@@ -458,8 +458,7 @@ public final class TypeBinding
       }
       else if (typeCode == XS_BASE64BINARY)
       {
-         // todo XS_BASE64BINARY
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_BASE64BINARY_NAME);
+         result = unmarshalBase64(value);
       }
       else if (typeCode == XS_HEXBINARY)
       {
@@ -653,7 +652,6 @@ public final class TypeBinding
       }
       else
       {
-         //todo do something
          throw new IllegalStateException("Unexpected field type " + javaType);
       }
 
@@ -826,8 +824,8 @@ public final class TypeBinding
       }
       else if (typeCode == XS_BASE64BINARY)
       {
-         // todo XS_BASE64BINARY
-         throw new IllegalStateException("Recognized but not supported xsdType: " + xsdType);
+         byte[] b = (byte[])value;
+         result = marshalBase64(b);
       }
       else if (typeCode == XS_HEXBINARY)
       {

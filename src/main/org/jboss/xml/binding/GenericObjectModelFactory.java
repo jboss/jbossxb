@@ -24,22 +24,22 @@ public interface GenericObjectModelFactory
    extends ObjectModelFactory
 {
    Object newChild(Object parent,
-                   ContentNavigator navigator,
+                   UnmarshallingContext navigator,
                    String namespaceURI,
                    String localName,
                    Attributes attrs);
 
    void addChild(Object parent,
                  Object child,
-                 ContentNavigator navigator,
+                 UnmarshallingContext navigator,
                  String namespaceURI,
                  String localName);
 
    void setValue(Object o,
-                 ContentNavigator navigator,
+                 UnmarshallingContext navigator,
                  String namespaceURI,
                  String localName,
                  String value);
 
-   Object completedRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName);
+   Object completedRoot(Object root, UnmarshallingContext navigator, String namespaceURI, String localName);
 }

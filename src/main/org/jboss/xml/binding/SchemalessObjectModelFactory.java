@@ -32,7 +32,7 @@ public class SchemalessObjectModelFactory
    private static final Logger log = Logger.getLogger(SchemalessObjectModelFactory.class);
 
    public Object newChild(Object parent,
-                          ContentNavigator navigator,
+                          UnmarshallingContext navigator,
                           String namespaceURI,
                           String localName,
                           Attributes attrs)
@@ -100,13 +100,13 @@ public class SchemalessObjectModelFactory
 
    public void addChild(Object parent,
                         Object child,
-                        ContentNavigator navigator,
+                        UnmarshallingContext navigator,
                         String namespaceURI,
                         String localName)
    {
    }
 
-   public void setValue(Object o, ContentNavigator navigator, String namespaceURI, String localName, String value)
+   public void setValue(Object o, UnmarshallingContext navigator, String namespaceURI, String localName, String value)
    {
       try
       {
@@ -147,7 +147,7 @@ public class SchemalessObjectModelFactory
    }
 
    public Object newRoot(Object root,
-                         ContentNavigator navigator,
+                         UnmarshallingContext navigator,
                          String namespaceURI,
                          String localName,
                          Attributes attrs)
@@ -176,7 +176,7 @@ public class SchemalessObjectModelFactory
       return root;
    }
 
-   public Object completedRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName)
+   public Object completedRoot(Object root, UnmarshallingContext navigator, String namespaceURI, String localName)
    {
       return root;
    }

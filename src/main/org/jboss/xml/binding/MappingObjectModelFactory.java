@@ -81,7 +81,7 @@ public class MappingObjectModelFactory
    // ObjectModelFactory implementation
 
    public Object newRoot(Object root,
-                         ContentNavigator navigator,
+                         UnmarshallingContext navigator,
                          String namespaceURI,
                          String localName,
                          Attributes attrs)
@@ -154,7 +154,7 @@ public class MappingObjectModelFactory
    // GenericObjectModelFactory implementation
 
    public Object newChild(Object o,
-                          ContentNavigator navigator,
+                          UnmarshallingContext navigator,
                           String namespaceURI,
                           String localName,
                           Attributes attrs)
@@ -331,7 +331,7 @@ public class MappingObjectModelFactory
 
    public void addChild(Object parent,
                         Object child,
-                        ContentNavigator navigator,
+                        UnmarshallingContext navigator,
                         String namespaceURI,
                         String localName)
    {
@@ -357,7 +357,7 @@ public class MappingObjectModelFactory
       setChild(child, parent, localName);
    }
 
-   public void setValue(Object o, ContentNavigator navigator, String namespaceURI, String localName, String value)
+   public void setValue(Object o, UnmarshallingContext navigator, String namespaceURI, String localName, String value)
    {
       if(log.isTraceEnabled())
       {
@@ -377,7 +377,7 @@ public class MappingObjectModelFactory
       setAttribute(o, localName, value, navigator.getType());
    }
 
-   public Object completedRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName)
+   public Object completedRoot(Object root, UnmarshallingContext navigator, String namespaceURI, String localName)
    {
       if(log.isTraceEnabled())
       {

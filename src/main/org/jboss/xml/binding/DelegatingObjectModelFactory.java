@@ -47,7 +47,7 @@ public class DelegatingObjectModelFactory
    }
 
    public Object newRoot(Object root,
-                         ContentNavigator navigator,
+                         UnmarshallingContext navigator,
                          String namespaceURI,
                          String localName,
                          Attributes attrs)
@@ -56,7 +56,7 @@ public class DelegatingObjectModelFactory
    }
 
    public Object newChild(Object parent,
-                          ContentNavigator navigator,
+                          UnmarshallingContext navigator,
                           String namespaceURI,
                           String localName,
                           Attributes attrs)
@@ -65,7 +65,7 @@ public class DelegatingObjectModelFactory
          "newChild",
          new Class[]{
             parent.getClass(),
-            ContentNavigator.class,
+            UnmarshallingContext.class,
             String.class,
             String.class,
             Attributes.class
@@ -91,7 +91,7 @@ public class DelegatingObjectModelFactory
 
    public void addChild(Object parent,
                         Object child,
-                        ContentNavigator navigator,
+                        UnmarshallingContext navigator,
                         String namespaceURI,
                         String localName)
    {
@@ -126,13 +126,13 @@ public class DelegatingObjectModelFactory
       }
    }
 
-   public void setValue(Object o, ContentNavigator navigator, String namespaceURI, String localName, String value)
+   public void setValue(Object o, UnmarshallingContext navigator, String namespaceURI, String localName, String value)
    {
       Method method = ObjectModelBuilder.getMethodForElement(typedFactory,
          "setValue",
          new Class[]{
             o.getClass(),
-            ContentNavigator.class,
+            UnmarshallingContext.class,
             String.class,
             String.class,
             String.class
@@ -154,7 +154,7 @@ public class DelegatingObjectModelFactory
       }
    }
 
-   public Object completedRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName)
+   public Object completedRoot(Object root, UnmarshallingContext navigator, String namespaceURI, String localName)
    {
       return root;
    }

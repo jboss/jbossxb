@@ -18,7 +18,7 @@ import java.util.Map;
  * @version <tt>$Revision$</tt>
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
-public interface ContentNavigator
+public interface UnmarshallingContext
 {
    Map getPrefixToNamespaceMap();
    

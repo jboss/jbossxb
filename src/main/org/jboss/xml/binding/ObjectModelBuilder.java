@@ -29,7 +29,7 @@ import java.lang.reflect.Method;
  * @version <tt>$Revision$</tt>
  */
 public class ObjectModelBuilder
-   implements ContentNavigator, JBossXBParser.ContentHandler
+   implements UnmarshallingContext, JBossXBParser.ContentHandler
 {
    /**
     * logger

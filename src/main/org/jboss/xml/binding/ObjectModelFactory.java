@@ -95,7 +95,7 @@ public interface ObjectModelFactory
     * @return the root of the object graph
     */
    Object newRoot(Object root,
-                  ContentNavigator navigator,
+                  UnmarshallingContext navigator,
                   String namespaceURI,
                   String localName,
                   Attributes attrs);

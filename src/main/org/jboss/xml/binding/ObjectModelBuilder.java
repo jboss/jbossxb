@@ -8,6 +8,7 @@ package org.jboss.xml.binding;
 
 import org.xml.sax.Attributes;
 import org.jboss.logging.Logger;
+import org.jboss.xml.binding.parser.JBossXBParser;
 
 import javax.xml.namespace.QName;
 import java.util.Map;
@@ -27,7 +28,7 @@ import java.lang.reflect.Method;
  * @version <tt>$Revision$</tt>
  */
 public class ObjectModelBuilder
-   implements ContentNavigator
+   implements ContentNavigator, JBossXBParser.ContentHandler
 {
    /**
     * logger
@@ -63,11 +64,6 @@ public class ObjectModelBuilder
    private Map prefixToUri = new HashMap();
 
    /**
-    * content
-    */
-   private Content content;
-
-   /**
     * the value of a simple element (i.e. the element that does not contain nested elements) being read
     */
    private StringBuffer value = new StringBuffer();
@@ -83,6 +79,22 @@ public class ObjectModelBuilder
       factoriesToNs.put(namespaceUri, factory);
    }
 
+   public void init(GenericObjectModelFactory defaultFactory, Object root)
+   {
+      this.defaultFactory = defaultFactory;
+
+      all.clear();
+      accepted.clear();
+      value.delete(0, value.length());
+
+      if(root != null)
+      {
+         all.push(root);
+         accepted.push(root);
+      }
+   }
+
+   /*
    public Object build(GenericObjectModelFactory defaultFactory, Object root, Content content)
       throws Exception
    {
@@ -111,6 +123,7 @@ public class ObjectModelBuilder
 
       return this.root;
    }
+   */
 
    // ContentNavigator implementation
 
@@ -161,7 +174,9 @@ public class ObjectModelBuilder
 
    public String getChildContent(String namespaceURI, String qName)
    {
-      return content.getChildContent(namespaceURI, qName);
+      // todo reimplement later
+      throw new UnsupportedOperationException();
+      //return content.getChildContent(namespaceURI, qName);
    }
 
    // Public
@@ -184,6 +199,16 @@ public class ObjectModelBuilder
       {
          prefixStack.removeFirst();
       }
+   }
+
+   public Object getRoot()
+   {
+      if(!all.isEmpty())
+      {
+         all.pop();
+         accepted.pop();
+      }
+      return root;
    }
 
    public void startElement(String namespaceURI, String localName, String qName, Attributes atts)

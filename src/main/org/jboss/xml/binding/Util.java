@@ -195,7 +195,7 @@ public final class Util
     */
    public static String xmlNameToClassName(String namespaceUri, String localName, boolean ignoreLowLine)
    {
-      return namespaceUri.length() == 0 ?
+      return namespaceUri == null || namespaceUri.length() == 0 ?
          xmlNameToClassName(localName, ignoreLowLine) :
          xmlNamespaceToJavaPackage(namespaceUri) + '.' + xmlNameToClassName(localName, ignoreLowLine);
    }

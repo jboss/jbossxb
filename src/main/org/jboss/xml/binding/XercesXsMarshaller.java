@@ -54,14 +54,7 @@ public class XercesXsMarshaller
     * Content the result is written to
     */
    private Content content = new Content();
-   /**
-    * Attributes added to the root element
-    */
-   //private AttributesImpl addedAttributes = new AttributesImpl(10);
-   /**
-    * Declared namespaces
-    */
-   //private final Map uriByNsName = new HashMap();
+
    private final Map prefixByUri = new HashMap();
 
    private Object root;
@@ -78,19 +71,6 @@ public class XercesXsMarshaller
     */
    public void declareNamespace(String name, String uri)
    {
-      /*
-      boolean nonEmptyName = (name != null && name.length() > 0);
-      String localName = (nonEmptyName ? name : "xmlns");
-      //String qName = (nonEmptyName ? getQName("xmlns", localName) : localName);
-
-      final Object prev = uriByNsName.put(localName, uri);
-
-      if(prev == null)
-      {
-      //   addedAttributes.add(null, localName, qName, "string", uri);
-      }
-      */
-
       prefixByUri.put(uri, name);
    }
 
@@ -106,23 +86,7 @@ public class XercesXsMarshaller
     */
    public void addAttribute(String prefix, String localName, String type, String value)
    {
-      /*
-      final String uri;
-      if(prefix != null && prefix.length() > 0)
-      {
-         uri = (String)uriByNsName.get(prefix);
-         if(uri == null)
-         {
-            throw new IllegalStateException("Namespace prefix " + prefix + " is not declared. Use declareNamespace().");
-         }
-      }
-      else
-      {
-         uri = null;
-      }
-      */
-      //String qName = getQName(prefix, localName);
-      //addedAttributes.add(uri, prefix, qName, type, value);
+      // todo addAttribute(String prefix, String localName, String type, String value)
    }
 
    // AbstractMarshaller implementation
@@ -218,8 +182,6 @@ public class XercesXsMarshaller
             }
          }
       }
-
-      log.info("marshalling " + element.getName() + "=" + value + ", min=" + minOccurs + ", max=" + maxOccurs);
 
       if(value != null)
       {

@@ -69,11 +69,16 @@ public class MappingObjectModelFactory
          {
             try
             {
-               setAttribute(root, attrs.getLocalName(i), attrs.getValue(i));
+               if(attrs.getLocalName(i).length() > 0)
+               {
+                  setAttribute(root, attrs.getLocalName(i), attrs.getValue(i));
+               }
             }
             catch(Exception e)
             {
-               throw new IllegalStateException("Failed to set attributes: " + e.getMessage());
+               throw new IllegalStateException(
+                  "Failed to set attribute " + attrs.getLocalName(i) + "=" + attrs.getValue(i) + ": " + e.getMessage()
+               );
             }
          }
       }
@@ -107,7 +112,6 @@ public class MappingObjectModelFactory
                   String getterStr = Util.xmlNameToGetMethodName(localName, true);
                   getter = o.getClass().getMethod(getterStr, null);
                }
-               //child = getter.invoke(o, null);
                child = get(o, localName, getter);
             }
 
@@ -120,7 +124,10 @@ public class MappingObjectModelFactory
             {
                for(int i = 0; i < attrs.getLength(); ++i)
                {
-                  setAttribute(child, attrs.getLocalName(i), attrs.getValue(i));
+                  if(attrs.getLocalName(i).length() > 0)
+                  {
+                     setAttribute(child, attrs.getLocalName(i), attrs.getValue(i));
+                  }
                }
             }
          }
@@ -492,8 +499,14 @@ public class MappingObjectModelFactory
       }
       else
       {
-         throw new IllegalStateException(
-            "setter is null and it's not an immutable container: parent=" + parent + ", child=" + child
+         throw new IllegalStateException("Setter is null and it's not an immutable container: " +
+            parent.getClass() +
+            ", localName=" +
+            localName +
+            ", parent=" +
+            parent +
+            ", child=" +
+            child
          );
       }
    }
@@ -643,18 +656,16 @@ public class MappingObjectModelFactory
       public ImmutableContainer(Class cls)
       {
          this.cls = cls;
-         log.info("created immutable container for " + cls);
       }
 
       public void addChild(String localName, Object child)
       {
          if(!names.isEmpty() && names.get(names.size() - 1).equals(localName))
          {
-            throw new IllegalStateException("!!! Ahh!! WTF? localName=" + localName);
+            throw new IllegalStateException("Attempt to add duplicate element: " + localName);
          }
          names.add(localName);
          values.add(child);
-         log.info("added child " + localName + " for " + cls + ": " + child);
       }
 
       public Object getChild(String localName)

@@ -6,23 +6,17 @@
  */
 package org.jboss.xml.binding;
 
-import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.logging.Logger;
-import org.xml.sax.DTDHandler;
+import org.jboss.xml.binding.parser.JBossXBParser;
+import org.jboss.xml.binding.parser.xni.XniJBossXBParser;
+import org.jboss.xml.binding.parser.sax.SaxJBossXBParser;
+import org.jboss.util.xml.JBossEntityResolver;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.SAXNotSupportedException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.XMLReader;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import java.io.InputStream;
 import java.io.Reader;
+import java.io.InputStream;
 
 /**
  * Unmarshaller implementation.
@@ -35,18 +29,17 @@ public class Unmarshaller
 {
    private static final Logger log = Logger.getLogger(Unmarshaller.class);
 
-   private static final String VALIDATION = "http://xml.org/sax/features/validation";
-   private static final String NAMESPACES = "http://xml.org/sax/features/namespaces";
+   public static final String VALIDATION = "http://xml.org/sax/features/validation";
+   public static final String NAMESPACES = "http://xml.org/sax/features/namespaces";
+   public static final String NAMESPACE_PREFIXES = "http://xml.org/sax/features/namespace-prefixes";
 
    // set some xerces specific features that allow transparent DTD and Schema validation
-   private static final String DYNAMIC_VALIDATION = "http://apache.org/xml/features/validation/dynamic";
-   private static final String SCHEMA_VALIDATION = "http://apache.org/xml/features/validation/schema";
-   private static final String SCHEMA_FULL_CHECKING = "http://apache.org/xml/features/validation/schema-full-checking";
+   public static final String DYNAMIC_VALIDATION = "http://apache.org/xml/features/validation/dynamic";
+   public static final String SCHEMA_VALIDATION = "http://apache.org/xml/features/validation/schema";
+   public static final String SCHEMA_FULL_CHECKING = "http://apache.org/xml/features/validation/schema-full-checking";
 
    private ObjectModelBuilder builder = new ObjectModelBuilder();
-   private XMLReader reader;
-   private SAXParser parser;
-   private EntityResolver entityResolver;
+   private final JBossXBParser parser;
 
    // Constructor
 
@@ -54,78 +47,40 @@ public class Unmarshaller
     * The constructor for DTD and XSD client awareness.
     */
    public Unmarshaller()
-      throws SAXException, ParserConfigurationException
+      throws JBossXBException
    {
-      SAXParserFactory saxFactory = SAXParserFactory.newInstance();
-      saxFactory.setValidating(true);
-      saxFactory.setNamespaceAware(true);
+      //parser = new SaxJBossXBParser();
+      parser = new XniJBossXBParser();
 
-      parser = saxFactory.newSAXParser();
+      parser.setFeature(VALIDATION, true);
+      parser.setFeature(SCHEMA_VALIDATION, true);
+      parser.setFeature(SCHEMA_FULL_CHECKING, true);
+      parser.setFeature(DYNAMIC_VALIDATION, true);
+      parser.setFeature(NAMESPACES, true);
 
-      reader = parser.getXMLReader();
-      reader.setContentHandler(new ContentPopulator());
-      reader.setDTDHandler(new MetaDataDTDHandler());
-      reader.setErrorHandler(new MetaDataErrorHandler());
-
-      setXmlReaderFeature(VALIDATION, true);
-      setXmlReaderFeature(SCHEMA_VALIDATION, true);
-      setXmlReaderFeature(SCHEMA_FULL_CHECKING, true);
-      setXmlReaderFeature(DYNAMIC_VALIDATION, true);
-      setXmlReaderFeature(NAMESPACES, true);
-
-      entityResolver = new JBossEntityResolver();
-      reader.setEntityResolver(entityResolver);
+      parser.setEntityResolver(new JBossEntityResolver());
    }
 
    public void setValidation(boolean validation)
-      throws SAXNotSupportedException, SAXNotRecognizedException
+      throws JBossXBException
    {
-      reader.setFeature(VALIDATION, validation);
+      parser.setFeature(VALIDATION, validation);
    }
 
    public void setNamespaceAware(boolean namespaces)
-      throws SAXNotSupportedException, SAXNotRecognizedException
+      throws JBossXBException
    {
-      reader.setFeature(NAMESPACES, namespaces);
+      parser.setFeature(NAMESPACES, namespaces);
    }
 
-   public void setXmlReaderFeature(String name, boolean value)
-      throws SAXNotRecognizedException, SAXNotSupportedException
+   public void setEntityResolver(EntityResolver entityResolver) throws JBossXBException
    {
-      try
-      {
-         reader.setFeature(name, value);
-      }
-      catch (SAXNotRecognizedException e)
-      {
-         log.warn("SAX feature not recognized: " + name);
-      }
-      catch (SAXNotSupportedException e)
-      {
-         log.warn("SAX feature not supported: " + name);
-      }
-   }
-
-   public void setXmlReaderProperty(String name, Object value)
-      throws SAXNotRecognizedException, SAXNotSupportedException
-   {
-      reader.setProperty(name, value);
-   }
-
-   public void setDTDHandler(DTDHandler dtdHandler)
-   {
-      reader.setDTDHandler(dtdHandler);
-   }
-
-   public void setEntityResolver(EntityResolver entityResolver)
-   {
-      reader.setEntityResolver(entityResolver);
-      this.entityResolver = entityResolver;
+      parser.setEntityResolver(entityResolver);
    }
 
    public void setErrorHandler(ErrorHandler errorHandler)
    {
-      reader.setErrorHandler(errorHandler);
+      // todo reader.setErrorHandler(errorHandler);
    }
 
    public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
@@ -133,84 +88,44 @@ public class Unmarshaller
       builder.mapFactoryToNamespace(getGenericObjectModelFactory(factory), namespaceUri);
    }
 
-   public Object unmarshal(InputStream is, ObjectModelFactory factory, Object root)
-      throws Exception
+   public Object unmarshal(InputSource is, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      InputSource source = new InputSource(is);
-      return unmarshal(source, factory, root);
+      Object result;
+      if(is.getCharacterStream() != null)
+      {
+         result = unmarshal(is.getCharacterStream(), factory, root);
+      }
+      else if(is.getByteStream() != null)
+      {
+         result = unmarshal(is.getByteStream(), factory, root);
+      }
+      else
+      {
+         result = unmarshal(is.getSystemId(), factory, root);
+      }
+      return result;
    }
 
-   public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root)
-      throws Exception
+   public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      InputSource source = new InputSource(reader);
-      return unmarshal(source, factory, root);
+      builder.init(getGenericObjectModelFactory(factory), root);
+      parser.parse(reader, builder);
+      return builder.getRoot();
    }
 
-   public Object unmarshal(InputSource source, ObjectModelFactory factory, Object root)
-      throws Exception
+   public Object unmarshal(InputStream is, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      reader.parse(source);
-      ContentPopulator populator = (ContentPopulator)reader.getContentHandler();
-      Content content = populator.getContent();
-      return builder.build(getGenericObjectModelFactory(factory), root, content);
+      builder.init(getGenericObjectModelFactory(factory), root);
+      parser.parse(is, builder);
+      return builder.getRoot();
    }
 
-   private static final class MetaDataErrorHandler
-      implements ErrorHandler
+   public Object unmarshal(String systemId, ObjectModelFactory factory, Object root)
+      throws JBossXBException
    {
-      public void warning(SAXParseException exception)
-      {
-         log.warn(formatMessage(exception));
-      }
-
-      public void error(SAXParseException exception)
-         throws SAXException
-      {
-         throw new SAXException(formatMessage(exception));
-      }
-
-      public void fatalError(SAXParseException exception)
-         throws SAXException
-      {
-         throw new SAXException(formatMessage(exception));
-      }
-      
-      public String formatMessage(SAXParseException exception)
-      {
-         StringBuffer buffer = new StringBuffer(50);
-         buffer.append(exception.getMessage()).append(" @ ");
-         String location = exception.getPublicId();
-         if (location != null)
-            buffer.append(location);
-         else
-         {
-            location = exception.getSystemId();
-            if (location != null)
-               buffer.append(location);
-            else
-               buffer.append("*unknown*");
-         }
-         buffer.append('[');
-         buffer.append(exception.getLineNumber()).append(',');
-         buffer.append(exception.getColumnNumber()).append(']');
-         return buffer.toString();
-      }
-   }
-
-   private static final class MetaDataDTDHandler
-      implements DTDHandler
-   {
-      public void notationDecl(String name, String publicId, String systemId)
-      {
-         log.debug("notationDecl: name=" + name + ", publicId=" + publicId + ", systemId=" + systemId);
-      }
-
-      public void unparsedEntityDecl(String name, String publicId, String systemId, String notationName)
-      {
-         log.debug("unparsedEntityDecl: name=" + name + ", publicId=" + publicId + ", systemId=" + systemId
-            + ", notationName=" + notationName);
-      }
+      builder.init(getGenericObjectModelFactory(factory), root);
+      parser.parse(systemId, builder);
+      return builder.getRoot();
    }
 
    private static final GenericObjectModelFactory getGenericObjectModelFactory(ObjectModelFactory factory)

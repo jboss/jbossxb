@@ -109,7 +109,7 @@ public class ObjectModelBuilder
    }
 
    /** Construct a QName from a value
-    * @param value A value that is of the form [prefix:]localpart
+    * @param value A value that is of the form [prefix:]localpart or [namespace:>]localpart
     */
    public QName resolveQName(String value)
    {
@@ -120,11 +120,24 @@ public class ObjectModelBuilder
       if (st.countTokens() != 2)
          throw new IllegalArgumentException("Illegal QName: " + value);
 
+      String nsURI = null;
       String prefix = st.nextToken();
       String local = st.nextToken();
-      String nsURI = resolveNamespacePrefix(prefix);
 
-      return new QName(nsURI, local);
+      QName qname = null;
+      if (local.startsWith(">"))
+      {
+         nsURI = prefix;
+         local = local.substring(1);
+         qname = new QName(nsURI, local);
+      }
+      else
+      {
+         nsURI = resolveNamespacePrefix(prefix);
+         qname = new QName(nsURI, local);
+      }
+
+      return qname;
    }
 
    public String getChildContent(String namespaceURI, String qName)

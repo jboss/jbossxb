@@ -39,19 +39,23 @@ public class ObjectModelBuilder
    private static final Logger log = Logger.getLogger(ObjectModelBuilder.class);
 
    /**
-    * the object that is pushed in the stack when the element read from the XML field is ignored by the
-    * metadata factory
+    * The object that represents an ignored by the object model factory XML element, i.e. the factory returned null
+    * from its newChild method
     */
    private static final Object IGNORED = new Object();
 
+   /**
+    * The root of the unmarshalled object graph
+    */
    private Object root;
 
    /**
-    * the stack of all the metadata objects including IGNORED
+    * the stack of all the objects including IGNORED
     */
    private Stack all = new StackImpl();
+
    /**
-    * the stack of only accepted metadata objects
+    * the stack of only accepted objects (all - IGNORED)
     */
    private Stack accepted = new StackImpl();
 
@@ -65,6 +69,7 @@ public class ObjectModelBuilder
     * default object model factory
     */
    private GenericObjectModelFactory defaultFactory;
+
    /**
     * factories mapped to namespace URIs
     */
@@ -76,7 +81,7 @@ public class ObjectModelBuilder
    private final NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
    /**
-    * the value of a simple element (i.e. the element that does not contain nested elements) being read
+    * Buffer for simple element with text content
     */
    private StringBuffer value = new StringBuffer();
 

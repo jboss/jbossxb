@@ -10,11 +10,14 @@
 package org.jboss.net.protocol.resource;
 
 import java.io.IOException;
+import java.io.FileNotFoundException;
 
 import java.net.URL;
 import java.net.MalformedURLException;
 
 import org.jboss.net.protocol.DelegatingURLConnection;
+
+import org.jboss.logging.Logger;
 
 /**
  * Provides access to system resources as a URLConnection.
@@ -25,6 +28,8 @@ import org.jboss.net.protocol.DelegatingURLConnection;
 public class ResourceURLConnection
    extends DelegatingURLConnection
 {
+   private static final Logger log = Logger.getLogger(ResourceURLConnection.class);
+   
    public ResourceURLConnection(final URL url)
       throws MalformedURLException, IOException
    {
@@ -39,11 +44,28 @@ public class ResourceURLConnection
       if (file != null && !file.equals("")) {
          name += file;
       }
-      
-      URL _url = ClassLoader.getSystemResource(name);
-      if (_url == null)
-         throw new IOException("could not locate resource: " + name);
 
-      return _url;
+      // first try TCL and then SCL
+
+      ClassLoader cl = Thread.currentThread().getContextClassLoader();
+      URL target = cl.getResource(name);
+
+      if (target == null) {
+         cl = ClassLoader.getSystemClassLoader();
+         target = cl.getResource(name);
+      }
+      
+      if (target == null)
+         throw new FileNotFoundException("Could not locate resource: " + name);
+
+      if (log.isTraceEnabled()) {
+         log.trace("Target resource URL: " + target);
+         try {
+            log.trace("Target resource URL connection: " + target.openConnection());
+         }
+         catch (Exception ignore) {}
+      }
+      
+      return target;
    }
 }

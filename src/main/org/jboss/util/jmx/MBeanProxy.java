@@ -260,15 +260,15 @@ public class MBeanProxy
       // make a which delegates to MBeanProxyInstance's cl for it's class resolution
       ClassLoader cl = new ClassLoader(intf.getClassLoader()) 
       {
-         public Class loadClass(final String name) throws ClassNotFoundException
+         public Class loadClass(final String className) throws ClassNotFoundException
          {
             try {
-               return super.loadClass(name);
+               return super.loadClass(className);
             }
             catch (ClassNotFoundException e) {
                // only allow loading of MBeanProxyInstance from this loader
-               if (name.equals(MBeanProxyInstance.class.getName())) {
-                  return MBeanProxyInstance.class.getClassLoader().loadClass(name);
+               if (className.equals(MBeanProxyInstance.class.getName())) {
+                  return MBeanProxyInstance.class.getClassLoader().loadClass(className);
                }
                
                // was some other classname, throw the CNFE
@@ -282,4 +282,6 @@ public class MBeanProxy
                                     new MBeanProxy(name, server));
    }
 }
-
+/*
+vim:tabstop=3:et:shiftwidth=3
+*/

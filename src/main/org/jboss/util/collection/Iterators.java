@@ -36,18 +36,18 @@ public final class Iterators
    private static final class Enum2Iterator
       implements Iterator
    {
-      private final Enumeration enum;
+      private final Enumeration enumeration;
     
-      public Enum2Iterator(final Enumeration enum) {
-         this.enum = enum;
+      public Enum2Iterator(final Enumeration enumeration) {
+         this.enumeration = enumeration;
       }
    
       public boolean hasNext() {
-         return enum.hasMoreElements();
+         return enumeration.hasMoreElements();
       }
     
       public Object next() {
-         return enum.nextElement();
+         return enumeration.nextElement();
       }
       
       public void remove() {
@@ -61,8 +61,8 @@ public final class Iterators
     * @param enum    Enumeration to wrap
     * @return        Enumeration wrapped as an Iterator
     */
-   public static Iterator forEnumeration(final Enumeration enum) {
-      return new Enum2Iterator(enum);
+   public static Iterator forEnumeration(final Enumeration enumeration) {
+      return new Enum2Iterator(enumeration);
    }
 
    /**
@@ -178,18 +178,18 @@ public final class Iterators
    private static final class SyncEnumeration
       implements Enumeration
    {
-      private final Enumeration enum;
+      private final Enumeration enumeration;
 
-      public SyncEnumeration(final Enumeration enum) {
-         this.enum = enum;
+      public SyncEnumeration(final Enumeration enumeration) {
+         this.enumeration = enumeration;
       }
 
       public synchronized boolean hasMoreElements() {
-         return enum.hasMoreElements();
+         return enumeration.hasMoreElements();
       }
 
       public synchronized Object nextElement() {
-         return enum.nextElement();
+         return enumeration.nextElement();
       }
    }
 
@@ -199,8 +199,8 @@ public final class Iterators
     * @param enum    Enumeration to synchronize.
     * @return        Synchronized Enumeration.
     */
-   public static Enumeration makeSynchronized(final Enumeration enum) {
-      return new SyncEnumeration(enum);
+   public static Enumeration makeSynchronized(final Enumeration enumeration) {
+      return new SyncEnumeration(enumeration);
    }
 
 

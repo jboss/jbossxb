@@ -414,14 +414,15 @@ public class ObjectModelBuilder
       }
       catch(InvocationTargetException e)
       {
-         log.error(e.getTargetException());
-         log.error("Factory="+factory+" Failed to invoke method " + method.getName(), e.getTargetException());
-         throw new IllegalStateException("Factory="+factory+" Failed to invoke method " + method.getName());
+         String msg = "Failed to invoke method " + method.getName() + ", factory=" + factory;
+         log.error(msg, e.getTargetException());
+         throw new IllegalStateException(msg);
       }
       catch(Exception e)
       {
-         log.error("Factory="+factory+" Failed to invoke method " + method.getName(), e);
-         throw new IllegalStateException("Factory="+factory+" Failed to invoke method " + method.getName());
+         String msg = "Failed to invoke method " + method.getName() + ", factory=" + factory;
+         log.error(msg, e);
+         throw new IllegalStateException(msg);
       }
    }
 

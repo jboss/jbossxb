@@ -23,12 +23,12 @@ import java.beans.PropertyEditorSupport;
 public class StringArrayEditor
    extends PropertyEditorSupport
 {
-   /** Build a String[]
+   /** Build a String[] from comma or eol seperated elements
     *
     */
    public void setAsText(final String text)
    {
-      StringTokenizer stok = new StringTokenizer(text, ",");
+      StringTokenizer stok = new StringTokenizer(text, ",\r\n");
       ArrayList list = new ArrayList();
       while (stok.hasMoreTokens())
       {

@@ -45,7 +45,7 @@ public class ObjectNameConverter
     * @throws MalformedObjectNameException If the given Object Name
     *         is not correct
     **/
-   public static ObjectName convertString( String pObjectName )
+   public static ObjectName convert( String pObjectName )
       throws MalformedObjectNameException
    {
       if( pObjectName == null ) {
@@ -81,7 +81,7 @@ public class ObjectNameConverter
     * @throws MalformedObjectNameException If the given Object Name
     *         is not correct
     **/
-   public static ObjectName convertProperties( String pDomainName, Hashtable pProperties )
+   public static ObjectName convert( String pDomainName, Hashtable pProperties )
       throws MalformedObjectNameException
    {
       if( pDomainName == null ) {

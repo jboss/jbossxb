@@ -30,9 +30,10 @@ import java.io.Serializable;
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @author  <a href="mailto:sacha.labourey@cogito-info.ch">Sacha Labourey</a>
  */
-public class Logger
-      implements Serializable
+public class Logger implements Serializable
 {
+   /** Serialization */
+   private static final long serialVersionUID = 4232175575988879434L;
    /** The system property to look for an externalized LoggerPlugin implementation class */
    protected static String PLUGIN_CLASS_PROP = "org.jboss.logging.Logger.pluginClass";
    /** The default LoggerPlugin implementation is log4j */

@@ -18,13 +18,13 @@ import java.beans.PropertyEditorSupport;
 public class ClassArrayEditor
    extends PropertyEditorSupport
 {
-   /** Build a Class[] from a comma/space seperated list of classes
+   /** Build a Class[] from a comma/whitespace seperated list of classes
     * @param text - the class name list
     */
    public void setAsText(final String text) throws IllegalArgumentException
    {
       ClassLoader loader = Thread.currentThread().getContextClassLoader();
-      StringTokenizer tokenizer = new StringTokenizer(text, ", ");
+      StringTokenizer tokenizer = new StringTokenizer(text, ", \t\r\n");
       ArrayList classes = new ArrayList();
       while( tokenizer.hasMoreTokens() == true )
       {

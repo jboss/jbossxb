@@ -9,7 +9,7 @@ package org.jboss.xml.binding.sunday.unmarshalling.impl;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
-import org.jboss.xml.binding.sunday.unmarshalling.TextContent;
+import org.jboss.xml.binding.sunday.unmarshalling.TextContentBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContentHandler;
 import org.jboss.logging.Logger;
@@ -31,7 +31,7 @@ public class ElementHandlerImpl
 
    private Map attrBindings = Collections.EMPTY_MAP;
    private Map childBindings = Collections.EMPTY_MAP;
-   protected TextContent contentBinding;
+   protected TextContentBinding contentBindingBinding;
 
    public AttributeBinding addAttribute(QName name)
    {
@@ -52,6 +52,11 @@ public class ElementHandlerImpl
          default:
             attrBindings.put(name, binding);
       }
+   }
+
+   public AttributeBinding getAttribute(QName name)
+   {
+      return (AttributeBinding)attrBindings.get(name);
    }
 
    public ElementHandler pushAttributeHandler(QName name, AttributeHandler handler)
@@ -80,18 +85,23 @@ public class ElementHandlerImpl
       }
    }
 
-   public void setTextContentBinding(TextContent contentBinding)
+   public void setTextContent(TextContentBinding contentBindingBinding)
    {
-      this.contentBinding = contentBinding;
+      this.contentBindingBinding = contentBindingBinding;
+   }
+
+   public TextContentBinding getTextContent()
+   {
+      return contentBindingBinding;
    }
 
    public ElementHandler pushTextContentHandler(TextContentHandler handler)
    {
-      if(contentBinding == null)
+      if(contentBindingBinding == null)
       {
-         contentBinding = new TextContentImpl();
+         contentBindingBinding = new TextContentBindingImpl();
       }
-      contentBinding.pushHandler(handler);
+      contentBindingBinding.pushHandler(handler);
       return this;
    }
 
@@ -129,9 +139,9 @@ public class ElementHandlerImpl
    {
       if(dataContent != null)
       {
-         if(contentBinding != null)
+         if(contentBindingBinding != null)
          {
-            contentBinding.set(child, dataContent, name);
+            contentBindingBinding.set(child, dataContent, name);
          }
       }
       addChild(parent, child, name);

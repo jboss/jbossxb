@@ -20,9 +20,13 @@ public interface ElementHandler
 
    void addAttribute(QName name, AttributeBinding binding);
 
+   AttributeBinding getAttribute(QName name);
+
    ElementHandler pushAttributeHandler(QName name, AttributeHandler handler);
 
-   void setTextContentBinding(TextContent binding);
+   void setTextContent(TextContentBinding binding);
+
+   TextContentBinding getTextContent();
 
    ElementHandler pushTextContentHandler(TextContentHandler handler);
 

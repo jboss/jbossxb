@@ -17,4 +17,6 @@ public interface DocumentHandler
    ElementBinding addElement(QName name);
 
    void addElement(QName name, ElementBinding binding);
+
+   ElementBinding getElement(QName name);
 }

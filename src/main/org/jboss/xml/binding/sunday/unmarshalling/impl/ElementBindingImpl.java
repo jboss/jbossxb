@@ -11,7 +11,7 @@ import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.ObjectModelStack;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
-import org.jboss.xml.binding.sunday.unmarshalling.TextContent;
+import org.jboss.xml.binding.sunday.unmarshalling.TextContentBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContentHandler;
 import org.xml.sax.Attributes;
 
@@ -74,9 +74,9 @@ public class ElementBindingImpl
       getLastHandler().addElement(name, binding);
    }
 
-   public void setTextContentBinding(TextContent binding)
+   public void setTextContent(TextContentBinding binding)
    {
-      getLastHandler().setTextContentBinding(binding);
+      getLastHandler().setTextContent(binding);
    }
 
    public ElementHandler pushTextContentHandler(TextContentHandler handler)

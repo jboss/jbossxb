@@ -27,7 +27,7 @@ public interface ElementBinding
 
    ElementHandler pushAttributeHandler(QName name, AttributeHandler handler);
 
-   void setTextContentBinding(TextContent binding);
+   void setTextContent(TextContentBinding binding);
 
    ElementHandler pushTextContentHandler(TextContentHandler handler);
 

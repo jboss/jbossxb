@@ -14,14 +14,11 @@ import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBindingStack;
 import org.jboss.xml.binding.metadata.unmarshalling.impl.RuntimeDocumentBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.DocumentHandler;
-import org.jboss.xml.binding.sunday.unmarshalling.impl.DocumentHandlerImpl;
+import org.jboss.xml.binding.sunday.unmarshalling.impl.SundayContentHandler;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.ContentHandler;
 
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.parsers.SAXParser;
 import java.io.Reader;
 import java.io.InputStream;
 
@@ -98,30 +95,9 @@ public class UnmarshallerImpl
 
    public Object unmarshal(String xmlFile, DocumentHandler handler) throws JBossXBException
    {
-      DocumentHandlerImpl handlerImpl = (DocumentHandlerImpl)handler;
-
-      SAXParserFactory factory = SAXParserFactory.newInstance();
-      SAXParser parser = null;
-      try
-      {
-         parser = factory.newSAXParser();
-      }
-      catch(Exception e)
-      {
-         throw new JBossXBRuntimeException("Failed to create new SAX parser: " + e.getMessage(), e);
-      }
-
-      try
-      {
-         parser.getXMLReader().setContentHandler((ContentHandler)handler);
-         parser.getXMLReader().parse(xmlFile);
-      }
-      catch(Exception e)
-      {
-         throw new JBossXBRuntimeException("Failed to parse XML content: " + e.getMessage(), e);
-      }
-
-      return handlerImpl.root;
+      SundayContentHandler cHandler = new SundayContentHandler(handler);
+      parser.parse(xmlFile, cHandler);
+      return cHandler.getRoot();
    }
 
    public Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata)

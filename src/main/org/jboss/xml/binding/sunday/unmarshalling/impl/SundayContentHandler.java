@@ -6,40 +6,51 @@
  */
 package org.jboss.xml.binding.sunday.unmarshalling.impl;
 
+import org.jboss.xml.binding.parser.JBossXBParser;
+import org.jboss.xml.binding.sunday.unmarshalling.ObjectModelStack;
 import org.jboss.xml.binding.sunday.unmarshalling.DocumentHandler;
+import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.logging.Logger;
+import org.xml.sax.Attributes;
+import org.apache.xerces.xs.XSTypeDefinition;
 
 import javax.xml.namespace.QName;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public class DocumentHandlerImpl
-   implements DocumentHandler
+public class SundayContentHandler
+   implements JBossXBParser.ContentHandler
 {
-   private Map topElements = new HashMap();
+   private final static Logger log = Logger.getLogger(SundayContentHandler.class);
 
-   public ElementBinding addElement(QName name)
+   private final DocumentHandler docHandler;
+
+   private ElementStack elementStack = new ElementStack();
+   private ObjectModelStack objectStack = new StackImpl();
+
+   private StringBuffer textContent = new StringBuffer();
+
+   private Object root;
+
+   public SundayContentHandler(DocumentHandler docHandler)
    {
-      ElementBinding binding = new ElementBindingImpl();
-      addElement(name, binding);
-      return binding;
+      this.docHandler = docHandler;
    }
 
-   public void addElement(QName name, ElementBinding binding)
+   public void characters(char[] ch, int start, int length)
    {
-      topElements.put(name, binding);
+      if(elementStack.peek() != ElementStack.NULL_ITEM)
+      {
+         textContent.append(ch, start, length);
+      }
    }
 
-   public ElementBinding getElement(QName name)
-   {
-      return (ElementBinding)topElements.get(name);
-   }
-/*
-   public void endElement(String namespaceURI, String localName, String qName) throws SAXException
+   public void endElement(String namespaceURI, String localName, String qName)
    {
       ElementStack.StackItem stackItem = elementStack.pop();
       if(stackItem != ElementStack.NULL_ITEM)
@@ -66,14 +77,18 @@ public class DocumentHandlerImpl
       }
    }
 
-   public void startElement(String namespaceURI, String localName, String qName, Attributes atts) throws SAXException
+   public void startElement(String namespaceURI,
+                            String localName,
+                            String qName,
+                            Attributes atts,
+                            XSTypeDefinition type)
    {
       QName startName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
 
       ElementStack.StackItem stackItem = ElementStack.NULL_ITEM;
       if(elementStack.isEmpty())
       {
-         ElementBinding element = (ElementBinding)topElements.get(startName);
+         ElementBinding element = docHandler.getElement(startName);
          if(element != null)
          {
             stackItem = new ElementStack.StackItem(startName, element, null, objectStack.size());
@@ -119,5 +134,64 @@ public class DocumentHandlerImpl
          );
       }
    }
-  */
+
+   public void startPrefixMapping(String prefix, String uri)
+   {
+   }
+
+   public void endPrefixMapping(String prefix)
+   {
+   }
+
+   public void processingInstruction(String target, String data)
+   {
+   }
+
+   public Object getRoot()
+   {
+      return root;
+   }
+
+   // Inner
+
+   static class StackImpl
+      implements ObjectModelStack
+   {
+      private LinkedList list = new LinkedList();
+
+      public void clear()
+      {
+         list.clear();
+      }
+
+      public void push(Object o)
+      {
+         list.addLast(o);
+      }
+
+      public Object pop()
+      {
+         return list.removeLast();
+      }
+
+      public Object peek()
+      {
+         return list.getLast();
+      }
+
+      public Object peek(int i)
+      {
+         return list.get(i);
+      }
+
+      public boolean isEmpty()
+      {
+         return list.isEmpty();
+      }
+
+      public int size()
+      {
+         return list.size();
+      }
+   }
 }

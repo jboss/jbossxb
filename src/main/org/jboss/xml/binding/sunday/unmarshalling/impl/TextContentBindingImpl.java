@@ -6,7 +6,7 @@
  */
 package org.jboss.xml.binding.sunday.unmarshalling.impl;
 
-import org.jboss.xml.binding.sunday.unmarshalling.TextContent;
+import org.jboss.xml.binding.sunday.unmarshalling.TextContentBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContentHandler;
 
 import javax.xml.namespace.QName;
@@ -15,8 +15,8 @@ import javax.xml.namespace.QName;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public class TextContentImpl
-   implements TextContent
+public class TextContentBindingImpl
+   implements TextContentBinding
 {
    private TextContentHandler handler;
 

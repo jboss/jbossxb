@@ -12,7 +12,7 @@ import javax.xml.namespace.QName;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface TextContent
+public interface TextContentBinding
 {
    void pushHandler(TextContentHandler handler);
 

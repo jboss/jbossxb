@@ -97,7 +97,7 @@ public class AttributesImpl
       int i = 0;
       while(i < attrList.size())
       {
-         final AttributeImpl attr = getAttribute(i);
+         final AttributeImpl attr = getAttribute(i++);
          if(
             (attr.namespaceUri == null ? uri == null : attr.namespaceUri.equals(uri)) &&
             (attr.localName == null ? localName == null : attr.localName.equals(localName))
@@ -107,8 +107,8 @@ public class AttributesImpl
          }
       }
 
-      if(i == attrList.size())
-         throw new IllegalStateException("Failed to find attribute: uri=" + uri + ", localName=" + localName);
+      if (i == attrList.size())
+         return -1;
 
       return i;
    }
@@ -118,15 +118,15 @@ public class AttributesImpl
       int i = 0;
       while(i < attrList.size())
       {
-         final AttributeImpl attr = getAttribute(i);
+         final AttributeImpl attr = getAttribute(i++);
          if(attr.qName.equals(qName))
          {
             break;
          }
       }
 
-      if(i == attrList.size())
-         throw new IllegalStateException("Failed to find attribute: qName=" + qName);
+      if (i == attrList.size())
+         return -1;
 
       return i;
    }
@@ -137,7 +137,7 @@ public class AttributesImpl
       int i = 0;
       while(i < attrList.size())
       {
-         attr = getAttribute(i);
+         attr = getAttribute(i++);
          if(
             (attr.namespaceUri == null ? uri == null : attr.namespaceUri.equals(uri)) &&
             (attr.localName == null ? localName == null : attr.localName.equals(localName))
@@ -147,8 +147,8 @@ public class AttributesImpl
          }
       }
 
-      if(attr == null)
-         throw new IllegalStateException("Failed to find attribute: uri=" + uri + ", localName=" + localName);
+      if (attr == null)
+         return null;
 
       return attr.type;
    }
@@ -159,15 +159,15 @@ public class AttributesImpl
       int i = 0;
       while(i < attrList.size())
       {
-         attr = getAttribute(i);
+         attr = getAttribute(i++);
          if(attr.qName.equals(qName))
          {
             break;
          }
       }
 
-      if(attr == null)
-         throw new IllegalStateException("Failed to find attribute: qName=" + qName);
+      if (attr == null)
+         return null;
 
       return attr.type;
    }
@@ -178,7 +178,7 @@ public class AttributesImpl
       int i = 0;
       while(i < attrList.size())
       {
-         attr = getAttribute(i);
+         attr = getAttribute(i++);
          if(
             (attr.namespaceUri == null ? uri == null : attr.namespaceUri.equals(uri)) &&
             (attr.localName == null ? localName == null : attr.localName.equals(localName))
@@ -188,8 +188,8 @@ public class AttributesImpl
          }
       }
 
-      if(attr == null)
-         throw new IllegalStateException("Failed to find attribute: uri=" + uri + ", localName=" + localName);
+      if (attr == null)
+         return null;
 
       return attr.value;
    }
@@ -200,15 +200,15 @@ public class AttributesImpl
       int i = 0;
       while(i < attrList.size())
       {
-         attr = getAttribute(i);
+         attr = getAttribute(i++);
          if(attr.qName.equals(qName))
          {
             break;
          }
       }
 
-      if(attr == null)
-         throw new IllegalStateException("Failed to find attribute: qNmae=" + qName);
+      if (attr == null)
+         return null;
 
       return attr.value;
    }

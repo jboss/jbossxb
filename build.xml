@@ -62,6 +62,7 @@
     <!-- Libraries -->
     <!-- ========= -->
     &libraries;
+
     <!-- The combined library classpath -->
     <path id="library.classpath">
       <path refid="apache.xerces.classpath"/>
@@ -119,8 +120,29 @@
    -->
   <target name="module-jars">
 
-    <!-- Server and client jars -->
-    <call target="_default:server-client-jars"/>
+    <!-- Build jboss-common.jar -->
+    <jar jarfile="${build.lib}/${jar.server.name}"
+      manifest="${build.etc}/default.mf">
+      <fileset dir="${build.classes}">
+        <include name="org/jboss/**"/>
+      </fileset>
+    </jar>
+
+    <!-- Build jboss-common-client.jar -->
+    <jar jarfile="${build.lib}/${jar.client.name}"
+      manifest="${build.etc}/default.mf">
+      <fileset dir="${build.classes}">
+        <include name="org/jboss/**"/>
+      </fileset>
+    </jar>
+
+    <!-- Build jboss-common-client.jar -->
+    <jar jarfile="${build.lib}/namespace.jar"
+      manifest="${build.etc}/default.mf">
+      <fileset dir="${build.classes}">
+        <include name="javax/xml/namespace/*"/>
+      </fileset>
+    </jar>
 
     <!--
        | JBoss/Testsuite Support
@@ -129,9 +151,9 @@
     <!-- testsuite-support.jar -->
     <jar jarfile="${build.lib}/testsuite-support.jar" manifest="${build.etc}/default.mf">
       <fileset dir="${build.classes}">
-         <include name="org/jboss/logging/**"/>
+        <include name="org/jboss/logging/**"/>
       </fileset>
     </jar>
-
   </target>
+
 </project>

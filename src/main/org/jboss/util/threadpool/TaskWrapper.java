@@ -60,7 +60,6 @@ public interface TaskWrapper extends Runnable
    /**
     * The task has been accepted
     *
-    * @param time the time taken to accept the task
     */
    void acceptTask();
 
@@ -72,4 +71,5 @@ public interface TaskWrapper extends Runnable
    void rejectTask(RuntimeException e);
 
    // Inner classes -------------------------------------------------
+   boolean isComplete();
 }

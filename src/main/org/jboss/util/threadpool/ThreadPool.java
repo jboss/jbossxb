@@ -62,4 +62,12 @@ public interface ThreadPool
     * @throws IllegalArgumentException for a null runnable
     */
    public void run(Runnable runnable);
+
+   /**
+    * 
+    * @param runnable
+    * @param startTimeout
+    * @param completeTimeout
+    */ 
+   public void run(Runnable runnable, long startTimeout, long completeTimeout);
 }

@@ -9,6 +9,7 @@ package org.jboss.util.threadpool;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Comparator;
 
 import org.jboss.util.collection.WeakValueHashMap;
 
@@ -16,6 +17,7 @@ import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.SynchronizedBoolean;
 import EDU.oswego.cs.dl.util.concurrent.SynchronizedInt;
 import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
+import EDU.oswego.cs.dl.util.concurrent.Heap;
 
 /**
  * A basic thread pool.
@@ -62,6 +64,9 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    /** Has the pool been stopped? */
    private SynchronizedBoolean stopped = new SynchronizedBoolean(false);
 
+   private Heap tasksWithTimeouts = new Heap(13);
+   TimeoutMonitor timeoutTask;
+
    // Static --------------------------------------------------------
 
    // Constructors --------------------------------------------------
@@ -94,6 +99,7 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
 
       poolNumber = lastPoolNumber.increment();
       setName(name);
+      timeoutTask = new TimeoutMonitor(name);
    }
 
    // Public --------------------------------------------------------
@@ -128,6 +134,14 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
 
       wrapper.acceptTask();
 
+      long completionTimeout = wrapper.getTaskCompletionTimeout();
+      TimeoutInfo info = null;
+      if( completionTimeout > 0 )
+      {
+         // Install the task in the
+         info = new TimeoutInfo(wrapper, completionTimeout);
+         tasksWithTimeouts.insert(info);
+      }
       int waitType = wrapper.getTaskWaitType();
       switch (waitType)
       {
@@ -141,7 +155,6 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
             execute(wrapper);
          }
       }
-
       waitForTask(wrapper);
    }
 
@@ -153,8 +166,12 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
 
    public void run(Runnable runnable)
    {
-      RunnableTaskWrapper wrapper = new RunnableTaskWrapper(runnable);
-      runTaskWrapper(wrapper);
+      run(runnable, 0, 0);
+   }
+   public void run(Runnable runnable, long startTimeout, long completeTimeout)
+   {
+      RunnableTaskWrapper wrapper = new RunnableTaskWrapper(runnable, startTimeout, completeTimeout);
+      runTaskWrapper(wrapper);      
    }
 
    // ThreadPoolMBean implementation --------------------------------
@@ -350,6 +367,12 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       wrapper.waitForTask();
    }
 
+   protected TimeoutInfo getNextTimeout()
+   {
+      TimeoutInfo info = (TimeoutInfo) this.tasksWithTimeouts.extract();
+      return info;
+   }
+
    // Private -------------------------------------------------------
 
    // Inner classes -------------------------------------------------
@@ -365,6 +388,88 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
          Thread thread = new Thread(threadGroup, runnable, threadName);
          thread.setDaemon(true);
          return thread;
+      }
+   }
+
+   private static class TimeoutInfo implements Comparable
+   {
+      long start;
+      long timeoutMS;
+      TaskWrapper wrapper;
+      TimeoutInfo(TaskWrapper wrapper, long timeout)
+      {
+         this.start = System.currentTimeMillis();
+         this.timeoutMS = start + timeout;
+         this.wrapper = wrapper;
+      }
+      public int compareTo(Object o)
+      {
+         TimeoutInfo ti = (TimeoutInfo) o;
+         long to0 = timeoutMS;
+         long to1 = ti.timeoutMS;
+         int diff = (int) (to0 - to1);
+         return diff;
+      }
+      TaskWrapper getTaskWrapper()
+      {
+         return wrapper;
+      }
+      public long getTaskCompletionTimeout()
+      {
+         return wrapper.getTaskCompletionTimeout();
+      }
+      public long getTaskCompletionTimeout(long now)
+      {
+         return timeoutMS - now;
+      }
+   }
+   private class TimeoutMonitor implements Runnable
+   {
+      TimeoutMonitor(String name)
+      {
+         Thread t = new Thread(this, name+" TimeoutMonitor");
+         t.setDaemon(true);
+         t.start();
+      }
+      public void run()
+      {
+         boolean isStopped = stopped.get();
+         while( isStopped == false )
+         {
+            try
+            {
+               TimeoutInfo info = getNextTimeout();
+               if( info != null )
+               {
+                  long now = System.currentTimeMillis();
+                  long timeToTimeout = info.getTaskCompletionTimeout(now);
+                  if( timeToTimeout < 0 )
+                     timeToTimeout = 1;
+                  Thread.sleep(timeToTimeout);
+                  // Check the status of the task
+                  TaskWrapper wrapper = info.getTaskWrapper();
+                  if( wrapper.isComplete() == false )
+                  {
+                     wrapper.stopTask();
+                     // Requeue the TimeoutInfo
+                     TimeoutInfo recheck = new TimeoutInfo(wrapper, 1000);
+                     tasksWithTimeouts.insert(recheck);
+                  }
+               }
+               else
+               {
+                  Thread.sleep(1000);
+               }
+            }
+            catch(InterruptedException e)
+            {
+            }
+            catch(Throwable e)
+            {
+               
+            }
+            isStopped = stopped.get();            
+         }
       }
    }
 }

@@ -26,6 +26,12 @@ public class RunnableTaskWrapper implements TaskWrapper
 
    /** The runnable */
    private Runnable runnable;
+   private boolean started;
+   private Thread runThread;
+   /** The start timeout */
+   private long startTimeout;
+   /** The completion timeout */
+   private long completionTimeout;
 
    // Static --------------------------------------------------------
 
@@ -35,13 +41,19 @@ public class RunnableTaskWrapper implements TaskWrapper
     * Create a new RunnableTaskWrapper
     *
     * @param runnable the runnable
-    * @throws IllegalArgumentExeption for a null runnable
+    * @throws IllegalArgumentException for a null runnable
     */
    public RunnableTaskWrapper(Runnable runnable)
+   {
+      this(runnable, 0, 0);
+   }
+   public RunnableTaskWrapper(Runnable runnable, long startTimeout, long completeTimeout)
    {
       if (runnable == null)
          throw new IllegalArgumentException("Null runnable");
       this.runnable = runnable;
+      this.startTimeout = startTimeout;
+      this.completionTimeout = completeTimeout;
    }
 
    // Public --------------------------------------------------------
@@ -60,12 +72,12 @@ public class RunnableTaskWrapper implements TaskWrapper
 
    public long getTaskStartTimeout()
    {
-      return 0L;
+      return startTimeout;
    }
 
    public long getTaskCompletionTimeout()
    {
-      return 0L;
+      return completionTimeout;
    }
 
    public void acceptTask()
@@ -80,7 +92,18 @@ public class RunnableTaskWrapper implements TaskWrapper
 
    public void stopTask()
    {
-      // Can't do anything?
+      // Interrupt the run thread if its not null
+      if( runThread != null && runThread.isInterrupted() == false )
+      {
+         runThread.interrupt();
+      }
+      else if( runThread != null )
+      {
+         /* If the thread has not been returned after being interrupted, then
+         use the deprecated stop method to try to force the thread abort.
+         */
+         runThread.stop();
+      }
    }
 
    public void waitForTask()
@@ -88,13 +111,20 @@ public class RunnableTaskWrapper implements TaskWrapper
       // Nothing to do
    }
 
+   public boolean isComplete()
+   {
+      return started == true && runThread == null;
+   }
    // Runnable implementation ---------------------------------------
 
    public void run()
    {
       try
       {
+         runThread = Thread.currentThread();
+         started = true;
          runnable.run();
+         runThread = null;
       }
       catch (Throwable t)
       {

@@ -69,6 +69,9 @@ public class BasicTaskWrapper implements TaskWrapper
    /** The wait type */
    private int waitType;
 
+   /** The thread */
+   private Thread runThread;
+
    // Static --------------------------------------------------------
 
    // Constructors --------------------------------------------------
@@ -84,7 +87,7 @@ public class BasicTaskWrapper implements TaskWrapper
     * Create a new task wrapper
     *
     * @param task the task
-    * @throws IllegalArgumentExeption for a null task
+    * @throws IllegalArgumentException for a null task
     */
    public BasicTaskWrapper(Task task)
    {
@@ -147,6 +150,12 @@ public class BasicTaskWrapper implements TaskWrapper
       taskRejected(e);
    }
 
+   // Inner classes -------------------------------------------------
+   public boolean isComplete()
+   {
+      return state == TASK_COMPLETED;
+   }
+
    public void stopTask()
    {
       boolean started;
@@ -156,7 +165,21 @@ public class BasicTaskWrapper implements TaskWrapper
          state = TASK_STOPPED;
       }
       if (started)
-         task.stop();
+      {
+         // Interrupt the run thread if its not null
+         if( runThread != null )
+         {
+            runThread.interrupt();
+         }
+         taskStop();
+      }
+      else if( runThread != null && runThread.isInterrupted() )
+      {
+         /* If the thread has not been returned after being interrupted, then
+         use the deprecated stop method to try to force the thread abort.
+         */
+         runThread.stop();
+      }
    }
 
    public void waitForTask()
@@ -193,8 +216,14 @@ public class BasicTaskWrapper implements TaskWrapper
 
    // Runnable implementation ---------------------------------------
 
+   /**
+    * Called by the thread pool executor
+    */ 
    public void run()
    {
+      // Get the execution thread
+      this.runThread = Thread.currentThread();
+
       // Check for a start timeout
       long runTime = getElapsedTime();
       if (startTimeout > 0l && runTime >= startTimeout)

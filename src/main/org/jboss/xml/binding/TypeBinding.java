@@ -12,6 +12,8 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.math.BigDecimal;
 import java.text.ParseException;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -301,8 +303,7 @@ public final class TypeBinding
       }
       else if(typeCode == XS_DATETIME)
       {
-         // todo XS_DATETIME
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_DATETIME_NAME);
+         result = unmarshalDateTime(value);
       }
       else if(typeCode == XS_QNAME)
       {
@@ -328,13 +329,11 @@ public final class TypeBinding
       }
       else if(typeCode == XS_DATE)
       {
-         // todo XS_DATE
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_DATE_NAME);
+         result = unmarshalDate(value);
       }
       else if(typeCode == XS_TIME)
       {
-         // todo XS_TIME
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_TIME_NAME);
+         result = unmarshalTime(value);
       }
       else if(typeCode == XS_BASE64BINARY)
       {
@@ -378,8 +377,7 @@ public final class TypeBinding
       }
       else if(typeCode == XS_GDAY)
       {
-         // todo XS_GDAY
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_GDAY_NAME);
+         return unmarshalGDay(value);
       }
       else if(typeCode == XS_NORMALIZEDSTRING)
       {
@@ -507,5 +505,237 @@ public final class TypeBinding
       }
 
       return result;
+   }
+
+   public static Calendar unmarshalGDay(String value)
+   {
+      // the format is ---DD[timezonePart]
+      if(value.length() < 5 || value.charAt(0) != '-' || value.charAt(1) != '-' || value.charAt(2) != '-')
+      {
+         throw new NumberFormatException("gDay value does not follow the format (---DD[timezonePart]): " + value);
+      }
+
+      // validate day
+      int day = Integer.parseInt(value.substring(3, 5));
+      if(day < 1 || day > 31)
+      {
+         throw new NumberFormatException("gDay value is not in the interval [1..31]: " + day);
+      }
+
+      // validate timezonePart
+      String timezonePart = value.substring(5);
+      TimeZone tz = parseTimeZone(timezonePart);
+
+      Calendar cal = Calendar.getInstance();
+      cal.clear();
+      if(tz != null)
+      {
+         cal.setTimeZone(tz);
+      }
+      cal.set(Calendar.DAY_OF_MONTH, day);
+
+      return cal;
+   }
+
+   /**
+    * Parses a string value that represents date following the format defined in
+    * http://www.w3.org/TR/xmlschema-2/#dateTime, i.e. '-'? yyyy '-' mm '-' dd.
+    * Creates an instance of java.util.Calendar and initializes it to the parsed values of the year, month and day.
+    *
+    * @param value string date value
+    * @return equivalent date as an instance of java.util.Calendar.
+    */
+   public static Calendar unmarshalDate(String value)
+   {
+      Calendar cal = Calendar.getInstance();
+      cal.clear();
+
+      int ind = parseDate(value, cal);
+
+      TimeZone tz = null;
+      if(ind < value.length())
+      {
+         String timezonePart = value.substring(ind);
+         tz = parseTimeZone(timezonePart);
+      }
+
+      if(tz != null)
+      {
+         cal.setTimeZone(tz);
+      }
+
+      return cal;
+   }
+
+   /**
+    * Parses string representation of time following the format hh:mm:ss:sss with optional timezone indicator.
+    *
+    * @param value
+    * @return
+    */
+   public static Calendar unmarshalTime(String value)
+   {
+      Calendar cal = Calendar.getInstance();
+      cal.clear();
+
+      parseTime(value, cal);
+
+      TimeZone tz = null;
+      if(value.length() > 12)
+      {
+         String timezonePart = value.substring(12);
+         tz = parseTimeZone(timezonePart);
+      }
+
+      if(tz != null)
+      {
+         cal.setTimeZone(tz);
+      }
+      return cal;
+   }
+
+   /**
+    * Parses string value of datetime following the format [-]yyyy-mm-ddThh:mm:ss[.s+][timezone].
+    * @param value
+    * @return
+    */
+   public static Calendar unmarshalDateTime(String value)
+   {
+      Calendar cal = Calendar.getInstance();
+      cal.clear();
+
+      int timeInd = value.indexOf('T');
+      if(timeInd == -1)
+      {
+         throw new JBossXBValueFormatException(
+            "DateTime value does not follow the format '[-]yyyy-mm-ddThh:mm:ss[.s+][timezone]'"
+         );
+      }
+
+      parseDate(value.substring(0, timeInd), cal);
+      parseTime(value.substring(timeInd + 1), cal);
+
+      TimeZone tz = null;
+      if(value.length() > timeInd + 13)
+      {
+         String timezonePart = value.substring(timeInd + 13);
+         tz = parseTimeZone(timezonePart);
+      }
+
+      if(tz != null)
+      {
+         cal.setTimeZone(tz);
+      }
+
+      return cal;
+   }
+
+   private static int parseDate(String value, Calendar cal)
+   {
+      int i = 0;
+      if(value.charAt(i) == '-')
+      {
+         ++i;
+      }
+
+      if(!Character.isDigit(value.charAt(i)))
+      {
+         throw new JBossXBValueFormatException(
+            "Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value
+         );
+      }
+
+      int nextToken = value.indexOf('-', i);
+      if(nextToken == -1 || nextToken - i < 4)
+      {
+         throw new JBossXBValueFormatException(
+            "Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value
+         );
+      }
+
+      int year = Integer.parseInt(value.substring(i, nextToken));
+
+      i = nextToken + 1;
+      nextToken = value.indexOf('-', i);
+      if(nextToken == -1 || nextToken - i < 2)
+      {
+         throw new JBossXBValueFormatException(
+            "Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value
+         );
+      }
+
+      int month = Integer.parseInt(value.substring(i, nextToken));
+
+      i = nextToken + 1;
+      nextToken += 3;
+      int day = Integer.parseInt(value.substring(i, nextToken));
+
+      cal.set(Calendar.YEAR, year);
+      cal.set(Calendar.MONTH, month - 1);
+      cal.set(Calendar.DAY_OF_MONTH, day);
+
+      return nextToken;
+   }
+
+   /**
+    * Parses string value of time following the format 'hh:mm:ss:sss' and sets time value on the passed in
+    * java.util.Calendar instace.
+    *
+    * @param value
+    * @param cal
+    */
+   private static void parseTime(String value, Calendar cal)
+   {
+      if(value.charAt(2) != ':' || value.charAt(5) != ':' || value.charAt(8) != '.')
+      {
+         throw new JBossXBValueFormatException("Time value does not follow the format 'hh:mm:ss:sss': " + value);
+      }
+
+      int hh = Integer.parseInt(value.substring(0, 2));
+      int mm = Integer.parseInt(value.substring(3, 5));
+      int ss = Integer.parseInt(value.substring(6, 8));
+      int sss = Integer.parseInt(value.substring(9, 12));
+
+      cal.set(Calendar.HOUR_OF_DAY, hh);
+      cal.set(Calendar.MINUTE, mm);
+      cal.set(Calendar.SECOND, ss);
+      cal.set(Calendar.MILLISECOND, sss);
+   }
+
+   /**
+    * Parses timzone.
+    * Format: [+/-]HH:MM
+    *
+    * @param timezonePart
+    * @return
+    */
+   private static TimeZone parseTimeZone(String timezonePart)
+   {
+      TimeZone tz = null;
+      if(timezonePart.charAt(0) == '+' || (timezonePart.charAt(0) == '-'))
+      {
+         if(timezonePart.length() == 6 &&
+            Character.isDigit(timezonePart.charAt(1)) &&
+            Character.isDigit(timezonePart.charAt(2)) &&
+            timezonePart.charAt(3) == ':' &&
+            Character.isDigit(timezonePart.charAt(4)) &&
+            Character.isDigit(timezonePart.charAt(5)))
+         {
+            tz = TimeZone.getTimeZone("GMT" + timezonePart);
+         }
+         else
+         {
+            throw new NumberFormatException("Timezone value does not follow the format ([+/-]HH:MM): " + timezonePart);
+         }
+      }
+      else if(timezonePart.equals("Z"))
+      {
+         tz = TimeZone.getTimeZone("GMT");
+      }
+      else
+      {
+         throw new NumberFormatException("Timezone value does not follow the format ([+/-]HH:MM): " + timezonePart);
+      }
+      return tz;
    }
 }

@@ -75,11 +75,13 @@ public class FileURLConnection
       return super.getHeaderField(name);
    }
 
+   /* FIXME (or remove me) 
    public Permission getPermission() throws IOException {
       // should probably return a FilePermission here... 
       // but I don't understand that crap, so just return the default
       return super.getPermission();
    }
+   */
 
    public long getLastModified() {
       return file.lastModified();

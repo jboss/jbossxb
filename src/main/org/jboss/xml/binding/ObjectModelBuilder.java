@@ -62,6 +62,7 @@ public class ObjectModelBuilder
    }
 
    public Object build(ObjectModelFactory defaultFactory, Object root, Content content)
+           throws Exception
    {
       this.defaultFactory = defaultFactory;
       this.content = content;

@@ -77,5 +77,5 @@ public interface ObjectModelFactory
     * @param objectModel  the object returned by the <code>startDocument</code>
     * at the beginning of the parsing.
     */
-   void endDocument(Object objectModel);
+   void endDocument(Object objectModel) throws Exception;
 }

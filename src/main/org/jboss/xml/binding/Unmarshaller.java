@@ -21,7 +21,6 @@ import org.xml.sax.XMLReader;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 
@@ -135,21 +134,21 @@ public class Unmarshaller
    }
 
    public Object unmarshal(InputStream is, ObjectModelFactory factory, Object root)
-      throws SAXException, IOException
+      throws Exception
    {
       InputSource source = new InputSource(is);
       return unmarshal(source, factory, root);
    }
 
    public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root)
-      throws SAXException, IOException
+      throws Exception
    {
       InputSource source = new InputSource(reader);
       return unmarshal(source, factory, root);
    }
 
    public Object unmarshal(InputSource source, ObjectModelFactory factory, Object root)
-      throws IOException, SAXException
+      throws Exception
    {
       reader.parse(source);
       ContentPopulator populator = (ContentPopulator)reader.getContentHandler();

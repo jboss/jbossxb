@@ -6,6 +6,8 @@
  */
 package org.jboss.xml.binding;
 
+import org.jboss.logging.Logger;
+
 /**
  * todo come up with a nicer class name
  * 
@@ -37,8 +39,8 @@ public class DelegatingObjectModelProvider
       return AbstractMarshaller.provideAttributeValue(provider, o, namespaceURI, localName);
    }
 
-   public Object getRoot()
+   public Object getRoot(Object o, String namespaceURI, String localName)
    {
-      return provider.getRoot();
+      return provider.getRoot(o, namespaceURI, localName);
    }
 }

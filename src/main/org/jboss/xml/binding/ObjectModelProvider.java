@@ -60,5 +60,5 @@ package org.jboss.xml.binding;
  */
 public interface ObjectModelProvider
 {
-   Object getRoot();
+   Object getRoot(Object o, String namespaceURI, String localName);
 }

@@ -26,7 +26,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.Reader;
 import java.io.Writer;
 import java.io.IOException;
-import java.util.Stack;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
@@ -45,7 +44,7 @@ public class XsMarshaller
 {
    private static final Logger log = Logger.getLogger(XsMarshaller.class);
 
-   private final Stack stack = new Stack();
+   private Stack stack = new StackImpl();
 
    /** ObjectModelProvider for this marshaller */
    private GenericObjectModelProvider provider;
@@ -56,13 +55,9 @@ public class XsMarshaller
    /** Declared namespaces */
    private final Map uriByNsName = new HashMap();
 
-   public void marshal(Reader schema, ObjectModelProvider provider, Writer writer)
-      throws IOException, SAXException, ParserConfigurationException
-   {
-      marshal(schema, provider, provider.getRoot(), writer);
-   }
+   private Object root;
 
-   public void marshal(Reader schema, ObjectModelProvider provider, Object document, Writer writer)
+   public void marshal(Reader schema, ObjectModelProvider provider, Object root, Writer writer)
       throws IOException, SAXException, ParserConfigurationException
    {
       InputSource source = new InputSource(schema);
@@ -74,7 +69,9 @@ public class XsMarshaller
       this.provider = provider instanceof GenericObjectModelProvider ?
          (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider);
 
-      stack.push(document);
+      this.root = root;
+
+      //stack.push(document);
       content.startDocument();
 
       for(int i = 0; i < rootQNames.size(); ++i)
@@ -82,13 +79,13 @@ public class XsMarshaller
          AbstractMarshaller.QName qName = (AbstractMarshaller.QName)rootQNames.get(i);
          XsQName rootName = new XsQName(qName.namespaceUri, qName.name, qName.prefix);
 
-         final XSElement root = xsSchema.getElement(rootName);
-         if(root == null)
+         final XSElement xsRoot = xsSchema.getElement(rootName);
+         if(xsRoot == null)
          {
             throw new IllegalStateException("Root element not found: " + rootName);
          }
 
-         processElement(root, addedAttributes);
+         processElement(xsRoot, addedAttributes);
       }
 
       content.endDocument();
@@ -237,8 +234,16 @@ public class XsMarshaller
          name.getLocalName() : prefix + ':' + name.getLocalName()
          );
 
-      Object parent = stack.peek();
       GenericObjectModelProvider provider = getProvider(name.getNamespaceURI(), this.provider);
+      Object parent;
+      if(stack.isEmpty())
+      {
+         parent = provider.getRoot(this.root, name.getNamespaceURI(), name.getLocalName());
+      }
+      else
+      {
+         parent = stack.peek();
+      }
       Object value = provider.getElementValue(parent, name.getNamespaceURI(), name.getLocalName());
 
       if(value != null)
@@ -253,9 +258,22 @@ public class XsMarshaller
    private final void processComplexType(XSElement element, XSComplexType type, AttributesImpl addedAttrs)
       throws SAXException
    {
-      Object parent = stack.peek();
       final XsQName xsName = element.getName();
       GenericObjectModelProvider provider = getProvider(xsName.getNamespaceURI(), this.provider);
+
+      Object parent;
+      boolean popRoot = false;
+      if(stack.isEmpty())
+      {
+         parent = provider.getRoot(this.root, xsName.getNamespaceURI(), xsName.getLocalName());
+         stack.push(parent);
+         popRoot = true;
+      }
+      else
+      {
+         parent = stack.peek();
+      }
+
       Object children = provider.getChildren(parent, xsName.getNamespaceURI(), xsName.getLocalName());
 
       if(children != null)
@@ -313,6 +331,11 @@ public class XsMarshaller
                }
             }
          }
+      }
+
+      if(popRoot)
+      {
+         stack.pop();
       }
    }
 
@@ -463,7 +486,7 @@ public class XsMarshaller
       stack.push(child);
 
       XsQName name = parent.getName();
-      final String prefix = name.getPrefix();
+      String prefix = name.getPrefix();
       String qName = (
          prefix == null || prefix.length() == 0 ?
          name.getLocalName() : prefix + ':' + name.getLocalName()
@@ -493,6 +516,46 @@ public class XsMarshaller
          if(!type.isEmpty() && type.getParticle() != null)
          {
             processParticle(type.getParticle());
+         }
+         else
+         {
+            ClassMapping mapping = getClassMapping(child.getClass());
+
+            InputSource source = new InputSource(mapping.schemaReader);
+
+            XSParser xsParser = new XSParser();
+            xsParser.setValidating(false);
+            XSSchema xsSchema;
+            try
+            {
+               xsSchema = xsParser.parse(source);
+            }
+            catch(Exception e)
+            {
+               e.printStackTrace();
+               throw new IllegalStateException(e.getMessage());
+            }
+
+            XsQName rootName = new XsQName(mapping.namespaceUri, mapping.root);
+            XSElement root = xsSchema.getElement(rootName);
+            // name with the prefix
+            rootName = root.getName();
+
+            String rootPrefix = rootName.getPrefix();
+            String rootQName = (rootPrefix == null || rootPrefix.length() == 0 ?
+               rootName.getLocalName() : rootPrefix + ':' + rootName.getLocalName());
+
+            Stack oldStack = this.stack;
+            Object oldRoot = this.root;
+            this.stack = new StackImpl();
+            this.root = child;
+            content.startElement(rootName.getNamespaceURI(), rootName.getLocalName(), rootQName, addedAttrs);
+
+            processElement(root, addedAttrs);
+
+            content.endElement(rootName.getNamespaceURI(), rootName.getLocalName(), rootQName);
+            this.root = oldRoot;
+            this.stack = oldStack;
          }
          content.endElement(name.getNamespaceURI(), name.getLocalName(), qName);
       }

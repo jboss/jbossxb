@@ -29,7 +29,6 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Stack;
 
 
 /**
@@ -46,7 +45,7 @@ public class DtdMarshaller
    private String publicId;
    private String systemId;
 
-   private final Stack stack = new Stack();
+   private final Stack stack = new StackImpl();
    private DTD dtd;
    private GenericObjectModelProvider provider;
    private Content content = new Content();
@@ -59,12 +58,6 @@ public class DtdMarshaller
       this.systemId = systemId;
    }
 
-   public void marshal(Reader dtdReader, ObjectModelProvider provider, Writer writer)
-      throws IOException, SAXException
-   {
-      marshal(dtdReader, provider, provider.getRoot(), writer);
-   }
-
    public void marshal(Reader dtdReader, ObjectModelProvider provider, Object document, Writer writer)
       throws IOException, SAXException
    {
@@ -73,23 +66,23 @@ public class DtdMarshaller
 
       this.provider = provider instanceof GenericObjectModelProvider ?
          (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider);
-      stack.push(document);
+      //stack.push(document);
 
       DTDElement[] roots = null;
       if(dtd.rootElement != null)
       {
-         handleRootElement(dtd.rootElement);
+         handleRootElement(document, dtd.rootElement);
       }
       else
       {
          roots = getRootList(dtd);
          for(int i = 0; i < roots.length; ++i)
          {
-            handleRootElement(roots[i]);
+            handleRootElement(document, roots[i]);
          }
       }
 
-      stack.pop();
+      //stack.pop();
 
       // version & encoding
       writer.write("<?xml version=\"");
@@ -124,14 +117,19 @@ public class DtdMarshaller
       content.handleContent(contentWriter);
    }
 
-   private void handleRootElement(final DTDElement root)
+   private void handleRootElement(Object o, final DTDElement dtdRoot)
    {
-      Element el = new Element(root, true);
+      Element el = new Element(dtdRoot, true);
       elementStack.addLast(el);
       content.startDocument();
 
-      handleChildren(dtd, root);
+      GenericObjectModelProvider provider = getProvider(systemId, this.provider);
+      Object root = provider.getRoot(o, systemId, dtdRoot.getName());
+      stack.push(root);
 
+      handleChildren(dtd, dtdRoot);
+
+      stack.pop();
       content.endDocument();
       elementStack.removeLast();
    }

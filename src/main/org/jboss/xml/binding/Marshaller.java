@@ -31,10 +31,9 @@ public interface Marshaller
 
    void mapProviderToNamespace(ObjectModelProvider provider, String namespaceUri);
 
-   void addRootElement(String namespaceUri, String prefix, String name);
+   void mapClassToNamespace(Class cls, String root, String namespaceUri, Reader schemaReader, ObjectModelProvider provider);
 
-   void marshal(Reader schema, ObjectModelProvider provider, Writer writer)
-      throws IOException, SAXException, ParserConfigurationException;
+   void addRootElement(String namespaceUri, String prefix, String name);
 
    void marshal(Reader schema, ObjectModelProvider provider, Object document, Writer writer)
       throws IOException, SAXException, ParserConfigurationException;

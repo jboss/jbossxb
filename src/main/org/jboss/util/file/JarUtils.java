@@ -18,6 +18,7 @@ import java.io.BufferedOutputStream;
 
 /** A utility class for dealing with Jar files.
 
+@author Scott.Stark@jboss.org
 @version $Revision$
 */
 public final class JarUtils
@@ -286,6 +287,63 @@ public final class JarUtils
       jin.close();
    }
    
+   /** Given a URL check if its a jar url(jar:<url>!/archive) and if it is,
+    extract the archive entry into the given dest directory and return a file
+    URL to its location. If the URL is not a jar url then the url is turned
+    into a jar url using URL("jar:"+jarURL.toString()+"!/").
+    @param jarURL the URL to validate and extract if its a jar URL
+    @param dest, the directory into which the nested jar will be extracted.
+    */
+   public static URL extractNestedJar(URL jarURL, File dest)
+      throws IOException
+   {
+      // This may not be a jar URL so validate the protocol 
+      if( jarURL.getProtocol().equals("jar") == false )
+         return new URL("jar:"+jarURL.toString()+"!/");
+
+      String destPath = dest.getPath();
+      URLConnection urlConn = jarURL.openConnection();
+      JarURLConnection jarConn = (JarURLConnection) urlConn;
+      // Extract the archive to dest/jarName-contents/archive
+      String parentArchiveName = jarConn.getJarFile().getName();
+      // Find the longest common prefix between destPath and parentArchiveName
+      int length = Math.min(destPath.length(), parentArchiveName.length());
+      int n = 0;
+      while( n < length )
+      {
+         char a = destPath.charAt(n);
+         char b = parentArchiveName.charAt(n);
+         if( a != b )
+            break;
+         n ++;
+      }
+      // Remove any common prefix from parentArchiveName
+      parentArchiveName = parentArchiveName.substring(n);
+
+      File archiveDir = new File(dest, parentArchiveName+"-contents");
+      if( archiveDir.exists() == false && archiveDir.mkdirs() == false )
+         throw new IOException("Failed to create contents directory for archive, path="+archiveDir.getAbsolutePath());
+      String archiveName = jarConn.getEntryName();
+      File archiveFile = new File(archiveDir, archiveName);
+      File archiveParentDir = archiveFile.getParentFile();
+      if( archiveParentDir.exists() == false && archiveParentDir.mkdirs() == false )
+         throw new IOException("Failed to create parent directory for archive, path="+archiveParentDir.getAbsolutePath());
+      InputStream archiveIS = jarConn.getInputStream();
+      FileOutputStream fos = new FileOutputStream(archiveFile);
+      BufferedOutputStream bos = new BufferedOutputStream(fos);
+      byte[] buffer = new byte[4096];
+      int read, totalRead = 0;
+      while( (read = archiveIS.read(buffer)) > 0 )
+      {
+         bos.write(buffer, 0, read);
+         totalRead += read;
+      }
+      archiveIS.close();
+      bos.close();
+
+      return archiveFile.toURL();
+   }
+
    /**
     * A simple jar-like tool used for testing.  It's actually faster than 
     * jar, though doesn't sipport as many options.

@@ -16,7 +16,7 @@ import org.jboss.logging.Logger;
  * @author Scott.Stark@jboss.org
  * @version $Revision$
  */
-public class StateMachine
+public class StateMachine implements Cloneable
 {
    private static Logger log = Logger.getLogger(StateMachine.class);
    /** A description of the state machine */
@@ -49,6 +49,17 @@ public class StateMachine
       this.startState = startState;
       this.currentState = startState;
       this.description = description;
+   }
+
+   /** Make a copy of the StateMachine maintaining the current state.
+    * 
+    * @return a copy of the StateMachine.
+    */ 
+   public Object clone()
+   {
+      StateMachine clone = new StateMachine(states, startState, description);
+      clone.currentState = currentState;
+      return clone;
    }
 
    /** Get the state machine description.

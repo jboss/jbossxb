@@ -149,7 +149,7 @@ public class StateMachine
          throw new NullArgumentException("state");
 
       if (!model.containsState(state)) {
-         throw new IllegalArgumentException("State not found in model: " + state);
+         return false;
       }
       
       // if the current state is final, then we can not go anywhere
@@ -195,11 +195,8 @@ public class StateMachine
     * @throws IllegalStateException   State can not be accepted, current
     *                                 state is final or non-acceptable.
     */
-   public void transition(State state)
+   public void transition(final State state)
    {
-      // Replace state with the mapped version
-      state = model.getState(state);
-      
       if (!accept(state)) {
          // make an informative exception message
          StringBuffer buff = new StringBuffer();
@@ -209,13 +206,6 @@ public class StateMachine
             buff.append("Current state is final");
          }
          else {
-
-            //
-            // jason: change this to show what states would be accepted
-            //        for the current state, rather than the acceptable
-            //        states for the given state.
-            //
-            
             buff.append("State must be ");
          
             Set temp = model.acceptableStates(current);
@@ -279,8 +269,13 @@ public class StateMachine
     * to all listeners and to the previous and new state objects
     * if they implement {@link ChangeListener}.
     */
-   protected ChangeEvent changeState(final State state)
+   protected ChangeEvent changeState(State state)
    {
+      // assert state != null
+
+      // Replace state with the mapped version
+      state = model.getState(state);
+         
       State prev = model.getCurrentState();
       model.setCurrentState(state);
 
@@ -632,6 +627,9 @@ public class StateMachine
        * @return        A set of accepting states.
        */
       Set acceptableStates(State state);
+
+      // Give clone() public access
+      Object clone();
    }
 
    

@@ -1,6 +1,7 @@
 package org.jboss.util.threadpool;
 
 import EDU.oswego.cs.dl.util.concurrent.PooledExecutor;
+import EDU.oswego.cs.dl.util.concurrent.Channel;
 
 /** A pooled executor where the minimum pool size threads are kept alive. This
 is needed in order for the waitWhenBlocked option to work because of a
@@ -26,6 +27,11 @@ size must be > 0.
  */
 public class MinPooledExecutor extends PooledExecutor
 {
+   public MinPooledExecutor(Channel channel, int poolSize)
+   {
+      super(channel, poolSize);
+   }
+
    public MinPooledExecutor(int poolSize)
    {
       super(poolSize);

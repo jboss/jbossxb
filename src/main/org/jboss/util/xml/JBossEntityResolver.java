@@ -11,6 +11,7 @@ package org.jboss.util.xml;
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -108,7 +109,7 @@ public class JBossEntityResolver implements EntityResolver
     * @param systemId - the system ID of DTD or Schema
     * @return InputSource of entity
     */
-   public InputSource resolveEntity(String publicId, String systemId)
+   public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException
    {
       entityResolved = false;
 

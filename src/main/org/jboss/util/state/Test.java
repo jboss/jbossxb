@@ -233,6 +233,9 @@ public class Test
       Assert.assertTrue(model.equals(aModel) == true);
 
       machine = new StateMachine(makeClone());
+      System.out.println(machine);
+      System.out.println();
+      
       test("new machine");
 
       Assert.assertTrue(finalChecking, "Acceptable State broken");

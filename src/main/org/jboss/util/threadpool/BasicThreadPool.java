@@ -219,7 +219,13 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
 
    public void setMinimumPoolSize(int size)
    {
-      executor.setMinimumPoolSize(size);
+      synchronized( executor )
+      {
+         executor.setMinimumPoolSize(size);
+         // Don't let the min size > max size
+         if( executor.getMaximumPoolSize() < size )
+            executor.setMaximumPoolSize(size);
+      }
    }
 
    public int getMaximumPoolSize()
@@ -228,9 +234,13 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    }
    public void setMaximumPoolSize(int size)
    {
-      // This is no longer called since it can be set independently
-      // executor.setMinimumPoolSize(size);
-      executor.setMaximumPoolSize(size);
+      synchronized( executor )
+      {
+         executor.setMaximumPoolSize(size);
+         // Don't let the min size > max size
+         if( executor.getMinimumPoolSize() > size )
+            executor.setMinimumPoolSize(size);
+      }
    }
 
    public long getKeepAliveTime()

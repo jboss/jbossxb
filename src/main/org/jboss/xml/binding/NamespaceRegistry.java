@@ -26,7 +26,7 @@ import java.util.Map;
  * @since 08-June-2004
  */
 public class NamespaceRegistry
-        implements NamespaceContext
+   implements NamespaceContext
 {
    public static final String PREFIX_XML_SCHEMA = "xsd";
    public static final String URI_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
@@ -90,8 +90,6 @@ public class NamespaceRegistry
    public void addPrefixMapping(String prefix, String uri)
    {
       Object obj = uriByPrefix.get(prefix);
-      assertMapEntry(obj);
-
       if (obj == null)
       {
          uriByPrefix.put(prefix, uri);
@@ -107,10 +105,12 @@ public class NamespaceRegistry
       {
          ((LinkedList)obj).add(uri);
       }
+      else
+      {
+         throwUnexpectedEntryException(obj);
+      }
 
       obj = prefixByUri.get(uri);
-      assertMapEntry(obj);
-
       if (obj == null)
       {
          prefixByUri.put(uri, prefix);
@@ -126,13 +126,9 @@ public class NamespaceRegistry
       {
          ((LinkedList)obj).add(prefix);
       }
-   }
-
-   private void assertMapEntry(Object obj)
-   {
-      if ((obj == null || obj instanceof String || obj instanceof LinkedList) == false)
+      else
       {
-         throw new IllegalStateException("Unexpected entry type: expected String or LinkedList but got " + obj.getClass());
+         throwUnexpectedEntryException(obj);
       }
    }
 
@@ -144,8 +140,6 @@ public class NamespaceRegistry
    public void removePrefixMapping(String prefix)
    {
       Object obj = uriByPrefix.get(prefix);
-      assertMapEntry(obj);
-
       if (obj != null)
       {
          String uri = null;
@@ -162,6 +156,10 @@ public class NamespaceRegistry
             {
                uriByPrefix.remove(prefix);
             }
+         }
+         else
+         {
+            throwUnexpectedEntryException(obj);
          }
 
          if (uri != null)
@@ -184,6 +182,10 @@ public class NamespaceRegistry
                   prefixByUri.remove(uri);
                }
             }
+            else
+            {
+               throwUnexpectedEntryException(obj);
+            }
          }
       }
    }
@@ -197,8 +199,6 @@ public class NamespaceRegistry
    public void unregisterURI(String nsURI)
    {
       Object obj = prefixByUri.get(nsURI);
-      assertMapEntry(obj);
-
       if (obj != null)
       {
          String prefix = null;
@@ -216,6 +216,10 @@ public class NamespaceRegistry
                removePrefixMappingOnly((String)list.get(i), nsURI);
             }
             prefixByUri.remove(nsURI);
+         }
+         else
+         {
+            throwUnexpectedEntryException(obj);
          }
       }
    }
@@ -242,16 +246,22 @@ public class NamespaceRegistry
    public String getPrefix(String nsURI)
    {
       Object obj = prefixByUri.get(nsURI);
-      assertMapEntry(obj);
 
       String prefix = null;
-      if (obj instanceof String)
+      if(obj != null)
       {
-         prefix = (String)obj;
-      }
-      else if (obj instanceof LinkedList)
-      {
-         prefix = (String)((LinkedList)obj).getLast();
+         if (obj instanceof String)
+         {
+            prefix = (String)obj;
+         }
+         else if (obj instanceof LinkedList)
+         {
+            prefix = (String)((LinkedList)obj).getLast();
+         }
+         else
+         {
+            throwUnexpectedEntryException(obj);
+         }
       }
 
       return prefix;
@@ -266,7 +276,6 @@ public class NamespaceRegistry
    public Iterator getPrefixes(String namespaceURI)
    {
       Object obj = prefixByUri.get(namespaceURI);
-      assertMapEntry(obj);
 
       Iterator result = null;
       if (obj == null)
@@ -281,6 +290,10 @@ public class NamespaceRegistry
       {
          result = ((LinkedList)obj).iterator();
       }
+      else
+      {
+         throwUnexpectedEntryException(obj);
+      }
 
       return result;
    }
@@ -290,7 +303,6 @@ public class NamespaceRegistry
    public String getNamespaceURI(String prefix)
    {
       Object obj = uriByPrefix.get(prefix);
-      assertMapEntry(obj);
 
       String uri = null;
       if (obj instanceof String)
@@ -300,6 +312,10 @@ public class NamespaceRegistry
       else if (obj instanceof LinkedList)
       {
          uri = (String)((LinkedList)obj).getLast();
+      }
+      else
+      {
+         throwUnexpectedEntryException(obj);
       }
 
       return uri;
@@ -327,5 +343,12 @@ public class NamespaceRegistry
             uriByPrefix.remove(prefix);
          }
       }
+   }
+
+   private void throwUnexpectedEntryException(Object entry)
+   {
+      throw new IllegalStateException(
+         "Unexpected entry type: expected java.lang.String or java.util.LinkedList but got " + entry.getClass()
+      );
    }
 }

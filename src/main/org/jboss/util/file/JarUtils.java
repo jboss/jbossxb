@@ -283,6 +283,7 @@ public final class JarUtils
             out.flush();
             out.close();
             jin.closeEntry();
+            file.setLastModified(entry.getTime());
          }
          entry = jin.getNextEntry();
       }
@@ -354,11 +355,10 @@ public final class JarUtils
       FileOutputStream fos = new FileOutputStream(archiveFile);
       BufferedOutputStream bos = new BufferedOutputStream(fos);
       byte[] buffer = new byte[4096];
-      int read, totalRead = 0;
+      int read;
       while( (read = archiveIS.read(buffer)) > 0 )
       {
          bos.write(buffer, 0, read);
-         totalRead += read;
       }
       archiveIS.close();
       bos.close();

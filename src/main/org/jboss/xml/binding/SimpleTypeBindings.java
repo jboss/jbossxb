@@ -28,7 +28,7 @@ import java.util.TimeZone;
  * @author Thomas.Diesler@jboss.org
  * @version <tt>$Revision$</tt>
  */
-public final class TypeBinding
+public final class SimpleTypeBindings
    implements Serializable
 {
    public static final String XS_ANYSIMPLETYPE_NAME = "anySimpleType";
@@ -274,7 +274,7 @@ public final class TypeBinding
       names[i] = XS_ENTITIES_NAME;
       codes[i++] = XS_ENTITIES;
 
-      Logger log = Logger.getLogger(TypeBinding.class);
+      Logger log = Logger.getLogger(SimpleTypeBindings.class);
       boolean allAreUnique = true;
       for (int outer = 0; outer < names.length; ++outer)
       {

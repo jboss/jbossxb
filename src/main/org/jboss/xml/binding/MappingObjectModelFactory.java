@@ -512,7 +512,7 @@ public class MappingObjectModelFactory
                throw new IllegalStateException("Name is null for simple type?!");
             }
 
-            Object trgValue = TypeBinding.unmarshal(type.getName(), value);
+            Object trgValue = SimpleTypeBindings.unmarshal(type.getName(), value);
             ((Collection)o).add(trgValue);
          }
       }
@@ -544,7 +544,7 @@ public class MappingObjectModelFactory
             {
                final String xmlToCls = Util.xmlNameToClassName(localName, true);
                Method getter = oCls.getMethod("get" + xmlToCls, null);
-               fieldValue = TypeBinding.unmarshal(value, getter.getReturnType());
+               fieldValue = SimpleTypeBindings.unmarshal(value, getter.getReturnType());
                setter = oCls.getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
             }
             catch(NoSuchMethodException e)

@@ -21,6 +21,7 @@ import java.util.Map;
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @author <a href="Scott.Stark@jboss.org">Scott Stark</a>
+ * @author <a href="claudio.vesco@previnet.it">Claudio Vesco</a>
  */
 public final class Strings
 {
@@ -29,6 +30,18 @@ public final class Strings
 
    /** New line string constant */
    public static final String NEWLINE = org.jboss.util.platform.Constants.LINE_SEPARATOR;
+   
+   /** File separator value */
+   private static final String FILE_SEPARATOR = org.jboss.util.platform.Constants.FILE_SEPARATOR;
+   
+   /** Path separator value */
+   private static final String PATH_SEPARATOR = org.jboss.util.platform.Constants.PATH_SEPARATOR;
+   
+   /** File separator alias */
+   private static final String FILE_SEPARATOR_ALIAS = "/";
+
+   /** Path separator alias */
+   private static final String PATH_SEPARATOR_ALIAS = ":";
 
    /**
     * List of valid Java keywords, see The Java Language Specification
@@ -313,10 +326,14 @@ public final class Strings
    //                             Regex Methods                           //
    /////////////////////////////////////////////////////////////////////////
 
-   /** Go through the input string and replace any occurance of ${p} with
-    *the System.getProperty(p) value. If there is no such property p defined, then
-    * the ${p} reference will remain unchanged.
-    *@return the input string with all property references replaced
+   /**
+    * Go through the input string and replace any occurance of ${p} with
+    * the System.getProperty(p) value. If there is no such property p defined, then
+    * the ${p} reference will remain unchanged. The property ${/} is replaced with
+    * System.getProperty("file.separator") value and the property ${:} is replaced with
+    * system.getProperty("path.separator").
+    * 
+    * @return the input string with all property references replaced
     */
    public static String replaceProperties(final String string)
    {
@@ -350,12 +367,30 @@ public final class Strings
          {
             // No content
             if (start+2 == i)
-               buffer.append("${}"); // REVIEW: Correct?
-
-            // Collect the system property
-            else
             {
-               String value = System.getProperty(string.substring(start+2, i));
+               buffer.append("${}"); // REVIEW: Correct?
+            }
+            else // Collect the system property
+            {
+               String value = null;
+               
+               String key = string.substring(start + 2, i);
+               
+               // check for alias
+               if (FILE_SEPARATOR_ALIAS.equals(key))
+               {
+                  value = FILE_SEPARATOR;
+               }
+               else if (PATH_SEPARATOR_ALIAS.equals(key))
+               {
+                  value = PATH_SEPARATOR;
+               }
+               else
+               {
+                  // check from System properties
+                  value = System.getProperty(key);
+               }
+
                if( value != null )
                {
                   properties = true;

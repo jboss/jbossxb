@@ -9,6 +9,7 @@ package org.jboss.util;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -23,7 +24,7 @@ import java.util.TimerTask;
     This is a lazy cache policy in that objects are not checked for expiration
     until they are accessed.
 
-    @author <a href="mailto:Scott_Stark@displayscape.com">Scott Stark</a>.
+    @author <a href="mailto:Scott.Stark@jboss.org">Scott Stark</a>.
     @version $Revision$
 */
 public class TimedCachePolicy
@@ -38,22 +39,26 @@ public class TimedCachePolicy
           the entry is first inserted into the cache so that entries do not
           have to know the absolute system time.
       */
-      void init(long now);
+      public void init(long now);
       
       /** Is the entry still valid basis the current time
           @return true if the entry is within its lifetime, false if it is expired.
       */
-      boolean isCurrent(long now);
+      public boolean isCurrent(long now);
       
       /** Attempt to extend the entry lifetime by refreshing it.
           @return true if the entry was refreshed successfully, false otherwise.
       */
-      boolean refresh();
+      public boolean refresh();
       
+      /** Notify the entry that it has been removed from the cache.
+      */
+      public void destroy();
+
       /** Get the value component of the TimedEntry. This may or may not
           be the TimedEntry implementation.
       */
-      Object getValue();
+      public Object getValue();
    }
 
    protected static Timer resolutionTimer = new Timer(true);
@@ -141,9 +146,10 @@ public class TimedCachePolicy
    }
 
    // --- Begin CachePolicy interface methods
-   /** Get the cache value for key if it has not expired.
+   /** Get the cache value for key if it has not expired. If the TimedEntry
+    is expired its destroy method is called and then removed from the cache.
        @returns the TimedEntry value or the original value if it was not an
-       instancee of TimedEntry if key is in the cache, null otherwise.
+       instance of TimedEntry if key is in the cache, null otherwise.
    */
    public Object get(Object key) 
    {
@@ -155,6 +161,7 @@ public class TimedCachePolicy
       {   // Try to refresh the entry
          if( entry.refresh() == false )
          {   // Failed, remove the entry and return null
+            entry.destroy();
             entryMap.remove(key);
             return null;
          }
@@ -199,23 +206,55 @@ public class TimedCachePolicy
       entry.init(now);
       entryMap.put(key, entry);
    }
-   /** Remove the entry associated with key.
+   /** Remove the entry associated with key and call destroy on the entry
+    if found.
     */
    public void remove(Object key) 
    {
-      entryMap.remove(key);
+      TimedEntry entry = (TimedEntry) entryMap.remove(key);
+      if( entry != null )
+         entry.destroy();
    }
    /** Remove all entries from the cache.
     */
    public void flush() 
    {
-      entryMap.clear();
+      Map tmpMap = entryMap;
+      if( threadSafe )
+         entryMap = Collections.synchronizedMap(new HashMap());
+      else
+         entryMap = new HashMap();
+      // Notify the entries of their removal
+      Iterator iter = tmpMap.values().iterator();
+      while( iter.hasNext() )
+      {
+         TimedEntry entry = (TimedEntry) iter.next();
+         entry.destroy();
+      }
+      tmpMap.clear();
    }
 
-   public int size() {
+   public int size()
+   {
       return entryMap.size();
    }
    // --- End CachePolicy interface methods
+
+   /** Get the default lifetime of cache entries.
+    @return default lifetime in seconds of cache entries.
+    */
+   public int getDefaultLifetime()
+   {
+      return defaultLifetime;
+   }
+   /** Set the default lifetime of cache entries for new values added to the cache.
+    @param defaultLifetime, lifetime in seconds of cache values that do
+    not implement TimedEntry.
+    */
+   public void setDefaultLifetime(int defaultLifetime)
+   {
+      this.defaultLifetime = defaultLifetime;
+   }
 
    /** The TimerTask run method. It updates the cache time to the
        current system time.
@@ -266,6 +305,9 @@ public class TimedCachePolicy
       public boolean refresh()
       {
          return false;
+      }
+      public void destroy()
+      {
       }
       public Object getValue()
       {

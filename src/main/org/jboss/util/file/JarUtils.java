@@ -306,7 +306,7 @@ public final class JarUtils
       if( jarURL.getProtocol().equals("jar") == false )
          return jarURL;
 
-      String destPath = dest.getPath();
+      String destPath = dest.getAbsolutePath();
       URLConnection urlConn = jarURL.openConnection();
       JarURLConnection jarConn = (JarURLConnection) urlConn;
       // Extract the archive to dest/jarName-contents/archive

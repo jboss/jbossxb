@@ -10,7 +10,11 @@ package org.jboss.xml.binding.metadata;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface XmlSimpleType
-   extends XmlType
+public interface JavaValueBinding
 {
+   Object newInstance();
+
+   Object get(Object owner, String name);
+
+   void set(Object owner, Object value, String name);
 }

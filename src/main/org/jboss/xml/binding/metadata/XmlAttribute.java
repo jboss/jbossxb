@@ -13,6 +13,10 @@ package org.jboss.xml.binding.metadata;
 public interface XmlAttribute
 {
    XmlNamespace getNamespace();
+
    String getName();
-   XmlSimpleType getType();
+
+   XmlType getType();
+
+   JavaValue getJavaValue();
 }

@@ -13,9 +13,12 @@ package org.jboss.xml.binding.metadata;
 public interface XmlDocument
 {
    XmlNamespace getNamespace(String uri);
+
    XmlElement getTopElement(String namespaceUri, String name);
 
    XmlNamespace addNamespace(String uri);
+
    XmlElement addTopElement(XmlNamespace ns, String name, XmlType xmlType);
-   XmlElement addTopElement(XmlNamespace ns, String name, Class javaType);
+
+   XmlElement addTopElement(XmlNamespace ns, String name);
 }

@@ -36,7 +36,10 @@ public class CursorImpl
       else
       {
          element = (XmlElement)stack.getLast();
-         element = ((XmlComplexType)element.getType()).getElement(namespaceURI, localName);
+         if(element != null)
+         {
+            element = ((XmlType)element.getType()).getElement(namespaceURI, localName);
+         }
       }
       stack.addLast(element);
    }

@@ -12,5 +12,7 @@ package org.jboss.xml.binding.metadata;
  */
 public interface XmlDataContent
 {
-   XmlSimpleType getType();
+   XmlType getType();
+
+   JavaValue getJavaValue();
 }

@@ -6,12 +6,6 @@
  */
 package org.jboss.xml.binding.metadata;
 
-import org.jboss.xml.binding.metadata.XmlDocument;
-import org.jboss.xml.binding.metadata.XmlNamespace;
-import org.jboss.xml.binding.metadata.XmlElement;
-import org.jboss.xml.binding.metadata.XmlType;
-import org.jboss.xml.binding.metadata.XmlDocument;
-import org.jboss.xml.binding.metadata.XmlElement;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -48,8 +42,8 @@ public class XmlDocumentImpl
       return ns.addElement(name, xmlType);
    }
 
-   public XmlElement addTopElement(XmlNamespace ns, String name, Class javaType)
+   public XmlElement addTopElement(XmlNamespace ns, String name)
    {
-      return ns.addElement(name, javaType);
+      return ns.addElement(name);
    }
 }

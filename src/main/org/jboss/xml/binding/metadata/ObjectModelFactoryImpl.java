@@ -7,18 +7,11 @@
 package org.jboss.xml.binding.metadata;
 
 import org.jboss.xml.binding.GenericObjectModelFactory;
-import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.UnmarshallingContext;
-import org.jboss.xml.binding.Util;
-import org.jboss.xml.binding.SimpleTypeBindings;
+import org.jboss.xml.binding.Immutable;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
-import java.util.List;
-import java.util.Collection;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Field;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -35,134 +28,76 @@ public class ObjectModelFactoryImpl
                           String localName,
                           Attributes attrs)
    {
-      boolean trace = log.isTraceEnabled();
-      if(trace)
-      {
-         log.trace("newChild " + namespaceURI + ":" + localName + " for " + parent);
-      }
+      Object child = null;
 
-      Object child;
-
-      XmlElement metadata = (XmlElement)ctx.getMetadata();
-      if(metadata == null)
+      XmlElement childElement = (XmlElement)ctx.getMetadata();
+      if(childElement != null)
       {
-         throw new JBossXBRuntimeException(
-            "Binding metadata is not available for element {" + namespaceURI + ":" + localName + "}"
-         );
-      }
-
-      if(Collection.class.isAssignableFrom(metadata.getType().getJavaValue().getClass()))
-      {
-         Collection col;
-         if(parent instanceof ImmutableContainer)
+         JavaValue javaValue = childElement.getJavaValue();
+         if(javaValue.isBound())
          {
-            ImmutableContainer imm = (ImmutableContainer)parent;
-            col = (Collection)imm.getChild(localName);
-            if(col == null)
+            child = javaValue.get(parent, localName);
+            if(child == null)
             {
-               col = (Collection)newInstance(metadata.getType().getJavaValue(), metadata.getName());
-               imm.addChild(localName, col);
+               child = javaValue.newInstance();
+               if(log.isTraceEnabled())
+               {
+                  log.trace(
+                     "newChild for " +
+                     localName +
+                     ": " +
+                     (child == null ? "" : child.getClass().getName() + ":") +
+                     child
+                  );
+               }
+            }
+            else if(log.isTraceEnabled())
+            {
+               log.trace(
+                  "newChild for " + localName + ": using already created child " + child.getClass() + ":" + child
+               );
+            }
+
+            if(child != null && attrs != null && attrs.getLength() > 0)
+            {
+               for(int i = 0; i < attrs.getLength(); ++i)
+               {
+                  XmlAttribute attr = childElement.getType().getAttribute(attrs.getURI(i), attrs.getLocalName(i));
+                  if(attr != null)
+                  {
+                     javaValue = attr.getJavaValue();
+                     if(javaValue.isBound())
+                     {
+                        javaValue.set(child, attrs.getValue(i), attrs.getLocalName(i));
+                     }
+                     else if(log.isTraceEnabled())
+                     {
+                        log.trace("Java value for attribute " +
+                           attrs.getURI(i) +
+                           ":" +
+                           attrs.getLocalName(i) +
+                           " is not bound."
+                        );
+                     }
+                  }
+                  else
+                  {
+                     log.warn("Metadata is not available for attribute " + namespaceURI + ":" + localName);
+                  }
+               }
             }
          }
          else
          {
-            col = (Collection)getFieldValue(metadata.getType().getJavaValue(), parent, metadata.getName());
-            if(col == null)
+            if(log.isTraceEnabled())
             {
-               col = (Collection)newInstance(metadata.getType().getJavaValue(), metadata.getName());
-               setFieldValue(metadata.getName(),
-                  metadata.getType().getJavaValue().getField(),
-                  metadata.getType().getJavaValue().getSetter(),
-                  parent,
-                  col
-               );
-            }
-         }
-
-         child = col;
-      }
-      else if(!Util.isAttributeType(metadata.getType().getJavaValue().getType()))
-      {
-         child = newInstance(metadata.getType().getJavaValue(), metadata.getName());
-         if(!(child instanceof ImmutableContainer))
-         {
-            if(parent instanceof Collection)
-            {
-               ((Collection)parent).add(child);
-            }
-            else if(parent instanceof ImmutableContainer)
-            {
-               ((ImmutableContainer)parent).addChild(localName, child);
-            }
-            /*
-            else if(metadata.getType().getJavaValue().getFieldType() != null &&
-               Collection.class.isAssignableFrom(metadata.getType().getJavaValue().getFieldType()))
-            {
-               Collection col = (Collection)getFieldValue(metadata.getType().getJavaValue(), parent, metadata.getName());
-               if(col == null)
-               {
-                  if(Set.class.isAssignableFrom(metadata.getType().getJavaValue().getFieldType()))
-                  {
-                     col = new HashSet();
-                  }
-                  else
-                  {
-                     col = new ArrayList();
-                  }
-                  setFieldValue(metadata.getName(),
-                     metadata.getType().getJavaValue().getField(),
-                     metadata.getType().getJavaValue().getSetter(),
-                     parent,
-                     col
-                  );
-               }
-               col.add(child);
-               log.info("added child " + metadata.getName() + " " + child.getClass() + ": " + child + " to collection");
-            }
-            */
-            else
-            {
-               setFieldValue(metadata.getName(),
-                  metadata.getType().getJavaValue().getField(),
-                  metadata.getType().getJavaValue().getSetter(),
-                  parent,
-                  child
-               );
-            }
-         }
-
-         if(attrs != null && attrs.getLength() > 0)
-         {
-            XmlComplexType type = (XmlComplexType)metadata.getType();
-            for(int i = 0; i < attrs.getLength(); ++i)
-            {
-               XmlAttribute attr = type.getAttribute(attrs.getURI(i), attrs.getLocalName(i));
-               if(attr != null)
-               {
-                  Object unmarshalledValue = SimpleTypeBindings.unmarshal(attrs.getValue(i),
-                     attr.getType().getJavaValue().getType()
-                  );
-
-                  if(child instanceof ImmutableContainer)
-                  {
-                     ((ImmutableContainer)child).addChild(attr.getName(), unmarshalledValue);
-                  }
-                  else
-                  {
-                     setFieldValue(attr.getName(),
-                        attr.getType().getJavaValue().getField(),
-                        attr.getType().getJavaValue().getGetter(),
-                        child,
-                        unmarshalledValue
-                     );
-                  }
-               }
+               log.trace("Java value for element " + namespaceURI + ":" + localName + " is not bound.");
             }
          }
       }
       else
       {
-         child = null;
+         log.warn("Metadata is not available for element " + namespaceURI + ":" + localName);
       }
 
       return child;
@@ -170,151 +105,29 @@ public class ObjectModelFactoryImpl
 
    public void addChild(Object parent, Object child, UnmarshallingContext ctx, String namespaceURI, String localName)
    {
-      if(child instanceof ImmutableContainer)
+      XmlElement childElement = (XmlElement)ctx.getMetadata();
+      if(log.isTraceEnabled())
       {
-         XmlElement metadata = (XmlElement)ctx.getMetadata();
-
-         child = ((ImmutableContainer)child).newInstance();
-         if(parent instanceof Collection)
-         {
-            ((Collection)parent).add(child);
-         }
-         else if(metadata.getType().getJavaValue().getFieldType() == null ||
-            Collection.class.isAssignableFrom(metadata.getType().getJavaValue().getFieldType()))
-         {
-            XmlElement parentMetadata = (XmlElement)ctx.getParentMetadata();
-
-            Collection col;
-            if(parent instanceof ImmutableContainer)
-            {
-               ImmutableContainer imm = (ImmutableContainer)parent;
-               col = (Collection)imm.getChild(localName);
-               if(col == null)
-               {
-                  col = (Collection)newInstance(metadata.getType().getJavaValue(), metadata.getName());
-                  imm.addChild(localName, col);
-               }
-            }
-            else
-            {
-               JavaFieldValue javaValue = metadata.getType().getJavaValue();
-               while(!(javaValue instanceof CollectionValue ||
-                  javaValue == parentMetadata.getType().getJavaValue()
-                  ))
-               {
-                  javaValue = (JavaFieldValue)javaValue.getJavaValue();
-               }
-
-               if(javaValue == parentMetadata.getType().getJavaValue())
-               {
-                  throw new JBossXBRuntimeException(
-                     "Failed to find CollectionValue java value. parent: " +
-                     javaValue.getClass() +
-                     " -> " +
-                     javaValue.getType()
-                  );
-               }
-
-               col = (Collection)getFieldValue(javaValue, parent, metadata.getName());
-               if(col == null)
-               {
-                  col = (Collection)newInstance(metadata.getType().getJavaValue(), metadata.getName());
-                  setFieldValue(metadata.getName(),
-                     metadata.getType().getJavaValue().getField(),
-                     metadata.getType().getJavaValue().getSetter(),
-                     parent,
-                     col
-                  );
-               }
-            }
-
-            col.add(child);
-         }
-         else if(parent instanceof ImmutableContainer)
-         {
-            ((ImmutableContainer)parent).addChild(localName, child);
-         }
-         else
-         {
-            setFieldValue(metadata.getName(),
-               metadata.getType().getJavaValue().getField(),
-               metadata.getType().getJavaValue().getSetter(),
-               parent,
-               child
-            );
-         }
+         log.trace("addChild for " + localName + ": child=" + child);
       }
+      childElement.getJavaValue().set(parent, child, localName);
    }
 
    public void setValue(Object o, UnmarshallingContext ctx, String namespaceURI, String localName, String value)
    {
-      XmlElement metadata = (XmlElement)ctx.getMetadata();
-
-      // todo: this check is a hack! undeterminism when field is of type collection and there is only RuntimeDocumentBinding
-      if(Collection.class.isAssignableFrom(metadata.getType().getJavaValue().getType()))
+      if(log.isTraceEnabled())
       {
-         ((Collection)o).add(value);
+         log.trace("setValue for " + localName + ": o=" + o + ", value=" + value);
+      }
+
+      XmlElement element = (XmlElement)ctx.getMetadata();
+      if(element != null)
+      {
+         element.getType().getDataContent().getJavaValue().set(o, value, localName);
       }
       else
       {
-         if(Util.isAttributeType(metadata.getType().getJavaValue().getType()))
-         {
-            Object unmarshalledValue = SimpleTypeBindings.unmarshal(value,
-               metadata.getType().getJavaValue().getType()
-            );
-            if(o instanceof Collection)
-            {
-               ((Collection)o).add(unmarshalledValue);
-            }
-            else if(o instanceof ImmutableContainer)
-            {
-               ((ImmutableContainer)o).addChild(localName, unmarshalledValue);
-            }
-            else
-            {
-               if(Collection.class.isAssignableFrom(metadata.getType().getJavaValue().getFieldType()))
-               {
-                  Collection col = (Collection)getFieldValue(metadata.getType().getJavaValue(), o, metadata.getName());
-                  if(col == null)
-                  {
-                     col = (Collection)newInstance(metadata.getType().getJavaValue(), metadata.getName());
-                     setFieldValue(metadata.getName(),
-                        metadata.getType().getJavaValue().getField(),
-                        metadata.getType().getJavaValue().getSetter(),
-                        o,
-                        col
-                     );
-                  }
-                  col.add(unmarshalledValue);
-               }
-               else
-               {
-                  setFieldValue(metadata.getName(),
-                     metadata.getType().getJavaValue().getField(),
-                     metadata.getType().getJavaValue().getSetter(),
-                     o,
-                     unmarshalledValue
-                  );
-               }
-            }
-         }
-         else
-         {
-            XmlDataContent data = metadata.getType().getDataContent();
-            if(data == null)
-            {
-               throw new JBossXBRuntimeException(
-                  "Data content binding is not customized for " + metadata.getName() + ": value=" + value
-               );
-            }
-
-            unmarshalValue(metadata.getType().getJavaValue(),
-               data.getType().getJavaValue(),
-               value,
-               o,
-               metadata.getName()
-            );
-         }
+         log.warn("Metadata is not available for " + namespaceURI + ":" + localName);
       }
    }
 
@@ -326,348 +139,22 @@ public class ObjectModelFactoryImpl
    {
       if(root == null)
       {
-         XmlElement metadata = (XmlElement)ctx.getMetadata();
-         if(metadata == null)
+         XmlElement element = (XmlElement)ctx.getMetadata();
+         root = element.getJavaValue().newInstance();
+         if(log.isTraceEnabled())
          {
-            throw new JBossXBRuntimeException(
-               "Binding metadata is not available for top-level element {" + namespaceURI + ":" + localName + "}"
-            );
+            log.trace("created new root: " + root.getClass() + ":" + root);
          }
-         root = newInstance(metadata.getType().getJavaValue(), metadata.getName());
       }
       return root;
    }
 
    public Object completeRoot(Object root, UnmarshallingContext ctx, String namespaceURI, String localName)
    {
-      return root instanceof ImmutableContainer ? ((ImmutableContainer)root).newInstance() : root;
-   }
-
-   // Private
-
-   private static Object unmarshalValue(JavaValue stopAtMe,
-                                        JavaFieldValue valueBinding,
-                                        Object value,
-                                        Object o,
-                                        String name)
-   {
-      Object unmarshalled;
-
-      if(valueBinding.getFieldType() != null && Util.isAttributeType(valueBinding.getFieldType()))
+      if(root instanceof Immutable)
       {
-         try
-         {
-            unmarshalled = SimpleTypeBindings.unmarshal((String)value, valueBinding.getFieldType());
-         }
-         catch(JBossXBRuntimeException e)
-         {
-            log.error("Failed to unmarshal " + name + "'s value '" + value + "' into " + valueBinding.getType());
-            throw e;
-         }
+         root = ((Immutable)root).newInstance();
       }
-      else
-      {
-         unmarshalled = newInstance(valueBinding, name);
-      }
-
-      Object unmarshalledOwner;
-      if(valueBinding.getJavaValue() != null && valueBinding.getJavaValue() != stopAtMe)
-      {
-         unmarshalledOwner = unmarshalValue(stopAtMe,
-            (JavaFieldValue)valueBinding.getJavaValue(),
-            unmarshalled,
-            o,
-            name
-         );
-      }
-      else
-      {
-         unmarshalledOwner = o;
-      }
-
-      // todo o instanceof java.util.Collection?
-      if(unmarshalledOwner instanceof ImmutableContainer)
-      {
-         ((ImmutableContainer)unmarshalledOwner).addChild(name, unmarshalled);
-      }
-      else if(unmarshalledOwner instanceof Collection)
-      {
-         ((Collection)unmarshalledOwner).add(unmarshalled);
-      }
-      else
-      {
-         setFieldValue(name,
-            ((JavaFieldValue)valueBinding).getField(),
-            ((JavaFieldValue)valueBinding).getSetter(),
-            unmarshalledOwner,
-            unmarshalled
-         );
-      }
-
-      return unmarshalled;
-   }
-
-   private static final void setFieldValue(String elementName,
-                                           Field field,
-                                           Method setter,
-                                           Object parent,
-                                           Object child)
-   {
-      if(setter != null)
-      {
-         try
-         {
-            setter.invoke(parent, new Object[]{child});
-         }
-         catch(Exception e)
-         {
-            throw new JBossXBRuntimeException("Failed to set value (" +
-               child.getClass().getName() +
-               ":" +
-               child +
-               ") using setter " +
-               setter.getName() +
-               " in (" +
-               parent.getClass() +
-               ":" +
-               parent + "): " + e.getMessage(), e
-            );
-         }
-      }
-      else if(field != null)
-      {
-         try
-         {
-            field.set(parent, child);
-         }
-         catch(IllegalAccessException e)
-         {
-            throw new JBossXBRuntimeException("Illegal access exception setting value (" +
-               child.getClass() +
-               ":" +
-               child +
-               ") using field " +
-               field.getName() +
-               " in (" +
-               parent.getClass() +
-               ":" +
-               parent + "): " + e.getMessage(), e
-            );
-         }
-      }
-      else
-      {
-         throw new JBossXBRuntimeException("Element/attribute " +
-            elementName +
-            " is not bound to any field!"
-         );
-      }
-   }
-
-   private static final Object getFieldValue(JavaFieldValue javaValue, Object parent, String name)
-   {
-      Object value;
-      if(javaValue.getGetter() != null)
-      {
-         try
-         {
-            value = javaValue.getGetter().invoke(parent, null);
-         }
-         catch(Exception e)
-         {
-            throw new JBossXBRuntimeException("Failed to get value using getter " +
-               javaValue.getGetter().getName() +
-               " from " +
-               parent.getClass() +
-               ":" +
-               parent + ": " + e.getMessage(), e
-            );
-         }
-      }
-      else if(javaValue.getField() != null)
-      {
-         try
-         {
-            value = javaValue.getField().get(parent);
-         }
-         catch(IllegalAccessException e)
-         {
-            throw new JBossXBRuntimeException("Illegal access exception getting value using field " +
-               javaValue.getField().getName() +
-               " from " +
-               parent.getClass() +
-               ":" +
-               parent + ": " + e.getMessage(), e
-            );
-         }
-      }
-      else if(parent instanceof ImmutableContainer)
-      {
-         value = ((ImmutableContainer)parent).getChild(name);
-      }
-      else
-      {
-         throw new JBossXBRuntimeException("Element " +
-            name +
-            " is not bound to any field in " + parent.getClass() + ":" + parent
-         );
-      }
-
-      return value;
-   }
-
-   private static final Object newInstance(JavaValue metadata, String name)
-   {
-      boolean trace = log.isTraceEnabled();
-
-      Object instance;
-      Class javaType = metadata.getType();
-      if(trace)
-      {
-         log.trace("newInstance " + javaType + " for " + name);
-      }
-
-      try
-      {
-         Constructor ctor = javaType.getConstructor(null);
-         instance = ctor.newInstance(null);
-      }
-      catch(NoSuchMethodException e)
-      {
-         instance = new ImmutableContainer(javaType);
-      }
-      catch(Exception e)
-      {
-         throw new JBossXBRuntimeException(
-            "Failed to create an instance of " + name + " of type " + metadata.getJavaValue().getType()
-         );
-      }
-      if(trace)
-      {
-         log.trace("newInstance=" + instance);
-      }
-      return instance;
-   }
-
-   // Inner
-
-   private static class ImmutableContainer
-   {
-      private final Class cls;
-
-      private final List names = new java.util.ArrayList();
-
-      private final List values = new java.util.ArrayList();
-
-      public ImmutableContainer(Class cls)
-      {
-         this.cls = cls;
-         if(log.isTraceEnabled())
-         {
-            log.trace("created immutable container for " + cls);
-         }
-      }
-
-      public void addChild(String localName, Object child)
-      {
-         if(!names.isEmpty() && names.get(names.size() - 1).equals(localName))
-         {
-            throw new IllegalStateException("Attempt to add duplicate element " +
-               localName +
-               ": prev value=" +
-               values.get(values.size() - 1) +
-               ", new value=" +
-               child
-            );
-         }
-         names.add(localName);
-         values.add(child);
-
-         if(log.isTraceEnabled())
-         {
-            log.trace("added child " + localName + " for " + cls + ": " + child);
-         }
-      }
-
-      public Object getChild(String localName)
-      {
-         return names.isEmpty() ?
-            null :
-            (names.get(names.size() - 1).equals(localName) ? values.get(values.size() - 1) : null);
-      }
-
-      public Object[] getValues()
-      {
-         return values.toArray();
-      }
-
-      public Class[] getValueTypes()
-      {
-         Class[] types = new Class[values.size()];
-         for(int i = 0; i < values.size(); ++i)
-         {
-            types[i] = values.get(i).getClass();
-         }
-         return types;
-      }
-
-      public Object newInstance()
-      {
-         Constructor ctor = null;
-         Constructor[] ctors = cls.getConstructors();
-
-         if(ctors == null || ctors.length == 0)
-         {
-            throw new JBossXBRuntimeException("The class has no declared constructors: " + cls);
-         }
-
-         for(int i = 0; i < ctors.length; ++i)
-         {
-            Class[] types = ctors[i].getParameterTypes();
-
-            if(types == null || types.length == 0)
-            {
-               throw new IllegalStateException("Found no-arg constructor for immutable " + cls);
-            }
-
-            if(types.length == values.size())
-            {
-               ctor = ctors[i];
-
-               int typeInd = 0;
-               while(typeInd < types.length)
-               {
-                  if(!types[typeInd].isAssignableFrom(values.get(typeInd++).getClass()))
-                  {
-                     ctor = null;
-                     break;
-                  }
-               }
-
-               if(ctor != null)
-               {
-                  break;
-               }
-            }
-         }
-
-         if(ctor == null)
-         {
-            throw new IllegalStateException("No constructor in " + cls + " that would take arguments " + values);
-         }
-
-         try
-         {
-            return ctor.newInstance(values.toArray());
-         }
-         catch(Exception e)
-         {
-            throw new IllegalStateException("Failed to create immutable instance of " +
-               cls +
-               " using arguments: "
-               + values + ": " + e.getMessage()
-            );
-         }
-      }
+      return root;
    }
 }

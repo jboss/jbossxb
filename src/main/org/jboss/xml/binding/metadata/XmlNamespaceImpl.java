@@ -6,20 +6,6 @@
  */
 package org.jboss.xml.binding.metadata;
 
-import org.jboss.xml.binding.metadata.XmlNamespace;
-import org.jboss.xml.binding.metadata.XmlType;
-import org.jboss.xml.binding.metadata.XmlElement;
-import org.jboss.xml.binding.metadata.XmlSimpleType;
-import org.jboss.xml.binding.metadata.XmlComplexType;
-import org.jboss.xml.binding.metadata.JavaValueFactory;
-import org.jboss.xml.binding.Util;
-import org.jboss.xml.binding.metadata.JavaValueFactory;
-import org.jboss.xml.binding.metadata.XmlElement;
-import org.jboss.xml.binding.metadata.XmlNamespace;
-import org.jboss.xml.binding.metadata.XmlSimpleType;
-import org.jboss.xml.binding.metadata.XmlType;
-import org.jboss.xml.binding.metadata.XmlComplexTypeImpl;
-import org.jboss.xml.binding.metadata.XmlElementImpl;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -67,16 +53,9 @@ public class XmlNamespaceImpl
       return (XmlElement)elements.get(name);
    }
 
-   public XmlSimpleType addSimpleType(String name, Class javaType)
+   public XmlType addType(String name)
    {
-      XmlSimpleType type = new XmlSimpleTypeImpl(name, this, JavaValueFactory.getInstance().newJavaFieldValue(javaType));
-      types.put(name, type);
-      return type;
-   }
-
-   public XmlComplexType addComplexType(String name, Class javaType)
-   {
-      XmlComplexType type = new XmlComplexTypeImpl(name, this, JavaValueFactory.getInstance().newJavaFieldValue(javaType));
+      XmlType type = new XmlTypeImpl(name, this);
       types.put(name, type);
       return type;
    }
@@ -88,17 +67,9 @@ public class XmlNamespaceImpl
       return element;
    }
 
-   public XmlElement addElement(String name, Class javaType)
+   public XmlElement addElement(String name)
    {
-      XmlType type;
-      if(Util.isAttributeType(javaType))
-      {
-         type = new XmlSimpleTypeImpl(name + "Type", this, JavaValueFactory.getInstance().newJavaFieldValue(javaType));
-      }
-      else
-      {
-         type = new XmlComplexTypeImpl(name + "Type", this, JavaValueFactory.getInstance().newJavaFieldValue(javaType));
-      }
+      XmlType type = new XmlTypeImpl(name + "Type", this);
       return addElement(name, type);
    }
 }

@@ -18,7 +18,6 @@ import javax.xml.namespace.QName;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -58,9 +57,9 @@ public class MetadataDrivenObjectModelFactory
       if(Collection.class.isAssignableFrom(metadata.getJavaType()))
       {
          Collection col;
-         if(parent instanceof ImmutableContainer)
+         if(parent instanceof Immutable)
          {
-            ImmutableContainer imm = (ImmutableContainer)parent;
+            Immutable imm = (Immutable)parent;
             col = (Collection)imm.getChild(localName);
             if(col == null)
             {
@@ -83,15 +82,15 @@ public class MetadataDrivenObjectModelFactory
       else if(!Util.isAttributeType(metadata.getJavaType()))
       {
          child = newInstance(metadata);
-         if(!(child instanceof ImmutableContainer))
+         if(!(child instanceof Immutable))
          {
             if(parent instanceof Collection)
             {
                ((Collection)parent).add(child);
             }
-            else if(parent instanceof ImmutableContainer)
+            else if(parent instanceof Immutable)
             {
-               ((ImmutableContainer)parent).addChild(localName, child);
+               ((Immutable)parent).addChild(localName, child);
             }
             else if(metadata.getFieldType() != null && Collection.class.isAssignableFrom(metadata.getFieldType()))
             {
@@ -128,9 +127,9 @@ public class MetadataDrivenObjectModelFactory
                      attrBinding.getJavaType()
                   );
 
-                  if(child instanceof ImmutableContainer)
+                  if(child instanceof Immutable)
                   {
-                     ((ImmutableContainer)child).addChild(attrName.getLocalPart(), unmarshalledValue);
+                     ((Immutable)child).addChild(attrName.getLocalPart(), unmarshalledValue);
                   }
                   else
                   {
@@ -155,11 +154,11 @@ public class MetadataDrivenObjectModelFactory
 
    public void addChild(Object parent, Object child, UnmarshallingContext ctx, String namespaceURI, String localName)
    {
-      if(child instanceof ImmutableContainer)
+      if(child instanceof Immutable)
       {
          ElementBinding metadata = (ElementBinding)ctx.getMetadata();
 
-         child = ((ImmutableContainer)child).newInstance();
+         child = ((Immutable)child).newInstance();
          if(parent instanceof Collection)
          {
             ((Collection)parent).add(child);
@@ -167,9 +166,9 @@ public class MetadataDrivenObjectModelFactory
          else if(metadata.getFieldType() == null || Collection.class.isAssignableFrom(metadata.getFieldType()))
          {
             Collection col;
-            if(parent instanceof ImmutableContainer)
+            if(parent instanceof Immutable)
             {
-               ImmutableContainer imm = (ImmutableContainer)parent;
+               Immutable imm = (Immutable)parent;
                col = (Collection)imm.getChild(localName);
                if(col == null)
                {
@@ -189,9 +188,9 @@ public class MetadataDrivenObjectModelFactory
 
             col.add(child);
          }
-         else if(parent instanceof ImmutableContainer)
+         else if(parent instanceof Immutable)
          {
-            ((ImmutableContainer)parent).addChild(localName, child);
+            ((Immutable)parent).addChild(localName, child);
          }
          else
          {
@@ -218,9 +217,9 @@ public class MetadataDrivenObjectModelFactory
             {
                ((Collection)o).add(unmarshalledValue);
             }
-            else if(o instanceof ImmutableContainer)
+            else if(o instanceof Immutable)
             {
-               ((ImmutableContainer)o).addChild(localName, unmarshalledValue);
+               ((Immutable)o).addChild(localName, unmarshalledValue);
             }
             else
             {
@@ -277,7 +276,7 @@ public class MetadataDrivenObjectModelFactory
 
    public Object completeRoot(Object root, UnmarshallingContext ctx, String namespaceURI, String localName)
    {
-      return root instanceof ImmutableContainer ? ((ImmutableContainer)root).newInstance() : root;
+      return root instanceof Immutable ? ((Immutable)root).newInstance() : root;
    }
 
    // Private
@@ -290,9 +289,9 @@ public class MetadataDrivenObjectModelFactory
          unmarshalled = newInstance(valueBinding);
          unmarshalValue(valueBinding.getValue(), value, unmarshalled);
 
-         if(unmarshalled instanceof ImmutableContainer)
+         if(unmarshalled instanceof Immutable)
          {
-            unmarshalled = ((ImmutableContainer)unmarshalled).newInstance();
+            unmarshalled = ((Immutable)unmarshalled).newInstance();
          }
       }
       else
@@ -301,9 +300,9 @@ public class MetadataDrivenObjectModelFactory
       }
 
       // todo o instanceof java.util.Collection?
-      if(o instanceof ImmutableContainer)
+      if(o instanceof Immutable)
       {
-         ((ImmutableContainer)o).addChild(valueBinding.getName().getLocalPart(), unmarshalled);
+         ((Immutable)o).addChild(valueBinding.getName().getLocalPart(), unmarshalled);
       }
       else
       {
@@ -438,7 +437,7 @@ public class MetadataDrivenObjectModelFactory
       }
       catch(NoSuchMethodException e)
       {
-         instance = new ImmutableContainer(javaType);
+         instance = new Immutable(javaType);
       }
       catch(Exception e)
       {
@@ -451,127 +450,5 @@ public class MetadataDrivenObjectModelFactory
          log.trace("newInstance=" + instance);
       }
       return instance;
-   }
-
-   // Inner
-
-   private static class ImmutableContainer
-   {
-      private final Class cls;
-
-      private final List names = new ArrayList();
-
-      private final List values = new ArrayList();
-
-      public ImmutableContainer(Class cls)
-      {
-         this.cls = cls;
-         if(log.isTraceEnabled())
-         {
-            log.trace("created immutable container for " + cls);
-         }
-      }
-
-      public void addChild(String localName, Object child)
-      {
-         if(!names.isEmpty() && names.get(names.size() - 1).equals(localName))
-         {
-            throw new IllegalStateException("Attempt to add duplicate element " +
-               localName +
-               ": prev value=" +
-               values.get(values.size() - 1) +
-               ", new value=" +
-               child
-            );
-         }
-         names.add(localName);
-         values.add(child);
-
-         if(log.isTraceEnabled())
-         {
-            log.trace("added child " + localName + " for " + cls + ": " + child);
-         }
-      }
-
-      public Object getChild(String localName)
-      {
-         return names.isEmpty() ?
-            null :
-            (names.get(names.size() - 1).equals(localName) ? values.get(values.size() - 1) : null);
-      }
-
-      public Object[] getValues()
-      {
-         return values.toArray();
-      }
-
-      public Class[] getValueTypes()
-      {
-         Class[] types = new Class[values.size()];
-         for(int i = 0; i < values.size(); ++i)
-         {
-            types[i] = values.get(i).getClass();
-         }
-         return types;
-      }
-
-      public Object newInstance()
-      {
-         Constructor ctor = null;
-         Constructor[] ctors = cls.getConstructors();
-
-         if(ctors == null || ctors.length == 0)
-         {
-            throw new JBossXBRuntimeException("The class has no declared constructors: " + cls);
-         }
-
-         for(int i = 0; i < ctors.length; ++i)
-         {
-            Class[] types = ctors[i].getParameterTypes();
-
-            if(types == null || types.length == 0)
-            {
-               throw new IllegalStateException("Found no-arg constructor for immutable " + cls);
-            }
-
-            if(types.length == values.size())
-            {
-               ctor = ctors[i];
-
-               int typeInd = 0;
-               while(typeInd < types.length)
-               {
-                  if(!types[typeInd].isAssignableFrom(values.get(typeInd++).getClass()))
-                  {
-                     ctor = null;
-                     break;
-                  }
-               }
-
-               if(ctor != null)
-               {
-                  break;
-               }
-            }
-         }
-
-         if(ctor == null)
-         {
-            throw new IllegalStateException("No constructor in " + cls + " that would take arguments " + values);
-         }
-
-         try
-         {
-            return ctor.newInstance(values.toArray());
-         }
-         catch(Exception e)
-         {
-            throw new IllegalStateException("Failed to create immutable instance of " +
-               cls +
-               " using arguments: "
-               + values + ": " + e.getMessage()
-            );
-         }
-      }
    }
 }

@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Collection;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * An ObjectModelFactory that uses mappings
@@ -269,9 +268,9 @@ public class MappingObjectModelFactory
          else
          {
             Class oCls;
-            if(o instanceof ImmutableContainer)
+            if(o instanceof Immutable)
             {
-               oCls = ((ImmutableContainer)o).cls;
+               oCls = ((Immutable)o).cls;
             }
             else
             {
@@ -373,9 +372,9 @@ public class MappingObjectModelFactory
          );
       }
 
-      if(child instanceof ImmutableContainer)
+      if(child instanceof Immutable)
       {
-         child = ((ImmutableContainer)child).newInstance();
+         child = ((Immutable)child).newInstance();
       }
       setChild(child, parent, localName);
    }
@@ -415,9 +414,9 @@ public class MappingObjectModelFactory
          );
       }
 
-      if(root instanceof ImmutableContainer)
+      if(root instanceof Immutable)
       {
-         root = ((ImmutableContainer)root).newInstance();
+         root = ((Immutable)root).newInstance();
       }
       return root;
    }
@@ -467,8 +466,8 @@ public class MappingObjectModelFactory
                log.trace("Add " + value + " to xml mapped class " + xmlToCls);
             }
 
-            Class parentCls = parent instanceof ImmutableContainer ?
-               ((ImmutableContainer)parent).cls :
+            Class parentCls = parent instanceof Immutable ?
+               ((Immutable)parent).cls :
                parent.getClass();
             Method getter = null;
             Field field = null;
@@ -561,9 +560,9 @@ public class MappingObjectModelFactory
          else
          {
             Class oCls;
-            if(o instanceof ImmutableContainer)
+            if(o instanceof Immutable)
             {
-               oCls = ((ImmutableContainer)o).cls;
+               oCls = ((Immutable)o).cls;
             }
             else
             {
@@ -653,9 +652,9 @@ public class MappingObjectModelFactory
       }
 
       Object value;
-      if(o instanceof ImmutableContainer)
+      if(o instanceof Immutable)
       {
-         ImmutableContainer con = ((ImmutableContainer)o);
+         Immutable con = ((Immutable)o);
          value = con.getChild(localName);
       }
       else
@@ -730,9 +729,9 @@ public class MappingObjectModelFactory
             );
          }
       }
-      else if(parent instanceof ImmutableContainer)
+      else if(parent instanceof Immutable)
       {
-         ((ImmutableContainer)parent).addChild(localName, child);
+         ((Immutable)parent).addChild(localName, child);
       }
       else
       {
@@ -759,7 +758,7 @@ public class MappingObjectModelFactory
       catch(NoSuchMethodException e)
       {
          log.warn("No no-arg constructor in " + cls);
-         instance = new ImmutableContainer(cls);
+         instance = new Immutable(cls);
       }
       catch(Exception e)
       {
@@ -999,118 +998,6 @@ public class MappingObjectModelFactory
          result = 29 * result + (cls != null ? cls.hashCode() : 0);
          result = 29 * result + (fieldName != null ? fieldName.hashCode() : 0);
          return result;
-      }
-   }
-
-   private static class ImmutableContainer
-   {
-      private final Class cls;
-
-      private final List names = new ArrayList();
-
-      private final List values = new ArrayList();
-
-      public ImmutableContainer(Class cls)
-      {
-         this.cls = cls;
-         if(log.isTraceEnabled())
-         {
-            log.trace("created immutable container for " + cls);
-         }
-      }
-
-      public void addChild(String localName, Object child)
-      {
-         if(!names.isEmpty() && names.get(names.size() - 1).equals(localName))
-         {
-            throw new IllegalStateException("Attempt to add duplicate element " + localName);
-         }
-         names.add(localName);
-         values.add(child);
-
-         if(log.isTraceEnabled())
-         {
-            log.trace("added child " + localName + " for " + cls + ": " + child);
-         }
-      }
-
-      public Object getChild(String localName)
-      {
-         return names.get(names.size() - 1).equals(localName) ? values.get(values.size() - 1) : null;
-      }
-
-      public Object[] getValues()
-      {
-         return values.toArray();
-      }
-
-      public Class[] getValueTypes()
-      {
-         Class[] types = new Class[values.size()];
-         for(int i = 0; i < values.size(); ++i)
-         {
-            types[i] = values.get(i).getClass();
-         }
-         return types;
-      }
-
-      public Object newInstance()
-      {
-         Constructor ctor = null;
-         Constructor[] ctors = cls.getConstructors();
-
-         if(ctors == null || ctors.length == 0)
-         {
-            throw new JBossXBRuntimeException("The class has no declared constructors: " + cls);
-         }
-
-         for(int i = 0; i < ctors.length; ++i)
-         {
-            Class[] types = ctors[i].getParameterTypes();
-
-            if(types == null || types.length == 0)
-            {
-               throw new IllegalStateException("Found no-arg constructor for immutable " + cls);
-            }
-
-            if(types.length == values.size())
-            {
-               ctor = ctors[i];
-
-               int typeInd = 0;
-               while(typeInd < types.length)
-               {
-                  if(!types[typeInd].isAssignableFrom(values.get(typeInd++).getClass()))
-                  {
-                     ctor = null;
-                     break;
-                  }
-               }
-
-               if(ctor != null)
-               {
-                  break;
-               }
-            }
-         }
-
-         if(ctor == null)
-         {
-            throw new IllegalStateException("No constructor in " + cls + " that would take arguments " + values);
-         }
-
-         try
-         {
-            return ctor.newInstance(values.toArray());
-         }
-         catch(Exception e)
-         {
-            throw new IllegalStateException("Failed to create immutable instance of " +
-               cls +
-               " using arguments: "
-               + values + ": " + e.getMessage()
-            );
-         }
       }
    }
 }

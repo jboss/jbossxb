@@ -6,11 +6,6 @@
  */
 package org.jboss.xml.binding.metadata;
 
-import org.jboss.xml.binding.metadata.XmlElement;
-import org.jboss.xml.binding.metadata.XmlNamespace;
-import org.jboss.xml.binding.metadata.XmlNamespace;
-import org.jboss.xml.binding.metadata.XmlType;
-import org.jboss.xml.binding.metadata.XmlType;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -22,12 +17,14 @@ public class XmlElementImpl
    private final XmlNamespace ns;
    private final String name;
    private final XmlType type;
+   private final JavaValue javaValue;
 
    public XmlElementImpl(XmlNamespace ns, String name, XmlType type)
    {
       this.ns = ns;
       this.name = name;
       this.type = type;
+      this.javaValue = (JavaValue)type.getJavaValue().clone();
    }
 
    public XmlNamespace getNamespace()
@@ -43,6 +40,11 @@ public class XmlElementImpl
    public XmlType getType()
    {
       return type;
+   }
+
+   public JavaValue getJavaValue()
+   {
+      return javaValue;
    }
 
    public boolean equals(Object o)

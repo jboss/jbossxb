@@ -6,8 +6,6 @@
  */
 package org.jboss.xml.binding.metadata;
 
-import org.jboss.xml.binding.metadata.XmlDocumentFactoryImpl;
-import org.jboss.xml.binding.metadata.XmlDocument;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>

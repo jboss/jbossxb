@@ -6,9 +6,6 @@
  */
 package org.jboss.xml.binding.metadata;
 
-import org.jboss.xml.binding.metadata.XmlDataContent;
-import org.jboss.xml.binding.metadata.XmlSimpleType;
-import org.jboss.xml.binding.metadata.XmlSimpleType;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -17,15 +14,22 @@ import org.jboss.xml.binding.metadata.XmlSimpleType;
 public class XmlDataContentImpl
    implements XmlDataContent
 {
-   private final XmlSimpleType type;
+   private final XmlType type;
+   private final JavaValue javaValue;
 
-   public XmlDataContentImpl(XmlSimpleType type)
+   public XmlDataContentImpl(XmlType type)
    {
       this.type = type;
+      this.javaValue = (JavaValue)type.getJavaValue().clone();
    }
 
-   public XmlSimpleType getType()
+   public XmlType getType()
    {
       return type;
+   }
+
+   public JavaValue getJavaValue()
+   {
+      return javaValue;
    }
 }

@@ -17,5 +17,5 @@ public interface FieldGroupBinding
    int FIELD = 2;
 
    int getCategory();
-   FinalClassBinding getFinalClassBinding();
+   BaseClassBinding getDeclaringClassBinding();
 }

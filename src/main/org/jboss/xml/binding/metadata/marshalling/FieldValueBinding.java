@@ -17,6 +17,7 @@ public interface FieldValueBinding
    int NON_FINAL_CLASS = 2;
    int COLLECTION = 4;
 
+   FieldBinding getFieldBinding();
    int getCategory();
    Class getJavaClass();
 }

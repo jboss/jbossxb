@@ -12,9 +12,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
@@ -44,9 +43,15 @@ public abstract class ObjectModelBindingFactory
 
    public abstract FieldBinding bindField(FinalClassBinding cls, String fieldName);
 
+   public abstract FieldBinding bindField(NonFinalClassBinding cls, String fieldName);
+
    public abstract FieldGroupSequenceBinding bindFieldGroupSequence(FinalClassBinding cls);
 
+   public abstract FieldGroupSequenceBinding bindFieldGroupSequence(NonFinalClassBinding cls);
+
    public abstract FieldGroupChoiceBinding bindFieldGroupChoice(FinalClassBinding cls);
+
+   public abstract FieldGroupChoiceBinding bindFieldGroupChoice(NonFinalClassBinding cls);
 
    public abstract FieldGroupSequenceBinding bindFieldGroupSequence(FieldGroupBinding group);
 
@@ -98,7 +103,7 @@ public abstract class ObjectModelBindingFactory
                                               String namespaceUri,
                                               String elementName)
       {
-         FinalClassBindingImpl clsBinding = new FinalClassBindingImpl(cls, namespaceUri, elementName);
+         FinalClassBindingImpl clsBinding = new FinalClassBindingImpl(null, cls, namespaceUri, elementName);
          ((ObjectModelBindingImpl)om).bindTop(clsBinding);
          return clsBinding;
       }
@@ -121,10 +126,24 @@ public abstract class ObjectModelBindingFactory
          return field;
       }
 
+      public FieldBinding bindField(NonFinalClassBinding cls, String fieldName)
+      {
+         FieldBinding field = new FieldBindingImpl(cls, fieldName);
+         ((NonFinalClassBindingImpl)cls).bindFieldGroup(field);
+         return field;
+      }
+
       public FieldGroupSequenceBinding bindFieldGroupSequence(FinalClassBinding cls)
       {
          FieldGroupSequenceBindingImpl seq = new FieldGroupSequenceBindingImpl(cls);
          ((FinalClassBindingImpl)cls).bindFieldGroup(seq);
+         return seq;
+      }
+
+      public FieldGroupSequenceBinding bindFieldGroupSequence(NonFinalClassBinding cls)
+      {
+         FieldGroupSequenceBindingImpl seq = new FieldGroupSequenceBindingImpl(cls);
+         ((NonFinalClassBindingImpl)cls).bindFieldGroup(seq);
          return seq;
       }
 
@@ -135,44 +154,51 @@ public abstract class ObjectModelBindingFactory
          return choice;
       }
 
+      public FieldGroupChoiceBinding bindFieldGroupChoice(NonFinalClassBinding cls)
+      {
+         FieldGroupChoiceBindingImpl choice = new FieldGroupChoiceBindingImpl(cls);
+         ((NonFinalClassBindingImpl)cls).bindFieldGroup(choice);
+         return choice;
+      }
+
       public FieldGroupSequenceBinding bindFieldGroupSequence(FieldGroupBinding group)
       {
-         FieldGroupSequenceBindingImpl seq = new FieldGroupSequenceBindingImpl(group.getFinalClassBinding());
+         FieldGroupSequenceBindingImpl seq = new FieldGroupSequenceBindingImpl(group.getDeclaringClassBinding());
          bindFieldGroup(group, seq);
          return seq;
       }
 
       public FieldGroupChoiceBinding bindFieldGroupChoice(FieldGroupBinding group)
       {
-         FieldGroupChoiceBindingImpl choice = new FieldGroupChoiceBindingImpl(group.getFinalClassBinding());
+         FieldGroupChoiceBindingImpl choice = new FieldGroupChoiceBindingImpl(group.getDeclaringClassBinding());
          bindFieldGroup(group, choice);
          return choice;
       }
 
       public FieldBinding bindField(FieldGroupBinding group, String fieldName)
       {
-         FieldBinding field = new FieldBindingImpl(group.getFinalClassBinding(), fieldName);
+         FieldBinding field = new FieldBindingImpl(group.getDeclaringClassBinding(), fieldName);
          bindFieldGroup(group, field);
          return field;
       }
 
       public SimpleValueBinding bindSimpleValue(FieldBinding field, String namespaceUri, String elementName)
       {
-         SimpleValueBinding value = new SimpleValueBindingImpl(field.getFieldType(), namespaceUri, elementName);
+         SimpleValueBinding value = new SimpleValueBindingImpl(field, field.getFieldType(), namespaceUri, elementName);
          ((FieldBindingImpl)field).bindValue(value);
          return value;
       }
 
       public FinalClassBinding bindFinalClassValue(FieldBinding field, String namespaceUri, String elementName)
       {
-         FinalClassBinding value = new FinalClassBindingImpl(field.getFieldType(), namespaceUri, elementName);
+         FinalClassBinding value = new FinalClassBindingImpl(field, field.getFieldType(), namespaceUri, elementName);
          ((FieldBindingImpl)field).bindValue(value);
          return value;
       }
 
       public NonFinalClassBinding bindNonFinalClassValue(FieldBinding field)
       {
-         NonFinalClassBinding value = new NonFinalClassBindingImpl(field.getFieldType());
+         NonFinalClassBinding value = new NonFinalClassBindingImpl(field, field.getFieldType());
          ((FieldBindingImpl)field).bindValue(value);
          return value;
       }
@@ -180,7 +206,8 @@ public abstract class ObjectModelBindingFactory
       public NonFinalClassBinding bindNonFinalClass(NonFinalClassBinding parentClass, Class subclass)
       {
          NonFinalClassBindingImpl parent = ((NonFinalClassBindingImpl)parentClass);
-         NonFinalClassBinding subclassBinding = new NonFinalClassBindingImpl(subclass,
+         NonFinalClassBinding subclassBinding = new NonFinalClassBindingImpl(parentClass.getFieldBinding(),
+            subclass,
             parent.fieldGroups,
             parent.fieldToAttribute
          );
@@ -194,7 +221,8 @@ public abstract class ObjectModelBindingFactory
                                               String elementName)
       {
          NonFinalClassBindingImpl parent = ((NonFinalClassBindingImpl)parentClass);
-         FinalClassBinding subclassBinding = new FinalClassBindingImpl(subclass,
+         FinalClassBinding subclassBinding = new FinalClassBindingImpl(parentClass.getFieldBinding(),
+            subclass,
             namespaceUri,
             elementName,
             parent.fieldGroups,
@@ -206,14 +234,14 @@ public abstract class ObjectModelBindingFactory
 
       public CollectionBinding bindCollectionValue(FieldBinding field, String namespaceUri, String elementName)
       {
-         CollectionBinding value = new CollectionBindingImpl(field.getFieldType(), namespaceUri, elementName);
+         CollectionBinding value = new CollectionBindingImpl(field, field.getFieldType(), namespaceUri, elementName);
          ((FieldBindingImpl)field).bindValue(value);
          return value;
       }
 
       public NonFinalClassBinding bindNonFinalItem(CollectionBinding col, Class itemClass)
       {
-         NonFinalClassBinding item = new NonFinalClassBindingImpl(itemClass);
+         NonFinalClassBinding item = new NonFinalClassBindingImpl(null, itemClass);
          ((CollectionBindingImpl)col).bindItem(item);
          return item;
       }
@@ -223,7 +251,7 @@ public abstract class ObjectModelBindingFactory
                                              String namespaceUri,
                                              String elementName)
       {
-         FinalClassBinding item = new FinalClassBindingImpl(itemClass, namespaceUri, elementName);
+         FinalClassBinding item = new FinalClassBindingImpl(null, itemClass, namespaceUri, elementName);
          ((CollectionBindingImpl)col).bindItem(item);
          return item;
       }
@@ -233,14 +261,14 @@ public abstract class ObjectModelBindingFactory
                                                String namespaceUri,
                                                String elementName)
       {
-         SimpleValueBinding item = new SimpleValueBindingImpl(itemClass, namespaceUri, elementName);
+         SimpleValueBinding item = new SimpleValueBindingImpl(null, itemClass, namespaceUri, elementName);
          ((CollectionBindingImpl)col).bindItem(item);
          return item;
       }
 
       public NonFinalClassBinding bindNonFinalClass(ObjectModelBinding om, Class cls)
       {
-         NonFinalClassBinding clsBinding = new NonFinalClassBindingImpl(cls);
+         NonFinalClassBinding clsBinding = new NonFinalClassBindingImpl(null, cls);
          ((ObjectModelBindingImpl)om).bindTop(clsBinding);
          return clsBinding;
       }
@@ -275,7 +303,7 @@ public abstract class ObjectModelBindingFactory
          tops.put(fieldValue.getJavaClass(), fieldValue);
       }
 
-      public FieldValueBinding getTopClasse(Class cls)
+      public FieldValueBinding getTopClass(Class cls)
       {
          return (FieldValueBinding)tops.get(cls);
       }
@@ -284,11 +312,18 @@ public abstract class ObjectModelBindingFactory
    static abstract class AbstractFieldValueBinding
       implements FieldValueBinding
    {
+      private final FieldBinding field;
       private final Class javaClass;
 
-      protected AbstractFieldValueBinding(Class javaClass)
+      protected AbstractFieldValueBinding(FieldBinding field, Class javaClass)
       {
          this.javaClass = javaClass;
+         this.field = field;
+      }
+
+      public FieldBinding getFieldBinding()
+      {
+         return field;
       }
 
       public Class getJavaClass()
@@ -301,18 +336,22 @@ public abstract class ObjectModelBindingFactory
       extends AbstractFieldValueBinding
       implements BaseClassBinding
    {
-      final Set fieldGroups;
-      final Set fieldToAttribute;
+      // order in which elements are bound is important, hence, LinkedHashMap.
+      final LinkedHashSet fieldGroups;
+      final LinkedHashSet fieldToAttribute;
 
-      public AbstractBaseClassBinding(Class javaClass,
+      public AbstractBaseClassBinding(FieldBinding field,
+                                      Class javaClass,
                                       Collection inheritedFieldGroups,
                                       Collection inheritedFieldToAttribute)
       {
-         super(javaClass);
-         this.fieldGroups = inheritedFieldGroups == null ? new HashSet() : new HashSet(inheritedFieldGroups);
+         super(field, javaClass);
+         this.fieldGroups = inheritedFieldGroups == null ?
+            new LinkedHashSet() :
+            new LinkedHashSet(inheritedFieldGroups);
          this.fieldToAttribute = inheritedFieldToAttribute == null ?
-            new HashSet() :
-            new HashSet(inheritedFieldToAttribute);
+            new LinkedHashSet() :
+            new LinkedHashSet(inheritedFieldToAttribute);
       }
 
       void bindFieldGroup(FieldGroupBinding group)
@@ -343,9 +382,9 @@ public abstract class ObjectModelBindingFactory
       private final String namespaceUri;
       private final String elementName;
 
-      public SimpleValueBindingImpl(Class javaClass, String namespaceUri, String elementName)
+      public SimpleValueBindingImpl(FieldBinding field, Class javaClass, String namespaceUri, String elementName)
       {
-         super(javaClass);
+         super(field, javaClass);
          this.namespaceUri = namespaceUri;
          this.elementName = elementName;
       }
@@ -373,18 +412,19 @@ public abstract class ObjectModelBindingFactory
       private final String namespaceUri;
       private final String elementName;
 
-      public FinalClassBindingImpl(Class javaClass, String namespaceUri, String elementName)
+      public FinalClassBindingImpl(FieldBinding field, Class javaClass, String namespaceUri, String elementName)
       {
-         this(javaClass, namespaceUri, elementName, null, null);
+         this(field, javaClass, namespaceUri, elementName, null, null);
       }
 
-      public FinalClassBindingImpl(Class javaClass,
+      public FinalClassBindingImpl(FieldBinding field,
+                                   Class javaClass,
                                    String namespaceUri,
                                    String elementName,
                                    Collection inheritedFieldGroups,
                                    Collection inheritedFieldToAttribute)
       {
-         super(javaClass, inheritedFieldGroups, inheritedFieldToAttribute);
+         super(field, javaClass, inheritedFieldGroups, inheritedFieldToAttribute);
          this.namespaceUri = namespaceUri;
          this.elementName = elementName;
       }
@@ -411,16 +451,17 @@ public abstract class ObjectModelBindingFactory
    {
       private final Map subclasses = new HashMap();
 
-      public NonFinalClassBindingImpl(Class javaClass)
+      public NonFinalClassBindingImpl(FieldBinding field, Class javaClass)
       {
-         this(javaClass, null, null);
+         this(field, javaClass, null, null);
       }
 
-      public NonFinalClassBindingImpl(Class javaClass,
+      public NonFinalClassBindingImpl(FieldBinding field,
+                                      Class javaClass,
                                       Collection inheritedFieldGroups,
                                       Collection inheritedFieldToAttribute)
       {
-         super(javaClass, inheritedFieldGroups, inheritedFieldToAttribute);
+         super(field, javaClass, inheritedFieldGroups, inheritedFieldToAttribute);
       }
 
       void bindSubclass(FieldValueBinding subclass)
@@ -447,9 +488,9 @@ public abstract class ObjectModelBindingFactory
       private final String elementName;
       private final Map items = new HashMap();
 
-      public CollectionBindingImpl(Class javaClass, String namespaceUri, String elementName)
+      public CollectionBindingImpl(FieldBinding field, Class javaClass, String namespaceUri, String elementName)
       {
-         super(javaClass);
+         super(field, javaClass);
          this.namespaceUri = namespaceUri;
          this.elementName = elementName;
       }
@@ -483,14 +524,14 @@ public abstract class ObjectModelBindingFactory
    static abstract class AbstractFieldGroupBindingImpl
       implements FieldGroupBinding
    {
-      private final FinalClassBinding owner;
+      private final BaseClassBinding owner;
 
-      protected AbstractFieldGroupBindingImpl(FinalClassBinding owner)
+      protected AbstractFieldGroupBindingImpl(BaseClassBinding owner)
       {
          this.owner = owner;
       }
 
-      public FinalClassBinding getFinalClassBinding()
+      public BaseClassBinding getDeclaringClassBinding()
       {
          return owner;
       }
@@ -502,7 +543,7 @@ public abstract class ObjectModelBindingFactory
    {
       private final List groups = new ArrayList();
 
-      public FieldGroupSequenceBindingImpl(FinalClassBinding owner)
+      public FieldGroupSequenceBindingImpl(BaseClassBinding owner)
       {
          super(owner);
       }
@@ -555,7 +596,7 @@ public abstract class ObjectModelBindingFactory
    {
       private final List groups = new ArrayList();
 
-      public FieldGroupChoiceBindingImpl(FinalClassBinding owner)
+      public FieldGroupChoiceBindingImpl(BaseClassBinding owner)
       {
          super(owner);
       }
@@ -612,7 +653,7 @@ public abstract class ObjectModelBindingFactory
       private final Class fieldType;
       private FieldValueBinding value;
 
-      public FieldBindingImpl(FinalClassBinding owner, String fieldName)
+      public FieldBindingImpl(BaseClassBinding owner, String fieldName)
       {
          super(owner);
 

@@ -12,5 +12,5 @@ package org.jboss.xml.binding.metadata.marshalling;
  */
 public interface ObjectModelBinding
 {
-   FieldValueBinding getTopClasse(Class cls);
+   FieldValueBinding getTopClass(Class cls);
 }

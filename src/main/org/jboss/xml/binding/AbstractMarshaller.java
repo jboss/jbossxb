@@ -34,7 +34,7 @@ import java.net.MalformedURLException;
 public abstract class AbstractMarshaller
    implements Marshaller
 {
-   private static final Logger log = Logger.getLogger(AbstractMarshaller.class);
+   protected static final Logger log = Logger.getLogger(AbstractMarshaller.class);
 
    protected String version = VERSION;
    protected String encoding = ENCODING;

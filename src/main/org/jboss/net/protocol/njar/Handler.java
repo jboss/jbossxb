@@ -13,8 +13,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -24,6 +22,11 @@ import java.io.OutputStream;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
+
+import org.jboss.util.stream.Streams;
+import org.jboss.util.ThrowableHandler;
 
 /**
  * A protocol handler for the n(ested)jar protocol.
@@ -60,6 +63,8 @@ public class Handler
    public static final String NJAR_SEPARATOR = "^/";
    public static final String JAR_SEPARATOR = "!/";
 
+   private static final Logger log = Logger.getLogger(Handler.class);
+
    protected Map savedJars = new HashMap();
 
    public URLConnection openConnection(final URL url)
@@ -68,6 +73,8 @@ public class Handler
       String file = url.getFile();
       String embeddedURL = file;
       String jarPath = "";
+
+      boolean trace = log.isTraceEnabled();
       
       int pos = file.lastIndexOf(NJAR_SEPARATOR);
       if (pos >= 0)
@@ -79,91 +86,73 @@ public class Handler
 
       if (embeddedURL.startsWith(PROTOCOL))
       {
-         //System.out.println("Opening next  nested jar: " + embeddedURL);
+         if (trace) log.trace("Opening next  nested jar: " + embeddedURL);
          File tempJar = (File) savedJars.get(embeddedURL);
          if (tempJar == null)
          {
             InputStream embededData = new URL(embeddedURL).openStream();
             tempJar = File.createTempFile("nested-", ".jar");
             tempJar.deleteOnExit();
-            //System.out.println("temp file location : " + tempJar);
-            storeJar(embededData, new FileOutputStream(tempJar));
+            
+            if (trace) log.trace("temp file location : " + tempJar);
+            OutputStream output = new FileOutputStream(tempJar);
+            
+            try {
+               // copyb will buffer the streams for us
+               Streams.copyb(embededData, output);
+            }
+            finally {
+               // close an pass errors to throwable handler (we don't care about them)
+               Streams.close(embededData);
+               Streams.close(output);
+            }
+            
             savedJars.put(embeddedURL, tempJar);
          }
 
          String t = tempJar.getCanonicalFile().toURL().toExternalForm();
-         //System.out.println("file URL : " + t);
+         if (trace) log.trace("file URL : " + t);
+         
          t = "njar:" + t + NJAR_SEPARATOR + jarPath;
-         //System.out.println("Opening saved jar: " + t);
+         if (trace) log.trace("Opening saved jar: " + t);
+
+         URL u = new URL(t);
+         if (trace) log.trace("Using URL: " + u);
          
-         return new URL(t).openConnection();
-         
+         return u.openConnection();
       }
       else
       {
-         //System.out.println("Opening final nested jar: " + embeddedURL);
-         return new URL("jar:" + embeddedURL + JAR_SEPARATOR + jarPath).openConnection();
+         if (trace) log.trace("Opening final nested jar: " + embeddedURL);
+
+         URL u = new URL("jar:" + embeddedURL + JAR_SEPARATOR + jarPath);
+         if (trace) log.trace("Using URL: " + u);
+         
+         return u.openConnection();
       }
    }
 
-   protected void storeJar(final InputStream in, final OutputStream out) 
-      throws IOException
+   public static URL njarToFile(URL url)
    {
-
-      BufferedInputStream bis = null;
-      BufferedOutputStream bos = null;
-      try
-      {
-         bis = new BufferedInputStream(in);
-         bos = new BufferedOutputStream(out);
-
-         byte data[] = new byte[512];
-         int c;
-         while ((c = bis.read(data)) >= 0)
-         {
-            bos.write(data, 0, c);
-         }
-
-      }
-      finally
-      {
-         try
-         {
-            bis.close();
-         }
-         catch (IOException ignore)
-         {
-         }
-         try
-         {
-            bos.close();
-         }
-         catch (IOException ignore)
-         {
-         }
-      }
-   }
-
-  public static URL njarToFile(URL url)
-    {
       if (url.getProtocol().equals(PROTOCOL))
       {
-	try
-	{
-	  // force the resource we are after to be unpacked - thanks
-	  // Jan & David...!
-	  URL dummy=new URL(PROTOCOL+":"+url.toString()+NJAR_SEPARATOR+"dummy.jar");
-	  String tmp=dummy.openConnection().getURL().toString();
-	  tmp=tmp.substring("jar:".length());
-	  tmp=tmp.substring(0, tmp.length()-(JAR_SEPARATOR+"dummy.jar").length());
-	  return new URL(tmp);
-	}
-	catch (Exception ignore)
-	{
-	}
+         try
+         {
+            // force the resource we are after to be unpacked - thanks
+            // Jan & David...!
+            URL dummy=new URL(PROTOCOL+":"+url.toString()+NJAR_SEPARATOR+"dummy.jar");
+            String tmp=dummy.openConnection().getURL().toString();
+            tmp=tmp.substring("jar:".length());
+            tmp=tmp.substring(0, tmp.length()-(JAR_SEPARATOR+"dummy.jar").length());
+            return new URL(tmp);
+         }
+         catch (Exception ignore)
+         {
+            ThrowableHandler.addWarning(ignore);
+         }
       }
 
       return url;
-    }
+   }
 }
 

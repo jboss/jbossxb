@@ -114,4 +114,22 @@ public final class ThrowableHandler
    public static void add(Throwable t) {
       add(Type.UNKNOWN, t);
    }
+
+   /**
+    * Add a throwable that is to be handled with error type.
+    *
+    * @param t    Throwable to be handled.
+    */
+   public static void addError(Throwable t) {
+      add(Type.ERROR, t);
+   }
+
+   /**
+    * Add a throwable that is to be handled with warning type.
+    *
+    * @param t    Throwable to be handled.
+    */
+   public static void addWarning(Throwable t) {
+      add(Type.ERROR, t);
+   }
 }

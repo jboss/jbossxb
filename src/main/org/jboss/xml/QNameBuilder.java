@@ -61,7 +61,7 @@ public final class QNameBuilder
       }
 
       if (namespaceURI != null)
-         return new QName(namespaceURI, localPart);
+         return new QName(namespaceURI, localPart, prefix);
 
       log.warn("Cannot find namespaceURI for name: " + combinedName);
       return new QName(localPart);

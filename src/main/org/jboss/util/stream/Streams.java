@@ -17,6 +17,8 @@ import java.io.BufferedOutputStream;
 
 import org.jboss.util.ThrowableHandler;
 
+import org.jboss.logging.Logger;
+
 /**
  * A collection of stream related utility methods.
  *
@@ -28,6 +30,8 @@ import org.jboss.util.ThrowableHandler;
  */
 public final class Streams
 {
+   private static final Logger log = Logger.getLogger(Streams.class);
+   
    /////////////////////////////////////////////////////////////////////////
    //                               Closing                               //
    /////////////////////////////////////////////////////////////////////////
@@ -275,9 +279,18 @@ public final class Streams
       long total = 0;
       int read;
 
+      boolean trace = log.isTraceEnabled();
+      if (trace) {
+         log.trace("copying " + input + " to " + output + " with buffer size: " + buffer.length);
+      }
+      
       while ((read = input.read(buffer)) != -1) {
          output.write(buffer, 0, read);
          total += read;
+
+         if (trace) {
+            log.trace("bytes read: " + read + "; total bytes read: " + total);
+         }
       }
 
       return total;
@@ -331,13 +344,19 @@ public final class Streams
                             OutputStream output)
       throws IOException
    {
-      if (!(input instanceof BufferedInputStream))
+      if (!(input instanceof BufferedInputStream)) {
          input = new BufferedInputStream(input);
+      }
       
-      if (!(output instanceof BufferedOutputStream))
+      if (!(output instanceof BufferedOutputStream)) {
          output = new BufferedOutputStream(output);
-      
-      return copy(input, output, DEFAULT_BUFFER_SIZE);
+      }
+
+      long bytes = copy(input, output, DEFAULT_BUFFER_SIZE);
+
+      output.flush();
+
+      return bytes;
    }
    
    /**
@@ -362,21 +381,25 @@ public final class Streams
       int read;
       int readLength;
 
+      boolean trace = log.isTraceEnabled();
+      
       // setup the initial readLength, if length is less than the buffer
       // size, then we only want to read that much
       readLength = Math.min((int)length, buffer.length);
-      // System.out.println("initial read length: " + readLength);
+      if (trace) {
+         log.trace("initial read length: " + readLength);
+      }
 
       while (readLength != 0 && (read = input.read(buffer, 0, readLength)) != -1) 
       {
-         // System.out.println("read bytes: " + read);
+         if (trace) log.trace("read bytes: " + read);
          output.write(buffer, 0, read);
          total += read;
-         // System.out.println("total bytes read: " + total);
+         if (trace) log.trace("total bytes read: " + total);
 
          // update the readLength
          readLength = Math.min((int)(length - total), buffer.length);
-         // System.out.println("next read length: " + readLength);
+         if (trace) log.trace("next read length: " + readLength);
       }
 
       return total;

@@ -37,8 +37,8 @@ import java.util.Arrays;
 /**
  * An XML schema based org.jboss.xml.binding.Marshaller implementation.
  *
- * @version <tt>$Revision$</tt>
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @version <tt>$Revision$</tt>
  */
 public class XsMarshaller
    extends AbstractMarshaller
@@ -47,11 +47,17 @@ public class XsMarshaller
 
    private Stack stack = new StackImpl();
 
-   /** ObjectModelProvider for this marshaller */
+   /**
+    * ObjectModelProvider for this marshaller
+    */
    private GenericObjectModelProvider provider;
-   /** Content the result is written to */
+   /**
+    * Content the result is written to
+    */
    private Content content = new Content();
-   /** Declared namespaces */
+   /**
+    * Declared namespaces
+    */
    private final Map uriByNsName = new HashMap();
 
    private Object root;
@@ -106,7 +112,7 @@ public class XsMarshaller
       // version & encoding
       writeXmlVersion(writer);
 
-      ContentWriter contentWriter = new ContentWriter(writer);
+      ContentWriter contentWriter = new ContentWriter(writer, propertyIsTrueOrNotSet(Marshaller.MARSHALLING_INDENT));
       content.handleContent(contentWriter);
    }
 
@@ -118,7 +124,7 @@ public class XsMarshaller
     * <p>If the namespace with the given name was already declared, its value is overwritten.
     *
     * @param name the name of the namespace to declare (can be null or empty string)
-    * @param uri the URI of the namespace.
+    * @param uri  the URI of the namespace.
     */
    public void declareNamespace(String name, String uri)
    {
@@ -132,10 +138,10 @@ public class XsMarshaller
     * First, we check whether there is a namespace associated with the passed in prefix.
     * If the prefix was not declared, an exception is thrown.
     *
-    * @param prefix the prefix of the attribute to be declared
+    * @param prefix    the prefix of the attribute to be declared
     * @param localName local name of the attribute
-    * @param type the type of the attribute
-    * @param value the value of the attribute
+    * @param type      the type of the attribute
+    * @param value     the value of the attribute
     */
    public void addAttribute(String prefix, String localName, String type, String value)
    {
@@ -157,11 +163,11 @@ public class XsMarshaller
    /**
     * Adds an attribute to the top most elements declaring namespace prefix if it is not yet declared.
     *
-    * @param namespaceUri  attribute's namespace URI
-    * @param prefix  attribute's prefix
-    * @param localName  attribute's local name
-    * @param type  attribute's type
-    * @param value  attribute's value
+    * @param namespaceUri attribute's namespace URI
+    * @param prefix       attribute's prefix
+    * @param localName    attribute's local name
+    * @param type         attribute's type
+    * @param value        attribute's value
     */
    public void addAttribute(String namespaceUri, String prefix, String localName, String type, String value)
    {
@@ -194,6 +200,7 @@ public class XsMarshaller
 
    /**
     * todo this should be rewritten
+    *
     * @param element
     * @param type
     * @param attrs
@@ -268,7 +275,10 @@ public class XsMarshaller
       }
    }
 
-   private final void processComplexType(XSElement element, XSComplexType type, AttributesImpl addedAttrs, int maxOccurs)
+   private final void processComplexType(XSElement element,
+                                         XSComplexType type,
+                                         AttributesImpl addedAttrs,
+                                         int maxOccurs)
       throws SAXException
    {
       final XsQName xsName = element.getName();
@@ -296,7 +306,9 @@ public class XsMarshaller
             }
          }
 
-         String qName = xsName.getPrefix() == null ? xsName.getLocalName() : xsName.getPrefix() + ":" + xsName.getLocalName();
+         String qName = xsName.getPrefix() == null ?
+            xsName.getLocalName() :
+            xsName.getPrefix() + ":" + xsName.getLocalName();
          content.startElement(xsName.getNamespaceURI(), xsName.getLocalName(), qName, attrs);
 
          stack.push(parent);
@@ -332,7 +344,9 @@ public class XsMarshaller
                }
             }
 
-            qName = xsName.getPrefix() == null ? xsName.getLocalName() : xsName.getPrefix() + ":" + xsName.getLocalName();
+            qName = xsName.getPrefix() == null ?
+               xsName.getLocalName() :
+               xsName.getPrefix() + ":" + xsName.getLocalName();
             content.startElement(xsName.getNamespaceURI(), xsName.getLocalName(), qName, attrs);
          }
 
@@ -399,12 +413,18 @@ public class XsMarshaller
       if(popRoot)
       {
          stack.pop();
-         String qName = xsName.getPrefix() == null ? xsName.getLocalName() : xsName.getPrefix() + ":" + xsName.getLocalName();
+         String qName = xsName.getPrefix() == null ?
+            xsName.getLocalName() :
+            xsName.getPrefix() + ":" + xsName.getLocalName();
          content.endElement(xsName.getNamespaceURI(), xsName.getLocalName(), qName);
       }
    }
 
-   private void handleChildren(XSElement parent, XSComplexType type, Object children, AttributesImpl addedAttrs, int maxOccurs)
+   private void handleChildren(XSElement parent,
+                               XSComplexType type,
+                               Object children,
+                               AttributesImpl addedAttrs,
+                               int maxOccurs)
       throws SAXException
    {
       if(children != null)
@@ -443,8 +463,9 @@ public class XsMarshaller
             final XSAttribute attr = (XSAttribute)attributable;
 
             final XsQName attrQName = attr.getName();
-            final Object attrValue = provider.getAttributeValue(
-               container, attrQName.getNamespaceURI(), attrQName.getLocalName()
+            final Object attrValue = provider.getAttributeValue(container,
+               attrQName.getNamespaceURI(),
+               attrQName.getLocalName()
             );
 
             if(attrValue != null)
@@ -455,8 +476,7 @@ public class XsMarshaller
                   attrQName.getLocalName() : attrQName.getPrefix() + ':' + attrQName.getLocalName()
                   );
 
-               attrs.add(
-                  attrQName.getNamespaceURI(),
+               attrs.add(attrQName.getNamespaceURI(),
                   attrQName.getLocalName(),
                   qName,
                   attr.getType().getName().getLocalName(),
@@ -521,7 +541,11 @@ public class XsMarshaller
       }
    }
 
-   private void handleChildrenList(XSElement parent, XSComplexType type, List children, AttributesImpl addedAttrs, int maxOccurs)
+   private void handleChildrenList(XSElement parent,
+                                   XSComplexType type,
+                                   List children,
+                                   AttributesImpl addedAttrs,
+                                   int maxOccurs)
       throws SAXException
    {
       /*
@@ -530,10 +554,14 @@ public class XsMarshaller
          handleChild(parent, type, children.get(i), addedAttrs);
       }
       */
-      handleChildrenIterator(parent, type, children.iterator(),  addedAttrs, maxOccurs);
+      handleChildrenIterator(parent, type, children.iterator(), addedAttrs, maxOccurs);
    }
 
-   private void handleChildrenIterator(XSElement parent, XSComplexType type, Iterator children, AttributesImpl addedAttrs, int maxOccurs)
+   private void handleChildrenIterator(XSElement parent,
+                                       XSComplexType type,
+                                       Iterator children,
+                                       AttributesImpl addedAttrs,
+                                       int maxOccurs)
       throws SAXException
    {
       //XSParticle particle = type.getParticle();
@@ -575,7 +603,11 @@ public class XsMarshaller
       }
    }
 
-   private void handleChildrenArray(XSElement parent, XSComplexType type, Object[] children, AttributesImpl addedAttrs, int maxOccurs)
+   private void handleChildrenArray(XSElement parent,
+                                    XSComplexType type,
+                                    Object[] children,
+                                    AttributesImpl addedAttrs,
+                                    int maxOccurs)
       throws SAXException
    {
       /*
@@ -642,7 +674,8 @@ public class XsMarshaller
 
             String rootPrefix = rootName.getPrefix();
             String rootQName = (rootPrefix == null || rootPrefix.length() == 0 ?
-               rootName.getLocalName() : rootPrefix + ':' + rootName.getLocalName());
+               rootName.getLocalName() : rootPrefix + ':' + rootName.getLocalName()
+               );
 
             Stack oldStack = this.stack;
             this.stack = new StackImpl();

@@ -18,21 +18,23 @@ import java.io.IOException;
  * org.xml.sax.ContentHandler implementation that serializes an instance of org.jboss.xml.binding.Content
  * to a java.io.Writer.
  *
- * @version <tt>$Revision$</tt>
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @version <tt>$Revision$</tt>
  */
 public class ContentWriter
    implements ContentHandler
 {
+   final boolean useIndent;
    private String indent = "   ";
    private int depth = 0;
    private boolean started = false;
 
-   private Writer writer;
+   private final Writer writer;
 
-   public ContentWriter(Writer writer)
+   public ContentWriter(Writer writer, boolean indent)
    {
       this.writer = writer;
+      this.useIndent = indent;
    }
 
    public void setDocumentLocator(Locator locator)
@@ -65,13 +67,19 @@ public class ContentWriter
    public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
       throws SAXException
    {
-      write(writer, '\n');
-
-      for(int j = 0; j < depth; ++j)
-         write(writer, indent);
+      if(useIndent)
+      {
+         write(writer, '\n');
+         for(int j = 0; j < depth; ++j)
+         {
+            write(writer, indent);
+         }
+      }
 
       if(!started)
+      {
          started = true;
+      }
 
       ++depth;
 
@@ -105,12 +113,19 @@ public class ContentWriter
          if(colon >= 0)
          {
             String prefix = qName.substring(0, colon);
-            write(writer, '\n');
-            for(int i = 0; i < depth + 1; ++i)
+            if(useIndent)
             {
-               write(writer, indent);
+               write(writer, '\n');
+               for(int i = 0; i < depth + 1; ++i)
+               {
+                  write(writer, indent);
+               }
             }
-            
+            else
+            {
+               write(writer, ' ');
+            }
+
             write(writer, "xmlns:");
             write(writer, prefix);
             write(writer, "=\"");
@@ -129,9 +144,14 @@ public class ContentWriter
       --depth;
       if(!started)
       {
-         write(writer, '\n');
-         for(int j = 0; j < depth; ++j)
-            write(writer, indent);
+         if(useIndent)
+         {
+            write(writer, '\n');
+            for(int j = 0; j < depth; ++j)
+            {
+               write(writer, indent);
+            }
+         }
       }
       else
       {

@@ -151,7 +151,7 @@ public class XercesXsMarshaller
          for(int i = 0; i < components.getLength(); ++i)
          {
             XSElementDeclaration element = (XSElementDeclaration)components.item(i);
-            marshalElement(element, 1);
+            marshalElement(element, 1, 1);// todo fix min/max
          }
       }
       else
@@ -178,7 +178,7 @@ public class XercesXsMarshaller
                );
             }
 
-            marshalElement(element, 1);
+            marshalElement(element, 1, 1);// todo fix min/max
          }
       }
 
@@ -187,11 +187,11 @@ public class XercesXsMarshaller
       // version & encoding
       writeXmlVersion(writer);
 
-      ContentWriter contentWriter = new ContentWriter(writer);
+      ContentWriter contentWriter = new ContentWriter(writer, propertyIsTrueOrNotSet(Marshaller.MARSHALLING_INDENT));
       content.handleContent(contentWriter);
    }
 
-   private void marshalElement(XSElementDeclaration element, int maxOccurs)
+   private boolean marshalElement(XSElementDeclaration element, int minOccurs, int maxOccurs)
    {
       Object value;
       if(stack.isEmpty())
@@ -199,7 +199,7 @@ public class XercesXsMarshaller
          value = provider.getRoot(root, element.getNamespace(), element.getName());
          if(value == null)
          {
-            return;
+            return false;
          }
       }
       else
@@ -218,6 +218,8 @@ public class XercesXsMarshaller
             }
          }
       }
+
+      log.info("marshalling " + element.getName() + "=" + value + ", min=" + minOccurs + ", max=" + maxOccurs);
 
       if(value != null)
       {
@@ -240,6 +242,8 @@ public class XercesXsMarshaller
 
          stack.pop();
       }
+
+      return minOccurs == 0 || value != null;
    }
 
    private void marshalElementType(XSElementDeclaration element)
@@ -306,26 +310,28 @@ public class XercesXsMarshaller
       content.endElement(element.getNamespace(), element.getName(), qName);
    }
 
-   private void marshalParticle(XSParticle particle)
+   private boolean marshalParticle(XSParticle particle)
    {
+      boolean marshalled;
       XSTerm term = particle.getTerm();
       switch(term.getType())
       {
          case XSConstants.MODEL_GROUP:
-            marshalModelGroup((XSModelGroup)term);
+            marshalled = marshalModelGroup((XSModelGroup)term);
             break;
          case XSConstants.WILDCARD:
-            marshalWildcard((XSWildcard)term);
+            marshalled = marshalWildcard((XSWildcard)term);
             break;
          case XSConstants.ELEMENT_DECLARATION:
-            marshalElement((XSElementDeclaration)term, particle.getMaxOccurs());
+            marshalled = marshalElement((XSElementDeclaration)term, particle.getMinOccurs(), particle.getMaxOccurs());
             break;
          default:
             throw new IllegalStateException("Unexpected term type: " + term.getType());
       }
+      return marshalled;
    }
 
-   private void marshalWildcard(XSWildcard wildcard)
+   private boolean marshalWildcard(XSWildcard wildcard)
    {
       // todo class resolution
       ClassMapping mapping = getClassMapping(stack.peek().getClass());
@@ -342,62 +348,82 @@ public class XercesXsMarshaller
       this.provider = mapping.provider;
       this.stack = new StackImpl();
 
+      boolean marshalled = false;
       XSModel model = loadSchema(mapping.schemaUrl);
       XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
       for(int i = 0; i < components.getLength(); ++i)
       {
          XSElementDeclaration element = (XSElementDeclaration)components.item(i);
-         marshalElement(element, 1);
+         marshalled = marshalElement(element, 1, 1);// todo fix min/max
       }
 
       this.root = parentRoot;
       this.provider = parentProvider;
       this.stack = parentStack;
+
+      return marshalled;
    }
 
-   private void marshalModelGroup(XSModelGroup modelGroup)
+   private boolean marshalModelGroup(XSModelGroup modelGroup)
    {
+      boolean marshalled;
       switch(modelGroup.getCompositor())
       {
          case XSModelGroup.COMPOSITOR_ALL:
-            marshalModelGroupAll(modelGroup.getParticles());
+            marshalled = marshalModelGroupAll(modelGroup.getParticles());
             break;
          case XSModelGroup.COMPOSITOR_CHOICE:
-            marshalModelGroupChoice(modelGroup.getParticles());
+            marshalled = marshalModelGroupChoice(modelGroup.getParticles());
             break;
          case XSModelGroup.COMPOSITOR_SEQUENCE:
-            marshalModelGroupSequence(modelGroup.getParticles());
+            marshalled = marshalModelGroupSequence(modelGroup.getParticles());
             break;
          default:
             throw new IllegalStateException("Unexpected compsitor: " + modelGroup.getCompositor());
       }
+      return marshalled;
    }
 
-   private void marshalModelGroupAll(XSObjectList particles)
+   private boolean marshalModelGroupAll(XSObjectList particles)
    {
+      boolean marshalled = false;
       for(int i = 0; i < particles.getLength(); ++i)
       {
          XSParticle particle = (XSParticle)particles.item(i);
-         marshalParticle(particle);
+         marshalled |= marshalParticle(particle);
       }
+      return marshalled;
    }
 
-   private void marshalModelGroupChoice(XSObjectList particles)
+   private boolean marshalModelGroupChoice(XSObjectList particles)
    {
+      boolean marshalled = false;
+      Content mainContent = this.content;
+      for(int i = 0; i < particles.getLength() && !marshalled; ++i)
+      {
+         XSParticle particle = (XSParticle)particles.item(i);
+         this.content = new Content();
+         marshalled = marshalParticle(particle);
+      }
+
+      if(marshalled)
+      {
+         mainContent.append(this.content);
+      }
+      this.content = mainContent;
+
+      return marshalled;
+   }
+
+   private boolean marshalModelGroupSequence(XSObjectList particles)
+   {
+      boolean marshalled = true;
       for(int i = 0; i < particles.getLength(); ++i)
       {
          XSParticle particle = (XSParticle)particles.item(i);
-         marshalParticle(particle);
+         marshalled &= marshalParticle(particle);
       }
-   }
-
-   private void marshalModelGroupSequence(XSObjectList particles)
-   {
-      for(int i = 0; i < particles.getLength(); ++i)
-      {
-         XSParticle particle = (XSParticle)particles.item(i);
-         marshalParticle(particle);
-      }
+      return marshalled;
    }
 
    private XSModel loadSchema(String schemaUri)

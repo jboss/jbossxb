@@ -119,7 +119,7 @@ public class Content
       StringWriter writer = new StringWriter();
       try
       {
-         ContentWriter contentWriter = new ContentWriter(writer);
+         ContentWriter contentWriter = new ContentWriter(writer, true);
          handleContent(contentWriter);
       }
       catch(SAXException e)
@@ -198,6 +198,14 @@ public class Content
       for(index = 0; index < content.size(); ++index)
       {
          ((Node)content.get(index)).read(builder);
+      }
+   }
+
+   public void append(Content content)
+   {
+      for(int i = 0; i < content.content.size(); ++i)
+      {
+         this.content.addLast(content.content.get(i));
       }
    }
 

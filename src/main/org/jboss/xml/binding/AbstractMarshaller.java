@@ -166,6 +166,12 @@ public abstract class AbstractMarshaller
 
    // Protected
 
+   protected boolean propertyIsTrueOrNotSet(String name)
+   {
+      String value = getProperty(name);
+      return value == null || "true".equalsIgnoreCase(value);
+   }
+
    protected void writeXmlVersion(Writer writer) throws IOException
    {
       String xmlVersion = getProperty(Marshaller.XML_VERSION);

@@ -59,7 +59,7 @@ public class SchemalessMarshaller
       writer.write("UTF-8");
       writer.write("\"?>\n");
 
-      ContentWriter contentWriter = new ContentWriter(writer);
+      ContentWriter contentWriter = new ContentWriter(writer, true);
       try
       {
          content.handleContent(contentWriter);

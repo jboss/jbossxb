@@ -23,6 +23,7 @@ public interface Marshaller
 {
    String XML_VERSION = "org.jboss.xml.binding.marshalling.version";
    String MARSHALLER_IMPL = "org.jboss.xml.binding.Marshaller";
+   String MARSHALLING_INDENT = "org.jboss.xml.binding.marshalling.indent";
 
    class FACTORY
    {

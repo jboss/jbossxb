@@ -164,8 +164,12 @@ public class Content
    public void characters(char[] ch, int start, int length)
    {
       Characters characters = new Characters(ch, start, length);
-      content.addLast(characters);
-      log.debug("characters> " + characters);
+      // ignore whitespace-only characters
+      if (characters.toString().trim().length() > 0)
+      {
+         content.addLast(characters);
+         log.debug("characters> " + characters);
+      }
    }
 
    // Methods that navigate through the content

@@ -41,7 +41,8 @@ public class FileURLConnection
    {
       super(url);
 
-      file = new File(url.getFile());
+      file = new File(url.getPath().replace('/', File.separatorChar).replace('|', ':'));
+
       doOutput = false;
    }
 

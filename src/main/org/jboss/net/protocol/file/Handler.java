@@ -29,4 +29,9 @@ public class Handler
    {
       return new FileURLConnection(url);
    }
+
+   protected void parseURL(final URL url, final String s, final int i, final int j)
+   {
+      super.parseURL(url, s.replace(java.io.File.separatorChar, '/'), i, j);
+   }
 }

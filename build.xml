@@ -179,7 +179,7 @@
 	      refid="xdoclet.task.classpath"/>
 
     <taskdef name="todo" 
-             classname="xdoclet.doc.DocumentDocletTask"
+             classname="xdoclet.modules.doc.DocumentDocletTask"
              classpathref="xdoclet.task.classpath"/>
   </target>
 

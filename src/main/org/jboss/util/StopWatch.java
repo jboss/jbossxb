@@ -11,8 +11,6 @@ package org.jboss.util;
 
 import java.io.Serializable;
 
-import java.util.Date;
-
 /**
  * Simulates a stop watch with a <em>lap</em> counter.
  *

@@ -535,6 +535,26 @@ public final class Strings
    /////////////////////////////////////////////////////////////////////////
 
    /**
+    * <p>Compare two strings.
+    *
+    * <p>Both or one of them may be null.
+    *
+    * @return true if object equals or intern ==, else false. 
+    */
+   public static boolean compare(final String me, final String you) {
+      // If both null or intern equals
+      if (me == you)
+         return true;
+      
+      // if me null and you are not
+      if (me == null && you != null)
+         return false;
+      
+      // me will not be null, test for equality
+      return me.equals(you);
+   }
+      
+   /**
     * Check if the given string is empty.
     *
     * @param string     String to check

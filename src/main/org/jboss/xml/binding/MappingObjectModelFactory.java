@@ -14,6 +14,7 @@ import org.apache.xerces.xs.XSTypeDefinition;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collection;
@@ -190,21 +191,39 @@ public class MappingObjectModelFactory
          {
             if(!(o instanceof Collection))
             {
-               Method getter;
                ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
                   new ElementToFieldMappingKey(localName, o.getClass())
                );
 
                if(fieldMapping != null)
                {
-                  getter = fieldMapping.getter;
+                  child = get(o, localName, fieldMapping.getter, fieldMapping.field);
                }
                else
                {
-                  String getterStr = Util.xmlNameToGetMethodName(localName, true);
-                  getter = o.getClass().getMethod(getterStr, null);
+                  String xmlToCls = Util.xmlNameToClassName(localName, true);
+                  Method getter = null;
+                  Field field = null;
+                  try
+                  {
+                     getter = o.getClass().getMethod("get" + xmlToCls, null);
+                  }
+                  catch(NoSuchMethodException e)
+                  {
+                     try
+                     {
+                        field =
+                           o.getClass().getField(Character.toLowerCase(xmlToCls.charAt(0)) + xmlToCls.substring(1));
+                     }
+                     catch(NoSuchFieldException ee)
+                     {
+                        throw new JBossXBException(
+                           "Neither field nor its getter were found for " + localName + " in " + o.getClass()
+                        );
+                     }
+                  }
+                  child = get(o, localName, getter, field);
                }
-               child = get(o, localName, getter);
             }
 
             if(child == null)
@@ -226,7 +245,7 @@ public class MappingObjectModelFactory
                }
             }
          }
-         catch(IllegalStateException e)
+         catch(RuntimeException e)
          {
             throw e;
          }
@@ -259,27 +278,37 @@ public class MappingObjectModelFactory
                oCls = o.getClass();
             }
 
-            String getterStr = Util.xmlNameToGetMethodName(localName, true);
-            Method getter;
+            String xmlToCls = Util.xmlNameToClassName(localName, true);
+            Method getter = null;
+            Field field = null;
+            Class childType;
             try
             {
-               getter = oCls.getMethod(getterStr, null);
+               getter = oCls.getMethod("get" + xmlToCls, null);
+               childType = getter.getReturnType();
             }
             catch(NoSuchMethodException e)
             {
-               throw new IllegalStateException("newChild failed for o=" +
-                  o +
-                  ", uri=" +
-                  namespaceURI +
-                  ", local="
-                  + localName + ", attrs=" + attrs + ": no getter"
-               );
+               try
+               {
+                  field = oCls.getField(Character.toLowerCase(xmlToCls.charAt(0)) + xmlToCls.substring(1));
+                  childType = field.getType();
+               }
+               catch(NoSuchFieldException e1)
+               {
+                  throw new IllegalStateException("newChild failed for o=" +
+                     o +
+                     ", uri=" +
+                     namespaceURI +
+                     ", local="
+                     + localName + ", attrs=" + attrs + ": neither field nor its getter were found"
+                  );
+               }
             }
 
-            Class childType = getter.getReturnType();
             if(Collection.class.isAssignableFrom(childType))
             {
-               child = get(o, localName, getter);
+               child = get(o, localName, getter, field);
 
                // now does this element really represent a Java collection or is it an element that can appear more than once?
                // try to load the class and create an instance
@@ -327,7 +356,7 @@ public class MappingObjectModelFactory
 
    public void addChild(Object parent,
                         Object child,
-                        UnmarshallingContext navigator,
+                        UnmarshallingContext ctx,
                         String namespaceURI,
                         String localName)
    {
@@ -337,8 +366,6 @@ public class MappingObjectModelFactory
             parent +
             " child=" +
             child +
-            " navigator=" +
-            navigator +
             " namespaceURI=" +
             namespaceURI +
             " localName=" +
@@ -421,7 +448,6 @@ public class MappingObjectModelFactory
       }
       else
       {
-         Method setter = null;
          final ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
             new ElementToFieldMappingKey(localName, parent.getClass())
          );
@@ -431,8 +457,7 @@ public class MappingObjectModelFactory
             {
                log.trace("Add " + value + " to " + parent + " using field mapping " + fieldMapping);
             }
-            setter = fieldMapping.setter;
-            set(parent, value, localName, setter);
+            set(parent, value, localName, fieldMapping.setter, fieldMapping.field);
          }
          else
          {
@@ -441,31 +466,37 @@ public class MappingObjectModelFactory
             {
                log.trace("Add " + value + " to xml mapped class " + xmlToCls);
             }
+
+            Class parentCls = parent instanceof ImmutableContainer ?
+               ((ImmutableContainer)parent).cls :
+               parent.getClass();
             Method getter = null;
-            Class parentCls;
-            if(parent instanceof ImmutableContainer)
-            {
-               parentCls = ((ImmutableContainer)parent).cls;
-            }
-            else
-            {
-               parentCls = parent.getClass();
-            }
+            Field field = null;
+            Class fieldType = null;
 
             try
             {
                getter = parentCls.getMethod("get" + xmlToCls, null);
+               fieldType = getter.getReturnType();
             }
             catch(NoSuchMethodException e)
             {
-               log.warn("no getter found for " + localName + " in " + parent);
+               try
+               {
+                  field = parentCls.getField(Character.toLowerCase(xmlToCls.charAt(0)) + xmlToCls.substring(1));
+                  fieldType = field.getType();
+               }
+               catch(NoSuchFieldException e1)
+               {
+                  log.warn("neither field nor its getter were found for " + localName + " in " + parent);
+               }
             }
 
-            if(getter != null)
+            if(fieldType != null)
             {
-               if(!(child instanceof Collection) && Collection.class.isAssignableFrom(getter.getReturnType()))
+               if(!(child instanceof Collection) && Collection.class.isAssignableFrom(fieldType))
                {
-                  Object o = get(parent, localName, getter);
+                  Object o = get(parent, localName, getter, field);
                   Collection col = (Collection)o;
                   if(trace)
                   {
@@ -475,17 +506,19 @@ public class MappingObjectModelFactory
                }
                else
                {
-
-                  try
+                  Method setter = null;
+                  if(field == null)
                   {
-                     setter = parentCls.getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
+                     try
+                     {
+                        setter = parentCls.getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
+                     }
+                     catch(NoSuchMethodException e)
+                     {
+                        log.warn("No setter for " + localName + " in " + parentCls);
+                     }
                   }
-                  catch(NoSuchMethodException e)
-                  {
-                     log.warn("No setter for " + localName + " in " + parentCls);
-                  }
-
-                  set(parent, value, localName, setter);
+                  set(parent, value, localName, setter, field);
                }
             }
          }
@@ -515,15 +548,15 @@ public class MappingObjectModelFactory
       }
       else
       {
-         Method setter = null;
          Object fieldValue = null;
          final ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
             new ElementToFieldMappingKey(localName, o.getClass())
          );
+
          if(fieldMapping != null)
          {
             fieldValue = fieldMapping.converter.unmarshal(value);
-            setter = fieldMapping.setter;
+            set(o, fieldValue, localName, fieldMapping.setter, fieldMapping.field);
          }
          else
          {
@@ -537,20 +570,41 @@ public class MappingObjectModelFactory
                oCls = o.getClass();
             }
 
+            Method setter = null;
+            Field field = null;
+            Class fieldType = null;
+            final String xmlToCls = Util.xmlNameToClassName(localName, true);
+
             try
             {
-               final String xmlToCls = Util.xmlNameToClassName(localName, true);
                Method getter = oCls.getMethod("get" + xmlToCls, null);
-               fieldValue = SimpleTypeBindings.unmarshal(value, getter.getReturnType());
+               fieldType = getter.getReturnType();
                setter = oCls.getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
             }
             catch(NoSuchMethodException e)
             {
-               log.warn("no setter found for " + localName + " in " + oCls);
+               try
+               {
+                  field = oCls.getField(Character.toLowerCase(xmlToCls.charAt(0)) + xmlToCls.substring(1));
+                  fieldType = field.getType();
+               }
+               catch(NoSuchFieldException e1)
+               {
+                  if(fieldType == null)
+                  {
+                     throw new JBossXBRuntimeException(
+                        "Failed to discover field's type: niether field nor its getter were found for " +
+                        localName +
+                        " in " +
+                        oCls
+                     );
+                  }
+               }
             }
-         }
 
-         set(o, fieldValue, localName, setter);
+            fieldValue = SimpleTypeBindings.unmarshal(value, fieldType);
+            set(o, fieldValue, localName, setter, field);
+         }
       }
    }
 
@@ -591,11 +645,11 @@ public class MappingObjectModelFactory
       return o;
    }
 
-   private static Object get(Object o, String localName, Method getter)
+   private static Object get(Object o, String localName, Method getter, Field field)
    {
       if(log.isTraceEnabled())
       {
-         log.trace("get object=" + o + " localName=" + localName + " getter=" + getter);
+         log.trace("get object=" + o + " localName=" + localName + " getter=" + getter + " field=" + field);
       }
 
       Object value;
@@ -608,17 +662,19 @@ public class MappingObjectModelFactory
       {
          try
          {
-            value = getter.invoke(o, null);
+            value = getter != null ? getter.invoke(o, null) : field.get(o);
          }
          catch(Exception e)
          {
-            throw new NestedRuntimeException("Failed to invoke " + getter + " on " + o, e);
+            throw new NestedRuntimeException(
+               "Failed to get field value " + (getter != null ? getter.getName() : field.getName()) + " on " + o, e
+            );
          }
       }
       return value;
    }
 
-   private static void set(Object parent, Object child, String localName, Method setter)
+   private static void set(Object parent, Object child, String localName, Method setter, Field field)
    {
       if(log.isTraceEnabled())
       {
@@ -633,10 +689,43 @@ public class MappingObjectModelFactory
          }
          catch(Exception e)
          {
-            throw new NestedRuntimeException("Failed to set attribute value " +
+            throw new NestedRuntimeException("Failed to set field value " +
                child +
                " with setter " +
                setter
+               + " on " + parent + ": ", e
+            );
+         }
+      }
+      else if(field != null)
+      {
+         if(!field.isAccessible())
+         {
+            field.setAccessible(true);
+         }
+
+         try
+         {
+            field.set(parent, child);
+         }
+         catch(IllegalArgumentException e)
+         {
+            throw new NestedRuntimeException("Failed to set field value " +
+               child +
+               " with field " +
+               field.getName() +
+               " on " +
+               parent +
+               ": field type is " +
+               field.getType() + ", value type is " + (child == null ? null : child.getClass()), e
+            );
+         }
+         catch(IllegalAccessException e)
+         {
+            throw new NestedRuntimeException("Failed to set field value " +
+               child +
+               " with field " +
+               field.getName()
                + " on " + parent + ": ", e
             );
          }
@@ -647,9 +736,9 @@ public class MappingObjectModelFactory
       }
       else
       {
-         throw new IllegalStateException("setter is null and it's not an immutable container: parent=" +
+         throw new IllegalStateException("Field and setter are null and it's not an immutable container: parent=" +
             parent.getClass() +
-            ", localName" + localName + ", parent=" + parent + ", child=" + child
+            ", localName=" + localName + ", parent=" + parent + ", child=" + child
          );
       }
    }
@@ -791,7 +880,7 @@ public class MappingObjectModelFactory
 
       public final Class cls;
 
-      public final String field;
+      public final String fieldName;
 
       public final TypeBinding converter;
 
@@ -801,31 +890,55 @@ public class MappingObjectModelFactory
 
       public final Method setter;
 
-      public ElementToFieldMapping(String element, Class cls, String field, TypeBinding converter)
+      public final Field field;
+
+      public ElementToFieldMapping(String element, Class cls, String fieldName, TypeBinding converter)
       {
          this.element = element;
          this.cls = cls;
-         this.field = field;
+         this.fieldName = fieldName;
          this.converter = converter;
          key = new ElementToFieldMappingKey(element, cls);
 
+         Field field = null;
+         Method getter = null;
+         Method setter = null;
          try
          {
-            getter = Classes.getAttributeGetter(cls, field);
+            field = cls.getField(fieldName);
+            if(!field.isAccessible())
+            {
+               field.setAccessible(true);
+            }
          }
-         catch(NoSuchMethodException e)
+         catch(NoSuchFieldException e)
          {
-            throw new IllegalStateException("Getter not found for " + field + " in class " + cls.getName());
+            try
+            {
+               getter = Classes.getAttributeGetter(cls, fieldName);
+            }
+            catch(NoSuchMethodException e1)
+            {
+               throw new JBossXBRuntimeException(
+                  "Neither field nor its getter method was found for " + fieldName + " in " + cls
+               );
+            }
+
+            try
+            {
+               setter = Classes.getAttributeSetter(cls, fieldName, getter.getReturnType());
+            }
+            catch(NoSuchMethodException e1)
+            {
+               throw new JBossXBRuntimeException(
+                  "Neither field nor its setter method was found for " + fieldName + " in " + cls
+               );
+            }
          }
 
-         try
-         {
-            setter = Classes.getAttributeSetter(cls, field, getter.getReturnType());
-         }
-         catch(NoSuchMethodException e)
-         {
-            throw new IllegalStateException("Setter not found for " + field + " in class " + cls.getName());
-         }
+         this.field = field;
+         this.getter = getter;
+         this.setter = setter;
       }
 
       public String toString()
@@ -837,7 +950,7 @@ public class MappingObjectModelFactory
          {
             buffer.append(" class=").append(cls.getName());
          }
-         buffer.append(" field=").append(field);
+         buffer.append(" field=").append(fieldName);
          buffer.append(" getter=").append(getter);
          buffer.append(" setter=").append(setter);
          if(converter != null)
@@ -869,7 +982,9 @@ public class MappingObjectModelFactory
          {
             return false;
          }
-         if(field != null ? !field.equals(elementToFieldMapping.field) : elementToFieldMapping.field != null)
+         if(fieldName != null ?
+            !fieldName.equals(elementToFieldMapping.fieldName) :
+            elementToFieldMapping.fieldName != null)
          {
             return false;
          }
@@ -882,7 +997,7 @@ public class MappingObjectModelFactory
          int result;
          result = (element != null ? element.hashCode() : 0);
          result = 29 * result + (cls != null ? cls.hashCode() : 0);
-         result = 29 * result + (field != null ? field.hashCode() : 0);
+         result = 29 * result + (fieldName != null ? fieldName.hashCode() : 0);
          return result;
       }
    }

@@ -11,6 +11,12 @@ package org.jboss.util;
 
 import java.util.Map;
 
+import java.net.URL;
+import java.net.MalformedURLException;
+
+import java.io.IOException;
+import java.io.File;
+
 /**
  * A collection of String utilities.
  *
@@ -616,5 +622,49 @@ public final class Strings
       }
 
       return strings;
+   }
+
+   /**
+    * Make a URL from the given string.
+    *
+    * <p>
+    * If the string is a properly formatted file URL, then the file
+    * portion will be made canonical.
+    *
+    * <p>
+    * If the string is an invalid URL then it will be converted into a
+    * file URL.
+    *
+    * @param urlspec    The string to construct a URL for.
+    * @return           A URL for the given string.
+    *
+    * @throws MalformedURLException  Could not make a URL for the given string.
+    */
+   public static URL toURL(String urlspec) throws MalformedURLException
+   {
+      urlspec = urlspec.trim();
+      
+      URL url;
+      
+      try {
+         url = new URL(urlspec);
+         if (url.getProtocol().equals("file")) {
+            // make sure the file is absolute & canonical file url
+            File file = new File(url.getFile()).getCanonicalFile();
+            url = file.toURL();
+         }
+      }
+      catch (Exception e) {
+         // make sure we have a absolute & canonical file url
+         try {
+            File file = new File(urlspec).getCanonicalFile();
+            url = file.toURL();
+         }
+         catch (IOException n) {
+            throw new MalformedURLException(n.toString());
+         }
+      }
+      
+      return url;
    }
 }

@@ -266,6 +266,7 @@
         <include name="org/jboss/util/id/*"/>
         <include name="org/jboss/util/platform/*"/>
         <include name="org/jboss/util/Mu*.class"/>
+        <include name="org/jboss/util/Strings*.class"/>
         <include name="org/jboss/util/Null*.class"/>
         <include name="org/jboss/util/StopWatch*.class"/>
         <include name="org/jboss/util/HashCode*.class"/>

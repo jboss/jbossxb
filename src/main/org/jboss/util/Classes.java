@@ -13,6 +13,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Array;
 
+import java.util.Map;
+import java.util.HashMap;
+
 /**
  * A collection of <code>Class</code> utilities.
  *
@@ -143,6 +146,37 @@ public final class Classes
    //                               Primitives                            //
    /////////////////////////////////////////////////////////////////////////
 
+   /** Primitive type name -> class map. */
+   private static final Map PRIMITIVE_NAME_TYPE_MAP = new HashMap();
+   
+   /** Setup the primitives map. */
+   static
+   {
+      PRIMITIVE_NAME_TYPE_MAP.put("boolean", Boolean.TYPE);
+      PRIMITIVE_NAME_TYPE_MAP.put("byte", Byte.TYPE);
+      PRIMITIVE_NAME_TYPE_MAP.put("char", Character.TYPE);
+      PRIMITIVE_NAME_TYPE_MAP.put("short", Short.TYPE);
+      PRIMITIVE_NAME_TYPE_MAP.put("int", Integer.TYPE);
+      PRIMITIVE_NAME_TYPE_MAP.put("long", Long.TYPE);
+      PRIMITIVE_NAME_TYPE_MAP.put("float", Float.TYPE);
+      PRIMITIVE_NAME_TYPE_MAP.put("double", Double.TYPE);
+   }
+
+   /**
+    * Get the primitive type for the given primitive name.
+    *
+    * <p>
+    * For example, "boolean" returns Boolean.TYPE and so on...
+    *
+    * @param name    Primitive type name (boolean, int, byte, ...)
+    * @return        Primitive type or null.
+    *
+    * @exception IllegalArgumentException    Type is not a primitive class
+    */
+   public static Class getPrimitiveTypeForName(final String name) {
+      return (Class)PRIMITIVE_NAME_TYPE_MAP.get(name);
+   }
+   
    /** Map of primitive types to their wrapper classes */
    private static final Class[] PRIMITIVE_WRAPPER_MAP = {
       Boolean.TYPE,     Boolean.class,

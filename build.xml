@@ -69,13 +69,6 @@
     <!-- Libraries -->
     <!-- ========= -->
 
-    <!-- Java Management Extensions (JMX) -->
-    <property name="sun.jmx.root" value="${project.thirdparty}/sun/jmx"/>
-    <property name="sun.jmx.lib" value="${sun.jmx.root}/lib"/>
-    <path id="sun.jmx.classpath">
-      <pathelement path="${sun.jmx.lib}/jmxri.jar"/>
-    </path>
-
     <!-- Java API for XML Processing (JAXP) -->
     <property name="sun.jaxp.root" value="${project.thirdparty}/sun/jaxp"/>
     <property name="sun.jaxp.lib" value="${sun.jaxp.root}/lib"/>
@@ -101,7 +94,6 @@
 
     <!-- The combined library classpath -->
     <path id="library.classpath">
-      <path refid="sun.jmx.classpath"/>
       <path refid="sun.jaxp.classpath"/>
       <path refid="apache.log4j.classpath"/>
     </path>
@@ -110,8 +102,16 @@
     <!-- Modules -->
     <!-- ======= -->
 
+    <!-- JMX -->
+    <property name="jboss.jmx.root" value="${project.root}/jmx/output"/>
+    <property name="jboss.jmx.lib" value="${jboss.jmx.root}/lib"/>
+    <path id="jboss.jmx.classpath">
+      <pathelement path="${jboss.jmx.lib}/jboss-jmx.jar"/>
+    </path>
+
     <!-- The combined dependent module classpath -->
     <path id="dependentmodule.classpath">
+      <path refid="jboss.jmx.classpath"/>
     </path>
 
     <!-- ===== -->

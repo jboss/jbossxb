@@ -43,6 +43,15 @@ public class PropertyContainer
    }
 
    /**
+    * Initialize the container with a property group of the given class name.
+    *
+    * @param type    The class whos name will be the property group name.
+    */
+   public PropertyContainer(final Class type) {
+      this(type.getName());
+   }
+   
+   /**
     * Creates a {@link FieldBoundPropertyListener} for the field and
     * property name and adds it the underlying property group.
     *

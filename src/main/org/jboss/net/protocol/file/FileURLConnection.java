@@ -23,6 +23,7 @@ import java.net.MalformedURLException;
 
 import java.security.Permission;
 import java.io.FilePermission;
+import java.io.BufferedInputStream;
 
 /**
  * Provides local file access via URL semantics, correctly returning
@@ -101,7 +102,22 @@ public class FileURLConnection
       else if (name.equalsIgnoreCase("content-length"))
          headerField = String.valueOf(file.length());
       else if (name.equalsIgnoreCase("content-type"))
+      {
          headerField = getFileNameMap().getContentTypeFor(file.getName());
+         if( headerField == null )
+         {
+            try
+            {
+               InputStream is = getInputStream();
+               BufferedInputStream bis = new BufferedInputStream(is);
+               headerField = URLConnection.guessContentTypeFromStream(bis);
+               bis.close();
+            }
+            catch(IOException e)
+            {
+            }
+         }
+      }
       else if (name.equalsIgnoreCase("date"))
          headerField = String.valueOf(file.lastModified());
       else

@@ -76,6 +76,15 @@
       <pathelement path="${sun.jmx.lib}/jmxri.jar"/>
     </path>
 
+    <!-- Java API for XML Processing (JAXP) -->
+    <property name="sun.jaxp.root" value="${project.thirdparty}/sun/jaxp"/>
+    <property name="sun.jaxp.lib" value="${sun.jaxp.root}/lib"/>
+    <path id="sun.jaxp.classpath">
+      <fileset dir="${sun.jaxp.lib}">
+        <include name="*.jar"/>
+      </fileset>
+    </path>
+
     <!-- JUnit -->
     <property name="junit.junit.root" value="${project.thirdparty}/junit/junit"/>
     <property name="junit.junit.lib" value="${junit.junit.root}/lib"/>
@@ -86,6 +95,7 @@
     <!-- The combined library classpath -->
     <path id="library.classpath">
       <path refid="sun.jmx.classpath"/>
+      <path refid="sun.jaxp.classpath"/>
     </path>
 
     <!-- ======= -->

@@ -9,24 +9,20 @@
 
 package org.jboss.util.propertyeditor;
 
-import java.beans.PropertyEditorSupport;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
- * A property editor for {@link java.lang.Integer}.
+ * A property editor for {@link java.util.TreeSet}.
  *
  * @version <tt>$Revision$</tt>
- * @author Scott.Stark@jboss.org
+ * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
-public class IntegerEditor
-   extends PropertyEditorSupport
+public class TreeSetEditor
+   extends SetEditor
 {
-   /**
-    * Map the argument text into and Integer using Integer.valueOf.
-    */
-   public void setAsText(final String text)
+   protected Set createSet()
    {
-      Integer newValue = Integer.valueOf(text);
-      setValue(newValue);
+      return new TreeSet();
    }
-
 }

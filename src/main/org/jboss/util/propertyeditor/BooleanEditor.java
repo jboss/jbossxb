@@ -11,7 +11,8 @@ package org.jboss.util.propertyeditor;
 
 import java.beans.PropertyEditorSupport;
 
-/** A property editor for {@link java.lang.Boolean}.
+/**
+ * A property editor for {@link java.lang.Boolean}.
  *
  * @version $Revision$
  * @author Scott.Stark@jboss.org
@@ -20,8 +21,9 @@ public class BooleanEditor extends PropertyEditorSupport
 {
    private static final String[] BOOLEAN_TAGS = {"true", "false"};
 
-   /** Map the argument text into Boolean.TRUE or Boolean.FALSE
-    using Boolean.valueOf.
+   /**
+    * Map the argument text into Boolean.TRUE or Boolean.FALSE
+    * using Boolean.valueOf.
     */
    public void setAsText(final String text)
    {
@@ -30,7 +32,7 @@ public class BooleanEditor extends PropertyEditorSupport
    }
 
    /**
-    @return the values {"true", "false"}
+    * @return the values {"true", "false"}
     */
    public String[] getTags()
    {

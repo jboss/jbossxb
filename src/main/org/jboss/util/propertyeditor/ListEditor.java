@@ -9,24 +9,26 @@
 
 package org.jboss.util.propertyeditor;
 
-import java.beans.PropertyEditorSupport;
+import java.util.Collection;
+import java.util.List;
+import java.util.LinkedList;
 
 /**
- * A property editor for {@link java.lang.Integer}.
+ * A property editor for {@link java.util.List}.
  *
  * @version <tt>$Revision$</tt>
- * @author Scott.Stark@jboss.org
+ * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
-public class IntegerEditor
-   extends PropertyEditorSupport
+public class ListEditor
+   extends CollectionEditor
 {
-   /**
-    * Map the argument text into and Integer using Integer.valueOf.
-    */
-   public void setAsText(final String text)
+   protected Collection createCollection()
    {
-      Integer newValue = Integer.valueOf(text);
-      setValue(newValue);
+      return createList();
    }
 
+   protected List createList()
+   {
+      return new LinkedList();
+   }
 }

@@ -9,24 +9,19 @@
 
 package org.jboss.util.propertyeditor;
 
-import java.beans.PropertyEditorSupport;
+import java.util.List;
 
 /**
- * A property editor for {@link java.lang.Integer}.
+ * A property editor for {@link java.util.Iterator}.
  *
  * @version <tt>$Revision$</tt>
- * @author Scott.Stark@jboss.org
+ * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
-public class IntegerEditor
-   extends PropertyEditorSupport
+public class IteratorEditor
+   extends ListEditor
 {
-   /**
-    * Map the argument text into and Integer using Integer.valueOf.
-    */
-   public void setAsText(final String text)
+   public void setValue(final List list)
    {
-      Integer newValue = Integer.valueOf(text);
-      setValue(newValue);
+      super.setValue((Object)list.iterator());
    }
-
 }

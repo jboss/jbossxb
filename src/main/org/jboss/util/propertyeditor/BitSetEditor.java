@@ -9,24 +9,19 @@
 
 package org.jboss.util.propertyeditor;
 
-import java.beans.PropertyEditorSupport;
+import java.util.BitSet;
 
 /**
- * A property editor for {@link java.lang.Integer}.
+ * A property editor for {@link java.lang.BitSet}.
  *
  * @version <tt>$Revision$</tt>
- * @author Scott.Stark@jboss.org
+ * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
-public class IntegerEditor
-   extends PropertyEditorSupport
+public class BitSetEditor
+   extends IntegerEditor
 {
-   /**
-    * Map the argument text into and Integer using Integer.valueOf.
-    */
-   public void setAsText(final String text)
+   public void setValue(final Integer i)
    {
-      Integer newValue = Integer.valueOf(text);
-      setValue(newValue);
+      super.setValue(new BitSet(i.intValue()));
    }
-
 }

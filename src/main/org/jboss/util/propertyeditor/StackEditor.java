@@ -9,24 +9,20 @@
 
 package org.jboss.util.propertyeditor;
 
-import java.beans.PropertyEditorSupport;
+import java.util.List;
+import java.util.Stack;
 
 /**
- * A property editor for {@link java.lang.Integer}.
+ * A property editor for {@link java.util.Stack}
  *
  * @version <tt>$Revision$</tt>
- * @author Scott.Stark@jboss.org
+ * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
-public class IntegerEditor
-   extends PropertyEditorSupport
+public class StackEditor
+   extends ListEditor
 {
-   /**
-    * Map the argument text into and Integer using Integer.valueOf.
-    */
-   public void setAsText(final String text)
+   protected List createList()
    {
-      Integer newValue = Integer.valueOf(text);
-      setValue(newValue);
+      return new Stack();
    }
-
 }

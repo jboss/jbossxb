@@ -47,7 +47,7 @@ public class Logger
    // without the JVM to try to load any log4j classes
    //
    protected static final String LOG4J_PLUGIN_CLASS_NAME = "org.jboss.logging.Log4jLoggerPlugin";
-   protected static final String LOG4j_DETECTOR_CLASS_NAME = "org.apache.log4j.Logger";
+   protected static final String LOG4J_DETECTOR_CLASS_NAME = "org.apache.log4j.Logger";
    
    static
    {
@@ -229,19 +229,17 @@ public class Logger
    //                         Custom Serialization                        //
    /////////////////////////////////////////////////////////////////////////
 
-   private void writeObject(java.io.ObjectOutputStream stream)
-      throws java.io.IOException
-   {
-      // nothing
-   }
-
    private void readObject(java.io.ObjectInputStream stream)
       throws java.io.IOException, ClassNotFoundException
    {
+      // restore non-transient fields (aka name)
+      stream.defaultReadObject();
+      
       // Restore logging
-      if (pluginClass == null)
+      if (pluginClass == null) {
          init();
-      this.loggerDelegate = getDelegatePlugin (name);     
+      }
+      this.loggerDelegate = getDelegatePlugin(name);     
    }
 
 
@@ -318,15 +316,16 @@ public class Logger
       pluginClass = org.jboss.logging.NullLoggerPlugin.class;
       try
       {
+         ClassLoader cl = Thread.currentThread().getContextClassLoader();
+         
          // try to load the class...
          //
-         Thread.currentThread ().getContextClassLoader ().loadClass (LOG4j_DETECTOR_CLASS_NAME);
+         cl.loadClass(LOG4J_DETECTOR_CLASS_NAME);
          
          // if we arrive here, it means that we can use log4j in this VM (or CL scope)
          //
-         pluginClass = Thread.currentThread ().getContextClassLoader ().loadClass (LOG4J_PLUGIN_CLASS_NAME);
+         pluginClass = cl.loadClass(LOG4J_PLUGIN_CLASS_NAME);
       }
       catch (ClassNotFoundException cnfe) { /* log4j not present*/ }
-         
    }
 }

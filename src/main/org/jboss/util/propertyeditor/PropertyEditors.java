@@ -25,28 +25,21 @@ import org.jboss.util.Classes;
  */
 public class PropertyEditors
 {
-   /**
-    * Setup some custom property editors.
+   /** Augment the PropertyEditorManager search path to incorporate the JBoss
+    specific editors by appending the org.jboss.util.propertyeditor package
+    to the PropertyEditorManager editor search path.
     */
    static
    {
-      //
-      // jason: should probably look into using the editor path, but
-      //        for now just hard code them here.
-      //
-      
-      Class[] map = {
-         javax.management.ObjectName.class, org.jboss.util.propertyeditor.ObjectNameEditor.class,
-         java.util.Properties.class, org.jboss.util.propertyeditor.PropertiesEditor.class,
-         java.io.File.class, org.jboss.util.propertyeditor.FileEditor.class,
-         java.net.URL.class, org.jboss.util.propertyeditor.URLEditor.class,
-      };
-
-      for (int i=0; i<map.length; i++) {
-         PropertyEditorManager.registerEditor(map[i++], map[i]);
-      }
+      String[] currentPath = PropertyEditorManager.getEditorSearchPath();
+      int length = currentPath != null ? currentPath.length : 0;
+      String[] newPath = new String[length+1];
+      System.arraycopy(currentPath, 0, newPath, 0, length);
+      // May want to put the JBoss editor path first, for now append it
+      newPath[length] = "org.jboss.util.propertyeditor";
+      PropertyEditorManager.setEditorSearchPath(newPath);
    }
-   
+
    /**
     * Locate a value editor for a given target type.
     *

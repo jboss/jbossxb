@@ -1,0 +1,293 @@
+/*
+ * JBoss, the OpenSource J2EE webOS
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
+package org.jboss.xml.binding;
+
+import org.apache.log4j.Category;
+import org.xml.sax.XMLReader;
+import org.xml.sax.SAXException;
+import org.xml.sax.DTDHandler;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.SAXNotSupportedException;
+import org.xml.sax.SAXNotRecognizedException;
+import org.jboss.xml.binding.Content;
+import org.jboss.xml.binding.ContentPopulator;
+import org.jboss.xml.binding.ObjectModelBuilder;
+import org.jboss.xml.binding.ObjectModelFactory;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import javax.xml.parsers.SAXParser;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.File;
+import java.io.Reader;
+import java.util.Map;
+import java.util.HashMap;
+import java.net.URL;
+
+/**
+ * @version <tt>$Revision$</tt>
+ * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ */
+public class Unmarshaller
+{
+   private static final Category log = Category.getInstance(Unmarshaller.class);
+
+   private static final String JAXP_SCHEMA_LANGUAGE = "http://java.sun.com/xml/jaxp/properties/schemaLanguage";
+   private static final String W3C_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
+   private static final String JAXP_SCHEMA_SOURCE = "http://java.sun.com/xml/jaxp/properties/schemaSource";
+   private static final String VALIDATION = "http://xml.org/sax/features/validation";
+   private static final String NAMESPACES = "http://xml.org/sax/features/namespaces";
+
+   private ObjectModelBuilder builder = new ObjectModelBuilder();
+   private XMLReader reader;
+   private SAXParser parser;
+   private LocalEntityResolver entityResolver = new LocalEntityResolver();
+
+   public static void mapPublicIdToSystemId(String publicId, String dtdLocation)
+   {
+      MetaDataEntityResolver.mapPublicIdToSystemId(publicId, dtdLocation);
+   }
+
+   // Constructor
+
+   public Unmarshaller()
+      throws SAXException, ParserConfigurationException
+   {
+      SAXParserFactory saxFactory = SAXParserFactory.newInstance();
+      saxFactory.setValidating(true);
+      saxFactory.setNamespaceAware(true);
+
+      parser = saxFactory.newSAXParser();
+      parser.setProperty(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
+
+      entityResolver.setCustom(new MetaDataEntityResolver());
+
+      reader = parser.getXMLReader();
+      reader.setContentHandler(new ContentPopulator());
+      reader.setDTDHandler(new MetaDataDTDHandler());
+      reader.setEntityResolver(entityResolver);
+      reader.setErrorHandler(new MetaDataErrorHandler());
+   }
+
+   public void setValidation(boolean validation)
+      throws SAXNotSupportedException, SAXNotRecognizedException
+   {
+      reader.setFeature(VALIDATION, validation);
+   }
+
+   public void setXmlReaderFeature(String name, boolean value)
+      throws SAXNotRecognizedException, SAXNotSupportedException
+   {
+      reader.setFeature(name, value);
+   }
+
+   public void setXmlReaderProperty(String name, Object value)
+      throws SAXNotRecognizedException, SAXNotSupportedException
+   {
+      reader.setProperty(name, value);
+   }
+
+   public void setDTDHandler(DTDHandler dtdHandler)
+   {
+      reader.setDTDHandler(dtdHandler);
+   }
+
+   public void setEntityResolver(EntityResolver entityResolver)
+   {
+      this.entityResolver.setCustom(entityResolver);
+   }
+
+   public void setErrorHandler(ErrorHandler errorHandler)
+   {
+      reader.setErrorHandler(errorHandler);
+   }
+
+   public void setSchemaSource(String schemaPath)
+      throws SAXNotSupportedException, SAXNotRecognizedException
+   {
+      parser.setProperty(JAXP_SCHEMA_SOURCE, new File(schemaPath));
+   }
+
+   public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
+   {
+      builder.mapFactoryToNamespace(factory, namespaceUri);
+   }
+
+   public void unmarshal(InputStream is, ObjectModelFactory factory, Object root)
+      throws SAXException, IOException
+   {
+      InputSource source = new InputSource(is);
+      unmarshal(source, factory, root);
+   }
+
+   public void unmarshal(Reader reader, ObjectModelFactory factory, Object root)
+      throws SAXException, IOException
+   {
+      InputSource source = new InputSource(reader);
+      unmarshal(source, factory, root);
+   }
+
+   public void unmarshal(InputSource source, ObjectModelFactory factory, Object root)
+      throws IOException, SAXException
+   {
+      reader.parse(source);
+      Content content = ((ContentPopulator)reader.getContentHandler()).getContent();
+      builder.build(factory, root, content);
+   }
+
+   // Private
+
+   private static String getResource(String name)
+   {
+      URL url = Thread.currentThread().getContextClassLoader().getResource(name);
+      if(url == null)
+         throw new IllegalStateException("Resource not found: " + name);
+      return url.toString();
+   }
+
+   // Inner
+
+   private final class LocalEntityResolver
+      implements EntityResolver
+   {
+      private EntityResolver custom;
+
+      public void setCustom(EntityResolver custom)
+      {
+         this.custom = custom;
+      }
+
+      public InputSource resolveEntity(String publicId, String systemId)
+         throws SAXException, IOException
+      {
+         try
+         {
+            InputSource source;
+            if(custom != null)
+            {
+               source = custom.resolveEntity(publicId, systemId);
+            }
+            else
+            {
+               throw new IllegalStateException(
+                  "Failed to resolve entity: publicId=" + publicId + ", systemId=" + systemId
+               );
+            }
+            return source;
+         }
+         catch(IOException e)
+         {
+            log.error("Failed to resolve entity: " + e.getMessage(), e);
+            throw e;
+         }
+         catch(SAXException e)
+         {
+            log.error("Failed to resolve entity: " + e.getMessage(), e);
+            throw e;
+         }
+      }
+   }
+
+   private static final class MetaDataEntityResolver
+      implements EntityResolver
+   {
+      private static final String EJB_JAR_20 = "-//Sun Microsystems, Inc.//DTD Enterprise JavaBeans 2.0//EN";
+      private static final String JBOSS_32 = "-//JBoss//DTD JBOSS 3.2//EN";
+      private static final String JBOSSCMP_JDBC_32 = "-//JBoss//DTD JBOSSCMP-JDBC 3.2//EN";
+
+      private static final Map DTD_FOR_ID = new HashMap();
+
+      static
+      {
+         DTD_FOR_ID.put(EJB_JAR_20, "ejb-jar_2_0.dtd");
+         DTD_FOR_ID.put(JBOSS_32, "jboss_3_2.dtd");
+         DTD_FOR_ID.put(JBOSSCMP_JDBC_32, "jbosscmp-jdbc_3_2.dtd");
+      }
+
+      public static final void mapPublicIdToSystemId(String publicId, String systemId)
+      {
+         DTD_FOR_ID.put(publicId, systemId);
+      }
+
+      public InputSource resolveEntity(String publicId, String systemId)
+         throws SAXException, IOException
+      {
+         if(publicId == null && systemId == null)
+            throw new IllegalStateException("Validation error: neither publicId nor systemId is specified.");
+
+         InputSource source;
+         if(publicId != null)
+         {
+            String dtd = (String)DTD_FOR_ID.get(publicId);
+            if(dtd == null)
+               throw new IllegalStateException("Unsupported publicId: " + publicId);
+
+            String dtdPath = getResource(dtd);
+            source = new InputSource(dtdPath);
+         }
+         else
+         {
+            URL url = new URL(systemId);
+            source = new InputSource(url.openStream());
+         }
+
+         return source;
+      }
+   }
+
+   private static final class MetaDataErrorHandler
+      implements ErrorHandler
+   {
+      public void warning(SAXParseException exception)
+         throws SAXException
+      {
+         log.warn(
+            exception.getMessage()
+            + "[" + exception.getColumnNumber() + ":" + exception.getLineNumber() + "]"
+         );
+      }
+
+      public void error(SAXParseException exception)
+         throws SAXException
+      {
+         throw new SAXException(
+            exception.getMessage()
+            + "[" + exception.getColumnNumber() + ":" + exception.getLineNumber() + "]"
+         );
+      }
+
+      public void fatalError(SAXParseException exception)
+         throws SAXException
+      {
+         throw new SAXException(
+            exception.getMessage()
+            + "[" + exception.getColumnNumber() + ":" + exception.getLineNumber() + "]"
+         );
+      }
+   }
+
+   private static final class MetaDataDTDHandler
+      implements DTDHandler
+   {
+      public void notationDecl(String name, String publicId, String systemId)
+         throws SAXException
+      {
+         log.debug("notationDecl: name=" + name + ", publicId=" + publicId + ", systemId=" + systemId);
+      }
+
+      public void unparsedEntityDecl(String name, String publicId, String systemId, String notationName)
+         throws SAXException
+      {
+         log.debug("unparsedEntityDecl: name=" + name + ", publicId=" + publicId + ", systemId=" + systemId
+            + ", notationName=" + notationName);
+      }
+   }
+}

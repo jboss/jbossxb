@@ -135,6 +135,7 @@
       <fileset dir="${build.classes}">
         <include name="org/jboss/**"/>
         <include name="org/apache/xerces/**"/>
+        <exclude name="org/jboss/deployment/**"/>
       </fileset>
     </jar>
 

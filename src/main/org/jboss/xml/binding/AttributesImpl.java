@@ -31,7 +31,7 @@ public class AttributesImpl
       {
          for(int i = 0; i < attrs.getLength(); ++i)
          {
-            addAttribute(
+            add(
                attrs.getURI(i),
                attrs.getLocalName(i),
                attrs.getQName(i),
@@ -44,12 +44,20 @@ public class AttributesImpl
 
    public AttributesImpl(int size)
    {
-      this.attrList = (size == 0 ? Collections.EMPTY_LIST : new ArrayList(size));
+      this.attrList = new ArrayList(size);
    }
 
-   public void addAttribute(String namespaceUri, String localName, String qName, String type, String value)
+   public void add(String namespaceUri, String localName, String qName, String type, String value)
    {
       attrList.add(new AttributeImpl(namespaceUri, localName, qName, type, value));
+   }
+
+   public void addAll(Attributes attrs)
+   {
+      for(int i = 0; i < attrs.getLength(); ++i)
+      {
+         add(attrs.getURI(i), attrs.getLocalName(i), attrs.getQName(i), attrs.getType(i), attrs.getValue(i));
+      }
    }
 
    // Attributes implementation
@@ -246,11 +254,11 @@ public class AttributesImpl
       public final String type;
       public final String value;
 
-      public AttributeImpl(String namespaceUri, String localName, String prefix, String type, String value)
+      public AttributeImpl(String namespaceUri, String localName, String qName, String type, String value)
       {
          this.namespaceUri = namespaceUri;
          this.localName = localName;
-         this.qName = prefix;
+         this.qName = qName;
          this.type = type;
          this.value = value;
       }

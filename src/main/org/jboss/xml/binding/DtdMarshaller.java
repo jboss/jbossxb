@@ -290,7 +290,7 @@ public class DtdMarshaller
          final Object attrValue = provideAttributeValue(provider, container, systemId, attr.getName());
          if(attrValue != null)
          {
-            attrs.addAttribute(
+            attrs.add(
                systemId,
                attr.getName(),
                attr.getName(),

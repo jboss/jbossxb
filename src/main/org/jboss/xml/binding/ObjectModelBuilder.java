@@ -26,35 +26,51 @@ import java.lang.reflect.Method;
  * such as newChild, addChild and setValue.
  * This implementation is not thread-safe.
  *
- * @version <tt>$Revision$</tt>
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @version <tt>$Revision$</tt>
  */
 public class ObjectModelBuilder
    implements ContentNavigator
 {
-   /** logger */
+   /**
+    * logger
+    */
    private static final Logger log = Logger.getLogger(ObjectModelBuilder.class);
 
-   /** the object that is pushed in the stack when the element read from the XML field is ignored by the
-    *  metadata factory */
+   /**
+    * the object that is pushed in the stack when the element read from the XML field is ignored by the
+    * metadata factory
+    */
    private static final Object IGNORED = new Object();
 
-   /** the stack of all the metadata objects including IGNORED */
+   /**
+    * the stack of all the metadata objects including IGNORED
+    */
    private Stack all = new Stack();
-   /** the stack of only accepted metadata objects */
+   /**
+    * the stack of only accepted metadata objects
+    */
    private Stack accepted = new Stack();
 
-   /** default object model factory */
+   /**
+    * default object model factory
+    */
    private ObjectModelFactory defaultFactory;
-   /** factories mapped to namespace URIs */
+   /**
+    * factories mapped to namespace URIs
+    */
    private Map factoriesToNs = Collections.EMPTY_MAP;
 
    private Map prefixToUri = new HashMap();
 
-   /** content */
+   /**
+    * content
+    */
    private Content content;
 
-   /** the value of a simple element (i.e. the element that does not contain nested elements) being read */
+   /**
+    * the value of a simple element (i.e. the element that does not contain nested elements) being read
+    */
    private StringBuffer value = new StringBuffer();
 
    // Public
@@ -69,7 +85,7 @@ public class ObjectModelBuilder
    }
 
    public Object build(ObjectModelFactory defaultFactory, Object root, Content content)
-           throws Exception
+      throws Exception
    {
       this.defaultFactory = defaultFactory;
       this.content = content;
@@ -100,7 +116,7 @@ public class ObjectModelBuilder
    public String resolveNamespacePrefix(String prefix)
    {
       String uri;
-      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
+      LinkedList prefixStack = (LinkedList) prefixToUri.get(prefix);
       if(prefixStack != null && !prefixStack.isEmpty())
       {
          uri = (String) prefixStack.getFirst();
@@ -112,17 +128,23 @@ public class ObjectModelBuilder
       return uri;
    }
 
-   /** Construct a QName from a value
+   /**
+    * Construct a QName from a value
+    *
     * @param value A value that is of the form [prefix:]localpart
     */
    public QName resolveQName(String value)
    {
       StringTokenizer st = new StringTokenizer(value, ":");
-      if (st.countTokens() == 1)
+      if(st.countTokens() == 1)
+      {
          return new QName(value);
+      }
 
-      if (st.countTokens() != 2)
+      if(st.countTokens() != 2)
+      {
          throw new IllegalArgumentException("Illegal QName: " + value);
+      }
 
       String prefix = st.nextToken();
       String local = st.nextToken();
@@ -140,7 +162,7 @@ public class ObjectModelBuilder
 
    public void startPrefixMapping(String prefix, String uri)
    {
-      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
+      LinkedList prefixStack = (LinkedList) prefixToUri.get(prefix);
       if(prefixStack == null || prefixStack.isEmpty())
       {
          prefixStack = new LinkedList();
@@ -151,7 +173,7 @@ public class ObjectModelBuilder
 
    public void endPrefixMapping(String prefix)
    {
-      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
+      LinkedList prefixStack = (LinkedList) prefixToUri.get(prefix);
       if(prefixStack != null)
       {
          prefixStack.removeFirst();
@@ -162,7 +184,9 @@ public class ObjectModelBuilder
    {
       Object parent = null;
       if(!accepted.isEmpty())
+      {
          parent = accepted.peek();
+      }
 
       Object factory = getFactory(namespaceURI);
       Object element = newChild(factory, parent, this, namespaceURI, localName, atts);
@@ -172,7 +196,7 @@ public class ObjectModelBuilder
 
          if(log.isTraceEnabled())
          {
-            log.debug("ignored " + namespaceURI + ':' + qName);
+            log.trace("ignored " + namespaceURI + ':' + qName);
          }
       }
       else
@@ -182,7 +206,7 @@ public class ObjectModelBuilder
 
          if(log.isTraceEnabled())
          {
-            log.debug("accepted " + namespaceURI + ':' + qName);
+            log.trace("accepted " + namespaceURI + ':' + qName);
          }
       }
    }
@@ -238,8 +262,7 @@ public class ObjectModelBuilder
                                   String qName,
                                   Attributes atts)
    {
-      Method method = getMethodForElement(
-         factory,
+      Method method = getMethodForElement(factory,
          "newChild",
          new Class[]{
             element.getClass(),
@@ -247,14 +270,25 @@ public class ObjectModelBuilder
             String.class,
             String.class,
             Attributes.class
-         }
-      );
+         });
+
+      if(method == null)
+      {
+         method = getMethodForElement(factory,
+            "newChild",
+            new Class[]{
+               Object.class,
+               ContentNavigator.class,
+               String.class,
+               String.class,
+               Attributes.class
+            });
+      }
 
       Object child = null;
       if(method != null)
       {
-         child = invokeFactory(
-            factory,
+         child = invokeFactory(factory,
             method,
             new Object[]{
                element,
@@ -262,12 +296,11 @@ public class ObjectModelBuilder
                namespaceURI,
                qName,
                atts
-            }
-         );
+            });
       }
       else if(log.isTraceEnabled())
       {
-            log.trace("No newChild method for " + element.getClass().getName());
+         log.trace("No newChild method for " + element.getClass().getName());
       }
 
       return child;
@@ -275,27 +308,34 @@ public class ObjectModelBuilder
 
    private static void addChild(Object factory, Object parent, Object element, ContentNavigator navigator)
    {
-      Method method = getMethodForElement(
-         factory,
+      Method method = getMethodForElement(factory,
          "addChild",
          new Class[]{
             parent.getClass(),
             element.getClass(),
             ContentNavigator.class
-         }
-      );
+         });
+
+      if(method == null)
+      {
+         method = getMethodForElement(factory,
+            "addChild",
+            new Class[]{
+               Object.class,
+               Object.class,
+               ContentNavigator.class,
+            });
+      }
 
       if(method != null)
       {
-         invokeFactory(
-            factory,
+         invokeFactory(factory,
             method,
             new Object[]{
                parent,
                element,
                navigator
-            }
-         );
+            });
       }
       else if(log.isTraceEnabled())
       {
@@ -310,8 +350,7 @@ public class ObjectModelBuilder
                                 String qName,
                                 String value)
    {
-      Method method = getMethodForElement(
-         factory,
+      Method method = getMethodForElement(factory,
          "setValue",
          new Class[]{
             element.getClass(),
@@ -319,29 +358,38 @@ public class ObjectModelBuilder
             String.class,
             String.class,
             String.class
-         }
-      );
+         });
+
+      if(method == null)
+      {
+         method = getMethodForElement(factory,
+            "setValue",
+            new Class[]{
+               Object.class,
+               ContentNavigator.class,
+               String.class,
+               String.class,
+               String.class
+            });
+      }
 
       if(method != null)
       {
-         invokeFactory(
-            factory,
+         invokeFactory(factory,
             method,
-            new Object[] {
+            new Object[]{
                element,
                navigator,
                namespaceURI,
                qName,
                value
-            }
-         );
+            });
       }
       else if(log.isTraceEnabled())
       {
-         log.trace(
-            "No setValue method for " + element.getClass().getName()
-            + ", uri=" + namespaceURI + ", qn=" + qName + ", value=" + value
-         );
+         log.trace("No setValue method for " +
+            element.getClass().getName()
+            + ", uri=" + namespaceURI + ", qn=" + qName + ", value=" + value);
       }
    }
 
@@ -351,7 +399,7 @@ public class ObjectModelBuilder
       {
          return method.invoke(factory, args);
       }
-      catch (InvocationTargetException e)
+      catch(InvocationTargetException e)
       {
          log.error("Failed to invoke method " + method.getName(), e.getTargetException());
          throw new IllegalStateException("Failed to invoke method " + method.getName());

@@ -65,7 +65,8 @@ public class PropertyEditors
       if (type == null)
       {
          // nope try look up
-         type = Class.forName(typeName);
+         ClassLoader loader = Thread.currentThread().getContextClassLoader();
+         type = loader.loadClass(typeName);
       }
       
       return PropertyEditorManager.findEditor(type);
@@ -131,8 +132,9 @@ public class PropertyEditors
                                      final String editorTypeName)
       throws ClassNotFoundException
    {
-      Class type = Class.forName(typeName);
-      Class editorType = Class.forName(editorTypeName);
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      Class type = loader.loadClass(typeName);
+      Class editorType = loader.loadClass(editorTypeName);
 
       PropertyEditorManager.registerEditor(type, editorType);
    }

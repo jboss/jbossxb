@@ -29,15 +29,16 @@ public class ClassEditor
     */
    public Object getValue()
    {
-      try {
-         Class type;
-         
+      try
+      {
+         ClassLoader loader = Thread.currentThread().getContextClassLoader();
          String classname = getAsText();
-         type = Class.forName(classname);
+         Class type = loader.loadClass(classname);
 
          return type;
       }
-      catch (Exception e) {
+      catch (Exception e)
+      {
          throw new NestedRuntimeException(e);
       }
    }

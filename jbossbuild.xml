@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+
+<!--
+ JBoss, the OpenSource J2EE webOS
+ 
+ Distributable under LGPL license.
+ See terms of license at gnu.org.
+-->
+
+<!-- ================================================================== -->
+<!-- Common component definition                                        -->
+<!-- ================================================================== -->
+
+<project name="project" 
+         default="build" 
+         basedir="."
+>
+   <!-- The main build -->
+   <import file="../jbossas/build.xml"/>
+
+   <!-- =============================================================== -->
+   <!-- The component definition                                        -->
+   <!-- =============================================================== -->
+
+   <componentdef component="common" description="JBoss Common">
+
+      <!-- ============================================================ -->
+      <!-- The main source                                              -->
+      <!-- ============================================================ -->
+
+      <source id="main">
+         <include input="commons"/>
+         <include input="concurrent"/>
+         <include input="dom4j"/>
+         <include input="jaxme"/>
+         <include input="log4j"/>
+         <include input="regexp"/>
+         <include input="slide"/>
+         <include input="wutka"/>
+         <include input="xerces"/>
+      </source>
+
+      <!-- ============================================================ -->
+      <!-- jboss-common.jar                                             -->
+      <!-- ============================================================ -->
+
+      <artifactdef artifact="jboss-common.jar">
+         <include input="main">
+            <include pattern="org/jboss/**"/>
+            <include pattern="org/apache/xerces/**"/>
+         </include>
+      </artifactdef>
+
+      <!-- ============================================================ -->
+      <!-- jboss-common-client.jar                                      -->
+      <!-- ============================================================ -->
+
+      <artifactdef artifact="jboss-common-client.jar">
+         <include input="main">
+            <include pattern="org/jboss/**"/>
+            <include pattern="org/apache/xerces/**"/>
+            <exclude pattern="org/jboss/deployment/**"/>
+         </include>
+      </artifactdef>
+
+      <!-- ============================================================ -->
+      <!-- namespace.jar                                                -->
+      <!-- ============================================================ -->
+
+      <artifactdef artifact="namespace.jar">
+         <include input="main">
+            <include pattern="javax/xml/namespace/*"/>
+         </include>
+      </artifactdef>
+
+   </componentdef>
+
+   <!-- Generate the targets -->   
+   <generate generate="common"/>
+
+</project>

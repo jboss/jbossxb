@@ -75,41 +75,17 @@ public class FileURLConnection
       return super.getHeaderField(name);
    }
 
-   public Permission getPermission() throws IOException {
-      // this sucks... must be a better way, but screw it for now
-      // if you know how this should be done, please fix it... please
-      java.util.List list = new java.util.ArrayList(4);
-      if (file.canRead()) list.add("read");
-      if (file.canWrite()) list.add("write");
-
-      SecurityManager security = System.getSecurityManager();
-      if (security != null) {
-         try {
-            security.checkExec(file.getPath());
-            list.add("execute");
-         }
-         catch (SecurityException ignore) {}
-
-         try {
-            security.checkDelete(file.getPath());
-            list.add("delete");
-         }
-         catch (SecurityException ignore) {}
-      }
-      else {
-         // ?? sure, whatever
-         list.add("execute");
-         list.add("delete");
-      }
-
-      StringBuffer actions = new StringBuffer();
-      java.util.Iterator iter = list.iterator();
-      while (iter.hasNext()) {
-         actions.append(iter.next());
-         if (iter.hasNext()) actions.append(",");
-      }
-
-      return new FilePermission(file.getPath(), actions.toString());
+   /** Return a permission for both read,write since both input
+   and output streams are supported.
+   */
+   public Permission getPermission() throws IOException
+   {
+      String path = url.getPath();
+      // See if the seperator char matches the URL '/'
+      if( File.separatorChar != '/' )
+         path = path.replace('/', File.separatorChar);
+      Permission p = new FilePermission(path, "read,write");
+      return p;
    }
 
    public long getLastModified() {

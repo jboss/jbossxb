@@ -96,6 +96,7 @@ public final class Util
 
    /**
     * Converts XML namespace to Java package name.
+    * The base algorithm is described in JAXB-2.0 spec in 'C.5 Generating a Java package name'.
     *
     * @param namespace XML namespace
     * @return Java package name
@@ -111,6 +112,7 @@ public final class Util
       char[] dst = new char[namespace.length()];
 
       int srcInd = 0;
+      // skip protocol part, i.e. http://, urn://
       while(src[srcInd++] != ':')
       {
          ;
@@ -121,25 +123,27 @@ public final class Util
          ++srcInd;
       }
 
+      // skip www part
       if(src[srcInd] == 'w' && src[srcInd + 1] == 'w' && src[srcInd + 2] == 'w')
       {
          srcInd += 4;
       }
 
+      // find domain start and end indexes
       int domainStart = srcInd;
-      while(srcInd < src.length && src[srcInd++] != '/')
+      while(srcInd < src.length && src[srcInd] != '/')
       {
+         ++srcInd;
       }
-      int domainEnd = src[srcInd - 1] == '/' ? srcInd - 1 : srcInd;
 
       int dstInd = 0;
-      for(int start = srcInd - 1, end = domainEnd; true; --start)
+      // copy domain parts in the reverse order
+      for(int start = srcInd - 1, end = srcInd; true; --start)
       {
          if(start == domainStart)
          {
             System.arraycopy(src, start, dst, dstInd, end - start);
             dstInd += end - start;
-            //dst[dstInd++] = '.';
             break;
          }
 
@@ -152,27 +156,33 @@ public final class Util
          }
       }
 
-      if(srcInd < src.length)
+      // copy the rest
+      while(srcInd < src.length)
       {
-         dst[dstInd++] = '.';
-         while(srcInd < src.length)
+         char c = src[srcInd++];
+         if(c == '/')
          {
-            char c = src[srcInd++];
-            if(c == '/')
+            if(srcInd < src.length)
             {
-               if(srcInd < src.length)
+               dst = append(dst, dstInd++, '.');
+               if(!Character.isJavaIdentifierStart(src[srcInd]))
                {
-                  dst[dstInd++] = '.';
+                  dst = append(dst, dstInd++, '_');
+               }
+               else
+               {
+                  System.out.println("next part starts with: " + src[srcInd]);
                }
             }
-            else if(c == '.')
-            {
-               break;
-            }
-            else
-            {
-               dst[dstInd++] = c;
-            }
+         }
+         else if(c == '.')
+         {
+            // for now assume it's an extention, i.e. '.xsd'
+            break;
+         }
+         else
+         {
+            dst = append(dst, dstInd++, Character.isJavaIdentifierPart(c) ? c : '_');
          }
       }
 
@@ -181,10 +191,11 @@ public final class Util
 
    /**
     * Converts XML namespace URI and local name to fully qualified class name.
+    *
     * @param namespaceUri  namespace URI
-    * @param localName  local name
-    * @param ignoreLowLine  should low lines be ignored in the class name
-    * @return  fully qualified class name
+    * @param localName     local name
+    * @param ignoreLowLine should low lines be ignored in the class name
+    * @return fully qualified class name
     */
    public static String xmlNameToClassName(String namespaceUri, String localName, boolean ignoreLowLine)
    {

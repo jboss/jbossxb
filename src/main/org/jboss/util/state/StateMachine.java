@@ -138,7 +138,7 @@ public class StateMachine
    /**
     * Construct a state machine with the given model.
     *
-    * @param model   The model for the machine; must not be null.
+    * @param model    The model for the machine; must not be null.
     */
    public StateMachine(final Model model)
    {
@@ -157,7 +157,7 @@ public class StateMachine
    }
 
    /** For sync and immutable wrappers. */
-   private StateMachine(final Model model, final boolean hereForSigChangeOnly)
+   private StateMachine(final Model model, final Object hereForSigChangeOnly)
    {
       // must be initialized (they are final), but never used.
       this.model = model;
@@ -177,7 +177,7 @@ public class StateMachine
       
       return buff.toString();
    }
-   
+
    /**
     * Return the model which provides data encapsulation for the machine.
     *
@@ -247,41 +247,50 @@ public class StateMachine
     *
     * @param state   The state check.
     * @return        True if the given state is acceptable for transition; else false.
-    *
-    * @throws IllegalArgumentException   State not found in model.
     */
    public boolean isAcceptable(State state)
    {
       if (state == null)
          throw new NullArgumentException("state");
 
-      // if the model does not contain this state or the current state is final,
-      // then we can not go anywhere
-      if (!model.containsState(state) || isStateFinal()) {
+      
+      return isAcceptable(model.getCurrentState(), state);
+   }
+
+   /**
+    * Actually checks the acceptability of a state.
+    */
+   protected boolean isAcceptable(final State origin, final State target)
+   {
+      // assert origin != null
+      // assert target != null
+      // assert model.conains(origin)
+
+      // state is not acceptable if the model does not contain this state
+      // or the origin is final
+      if (!model.containsState(target) || isStateFinal(origin)) {
          return false;
       }
       
-      State currentState = model.getCurrentState();
-
       // Do not allow the current state to accept itself
-      if (state.equals(currentState)) {
+      if (target.equals(origin)) {
          return false;
       }
       
       boolean rv = false;
 
       // Replace state with the mapped version
-      state = model.getMappedState(state);
+      State state = model.getMappedState(target);
       
       // If the current state implements Acceptable let it have a whack
-      if (currentState instanceof Acceptable) {
-         rv = ((Acceptable)currentState).isAcceptable(state);
+      if (origin instanceof Acceptable) {
+         rv = ((Acceptable)origin).isAcceptable(state);
       }
 
       // If we still have not accepted, then check the accept list
-      Set states = model.acceptableStates(model.getCurrentState());
-      if (!rv && states.contains(state)) {
-         rv = true;
+      Set states = model.acceptableStates(origin);
+      if (!rv) {
+         rv = states.contains(state);
       }
       
       return rv;
@@ -301,10 +310,20 @@ public class StateMachine
     */
    public void transition(final State state)
    {
+      // Make sure we are in an acceptable state
+      ensureAcceptable(state);
+      
+      // state is acceptable, let any listeners know about it
+      changeState(state);
+   }
+
+   protected void ensureAcceptable(final State state)
+   {
       if (!isAcceptable(state)) {
+         State currentState = model.getCurrentState();
+         
          // make an informative exception message
          StringBuffer buff = new StringBuffer();
-         State current = model.getCurrentState();
          
          if (isStateFinal()) {
             buff.append("Current state is final");
@@ -312,7 +331,7 @@ public class StateMachine
          else {
             buff.append("State must be ");
          
-            Set temp = model.acceptableStates(current);
+            Set temp = model.acceptableStates(currentState);
             State[] states = (State[])temp.toArray(new State[temp.size()]);
          
             for (int i=0; i<states.length; i++) {
@@ -328,15 +347,12 @@ public class StateMachine
          buff.append("; cannot accept state: ")
             .append(state.getName())
             .append("; state=")
-            .append(current.getName());
+            .append(currentState.getName());
          
          throw new IllegalStateException(buff.toString());
       }
-
-      // state is acceptable, let any listeners know about it
-      changeState(state);
    }
-
+   
    /**
     * Reset the state machine.
     *
@@ -379,11 +395,6 @@ public class StateMachine
    protected ChangeEvent changeState(final State state)
    {
       // assert state != null
-
-      //
-      // jason: Change to allow event to contain the given state as
-      //        well as the mapped state.
-      // 
 
       // Replace state with the mapped version
       State mappedState = model.getMappedState(state);
@@ -653,6 +664,7 @@ public class StateMachine
          return getClass().getName() + // don't use super, it will mess up formating
             "{ previous=" + previous +
             ", current=" + current +
+            (user != current ? (", user=" + user) : "") +
             " }";
       }
    }
@@ -850,7 +862,7 @@ public class StateMachine
       if (machine == null)
          throw new NullArgumentException("machine");
       
-      return new StateMachine(null, true)
+      return new StateMachine(null, null)
          {
             private Object lock = (mutex == null ? this : mutex);
 
@@ -989,7 +1001,7 @@ public class StateMachine
       if (machine == null)
          throw new NullArgumentException("machine");
       
-      return new StateMachine(machine.getModel(), true)
+      return new StateMachine(machine.getModel(), null)
          {
             public Model getModel()
             {

@@ -47,6 +47,14 @@ public final class Util
       );
    }
 
+   public static String xmlNameToFieldName(String name, boolean ignoreLowLine)
+   {
+      return XMLNameToJavaIdentifierConverter.PARSER.parse(XMLNameToJavaIdentifierConverter.FIELD_NAME,
+         name,
+         ignoreLowLine
+      );
+   }
+
    /**
     * Converts XML name to Java getter method name according to
     * Binding XML Names to Java Identifiers
@@ -266,6 +274,8 @@ public final class Util
        */
       byte commandForNext(char prev, char next, boolean ignoreLowLine);
 
+      char firstCharacter(char ch, String str, int secondCharIndex);
+
       /**
        * An XML name parser class that parses the XML name and asks the outer interface implementation
        * what to do with the next parsed character from the XML name.
@@ -311,7 +321,7 @@ public final class Util
             }
 
             char[] buf = new char[xmlName.length() - i + 1];
-            buf[0] = Character.toUpperCase(c);
+            buf[0] = converter.firstCharacter(c, xmlName, i);
             int bufInd = 1;
             while(i < xmlName.length())
             {
@@ -350,6 +360,11 @@ public final class Util
        */
       XMLNameToJavaIdentifierConverter CLASS_NAME = new XMLNameToJavaIdentifierConverter()
       {
+         public char firstCharacter(char ch, String str, int secondCharIndex)
+         {
+            return Character.toUpperCase(ch);
+         }
+
          public byte commandForNext(char prev, char next, boolean ignoreLowLine)
          {
             byte command;
@@ -381,10 +396,36 @@ public final class Util
       };
 
       /**
+       * XML name to Java class name converter
+       */
+      XMLNameToJavaIdentifierConverter FIELD_NAME = new XMLNameToJavaIdentifierConverter()
+      {
+         public char firstCharacter(char ch, String str, int secondCharIndex)
+         {
+            return (str.length() > secondCharIndex &&
+               Character.isJavaIdentifierPart(str.charAt(secondCharIndex)) &&
+               Character.isUpperCase(str.charAt(secondCharIndex))
+               ) ?
+               Character.toUpperCase(ch) :
+               Character.toLowerCase(ch);
+         }
+
+         public byte commandForNext(char prev, char next, boolean ignoreLowLine)
+         {
+            return CLASS_NAME.commandForNext(prev, next, ignoreLowLine);
+         }
+      };
+
+      /**
        * XML name to Java constant name converter
        */
       XMLNameToJavaIdentifierConverter CONSTANT_NAME = new XMLNameToJavaIdentifierConverter()
       {
+         public char firstCharacter(char ch, String str, int secondCharIndex)
+         {
+            return Character.toUpperCase(ch);
+         }
+
          public byte commandForNext(char prev, char next, boolean ignoreLowLine)
          {
             byte command;
@@ -400,7 +441,9 @@ public final class Util
                }
                else if(Character.isJavaIdentifierPart(prev))
                {
-                  command = Character.isUpperCase(next) ? APPEND_WITH_LOW_LINE : APPEND_UPPER_CASED;
+                  command = Character.isUpperCase(next) ?
+                     (Character.isUpperCase(prev) ? APPEND_UPPER_CASED : APPEND_WITH_LOW_LINE) :
+                     APPEND_UPPER_CASED;
                }
                else
                {

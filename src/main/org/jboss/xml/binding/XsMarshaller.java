@@ -30,6 +30,8 @@ import java.util.Stack;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
+import java.util.Map;
+import java.util.HashMap;
 
 
 /**
@@ -44,9 +46,15 @@ public class XsMarshaller
    private static final Category log = Category.getInstance(XsMarshaller.class);
 
    private final Stack stack = new Stack();
+
+   /** ObjectModelProvider for this marshaller */
    private ObjectModelProvider provider;
+   /** Content the result is written to */
    private Content content = new Content();
+   /** Attributes added to the root element */
    private AttributesImpl addedAttributes = new AttributesImpl(10);
+   /** Declared namespaces */
+   private final Map uriByNsName = new HashMap();
 
    public void marshal(Reader schema, ObjectModelProvider provider, Writer writer)
       throws IOException, SAXException, ParserConfigurationException
@@ -92,10 +100,73 @@ public class XsMarshaller
       content.handleContent(contentWriter);
    }
 
+   /**
+    * Defines a namespace. The namespace declaration will appear in the root element.
+    * <p>If <code>name</code> argument is <code>null</code> or is an empty string then
+    * the passed in URI will be used for the default namespace, i.e. <code>xmlns</code>.
+    * Otherwise, the declaration will follow the format <code>xmlns:name=uri</code>.
+    * <p>If the namespace with the given name was already declared, its value is overwritten.
+    *
+    * @param name the name of the namespace to declare (can be null or empty string)
+    * @param uri the URI of the namespace.
+    */
+   public void declareNamespace(String name, String uri)
+   {
+      boolean nonEmptyName = (name != null && name.length() > 0);
+      String localName = (nonEmptyName ? name : "xmlns");
+      String qName = (nonEmptyName ? getQName("xmlns", localName) : localName);
+
+      final Object prev = uriByNsName.put(localName, uri);
+
+      if(prev == null)
+      {
+         addedAttributes.add(null, localName, qName, "string", uri);
+      }
+   }
+
+   /**
+    * Adds an attribute to the top most elements.
+    * First, we check whether there is a namespace associated with the passed in prefix.
+    * If the prefix was not declared, an exception is thrown.
+    *
+    * @param prefix the prefix of the attribute to be declared
+    * @param localName local name of the attribute
+    * @param type the type of the attribute
+    * @param value the value of the attribute
+    */
+   public void addAttribute(String prefix, String localName, String type, String value)
+   {
+      final String uri;
+      if(prefix != null && prefix.length() > 0)
+      {
+         uri = (String)uriByNsName.get(prefix);
+         if(uri == null)
+         {
+            throw new IllegalStateException("Namespace prefix " + prefix + " is not declared. Use declareNamespace().");
+         }
+      }
+      else
+      {
+         uri = null;
+      }
+
+      String qName = getQName(prefix, localName);
+      addedAttributes.add(uri, prefix, qName, type, value);
+   }
+
+   /**
+    * Adds an attribute to the top most elements declaring namespace prefix if it is not yet declared.
+    *
+    * @param namespaceUri  attribute's namespace URI
+    * @param prefix  attribute's prefix
+    * @param localName  attribute's local name
+    * @param type  attribute's type
+    * @param value  attribute's value
+    */
    public void addAttribute(String namespaceUri, String prefix, String localName, String type, String value)
    {
-      String qName = (prefix == null || prefix.length() == 0 ? localName : prefix + ':' + localName);
-      addedAttributes.add(namespaceUri, localName, qName, type, value);
+      declareNamespace(prefix, namespaceUri);
+      addAttribute(prefix, localName, type, value);
    }
 
    // Private
@@ -408,5 +479,10 @@ public class XsMarshaller
       }
 
       stack.pop();
+   }
+
+   private static String getQName(String prefix, String localName)
+   {
+      return (prefix == null || prefix.length() == 0 ? localName : prefix + ':' + localName);
    }
 }

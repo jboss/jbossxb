@@ -94,4 +94,15 @@ public final class Java
    public static int getVersion() {
       return VERSION;
    }
+
+   /**
+    * Retrurns true if the given version identifer is equal to the
+    * version identifier of the current virtuial machine.
+    *
+    * @param version    The version identifier to check for.
+    * @return           True if the current virtual machine is the same version.
+    */
+   public static boolean isVersion(final int version) {
+      return VERSION == version;
+   }
 }

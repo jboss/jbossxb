@@ -66,8 +66,7 @@ public class URLStreamHandlerFactory
    /** A list of JBoss specific protocols for preloading. */
    public static final String PROTOCOLS[] = {
       "resource",
-      "file",
-      "njar"
+      "file"
    };
 
    /**
@@ -127,7 +126,14 @@ public class URLStreamHandlerFactory
 
             try
             {
-               type = ctxLoader.loadClass(classname);
+               /* First see if the class exists as a resource. This is to work
+               around a bad interaction between the IBM VMs and custom
+               URLStreamHandlerFactory that use the TCL. See bug#669043
+               */
+               String resname = classname.replace('.', '/') + ".class";
+               URL typeURL = ctxLoader.getResource(resname);
+               if( typeURL != null )
+                  type = ctxLoader.loadClass(classname);
             }
             catch(ClassNotFoundException e)
             {

@@ -9,11 +9,12 @@
 
 package org.jboss.util;
 
-import java.io.IOException;
 import java.io.File;
-import java.net.URL;
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * A collection of String utilities.
@@ -30,13 +31,13 @@ public final class Strings
 
    /** New line string constant */
    public static final String NEWLINE = org.jboss.util.platform.Constants.LINE_SEPARATOR;
-   
+
    /** File separator value */
    private static final String FILE_SEPARATOR = org.jboss.util.platform.Constants.FILE_SEPARATOR;
-   
+
    /** Path separator value */
    private static final String PATH_SEPARATOR = org.jboss.util.platform.Constants.PATH_SEPARATOR;
-   
+
    /** File separator alias */
    private static final String FILE_SEPARATOR_ALIAS = "/";
 
@@ -48,88 +49,88 @@ public final class Strings
     * Second Edition Section 3.9, 3.10.3 and 3.10.7
     */
    private static final String[] keywords =
-   {
-      "abstract",
-      "boolean",
-      "break",
-      "byte",
-      "case",
-      "catch",
-      "char",
-      "class",
-      "const",
-      "continue",
-      "default",
-      "do",
-      "double",
-      "else",
-      "extends",
-      "final",
-      "finally",
-      "float",
-      "for",
-      "goto",
-      "if",
-      "implements",
-      "import",
-      "instanceof",
-      "int",
-      "interface",
-      "long",
-      "native",
-      "new",
-      "package",
-      "private",
-      "protected",
-      "public",
-      "return",
-      "short",
-      "static",
-      "strictfp",
-      "super",
-      "switch",
-      "synchronized",
-      "this",
-      "throw",
-      "throws",
-      "transient",
-      "try",
-      "void",
-      "volatile",
-      "while",
+      {
+         "abstract",
+         "boolean",
+         "break",
+         "byte",
+         "case",
+         "catch",
+         "char",
+         "class",
+         "const",
+         "continue",
+         "default",
+         "do",
+         "double",
+         "else",
+         "extends",
+         "final",
+         "finally",
+         "float",
+         "for",
+         "goto",
+         "if",
+         "implements",
+         "import",
+         "instanceof",
+         "int",
+         "interface",
+         "long",
+         "native",
+         "new",
+         "package",
+         "private",
+         "protected",
+         "public",
+         "return",
+         "short",
+         "static",
+         "strictfp",
+         "super",
+         "switch",
+         "synchronized",
+         "this",
+         "throw",
+         "throws",
+         "transient",
+         "try",
+         "void",
+         "volatile",
+         "while",
 
-      "true",     // technically no keywords but we are not picky
-      "false",
-      "null"
-   };
+         "true", // technically no keywords but we are not picky
+         "false",
+         "null"
+      };
 
    /**
     * List of EJB-QL Identifiers as defined in the EJB 2.0 Specification
     * Section 11.2.6.1
     */
    private static final String[] ejbQlIdentifiers =
-   {
-      "AND",
-      "AS",
-      "BETWEEN",
-      "DISTINCT",
-      "EMPTY",
-      "FALSE",
-      "FROM",
-      "IN",
-      "IS",
-      "LIKE",
-      "MEMBER",
-      "NOT",
-      "NULL",
-      "OBJECT",
-      "OF",
-      "OR",
-      "SELECT",
-      "UNKNOWN",
-      "TRUE",
-      "WHERE",
-   };
+      {
+         "AND",
+         "AS",
+         "BETWEEN",
+         "DISTINCT",
+         "EMPTY",
+         "FALSE",
+         "FROM",
+         "IN",
+         "IS",
+         "LIKE",
+         "MEMBER",
+         "NOT",
+         "NULL",
+         "OBJECT",
+         "OF",
+         "OR",
+         "SELECT",
+         "UNKNOWN",
+         "TRUE",
+         "WHERE",
+      };
 
    // States used in property parsing
    private static final int NORMAL = 0;
@@ -150,11 +151,12 @@ public final class Strings
     * @return        Substituted string
     */
    public static String subst(final StringBuffer buff, final String from,
-                              final String to, final String string)
+      final String to, final String string)
    {
       int begin = 0, end = 0;
 
-      while ((end = string.indexOf(from, end)) != -1) {
+      while ((end = string.indexOf(from, end)) != -1)
+      {
          // append the first part of the string
          buff.append(string.substring(begin, end));
 
@@ -180,8 +182,8 @@ public final class Strings
     * @param string  String to look for from in
     * @return        Substituted string
     */
-   public static String subst(final String from, final String to, 
-                              final String string)
+   public static String subst(final String from, final String to,
+      final String string)
    {
       return subst(new StringBuffer(), from, to, string);
    }
@@ -197,19 +199,20 @@ public final class Strings
     * @return           Substituted string
     */
    public static String subst(final StringBuffer buff, final String string,
-                              final Map map, final String beginToken,
-                              final String endToken)
+      final Map map, final String beginToken,
+      final String endToken)
    {
       int begin = 0, rangeEnd = 0;
       Range range;
 
-      while ((range = rangeOf(beginToken, endToken, string, rangeEnd)) != null) {
+      while ((range = rangeOf(beginToken, endToken, string, rangeEnd)) != null)
+      {
          // append the first part of the string
          buff.append(string.substring(begin, range.begin));
 
          // Get the string to replace from the map
          String key = string.substring(range.begin + beginToken.length(),
-                                       range.end);
+            range.end);
          Object value = map.get(key);
          // if mapping does not exist then use empty;
          if (value == null) value = EMPTY;
@@ -238,7 +241,7 @@ public final class Strings
     * @return           Substituted string
     */
    public static String subst(final String string, final Map map,
-                              final String beginToken, final String endToken)
+      final String beginToken, final String endToken)
    {
       return subst(new StringBuffer(), string, map, beginToken, endToken);
    }
@@ -257,31 +260,37 @@ public final class Strings
     *                   reference.
     * @return           Substituted string.
     */
-   public static String subst(final StringBuffer buff, final String string, 
-                              final String replace[], final char token)
+   public static String subst(final StringBuffer buff, final String string,
+      final String replace[], final char token)
    {
       int i = string.length();
-      for (int j = 0; j >= 0 && j < i; j++) {
+      for (int j = 0; j >= 0 && j < i; j++)
+      {
          char c = string.charAt(j);
 
          // if the char is the token, then get the index
-         if (c == token) {
+         if (c == token)
+         {
 
             // if we aren't at the end of the string, get the index
-            if (j != i) {
+            if (j != i)
+            {
                int k = Character.digit(string.charAt(j + 1), 10);
 
-               if (k == -1) {
+               if (k == -1)
+               {
                   buff.append(string.charAt(j + 1));
                }
-               else if (k < replace.length) {
+               else if (k < replace.length)
+               {
                   buff.append(replace[k]);
                }
 
                j++;
-            }  
+            }
          }
-         else {
+         else
+         {
             buff.append(c);
          }
       }
@@ -301,8 +310,8 @@ public final class Strings
     *                   reference.
     * @return           Substituted string.
     */
-   public static String subst(final String string, final String replace[], 
-                              final char token)
+   public static String subst(final String string, final String replace[],
+      final char token)
    {
       return subst(new StringBuffer(), string, replace, token);
    }
@@ -318,7 +327,8 @@ public final class Strings
     *                   their index is found.
     * @return           Substituted string.
     */
-   public static String subst(final String string, final String replace[]) {
+   public static String subst(final String string, final String replace[])
+   {
       return subst(new StringBuffer(), string, replace, '%');
    }
 
@@ -332,10 +342,29 @@ public final class Strings
     * the ${p} reference will remain unchanged. The property ${/} is replaced with
     * System.getProperty("file.separator") value and the property ${:} is replaced with
     * system.getProperty("path.separator").
-    * 
-    * @return the input string with all property references replaced
+    *
+    * @param string - the string with possible ${} references
+    * @return the input string with all property references replaced if any.
+    *    If there are no valid references the input string will be returned.
     */
    public static String replaceProperties(final String string)
+   {
+      return replaceProperties(string, System.getProperties());
+   }
+
+   /**
+    * Go through the input string and replace any occurance of ${p} with
+    * the System.getProperty(p) value. If there is no such property p defined, then
+    * the ${p} reference will remain unchanged. The property ${/} is replaced with
+    * System.getProperty("file.separator") value and the property ${:} is replaced with
+    * system.getProperty("path.separator").
+    *
+    * @param string - the string with possible ${} references
+    * @param props - the source for ${x} property ref values
+    * @return the input string with all property references replaced if any.
+    *    If there are no valid references the input string will be returned.
+    */
+   public static String replaceProperties(final String string, final Properties props)
    {
       final char[] chars = string.toCharArray();
       StringBuffer buffer = new StringBuffer();
@@ -353,9 +382,9 @@ public final class Strings
          // Open bracket immediatley after dollar
          else if (c == '{' && state == SEEN_DOLLAR)
          {
-            buffer.append(string.substring(start, i-1));
+            buffer.append(string.substring(start, i - 1));
             state = IN_BRACKET;
-            start = i-1;
+            start = i - 1;
          }
 
          // No open bracket after dollar
@@ -366,14 +395,14 @@ public final class Strings
          else if (c == '}' && state == IN_BRACKET)
          {
             // No content
-            if (start+2 == i)
+            if (start + 2 == i)
             {
                buffer.append("${}"); // REVIEW: Correct?
             }
             else // Collect the system property
             {
                String value = null;
-               
+
                String key = string.substring(start + 2, i);
                
                // check for alias
@@ -388,16 +417,16 @@ public final class Strings
                else
                {
                   // check from System properties
-                  value = System.getProperty(key);
+                  value = props.getProperty(key);
                }
 
-               if( value != null )
+               if (value != null)
                {
                   properties = true;
                   buffer.append(value);
                }
             }
-            start = i+1;
+            start = i + 1;
             state = NORMAL;
          }
       }
@@ -425,27 +454,30 @@ public final class Strings
    {
       /** The beginning of the range. */
       public int begin;
-      
+
       /** The end of the range. */
       public int end;
-   
+
       /**
        * Construct a new range.
        *
        * @param begin   The beginning of the range.
        * @param end     The end of the range.
        */
-      public Range(int begin, int end) {
+      public Range(int begin, int end)
+      {
          this.begin = begin;
          this.end = end;
       }
-   
+
       /**
        * Default constructor.
        */
-      public Range() {}
+      public Range()
+      {
+      }
    }
-      
+
    /**
     * Return the range from a begining token to an ending token.
     *
@@ -456,13 +488,15 @@ public final class Strings
     * @return           (begin index, end index) or <i>null</i>.
     */
    public static Range rangeOf(final String beginToken, final String endToken,
-                               final String string, final int fromIndex)
+      final String string, final int fromIndex)
    {
       int begin = string.indexOf(beginToken, fromIndex);
 
-      if (begin != -1) {
+      if (begin != -1)
+      {
          int end = string.indexOf(endToken, begin + 1);
-         if (end != -1) {
+         if (end != -1)
+         {
             return new Range(begin, end);
          }
       }
@@ -479,7 +513,7 @@ public final class Strings
     * @return           (begin index, end index) or <i>null</i>.
     */
    public static Range rangeOf(final String beginToken, final String endToken,
-                               final String string)
+      final String string)
    {
       return rangeOf(beginToken, endToken, string, 0);
    }
@@ -499,20 +533,22 @@ public final class Strings
     * @return        Array of strings.
     */
    public static String[] split(final String string, final String delim,
-                                final int limit)
+      final int limit)
    {
       // get the count of delim in string, if count is > limit 
       // then use limit for count.  The number of delimiters is less by one
       // than the number of elements, so add one to count.
       int count = count(string, delim) + 1;
-      if (limit > 0 && count > limit) {
+      if (limit > 0 && count > limit)
+      {
          count = limit;
       }
 
       String strings[] = new String[count];
       int begin = 0;
 
-      for (int i=0; i<count; i++) {
+      for (int i = 0; i < count; i++)
+      {
          // get the next index of delim
          int end = string.indexOf(delim, begin);
          
@@ -541,7 +577,8 @@ public final class Strings
     * @param delim   Delimiter.
     * @return        Array of strings.
     */
-   public static String[] split(final String string, final String delim) {
+   public static String[] split(final String string, final String delim)
+   {
       return split(string, delim, -1);
    }
 
@@ -559,18 +596,20 @@ public final class Strings
     * @return        Joined string.
     */
    public static String join(final StringBuffer buff, final Object array[],
-                             final String delim)
+      final String delim)
    {
       boolean haveDelim = (delim != null);
-   
-      for (int i=0; i<array.length; i++) {
+
+      for (int i = 0; i < array.length; i++)
+      {
          buff.append(array[i]);
 
          // if this is the last element then don't append delim
-         if (haveDelim && (i + 1) < array.length) {
+         if (haveDelim && (i + 1) < array.length)
+         {
             buff.append(delim);
          }
-      } 
+      }
 
       return buff.toString();
    }
@@ -582,7 +621,8 @@ public final class Strings
     * @param delim   Delimiter to join strings with or <i>null</i>.
     * @return        Joined string.
     */
-   public static String join(final Object array[], final String delim) {
+   public static String join(final Object array[], final String delim)
+   {
       return join(new StringBuffer(), array, delim);
    }
 
@@ -592,7 +632,8 @@ public final class Strings
     * @param array   Array of objects to join as strings.
     * @return        Converted and joined objects.
     */
-   public static String join(final Object array[]) {
+   public static String join(final Object array[])
+   {
       return join(array, null);
    }
 
@@ -602,9 +643,11 @@ public final class Strings
     * @param array   Array of objects to join as strings.
     * @return        Converted and joined objects.
     */
-   public static String join(final byte array[]) {
+   public static String join(final byte array[])
+   {
       Byte bytes[] = new Byte[array.length];
-      for (int i=0; i<bytes.length; i++) {
+      for (int i = 0; i < bytes.length; i++)
+      {
          bytes[i] = new Byte(array[i]);
       }
 
@@ -622,9 +665,9 @@ public final class Strings
     * @return           String in the format of:
     *                   prefix + n ( + separator + n+i)* + suffix.
     */
-   public static String join(final StringBuffer buff, final Object[] array, 
-                             final String prefix, final String separator,
-                             final String suffix)
+   public static String join(final StringBuffer buff, final Object[] array,
+      final String prefix, final String separator,
+      final String suffix)
    {
       buff.append(prefix);
       join(buff, array, separator);
@@ -643,8 +686,8 @@ public final class Strings
     * @return           String in the format of:
     *                   prefix + n ( + separator + n+i)* + suffix.
     */
-   public static String join(final Object[] array, final String prefix, 
-                             final String separator, final String suffix)
+   public static String join(final Object[] array, final String prefix,
+      final String separator, final String suffix)
    {
       return join(new StringBuffer(), array, prefix, separator, suffix);
    }
@@ -661,11 +704,13 @@ public final class Strings
     * @param substring  Sub-string to look for.
     * @return           Count of substrings in string.
     */
-   public static int count(final String string, final String substring) {
+   public static int count(final String string, final String substring)
+   {
       int count = 0;
       int idx = 0;
 
-      while ((idx = string.indexOf(substring, idx)) != -1) {
+      while ((idx = string.indexOf(substring, idx)) != -1)
+      {
          idx++;
          count++;
       }
@@ -680,7 +725,8 @@ public final class Strings
     * @param c          Character to look for.
     * @return           Count of substrings in string.
     */
-   public static int count(final String string, final char c) {
+   public static int count(final String string, final char c)
+   {
       return count(string, String.valueOf(c));
    }
 
@@ -698,9 +744,10 @@ public final class Strings
     * @return           Padded string.
     */
    public static String pad(final StringBuffer buff, final String string,
-                            final int count)
+      final int count)
    {
-      for (int i=0; i<count; i++) {
+      for (int i = 0; i < count; i++)
+      {
          buff.append(string);
       }
 
@@ -714,7 +761,8 @@ public final class Strings
     * @param count      Pad count.
     * @return           Padded string.
     */
-   public static String pad(final String string, final int count) {
+   public static String pad(final String string, final int count)
+   {
       return pad(new StringBuffer(), string, count);
    }
 
@@ -726,7 +774,8 @@ public final class Strings
     * @param count   Pad count.
     * @return        Padded string.
     */
-   public static String pad(final Object obj, final int count) {
+   public static String pad(final Object obj, final int count)
+   {
       return pad(new StringBuffer(), String.valueOf(obj), count);
    }
 
@@ -742,7 +791,8 @@ public final class Strings
     *
     * @return true if object equals or intern ==, else false. 
     */
-   public static boolean compare(final String me, final String you) {
+   public static boolean compare(final String me, final String you)
+   {
       // If both null or intern equals
       if (me == you)
          return true;
@@ -754,14 +804,15 @@ public final class Strings
       // me will not be null, test for equality
       return me.equals(you);
    }
-      
+
    /**
     * Check if the given string is empty.
     *
     * @param string     String to check
     * @return           True if string is empty
     */
-   public static boolean isEmpty(final String string) {
+   public static boolean isEmpty(final String string)
+   {
       return string.equals(EMPTY);
    }
 
@@ -774,11 +825,12 @@ public final class Strings
     * @return           Index of <i>nth</i> item or -1.
     */
    public static int nthIndexOf(final String string, final String token,
-                                final int index)
+      final int index)
    {
       int j = 0;
 
-      for (int i = 0; i < index; i++) {
+      for (int i = 0; i < index; i++)
+      {
          j = string.indexOf(token, j + 1);
          if (j == -1) break;
       }
@@ -794,7 +846,8 @@ public final class Strings
     *
     * @throws IllegalArgumentException    String is <kk>null</kk> or empty.
     */
-   public static String capitalize(final String string) {
+   public static String capitalize(final String string)
+   {
       if (string == null)
          throw new NullArgumentException("string");
       if (string.equals(""))
@@ -811,8 +864,10 @@ public final class Strings
     * @param strings    String array to trim.
     * @return           String array with each element trimmed.
     */
-   public static String[] trim(final String[] strings) {
-      for (int i=0; i<strings.length; i++) {
+   public static String[] trim(final String[] strings)
+   {
+      for (int i = 0; i < strings.length; i++)
+      {
          strings[i] = strings[i].trim();
       }
 
@@ -840,28 +895,33 @@ public final class Strings
    public static URL toURL(String urlspec, final String relativePrefix) throws MalformedURLException
    {
       urlspec = urlspec.trim();
-      
+
       URL url;
-      
-      try {
+
+      try
+      {
          url = new URL(urlspec);
-         if (url.getProtocol().equals("file")) {
+         if (url.getProtocol().equals("file"))
+         {
             url = makeURLFromFilespec(url.getFile(), relativePrefix);
          }
       }
-      catch (Exception e) {
+      catch (Exception e)
+      {
          // make sure we have a absolute & canonical file url
-         try {
+         try
+         {
             url = makeURLFromFilespec(urlspec, relativePrefix);
          }
-         catch (IOException n) {
+         catch (IOException n)
+         {
             //
             // jason: or should we rethrow e?
             //
             throw new MalformedURLException(n.toString());
          }
       }
-      
+
       return url;
    }
 
@@ -873,16 +933,17 @@ public final class Strings
       File file = new File(filespec);
       
       // if we have a prefix and the file is not abs then prepend
-      if (relativePrefix != null && !file.isAbsolute()) {
+      if (relativePrefix != null && !file.isAbsolute())
+      {
          file = new File(relativePrefix, filespec);
       }
       
       // make sure it is canonical (no ../ and such)
       file = file.getCanonicalFile();
-      
+
       return file.toURL();
    }
-   
+
    /**
     * Make a URL from the given string.
     *
@@ -907,16 +968,16 @@ public final class Strings
     * @return <code>true</code> if the given String is a reserved Java
     *         keyword, <code>false</code> otherwise.
     */
-   public final static boolean isJavaKeyword( String s )
+   public final static boolean isJavaKeyword(String s)
    {
-      if( s == null || s.length() == 0 )
+      if (s == null || s.length() == 0)
       {
          return false;
       }
 
-      for( int i = 0; i < keywords.length; i++ )
+      for (int i = 0; i < keywords.length; i++)
       {
-         if( keywords[i].equals(s) )
+         if (keywords[i].equals(s))
          {
             return true;
          }
@@ -934,16 +995,16 @@ public final class Strings
     * @return <code>true</code> if the given String is a reserved
     *         identifier in EJB-QL, <code>false</code> otherwise.
     */
-   public final static boolean isEjbQlIdentifier( String s )
+   public final static boolean isEjbQlIdentifier(String s)
    {
-      if( s == null || s.length() == 0 )
+      if (s == null || s.length() == 0)
       {
          return false;
       }
 
-      for( int i = 0; i < ejbQlIdentifiers.length; i++ )
+      for (int i = 0; i < ejbQlIdentifiers.length; i++)
       {
-         if( ejbQlIdentifiers[i].equalsIgnoreCase(s) )
+         if (ejbQlIdentifiers[i].equalsIgnoreCase(s))
          {
             return true;
          }
@@ -964,23 +1025,23 @@ public final class Strings
     * @return <code>true</code> if the given String is a valid Java
     *         identifier, <code>false</code> otherwise.
     */
-   public final static boolean isValidJavaIdentifier( String s )
+   public final static boolean isValidJavaIdentifier(String s)
    {
       // an empty or null string cannot be a valid identifier
-      if( s == null || s.length() == 0 )
+      if (s == null || s.length() == 0)
       {
          return false;
       }
 
       char[] c = s.toCharArray();
-      if( !Character.isJavaIdentifierStart(c[0]) )
+      if (!Character.isJavaIdentifierStart(c[0]))
       {
          return false;
       }
 
-      for( int i = 1; i < c.length; i++ )
+      for (int i = 1; i < c.length; i++)
       {
-         if( !Character.isJavaIdentifierPart(c[i]) )
+         if (!Character.isJavaIdentifierPart(c[i]))
          {
             return false;
          }
@@ -990,6 +1051,7 @@ public final class Strings
    }
 
 }
+
 /*
 vim:ts=3:sw=3:et
 */

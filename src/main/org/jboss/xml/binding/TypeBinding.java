@@ -126,9 +126,9 @@ public final class TypeBinding
    public static final int XS_ENTITY = XS_ENTITY_NAME.hashCode();
    public static final int XS_ENTITIES = XS_ENTITIES_NAME.hashCode();
 
+   // check for uniqueness of hashCode's
    static
    {
-      // check for uniqueness of hashCode's
       int[] codes = new int[45];
       String[] names = new String[codes.length];
       int i = 0;
@@ -1193,6 +1193,7 @@ public final class TypeBinding
 
    /**
     * ---DD[timezonePart]
+    *
     * @param value
     * @return
     */
@@ -1226,6 +1227,7 @@ public final class TypeBinding
 
    /**
     * ---DD[timezonePart]
+    *
     * @param value
     * @return
     */
@@ -1446,14 +1448,18 @@ public final class TypeBinding
    }
 
    /**
-    *
     * @param value
     * @return
     */
    public static String marshalHexBinary(byte[] value)
    {
-      // todo marshalHexBinary
-      throw new UnsupportedOperationException();
+      StringBuffer result = new StringBuffer(2 * value.length);
+      for(int i = 0; i < value.length; ++i)
+      {
+         result.append(convertDigit((int)(value[i] >> 4)));
+         result.append(convertDigit((int)(value[i] & 0x0f)));
+      }
+      return result.toString();
    }
 
    public static boolean isNormalizedString(String value)
@@ -1640,8 +1646,23 @@ public final class TypeBinding
       }
       else if(result.length() > length)
       {
-         throw new JBossXBValueFormatException("Can't marshal int value " + value + " to a string with length of " + length);
+         throw new JBossXBValueFormatException(
+            "Can't marshal int value " + value + " to a string with length of " + length
+         );
       }
       return result;
+   }
+
+   private static char convertDigit(int value)
+   {
+      value &= 0x0f;
+      if(value >= 10)
+      {
+         return ((char)(value - 10 + 'a'));
+      }
+      else
+      {
+         return ((char)(value + '0'));
+      }
    }
 }

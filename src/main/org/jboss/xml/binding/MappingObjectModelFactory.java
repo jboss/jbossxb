@@ -22,40 +22,51 @@ import java.util.List;
 
 /**
  * An ObjectModelFactory that uses mappings
- * 
+ *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @author <a href="mailto:adrian@jboss.com">Adrian Brock</a>
  * @version <tt>$Revision$</tt>
  */
-public class MappingObjectModelFactory implements GenericObjectModelFactory
+public class MappingObjectModelFactory
+   implements GenericObjectModelFactory
 {
    // Constants -----------------------------------------------------
 
-   /** The log */
+   /**
+    * The log
+    */
    private final static Logger log = Logger.getLogger(MappingObjectModelFactory.class);
 
    // Attributes ----------------------------------------------------
 
-   /** Whether trace is enabled */
+   /**
+    * Whether trace is enabled
+    */
    private boolean trace = log.isTraceEnabled();
 
-   /** The class mappings */
+   /**
+    * The class mappings
+    */
    private final Map elementToClassMapping = new HashMap();
 
-   /** The field mappings */
+   /**
+    * The field mappings
+    */
    private final Map elementToFieldMapping = new HashMap();
 
    // Static --------------------------------------------------------
 
    private static Object get(Object o, String localName, Method getter)
    {
-      if (log.isTraceEnabled())
-         log.trace("get object=" + o + " localName=" + localName + " getter=" + getter);
-      
-      Object value;
-      if (o instanceof ImmutableContainer)
+      if(log.isTraceEnabled())
       {
-         ImmutableContainer con = ((ImmutableContainer) o);
+         log.trace("get object=" + o + " localName=" + localName + " getter=" + getter);
+      }
+
+      Object value;
+      if(o instanceof ImmutableContainer)
+      {
+         ImmutableContainer con = ((ImmutableContainer)o);
          value = con.getChild(localName);
       }
       else
@@ -64,7 +75,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          {
             value = getter.invoke(o, null);
          }
-         catch (Exception e)
+         catch(Exception e)
          {
             throw new NestedRuntimeException("Failed to invoke " + getter + " on " + o, e);
          }
@@ -74,36 +85,46 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
 
    public static void set(Object parent, Object child, String localName, Method setter)
    {
-      if (log.isTraceEnabled())
+      if(log.isTraceEnabled())
+      {
          log.trace("set parent=" + parent + " child=" + child + " localName=" + localName + " setter=" + setter);
+      }
 
-      if (setter != null)
+      if(setter != null)
       {
          try
          {
-            setter.invoke(parent, new Object[] { child });
+            setter.invoke(parent, new Object[]{child});
          }
-         catch (Exception e)
+         catch(Exception e)
          {
-            throw new NestedRuntimeException("Failed to set attribute value " + child + " with setter " + setter
-               + " on " + parent + ": ", e);
+            throw new NestedRuntimeException("Failed to set attribute value " +
+               child +
+               " with setter " +
+               setter
+               + " on " + parent + ": ", e
+            );
          }
       }
-      else if (parent instanceof ImmutableContainer)
+      else if(parent instanceof ImmutableContainer)
       {
-         ((ImmutableContainer) parent).addChild(localName, child);
+         ((ImmutableContainer)parent).addChild(localName, child);
       }
       else
       {
-         throw new IllegalStateException("setter is null and it's not an immutable container: parent=" + parent.getClass() +
-            ", localName" + localName + ", parent=" + parent + ", child=" + child);
+         throw new IllegalStateException("setter is null and it's not an immutable container: parent=" +
+            parent.getClass() +
+            ", localName" + localName + ", parent=" + parent + ", child=" + child
+         );
       }
    }
 
    private static Object newInstance(Class cls)
    {
-      if (log.isTraceEnabled())
+      if(log.isTraceEnabled())
+      {
          log.trace("new " + cls.getName());
+      }
 
       Object instance;
       try
@@ -111,15 +132,18 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          Constructor ctor = cls.getConstructor(null);
          instance = ctor.newInstance(null);
       }
-      catch (NoSuchMethodException e)
+      catch(NoSuchMethodException e)
       {
          log.warn("No no-arg constructor in " + cls);
          instance = new ImmutableContainer(cls);
       }
-      catch (Exception e)
+      catch(Exception e)
       {
-         throw new IllegalStateException("Failed to create an instance of " + cls + " with the no-arg constructor: "
-            + e.getMessage());
+         throw new IllegalStateException("Failed to create an instance of " +
+            cls +
+            " with the no-arg constructor: "
+            + e.getMessage()
+         );
       }
       return instance;
    }
@@ -130,49 +154,67 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
 
    /**
     * Map an element to a class
-    * 
+    *
     * @param element the element name
-    * @param cls the class
+    * @param cls     the class
     */
    public void mapElementToClass(String element, Class cls)
    {
       ElementToClassMapping mapping = new ElementToClassMapping(element, cls);
       addElementToClassMapping(mapping);
-      if (trace)
+      if(trace)
+      {
          log.trace(mapping);
+      }
    }
 
    /**
     * Map an element to a field
-    * 
-    * @param element the element name
-    * @param cls the class
-    * @param field the field name
+    *
+    * @param element   the element name
+    * @param cls       the class
+    * @param field     the field name
     * @param converter the type convertor
     */
    public void mapElementToField(String element, Class cls, String field, TypeConverter converter)
    {
       ElementToFieldMapping mapping = new ElementToFieldMapping(element, cls, field, converter);
       addElementToFieldMapping(mapping);
-      if (trace)
+      if(trace)
+      {
          log.trace(mapping);
+      }
    }
 
    // ObjectModelFactory implementation -----------------------------
 
    public Object newRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName,
-      Attributes attrs)
+                         Attributes attrs)
    {
-      if (trace)
-         log.trace("newRoot root=" + root + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName + " attributes=" + attrs);
-
-      if (root == null)
+      if(trace)
       {
-         ElementToClassMapping mapping = (ElementToClassMapping) elementToClassMapping.get(localName);
-         if (mapping != null)
+         log.trace("newRoot root=" +
+            root +
+            " navigator=" +
+            navigator +
+            " namespaceURI=" +
+            namespaceURI +
+            " localName=" +
+            localName +
+            " attributes=" +
+            attrs
+         );
+      }
+
+      if(root == null)
+      {
+         ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
+         if(mapping != null)
          {
-            if (trace)
+            if(trace)
+            {
                log.trace("creating root using " + mapping);
+            }
             root = newInstance(mapping.cls);
          }
          else
@@ -183,14 +225,14 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          if(root == null)
          {
             throw new IllegalStateException(
-               "Failed to resolve root element binding: ns=" + namespaceURI + ", local=" + localName
+               "Failed to resolve Java type binding for root element: ns=" + namespaceURI + ", local=" + localName
             );
          }
       }
 
-      if (attrs != null)
+      if(attrs != null)
       {
-         for (int i = 0; i < attrs.getLength(); ++i)
+         for(int i = 0; i < attrs.getLength(); ++i)
          {
             try
             {
@@ -202,7 +244,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
                   }
                }
             }
-            catch (Exception e)
+            catch(Exception e)
             {
                String msg = "Failed to set attribute " + attrs.getQName(i) + "=" + attrs.getValue(i);
                log.error(msg, e);
@@ -216,29 +258,52 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
 
    // GenericObjectModelFactory implementation ----------------------
 
-   public Object newChild(Object o, ContentNavigator navigator, String namespaceURI, String localName, Attributes attrs)
+   public Object newChild(Object o,
+                          ContentNavigator navigator,
+                          String namespaceURI,
+                          String localName,
+                          Attributes attrs)
    {
-      if (trace)
-         log.trace("newChild object=" + o + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName + " attributes=" + attrs);
+      if(trace)
+      {
+         log.trace("newChild object=" +
+            o +
+            " navigator=" +
+            navigator +
+            " namespaceURI=" +
+            namespaceURI +
+            " localName=" +
+            localName +
+            " attributes=" +
+            attrs
+         );
+      }
 
-      if (o == null)
+      if(o == null)
+      {
          throw new RuntimeException("Attempt to add a new child to a null parent localName=" + localName);
+      }
 
       Object child = null;
-      
+
       ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
       XSTypeDefinition type = navigator.getType();
       if(mapping != null)
       {
-         if (trace)
-           log.trace("newChild using mapping " + mapping);
+         if(trace)
+         {
+            log.trace("newChild using mapping " + mapping);
+         }
+
          try
          {
-            if (!(o instanceof Collection))
+            if(!(o instanceof Collection))
             {
                Method getter;
-               ElementToFieldMapping fieldMapping = (ElementToFieldMapping) elementToFieldMapping.get(new ElementToFieldMappingKey(localName, o.getClass()));
-               if (fieldMapping != null)
+               ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
+                  new ElementToFieldMappingKey(localName, o.getClass())
+               );
+               if(fieldMapping != null)
                {
                   getter = fieldMapping.getter;
                }
@@ -250,14 +315,14 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
                child = get(o, localName, getter);
             }
 
-            if (child == null)
+            if(child == null)
             {
                child = newInstance(mapping.cls);
             }
 
-            if (attrs != null)
+            if(attrs != null)
             {
-               for (int i = 0; i < attrs.getLength(); ++i)
+               for(int i = 0; i < attrs.getLength(); ++i)
                {
                   if(attrs.getLocalName(i).length() > 0)
                   {
@@ -269,28 +334,33 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
                }
             }
          }
-         catch (IllegalStateException e)
+         catch(IllegalStateException e)
          {
             throw e;
          }
-         catch (Exception e)
+         catch(Exception e)
          {
-            throw new NestedRuntimeException("newChild failed for o=" + o + ", uri=" + namespaceURI + ", local="
-               + localName + ", attrs=" + attrs, e);
+            throw new NestedRuntimeException("newChild failed for o=" +
+               o +
+               ", uri=" +
+               namespaceURI +
+               ", local="
+               + localName + ", attrs=" + attrs, e
+            );
          }
       }
       else
       {
-         if (o instanceof Collection)
+         if(o instanceof Collection)
          {
             child = create(namespaceURI, localName, type);
          }
          else
          {
             Class oCls;
-            if (o instanceof ImmutableContainer)
+            if(o instanceof ImmutableContainer)
             {
-               oCls = ((ImmutableContainer) o).cls;
+               oCls = ((ImmutableContainer)o).cls;
             }
             else
             {
@@ -303,10 +373,15 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
             {
                getter = oCls.getMethod(getterStr, null);
             }
-            catch (NoSuchMethodException e)
+            catch(NoSuchMethodException e)
             {
-               throw new IllegalStateException("newChild failed for o=" + o + ", uri=" + namespaceURI + ", local="
-                  + localName + ", attrs=" + attrs + ": no getter");
+               throw new IllegalStateException("newChild failed for o=" +
+                  o +
+                  ", uri=" +
+                  namespaceURI +
+                  ", local="
+                  + localName + ", attrs=" + attrs + ": no getter"
+               );
             }
 
             Class childType = getter.getReturnType();
@@ -340,7 +415,17 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
             }
             else if(!Util.isAttributeType(childType))
             {
-               child = newInstance(childType);
+               // id there is no field mapping
+               ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
+                  new ElementToFieldMappingKey(localName, o.getClass())
+               );
+               TypeConverter converter = fieldMapping == null ? null : fieldMapping.converter;
+
+               // if converter != null it will be used in setValue
+               if(converter == null)
+               {
+                  child = newInstance(childType);
+               }
             }
          }
       }
@@ -348,32 +433,70 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
       return child;
    }
 
-   public void addChild(Object parent, Object child, ContentNavigator navigator, String namespaceURI, String localName)
+   public void addChild(Object parent,
+                        Object child,
+                        ContentNavigator navigator,
+                        String namespaceURI,
+                        String localName)
    {
-      if (trace)
-         log.trace("addChild parent=" + parent + " child=" + child + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName);
-
-      if (child instanceof ImmutableContainer)
+      if(trace)
       {
-         child = ((ImmutableContainer) child).newInstance();
+         log.trace("addChild parent=" +
+            parent +
+            " child=" +
+            child +
+            " navigator=" +
+            navigator +
+            " namespaceURI=" +
+            namespaceURI +
+            " localName=" +
+            localName
+         );
+      }
+
+      if(child instanceof ImmutableContainer)
+      {
+         child = ((ImmutableContainer)child).newInstance();
       }
       setChild(child, parent, localName);
    }
 
    public void setValue(Object o, ContentNavigator navigator, String namespaceURI, String localName, String value)
    {
-      if (trace)
-         log.trace("setValue object=" + o + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName + " value=" + value);
+      if(trace)
+      {
+         log.trace("setValue object=" +
+            o +
+            " navigator=" +
+            navigator +
+            " namespaceURI=" +
+            namespaceURI +
+            " localName=" +
+            localName +
+            " value=" +
+            value
+         );
+      }
       setAttribute(o, localName, value, navigator.getType());
    }
 
    public Object completedRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName)
    {
-      if (trace)
-         log.trace("completedRoot root=" + root + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName);
-      if (root instanceof ImmutableContainer)
+      if(trace)
       {
-         root = ((ImmutableContainer) root).newInstance();
+         log.trace("completedRoot root=" +
+            root +
+            " navigator=" +
+            navigator +
+            " namespaceURI=" +
+            namespaceURI +
+            " localName=" +
+            localName
+         );
+      }
+      if(root instanceof ImmutableContainer)
+      {
+         root = ((ImmutableContainer)root).newInstance();
       }
       return root;
    }
@@ -398,33 +521,41 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
    {
       boolean trace = log.isTraceEnabled();
       Object value = child;
-      if (parent instanceof Collection)
+      if(parent instanceof Collection)
       {
-         if (trace)
+         if(trace)
+         {
             log.trace("Add " + value + " to collection " + parent);
-         ((Collection) parent).add(value);
+         }
+         ((Collection)parent).add(value);
       }
       else
       {
          Method setter = null;
-         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping) elementToFieldMapping.get(new ElementToFieldMappingKey(localName, parent.getClass()));
-         if (fieldMapping != null)
+         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
+            new ElementToFieldMappingKey(localName, parent.getClass())
+         );
+         if(fieldMapping != null)
          {
-            if (trace)
+            if(trace)
+            {
                log.trace("Add " + value + " to " + parent + " using field mapping " + fieldMapping);
+            }
             setter = fieldMapping.setter;
             set(parent, value, localName, setter);
          }
          else
          {
             final String xmlToCls = Util.xmlNameToClassName(localName, true);
-            if (trace)
+            if(trace)
+            {
                log.trace("Add " + value + " to xml mapped class " + xmlToCls);
+            }
             Method getter = null;
             Class parentCls;
-            if (parent instanceof ImmutableContainer)
+            if(parent instanceof ImmutableContainer)
             {
-               parentCls = ((ImmutableContainer) parent).cls;
+               parentCls = ((ImmutableContainer)parent).cls;
             }
             else
             {
@@ -435,29 +566,31 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
             {
                getter = parentCls.getMethod("get" + xmlToCls, null);
             }
-            catch (NoSuchMethodException e)
+            catch(NoSuchMethodException e)
             {
                log.warn("no getter found for " + localName + " in " + parent);
             }
 
-            if (getter != null)
+            if(getter != null)
             {
-               if (!(child instanceof Collection) && Collection.class.isAssignableFrom(getter.getReturnType()))
+               if(!(child instanceof Collection) && Collection.class.isAssignableFrom(getter.getReturnType()))
                {
                   Object o = get(parent, localName, getter);
-                  Collection col = (Collection) o;
-                  if (trace)
+                  Collection col = (Collection)o;
+                  if(trace)
+                  {
                      log.trace("Add " + value + " to collection " + col + " retrieved from getter " + getter);
+                  }
                   col.add(child);
                }
                else
                {
-                  
+
                   try
                   {
-                     setter = parentCls.getMethod("set" + xmlToCls, new Class[] { getter.getReturnType() });
+                     setter = parentCls.getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
                   }
-                  catch (NoSuchMethodException e)
+                  catch(NoSuchMethodException e)
                   {
                      log.warn("No setter for " + localName + " in " + parentCls);
                   }
@@ -471,7 +604,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
 
    private final void setAttribute(Object o, String localName, String value, XSTypeDefinition type)
    {
-      if (o instanceof Collection)
+      if(o instanceof Collection)
       {
          if(type == null)
          {
@@ -493,8 +626,10 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
       {
          Method setter = null;
          Object fieldValue = null;
-         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping) elementToFieldMapping.get(new ElementToFieldMappingKey(localName, o.getClass()));
-         if (fieldMapping != null)
+         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
+            new ElementToFieldMappingKey(localName, o.getClass())
+         );
+         if(fieldMapping != null)
          {
             fieldValue = fieldMapping.converter.unmarshal(value);
             setter = fieldMapping.setter;
@@ -502,9 +637,9 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          else
          {
             Class oCls;
-            if (o instanceof ImmutableContainer)
+            if(o instanceof ImmutableContainer)
             {
-               oCls = ((ImmutableContainer) o).cls;
+               oCls = ((ImmutableContainer)o).cls;
             }
             else
             {
@@ -518,7 +653,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
                fieldValue = TypeBinding.unmarshal(value, getter.getReturnType());
                setter = oCls.getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
             }
-            catch (NoSuchMethodException e)
+            catch(NoSuchMethodException e)
             {
                log.warn("no setter found for " + localName + " in " + oCls);
             }
@@ -549,9 +684,12 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
       {
          cls = Thread.currentThread().getContextClassLoader().loadClass(clsName);
       }
-      catch (ClassNotFoundException e)
+      catch(ClassNotFoundException e)
       {
-         log.debug("create: failed to load class " + clsName);
+         if(log.isTraceEnabled())
+         {
+            log.trace("create: failed to load class " + clsName);
+         }
       }
 
       if(cls != null)
@@ -581,26 +719,28 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          StringBuffer buffer = new StringBuffer();
          buffer.append("ElementToClass@").append(System.identityHashCode(this));
          buffer.append("{element=").append(element);
-         if (cls != null)
+         if(cls != null)
+         {
             buffer.append(" class=").append(cls.getName());
+         }
          buffer.append("}");
          return buffer.toString();
       }
 
       public boolean equals(Object o)
       {
-         if (this == o)
+         if(this == o)
          {
             return true;
          }
-         if (!(o instanceof ElementToClassMapping))
+         if(!(o instanceof ElementToClassMapping))
          {
             return false;
          }
 
-         final ElementToClassMapping classMapping = (ElementToClassMapping) o;
+         final ElementToClassMapping classMapping = (ElementToClassMapping)o;
 
-         if (cls != null ? !cls.equals(classMapping.cls) : classMapping.cls != null)
+         if(cls != null ? !cls.equals(classMapping.cls) : classMapping.cls != null)
          {
             return false;
          }
@@ -617,7 +757,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
    private class ElementToFieldMappingKey
    {
       public final String element;
-      
+
       public final Class cls;
 
       public ElementToFieldMappingKey(String element, Class cls)
@@ -628,22 +768,24 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
 
       public boolean equals(Object o)
       {
-         if (this == o)
+         if(this == o)
          {
             return true;
          }
-         if (!(o instanceof ElementToFieldMappingKey))
+         if(!(o instanceof ElementToFieldMappingKey))
          {
             return false;
          }
 
-         final ElementToFieldMappingKey elementToFieldMappingKey = (ElementToFieldMappingKey) o;
+         final ElementToFieldMappingKey elementToFieldMappingKey = (ElementToFieldMappingKey)o;
 
-         if (cls != null ? !cls.equals(elementToFieldMappingKey.cls) : elementToFieldMappingKey.cls != null)
+         if(cls != null ? !cls.equals(elementToFieldMappingKey.cls) : elementToFieldMappingKey.cls != null)
          {
             return false;
          }
-         if (element != null ? !element.equals(elementToFieldMappingKey.element) : elementToFieldMappingKey.element != null)
+         if(element != null ?
+            !element.equals(elementToFieldMappingKey.element) :
+            elementToFieldMappingKey.element != null)
          {
             return false;
          }
@@ -659,7 +801,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          return result;
       }
    }
-   
+
    private class ElementToFieldMapping
    {
       public final String element;
@@ -671,7 +813,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
       public final TypeConverter converter;
 
       public final ElementToFieldMappingKey key;
-      
+
       public final Method getter;
 
       public final Method setter;
@@ -683,12 +825,12 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          this.field = field;
          this.converter = converter;
          key = new ElementToFieldMappingKey(element, cls);
-         
+
          try
          {
             getter = Classes.getAttributeGetter(cls, field);
          }
-         catch (NoSuchMethodException e)
+         catch(NoSuchMethodException e)
          {
             throw new IllegalStateException("Getter not found for " + field + " in class " + cls.getName());
          }
@@ -697,7 +839,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          {
             setter = Classes.getAttributeSetter(cls, field, getter.getReturnType());
          }
-         catch (NoSuchMethodException e)
+         catch(NoSuchMethodException e)
          {
             throw new IllegalStateException("Setter not found for " + field + " in class " + cls.getName());
          }
@@ -708,39 +850,43 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          StringBuffer buffer = new StringBuffer();
          buffer.append("ElementToField@").append(System.identityHashCode(this));
          buffer.append("{element=").append(element);
-         if (cls != null)
+         if(cls != null)
+         {
             buffer.append(" class=").append(cls.getName());
+         }
          buffer.append(" field=").append(field);
          buffer.append(" getter=").append(getter);
          buffer.append(" setter=").append(setter);
-         if (converter != null)
+         if(converter != null)
+         {
             buffer.append(" convertor=").append(converter.getClass().getName());
+         }
          buffer.append("}");
          return buffer.toString();
       }
 
       public boolean equals(Object o)
       {
-         if (this == o)
+         if(this == o)
          {
             return true;
          }
-         if (!(o instanceof ElementToFieldMapping))
+         if(!(o instanceof ElementToFieldMapping))
          {
             return false;
          }
 
-         final ElementToFieldMapping elementToFieldMapping = (ElementToFieldMapping) o;
+         final ElementToFieldMapping elementToFieldMapping = (ElementToFieldMapping)o;
 
-         if (cls != null ? !cls.equals(elementToFieldMapping.cls) : elementToFieldMapping.cls != null)
+         if(cls != null ? !cls.equals(elementToFieldMapping.cls) : elementToFieldMapping.cls != null)
          {
             return false;
          }
-         if (element != null ? !element.equals(elementToFieldMapping.element) : elementToFieldMapping.element != null)
+         if(element != null ? !element.equals(elementToFieldMapping.element) : elementToFieldMapping.element != null)
          {
             return false;
          }
-         if (field != null ? !field.equals(elementToFieldMapping.field) : elementToFieldMapping.field != null)
+         if(field != null ? !field.equals(elementToFieldMapping.field) : elementToFieldMapping.field != null)
          {
             return false;
          }
@@ -769,18 +915,25 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
       public ImmutableContainer(Class cls)
       {
          this.cls = cls;
-         log.info("created immutable container for " + cls);
+         if(log.isTraceEnabled())
+         {
+            log.trace("created immutable container for " + cls);
+         }
       }
 
       public void addChild(String localName, Object child)
       {
-         if (!names.isEmpty() && names.get(names.size() - 1).equals(localName))
+         if(!names.isEmpty() && names.get(names.size() - 1).equals(localName))
          {
             throw new IllegalStateException("Attempt to add duplicate element " + localName);
          }
          names.add(localName);
          values.add(child);
-         log.info("added child " + localName + " for " + cls + ": " + child);
+
+         if(log.isTraceEnabled())
+         {
+            log.trace("added child " + localName + " for " + cls + ": " + child);
+         }
       }
 
       public Object getChild(String localName)
@@ -796,7 +949,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
       public Class[] getValueTypes()
       {
          Class[] types = new Class[values.size()];
-         for (int i = 0; i < values.size(); ++i)
+         for(int i = 0; i < values.size(); ++i)
          {
             types[i] = values.get(i).getClass();
          }
@@ -807,37 +960,43 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
       {
          Constructor ctor = null;
          Constructor[] ctors = cls.getConstructors();
-         for (int i = 0; i < ctors.length; ++i)
+
+         if(ctors == null || ctors.length == 0)
+         {
+            throw new JBossXBRuntimeException("The class has no declared constructors: " + cls);
+         }
+
+         for(int i = 0; i < ctors.length; ++i)
          {
             Class[] types = ctors[i].getParameterTypes();
 
-            if (types == null || types.length == 0)
+            if(types == null || types.length == 0)
             {
                throw new IllegalStateException("Found no-arg constructor for immutable " + cls);
             }
 
-            if (types.length == values.size())
+            if(types.length == values.size())
             {
                ctor = ctors[i];
 
                int typeInd = 0;
-               while (typeInd < types.length)
+               while(typeInd < types.length)
                {
-                  if (!types[typeInd].isAssignableFrom(values.get(typeInd++).getClass()))
+                  if(!types[typeInd].isAssignableFrom(values.get(typeInd++).getClass()))
                   {
                      ctor = null;
                      break;
                   }
                }
 
-               if (ctor != null)
+               if(ctor != null)
                {
                   break;
                }
             }
          }
 
-         if (ctor == null)
+         if(ctor == null)
          {
             throw new IllegalStateException("No constructor in " + cls + " that would take arguments " + values);
          }
@@ -846,10 +1005,13 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          {
             return ctor.newInstance(values.toArray());
          }
-         catch (Exception e)
+         catch(Exception e)
          {
-            throw new IllegalStateException("Failed to create immutable instance of " + cls + " using arguments: "
-               + values + ": " + e.getMessage());
+            throw new IllegalStateException("Failed to create immutable instance of " +
+               cls +
+               " using arguments: "
+               + values + ": " + e.getMessage()
+            );
          }
       }
    }

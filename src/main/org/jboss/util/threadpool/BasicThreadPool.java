@@ -106,6 +106,15 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
          executor.shutdownAfterProcessingCurrentlyQueuedTasks();
    }
 
+   public void waitForTasks() throws InterruptedException
+   {
+      executor.awaitTerminationAfterShutdown();
+   }
+   public void waitForTasks(long maxWaitTime) throws InterruptedException
+   {
+      executor.awaitTerminationAfterShutdown(maxWaitTime);
+   }
+
    public void runTaskWrapper(TaskWrapper wrapper)
    {
       if (stopped.get())
@@ -224,6 +233,30 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    public void setKeepAliveTime(long time)
    {
       executor.setKeepAliveTime(time);
+   }
+
+   public void setBlockingMode(String mode)
+   {
+      if( mode.equalsIgnoreCase("run") )
+      {
+         executor.runWhenBlocked();
+      }
+      else if( mode.equalsIgnoreCase("wait") )
+      {
+         executor.waitWhenBlocked();
+      }
+      else if( mode.equalsIgnoreCase("discard") )
+      {
+         executor.discardWhenBlocked();
+      }
+      else if( mode.equalsIgnoreCase("discardOldest") )
+      {
+         executor.discardOldestWhenBlocked();
+      }
+      else
+      {
+         executor.abortWhenBlocked();
+      }
    }
 
    public ThreadPool getInstance()

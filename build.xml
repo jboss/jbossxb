@@ -253,10 +253,17 @@
     <!-- Build the jboss-common-client.jar -->
     <jar jarfile="${build.lib}/jboss-common-client.jar" manifest="${build.etc}/default.mf">
       <fileset dir="${build.classes}">
+        <!-- All MBean interfaces -->
+        <include name="**/*MBean.class"/>
+
         <!-- All Exceptions, Errors and Throwable Support Classes -->
         <include name="**/*Exception*"/>
         <include name="**/*Error*"/>
-        <include name="org/jboss/util/*NestedThrowable"/>
+        <include name="org/jboss/util/*NestedThrowable*.class"/>
+
+        <!-- Misc Fluff clients need -->
+        <include name="org/jboss/util/jmx/ObjectNameFactory*.class"/>
+        <include name="org/jboss/util/jmx/JMXExceptionDecoder*.class"/>
 
         <!-- Client Logging support -->
         <include name="org/jboss/logging/Logger*.class"/>

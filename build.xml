@@ -125,26 +125,31 @@
     <mkdir dir="${build.lib}"/>
     
     <!-- Build the jboss-common.jar -->
-    <jar jarfile="${build.lib}/jboss-common.jar" manifest="${build.etc}/default.mf">
+    <jar destfile="${build.lib}/jboss-common.jar" manifest="${build.etc}/default.mf"
+	 update="${jar.update}" index="${jar.index}">
       <fileset dir="${build.classes}">
         <include name="**"/>
       </fileset>
     </jar>
 
     <!-- Build the jboss-common-client.jar -->
-    <jar jarfile="${build.lib}/jboss-common-client.jar" manifest="${build.etc}/default.mf">
+    <jar destfile="${build.lib}/jboss-common-client.jar" manifest="${build.etc}/default.mf"
+         update="${jar.update}" index="${jar.index}">
       <fileset dir="${build.classes}">
         <include name="**"/>
       </fileset>
     </jar>
 
     <!-- testsuite-support.jar -->
-    <jar jarfile="${build.lib}/testsuite-support.jar" manifest="${build.etc}/default.mf">
+    <jar destfile="${build.lib}/testsuite-support.jar" manifest="${build.etc}/default.mf"
+         update="${jar.update}" index="${jar.index}">
       <fileset dir="${build.classes}">
          <include name="org/jboss/logging/**"/>
       </fileset>
     </jar>
 
+    <!-- Generate checksums -->
+    <call target="_default:compile-checksums"/>
   </target>
 
 

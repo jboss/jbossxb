@@ -9,22 +9,27 @@
 
 package org.jboss.util;
 
-import java.util.Map;
-
-import java.net.URL;
-import java.net.MalformedURLException;
-
 import java.io.IOException;
 import java.io.File;
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.util.Map;
+
+import gnu.regexp.RE;
+import gnu.regexp.REException;
+import gnu.regexp.REMatch;
 
 /**
  * A collection of String utilities.
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author Scott.Stark@jboss.org
  */
 public final class Strings
 {
+   private static RE PROPERTY_REF_REGEX;
+
    /** An empty string constant */
    public static final String EMPTY = "";
 
@@ -218,6 +223,50 @@ public final class Strings
       return subst(new StringBuffer(), string, replace, '%');
    }
 
+   /////////////////////////////////////////////////////////////////////////
+   //                             Regex Methods                           //
+   /////////////////////////////////////////////////////////////////////////
+
+   /** Go through the input string and replace any occurance of ${p} with
+    *the System.getProperty(p) value.
+    *@return the input string with all property references replaced
+    */
+   public static String replaceProperties(final String string)
+   {
+      synchronized( Strings.class )
+      {
+      if( PROPERTY_REF_REGEX == null )
+      {
+         try
+         {
+            PROPERTY_REF_REGEX = new RE("([^$]*)\\${([^}]+)}([^$]*)");
+         }
+         catch(REException e)
+         {
+            throw new NestedRuntimeException("Failed to init RE(([^$]*)\\${([^}]+)}([^$]*)", e);
+         }
+      }
+      }
+
+      REMatch[] matches = PROPERTY_REF_REGEX.getAllMatches(string);
+      if( matches.length == 0 )
+         return string;
+
+      StringBuffer buffer = new StringBuffer();
+      for(int m = 0; m < matches.length; m ++)
+      {
+         REMatch match = matches[m];
+         String prefix = match.toString(1);
+         String prop = match.toString(2);
+         String suffix = match.toString(3);
+         String value = System.getProperty(prop);
+         buffer.append(prefix);
+         if( value != null )
+            buffer.append(value);
+         buffer.append(suffix);
+      }
+      return buffer.toString();
+   }
 
    /////////////////////////////////////////////////////////////////////////
    //                             Range Methods                           //

@@ -35,7 +35,7 @@ public class StateAdapter
     *
     * @return  False;
     */
-   public boolean accept(final State state) { return false; }
+   public boolean isAcceptable(final State state) { return false; }
 
    public void stateChanged(final StateMachine.ChangeEvent event) {}
 }

@@ -93,7 +93,7 @@ public class SystemPropertyClassValue
    {
       Throwable error = setSystemPropertyClassValue(property, className);
       if (error != null)
-         log.debug("Error loading class " + className + " property " + property + " not set.", error);
+         log.trace("Error loading class " + className + " property " + property + " not set.", error);
    }
 
    /**

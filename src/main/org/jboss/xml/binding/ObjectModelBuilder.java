@@ -13,6 +13,7 @@ import java.util.Stack;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
@@ -280,6 +281,11 @@ public class ObjectModelBuilder
       try
       {
          return method.invoke(factory, args);
+      }
+      catch (InvocationTargetException e)
+      {
+         log.error("Failed to invoke method " + method.getName(), e.getTargetException());
+         throw new IllegalStateException("Failed to invoke method " + method.getName());
       }
       catch(Exception e)
       {

@@ -24,6 +24,13 @@ ANT_BUILD_FILE="build.xml"
 # the default arguments
 ANT_OPTIONS="-find $ANT_BUILD_FILE"
 
+# the logger listener to use
+if [ "x$ANT_COLOR" = "x" ]; then
+    ANT_LOGGER="org.apache.tools.ant.NoBannerLogger"
+else
+    ANT_LOGGER="org.apache.tools.ant.listener.AnsiColorLogger"
+fi
+
 # Use the maximum available, or set MAX_FD != -1 to use that
 MAX_FD="maximum"
 
@@ -172,6 +179,7 @@ main() {
 
     # setup some build properties
     ANT_OPTS="$ANT_OPTS -Xmx640m"
+    ANT_OPTIONS="-logger $ANT_LOGGER"
 
     # change to the directory where the script lives so users are not forced
     # to be in the same directory as build.xml

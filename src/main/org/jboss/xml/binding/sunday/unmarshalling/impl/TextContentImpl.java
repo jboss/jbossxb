@@ -22,14 +22,12 @@ public class TextContentImpl
 
    public void pushHandler(TextContentHandler handler)
    {
-      if(this.handler == null)
+      if(this.handler != null)
       {
+         handler.setNext(this.handler);
          this.handler = handler;
       }
-      else
-      {
-         this.handler.setNext(handler);
-      }
+      this.handler = handler;
    }
 
    public void set(Object owner, String data, QName name)

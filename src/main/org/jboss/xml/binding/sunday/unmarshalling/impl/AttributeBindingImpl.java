@@ -6,7 +6,7 @@
  */
 package org.jboss.xml.binding.sunday.unmarshalling.impl;
 
-import org.jboss.xml.binding.sunday.unmarshalling.AttributeType;
+import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
 
 import javax.xml.namespace.QName;
@@ -15,21 +15,18 @@ import javax.xml.namespace.QName;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public class AttributeTypeImpl
-   implements AttributeType
+public class AttributeBindingImpl
+   implements AttributeBinding
 {
    private AttributeHandler handler;
 
-   public AttributeType pushHandler(AttributeHandler handler)
+   public AttributeBinding pushHandler(AttributeHandler handler)
    {
-      if(this.handler == null)
+      if(this.handler != null)
       {
-         this.handler = handler;
+         handler.setNext(this.handler);
       }
-      else
-      {
-         this.handler.setNext(handler);
-      }
+      this.handler = handler;
       return this;
    }
 

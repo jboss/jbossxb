@@ -13,7 +13,7 @@ import org.xml.sax.Attributes;
 import org.jboss.logging.Logger;
 import org.jboss.xml.binding.sunday.unmarshalling.DocumentHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.ObjectModelStack;
-import org.jboss.xml.binding.sunday.unmarshalling.ElementType;
+import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
 
 import javax.xml.namespace.QName;
@@ -39,14 +39,14 @@ public class DocumentHandlerImpl
 
    public Object root;
 
-   public ElementType addElement(QName name)
+   public ElementBinding addElement(QName name)
    {
-      ElementType type = new ElementTypeImpl();
-      addElement(name, type);
-      return type;
+      ElementBinding binding = new ElementBindingImpl();
+      addElement(name, binding);
+      return binding;
    }
 
-   public void addElement(QName name, ElementType binding)
+   public void addElement(QName name, ElementBinding binding)
    {
       topElements.put(name, binding);
    }
@@ -125,7 +125,7 @@ public class DocumentHandlerImpl
       ElementStack.StackItem stackItem = ElementStack.NULL_ITEM;
       if(elementStack.isEmpty())
       {
-         ElementType element = (ElementType)topElements.get(startName);
+         ElementBinding element = (ElementBinding)topElements.get(startName);
          if(element != null)
          {
             stackItem = new ElementStack.StackItem(startName, element, null, objectStack.size());
@@ -136,8 +136,8 @@ public class DocumentHandlerImpl
          ElementStack.StackItem parentItem = elementStack.peek();
          if(parentItem != ElementStack.NULL_ITEM)
          {
-            ElementType element = null;
-            List handlers = parentItem.binding.getHandlers();
+            ElementBinding element = null;
+            List handlers = parentItem.binding.getElementHandlers();
             for(int i = 0; i < handlers.size(); ++i)
             {
                ElementHandler handler = (ElementHandler)handlers.get(i);

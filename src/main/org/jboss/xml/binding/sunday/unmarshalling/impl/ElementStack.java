@@ -6,7 +6,7 @@
  */
 package org.jboss.xml.binding.sunday.unmarshalling.impl;
 
-import org.jboss.xml.binding.sunday.unmarshalling.ElementType;
+import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
 
 import javax.xml.namespace.QName;
 import java.util.List;
@@ -23,12 +23,12 @@ public class ElementStack
    public static class StackItem
    {
       public final QName name;
-      public final ElementType binding;
+      public final ElementBinding binding;
       public final Object parent;
       public final int startIndex;
       public int endIndex;
 
-      public StackItem(QName name, ElementType binding, Object parent, int objectStackIndex)
+      public StackItem(QName name, ElementBinding binding, Object parent, int objectStackIndex)
       {
          this.name = name;
          this.binding = binding;

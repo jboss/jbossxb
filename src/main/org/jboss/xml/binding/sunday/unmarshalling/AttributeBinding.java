@@ -12,9 +12,9 @@ import javax.xml.namespace.QName;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface AttributeType
+public interface AttributeBinding
 {
-   AttributeType pushHandler(AttributeHandler handler);
+   AttributeBinding pushHandler(AttributeHandler handler);
 
    void set(Object parent, String data, QName name);
 }

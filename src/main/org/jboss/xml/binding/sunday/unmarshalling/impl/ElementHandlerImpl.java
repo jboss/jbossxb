@@ -7,8 +7,8 @@
 package org.jboss.xml.binding.sunday.unmarshalling.impl;
 
 import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
-import org.jboss.xml.binding.sunday.unmarshalling.ElementType;
-import org.jboss.xml.binding.sunday.unmarshalling.AttributeType;
+import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContent;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContentHandler;
@@ -31,16 +31,16 @@ public class ElementHandlerImpl
 
    private Map attrBindings = Collections.EMPTY_MAP;
    private Map childBindings = Collections.EMPTY_MAP;
-   private TextContent contentBinding;
+   protected TextContent contentBinding;
 
-   public AttributeType addAttribute(QName name)
+   public AttributeBinding addAttribute(QName name)
    {
-      AttributeType attr = new AttributeTypeImpl();
+      AttributeBinding attr = new AttributeBindingImpl();
       addAttribute(name, attr);
       return attr;
    }
 
-   public void addAttribute(QName name, AttributeType binding)
+   public void addAttribute(QName name, AttributeBinding binding)
    {
       switch(attrBindings.size())
       {
@@ -56,17 +56,17 @@ public class ElementHandlerImpl
 
    public ElementHandler pushAttributeHandler(QName name, AttributeHandler handler)
    {
-      AttributeType binding = (AttributeType)attrBindings.get(name);
+      AttributeBinding binding = (AttributeBinding)attrBindings.get(name);
       if(binding == null)
       {
-         binding = new AttributeTypeImpl();
+         binding = new AttributeBindingImpl();
          addAttribute(name, binding);
       }
       binding.pushHandler(handler);
       return this;
    }
 
-   public void addElement(QName name, ElementType binding)
+   public void addElement(QName name, ElementBinding binding)
    {
       switch(childBindings.size())
       {
@@ -95,9 +95,9 @@ public class ElementHandlerImpl
       return this;
    }
 
-   public ElementType addElement(QName name)
+   public ElementBinding addElement(QName name)
    {
-      ElementType childBinding = new ElementTypeImpl();
+      ElementBinding childBinding = new ElementBindingImpl();
       addElement(name, childBinding);
       return childBinding;
    }
@@ -111,7 +111,7 @@ public class ElementHandlerImpl
          {
             String localName = attrs.getLocalName(i);
             QName attrName = new QName(attrs.getURI(i), localName.length() == 0 ? attrs.getQName(i) : localName);
-            AttributeType attr = (AttributeType)attrBindings.get(attrName);
+            AttributeBinding attr = (AttributeBinding)attrBindings.get(attrName);
             if(attr != null)
             {
                attr.set(child, attrs.getValue(i), attrName);
@@ -137,9 +137,9 @@ public class ElementHandlerImpl
       addChild(parent, child, name);
    }
 
-   public ElementType getElement(QName name)
+   public ElementBinding getElement(QName name)
    {
-      return (ElementType)childBindings.get(name);
+      return (ElementBinding)childBindings.get(name);
    }
 
    // Protected

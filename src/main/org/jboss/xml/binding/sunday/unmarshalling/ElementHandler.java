@@ -16,9 +16,9 @@ import javax.xml.namespace.QName;
  */
 public interface ElementHandler
 {
-   AttributeType addAttribute(QName name);
+   AttributeBinding addAttribute(QName name);
 
-   void addAttribute(QName name, AttributeType binding);
+   void addAttribute(QName name, AttributeBinding binding);
 
    ElementHandler pushAttributeHandler(QName name, AttributeHandler handler);
 
@@ -26,11 +26,11 @@ public interface ElementHandler
 
    ElementHandler pushTextContentHandler(TextContentHandler handler);
 
-   ElementType addElement(QName name);
+   ElementBinding addElement(QName name);
 
-   void addElement(QName name, ElementType binding);
+   void addElement(QName name, ElementBinding binding);
 
-   ElementType getElement(QName name);
+   ElementBinding getElement(QName name);
 
    Object start(Object parent, QName name, Attributes attrs);
 

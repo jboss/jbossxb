@@ -14,7 +14,7 @@ import javax.xml.namespace.QName;
  */
 public interface DocumentHandler
 {
-   ElementType addElement(QName name);
+   ElementBinding addElement(QName name);
 
-   void addElement(QName name, ElementType binding);
+   void addElement(QName name, ElementBinding binding);
 }

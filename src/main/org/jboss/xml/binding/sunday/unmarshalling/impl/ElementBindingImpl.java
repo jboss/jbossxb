@@ -6,10 +6,10 @@
  */
 package org.jboss.xml.binding.sunday.unmarshalling.impl;
 
-import org.jboss.xml.binding.sunday.unmarshalling.ElementType;
+import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.ObjectModelStack;
-import org.jboss.xml.binding.sunday.unmarshalling.AttributeType;
+import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContent;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContentHandler;
@@ -24,12 +24,12 @@ import java.util.ArrayList;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public class ElementTypeImpl
-   implements ElementType
+public class ElementBindingImpl
+   implements ElementBinding
 {
    private List handlers = Collections.EMPTY_LIST;
 
-   public ElementType pushElementHandler(ElementHandler handler)
+   public ElementBinding pushElementHandler(ElementHandler handler)
    {
       switch(handlers.size())
       {
@@ -39,22 +39,22 @@ public class ElementTypeImpl
          case 1:
             handlers = new ArrayList(handlers);
          default:
-            handlers.add(handler);
+            handlers.add(0, handler);
       }
       return this;
    }
 
-   public List getHandlers()
+   public List getElementHandlers()
    {
       return handlers;
    }
 
-   public AttributeType addAttribute(QName name)
+   public AttributeBinding addAttribute(QName name)
    {
       return getLastHandler().addAttribute(name);
    }
 
-   public void addAttribute(QName name, AttributeType binding)
+   public void addAttribute(QName name, AttributeBinding binding)
    {
       getLastHandler().addAttribute(name, binding);
    }
@@ -64,12 +64,12 @@ public class ElementTypeImpl
       return getLastHandler().pushAttributeHandler(name, handler);
    }
 
-   public ElementType addElement(QName name)
+   public ElementBinding addElement(QName name)
    {
       return getLastHandler().addElement(name);
    }
 
-   public void addElement(QName name, ElementType binding)
+   public void addElement(QName name, ElementBinding binding)
    {
       getLastHandler().addElement(name, binding);
    }
@@ -154,6 +154,6 @@ public class ElementTypeImpl
       {
          pushElementHandler(new ElementHandlerImpl());
       }
-      return (ElementHandler)handlers.get(handlers.size() - 1);
+      return (ElementHandler)handlers.get(0);
    }
 }

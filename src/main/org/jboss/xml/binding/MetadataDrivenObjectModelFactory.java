@@ -135,7 +135,7 @@ public class MetadataDrivenObjectModelFactory
                   {
                      setFieldValue(attrBinding.getAttributeName(),
                         attrBinding.getField(),
-                        attrBinding.getGetter(),
+                        attrBinding.getSetter(),
                         child,
                         unmarshalledValue
                      );

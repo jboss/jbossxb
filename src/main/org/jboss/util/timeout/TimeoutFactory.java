@@ -542,7 +542,7 @@ public class TimeoutFactory
    static
    {
       singleton = new TimeoutFactory();
-      Thread thread = new Thread()
+      Thread thread = new Thread("TimeoutFactory")
       {
          public void run()
          {

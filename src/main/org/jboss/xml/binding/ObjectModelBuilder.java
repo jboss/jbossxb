@@ -13,6 +13,8 @@ import java.util.Stack;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
+import java.util.List;
+import java.util.LinkedList;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -43,6 +45,8 @@ public class ObjectModelBuilder
    private ObjectModelFactory defaultFactory;
    /** factories mapped to namespace URIs */
    private Map factoriesToNs = Collections.EMPTY_MAP;
+
+   private Map prefixToUri = new HashMap();
 
    /** content */
    private Content content;
@@ -87,12 +91,47 @@ public class ObjectModelBuilder
 
    // ContentNavigator implementation
 
+   public String resolveNamespacePrefix(String prefix)
+   {
+      String uri;
+      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
+      if(prefixStack != null && !prefixStack.isEmpty())
+      {
+         uri = (String) prefixStack.getFirst();
+      }
+      else
+      {
+         uri = null;
+      }
+      return uri;
+   }
+
    public String getChildContent(String namespaceURI, String qName)
    {
       return content.getChildContent(namespaceURI, qName);
    }
 
    // Public
+
+   public void startPrefixMapping(String prefix, String uri)
+   {
+      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
+      if(prefixStack == null || prefixStack.isEmpty())
+      {
+         prefixStack = new LinkedList();
+         prefixToUri.put(prefix, prefixStack);
+      }
+      prefixStack.addFirst(uri);
+   }
+
+   public void endPrefixMapping(String prefix)
+   {
+      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
+      if(prefixStack != null)
+      {
+         prefixStack.removeFirst();
+      }
+   }
 
    public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
    {

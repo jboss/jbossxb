@@ -15,5 +15,11 @@ package org.jboss.xml.binding;
  */
 public interface ContentNavigator
 {
+   /**
+    * @param prefix  the prefix to resolve
+    * @return the namespace URI the prefix was mapped to
+    */
+   String resolveNamespacePrefix(String prefix);
+
    String getChildContent(String namespaceURI, String qName);
 }

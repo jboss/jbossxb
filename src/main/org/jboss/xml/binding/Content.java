@@ -142,10 +142,14 @@ public class Content
 
    public void startPrefixMapping(String prefix, String uri)
    {
+      StartPrefixMapping node = new StartPrefixMapping(prefix, uri);
+      content.addLast(node);
    }
 
    public void endPrefixMapping(String prefix)
    {
+      EndPrefixMapping node = new EndPrefixMapping(prefix);
+      content.addLast(node);
    }
 
    public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
@@ -289,6 +293,59 @@ public class Content
       public void read(ObjectModelBuilder builder)
       {
          builder.startElement(namespaceURI, localName, qName, attrs);
+      }
+   }
+
+   public static class StartPrefixMapping implements Node
+   {
+      public final String prefix;
+      public final String uri;
+
+      public StartPrefixMapping(String prefix, String uri)
+      {
+         this.prefix = prefix;
+         this.uri = uri;
+      }
+
+      public void read(ObjectModelBuilder builder)
+      {
+         builder.startPrefixMapping(prefix, uri);
+      }
+
+      public boolean equals(Object o)
+      {
+         if(this == o) return true;
+         if(!(o instanceof StartPrefixMapping)) return false;
+
+         final StartPrefixMapping startPrefixMapping = (StartPrefixMapping) o;
+
+         if(prefix != null ? !prefix.equals(startPrefixMapping.prefix) : startPrefixMapping.prefix != null) return false;
+         if(uri != null ? !uri.equals(startPrefixMapping.uri) : startPrefixMapping.uri != null) return false;
+
+         return true;
+      }
+
+      public int hashCode()
+      {
+         int result;
+         result = (prefix != null ? prefix.hashCode() : 0);
+         result = 29 * result + (uri != null ? uri.hashCode() : 0);
+         return result;
+      }
+   }
+
+   public static class EndPrefixMapping implements Node
+   {
+      public final String prefix;
+
+      public EndPrefixMapping(String prefix)
+      {
+         this.prefix = prefix;
+      }
+
+      public void read(ObjectModelBuilder builder)
+      {
+         builder.endPrefixMapping(prefix);
       }
    }
 }

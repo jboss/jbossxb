@@ -47,6 +47,14 @@ public class CollectionsFactory
    }
 
    /**
+    * Defines the list implementation
+    */
+   public static final List createCopyOnWriteList()
+   {
+      return new CopyOnWriteArrayList();
+   }
+
+   /**
     * Defines the set implementation
     */
    public static final Set createSet()

@@ -7,6 +7,7 @@
 package org.jboss.xml.binding;
 
 import org.apache.log4j.Category;
+import org.apache.xml.resolver.tools.CatalogResolver;
 import org.xml.sax.XMLReader;
 import org.xml.sax.SAXException;
 import org.xml.sax.DTDHandler;
@@ -77,7 +78,7 @@ public class Unmarshaller
       reader.setDTDHandler(new MetaDataDTDHandler());
       reader.setErrorHandler(new MetaDataErrorHandler());
 
-      entityResolver = new MetaDataEntityResolver(null);
+      entityResolver = new CatalogResolver(); //MetaDataEntityResolver(null);
       reader.setEntityResolver(entityResolver);
    }
 
@@ -112,8 +113,10 @@ public class Unmarshaller
 
    public void setEntityResolver(EntityResolver entityResolver)
    {
+      /*
       reader.setEntityResolver(entityResolver);
       this.entityResolver = entityResolver;
+      */
    }
 
    public void setErrorHandler(ErrorHandler errorHandler)
@@ -150,7 +153,8 @@ public class Unmarshaller
       throws IOException, SAXException
    {
       reader.parse(source);
-      Content content = ((ContentPopulator)reader.getContentHandler()).getContent();
+      ContentPopulator populator = (ContentPopulator)reader.getContentHandler();
+      Content content = populator.getContent();
       return builder.build(factory, root, content);
    }
 

@@ -18,6 +18,11 @@ import javax.management.ObjectName;
  * A simple factory for creating safe object names.  This factory
  * will <b>not</b> throw MalformedObjectNameException.  Any such 
  * exceptions will be translated into Errors.
+ *
+ * <p>
+ * This should only be used where it is not possible to catch a
+ * MalformedObjectNameException, such as when defining a static final in an
+ * interface.
  *      
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @version $Revision$

@@ -7,7 +7,7 @@
 package org.jboss.xml.binding;
 
 import org.apache.log4j.Category;
-import org.apache.xml.resolver.tools.CatalogResolver;
+import org.jboss.util.xml.JBossEntityResolver;
 import org.xml.sax.DTDHandler;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -21,13 +21,9 @@ import org.xml.sax.XMLReader;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Unmarshaller implementation.
@@ -40,38 +36,25 @@ public class Unmarshaller
 {
    private static final Category log = Category.getInstance(Unmarshaller.class);
 
-   private static final String JAXP_SCHEMA_LANGUAGE = "http://java.sun.com/xml/jaxp/properties/schemaLanguage";
-   private static final String W3C_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
-   private static final String JAXP_SCHEMA_SOURCE = "http://java.sun.com/xml/jaxp/properties/schemaSource";
    private static final String VALIDATION = "http://xml.org/sax/features/validation";
    private static final String NAMESPACES = "http://xml.org/sax/features/namespaces";
+
+   // set some xerces specific features that allow transparent DTD and Schema validation
+   private static final String DYNAMIC_VALIDATION = "http://apache.org/xml/features/validation/dynamic";
+   private static final String SCHEMA_VALIDATION = "http://apache.org/xml/features/validation/schema";
+   private static final String SCHEMA_FULL_CHECKING = "http://apache.org/xml/features/validation/schema-full-checking";
 
    private ObjectModelBuilder builder = new ObjectModelBuilder();
    private XMLReader reader;
    private SAXParser parser;
    private EntityResolver entityResolver;
 
-   public static void mapPublicIdToSystemId(String publicId, String dtdLocation)
-   {
-      MetaDataEntityResolver.mapPublicIdToSystemId(publicId, dtdLocation);
-   }
-
    // Constructor
-
-   /**
-    * The general purpose constructor that should work for DTD and XSD.
-    * At the moment it uses hardcoded XSD unmarshalling.
-    */
-   public Unmarshaller()
-           throws SAXException, ParserConfigurationException
-   {
-      this(false);
-   }
 
    /**
     * The constructor for DTD and XSD client awareness.
     */
-   public Unmarshaller(boolean hasDTD)
+   public Unmarshaller()
            throws SAXException, ParserConfigurationException
    {
       SAXParserFactory saxFactory = SAXParserFactory.newInstance();
@@ -80,15 +63,18 @@ public class Unmarshaller
 
       parser = saxFactory.newSAXParser();
 
-      if (hasDTD == false)
-         parser.setProperty(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
-
       reader = parser.getXMLReader();
       reader.setContentHandler(new ContentPopulator());
       reader.setDTDHandler(new MetaDataDTDHandler());
       reader.setErrorHandler(new MetaDataErrorHandler());
 
-      entityResolver = new CatalogResolver(); //MetaDataEntityResolver(null);
+      setXmlReaderFeature(VALIDATION, true);
+      setXmlReaderFeature(SCHEMA_VALIDATION, true);
+      setXmlReaderFeature(SCHEMA_FULL_CHECKING, true);
+      setXmlReaderFeature(DYNAMIC_VALIDATION, true);
+      setXmlReaderFeature(NAMESPACES, true);
+
+      entityResolver = new JBossEntityResolver();
       reader.setEntityResolver(entityResolver);
    }
 
@@ -107,7 +93,18 @@ public class Unmarshaller
    public void setXmlReaderFeature(String name, boolean value)
       throws SAXNotRecognizedException, SAXNotSupportedException
    {
-      reader.setFeature(name, value);
+      try
+      {
+         reader.setFeature(name, value);
+      }
+      catch (SAXNotRecognizedException e)
+      {
+         log.warn("SAX feature not recognized: " + name);
+      }
+      catch (SAXNotSupportedException e)
+      {
+         log.warn("SAX feature not supported: " + name);
+      }
    }
 
    public void setXmlReaderProperty(String name, Object value)
@@ -130,12 +127,6 @@ public class Unmarshaller
    public void setErrorHandler(ErrorHandler errorHandler)
    {
       reader.setErrorHandler(errorHandler);
-   }
-
-   public void setSchemaSource(String schemaPath)
-      throws SAXNotSupportedException, SAXNotRecognizedException
-   {
-      parser.setProperty(JAXP_SCHEMA_SOURCE, new File(schemaPath));
    }
 
    public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
@@ -164,118 +155,6 @@ public class Unmarshaller
       ContentPopulator populator = (ContentPopulator)reader.getContentHandler();
       Content content = populator.getContent();
       return builder.build(factory, root, content);
-   }
-
-   // Private
-
-   private static String getResource(String name)
-   {
-      URL url = Thread.currentThread().getContextClassLoader().getResource(name);
-      if(url == null)
-         throw new IllegalStateException("Resource not found: " + name);
-      return url.toString();
-   }
-
-   // Inner
-
-   private static final class MetaDataEntityResolver
-      extends ChainedEntityResolver
-   {
-      private static final String EJB_JAR_20 = "-//Sun Microsystems, Inc.//DTD Enterprise JavaBeans 2.0//EN";
-      private static final String JBOSS_32 = "-//JBoss//DTD JBOSS 3.2//EN";
-      private static final String JBOSSCMP_JDBC_32 = "-//JBoss//DTD JBOSSCMP-JDBC 3.2//EN";
-
-      private static final Map DTD_FOR_ID = new HashMap();
-
-      static
-      {
-         DTD_FOR_ID.put(EJB_JAR_20, "ejb-jar_2_0.dtd");
-         DTD_FOR_ID.put(JBOSS_32, "jboss_3_2.dtd");
-         DTD_FOR_ID.put(JBOSSCMP_JDBC_32, "jbosscmp-jdbc_3_2.dtd");
-      }
-
-      public static final void mapPublicIdToSystemId(String publicId, String systemId)
-      {
-         DTD_FOR_ID.put(publicId, systemId);
-      }
-
-      public MetaDataEntityResolver(ChainedEntityResolver next)
-      {
-         super(next);
-      }
-
-      protected InputSource tryToResolveEntity(String publicId, String systemId)
-         throws IOException
-      {
-         if(publicId == null && systemId == null)
-            throw new IllegalStateException("Validation error: neither publicId nor systemId is specified.");
-
-         InputSource source = null;
-         if(publicId != null)
-         {
-            String dtd = (String)DTD_FOR_ID.get(publicId);
-            if(dtd != null)
-            {
-               String dtdPath = getResource(dtd);
-               source = new InputSource(dtdPath);
-            }
-         }
-         else
-         {
-            URL url = new URL(systemId);
-            source = new InputSource(url.openStream());
-         }
-
-         return source;
-      }
-   }
-
-   private static abstract class ChainedEntityResolver
-      implements EntityResolver
-   {
-      private final ChainedEntityResolver next;
-
-      public ChainedEntityResolver(ChainedEntityResolver next)
-      {
-         this.next = next;
-      }
-
-      // EntityResolver implementation
-
-      public InputSource resolveEntity(String publicId, String systemId)
-         throws SAXException, IOException
-      {
-         InputSource source = tryToResolveEntity(publicId, systemId);
-         if(source == null)
-         {
-            if(next != null)
-            {
-               source = next.resolveEntity(publicId, systemId);
-            }
-         }
-
-         if(source == null)
-         {
-            if(systemId != null)
-            {
-               source = new InputSource(systemId);
-            }
-            else
-            {
-
-               throw new IllegalStateException(
-                  "Failed to resolve entity: publicId=" + publicId + ", systemId=" + systemId
-               );
-            }
-         }
-
-         return source;
-      }
-
-      // Protected
-
-      protected abstract InputSource tryToResolveEntity(String publicId, String systemId)
-         throws SAXException, IOException;
    }
 
    private static final class MetaDataErrorHandler

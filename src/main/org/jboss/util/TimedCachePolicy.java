@@ -96,13 +96,13 @@ public class TimedCachePolicy
    /** Creates a new TimedCachePolicy with the given default entry lifetime
        that does/does not synchronized access to its policy store depending
        on the value of threadSafe.
-       @param defaultLifetime, the lifetime in seconds to use for objects inserted
+       @param defaultLifetime - the lifetime in seconds to use for objects inserted
        that do not implement the TimedEntry interface.
-       @param threadSafe, a flag indicating if the cach store should be synchronized
+       @param threadSafe - a flag indicating if the cach store should be synchronized
        to allow correct operation under multi-threaded access. If true, the
        cache store is synchronized. If false the cache store is unsynchronized and
        the cache is not thread safe.
-       @param resolution, the resolution in seconds of the cache timer. A cache does
+       @param resolution - the resolution in seconds of the cache timer. A cache does
        not query the system time on every get() invocation. Rather the cache
        updates its notion of the current time every 'resolution' seconds.
    */
@@ -150,7 +150,7 @@ public class TimedCachePolicy
    // --- Begin CachePolicy interface methods
    /** Get the cache value for key if it has not expired. If the TimedEntry
     is expired its destroy method is called and then removed from the cache.
-       @returns the TimedEntry value or the original value if it was not an
+    @return the TimedEntry value or the original value if it was not an
        instance of TimedEntry if key is in the cache, null otherwise.
    */
    public Object get(Object key) 
@@ -173,7 +173,7 @@ public class TimedCachePolicy
    }
    /** Get the cache value for key. This method does not check to see if
        the entry has expired.
-       @returns the TimedEntry value or the original value if it was not an
+       @return the TimedEntry value or the original value if it was not an
        instancee of TimedEntry if key is in the cache, null otherwise.
    */
    public Object peek(Object key) 
@@ -187,8 +187,8 @@ public class TimedCachePolicy
    /** Insert a value into the cache. In order to have the cache entry
        reshresh itself value would have to implement TimedEntry and
        implement the required refresh() method logic.
-       @param key, the key for the cache entry
-       @param value, Either an instance of TimedEntry that will be inserted without
+       @param key - the key for the cache entry
+       @param value - Either an instance of TimedEntry that will be inserted without
        change, or an abitrary value that will be wrapped in a non-refreshing
        TimedEntry.
    */
@@ -276,12 +276,38 @@ public class TimedCachePolicy
       return defaultLifetime;
    }
    /** Set the default lifetime of cache entries for new values added to the cache.
-    @param defaultLifetime, lifetime in seconds of cache values that do
+    @param defaultLifetime - lifetime in seconds of cache values that do
     not implement TimedEntry.
     */
-   public void setDefaultLifetime(int defaultLifetime)
+   public synchronized void setDefaultLifetime(int defaultLifetime)
    {
       this.defaultLifetime = defaultLifetime;
+   }
+
+   /**
+    * Get the frequency of the current time snapshot.
+    * @return the current timer resolution in seconds.
+    */ 
+   public int getResolution()
+   {
+      return resolution;
+   }
+   /** Set the cache timer resolution
+    * 
+    @param resolution - the resolution in seconds of the cache timer. A cache does
+    not query the system time on every get() invocation. Rather the cache
+    updates its notion of the current time every 'resolution' seconds.
+    */ 
+   public synchronized void setResolution(int resolution)
+   {
+      if( resolution <= 0 )
+         resolution = 60;
+      if( resolution != this.resolution )
+      {
+         this.resolution = resolution;
+         resolutionTimer.cancel();
+         resolutionTimer.scheduleAtFixedRate(this, 0, 1000*resolution);
+      }
    }
 
    /** The TimerTask run method. It updates the cache time to the
@@ -343,3 +369,4 @@ public class TimedCachePolicy
       }        
    }
 }
+

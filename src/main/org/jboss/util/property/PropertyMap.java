@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Collections;
 import java.util.Properties;
 
@@ -170,6 +172,38 @@ public class PropertyMap
       return value;
    }
 
+   /**
+    * Returns a set of keys for all entries in this group and optionally
+    * all of the keys in the defaults map.
+    */
+   public Set keySet(final boolean includeDefaults)
+   {
+      if (includeDefaults) {
+         Set set = new HashSet();
+         set.addAll(defaults.keySet());
+         set.addAll(super.keySet());
+         return Collections.synchronizedSet(set);
+      }
+      
+      return super.keySet();
+   }   
+
+   /**
+    * Returns a set of entrys for all entries in this group and optionally
+    * all of the entrys in the defaults map.
+    */
+   public Set entrySet(final boolean includeDefaults)
+   {
+      if (includeDefaults) {
+         Set set = new HashSet();
+         set.addAll(defaults.entrySet());
+         set.addAll(super.entrySet());
+         return Collections.synchronizedSet(set);
+      }
+      
+      return super.entrySet();
+   }   
+   
 
    /////////////////////////////////////////////////////////////////////////
    //                      Property Listener Methods                      //

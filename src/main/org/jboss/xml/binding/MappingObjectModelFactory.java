@@ -30,19 +30,7 @@ import java.util.List;
 public class MappingObjectModelFactory
    implements GenericObjectModelFactory
 {
-   // Constants -----------------------------------------------------
-
-   /**
-    * The log
-    */
    private final static Logger log = Logger.getLogger(MappingObjectModelFactory.class);
-
-   // Attributes ----------------------------------------------------
-
-   /**
-    * Whether trace is enabled
-    */
-   private boolean trace = log.isTraceEnabled();
 
    /**
     * The class mappings
@@ -54,103 +42,7 @@ public class MappingObjectModelFactory
     */
    private final Map elementToFieldMapping = new HashMap();
 
-   // Static --------------------------------------------------------
-
-   private static Object get(Object o, String localName, Method getter)
-   {
-      if(log.isTraceEnabled())
-      {
-         log.trace("get object=" + o + " localName=" + localName + " getter=" + getter);
-      }
-
-      Object value;
-      if(o instanceof ImmutableContainer)
-      {
-         ImmutableContainer con = ((ImmutableContainer)o);
-         value = con.getChild(localName);
-      }
-      else
-      {
-         try
-         {
-            value = getter.invoke(o, null);
-         }
-         catch(Exception e)
-         {
-            throw new NestedRuntimeException("Failed to invoke " + getter + " on " + o, e);
-         }
-      }
-      return value;
-   }
-
-   public static void set(Object parent, Object child, String localName, Method setter)
-   {
-      if(log.isTraceEnabled())
-      {
-         log.trace("set parent=" + parent + " child=" + child + " localName=" + localName + " setter=" + setter);
-      }
-
-      if(setter != null)
-      {
-         try
-         {
-            setter.invoke(parent, new Object[]{child});
-         }
-         catch(Exception e)
-         {
-            throw new NestedRuntimeException("Failed to set attribute value " +
-               child +
-               " with setter " +
-               setter
-               + " on " + parent + ": ", e
-            );
-         }
-      }
-      else if(parent instanceof ImmutableContainer)
-      {
-         ((ImmutableContainer)parent).addChild(localName, child);
-      }
-      else
-      {
-         throw new IllegalStateException("setter is null and it's not an immutable container: parent=" +
-            parent.getClass() +
-            ", localName" + localName + ", parent=" + parent + ", child=" + child
-         );
-      }
-   }
-
-   private static Object newInstance(Class cls)
-   {
-      if(log.isTraceEnabled())
-      {
-         log.trace("new " + cls.getName());
-      }
-
-      Object instance;
-      try
-      {
-         Constructor ctor = cls.getConstructor(null);
-         instance = ctor.newInstance(null);
-      }
-      catch(NoSuchMethodException e)
-      {
-         log.warn("No no-arg constructor in " + cls);
-         instance = new ImmutableContainer(cls);
-      }
-      catch(Exception e)
-      {
-         throw new IllegalStateException("Failed to create an instance of " +
-            cls +
-            " with the no-arg constructor: "
-            + e.getMessage()
-         );
-      }
-      return instance;
-   }
-
-   // Constructors --------------------------------------------------
-
-   // Public --------------------------------------------------------
+   // Public
 
    /**
     * Map an element to a class
@@ -162,7 +54,7 @@ public class MappingObjectModelFactory
    {
       ElementToClassMapping mapping = new ElementToClassMapping(element, cls);
       addElementToClassMapping(mapping);
-      if(trace)
+      if(log.isTraceEnabled())
       {
          log.trace(mapping);
       }
@@ -180,18 +72,21 @@ public class MappingObjectModelFactory
    {
       ElementToFieldMapping mapping = new ElementToFieldMapping(element, cls, field, converter);
       addElementToFieldMapping(mapping);
-      if(trace)
+      if(log.isTraceEnabled())
       {
          log.trace(mapping);
       }
    }
 
-   // ObjectModelFactory implementation -----------------------------
+   // ObjectModelFactory implementation
 
-   public Object newRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName,
+   public Object newRoot(Object root,
+                         ContentNavigator navigator,
+                         String namespaceURI,
+                         String localName,
                          Attributes attrs)
    {
-      if(trace)
+      if(log.isTraceEnabled())
       {
          log.trace("newRoot root=" +
             root +
@@ -211,7 +106,7 @@ public class MappingObjectModelFactory
          ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
          if(mapping != null)
          {
-            if(trace)
+            if(log.isTraceEnabled())
             {
                log.trace("creating root using " + mapping);
             }
@@ -256,7 +151,7 @@ public class MappingObjectModelFactory
       return root;
    }
 
-   // GenericObjectModelFactory implementation ----------------------
+   // GenericObjectModelFactory implementation
 
    public Object newChild(Object o,
                           ContentNavigator navigator,
@@ -264,7 +159,7 @@ public class MappingObjectModelFactory
                           String localName,
                           Attributes attrs)
    {
-      if(trace)
+      if(log.isTraceEnabled())
       {
          log.trace("newChild object=" +
             o +
@@ -290,7 +185,7 @@ public class MappingObjectModelFactory
       XSTypeDefinition type = navigator.getType();
       if(mapping != null)
       {
-         if(trace)
+         if(log.isTraceEnabled())
          {
             log.trace("newChild using mapping " + mapping);
          }
@@ -303,6 +198,7 @@ public class MappingObjectModelFactory
                ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
                   new ElementToFieldMappingKey(localName, o.getClass())
                );
+
                if(fieldMapping != null)
                {
                   getter = fieldMapping.getter;
@@ -439,7 +335,7 @@ public class MappingObjectModelFactory
                         String namespaceURI,
                         String localName)
    {
-      if(trace)
+      if(log.isTraceEnabled())
       {
          log.trace("addChild parent=" +
             parent +
@@ -463,7 +359,7 @@ public class MappingObjectModelFactory
 
    public void setValue(Object o, ContentNavigator navigator, String namespaceURI, String localName, String value)
    {
-      if(trace)
+      if(log.isTraceEnabled())
       {
          log.trace("setValue object=" +
             o +
@@ -477,12 +373,13 @@ public class MappingObjectModelFactory
             value
          );
       }
+
       setAttribute(o, localName, value, navigator.getType());
    }
 
    public Object completedRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName)
    {
-      if(trace)
+      if(log.isTraceEnabled())
       {
          log.trace("completedRoot root=" +
             root +
@@ -494,6 +391,7 @@ public class MappingObjectModelFactory
             localName
          );
       }
+
       if(root instanceof ImmutableContainer)
       {
          root = ((ImmutableContainer)root).newInstance();
@@ -501,11 +399,7 @@ public class MappingObjectModelFactory
       return root;
    }
 
-   // Package protected ---------------------------------------------
-
-   // Protected -----------------------------------------------------
-   
-   // Private -------------------------------------------------------
+   // Private
 
    private void addElementToClassMapping(ElementToClassMapping mapping)
    {
@@ -602,7 +496,7 @@ public class MappingObjectModelFactory
       }
    }
 
-   private final void setAttribute(Object o, String localName, String value, XSTypeDefinition type)
+   private void setAttribute(Object o, String localName, String value, XSTypeDefinition type)
    {
       if(o instanceof Collection)
       {
@@ -671,7 +565,7 @@ public class MappingObjectModelFactory
     * @param localName    element's local name
     * @return null if the class could not be loaded, otherwise an instance of the loaded class
     */
-   private Object create(String namespaceURI, String localName, XSTypeDefinition type)
+   private static Object create(String namespaceURI, String localName, XSTypeDefinition type)
    {
       Object o = null;
 
@@ -700,7 +594,99 @@ public class MappingObjectModelFactory
       return o;
    }
 
-   // Inner classes -------------------------------------------------
+   private static Object get(Object o, String localName, Method getter)
+   {
+      if(log.isTraceEnabled())
+      {
+         log.trace("get object=" + o + " localName=" + localName + " getter=" + getter);
+      }
+
+      Object value;
+      if(o instanceof ImmutableContainer)
+      {
+         ImmutableContainer con = ((ImmutableContainer)o);
+         value = con.getChild(localName);
+      }
+      else
+      {
+         try
+         {
+            value = getter.invoke(o, null);
+         }
+         catch(Exception e)
+         {
+            throw new NestedRuntimeException("Failed to invoke " + getter + " on " + o, e);
+         }
+      }
+      return value;
+   }
+
+   private static void set(Object parent, Object child, String localName, Method setter)
+   {
+      if(log.isTraceEnabled())
+      {
+         log.trace("set parent=" + parent + " child=" + child + " localName=" + localName + " setter=" + setter);
+      }
+
+      if(setter != null)
+      {
+         try
+         {
+            setter.invoke(parent, new Object[]{child});
+         }
+         catch(Exception e)
+         {
+            throw new NestedRuntimeException("Failed to set attribute value " +
+               child +
+               " with setter " +
+               setter
+               + " on " + parent + ": ", e
+            );
+         }
+      }
+      else if(parent instanceof ImmutableContainer)
+      {
+         ((ImmutableContainer)parent).addChild(localName, child);
+      }
+      else
+      {
+         throw new IllegalStateException("setter is null and it's not an immutable container: parent=" +
+            parent.getClass() +
+            ", localName" + localName + ", parent=" + parent + ", child=" + child
+         );
+      }
+   }
+
+   private static Object newInstance(Class cls)
+   {
+      if(log.isTraceEnabled())
+      {
+         log.trace("new " + cls.getName());
+      }
+
+      Object instance;
+      try
+      {
+         Constructor ctor = cls.getConstructor(null);
+         instance = ctor.newInstance(null);
+      }
+      catch(NoSuchMethodException e)
+      {
+         log.warn("No no-arg constructor in " + cls);
+         instance = new ImmutableContainer(cls);
+      }
+      catch(Exception e)
+      {
+         throw new IllegalStateException("Failed to create an instance of " +
+            cls +
+            " with the no-arg constructor: "
+            + e.getMessage()
+         );
+      }
+      return instance;
+   }
+
+   // Inner classes
 
    private class ElementToClassMapping
    {

@@ -257,16 +257,21 @@
         <include name="**/*MBean.class"/>
 
         <!-- All Exceptions, Errors and Throwable Support Classes -->
-        <include name="**/*Exception*"/>
-        <include name="**/*Error*"/>
+        <include name="**/*Exception*.class"/>
+        <include name="**/*Error*.class"/>
         <include name="org/jboss/util/*NestedThrowable*.class"/>
 
         <!-- Misc Fluff clients need -->
-        <include name="org/jboss/util/jmx/ObjectNameFactory*.class"/>
-        <include name="org/jboss/util/jmx/JMXExceptionDecoder*.class"/>
-        <include name="org/jboss/util/jmx/MBeanProxy*.class"/>
+        <include name="org/jboss/util/jmx/*"/>
         <include name="org/jboss/util/id/*"/>
         <include name="org/jboss/util/platform/*"/>
+        <include name="org/jboss/util/Mu*.class"/>
+        <include name="org/jboss/util/Null*.class"/>
+        <include name="org/jboss/util/StopWatch*.class"/>
+        <include name="org/jboss/util/HashCode*.class"/>
+        <include name="org/jboss/util/Counter*.class"/>
+        <include name="org/jboss/util/SoftObject*.class"/>
+        <include name="org/jboss/util/WeakObject*.class"/>
 
         <!-- Client Logging support -->
         <include name="org/jboss/logging/Logger*.class"/>

@@ -144,7 +144,7 @@ public class XercesXsMarshaller
                   }
                   roots += "{" + xsObject.getNamespace() + "}" + xsObject.getName();
                }
-               throw new IllegalStateException("Root element not found: " + qName.getNamespaceURI() + ":" + qName.getLocalPart() + " among " + roots);
+               throw new IllegalStateException("Root element not found: " + qName + " among " + roots);
             }
 
             marshalElement(element, 1, 1);// todo fix min/max

@@ -9,6 +9,7 @@ package org.jboss.xml.binding;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
+import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
 
 import java.io.Reader;
 import java.io.InputStream;
@@ -38,6 +39,10 @@ public interface Unmarshaller
    void setErrorHandler(ErrorHandler errorHandler);
 
    void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri);
+
+   Object unmarshal(String xmlFile) throws JBossXBException;
+
+   Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata) throws JBossXBException;
 
    Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException;
 

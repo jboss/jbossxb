@@ -9,6 +9,9 @@ package org.jboss.xml.binding;
 import org.xml.sax.Attributes;
 import org.jboss.logging.Logger;
 import org.jboss.xml.binding.parser.JBossXBParser;
+import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
+import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.BasicElementBinding;
 import org.apache.xerces.xs.XSTypeDefinition;
 
 import javax.xml.namespace.QName;
@@ -87,6 +90,8 @@ public class ObjectModelBuilder
 
    private XSTypeDefinition currentType;
 
+   private BindingCursor metadataCursor;
+
    // Public
 
    public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
@@ -98,9 +103,10 @@ public class ObjectModelBuilder
       factoriesToNs.put(namespaceUri, getGenericObjectModelFactory(factory));
    }
 
-   public void init(ObjectModelFactory defaultFactory, Object root)
+   public void init(ObjectModelFactory defaultFactory, Object root, DocumentBinding docBinding)
    {
       this.defaultFactory = getGenericObjectModelFactory(defaultFactory);
+      this.metadataCursor = BindingCursor.Factory.newCursor(docBinding);
 
       all.clear();
       accepted.clear();
@@ -108,7 +114,7 @@ public class ObjectModelBuilder
       this.root = root;
    }
 
-   // ContentNavigator implementation
+   // UnmarshallingContext implementation
 
    public Iterator getNamespaceURIs()
    {
@@ -118,6 +124,11 @@ public class ObjectModelBuilder
    public NamespaceContext getNamespaceContext()
    {
       return nsRegistry;
+   }
+
+   public BasicElementBinding getMetadata()
+   {
+      return metadataCursor.getElementBinding();
    }
 
    /**
@@ -248,6 +259,7 @@ public class ObjectModelBuilder
                             XSTypeDefinition type)
    {
       Object parent = accepted.isEmpty() ? root : accepted.peek();
+      metadataCursor.startElement(namespaceURI, localName);
 
       // todo currentType assignment
       currentType = type;
@@ -346,6 +358,8 @@ public class ObjectModelBuilder
             root = curFactory.completeRoot(element, this, namespaceURI, localName);
          }
       }
+
+      metadataCursor.endElement(namespaceURI, localName);
    }
 
    public void characters(char[] ch, int start, int length)

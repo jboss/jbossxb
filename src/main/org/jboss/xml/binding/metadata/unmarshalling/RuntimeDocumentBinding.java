@@ -111,24 +111,47 @@ public class RuntimeDocumentBinding
          }
          else
          {
+            Method getter = null;
+            Method setter = null;
+            Field field = null;
+            Class fieldType = null;
             try
             {
-               Method getter = javaType.getMethod("get" + clsName, null);
-               Method setter = javaType.getMethod("set" + clsName, new Class[]{getter.getReturnType()});
-               el = createElementBinding(elementName, getter, setter, null);
+               getter = javaType.getMethod("get" + clsName, null);
+               setter = javaType.getMethod("set" + clsName, new Class[]{getter.getReturnType()});
+               fieldType = getter.getReturnType();
             }
             catch(NoSuchMethodException e)
             {
                String fieldName = Character.toLowerCase(clsName.charAt(0)) + clsName.substring(1);
                try
                {
-                  Field field = javaType.getField(fieldName);
-                  el = createElementBinding(elementName, null, null, field);
+                  field = javaType.getField(fieldName);
+                  fieldType = field.getType();
                }
                catch(NoSuchFieldException e1)
                {
                   // neither field nor getter/setter pair were found
                }
+            }
+
+            if(fieldType != null)
+            {
+               Class childType = fieldType;
+               if(Collection.class.isAssignableFrom(fieldType))
+               {
+                  clsName = ns.getJavaPackage() + "." + clsName;
+                  try
+                  {
+                     childType = Thread.currentThread().getContextClassLoader().loadClass(clsName);
+                  }
+                  catch(ClassNotFoundException e)
+                  {
+                     // todo: so what is this?
+                  }
+               }
+
+               el = createElementBinding(elementName, getter, setter, field, childType);
             }
          }
 
@@ -145,9 +168,12 @@ public class RuntimeDocumentBinding
          return javaType;
       }
 
-      private ElementBinding createElementBinding(String elementName, Method getter, Method setter, Field field)
+      private ElementBinding createElementBinding(String elementName,
+                                                  Method getter,
+                                                  Method setter,
+                                                  Field field,
+                                                  Class javaType)
       {
-         Class javaType = getter == null ? field.getType() : getter.getReturnType();
          if(Collection.class.isAssignableFrom(javaType))
          {
             javaType = java.util.ArrayList.class;

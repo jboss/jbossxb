@@ -6,10 +6,10 @@
  */
 package org.jboss.xml.binding;
 
-import org.jboss.logging.Logger;
 import org.jboss.xml.binding.parser.JBossXBParser;
 import org.jboss.xml.binding.parser.xni.XniJBossXBParser;
-import org.jboss.xml.binding.parser.sax.SaxJBossXBParser;
+import org.jboss.xml.binding.metadata.unmarshalling.RuntimeDocumentBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -21,13 +21,12 @@ import java.io.InputStream;
  * Unmarshaller implementation.
  * WARNING: this implementation is not thread-safe.
  *
- * @version <tt>$Revision$</tt>
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @version <tt>$Revision$</tt>
  */
-public class UnmarshallerImpl implements Unmarshaller
+public class UnmarshallerImpl
+   implements Unmarshaller
 {
-   private static final Logger log = Logger.getLogger(UnmarshallerImpl.class);
-
    private ObjectModelBuilder builder = new ObjectModelBuilder();
    private final JBossXBParser parser;
 
@@ -78,24 +77,38 @@ public class UnmarshallerImpl implements Unmarshaller
       builder.mapFactoryToNamespace(factory, namespaceUri);
    }
 
+   public Object unmarshal(String xmlFile) throws JBossXBException
+   {
+      builder.init(new MappingObjectModelFactory(), null, new RuntimeDocumentBinding());
+      parser.parse(xmlFile, builder);
+      return builder.getRoot();
+   }
+
+   public Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata)
+      throws JBossXBException
+   {
+      builder.init(factory, null, metadata);
+      parser.parse(xmlFile, builder);
+      return builder.getRoot();
+   }
+
    public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      builder.init(factory, root);
+      builder.init(factory, root, null);
       parser.parse(reader, builder);
       return builder.getRoot();
    }
 
    public Object unmarshal(InputStream is, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      builder.init(factory, root);
+      builder.init(factory, root, null);
       parser.parse(is, builder);
       return builder.getRoot();
    }
 
-   public Object unmarshal(String systemId, ObjectModelFactory factory, Object root)
-      throws JBossXBException
+   public Object unmarshal(String systemId, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      builder.init(factory, root);
+      builder.init(factory, root, null);
       parser.parse(systemId, builder);
       return builder.getRoot();
    }

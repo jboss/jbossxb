@@ -60,7 +60,7 @@ public class ObjectModelBuilder
       factoriesToNs.put(namespaceUri, factory);
    }
 
-   public void build(ObjectModelFactory defaultFactory, Object root, Content content)
+   public Object build(ObjectModelFactory defaultFactory, Object root, Content content)
    {
       this.defaultFactory = defaultFactory;
       this.content = content;
@@ -79,6 +79,8 @@ public class ObjectModelBuilder
       root = all.pop();
       accepted.pop();
       defaultFactory.endDocument(root);
+
+      return root;
    }
 
    // ContentNavigator implementation

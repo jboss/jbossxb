@@ -33,6 +33,9 @@ import java.util.HashMap;
 import java.net.URL;
 
 /**
+ * Unmarshaller implementation.
+ * WARNING: this implementation is not thread-safe.
+ *
  * @version <tt>$Revision$</tt>
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  */
@@ -83,6 +86,12 @@ public class Unmarshaller
       reader.setFeature(VALIDATION, validation);
    }
 
+   public void setNamespaceAware(boolean namespaces)
+      throws SAXNotSupportedException, SAXNotRecognizedException
+   {
+      reader.setFeature(NAMESPACES, namespaces);
+   }
+
    public void setXmlReaderFeature(String name, boolean value)
       throws SAXNotRecognizedException, SAXNotSupportedException
    {
@@ -121,26 +130,26 @@ public class Unmarshaller
       builder.mapFactoryToNamespace(factory, namespaceUri);
    }
 
-   public void unmarshal(InputStream is, ObjectModelFactory factory, Object root)
+   public Object unmarshal(InputStream is, ObjectModelFactory factory, Object root)
       throws SAXException, IOException
    {
       InputSource source = new InputSource(is);
-      unmarshal(source, factory, root);
+      return unmarshal(source, factory, root);
    }
 
-   public void unmarshal(Reader reader, ObjectModelFactory factory, Object root)
+   public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root)
       throws SAXException, IOException
    {
       InputSource source = new InputSource(reader);
-      unmarshal(source, factory, root);
+      return unmarshal(source, factory, root);
    }
 
-   public void unmarshal(InputSource source, ObjectModelFactory factory, Object root)
+   public Object unmarshal(InputSource source, ObjectModelFactory factory, Object root)
       throws IOException, SAXException
    {
       reader.parse(source);
       Content content = ((ContentPopulator)reader.getContentHandler()).getContent();
-      builder.build(factory, root, content);
+      return builder.build(factory, root, content);
    }
 
    // Private

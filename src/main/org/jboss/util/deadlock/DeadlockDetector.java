@@ -42,7 +42,10 @@ public class DeadlockDetector
                if (set.contains(holding))
                {
                   // removeWaiting should be cleaned up in acquire
-                  throw new ApplicationDeadlockException("Application deadlock detected", true);
+                  String msg = "Application deadlock detected, resource="+resource
+                     +", holder="+holder+", waitingResource="+waitingFor
+                     +", waitingResourceHolder="+holding;
+                  throw new ApplicationDeadlockException(msg, true);
                }
                set.add(holding);
             }

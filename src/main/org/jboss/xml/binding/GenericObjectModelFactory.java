@@ -40,4 +40,6 @@ public interface GenericObjectModelFactory
                  String namespaceURI,
                  String localName,
                  String value);
+
+   Object completedRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName);
 }

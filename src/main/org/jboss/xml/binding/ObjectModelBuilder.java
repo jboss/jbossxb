@@ -254,14 +254,18 @@ public class ObjectModelBuilder
          element = accepted.pop();
          Object parent = (accepted.isEmpty() ? null : accepted.peek());
 
+         if(factory == null)
+         {
+            factory = getFactory(namespaceURI);
+         }
+
          if(parent != null)
          {
-            if(factory == null)
-            {
-               factory = getFactory(namespaceURI);
-            }
-
             factory.addChild(parent, element, this, namespaceURI, localName);
+         }
+         else
+         {
+            root = factory.completedRoot(element, this, namespaceURI, localName);
          }
       }
    }

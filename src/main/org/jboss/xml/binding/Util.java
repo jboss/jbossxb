@@ -169,10 +169,6 @@ public final class Util
                {
                   dst = append(dst, dstInd++, '_');
                }
-               else
-               {
-                  System.out.println("next part starts with: " + src[srcInd]);
-               }
             }
          }
          else if(c == '.')

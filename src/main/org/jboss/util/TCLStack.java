@@ -12,6 +12,8 @@ package org.jboss.util;
 import java.util.Stack;
 import java.util.EmptyStackException;
 import java.util.Iterator;
+import java.security.PrivilegedAction;
+import java.security.AccessController;
 
 import org.jboss.logging.Logger;
 
@@ -52,17 +54,18 @@ public class TCLStack
     * argument is null then the current TCL is not updated and pop will leave
     * the current TCL the same as entry into push.
     *
-    * @param cl   The class loader to set as the TCL.
+    * @param cl The class loader to set as the TCL.
     */
    public static void push(final ClassLoader cl)
    {
       boolean trace = log.isTraceEnabled();
 
       // push the old cl and set the new cl
-      Thread currentThread = Thread.currentThread();
-      ClassLoader oldCL = currentThread.getContextClassLoader();
+      ClassLoader oldCL = GetTCLAction.getContextClassLoader();
       if( cl != null )
-         currentThread.setContextClassLoader(cl);
+      {
+         SetTCLAction.setContextClassLoader(cl);
+      }
       getStack().push(oldCL);
 
       if (trace)
@@ -84,11 +87,10 @@ public class TCLStack
       // get the last cl in the stack & make it the current
       try
       {
-         Thread currentThread = Thread.currentThread();
          ClassLoader cl = (ClassLoader) getStack().pop();
-         ClassLoader oldCL = currentThread.getContextClassLoader();
+         ClassLoader oldCL = GetTCLAction.getContextClassLoader();
 
-         currentThread.setContextClassLoader(cl);
+         SetTCLAction.setContextClassLoader(cl);
 
          if (log.isTraceEnabled())
          {
@@ -127,5 +129,39 @@ public class TCLStack
    public static ClassLoader get(final int index) throws ArrayIndexOutOfBoundsException
    {
       return (ClassLoader) getStack().get(index);
+   }
+
+   private static class GetTCLAction implements PrivilegedAction
+   {
+      static PrivilegedAction ACTION = new GetTCLAction();
+      public Object run()
+      {
+         ClassLoader loader = Thread.currentThread().getContextClassLoader();
+         return loader;
+      }
+      static ClassLoader getContextClassLoader()
+      {
+         ClassLoader loader = (ClassLoader) AccessController.doPrivileged(ACTION);
+         return loader;
+      }
+   }
+   private static class SetTCLAction implements PrivilegedAction
+   {
+      ClassLoader loader;
+      SetTCLAction(ClassLoader loader)
+      {
+         this.loader = loader;
+      }
+      public Object run()
+      {
+         Thread.currentThread().setContextClassLoader(loader);
+         loader = null;
+         return null;
+      }
+      static void setContextClassLoader(ClassLoader loader)
+      {
+         PrivilegedAction action = new SetTCLAction(loader);
+         AccessController.doPrivileged(action);
+      }
    }
 }

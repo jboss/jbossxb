@@ -15,7 +15,7 @@ import java.util.Iterator;
 import java.util.Properties;
 
 import org.jboss.util.NestedRuntimeException;
-import org.jboss.util.Strings;
+import org.jboss.util.StringPropertyReplacer;
 
 /**
  * A property editor for {@link java.util.Properties}.
@@ -52,7 +52,7 @@ public class PropertiesEditor
          {
             String key = (String) keys.next();
             String value = rawProps.getProperty(key);
-            String value2 = Strings.replaceProperties(value, rawProps);
+            String value2 = StringPropertyReplacer.replaceProperties(value, rawProps);
             props.setProperty(key, value2);
          }
          rawProps.clear();

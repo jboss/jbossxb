@@ -13,7 +13,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.jboss.util.NestedRuntimeException;
-import org.jboss.util.Strings;
+import org.jboss.util.StringPropertyReplacer;
 
 /**
  * A property editor for {@link java.net.InetAddress}.
@@ -46,7 +46,7 @@ public class InetAddressEditor
             // /127.0.0.1 and the getByNames barfs on the slash - JGH
             text = text.substring(1);
          }
-         return InetAddress.getByName(Strings.replaceProperties(text));
+         return InetAddress.getByName(StringPropertyReplacer.replaceProperties(text));
       }
       catch (UnknownHostException e)
       {

@@ -126,6 +126,18 @@ public class URLStreamHandlerFactory
 
             try
             {
+               /* Aparently a security mgr causes the getResource call to loop
+                  back into this method. Why this occurs still needs to be
+                  investigated but this check means that we do not load
+                  protocol handlers from the TCL if there is a security mgr.
+                  See bug #696633.
+               */
+               if( System.getSecurityManager() != null )
+               {
+                  // Trigger the Class.forName call below
+                  throw new ClassNotFoundException("SecurityManager bypass");
+               }
+
                /* First see if the class exists as a resource. This is to work
                around a bad interaction between the IBM VMs and custom
                URLStreamHandlerFactory that use the TCL. See bug#669043
@@ -145,11 +157,14 @@ public class URLStreamHandlerFactory
             {
                handler = (URLStreamHandler) type.newInstance();
                handlerMap.put(protocol, handler);
-               log.trace("Found protocol:"+protocol+" handler:"+handler);
+               if( log.isTraceEnabled() )
+                  log.trace("Found protocol:"+protocol+" handler:"+handler);
             }
          }
          catch (Exception ignore)
          {
+            if( log.isTraceEnabled() )
+               log.trace("Failed to find protocol handler:"+protocol, ignore);
          }
       }
 

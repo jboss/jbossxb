@@ -12,6 +12,7 @@ package org.jboss.net.protocol.file;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -20,15 +21,13 @@ import java.util.Collection;
 import org.jboss.net.protocol.URLListerBase;
 
 public class FileURLLister extends URLListerBase {
-   public Collection listMembers(URL baseUrl) {
+   public Collection listMembers(final URL baseUrl, final URLFilter filter) throws IOException {
       File directory = new File(baseUrl.getPath());
-      File[] files = directory.listFiles();
-      return filesToURLs(baseUrl, files);
-   }
-
-   public Collection listMembers(URL baseUrl, String[] members) {
-      File directory = new File(baseUrl.getPath());
-      File[] files = directory.listFiles(new FileURLFilter(members));
+      File[] files = directory.listFiles(new FileFilter() {
+         public boolean accept(File file) {
+            return filter.accept(baseUrl, file.getName());
+         }
+      });
       return filesToURLs(baseUrl, files);
    }
 
@@ -46,15 +45,5 @@ public class FileURLLister extends URLListerBase {
          }
       }
       return Arrays.asList(urls);
-   }
-
-   private class FileURLFilter extends URLFilter implements FileFilter {
-      public FileURLFilter(String[] patterns) {
-         super(patterns);
-      }
-
-      public boolean accept(File file) {
-         return super.accept(file.getName());
-      }
    }
 }

@@ -27,23 +27,24 @@ public abstract class URLListerBase implements URLLister {
       for (int i=0; tokens.hasMoreTokens(); i++) {
          members[i] = tokens.nextToken();
       }
-      return listMembers(baseUrl, members);
+      URLFilter filter = new URLFilterImpl(members);
+      return listMembers(baseUrl, filter);
    }
 
    /**
     * Inner class representing Filter criteria to be applied to the members
     * of the returned Collection
     */
-   public static class URLFilter {
+   public static class URLFilterImpl implements URLFilter  {
       protected boolean allowAll;
       protected HashSet constants;
 
-      public URLFilter(String[] patterns) {
+      public URLFilterImpl(String[] patterns) {
          constants = new HashSet(Arrays.asList(patterns));
          allowAll = constants.contains("*");
       }
 
-      public boolean accept(String name) {
+      public boolean accept(URL baseUrl, String name) {
          if (allowAll) {
             return true;
          }
@@ -54,5 +55,9 @@ public abstract class URLListerBase implements URLLister {
       }
    }
 
-   protected static final URLFilter acceptAllFilter = new URLFilter(new String[] {"*"});
+   protected static final URLFilter acceptAllFilter = new URLFilter() {
+      public boolean accept(URL baseURL, String memberName) {
+         return true;
+      }
+   };
 }

@@ -23,23 +23,16 @@ import org.apache.webdav.lib.WebdavResource;
 import org.jboss.net.protocol.URLListerBase;
 
 public class DavURLLister extends URLListerBase {
-   public Collection listMembers(URL baseUrl) throws IOException {
-      return listMembers(baseUrl,  acceptAllFilter);
-   }
-
-   public Collection listMembers(URL baseUrl, String[] members) throws IOException {
-      return listMembers(baseUrl,  new URLFilter(members));
-   }
-
-   private Collection listMembers(URL baseUrl, URLFilter filter) throws IOException {
+   public Collection listMembers(URL baseUrl, URLFilter filter) throws IOException {
+      WebdavResource resource = null;
       try {
-         WebdavResource resource = new WebdavResource(baseUrl.toString());
+         resource = new WebdavResource(baseUrl.toString());
          WebdavResource[] resources = resource.listWebdavResources();
          List urls = new ArrayList(resources.length);
          for (int i = 0; i < resources.length; i++) {
             WebdavResource member = resources[i];
             HttpURL httpURL = member.getHttpURL();
-            if (filter.accept(httpURL.getName())) {
+            if (filter.accept(baseUrl, httpURL.getName())) {
                String url = httpURL.getUnescapedHttpURL();
                if (member.isCollection() && url.endsWith("/") == false) {
                   url += "/";
@@ -53,6 +46,10 @@ public class DavURLLister extends URLListerBase {
       } catch (MalformedURLException e) {
          // should not happen
          throw new IllegalStateException(e.getMessage());
+      } finally {
+         if (resource != null) {
+            resource.close();
+         }
       }
    }
 }

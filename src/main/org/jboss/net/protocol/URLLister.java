@@ -19,24 +19,6 @@ import java.util.Collection;
  */
 public interface URLLister {
    /**
-    * List all the members of the given collection URL.
-    * @param baseUrl the URL to list; must end in "/"
-    * @return a Collection of URLs that are members of the baseURL
-    * @throws IOException if there was a problem getting the list
-    */
-   Collection listMembers(URL baseUrl) throws IOException;
-
-   /**
-    * List the members of the given collection URL that match the patterns
-    * supplied.
-    * @param baseUrl the URL to list; must end in "/"
-    * @param patterns the patterns to match
-    * @return a Collection of URLs that match
-    * @throws IOException if there was a problem getting the list
-    */
-   Collection listMembers(URL baseUrl, String[] patterns) throws IOException;
-
-   /**
     * List the members of the given collection URL that match the patterns
     * supplied.
     * @param baseUrl the URL to list; must end in "/"
@@ -45,4 +27,27 @@ public interface URLLister {
     * @throws IOException if there was a problem getting the list
     */
    Collection listMembers(URL baseUrl, String patterns) throws IOException;
+
+   /**
+    * List the members of the given collection that are accepted by the filter
+    * @param baseUrl the URL to list; must end in "/"
+    * @param filter a filter that is called to determine if a member should
+    *               be returned
+    * @return a Collection of URLs that match
+    * @throws IOException if there was a problem getting the list
+    */
+   Collection listMembers(URL baseUrl, URLFilter filter) throws IOException;
+
+   /**
+    * Interface defining a filter for listed members.
+    */
+   public interface URLFilter {
+      /**
+       * Determine whether the supplied memberName should be accepted
+       * @param baseURL the URL of the collection
+       * @param memberName the member of the collection
+       * @return
+       */
+      boolean accept(URL baseURL, String memberName);
+   }
 }

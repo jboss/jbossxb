@@ -143,5 +143,27 @@ public class Handler
          }
       }
    }
+
+  public static URL njarToFile(URL url)
+    {
+      if (url.getProtocol().equals(PROTOCOL))
+      {
+	try
+	{
+	  // force the resource we are after to be unpacked - thanks
+	  // Jan & David...!
+	  URL dummy=new URL(PROTOCOL+":"+url.toString()+NJAR_SEPARATOR+"dummy.jar");
+	  String tmp=dummy.openConnection().getURL().toString();
+	  tmp=tmp.substring("jar:".length());
+	  tmp=tmp.substring(0, tmp.length()-(JAR_SEPARATOR+"dummy.jar").length());
+	  return new URL(tmp);
+	}
+	catch (Exception ignore)
+	{
+	}
+      }
+
+      return url;
+    }
 }
 

@@ -114,9 +114,9 @@ public class TimedCachePolicy
    public void create()
    {
       if( threadSafe )
-         entryMap = new HashMap();
-      else
          entryMap = Collections.synchronizedMap(new HashMap());
+      else
+         entryMap = new HashMap();
       now = System.currentTimeMillis();
    }
    /** Schedules this with the class resolutionTimer Timer object for

@@ -62,7 +62,8 @@ public class MappingObjectModelProvider
             }
             else
             {
-               getter = Classes.getAttributeGetter(cls, localName);
+               String getterStr = Util.xmlNameToGetMethodName(localName, true);
+               getter = cls.getMethod(getterStr, null);
             }
 
             if(!writeAsValue(getter.getReturnType()))
@@ -107,7 +108,8 @@ public class MappingObjectModelProvider
             }
             else
             {
-               getter = Classes.getAttributeGetter(cls, localName);
+               String getterStr = Util.xmlNameToGetMethodName(localName, true);
+               getter = cls.getMethod(getterStr, null);
             }
 
             value = getter.invoke(o, null);
@@ -153,7 +155,8 @@ public class MappingObjectModelProvider
             }
             else
             {
-               getter = Classes.getAttributeGetter(cls, localName);
+               String getterStr = Util.xmlNameToGetMethodName(localName, true);
+               getter = cls.getMethod(getterStr, null);
             }
 
             value = getter.invoke(o, null);

@@ -101,7 +101,8 @@ public class MappingObjectModelFactory
                }
                else
                {
-                  getter = Classes.getAttributeGetter(o.getClass(), localName);
+                  String getterStr = Util.xmlNameToGetMethodName(localName, true);
+                  getter = o.getClass().getMethod(getterStr, null);
                }
                child = getter.invoke(o, null);
             }
@@ -152,9 +153,9 @@ public class MappingObjectModelFactory
          {
             try
             {
-               Method getter = Classes.getAttributeGetter(parent.getClass(), localName);
-               final Class type = getter.getReturnType();
-               setter = Classes.getAttributeSetter(parent.getClass(), localName, type);
+               final String xmlToCls = Util.xmlNameToClassName(localName, true);
+               Method getter = parent.getClass().getMethod("get" + xmlToCls, null);
+               setter = parent.getClass().getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
             }
             catch(NoSuchMethodException e)
             {
@@ -224,10 +225,10 @@ public class MappingObjectModelFactory
          {
             try
             {
-               Method getter = Classes.getAttributeGetter(o.getClass(), localName);
-               final Class type = getter.getReturnType();
-               setter = Classes.getAttributeSetter(o.getClass(), localName, type);
-               fieldValue = getTypeConverter(type).unmarshal(value);
+               final String xmlToCls = Util.xmlNameToClassName(localName, true);
+               Method getter = o.getClass().getMethod("get" + xmlToCls, null);
+               setter = o.getClass().getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
+               fieldValue = getTypeConverter(getter.getReturnType()).unmarshal(value);
             }
             catch(NoSuchMethodException e)
             {

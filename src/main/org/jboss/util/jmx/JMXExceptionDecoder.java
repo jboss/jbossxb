@@ -30,26 +30,26 @@ public class JMXExceptionDecoder
     * is a container JMX exception, then the target
     * is returned.  Otherwise the argument is returned.
     */
-   public static Throwable decode(final Exception e)
+   public static Throwable decode(final Throwable t)
    {
-      if (e instanceof MBeanException) {
-         return ((MBeanException)e).getTargetException();
+      if (t instanceof MBeanException) {
+         return ((MBeanException)t).getTargetException();
       }
-      if (e instanceof ReflectionException) {
-         return ((ReflectionException)e).getTargetException();
+      if (t instanceof ReflectionException) {
+         return ((ReflectionException)t).getTargetException();
       }
-      if (e instanceof RuntimeOperationsException) {
-         return ((RuntimeOperationsException)e).getTargetException();
+      if (t instanceof RuntimeOperationsException) {
+         return ((RuntimeOperationsException)t).getTargetException();
       }
-      if (e instanceof RuntimeMBeanException) {
-         return ((RuntimeMBeanException)e).getTargetException();
+      if (t instanceof RuntimeMBeanException) {
+         return ((RuntimeMBeanException)t).getTargetException();
       }
-      if (e instanceof RuntimeErrorException) {
-         return ((RuntimeErrorException)e).getTargetError();
+      if (t instanceof RuntimeErrorException) {
+         return ((RuntimeErrorException)t).getTargetError();
       }
 
       // can't decode
-      return e;
+      return t;
    }
 
    /**

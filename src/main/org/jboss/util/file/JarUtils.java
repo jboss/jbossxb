@@ -291,17 +291,20 @@ public final class JarUtils
    
    /** Given a URL check if its a jar url(jar:<url>!/archive) and if it is,
     extract the archive entry into the given dest directory and return a file
-    URL to its location. If the URL is not a jar url then the url is turned
-    into a jar url using URL("jar:"+jarURL.toString()+"!/").
-    @param jarURL the URL to validate and extract if its a jar URL
+    URL to its location. If jarURL is not a jar url then it is simply returned
+    as the URL for the jar.
+
+    @param jarURL the URL to validate and extract the referenced entry if its
+      a jar protocol URL
     @param dest, the directory into which the nested jar will be extracted.
+    @return the file: URL for the jar referenced by the jarURL parameter.
     */
    public static URL extractNestedJar(URL jarURL, File dest)
       throws IOException
    {
       // This may not be a jar URL so validate the protocol 
       if( jarURL.getProtocol().equals("jar") == false )
-         return new URL("jar:"+jarURL.toString()+"!/");
+         return jarURL;
 
       String destPath = dest.getPath();
       URLConnection urlConn = jarURL.openConnection();
@@ -343,8 +346,10 @@ public final class JarUtils
       archiveIS.close();
       bos.close();
 
+      // Return the file url to the extracted jar
       return archiveFile.toURL();
    }
+
 
    /**
     * A simple jar-like tool used for testing.  It's actually faster than 

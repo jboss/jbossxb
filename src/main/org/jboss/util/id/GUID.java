@@ -10,7 +10,6 @@
 package org.jboss.util.id;
 
 import org.jboss.util.CloneableObject;
-
 /**
  * A globally unique identifier (globally across a cluster of virtual 
  * machines).
@@ -35,7 +34,7 @@ import org.jboss.util.CloneableObject;
  */
 public class GUID
    extends CloneableObject
-   implements ID
+   implements ID, Comparable
 {
    /** The virtual machine identifier */
    protected final VMID vmid;
@@ -45,6 +44,9 @@ public class GUID
 
    /** The hash code of this GUID */
    protected final int hashCode;
+
+   /** string represntation **/
+   protected final String asString;
 
    /**
     * Construct a new GUID.
@@ -65,6 +67,7 @@ public class GUID
       int code = vmid.hashCode();
       code ^= uid.hashCode();
       hashCode = code;
+      asString = toString();
    }
    
    /**
@@ -76,6 +79,7 @@ public class GUID
       this.vmid = guid.vmid;
       this.uid = guid.uid;
       this.hashCode = guid.hashCode;
+      this.asString = guid.asString;
    }
 
    /**
@@ -95,6 +99,15 @@ public class GUID
    public final UID getUID() {
       return uid;
    }
+
+   /**
+    *
+    */
+   public int compareTo(Object obj)
+   {
+      GUID guid = (GUID)obj;
+      return toString().compareTo(guid.toString());
+   }
    
    /**
     * Return a string representation of this GUID.
@@ -102,7 +115,7 @@ public class GUID
     * @return  A string representation of this GUID.
     */
    public String toString() {
-      return vmid.toString() + "-" + uid.toString();
+      return asString;
    }
 
    /**

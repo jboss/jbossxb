@@ -15,7 +15,9 @@ import org.xml.sax.Attributes;
 
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
@@ -35,6 +37,10 @@ public class MetadataDrivenObjectModelFactory
                           String localName,
                           Attributes attrs)
    {
+      boolean trace = log.isTraceEnabled();
+      if (trace)
+         log.trace("newChild " + namespaceURI + ":" + localName + " for " + parent);
+      
       Object child;
 
       ElementBinding metadata = (ElementBinding)ctx.getMetadata();
@@ -88,7 +94,10 @@ public class MetadataDrivenObjectModelFactory
                Collection col = (Collection)getFieldValue(metadata, parent);
                if(col == null)
                {
-                  col = new ArrayList();
+                  if (Set.class.isAssignableFrom(metadata.getFieldType()))
+                     col = new HashSet();
+                  else
+                     col = new ArrayList();
                   setFieldValue(metadata, metadata.getField(), metadata.getSetter(), parent, col);
                }
                col.add(child);
@@ -285,7 +294,7 @@ public class MetadataDrivenObjectModelFactory
          catch(Exception e)
          {
             throw new JBossXBRuntimeException("Failed to set value (" +
-               child.getClass() +
+               child.getClass().getName() +
                ":" +
                child +
                ") using setter " +
@@ -377,8 +386,12 @@ public class MetadataDrivenObjectModelFactory
 
    private static final Object newInstance(XmlValueContainer metadata)
    {
+      boolean trace = log.isTraceEnabled();
+         
       Object instance;
       Class javaType = metadata.getJavaType();
+      if (trace)
+         log.trace("newInstance " + javaType + " for " + metadata.getName());
       try
       {
          Constructor ctor = javaType.getConstructor(null);
@@ -394,6 +407,8 @@ public class MetadataDrivenObjectModelFactory
             "Failed to create an instance of " + metadata.getName() + " of type " + metadata.getJavaType()
          );
       }
+      if (trace)
+         log.trace("newInstance=" + instance);
       return instance;
    }
 

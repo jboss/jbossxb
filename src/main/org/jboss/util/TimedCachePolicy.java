@@ -7,9 +7,11 @@
 
 package org.jboss.util;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -219,11 +221,16 @@ public class TimedCachePolicy
     */
    public void flush() 
    {
-      Map tmpMap = entryMap;
-      if( threadSafe )
-         entryMap = Collections.synchronizedMap(new HashMap());
-      else
-         entryMap = new HashMap();
+      Map tmpMap = null;
+      synchronized( this )
+      {
+         tmpMap = entryMap;
+         if( threadSafe )
+            entryMap = Collections.synchronizedMap(new HashMap());
+         else
+            entryMap = new HashMap();
+      }
+
       // Notify the entries of their removal
       Iterator iter = tmpMap.values().iterator();
       while( iter.hasNext() )
@@ -239,6 +246,27 @@ public class TimedCachePolicy
       return entryMap.size();
    }
    // --- End CachePolicy interface methods
+
+   /** Get the list of keys for entries that are not expired.
+    *
+    * @return A List of the keys corresponding to valid entries
+    */
+   public List getValidKeys()
+   {
+      ArrayList validKeys = new ArrayList();
+      synchronized( entryMap )
+      {
+         Iterator iter = entryMap.entrySet().iterator();
+         while( iter.hasNext() )
+         {
+            Map.Entry entry = (Map.Entry) iter.next();
+            TimedEntry value = (TimedEntry) entry.getValue();
+            if( value.isCurrent(now) == true )
+               validKeys.add(entry.getKey());
+         }
+      }
+      return validKeys;
+   }
 
    /** Get the default lifetime of cache entries.
     @return default lifetime in seconds of cache entries.

@@ -12,11 +12,13 @@ import org.jboss.xml.binding.parser.JBossXBParser;
 import org.apache.xerces.xs.XSTypeDefinition;
 
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
+import java.util.Iterator;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -68,7 +70,10 @@ public class ObjectModelBuilder
     */
    private Map factoriesToNs = Collections.EMPTY_MAP;
 
-   private Map prefixToUri = new HashMap();
+   /**
+    * NamespaceContext implementation
+    */
+   private final NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
    /**
     * the value of a simple element (i.e. the element that does not contain nested elements) being read
@@ -98,57 +103,16 @@ public class ObjectModelBuilder
       this.root = root;
    }
 
-   /*
-   public Object build(GenericObjectModelFactory defaultFactory, Object root, Content content)
-      throws Exception
-   {
-      this.defaultFactory = defaultFactory;
-      this.content = content;
-
-      all.clear();
-      accepted.clear();
-      value.delete(0, value.length());
-
-      boolean popRoot = false;
-      if(root != null)
-      {
-         all.push(root);
-         accepted.push(root);
-         popRoot = true;
-      }
-
-      content.build(this);
-
-      if(popRoot)
-      {
-         root = all.pop();
-         accepted.pop();
-      }
-
-      return this.root;
-   }
-   */
-
    // ContentNavigator implementation
 
-   public Map getPrefixToNamespaceMap()
+   public Iterator getNamespaceURIs()
    {
-      return Collections.unmodifiableMap(prefixToUri);
+      return nsRegistry.getRegisteredURIs();
    }
 
-   public String resolveNamespacePrefix(String prefix)
+   public NamespaceContext getNamespaceContext()
    {
-      String uri;
-      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
-      if(prefixStack != null && !prefixStack.isEmpty())
-      {
-         uri = (String)prefixStack.getFirst();
-      }
-      else
-      {
-         uri = null;
-      }
-      return uri;
+      return nsRegistry;
    }
 
    /**
@@ -171,7 +135,7 @@ public class ObjectModelBuilder
 
       String prefix = st.nextToken();
       String local = st.nextToken();
-      String nsURI = resolveNamespacePrefix(prefix);
+      String nsURI = nsRegistry.getNamespaceURI(prefix);
 
       return new QName(nsURI, local);
    }
@@ -192,22 +156,12 @@ public class ObjectModelBuilder
 
    public void startPrefixMapping(String prefix, String uri)
    {
-      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
-      if(prefixStack == null || prefixStack.isEmpty())
-      {
-         prefixStack = new LinkedList();
-         prefixToUri.put(prefix, prefixStack);
-      }
-      prefixStack.addFirst(uri);
+      nsRegistry.addPrefixMapping(prefix, uri);
    }
 
    public void endPrefixMapping(String prefix)
    {
-      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
-      if(prefixStack != null)
-      {
-         prefixStack.removeFirst();
-      }
+      nsRegistry.removePrefixMapping(prefix);
    }
 
    public void processingInstruction(String target, String data)

@@ -9,7 +9,9 @@ package org.jboss.xml.binding;
 import org.apache.xerces.xs.XSTypeDefinition;
 
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 import java.util.Map;
+import java.util.Iterator;
 
 /**
  * An interface for content navigation. At the moment it has only one method to get child's content.
@@ -20,20 +22,32 @@ import java.util.Map;
  */
 public interface UnmarshallingContext
 {
-   Map getPrefixToNamespaceMap();
-   
-   /**
-    * @param prefix  the prefix to resolve
-    * @return the namespace URI the prefix was mapped to
-    */
-   String resolveNamespacePrefix(String prefix);
-
    /** Construct a QName from a value
     * @param value A value that is of the form [prefix:]localpart
     */
    QName resolveQName(String value);
 
+   /**
+    * @return  all the known namespace URIs
+    */
+   Iterator getNamespaceURIs();
+
+   /**
+    * @return  NamespaceContext instance
+    */
+   NamespaceContext getNamespaceContext();
+
+   /**
+    * Returns child's content.
+    * todo consider deprecating this method
+    * @param namespaceURI
+    * @param qName
+    * @return
+    */
    String getChildContent(String namespaceURI, String qName);
 
+   /**
+    * @return current element's type definition or null if this info is not available
+    */
    XSTypeDefinition getType();
 }

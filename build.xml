@@ -220,6 +220,12 @@
     <!-- Build the jboss-common-client.jar -->
     <jar jarfile="${build.lib}/jboss-common-client.jar">
       <fileset dir="${build.classes}">
+        <!-- All Exceptions, Errors and Throwable Support Classes -->
+        <include name="**/*Exception*"/>
+        <include name="**/*Error*"/>
+        <include name="org/jboss/util/*NestedThrowable"/>
+
+        <!-- Needed by EJB clients -->
         <include name="org/jboss/util/collection/SerializableEnumeration*"/>
       </fileset>
     </jar>
@@ -258,7 +264,7 @@
 	      targetfile="${build.api}/index.html">
       <srcfiles dir="${source.java}" includes="**/*.java"/>
     </uptodate>
-  </target>	      
+  </target>
 
   <!-- Generate Javadoc if we are out of date -->
   <target name="docs-javadocs" 

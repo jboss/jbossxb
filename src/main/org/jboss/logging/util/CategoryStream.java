@@ -15,7 +15,6 @@ import java.io.PrintStream;
 import org.apache.log4j.Category;
 import org.apache.log4j.Priority;
 
-import org.jboss.logging.XPriority;
 
 /**
  * A subclass of PrintStream that redirects its output to a log4j Category.
@@ -26,7 +25,7 @@ import org.jboss.logging.XPriority;
  * @deprecated Use {@link LoggerStream} instead.
  *
  * @version <tt>$Revision$</tt>
- * @author <a href="mailto:Scott_Stark@displayscape.com">Scott Stark</a>.
+ * @author <a href="mailto:Scott.Stark@jboss.org">Scott Stark</a>.
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
 public class CategoryStream
@@ -51,7 +50,6 @@ public class CategoryStream
    
    private Category category;
    private Priority priority;
-   private boolean inWrite;
    private boolean issuedWarning;
    
    /**
@@ -96,14 +94,17 @@ public class CategoryStream
       byte[] bytes = {b};
       write(bytes, 0, 1);
    }
-    
-   public synchronized void write(byte[] b, int off, int len)
+
+   private ThreadLocal recursiveCheck = new ThreadLocal();
+   public void write(byte[] b, int off, int len)
    {
-      if( inWrite == true )
+      Boolean recursed = (Boolean)recursiveCheck.get();
+      if (recursed != null && recursed.equals(Boolean.TRUE))
       {
-         // There is a configuration error that is causing looping. Most
-         // likely there are two console appenders so just return to prevent
-         // spinning.
+         /* There is a configuration error that is causing looping. Most
+            likely there are two console appenders so just return to prevent
+            spinning.
+         */
          if( issuedWarning == false )
          {
             String msg = "ERROR: invalid console appender config detected, console stream is looping";
@@ -111,13 +112,14 @@ public class CategoryStream
             {
                out.write(msg.getBytes());
             }
-            catch(IOException ignore) {}
+            catch(IOException ignore)
+            {
+            }
             issuedWarning = true;
          }
          return;
       }
-      inWrite = true;
-        
+
       // Remove the end of line chars
       while( len > 0 && (b[len-1] == '\n' || b[len-1] == '\r') && len > off )
          len --;
@@ -125,16 +127,19 @@ public class CategoryStream
       // HACK, something is logging exceptions line by line (including
       // blanks), but I can't seem to find it, so for now just ignore
       // empty lines... they aren't very useful.
-      if (len != 0) {
+      if (len != 0)
+      {
          String msg = new String(b, off, len);
-
-         if (TRACE) {
+         recursiveCheck.set(Boolean.TRUE);
+         if (TRACE)
+         {
             category.log(priority, msg, new Throwable());
          }
-         else {
+         else
+         {
             category.log(priority, msg);
          }
+         recursiveCheck.set(Boolean.FALSE);
       }
-      inWrite = false;
    }
 }

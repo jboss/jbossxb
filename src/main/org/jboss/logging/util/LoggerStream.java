@@ -15,8 +15,6 @@ import java.io.PrintStream;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
 
-import org.jboss.logging.XLevel;
-
 /**
  * A subclass of PrintStream that redirects its output to a log4j Logger.
  * 
@@ -24,7 +22,7 @@ import org.jboss.logging.XLevel;
  *    the log4j Categories. Examples include capturing System.out/System.err
  *
  * @version <tt>$Revision$</tt>
- * @author <a href="mailto:Scott_Stark@displayscape.com">Scott Stark</a>.
+ * @author <a href="mailto:Scott.Stark@jboss.org">Scott Stark</a>.
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
 public class LoggerStream
@@ -95,13 +93,16 @@ public class LoggerStream
       write(bytes, 0, 1);
    }
     
-   public synchronized void write(byte[] b, int off, int len)
+   private ThreadLocal recursiveCheck = new ThreadLocal();
+   public void write(byte[] b, int off, int len)
    {
-      if( inWrite == true )
+      Boolean recursed = (Boolean)recursiveCheck.get();
+      if (recursed != null && recursed.equals(Boolean.TRUE))
       {
-         // There is a configuration error that is causing looping. Most
-         // likely there are two console appenders so just return to prevent
-         // spinning.
+         /* There is a configuration error that is causing looping. Most
+            likely there are two console appenders so just return to prevent
+            spinning.
+         */
          if( issuedWarning == false )
          {
             String msg = "ERROR: invalid console appender config detected, console stream is looping";
@@ -109,13 +110,14 @@ public class LoggerStream
             {
                out.write(msg.getBytes());
             }
-            catch(IOException ignore) {}
+            catch(IOException ignore)
+            {
+            }
             issuedWarning = true;
          }
          return;
       }
-      inWrite = true;
-        
+
       // Remove the end of line chars
       while( len > 0 && (b[len-1] == '\n' || b[len-1] == '\r') && len > off )
          len --;
@@ -123,16 +125,19 @@ public class LoggerStream
       // HACK, something is logging exceptions line by line (including
       // blanks), but I can't seem to find it, so for now just ignore
       // empty lines... they aren't very useful.
-      if (len != 0) {
+      if (len != 0)
+      {
          String msg = new String(b, off, len);
-
-         if (TRACE) {
+         recursiveCheck.set(Boolean.TRUE);
+         if (TRACE)
+         {
             logger.log(level, msg, new Throwable());
          }
-         else {
+         else
+         {
             logger.log(level, msg);
          }
+         recursiveCheck.set(Boolean.FALSE);
       }
-      inWrite = false;
    }
 }

@@ -7,7 +7,6 @@
 
 package org.jboss.interception;
 
-import java.io.DataOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

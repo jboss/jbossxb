@@ -6,9 +6,6 @@
 */
 package org.jboss.interception;
 
-import java.io.DataOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.HashMap;

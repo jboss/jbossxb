@@ -26,7 +26,7 @@ import java.io.FilePermission;
 
 /**
  * Provides local file access via URL semantics, correctly returning
- * lastModified.
+ * the last modified time of the underlying file.
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
@@ -45,6 +45,18 @@ public class FileURLConnection
       doOutput = false;
    }
 
+   /**
+    * Returns the underlying file for this connection.
+    */
+   public File getFile() {
+      return file;
+   }
+
+   /**
+    * Checks if the underlying file for this connection exists.
+    *
+    * @throws FileNotFoundException
+    */
    public void connect() throws IOException {
       if (connected) return;
 
@@ -67,6 +79,10 @@ public class FileURLConnection
       return new FileOutputStream(file);
    }
 
+   /**
+    * Provides support for returning the value for the
+    * <tt>last-modified</tt> header.
+    */
    public String getHeaderField(final String name) {
       if (name.equalsIgnoreCase("last-modified")) {
          return String.valueOf(getLastModified());
@@ -75,19 +91,18 @@ public class FileURLConnection
       return super.getHeaderField(name);
    }
 
-   /** Return a permission for both read,write since both input
-   and output streams are supported.
-   */
+   /** 
+    * Return a permission for both read & write since both
+    * input and output streams are supported.
+    */
    public Permission getPermission() throws IOException
    {
-      String path = url.getPath();
-      // See if the seperator char matches the URL '/'
-      if( File.separatorChar != '/' )
-         path = path.replace('/', File.separatorChar);
-      Permission p = new FilePermission(path, "read,write");
-      return p;
+      return new FilePermission(file.getPath(), "read,write");
    }
 
+   /**
+    * Returns the last modified time of the underlying file.
+    */
    public long getLastModified() {
       return file.lastModified();
    }

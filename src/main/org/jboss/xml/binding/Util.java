@@ -6,6 +6,8 @@
  */
 package org.jboss.xml.binding;
 
+import org.jboss.util.Classes;
+
 /**
  * Various utilities for XML binding.
  *
@@ -41,7 +43,8 @@ public final class Util
    {
       return XMLNameToJavaIdentifierConverter.PARSER.parse(XMLNameToJavaIdentifierConverter.CLASS_NAME,
          name,
-         ignoreLowLine);
+         ignoreLowLine
+      );
    }
 
    /**
@@ -87,7 +90,114 @@ public final class Util
    {
       return XMLNameToJavaIdentifierConverter.PARSER.parse(XMLNameToJavaIdentifierConverter.CONSTANT_NAME,
          name,
-         true);
+         true
+      );
+   }
+
+   /**
+    * Converts XML namespace to Java package name.
+    *
+    * @param namespace XML namespace
+    * @return Java package name
+    */
+   public static String xmlNamespaceToJavaPackage(String namespace)
+   {
+      if(namespace.length() == 0)
+      {
+         return namespace;
+      }
+
+      char[] src = namespace.toLowerCase().toCharArray();
+      char[] dst = new char[namespace.length()];
+
+      int srcInd = 0;
+      while(src[srcInd++] != ':')
+      {
+         ;
+      }
+
+      while(src[srcInd] == '/')
+      {
+         ++srcInd;
+      }
+
+      if(src[srcInd] == 'w' && src[srcInd + 1] == 'w' && src[srcInd + 2] == 'w')
+      {
+         srcInd += 4;
+      }
+
+      int domainStart = srcInd;
+      while(srcInd < src.length && src[srcInd++] != '/')
+      {
+      }
+      int domainEnd = src[srcInd - 1] == '/' ? srcInd - 1 : srcInd;
+
+      int dstInd = 0;
+      for(int start = srcInd - 1, end = domainEnd; true; --start)
+      {
+         if(start == domainStart)
+         {
+            System.arraycopy(src, start, dst, dstInd, end - start);
+            dstInd += end - start;
+            //dst[dstInd++] = '.';
+            break;
+         }
+
+         if(src[start] == '.')
+         {
+            System.arraycopy(src, start + 1, dst, dstInd, end - start - 1);
+            dstInd += end - start;
+            dst[dstInd - 1] = '.';
+            end = start;
+         }
+      }
+
+      if(srcInd < src.length)
+      {
+         dst[dstInd++] = '.';
+         while(srcInd < src.length)
+         {
+            char c = src[srcInd++];
+            if(c == '/')
+            {
+               if(srcInd < src.length)
+               {
+                  dst[dstInd++] = '.';
+               }
+            }
+            else if(c == '.')
+            {
+               break;
+            }
+            else
+            {
+               dst[dstInd++] = c;
+            }
+         }
+      }
+
+      return String.valueOf(dst, 0, dstInd);
+   }
+
+   /**
+    * Converts XML namespace URI and local name to fully qualified class name.
+    * @param namespaceUri  namespace URI
+    * @param localName  local name
+    * @param ignoreLowLine  should low lines be ignored in the class name
+    * @return  fully qualified class name
+    */
+   public static String xmlNameToClassName(String namespaceUri, String localName, boolean ignoreLowLine)
+   {
+      return namespaceUri.length() == 0 ?
+         xmlNameToClassName(localName, ignoreLowLine) :
+         xmlNamespaceToJavaPackage(namespaceUri) + '.' + xmlNameToClassName(localName, ignoreLowLine);
+   }
+
+   public static boolean isAttributeType(final Class type)
+   {
+      return Classes.isPrimitive(type) ||
+         type == String.class ||
+         type == java.util.Date.class;
    }
 
    // Private
@@ -188,7 +298,8 @@ public final class Util
                if(i == xmlName.length())
                {
                   throw new IllegalArgumentException(
-                     "XML name contains no valid character to start Java identifier: " + xmlName);
+                     "XML name contains no valid character to start Java identifier: " + xmlName
+                  );
                }
             }
 
@@ -272,7 +383,7 @@ public final class Util
             byte command;
             if(Character.isDigit(next))
             {
-               command = Character.isDigit(prev) ? APPEND: APPEND_UPPER_CASED_WITH_LOW_LINE;
+               command = Character.isDigit(prev) ? APPEND : APPEND_UPPER_CASED_WITH_LOW_LINE;
             }
             else if(Character.isJavaIdentifierPart(next))
             {
@@ -282,7 +393,7 @@ public final class Util
                }
                else if(Character.isJavaIdentifierPart(prev))
                {
-                  command = Character.isUpperCase(next) ? APPEND_WITH_LOW_LINE: APPEND_UPPER_CASED;
+                  command = Character.isUpperCase(next) ? APPEND_WITH_LOW_LINE : APPEND_UPPER_CASED;
                }
                else
                {

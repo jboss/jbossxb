@@ -72,7 +72,18 @@ public class NestedRuntimeException
     *
     * @return  Nested <tt>Throwable</tt>.
     */
-   public final Throwable getNested() {
+   public Throwable getNested() {
+      return nested;
+   }
+   
+   /**
+    * Return the nested <tt>Throwable</tt>.
+    *
+    * <p>For JDK 1.4 compatibility.
+    *
+    * @return  Nested <tt>Throwable</tt>.
+    */
+   public Throwable getCause() {
       return nested;
    }
 

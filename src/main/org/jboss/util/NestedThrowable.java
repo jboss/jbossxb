@@ -29,6 +29,15 @@ public interface NestedThrowable
     */
    Throwable getNested();
 
+   /**
+    * Return the nested <tt>Throwable</tt>.
+    *
+    * <p>For JDK 1.4 compatibility.
+    *
+    * @return  Nested <tt>Throwable</tt>.
+    */
+   Throwable getCause();
+
 
    /////////////////////////////////////////////////////////////////////////
    //                      Nested Throwable Utilities                     //

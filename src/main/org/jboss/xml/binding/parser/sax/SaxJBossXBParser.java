@@ -199,6 +199,7 @@ public class SaxJBossXBParser
 
       public void processingInstruction(String target, String data)
       {
+         contentHandler.processingInstruction(target, data);         
       }
 
       public void startPrefixMapping(String prefix, String uri)

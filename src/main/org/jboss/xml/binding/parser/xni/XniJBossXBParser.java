@@ -256,6 +256,7 @@ public class XniJBossXBParser
       public void processingInstruction(String target, XMLString data, Augmentations augs)
          throws XNIException
       {
+         contentHandler.processingInstruction(target, String.valueOf(data.ch, data.offset, data.length));
       }
 
       public void startElement(QName name, XMLAttributes attributes, Augmentations augs)

@@ -85,19 +85,19 @@ public class Unmarshaller
 
    public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
    {
-      builder.mapFactoryToNamespace(getGenericObjectModelFactory(factory), namespaceUri);
+      builder.mapFactoryToNamespace(factory, namespaceUri);
    }
 
    public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      builder.init(getGenericObjectModelFactory(factory), root);
+      builder.init(factory, root);
       parser.parse(reader, builder);
       return builder.getRoot();
    }
 
    public Object unmarshal(InputStream is, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      builder.init(getGenericObjectModelFactory(factory), root);
+      builder.init(factory, root);
       parser.parse(is, builder);
       return builder.getRoot();
    }
@@ -105,7 +105,7 @@ public class Unmarshaller
    public Object unmarshal(String systemId, ObjectModelFactory factory, Object root)
       throws JBossXBException
    {
-      builder.init(getGenericObjectModelFactory(factory), root);
+      builder.init(factory, root);
       parser.parse(systemId, builder);
       return builder.getRoot();
    }
@@ -125,14 +125,5 @@ public class Unmarshaller
          result = unmarshal(is.getSystemId(), factory, root);
       }
       return result;
-   }
-
-   private static final GenericObjectModelFactory getGenericObjectModelFactory(ObjectModelFactory factory)
-   {
-      if(!(factory instanceof GenericObjectModelFactory))
-      {
-         factory = new DelegatingObjectModelFactory(factory);
-      }
-      return factory instanceof GenericObjectModelFactory ? (GenericObjectModelFactory)factory : new DelegatingObjectModelFactory(factory);
    }
 }

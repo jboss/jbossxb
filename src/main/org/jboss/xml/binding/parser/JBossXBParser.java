@@ -32,6 +32,8 @@ public interface JBossXBParser
 
       void endPrefixMapping(String prefix);
 
+      void processingInstruction(String target, String data);
+
       Object getRoot();
    }
 

@@ -79,18 +79,18 @@ public class ObjectModelBuilder
 
    // Public
 
-   public void mapFactoryToNamespace(GenericObjectModelFactory factory, String namespaceUri)
+   public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
    {
       if(factoriesToNs == Collections.EMPTY_MAP)
       {
          factoriesToNs = new HashMap();
       }
-      factoriesToNs.put(namespaceUri, factory);
+      factoriesToNs.put(namespaceUri, getGenericObjectModelFactory(factory));
    }
 
-   public void init(GenericObjectModelFactory defaultFactory, Object root)
+   public void init(ObjectModelFactory defaultFactory, Object root)
    {
-      this.defaultFactory = defaultFactory;
+      this.defaultFactory = getGenericObjectModelFactory(defaultFactory);
 
       all.clear();
       accepted.clear();
@@ -139,10 +139,10 @@ public class ObjectModelBuilder
    public String resolveNamespacePrefix(String prefix)
    {
       String uri;
-      LinkedList prefixStack = (LinkedList) prefixToUri.get(prefix);
+      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
       if(prefixStack != null && !prefixStack.isEmpty())
       {
-         uri = (String) prefixStack.getFirst();
+         uri = (String)prefixStack.getFirst();
       }
       else
       {
@@ -192,7 +192,7 @@ public class ObjectModelBuilder
 
    public void startPrefixMapping(String prefix, String uri)
    {
-      LinkedList prefixStack = (LinkedList) prefixToUri.get(prefix);
+      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
       if(prefixStack == null || prefixStack.isEmpty())
       {
          prefixStack = new LinkedList();
@@ -203,10 +203,72 @@ public class ObjectModelBuilder
 
    public void endPrefixMapping(String prefix)
    {
-      LinkedList prefixStack = (LinkedList) prefixToUri.get(prefix);
+      LinkedList prefixStack = (LinkedList)prefixToUri.get(prefix);
       if(prefixStack != null)
       {
          prefixStack.removeFirst();
+      }
+   }
+
+   public void processingInstruction(String target, String data)
+   {
+      if(!"jbossxb".equals(target))
+      {
+         return;
+      }
+
+      int i = data.indexOf("factory=\"");
+      if(i != -1)
+      {
+         int end = data.indexOf('\"', i + 9);
+         if(end == -1)
+         {
+            throw new JBossXBRuntimeException(
+               "Property 'factory' is not terminated with '\"' in processing instruction: " + data
+            );
+         }
+
+         String factoryProp = data.substring(i + 9, end);
+         Class factoryCls;
+         try
+         {
+            factoryCls = Thread.currentThread().getContextClassLoader().loadClass(factoryProp);
+         }
+         catch(ClassNotFoundException e)
+         {
+            throw new JBossXBRuntimeException("Failed to load factory class : " + e.getMessage(), e);
+         }
+
+         ObjectModelFactory factory;
+         try
+         {
+            factory = (ObjectModelFactory)factoryCls.newInstance();
+         }
+         catch(Exception e)
+         {
+            throw new JBossXBRuntimeException("Failed to instantiate factory " + factoryProp + ": " + e.getMessage(), e);
+         }
+
+         i = data.indexOf("ns=\"");
+         if(i == -1)
+         {
+            throw new JBossXBRuntimeException("Property 'ns' not found in factory mapping processing instruction: " + data);
+         }
+
+         end = data.indexOf("\"", i + 4);
+         if(end == -1)
+         {
+            throw new JBossXBRuntimeException(
+               "Property 'ns' is not terminated with '\"' in processing instruction: " + data
+            );
+         }
+
+         String nsProp = data.substring(i + 4, end);
+         mapFactoryToNamespace(factory, nsProp);
+      }
+      else
+      {
+         throw new JBossXBRuntimeException("Unexpected data in processing instruction: target=" + target + ", data=" + data);
       }
    }
 
@@ -220,7 +282,11 @@ public class ObjectModelBuilder
       return root;
    }
 
-   public void startElement(String namespaceURI, String localName, String qName, Attributes atts, XSTypeDefinition type)
+   public void startElement(String namespaceURI,
+                            String localName,
+                            String qName,
+                            Attributes atts,
+                            XSTypeDefinition type)
    {
       Object parent = accepted.isEmpty() ? root : accepted.peek();
 
@@ -374,6 +440,15 @@ public class ObjectModelBuilder
       }
 
       return method;
+   }
+
+   static final GenericObjectModelFactory getGenericObjectModelFactory(ObjectModelFactory factory)
+   {
+      if(!(factory instanceof GenericObjectModelFactory))
+      {
+         factory = new DelegatingObjectModelFactory(factory);
+      }
+      return factory instanceof GenericObjectModelFactory ? (GenericObjectModelFactory)factory : new DelegatingObjectModelFactory(factory);
    }
 
    private static interface Stack

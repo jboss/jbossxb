@@ -2,6 +2,7 @@
 <!DOCTYPE project [
    <!ENTITY buildmagic SYSTEM "../tools/etc/buildmagic/buildmagic.ent">
    <!ENTITY libraries SYSTEM "../tools/etc/buildmagic/libraries.ent">
+   <!ENTITY modules SYSTEM "../tools/etc/buildmagic/modules.ent">
 ]>
 
 <!-- ====================================================================== -->
@@ -70,6 +71,7 @@
     <!-- Libraries -->
     <!-- ========= -->
     &libraries;
+
     <!-- The combined library classpath -->
     <path id="library.classpath">
       <path refid="apache.crimson.classpath"/>
@@ -84,6 +86,8 @@
     <!-- ======= -->
     <!-- Modules -->
     <!-- ======= -->
+
+    &modules;
 
     <!-- The combined dependent module classpath -->
     <path id="dependentmodule.classpath">
@@ -302,8 +306,8 @@
 	  description="Builds almost everything."
 	  depends="jars"/>
 
-  <target name="help" 
-          description="Show this help message."
-	  depends="_buildmagic:help:standard"/>
+    <target name="help"
+            description="Show this help message."
+        depends="_buildmagic:help:standard"/>
 
 </project>

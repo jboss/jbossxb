@@ -16,6 +16,8 @@ import javax.xml.namespace.QName;
  */
 public interface ElementHandler
 {
+   ElementTypeBinding getElementType();
+
    AttributeBinding addAttribute(QName name);
 
    void addAttribute(QName name, AttributeBinding binding);

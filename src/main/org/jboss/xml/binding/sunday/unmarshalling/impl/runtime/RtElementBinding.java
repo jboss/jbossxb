@@ -34,6 +34,7 @@ public class RtElementBinding
 
    public ElementBinding pushElementHandler(ElementHandler handler)
    {
+      handler.getElementType().addParent(new RtElementTypeBinding());
       return super.pushElementHandler(handler);
    }
 
@@ -69,7 +70,9 @@ public class RtElementBinding
 
    public ElementBinding addElement(QName name)
    {
-      return super.addElement(name);
+      ElementBinding binding = new RtElementBinding();
+      super.addElement(name, binding);
+      return binding;
    }
 
    public void addElement(QName name, ElementBinding binding)

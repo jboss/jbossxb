@@ -17,6 +17,8 @@ import javax.xml.namespace.QName;
 import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -27,7 +29,8 @@ public class ElementTypeBindingImpl
 {
    private Map attrBindings = Collections.EMPTY_MAP;
    private Map childBindings = Collections.EMPTY_MAP;
-   protected TextContentBinding contentBindingBinding;
+   protected TextContentBinding contentBinding;
+   private List parents = Collections.EMPTY_LIST;
 
    public AttributeBinding addAttribute(QName name)
    {
@@ -52,12 +55,39 @@ public class ElementTypeBindingImpl
 
    public AttributeBinding getAttribute(QName name)
    {
-      return (AttributeBinding)attrBindings.get(name);
+      AttributeBinding attr = (AttributeBinding)attrBindings.get(name);
+      if(attr == null && parents.size() > 0)
+      {
+         for(int i = 0; i < parents.size(); ++i)
+         {
+            ElementTypeBinding parent = (ElementTypeBinding)parents.get(i);
+            attr = parent.getAttribute(name);
+            if(attr != null)
+            {
+               addAttribute(name, attr);
+               break;
+            }
+         }
+      }
+      return attr;
    }
 
    public boolean hasAttributes()
    {
-      return !attrBindings.isEmpty();
+      boolean has = !attrBindings.isEmpty();
+      if(!has && parents.size() > 0)
+      {
+         for(int i = 0; i < parents.size(); ++i)
+         {
+            ElementTypeBinding parent = (ElementTypeBinding)parents.get(i);
+            has = parent.hasAttributes();
+            if(has)
+            {
+               break;
+            }
+         }
+      }
+      return has;
    }
 
    public void pushAttributeHandler(QName name, AttributeHandler handler)
@@ -87,21 +117,33 @@ public class ElementTypeBindingImpl
 
    public void setTextContent(TextContentBinding contentBindingBinding)
    {
-      this.contentBindingBinding = contentBindingBinding;
+      this.contentBinding = contentBindingBinding;
    }
 
    public TextContentBinding getTextContent()
    {
-      return contentBindingBinding;
+      if(contentBinding == null && parents.size() > 0)
+      {
+         for(int i = 0; i < parents.size(); ++i)
+         {
+            ElementTypeBinding parent = (ElementTypeBinding)parents.get(i);
+            contentBinding = parent.getTextContent();
+            if(contentBinding != null)
+            {
+               break;
+            }
+         }
+      }
+      return contentBinding;
    }
 
    public void pushTextContentHandler(TextContentHandler handler)
    {
-      if(contentBindingBinding == null)
+      if(contentBinding == null)
       {
-         contentBindingBinding = new TextContentBindingImpl();
+         contentBinding = new TextContentBindingImpl();
       }
-      contentBindingBinding.pushHandler(handler);
+      contentBinding.pushHandler(handler);
    }
 
    public ElementBinding addElement(QName name)
@@ -113,6 +155,34 @@ public class ElementTypeBindingImpl
 
    public ElementBinding getElement(QName name)
    {
-      return (ElementBinding)childBindings.get(name);
+      ElementBinding element = (ElementBinding)childBindings.get(name);
+      if(element == null && parents.size() > 0)
+      {
+         for(int i = 0; i <  parents.size(); ++i)
+         {
+            ElementTypeBinding parent = (ElementTypeBinding)parents.get(i);
+            element = parent.getElement(name);
+            if(element != null)
+            {
+               addElement(name, element);
+               break;
+            }
+         }
+      }
+      return element;
+   }
+
+   public void addParent(ElementTypeBinding type)
+   {
+      switch(parents.size())
+      {
+         case 0:
+            parents = Collections.singletonList(type);
+            break;
+         case 1:
+            parents = new ArrayList(parents);
+         default:
+            parents.add(type);
+      }
    }
 }

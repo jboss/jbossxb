@@ -52,6 +52,11 @@ public class ElementHandlerImpl
       this.invokeNext = invokeNext;
    }
 
+   public ElementTypeBinding getElementType()
+   {
+      return typeBinding;
+   }
+
    public AttributeBinding addAttribute(QName name)
    {
       return typeBinding.addAttribute(name);
@@ -135,16 +140,20 @@ public class ElementHandlerImpl
    {
       for(int i = 0; i < attrs.getLength(); ++i)
       {
-         String localName = attrs.getLocalName(i);
-         QName attrName = new QName(attrs.getURI(i), localName.length() == 0 ? attrs.getQName(i) : localName);
-         AttributeBinding attr = (AttributeBinding)typeBinding.getAttribute(attrName);
-         if(attr != null)
+         // todo it's hack, there should be a way to setup ignorable namespaces!!! 
+         if(!"http://www.w3.org/2001/XMLSchema-instance".equals(attrs.getURI(i)))
          {
-            attr.set(child, attrs.getValue(i), attrName);
-         }
-         else
-         {
-            log.warn("no binding for attribute " + attrName);
+            String localName = attrs.getLocalName(i);
+            QName attrName = new QName(attrs.getURI(i), localName.length() == 0 ? attrs.getQName(i) : localName);
+            AttributeBinding attr = (AttributeBinding)typeBinding.getAttribute(attrName);
+            if(attr != null)
+            {
+               attr.set(child, attrs.getValue(i), attrName);
+            }
+            else
+            {
+               log.warn("no binding for attribute " + attrName);
+            }
          }
       }
    }

@@ -20,6 +20,13 @@ public class RtDocumentHandler
 {
    private static final RtElementBinding ELEMENT_BINDING = new RtElementBinding();
 
+   public ElementBinding addElement(QName name)
+   {
+      ElementBinding binding = new RtElementBinding();
+      addElement(name, binding);
+      return binding;
+   }
+
    public ElementBinding getElement(QName name)
    {
       ElementBinding element = super.getElement(name);

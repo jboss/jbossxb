@@ -35,4 +35,6 @@ public interface ElementTypeBinding
    void addElement(QName name, ElementBinding binding);
 
    ElementBinding getElement(QName name);
+
+   void addParent(ElementTypeBinding type);
 }

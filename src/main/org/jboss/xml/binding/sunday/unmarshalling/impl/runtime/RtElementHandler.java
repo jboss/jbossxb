@@ -95,7 +95,7 @@ public class RtElementHandler
    {
       Object child = null;
 
-      Class childCls = RtUtil.resolveClass(name, true);
+      Class childCls = RtUtil.resolveClass(name, false);
       if(childCls != null)
       {
          try
@@ -130,6 +130,11 @@ public class RtElementHandler
 
             attr.set(child, attrs.getValue(i), attrName);
          }
+      }
+      else
+      {
+         // we want to set text content on the parent then
+         child = parent;
       }
 
       callback.accept(child, true);

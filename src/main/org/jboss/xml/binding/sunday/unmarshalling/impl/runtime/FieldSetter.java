@@ -73,7 +73,7 @@ public interface FieldSetter
 
       public void set(Object owner, Object value, QName name)
       {
-         value = RtUtil.cast(value, owner.getClass());
+         value = RtUtil.cast(value, setter.getParameterTypes()[0]);
          try
          {
             setter.invoke(owner, new Object[]{value});

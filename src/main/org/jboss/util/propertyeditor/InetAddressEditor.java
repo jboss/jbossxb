@@ -36,7 +36,14 @@ public class InetAddressEditor
    {
       try
       {
-         return InetAddress.getByName(Strings.replaceProperties(getAsText()));
+		 String text = getAtText();
+		 if (text.startsWith("/"))
+		 {
+			 // seems like localhost sometimes will look like:
+			 // /127.0.0.1 and the getByNames barfs on the slash - JGH
+			 text = text.substring(1);
+		 }
+         return InetAddress.getByName(Strings.replaceProperties(text));
       }
       catch (UnknownHostException e)
      {

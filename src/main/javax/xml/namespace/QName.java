@@ -26,7 +26,7 @@ import java.util.StringTokenizer;
  * @author Jeff Suttor (javadoc)
  * @version $Revision$
  */
-public class QName implements Serializable
+public class QName implements Serializable, Comparable
 {
    private String namespaceURI;
    private String localPart;
@@ -166,5 +166,16 @@ public class QName implements Serializable
    {
       int hashCode = namespaceURI.hashCode() + localPart.hashCode();
       return hashCode;
+   }
+
+   /**
+    * Compares this object with the specified object for order.  Returns a
+    * negative integer, zero, or a positive integer as this object is less
+    * than, equal to, or greater than the specified object.<p>
+    */
+   public int compareTo(Object o)
+   {
+      QName other = (QName)o;
+      return toString().compareTo(other.toString());
    }
 }

@@ -6,20 +6,25 @@
  */
 package org.jboss.xml.binding;
 
-import org.jboss.logging.Logger;
+// $Id$
 
-import java.io.Serializable;
+import org.jboss.logging.Logger;
+import org.jboss.util.Base64;
+
+import javax.xml.namespace.QName;
 import java.io.ByteArrayOutputStream;
-import java.math.BigInteger;
+import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.Calendar;
-import java.util.TimeZone;
 import java.util.StringTokenizer;
-import java.net.URISyntaxException;
+import java.util.TimeZone;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @author Thomas.Diesler@jboss.org
  * @version <tt>$Revision$</tt>
  */
 public final class TypeBinding
@@ -270,17 +275,17 @@ public final class TypeBinding
 
       Logger log = Logger.getLogger(TypeBinding.class);
       boolean allAreUnique = true;
-      for(int outer = 0; outer < names.length; ++outer)
+      for (int outer = 0; outer < names.length; ++outer)
       {
          int outerCode = codes[outer];
          String outerName = names[outer];
 
-         for(int inner = outer + 1; inner < names.length; ++inner)
+         for (int inner = outer + 1; inner < names.length; ++inner)
          {
             int innerCode = codes[inner];
             String innerName = names[inner];
 
-            if(outerCode == innerCode)
+            if (outerCode == innerCode)
             {
                log.error("Types have the same hash code " + outerCode + ": " + outerName + " and " + innerName);
                allAreUnique = false;
@@ -288,7 +293,7 @@ public final class TypeBinding
          }
       }
 
-      if(!allAreUnique)
+      if (!allAreUnique)
       {
          throw new IllegalStateException("Not all the schema types have unique hash codes! See log for more details.");
       }
@@ -298,29 +303,29 @@ public final class TypeBinding
    {
       int typeCode = xsdType.hashCode();
       Object result;
-      if(typeCode == XS_INT)
+      if (typeCode == XS_INT)
       {
          result = Integer.valueOf(value);
       }
-      else if(typeCode == XS_LONG)
+      else if (typeCode == XS_LONG)
       {
          result = Long.valueOf(value);
       }
-      else if(typeCode == XS_SHORT)
+      else if (typeCode == XS_SHORT)
       {
          result = Short.valueOf(value);
       }
-      else if(typeCode == XS_BYTE)
+      else if (typeCode == XS_BYTE)
       {
          result = Byte.valueOf(value);
       }
-      else if(typeCode == XS_FLOAT)
+      else if (typeCode == XS_FLOAT)
       {
-         if("INF".equals(value))
+         if ("INF".equals(value))
          {
             result = new Float(Float.POSITIVE_INFINITY);
          }
-         else if("-INF".equals(value))
+         else if ("-INF".equals(value))
          {
             result = new Float(Float.NEGATIVE_INFINITY);
          }
@@ -329,13 +334,13 @@ public final class TypeBinding
             result = Float.valueOf(value);
          }
       }
-      else if(typeCode == XS_DOUBLE)
+      else if (typeCode == XS_DOUBLE)
       {
-         if("INF".equals(value))
+         if ("INF".equals(value))
          {
             result = new Double(Double.POSITIVE_INFINITY);
          }
-         else if("-INF".equals(value))
+         else if ("-INF".equals(value))
          {
             result = new Double(Double.NEGATIVE_INFINITY);
          }
@@ -344,11 +349,11 @@ public final class TypeBinding
             result = Double.valueOf(value);
          }
       }
-      else if(typeCode == XS_BOOLEAN)
+      else if (typeCode == XS_BOOLEAN)
       {
-         if(value.length() == 1)
+         if (value.length() == 1)
          {
-            switch(value.charAt(0))
+            switch (value.charAt(0))
             {
                case '1':
                   result = Boolean.TRUE;
@@ -358,8 +363,7 @@ public final class TypeBinding
                   break;
                default:
                   throw new JBossXBValueFormatException("An instance of a datatype that is defined as ?boolean? can have the following legal literals" +
-                     " {true, false, 1, 0}. But got: " + value
-                  );
+                     " {true, false, 1, 0}. But got: " + value);
             }
          }
          else
@@ -367,28 +371,28 @@ public final class TypeBinding
             result = Boolean.valueOf(value);
          }
       }
-      else if(typeCode == XS_STRING)
+      else if (typeCode == XS_STRING)
       {
          result = value;
       }
-      else if(typeCode == XS_INTEGER)
+      else if (typeCode == XS_INTEGER)
       {
          result = new BigInteger(value);
       }
-      else if(typeCode == XS_DECIMAL)
+      else if (typeCode == XS_DECIMAL)
       {
          result = new BigDecimal(value);
       }
-      else if(typeCode == XS_DATETIME)
+      else if (typeCode == XS_DATETIME)
       {
          result = unmarshalDateTime(value);
       }
-      else if(typeCode == XS_QNAME)
+      else if (typeCode == XS_QNAME)
       {
          // todo XS_QNAME
          throw new IllegalStateException("Recognized but not supported xsdType: " + XS_QNAME_NAME);
       }
-      else if(typeCode == XS_ANYURI)
+      else if (typeCode == XS_ANYURI)
       {
          // anyUri is by default bound to java.net.URI for now. The following is the warning from JAXB2.0:
          //
@@ -402,96 +406,96 @@ public final class TypeBinding
          {
             result = new java.net.URI(value);
          }
-         catch(URISyntaxException e)
+         catch (URISyntaxException e)
          {
             throw new JBossXBValueFormatException("Failed to unmarshal anyURI value " + value, e);
          }
       }
-      else if(typeCode == XS_UNSIGNEDLONG)
+      else if (typeCode == XS_UNSIGNEDLONG)
       {
          double d = Double.parseDouble(value);
-         if(d < 0 || d > 18446744073709551615D)
+         if (d < 0 || d > 18446744073709551615D)
          {
             throw new JBossXBValueFormatException("Invalid unsignedLong value: " + value);
          }
          result = new Double(d);
       }
-      else if(typeCode == XS_UNSIGNEDINT)
+      else if (typeCode == XS_UNSIGNEDINT)
       {
          long l = Long.parseLong(value);
-         if(l < 0 || l > 4294967295L)
+         if (l < 0 || l > 4294967295L)
          {
             throw new JBossXBValueFormatException("Invalid unsignedInt value: " + value);
          }
          result = new Long(l);
       }
-      else if(typeCode == XS_UNSIGNEDSHORT)
+      else if (typeCode == XS_UNSIGNEDSHORT)
       {
          int i = Integer.parseInt(value);
-         if(i < 0 || i > 65535)
+         if (i < 0 || i > 65535)
          {
             throw new JBossXBValueFormatException("Invalid unsignedShort value: " + value);
          }
          result = new Integer(i);
       }
-      else if(typeCode == XS_UNSIGNEDBYTE)
+      else if (typeCode == XS_UNSIGNEDBYTE)
       {
          short s = Short.parseShort(value);
-         if(s < 0 || s > 255)
+         if (s < 0 || s > 255)
          {
             throw new JBossXBValueFormatException("Invalid unsignedByte value: " + value);
          }
          result = new Short(s);
       }
-      else if(typeCode == XS_DATE)
+      else if (typeCode == XS_DATE)
       {
          result = unmarshalDate(value);
       }
-      else if(typeCode == XS_TIME)
+      else if (typeCode == XS_TIME)
       {
          result = unmarshalTime(value);
       }
-      else if(typeCode == XS_BASE64BINARY)
+      else if (typeCode == XS_BASE64BINARY)
       {
          // todo XS_BASE64BINARY
          throw new IllegalStateException("Recognized but not supported xsdType: " + XS_BASE64BINARY_NAME);
       }
-      else if(typeCode == XS_HEXBINARY)
+      else if (typeCode == XS_HEXBINARY)
       {
          result = unmarshalHexBinary(value);
       }
-      else if(typeCode == XS_ANYSIMPLETYPE)
+      else if (typeCode == XS_ANYSIMPLETYPE)
       {
          result = value;
       }
-      else if(typeCode == XS_DURATION)
+      else if (typeCode == XS_DURATION)
       {
          // todo XS_DURATION
          throw new IllegalStateException("Recognized but not supported xsdType: " + XS_DURATION_NAME);
       }
-      else if(typeCode == XS_GYEARMONTH)
+      else if (typeCode == XS_GYEARMONTH)
       {
          result = unmarshalGYearMonth(value);
       }
-      else if(typeCode == XS_GYEAR)
+      else if (typeCode == XS_GYEAR)
       {
          result = unmarshalGYear(value);
       }
-      else if(typeCode == XS_GMONTHDAY)
+      else if (typeCode == XS_GMONTHDAY)
       {
          result = unmarshalGMonthDay(value);
       }
-      else if(typeCode == XS_GMONTH)
+      else if (typeCode == XS_GMONTH)
       {
          return unmarshalGMonth(value);
       }
-      else if(typeCode == XS_GDAY)
+      else if (typeCode == XS_GDAY)
       {
          return unmarshalGDay(value);
       }
-      else if(typeCode == XS_NORMALIZEDSTRING)
+      else if (typeCode == XS_NORMALIZEDSTRING)
       {
-         if(isNormalizedString(value))
+         if (isNormalizedString(value))
          {
             result = value;
          }
@@ -500,9 +504,9 @@ public final class TypeBinding
             throw new JBossXBValueFormatException("Invalid normalizedString value: " + value);
          }
       }
-      else if(typeCode == XS_TOKEN)
+      else if (typeCode == XS_TOKEN)
       {
-         if(isValidToken(value))
+         if (isValidToken(value))
          {
             result = value;
          }
@@ -511,80 +515,80 @@ public final class TypeBinding
             throw new JBossXBValueFormatException("Invalid token value: " + value);
          }
       }
-      else if(typeCode == XS_LANGUAGE)
+      else if (typeCode == XS_LANGUAGE)
       {
          result = value;
       }
-      else if(typeCode == XS_NAME)
+      else if (typeCode == XS_NAME)
       {
          result = value;
       }
-      else if(typeCode == XS_NCNAME)
+      else if (typeCode == XS_NCNAME)
       {
          result = value;
       }
-      else if(typeCode == XS_ID)
+      else if (typeCode == XS_ID)
       {
          result = value;
       }
-      else if(typeCode == XS_NMTOKEN)
+      else if (typeCode == XS_NMTOKEN)
       {
          result = value;
       }
-      else if(typeCode == XS_NMTOKENS)
+      else if (typeCode == XS_NMTOKENS)
       {
          result = unmarshalNMTokens(value);
       }
-      else if(typeCode == XS_NONPOSITIVEINTEGER)
+      else if (typeCode == XS_NONPOSITIVEINTEGER)
       {
          result = new BigInteger(value);
-         if(BigInteger.ZERO.compareTo(result) < 0)
+         if (BigInteger.ZERO.compareTo(result) < 0)
          {
             throw new JBossXBValueFormatException("Invalid nonPositiveInteger value: " + value);
          }
       }
-      else if(typeCode == XS_NEGATIVEINTEGER)
+      else if (typeCode == XS_NEGATIVEINTEGER)
       {
          result = new BigInteger(value);
-         if(BigInteger.ZERO.compareTo(result) <= 0)
+         if (BigInteger.ZERO.compareTo(result) <= 0)
          {
             throw new JBossXBValueFormatException("Invalid negativeInteger value: " + value);
          }
       }
-      else if(typeCode == XS_NONNEGATIVEINTEGER)
+      else if (typeCode == XS_NONNEGATIVEINTEGER)
       {
          result = new BigInteger(value);
-         if(BigInteger.ZERO.compareTo(result) > 0)
+         if (BigInteger.ZERO.compareTo(result) > 0)
          {
             throw new JBossXBValueFormatException("Invalid nonNegativeInteger value: " + value);
          }
       }
-      else if(typeCode == XS_POSITIVEINTEGER)
+      else if (typeCode == XS_POSITIVEINTEGER)
       {
          result = new BigInteger(value);
-         if(BigInteger.ZERO.compareTo(result) >= 0)
+         if (BigInteger.ZERO.compareTo(result) >= 0)
          {
             throw new JBossXBValueFormatException("Invalid positiveInteger value: " + value);
          }
       }
-      else if(typeCode == XS_NOTATION)
+      else if (typeCode == XS_NOTATION)
       {
          // todo NOTATION
          result = value;
       }
-      else if(typeCode == XS_IDREF)
+      else if (typeCode == XS_IDREF)
       {
          result = value;
       }
-      else if(typeCode == XS_IDREFS)
+      else if (typeCode == XS_IDREFS)
       {
          result = unmarshalIdRefs(value);
       }
-      else if(typeCode == XS_ENTITY)
+      else if (typeCode == XS_ENTITY)
       {
          result = value;
       }
-      else if(typeCode == XS_ENTITIES)
+      else if (typeCode == XS_ENTITIES)
       {
          result = unmarshalIdRefs(value);
       }
@@ -598,53 +602,51 @@ public final class TypeBinding
    public static Object unmarshal(String value, Class javaType)
    {
       Object result;
-      if(String.class == javaType)
+      if (String.class == javaType)
       {
          result = value;
       }
-      else if(int.class == javaType || Integer.class == javaType)
+      else if (int.class == javaType || Integer.class == javaType)
       {
          result = Integer.valueOf(value);
       }
-      else if(long.class == javaType || Long.class == javaType)
+      else if (long.class == javaType || Long.class == javaType)
       {
          result = Long.valueOf(value);
       }
-      else if(double.class == javaType || Double.class == javaType)
+      else if (double.class == javaType || Double.class == javaType)
       {
          result = Double.valueOf(value);
       }
-      else if(float.class == javaType || Float.class == javaType)
+      else if (float.class == javaType || Float.class == javaType)
       {
          result = Float.valueOf(value);
       }
-      else if(short.class == javaType || Short.class == javaType)
+      else if (short.class == javaType || Short.class == javaType)
       {
          result = Short.valueOf(value);
       }
-      else if(byte.class == javaType || Byte.class == javaType)
+      else if (byte.class == javaType || Byte.class == javaType)
       {
          result = Byte.valueOf(value);
       }
-      else if(char.class == javaType || Character.class == javaType)
+      else if (char.class == javaType || Character.class == javaType)
       {
          result = new Character(value.charAt(0));
       }
-      else if(java.util.Date.class == javaType)
+      else if (java.util.Date.class == javaType)
       {
          final String FORMAT = "yyyy-MM-dd";
          try
          {
             result = new java.text.SimpleDateFormat(FORMAT).parse(value);
          }
-         catch(ParseException e)
+         catch (ParseException e)
          {
-            throw new IllegalStateException(
-               "Failed to parse date accroding to " + FORMAT + " format: " + value + ": " + e.getMessage()
-            );
+            throw new IllegalStateException("Failed to parse date accroding to " + FORMAT + " format: " + value + ": " + e.getMessage());
          }
       }
-      else if(Object.class == javaType)
+      else if (Object.class == javaType)
       {
          result = value;
       }
@@ -659,41 +661,41 @@ public final class TypeBinding
 
    public static String marshal(String xsdType, Object value)
    {
-      if(value == null)
+      if (value == null)
       {
          throw new IllegalArgumentException("Can't marshal null value!");
       }
 
       int typeCode = xsdType.hashCode();
       String result;
-      if(typeCode == XS_INT)
+      if (typeCode == XS_INT)
       {
          Integer i = (Integer)value;
          result = i.toString();
       }
-      else if(typeCode == XS_LONG)
+      else if (typeCode == XS_LONG)
       {
          Long l = (Long)value;
          result = l.toString();
       }
-      else if(typeCode == XS_SHORT)
+      else if (typeCode == XS_SHORT)
       {
          Short s = (Short)value;
          result = s.toString();
       }
-      else if(typeCode == XS_BYTE)
+      else if (typeCode == XS_BYTE)
       {
          Byte b = (Byte)value;
          result = b.toString();
       }
-      else if(typeCode == XS_FLOAT)
+      else if (typeCode == XS_FLOAT)
       {
          Float f = (Float)value;
-         if(f.floatValue() == Float.POSITIVE_INFINITY)
+         if (f.floatValue() == Float.POSITIVE_INFINITY)
          {
             result = "INF";
          }
-         else if(f.floatValue() == Float.NEGATIVE_INFINITY)
+         else if (f.floatValue() == Float.NEGATIVE_INFINITY)
          {
             result = "-INF";
          }
@@ -702,14 +704,14 @@ public final class TypeBinding
             result = f.toString();
          }
       }
-      else if(typeCode == XS_DOUBLE)
+      else if (typeCode == XS_DOUBLE)
       {
          Double d = (Double)value;
-         if(d.doubleValue() == Double.POSITIVE_INFINITY)
+         if (d.doubleValue() == Double.POSITIVE_INFINITY)
          {
             result = "INF";
          }
-         else if(d.doubleValue() == Double.NEGATIVE_INFINITY)
+         else if (d.doubleValue() == Double.NEGATIVE_INFINITY)
          {
             result = "-INF";
          }
@@ -718,16 +720,16 @@ public final class TypeBinding
             result = d.toString();
          }
       }
-      else if(typeCode == XS_BOOLEAN)
+      else if (typeCode == XS_BOOLEAN)
       {
-         if(value instanceof Boolean)
+         if (value instanceof Boolean)
          {
             result = ((Boolean)value).booleanValue() ? "true" : "false";
          }
-         else if(value instanceof Number)
+         else if (value instanceof Number)
          {
             Number n = (Number)value;
-            switch(n.byteValue())
+            switch (n.byteValue())
             {
                case 1:
                   result = "1";
@@ -737,141 +739,139 @@ public final class TypeBinding
                   break;
                default:
                   throw new JBossXBValueFormatException("An instance of a datatype that is defined as ?boolean? can have the following legal literals" +
-                     " {true, false, 1, 0}. But got: " + value
-                  );
+                     " {true, false, 1, 0}. But got: " + value);
             }
          }
          else
          {
             throw new JBossXBValueFormatException("Java value for XSD boolean type expected to be an instance of java.lang.Boolean or java.lang.Number. But the value is of type " +
-               value.getClass().getName()
-            );
+               value.getClass().getName());
          }
       }
-      else if(typeCode == XS_STRING)
+      else if (typeCode == XS_STRING)
       {
          result = (String)value;
       }
-      else if(typeCode == XS_INTEGER)
+      else if (typeCode == XS_INTEGER)
       {
          BigInteger bi = (BigInteger)value;
          result = bi.toString();
       }
-      else if(typeCode == XS_DECIMAL)
+      else if (typeCode == XS_DECIMAL)
       {
          BigDecimal bd = (BigDecimal)value;
          result = bd.toString();
       }
-      else if(typeCode == XS_DATETIME)
+      else if (typeCode == XS_DATETIME)
       {
          Calendar c = (Calendar)value;
          result = marshalDateTime(c);
       }
-      else if(typeCode == XS_QNAME)
+      else if (typeCode == XS_QNAME)
       {
          // todo XS_QNAME
          throw new IllegalStateException("Recognized but not supported xsdType: " + xsdType);
       }
-      else if(typeCode == XS_ANYURI)
+      else if (typeCode == XS_ANYURI)
       {
          java.net.URI u = (java.net.URI)value;
          result = u.toString();
       }
-      else if(typeCode == XS_UNSIGNEDLONG)
+      else if (typeCode == XS_UNSIGNEDLONG)
       {
          Double d = (Double)value;
-         if(d.doubleValue() < 0 || d.doubleValue() > 18446744073709551615D)
+         if (d.doubleValue() < 0 || d.doubleValue() > 18446744073709551615D)
          {
             throw new JBossXBValueFormatException("Invalid unsignedLong value: " + value);
          }
          result = d.toString();
       }
-      else if(typeCode == XS_UNSIGNEDINT)
+      else if (typeCode == XS_UNSIGNEDINT)
       {
          Long l = (Long)value;
-         if(l.longValue() < 0 || l.longValue() > 4294967295L)
+         if (l.longValue() < 0 || l.longValue() > 4294967295L)
          {
             throw new JBossXBValueFormatException("Invalid unsignedInt value: " + value);
          }
          result = l.toString();
       }
-      else if(typeCode == XS_UNSIGNEDSHORT)
+      else if (typeCode == XS_UNSIGNEDSHORT)
       {
          Integer i = (Integer)value;
-         if(i.intValue() < 0 || i.intValue() > 65535)
+         if (i.intValue() < 0 || i.intValue() > 65535)
          {
             throw new JBossXBValueFormatException("Invalid unsignedShort value: " + value);
          }
          result = i.toString();
       }
-      else if(typeCode == XS_UNSIGNEDBYTE)
+      else if (typeCode == XS_UNSIGNEDBYTE)
       {
          Short s = (Short)value;
-         if(s.shortValue() < 0 || s.shortValue() > 255)
+         if (s.shortValue() < 0 || s.shortValue() > 255)
          {
             throw new JBossXBValueFormatException("Invalid unsignedByte value: " + value);
          }
          result = s.toString();
       }
-      else if(typeCode == XS_DATE)
+      else if (typeCode == XS_DATE)
       {
          Calendar c = (Calendar)value;
          result = marshalDate(c);
       }
-      else if(typeCode == XS_TIME)
+      else if (typeCode == XS_TIME)
       {
          Calendar c = (Calendar)value;
          result = marshalTime(c);
       }
-      else if(typeCode == XS_BASE64BINARY)
+      else if (typeCode == XS_BASE64BINARY)
       {
          // todo XS_BASE64BINARY
          throw new IllegalStateException("Recognized but not supported xsdType: " + xsdType);
       }
-      else if(typeCode == XS_HEXBINARY)
+      else if (typeCode == XS_HEXBINARY)
       {
          byte[] b = (byte[])value;
          result = marshalHexBinary(b);
       }
-      else if(typeCode == XS_ANYSIMPLETYPE)
+      else if (typeCode == XS_ANYSIMPLETYPE)
       {
          // todo XS_ANYSIMPLETYPE
          throw new IllegalStateException("Recognized but not supported xsdType: " + xsdType);
       }
-      else if(typeCode == XS_DURATION)
+      else if (typeCode == XS_DURATION)
       {
          // todo XS_DURATION
          throw new IllegalStateException("Recognized but not supported xsdType: " + xsdType);
       }
-      else if(typeCode == XS_GYEARMONTH)
+      else if (typeCode == XS_GYEARMONTH)
       {
          Calendar c = (Calendar)value;
          result = marshalGYearMonth(c);
       }
-      else if(typeCode == XS_GYEAR)
+      else if (typeCode == XS_GYEAR)
       {
          Calendar c = (Calendar)value;
          result = marshalGYear(c);
       }
-      else if(typeCode == XS_GMONTHDAY)
+      else if (typeCode == XS_GMONTHDAY)
       {
          Calendar c = (Calendar)value;
          result = marshalGMonthDay(c);
       }
-      else if(typeCode == XS_GMONTH)
+      else if (typeCode == XS_GMONTH)
       {
          Calendar c = (Calendar)value;
          result = marshalGMonth(c);
       }
-      else if(typeCode == XS_GDAY)
+      else if (typeCode == XS_GDAY)
       {
          Calendar c = (Calendar)value;
          result = marshalGDay(c);
       }
-      else if(typeCode == XS_NORMALIZEDSTRING)
+      else if (typeCode == XS_NORMALIZEDSTRING)
       {
          String s = (String)value;
-         if(isNormalizedString(s))
+         if (isNormalizedString(s))
          {
             result = s;
          }
@@ -880,10 +880,10 @@ public final class TypeBinding
             throw new JBossXBValueFormatException("Invalid normalizedString value: " + value);
          }
       }
-      else if(typeCode == XS_TOKEN)
+      else if (typeCode == XS_TOKEN)
       {
          String s = (String)value;
-         if(isValidToken(s))
+         if (isValidToken(s))
          {
             result = s;
          }
@@ -892,38 +892,38 @@ public final class TypeBinding
             throw new JBossXBValueFormatException("Invalid token value: " + value);
          }
       }
-      else if(typeCode == XS_LANGUAGE)
+      else if (typeCode == XS_LANGUAGE)
       {
          String s = (String)value;
          result = s;
       }
-      else if(typeCode == XS_NAME)
+      else if (typeCode == XS_NAME)
       {
          String s = (String)value;
          result = s;
       }
-      else if(typeCode == XS_NCNAME)
+      else if (typeCode == XS_NCNAME)
       {
          String s = (String)value;
          result = s;
       }
-      else if(typeCode == XS_ID)
+      else if (typeCode == XS_ID)
       {
          String s = (String)value;
          result = s;
       }
-      else if(typeCode == XS_NMTOKEN)
+      else if (typeCode == XS_NMTOKEN)
       {
          String s = (String)value;
          result = s;
       }
-      else if(typeCode == XS_NMTOKENS)
+      else if (typeCode == XS_NMTOKENS)
       {
          String[] tokens = (String[])value;
-         if(tokens.length > 0)
+         if (tokens.length > 0)
          {
             result = tokens[0];
-            for(int i = 1; i < tokens.length; ++i)
+            for (int i = 1; i < tokens.length; ++i)
             {
                result += ' ' + tokens[i];
             }
@@ -933,58 +933,58 @@ public final class TypeBinding
             result = "";
          }
       }
-      else if(typeCode == XS_NONPOSITIVEINTEGER)
+      else if (typeCode == XS_NONPOSITIVEINTEGER)
       {
          BigInteger bi = (BigInteger)value;
-         if(BigInteger.ZERO.compareTo(bi) < 0)
+         if (BigInteger.ZERO.compareTo(bi) < 0)
          {
             throw new JBossXBValueFormatException("Invalid nonPositiveInteger value: " + value);
          }
          result = bi.toString();
       }
-      else if(typeCode == XS_NEGATIVEINTEGER)
+      else if (typeCode == XS_NEGATIVEINTEGER)
       {
          BigInteger bi = (BigInteger)value;
-         if(BigInteger.ZERO.compareTo(bi) <= 0)
+         if (BigInteger.ZERO.compareTo(bi) <= 0)
          {
             throw new JBossXBValueFormatException("Invalid negativeInteger value: " + value);
          }
          result = bi.toString();
       }
-      else if(typeCode == XS_NONNEGATIVEINTEGER)
+      else if (typeCode == XS_NONNEGATIVEINTEGER)
       {
          BigInteger bi = (BigInteger)value;
-         if(BigInteger.ZERO.compareTo(bi) > 0)
+         if (BigInteger.ZERO.compareTo(bi) > 0)
          {
             throw new JBossXBValueFormatException("Invalid nonNegativeInteger value: " + value);
          }
          result = bi.toString();
       }
-      else if(typeCode == XS_POSITIVEINTEGER)
+      else if (typeCode == XS_POSITIVEINTEGER)
       {
          BigInteger bi = (BigInteger)value;
-         if(BigInteger.ZERO.compareTo(bi) >= 0)
+         if (BigInteger.ZERO.compareTo(bi) >= 0)
          {
             throw new JBossXBValueFormatException("Invalid positiveInteger value: " + value);
          }
          result = bi.toString();
       }
-      else if(typeCode == XS_NOTATION)
+      else if (typeCode == XS_NOTATION)
       {
          // todo NOTATION
          result = (String)value;
       }
-      else if(typeCode == XS_IDREF)
+      else if (typeCode == XS_IDREF)
       {
          result = (String)value;
       }
-      else if(typeCode == XS_IDREFS)
+      else if (typeCode == XS_IDREFS)
       {
          String[] refs = (String[])value;
-         if(refs.length > 0)
+         if (refs.length > 0)
          {
             result = refs[0];
-            for(int i = 1; i < refs.length; ++i)
+            for (int i = 1; i < refs.length; ++i)
             {
                result += ' ' + refs[i];
             }
@@ -994,17 +994,17 @@ public final class TypeBinding
             result = "";
          }
       }
-      else if(typeCode == XS_ENTITY)
+      else if (typeCode == XS_ENTITY)
       {
          result = (String)value;
       }
-      else if(typeCode == XS_ENTITIES)
+      else if (typeCode == XS_ENTITIES)
       {
          String[] refs = (String[])value;
-         if(refs.length > 0)
+         if (refs.length > 0)
          {
             result = refs[0];
-            for(int i = 1; i < refs.length; ++i)
+            for (int i = 1; i < refs.length; ++i)
             {
                result += ' ' + refs[i];
             }
@@ -1025,7 +1025,7 @@ public final class TypeBinding
    {
       StringTokenizer tokenizer = new StringTokenizer(value);
       String[] tokens = new String[tokenizer.countTokens()];
-      for(int i = 0; i < tokens.length; ++i)
+      for (int i = 0; i < tokens.length; ++i)
       {
          tokens[i] = tokenizer.nextToken();
       }
@@ -1036,7 +1036,7 @@ public final class TypeBinding
    {
       StringTokenizer tokenizer = new StringTokenizer(value);
       String[] tokens = new String[tokenizer.countTokens()];
-      for(int i = 0; i < tokens.length; ++i)
+      for (int i = 0; i < tokens.length; ++i)
       {
          tokens[i] = tokenizer.nextToken();
       }
@@ -1051,21 +1051,19 @@ public final class TypeBinding
     */
    public static Calendar unmarshalGMonthDay(String value)
    {
-      if(value.length() < 6 ||
+      if (value.length() < 6 ||
          value.charAt(0) != '-' ||
          value.charAt(1) != '-' ||
          value.charAt(4) != '-')
       {
-         throw new JBossXBValueFormatException(
-            "gMonthDay value does not follow the format '--MM-DD[timezone]: " + value
-         );
+         throw new JBossXBValueFormatException("gMonthDay value does not follow the format '--MM-DD[timezone]: " + value);
       }
 
       Calendar cal = Calendar.getInstance();
       cal.clear();
       cal.set(Calendar.MONTH, Integer.parseInt(value.substring(2, 4)) - 1);
       cal.set(Calendar.DAY_OF_MONTH, Integer.parseInt(value.substring(5, 7)));
-      if(value.length() > 7)
+      if (value.length() > 7)
       {
          cal.setTimeZone(parseTimeZone(value, 7));
       }
@@ -1096,7 +1094,7 @@ public final class TypeBinding
     */
    public static Calendar unmarshalGMonth(String value)
    {
-      if(value.length() < 4 || value.charAt(0) != '-' || value.charAt(1) != '-')
+      if (value.length() < 4 || value.charAt(0) != '-' || value.charAt(1) != '-')
       {
          throw new JBossXBValueFormatException("gMonth value does not follow the format '--MM': " + value);
       }
@@ -1105,7 +1103,7 @@ public final class TypeBinding
       cal.clear();
 
       cal.set(Calendar.MONTH, Integer.parseInt(value.substring(2, 4)) - 1);
-      if(value.length() > 4)
+      if (value.length() > 4)
       {
          cal.setTimeZone(parseTimeZone(value, 4));
       }
@@ -1131,7 +1129,7 @@ public final class TypeBinding
       Calendar cal = Calendar.getInstance();
       cal.clear();
       int timeZone = parseGYear(value, 0, cal);
-      if(value.length() > timeZone)
+      if (value.length() > timeZone)
       {
          TimeZone tz = parseTimeZone(value, timeZone);
          cal.setTimeZone(tz);
@@ -1158,16 +1156,14 @@ public final class TypeBinding
       cal.clear();
 
       int month = parseGYear(value, 0, cal);
-      if(value.charAt(month) != '-')
+      if (value.charAt(month) != '-')
       {
-         throw new JBossXBValueFormatException(
-            "gYearMonth value does not follow the format '[-]CCYY-MM[timezone]': " + value
-         );
+         throw new JBossXBValueFormatException("gYearMonth value does not follow the format '[-]CCYY-MM[timezone]': " + value);
       }
 
       cal.set(Calendar.MONTH, Integer.parseInt(value.substring(month + 1, month + 3)) - 1);
 
-      if(value.length() > month + 3)
+      if (value.length() > month + 3)
       {
          TimeZone tz = parseTimeZone(value, month + 3);
          cal.setTimeZone(tz);
@@ -1199,14 +1195,14 @@ public final class TypeBinding
     */
    public static Calendar unmarshalGDay(String value)
    {
-      if(value.length() < 5 || value.charAt(0) != '-' || value.charAt(1) != '-' || value.charAt(2) != '-')
+      if (value.length() < 5 || value.charAt(0) != '-' || value.charAt(1) != '-' || value.charAt(2) != '-')
       {
          throw new NumberFormatException("gDay value does not follow the format (---DD[timezonePart]): " + value);
       }
 
       // validate day
       int day = Integer.parseInt(value.substring(3, 5));
-      if(day < 1 || day > 31)
+      if (day < 1 || day > 31)
       {
          throw new NumberFormatException("gDay value is not in the interval [1..31]: " + day);
       }
@@ -1216,7 +1212,7 @@ public final class TypeBinding
 
       Calendar cal = Calendar.getInstance();
       cal.clear();
-      if(tz != null)
+      if (tz != null)
       {
          cal.setTimeZone(tz);
       }
@@ -1255,12 +1251,12 @@ public final class TypeBinding
       int ind = parseDate(value, 0, cal);
 
       TimeZone tz = null;
-      if(ind < value.length())
+      if (ind < value.length())
       {
          tz = parseTimeZone(value, ind);
       }
 
-      if(tz != null)
+      if (tz != null)
       {
          cal.setTimeZone(tz);
       }
@@ -1299,12 +1295,12 @@ public final class TypeBinding
       parseTime(value, 0, cal);
 
       TimeZone tz = null;
-      if(value.length() > 12)
+      if (value.length() > 12)
       {
          tz = parseTimeZone(value, 12);
       }
 
-      if(tz != null)
+      if (tz != null)
       {
          cal.setTimeZone(tz);
       }
@@ -1342,22 +1338,21 @@ public final class TypeBinding
       cal.clear();
 
       int timeInd = parseDate(value, 0, cal);
-      if(value.charAt(timeInd) != 'T')
+      if (value.charAt(timeInd) != 'T')
       {
          throw new JBossXBValueFormatException("DateTime value does not follow the format '[-]yyyy-mm-ddThh:mm:ss[.s+][timezone]': expected 'T' but got " +
-            value.charAt(timeInd)
-         );
+            value.charAt(timeInd));
       }
 
       parseTime(value, timeInd + 1, cal);
 
       TimeZone tz = null;
-      if(value.length() > timeInd + 13)
+      if (value.length() > timeInd + 13)
       {
          tz = parseTimeZone(value, timeInd + 13);
       }
 
-      if(tz != null)
+      if (tz != null)
       {
          cal.setTimeZone(tz);
       }
@@ -1398,26 +1393,26 @@ public final class TypeBinding
     */
    public static byte[] unmarshalHexBinary(String value)
    {
-      if(value.length() % 2 != 0)
+      if (value.length() % 2 != 0)
       {
          throw new IllegalArgumentException("hexBinary value must have even length.");
       }
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      for(int i = 0; i < value.length(); i += 2)
+      for (int i = 0; i < value.length(); i += 2)
       {
          char c1 = value.charAt(i);
          char c2 = value.charAt(i + 1);
          byte b = 0;
-         if((c1 >= '0') && (c1 <= '9'))
+         if ((c1 >= '0') && (c1 <= '9'))
          {
             b += ((c1 - '0') * 16);
          }
-         else if((c1 >= 'a') && (c1 <= 'f'))
+         else if ((c1 >= 'a') && (c1 <= 'f'))
          {
             b += ((c1 - 'a' + 10) * 16);
          }
-         else if((c1 >= 'A') && (c1 <= 'F'))
+         else if ((c1 >= 'A') && (c1 <= 'F'))
          {
             b += ((c1 - 'A' + 10) * 16);
          }
@@ -1426,15 +1421,15 @@ public final class TypeBinding
             throw new IllegalArgumentException("hexBinary value contains illegal character: " + value);
          }
 
-         if((c2 >= '0') && (c2 <= '9'))
+         if ((c2 >= '0') && (c2 <= '9'))
          {
             b += (c2 - '0');
          }
-         else if((c2 >= 'a') && (c2 <= 'f'))
+         else if ((c2 >= 'a') && (c2 <= 'f'))
          {
             b += (c2 - 'a' + 10);
          }
-         else if((c2 >= 'A') && (c2 <= 'F'))
+         else if ((c2 >= 'A') && (c2 <= 'F'))
          {
             b += (c2 - 'A' + 10);
          }
@@ -1454,7 +1449,7 @@ public final class TypeBinding
    public static String marshalHexBinary(byte[] value)
    {
       StringBuffer result = new StringBuffer(2 * value.length);
-      for(int i = 0; i < value.length; ++i)
+      for (int i = 0; i < value.length; ++i)
       {
          result.append(convertDigit((int)(value[i] >> 4)));
          result.append(convertDigit((int)(value[i] & 0x0f)));
@@ -1464,10 +1459,10 @@ public final class TypeBinding
 
    public static boolean isNormalizedString(String value)
    {
-      for(int i = 0; i < value.length(); ++i)
+      for (int i = 0; i < value.length(); ++i)
       {
          char c = value.charAt(i);
-         if(c == 0x09 || c == 0x0A || c == 0x0D)
+         if (c == 0x09 || c == 0x0A || c == 0x0D)
          {
             return false;
          }
@@ -1475,25 +1470,81 @@ public final class TypeBinding
       return true;
    }
 
+   /** Converts base64Binary value into byte array.
+    */
+   public static byte[] unmarshalBase64(String value)
+   {
+      return Base64.decode(value);
+   }
+
+   /** Converts byte array into a base64Binary value.
+    */
+   public static String marshalBase64(byte[] value)
+   {
+      return Base64.encodeBytes(value);
+   }
+
+   /** Converts a value of form prefix:localPart into a QName
+    * The prefix must be registered previously
+    */
+   public static QName unmarshalQName(String value, NamespaceRegistry nsRegistry)
+   {
+      int colonIndex = value.lastIndexOf(":");
+      if (colonIndex > 0)
+      {
+         String prefix = value.substring(0, colonIndex);
+         String nsURI = nsRegistry.getNamespaceURI(prefix);
+         if (nsURI == null)
+            throw new IllegalStateException("No namespace URI registered for prefix: " + prefix);
+
+         String localPart = value.substring(colonIndex + 1);
+         return new QName(nsURI, localPart);
+      }
+      else
+      {
+         return new QName(value);
+      }
+   }
+
+   /** Converts a QName value to form prefix:localPart
+    * The prefix must be registered previously
+    */
+   public static String marshalQName(QName value, NamespaceRegistry nsRegistry)
+   {
+      String nsURI = value.getNamespaceURI();
+      if (nsURI.length() > 0)
+      {
+         String prefix = nsRegistry.getPrefix(nsURI);
+         if (prefix == null)
+            throw new IllegalStateException("Namespace URI not registered: " + nsURI);
+
+         return prefix + ":" + value.getLocalPart();
+      }
+      else
+      {
+         return value.getLocalPart();
+      }
+   }
+
    public static boolean isValidToken(String value)
    {
-      if(value != null && value.length() > 0)
+      if (value != null && value.length() > 0)
       {
-         if(value.charAt(0) == 0x20 || value.charAt(value.length() - 1) == 0x20)
+         if (value.charAt(0) == 0x20 || value.charAt(value.length() - 1) == 0x20)
          {
             return false;
          }
 
-         for(int i = 0; i < value.length(); ++i)
+         for (int i = 0; i < value.length(); ++i)
          {
             char c = value.charAt(i);
-            if(c == 0x09 || c == 0x0A || c == 0x0D)
+            if (c == 0x09 || c == 0x0A || c == 0x0D)
             {
                return false;
             }
-            else if(c == 0x20)
+            else if (c == 0x20)
             {
-               if(i + 1 < value.length() && value.charAt(i + 1) == 0x20)
+               if (i + 1 < value.length() && value.charAt(i + 1) == 0x20)
                {
                   return false;
                }
@@ -1513,35 +1564,29 @@ public final class TypeBinding
 
    private static int parseDate(String value, int start, Calendar cal)
    {
-      if(value.charAt(start) == '-')
+      if (value.charAt(start) == '-')
       {
          ++start;
       }
 
-      if(!Character.isDigit(value.charAt(start)))
+      if (!Character.isDigit(value.charAt(start)))
       {
-         throw new JBossXBValueFormatException(
-            "Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value
-         );
+         throw new JBossXBValueFormatException("Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value);
       }
 
       int nextToken = value.indexOf('-', start);
-      if(nextToken == -1 || nextToken - start < 4)
+      if (nextToken == -1 || nextToken - start < 4)
       {
-         throw new JBossXBValueFormatException(
-            "Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value
-         );
+         throw new JBossXBValueFormatException("Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value);
       }
 
       int year = Integer.parseInt(value.substring(start, nextToken));
 
       start = nextToken + 1;
       nextToken = value.indexOf('-', start);
-      if(nextToken == -1 || nextToken - start < 2)
+      if (nextToken == -1 || nextToken - start < 2)
       {
-         throw new JBossXBValueFormatException(
-            "Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value
-         );
+         throw new JBossXBValueFormatException("Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value);
       }
 
       int month = Integer.parseInt(value.substring(start, nextToken));
@@ -1566,7 +1611,7 @@ public final class TypeBinding
     */
    private static void parseTime(String value, int start, Calendar cal)
    {
-      if(value.charAt(start + 2) != ':' || value.charAt(start + 5) != ':' || value.charAt(start + 8) != '.')
+      if (value.charAt(start + 2) != ':' || value.charAt(start + 5) != ':' || value.charAt(start + 8) != '.')
       {
          throw new JBossXBValueFormatException("Time value does not follow the format 'hh:mm:ss:sss': " + value);
       }
@@ -1591,9 +1636,9 @@ public final class TypeBinding
    private static TimeZone parseTimeZone(String value, int start)
    {
       TimeZone tz = null;
-      if(value.charAt(start) == '+' || (value.charAt(start) == '-'))
+      if (value.charAt(start) == '+' || (value.charAt(start) == '-'))
       {
-         if(value.length() - start == 6 &&
+         if (value.length() - start == 6 &&
             Character.isDigit(value.charAt(start + 1)) &&
             Character.isDigit(value.charAt(start + 2)) &&
             value.charAt(start + 3) == ':' &&
@@ -1604,20 +1649,16 @@ public final class TypeBinding
          }
          else
          {
-            throw new NumberFormatException(
-               "Timezone value does not follow the format ([+/-]HH:MM): " + value.substring(start)
-            );
+            throw new NumberFormatException("Timezone value does not follow the format ([+/-]HH:MM): " + value.substring(start));
          }
       }
-      else if(value.charAt(start) == 'Z')
+      else if (value.charAt(start) == 'Z')
       {
          tz = TimeZone.getTimeZone("GMT");
       }
       else
       {
-         throw new NumberFormatException(
-            "Timezone value does not follow the format ([+/-]HH:MM): " + value.substring(start)
-         );
+         throw new NumberFormatException("Timezone value does not follow the format ([+/-]HH:MM): " + value.substring(start));
       }
       return tz;
    }
@@ -1637,18 +1678,16 @@ public final class TypeBinding
    private static String marshalInt(int value, int length)
    {
       String result = String.valueOf(value);
-      if(result.length() < length)
+      if (result.length() < length)
       {
-         while(result.length() < length)
+         while (result.length() < length)
          {
             result = '0' + result;
          }
       }
-      else if(result.length() > length)
+      else if (result.length() > length)
       {
-         throw new JBossXBValueFormatException(
-            "Can't marshal int value " + value + " to a string with length of " + length
-         );
+         throw new JBossXBValueFormatException("Can't marshal int value " + value + " to a string with length of " + length);
       }
       return result;
    }
@@ -1656,7 +1695,7 @@ public final class TypeBinding
    private static char convertDigit(int value)
    {
       value &= 0x0f;
-      if(value >= 10)
+      if (value >= 10)
       {
          return ((char)(value - 10 + 'a'));
       }

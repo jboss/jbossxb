@@ -29,7 +29,6 @@ import org.jboss.logging.Logger;
  *
  * <p>Installs the default PropertyEditors.
  *
- * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @author Scott.Stark@jboss.org
  * @version <tt>$Revision$</tt>
@@ -202,10 +201,16 @@ public class PropertyEditors
    /**
     * This method takes the properties found in the given beanProps
     * to the bean using the property editor registered for the property.
-    * Any properties for which an editor cannot be found are ignored.
+    * Any property in beanProps that does not have an associated java bean
+    * property will result in an IntrospectionException. The string property
+    * values are converted to the true java bean property type using the
+    * java bean PropertyEditor framework. If a property in beanProps does not
+    * have a PropertyEditor registered it will be ignored.
     * 
-    * @param bean the java bean instance to apply the properties to
-    * @param beanProps
+    * @param bean - the java bean instance to apply the properties to
+    * @param beanProps - map of java bean property name to property value.
+    * @throws IntrospectionException thrown on introspection of bean and if
+    *    a property in beanProps does not map to a property of bean.
     */ 
    public static void mapJavaBeanProperties(Object bean, Properties beanProps)
       throws IntrospectionException
@@ -230,9 +235,25 @@ public class PropertyEditors
          PropertyDescriptor pd = (PropertyDescriptor) propertyMap.get(name);
          if (pd == null)
          {
-            if( trace )
-               log.trace("No property found for: "+name);
-            continue;
+            /* Try the property name with the first char uppercased to handle
+            a property name like dLQMaxResent whose expected introspected
+            property name would be DLQMaxResent since the JavaBean
+            Introspector would view setDLQMaxResent as the setter for a
+            DLQMaxResent property whose Introspector.decapitalize() method
+            would also return "DLQMaxResent". 
+            */
+            if( name.length() > 1 )
+            {
+               char first = name.charAt(0);
+               String exName = Character.toUpperCase(first) + name.substring(1);
+               pd = (PropertyDescriptor) propertyMap.get(exName);
+            }
+
+            if( pd == null )
+            {
+               String msg = "No property found for: "+name+" on JavaBean: "+bean;
+               throw new IntrospectionException(msg);
+            }
          }
          Method setter = pd.getWriteMethod();
          if( trace )

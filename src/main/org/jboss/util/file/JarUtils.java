@@ -1,20 +1,22 @@
 package org.jboss.util.file;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.JarURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
-import java.io.InputStream;
-import java.io.FileOutputStream;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 
 /** A utility class for dealing with Jar files.
 

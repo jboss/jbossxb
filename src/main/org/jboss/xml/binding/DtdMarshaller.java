@@ -16,6 +16,7 @@ import com.wutka.dtd.DTDMixed;
 import com.wutka.dtd.DTDName;
 import com.wutka.dtd.DTDPCData;
 import com.wutka.dtd.DTDParser;
+import com.wutka.dtd.DTDCardinal;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -34,8 +35,8 @@ import java.util.LinkedList;
 /**
  * A DTD based org.jboss.xml.binding.Marshaller implementation.
  *
- * @version <tt>$Revision$</tt>
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @version <tt>$Revision$</tt>
  */
 public class DtdMarshaller
    extends AbstractMarshaller
@@ -65,7 +66,7 @@ public class DtdMarshaller
       dtd = parser.parse(true);
 
       this.provider = provider instanceof GenericObjectModelProvider ?
-         (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider);
+         (GenericObjectModelProvider) provider : new DelegatingObjectModelProvider(provider);
       //stack.push(document);
 
       DTDElement[] roots = null;
@@ -126,7 +127,10 @@ public class DtdMarshaller
       Object root = provider.getRoot(o, systemId, dtdRoot.getName());
       stack.push(root);
 
-      handleChildren(dtd, dtdRoot);
+      Attributes attrs = provideAttributes(dtdRoot, root);
+      content.startElement("", dtdRoot.getName(), dtdRoot.getName(), attrs);
+      handleElement(dtd, dtdRoot, attrs);
+      content.endElement("", dtdRoot.getName(), dtdRoot.getName());
 
       stack.pop();
       content.endDocument();
@@ -138,22 +142,21 @@ public class DtdMarshaller
       DTDItem item = element.content;
       if(item instanceof DTDMixed)
       {
-         handleMixedElement((DTDMixed)item, element.getName(), attrs);
+         handleMixedElement((DTDMixed) item, element.getName(), attrs);
       }
       else if(item instanceof DTDEmpty)
       {
          final Object value = provider.getElementValue(stack.peek(), systemId, element.getName());
          if(Boolean.TRUE.equals(value))
          {
+            writeSkippedElements();
             content.startElement("", element.getName(), element.getName(), attrs);
             content.endElement("", element.getName(), element.getName());
          }
       }
       else if(item instanceof DTDContainer)
       {
-         content.startElement("", element.getName(), element.getName(), attrs);
-         processContainer(dtd, (DTDContainer)item);
-         content.endElement("", element.getName(), element.getName());
+         processContainer(dtd, (DTDContainer) item);
       }
       else
       {
@@ -173,6 +176,8 @@ public class DtdMarshaller
             Object value = provider.getElementValue(parent, systemId, elementName);
             if(value != null)
             {
+               writeSkippedElements();
+
                char[] ch = value.toString().toCharArray();
                content.startElement("", elementName, elementName, attrs);
                content.characters(ch, 0, ch.length);
@@ -182,7 +187,7 @@ public class DtdMarshaller
       }
    }
 
-   private final void handleChildren(DTD dtd, DTDElement element)
+   private final void handleChildren(DTD dtd, DTDElement element, DTDCardinal elementCardinal)
    {
       Object parent = stack.peek();
       Object children = provider.getChildren(parent, systemId, element.getName());
@@ -192,46 +197,28 @@ public class DtdMarshaller
          Iterator iter;
          if(children instanceof Iterator)
          {
-            iter = (Iterator)children;
+            iter = (Iterator) children;
          }
          else if(children instanceof Collection)
          {
-            iter = ((Collection)children).iterator();
+            iter = ((Collection) children).iterator();
          }
          else
          {
             iter = Collections.singletonList(children).iterator();
          }
 
-         Element el = (Element)elementStack.getLast();
-         if(!el.started)
-         {
-            int firstNotStarted = elementStack.size() - 1;
-            do
-            {
-               el = (Element)elementStack.get(--firstNotStarted);
-            }
-            while(!el.started);
+         writeSkippedElements();
 
-            ++firstNotStarted;
-
-            while(firstNotStarted < elementStack.size())
-            {
-               el = (Element)elementStack.get(firstNotStarted++);
-               DTDElement notStarted = el.element;
-
-               if(log.isTraceEnabled())
-               {
-                  log.trace("starting skipped> " + notStarted.getName());
-               }
-
-               content.startElement("", notStarted.getName(), notStarted.getName(), null);
-               el.started = true;
-            }
-         }
-
-         el = new Element(element, true);
+         Element el = new Element(element, true);
          elementStack.addLast(el);
+
+         final boolean singleValued = elementCardinal == DTDCardinal.NONE || elementCardinal == DTDCardinal.OPTIONAL;
+         if(singleValued)
+         {
+            // todo attributes!
+            content.startElement("", element.getName(), element.getName(), null);
+         }
 
          while(iter.hasNext())
          {
@@ -239,27 +226,49 @@ public class DtdMarshaller
             stack.push(child);
 
             AttributesImpl attrs = (element.attributes.isEmpty() ? null : provideAttributes(element, child));
+            if(!singleValued)
+            {
+               content.startElement("", element.getName(), element.getName(), null);
+            }
+
             handleElement(dtd, element, attrs);
 
+            if(!singleValued)
+            {
+               content.endElement(systemId, element.getName(), element.getName());
+            }
+
             stack.pop();
+         }
+
+         if(singleValued)
+         {
+            content.endElement(systemId, element.getName(), element.getName());
          }
 
          elementStack.removeLast();
       }
       else
       {
-         Element el = new Element(element);
-         elementStack.addLast(el);
+         boolean removeLast = false;
+         if(!(element.getContent() instanceof DTDMixed || element.getContent() instanceof DTDEmpty))
+         {
+            Element el = new Element(element);
+            elementStack.addLast(el);
+            removeLast = true;
+         }
 
          AttributesImpl attrs = (element.attributes.isEmpty() ? null : provideAttributes(element, parent));
          handleElement(dtd, element, attrs);
 
-         el = (Element)elementStack.removeLast();
-
-         if(el.started)
+         if(removeLast)
          {
-            DTDElement started = el.element;
-            content.endElement("", started.getName(), started.getName());
+            Element el = (Element) elementStack.removeLast();
+            if(el.started)
+            {
+               DTDElement started = el.element;
+               content.endElement("", started.getName(), started.getName());
+            }
          }
       }
    }
@@ -272,13 +281,43 @@ public class DtdMarshaller
          DTDItem item = items[i];
          if(item instanceof DTDContainer)
          {
-            processContainer(dtd, (DTDContainer)item);
+            processContainer(dtd, (DTDContainer) item);
          }
          else if(item instanceof DTDName)
          {
-            DTDName name = (DTDName)item;
-            DTDElement element = (DTDElement)dtd.elements.get(name.value);
-            handleChildren(dtd, element);
+            DTDName name = (DTDName) item;
+            DTDElement element = (DTDElement) dtd.elements.get(name.value);
+            handleChildren(dtd, element, name.getCardinal());
+         }
+      }
+   }
+
+   private void writeSkippedElements()
+   {
+      Element el = (Element) elementStack.getLast();
+      if(!el.started)
+      {
+         int firstNotStarted = elementStack.size() - 1;
+         do
+         {
+            el = (Element) elementStack.get(--firstNotStarted);
+         }
+         while(!el.started);
+
+         ++firstNotStarted;
+
+         while(firstNotStarted < elementStack.size())
+         {
+            el = (Element) elementStack.get(firstNotStarted++);
+            DTDElement notStarted = el.element;
+
+            if(log.isTraceEnabled())
+            {
+               log.trace("starting skipped> " + notStarted.getName());
+            }
+
+            content.startElement("", notStarted.getName(), notStarted.getName(), null);
+            el.started = true;
          }
       }
    }
@@ -290,18 +329,16 @@ public class DtdMarshaller
 
       for(Iterator attrIter = attributes.values().iterator(); attrIter.hasNext();)
       {
-         DTDAttribute attr = (DTDAttribute)attrIter.next();
+         DTDAttribute attr = (DTDAttribute) attrIter.next();
          final Object attrValue = provider.getAttributeValue(container, systemId, attr.getName());
 
          if(attrValue != null)
          {
-            attrs.add(
-               systemId,
+            attrs.add(systemId,
                attr.getName(),
                attr.getName(),
                attr.getType().toString(),
-               attrValue.toString()
-            );
+               attrValue.toString());
          }
       }
 
@@ -318,42 +355,42 @@ public class DtdMarshaller
       Enumeration e = dtd.elements.elements();
       while(e.hasMoreElements())
       {
-         DTDElement element = (DTDElement)e.nextElement();
+         DTDElement element = (DTDElement) e.nextElement();
          roots.put(element.name, element);
       }
 
       e = dtd.elements.elements();
       while(e.hasMoreElements())
       {
-         DTDElement element = (DTDElement)e.nextElement();
+         DTDElement element = (DTDElement) e.nextElement();
          if(!(element.content instanceof DTDContainer))
          {
             continue;
          }
 
-         Enumeration items = ((DTDContainer)element.content).getItemsVec().elements();
+         Enumeration items = ((DTDContainer) element.content).getItemsVec().elements();
          while(items.hasMoreElements())
          {
-            removeElements(roots, dtd, (DTDItem)items.nextElement());
+            removeElements(roots, dtd, (DTDItem) items.nextElement());
          }
       }
 
       final Collection rootCol = roots.values();
-      return (DTDElement[])rootCol.toArray(new DTDElement[rootCol.size()]);
+      return (DTDElement[]) rootCol.toArray(new DTDElement[rootCol.size()]);
    }
 
    protected static void removeElements(Hashtable h, DTD dtd, DTDItem item)
    {
       if(item instanceof DTDName)
       {
-         h.remove(((DTDName)item).value);
+         h.remove(((DTDName) item).value);
       }
       else if(item instanceof DTDContainer)
       {
-         Enumeration e = ((DTDContainer)item).getItemsVec().elements();
+         Enumeration e = ((DTDContainer) item).getItemsVec().elements();
          while(e.hasMoreElements())
          {
-            removeElements(h, dtd, (DTDItem)e.nextElement());
+            removeElements(h, dtd, (DTDItem) e.nextElement());
          }
       }
    }

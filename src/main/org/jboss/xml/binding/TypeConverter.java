@@ -120,11 +120,13 @@ public interface TypeConverter
 
    TypeConverter JAVA_UTIL_DATE = new TypeConverter()
    {
+      private static final String FORMAT = "yyyy-MM-dd";
+
       public Object unmarshal(String value)
       {
          try
          {
-            return new java.text.SimpleDateFormat("yyyy-MM-dd").parse(value);
+            return new java.text.SimpleDateFormat(FORMAT).parse(value);
          }
          catch(ParseException e)
          {
@@ -134,10 +136,9 @@ public interface TypeConverter
 
       public String marshal(Object value)
       {
-         return String.valueOf(value);
+         return new java.text.SimpleDateFormat(FORMAT).format(value);
       }
    };
-   
 
    Object unmarshal(String value);
 

@@ -47,7 +47,7 @@ public class MappingObjectModelProvider
 
    // GenericObjectModelProvider implementation
 
-   public Object getChildren(Object o, String namespaceURI, String localName)
+   public Object getChildren(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
       Object children = null;
       if(!writeAsValue(o.getClass()))
@@ -57,7 +57,7 @@ public class MappingObjectModelProvider
       return children;
    }
 
-   public Object getElementValue(Object o, String namespaceURI, String localName)
+   public Object getElementValue(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
       Object value = null;
       if(writeAsValue(o.getClass()))
@@ -71,7 +71,7 @@ public class MappingObjectModelProvider
       return value;
    }
 
-   public Object getAttributeValue(Object o, String namespaceURI, String localName)
+   public Object getAttributeValue(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
       Object value = null;
       if(writeAsValue(o.getClass()))
@@ -85,7 +85,7 @@ public class MappingObjectModelProvider
       return value;
    }
 
-   public Object getRoot(Object o, String namespaceURI, String localName)
+   public Object getRoot(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
       String correspCls = Util.xmlNameToClassName(localName, true);
       String shortName = Classes.stripPackageName(o.getClass());

@@ -74,9 +74,10 @@ public interface ObjectModelProvider
     * Called by the framework when a root XML element is marshalled.
     *
     * @param o            the root of the object graph
+    * @param ctx
     * @param namespaceURI namespace URI of the root XML element being marshalled
     * @param localName    local name of the root XML element being marshalled
     * @return an object that represents the root XML element corresponding to the namespace URI and local name
     */
-   Object getRoot(Object o, String namespaceURI, String localName);
+   Object getRoot(Object o, MarshallingContext ctx, String namespaceURI, String localName);
 }

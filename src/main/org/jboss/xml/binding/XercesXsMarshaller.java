@@ -165,7 +165,7 @@ public class XercesXsMarshaller
       Object value;
       if (stack.isEmpty())
       {
-         value = provider.getRoot(root, element.getNamespace(), element.getName());
+         value = provider.getRoot(root, null, element.getNamespace(), element.getName());
          if (value == null)
          {
             return false;
@@ -180,10 +180,10 @@ public class XercesXsMarshaller
          }
          else
          {
-            value = provider.getChildren(stack.peek(), element.getNamespace(), element.getName());
+            value = provider.getChildren(stack.peek(), null, element.getNamespace(), element.getName());
             if (value == null)
             {
-               value = provider.getElementValue(stack.peek(), element.getNamespace(), element.getName());
+               value = provider.getElementValue(stack.peek(), null, element.getNamespace(), element.getName());
             }
          }
       }
@@ -253,7 +253,7 @@ public class XercesXsMarshaller
       {
          XSAttributeUse attrUse = (XSAttributeUse)attributeUses.item(i);
          XSAttributeDeclaration attrDec = attrUse.getAttrDeclaration();
-         Object attrValue = provider.getAttributeValue(stack.peek(), attrDec.getNamespace(), attrDec.getName());
+         Object attrValue = provider.getAttributeValue(stack.peek(), null, attrDec.getNamespace(), attrDec.getName());
          if (attrValue != null)
          {
             attrs.add(attrDec.getNamespace(),

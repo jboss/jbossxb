@@ -22,9 +22,9 @@ package org.jboss.xml.binding;
 public interface GenericObjectModelProvider
    extends ObjectModelProvider
 {
-   Object getChildren(Object o, String namespaceURI, String localName);
+   Object getChildren(Object o, MarshallingContext ctx, String namespaceURI, String localName);
 
-   Object getElementValue(Object o, String namespaceURI, String localName);
+   Object getElementValue(Object o, MarshallingContext ctx, String namespaceURI, String localName);
 
-   Object getAttributeValue(Object o, String namespaceURI, String localName);
+   Object getAttributeValue(Object o, MarshallingContext ctx, String namespaceURI, String localName);
 }

@@ -22,23 +22,23 @@ public class DelegatingObjectModelProvider
       this.provider = provider;
    }
 
-   public Object getChildren(Object o, String namespaceURI, String localName)
+   public Object getChildren(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
       return AbstractMarshaller.provideChildren(provider, o, namespaceURI, localName);
    }
 
-   public Object getElementValue(Object o, String namespaceURI, String localName)
+   public Object getElementValue(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
       return AbstractMarshaller.provideValue(provider, o, namespaceURI, localName);
    }
 
-   public Object getAttributeValue(Object o, String namespaceURI, String localName)
+   public Object getAttributeValue(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
       return AbstractMarshaller.provideAttributeValue(provider, o, namespaceURI, localName);
    }
 
-   public Object getRoot(Object o, String namespaceURI, String localName)
+   public Object getRoot(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
-      return provider.getRoot(o, namespaceURI, localName);
+      return provider.getRoot(o, null, namespaceURI, localName);
    }
 }

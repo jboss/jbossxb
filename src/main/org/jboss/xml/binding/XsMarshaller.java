@@ -251,7 +251,7 @@ public class XsMarshaller
       Object parent;
       if(stack.isEmpty())
       {
-         parent = provider.getRoot(this.root, name.getNamespaceURI(), name.getLocalName());
+         parent = provider.getRoot(this.root, null, name.getNamespaceURI(), name.getLocalName());
          if(parent == null)
          {
             return;
@@ -264,7 +264,7 @@ public class XsMarshaller
       else
       {
          parent = stack.peek();
-         Object value = provider.getElementValue(parent, name.getNamespaceURI(), name.getLocalName());
+         Object value = provider.getElementValue(parent, null, name.getNamespaceURI(), name.getLocalName());
 
          if(value != null)
          {
@@ -288,7 +288,7 @@ public class XsMarshaller
       boolean popRoot = false;
       if(stack.isEmpty())
       {
-         parent = provider.getRoot(this.root, xsName.getNamespaceURI(), xsName.getLocalName());
+         parent = provider.getRoot(this.root, null, xsName.getNamespaceURI(), xsName.getLocalName());
          if(parent == null)
          {
             return;
@@ -324,7 +324,7 @@ public class XsMarshaller
       Object children = null;
       if(!popRoot)
       {
-         children = provider.getChildren(parent, xsName.getNamespaceURI(), xsName.getLocalName());
+         children = provider.getChildren(parent, null, xsName.getNamespaceURI(), xsName.getLocalName());
       }
 
       if(children != null)
@@ -370,7 +370,7 @@ public class XsMarshaller
             {
                final XsQName name = element.getName();
 
-               final Object value = provider.getElementValue(parent, name.getNamespaceURI(), name.getLocalName());
+               final Object value = provider.getElementValue(parent, null, name.getNamespaceURI(), name.getLocalName());
                if(Boolean.TRUE.equals(value))
                {
                   final String prefix = name.getPrefix();
@@ -465,7 +465,7 @@ public class XsMarshaller
 
             final XsQName attrQName = attr.getName();
             final Object attrValue = provider.getAttributeValue(container,
-               attrQName.getNamespaceURI(),
+               null, attrQName.getNamespaceURI(),
                attrQName.getLocalName()
             );
 

@@ -120,7 +120,7 @@ public class DtdMarshaller
       elementStack.addLast(el);
       content.startDocument();
 
-      Object root = provider.getRoot(o, systemId, dtdRoot.getName());
+      Object root = provider.getRoot(o, null, systemId, dtdRoot.getName());
       if(root == null)
       {
          return;
@@ -146,7 +146,7 @@ public class DtdMarshaller
       }
       else if(item instanceof DTDEmpty)
       {
-         final Object value = provider.getElementValue(stack.peek(), systemId, element.getName());
+         final Object value = provider.getElementValue(stack.peek(), null, systemId, element.getName());
          if(Boolean.TRUE.equals(value))
          {
             writeSkippedElements();
@@ -173,7 +173,7 @@ public class DtdMarshaller
          DTDItem item = items[i];
          if(item instanceof DTDPCData)
          {
-            Object value = provider.getElementValue(parent, systemId, elementName);
+            Object value = provider.getElementValue(parent, null, systemId, elementName);
             if(value != null)
             {
                writeSkippedElements();
@@ -190,7 +190,7 @@ public class DtdMarshaller
    private final void handleChildren(DTD dtd, DTDElement element, DTDCardinal elementCardinal)
    {
       Object parent = stack.peek();
-      Object children = provider.getChildren(parent, systemId, element.getName());
+      Object children = provider.getChildren(parent, null, systemId, element.getName());
 
       if(children != null)
       {
@@ -330,7 +330,7 @@ public class DtdMarshaller
       for(Iterator attrIter = attributes.values().iterator(); attrIter.hasNext();)
       {
          DTDAttribute attr = (DTDAttribute)attrIter.next();
-         final Object attrValue = provider.getAttributeValue(container, systemId, attr.getName());
+         final Object attrValue = provider.getAttributeValue(container, null, systemId, attr.getName());
 
          if(attrValue != null)
          {

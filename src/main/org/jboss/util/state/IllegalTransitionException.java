@@ -1,4 +1,10 @@
-package state;
+/*
+ * JBoss, the OpenSource WebOS
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
+package org.jboss.util.state;
 
 /** An exception thrown when an invalid transition is attempted from a state.
  * 

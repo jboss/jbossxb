@@ -18,7 +18,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.httpclient.HttpException;
-import org.apache.util.HttpURL;
+import org.apache.commons.httpclient.HttpURL;
 import org.apache.webdav.lib.WebdavResource;
 import org.jboss.net.protocol.URLListerBase;
 
@@ -43,27 +43,27 @@ public class DavURLLister extends URLListerBase
             HttpURL httpURL = member.getHttpURL ();
             if (filter.accept (baseUrl, httpURL.getName ()))
             {
-               String url = httpURL.getUnescapedHttpURL ();
+               String uri = httpURL.getURI();
                if (member.isCollection ())
                {
-                  if (! url.endsWith ("/"))
-                     url += "/";
+                  if (! uri.endsWith ("/"))
+                     uri += "/";
 
                   // it is a directory: do we have to recursively list its content?
-                  //
-                  if (scanNonDottedSubDirs && getFilePartFromUrl (httpURL.toURL ()).indexOf (".") == -1)
+                  String path = httpURL.getPath();
+                  if (scanNonDottedSubDirs && getFilePartFromUrl(path).indexOf (".") == -1)
                   {
-                     URL subUrl = new URL (url) ;
+                     URL subUrl = new URL (uri) ;
                      urls.addAll (listMembers (subUrl, filter, scanNonDottedSubDirs));
                   }
                   else
                   {
-                     urls.add (new URL (url));
+                     urls.add (new URL (uri));
                   }
                }
                else
                {
-                  urls.add (new URL (url));
+                  urls.add (new URL (uri));
                }
                
             }
@@ -85,9 +85,8 @@ public class DavURLLister extends URLListerBase
       }
    }
    
-   protected static final String getFilePartFromUrl (URL source)
+   protected static final String getFilePartFromUrl (String name)
    {
-      String name = source.getPath ();
       int length = name.length ();
       
       if (name.charAt (length - 1) == '/')
@@ -101,5 +100,4 @@ public class DavURLLister extends URLListerBase
          return name.substring (start);         
       }
    }
-   
 }

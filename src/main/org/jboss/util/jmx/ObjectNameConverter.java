@@ -14,7 +14,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 /**
- * Converts forbidden characters in the value of an object name
+ * Converts forbidden characters in the key and value of an object name
  * to valid characters and back.
  * <br>
  * Character Conversion Table: (based on RFC 1738 style escapes<br>
@@ -25,6 +25,9 @@ import javax.management.ObjectName;
  * '?'  =>  '%3f'  <br>
  * '='  =>  '%3d'  <br>
  * <br>Thanx to William Hoyle for mention this
+ * <br><b>Attention:</b>When you have a comma in one of your property
+ * value then you have to use a <i>Hashtable</i> to provide the properties
+ * otherwise the property parsing will fail.
  *
  * @author <a href="mailto:andreas@jboss.org">Andreas Schaefer</a>
  * @author <a href="mailto:william.hoyle@jungledrum.co.nz">William Hoyle</a>
@@ -34,13 +37,19 @@ public class ObjectNameConverter
 {
    /**
     * Parses the given Object Name String representation and
-    * replaces any invalid characters in property values with
+    * replaces any invalid characters in property keays and values with
     * valid characters.
+    * </b>Attention:</b> Do not use this method when a property
+    * key or value contain a comma because then the parsing will fail.
+    * Please use the {@link #convert( java.lang.String, java.util.Hashtable )
+    * convert( String, Hashtable )} instead because the properties
+    * are already parsed (by you).
     *
-    * @param pObjectName String representing an Object Name
+    * @param pObjectName String representing an Object Name which must
+    *                    not contain a comman inside a property value
     *
-    * @return Created Object Name with the given and parse string
-    *         representation
+    * @return Created Object Name with the converted keys and values
+    *         of the given Object Name
     *
     * @throws MalformedObjectNameException If the given Object Name
     *         is not correct
@@ -71,12 +80,12 @@ public class ObjectNameConverter
    }
    
    /**
-    * Check the values of the properties and convert invalid characters
+    * Check the keys and values of the properties and convert invalid characters
     *
     * @param pDomainName Name of the Domain
     * @param pProperites Hashtable containing the properties of the Object Name
     *
-    * @return Created Object Name with the converted values
+    * @return Created Object Name with the converted keays and values
     *
     * @throws MalformedObjectNameException If the given Object Name
     *         is not correct
@@ -101,10 +110,16 @@ public class ObjectNameConverter
     * @param pObjectName Given Object Name
     *
     * @return Hashtable with the back converted properties in it
+    *         and will contain a "*" as key if the given object
+    *         name is a property pattern for queries.
     **/
    public static Hashtable getProperties( ObjectName pObjectName )
    {
-      return reverseProperties( pObjectName.getKeyPropertyList() );
+      Hashtable lReturn = reverseProperties( pObjectName.getKeyPropertyList() );
+      if( pObjectName.isPropertyPattern() ) {
+         lReturn.put( "*", "*" );
+      }
+      return lReturn;
    }
    
    /**
@@ -113,11 +128,17 @@ public class ObjectNameConverter
     *
     * @param pObjectName Given Object Name
     *
-    * @return String with the original Object Name String representation
+    * @return String with the original Object Name String representation and
+    *         when a property pattern Object Name for queries it contains a ",*"
+    *         at the end.
     **/
    public static String getString( ObjectName pObjectName )
    {
-      return pObjectName.getDomain() + ":" + reverseString( pObjectName.getKeyPropertyList() );
+      String lReturn = pObjectName.getDomain() + ":" + reverseString( pObjectName.getKeyPropertyList() );
+      if( pObjectName.isPropertyPattern() ) {
+         lReturn = lReturn + ",*";
+      }
+      return lReturn;
    }
    
    /**
@@ -125,6 +146,8 @@ public class ObjectNameConverter
     *
     * @param pValue Property Value of the Object Name's property list to be en- or decrypted
     * @param pEncrypt True if the value must be encrypted otherwise decrypted
+    *
+    * @return A en- or decrypted String according to the conversion table above
     **/
    public static String convertCharacters( String pValue, boolean pEncrypt ) {
       String lReturn = pValue;
@@ -324,44 +347,12 @@ public class ObjectNameConverter
          }
          
          // Search for invalid characters and replace them
-         String lConverted = convertCharacters( val, true );
-         if( isIllegalKeyOrValue( key ) )
-         {
-            throw new MalformedObjectNameException("malformed key: " + key);
-         }
-         lReturn.put( key, lConverted );
+         String lKey = convertCharacters( key, true );
+         String lValue = convertCharacters( val, true );
+         
+         lReturn.put( lKey, lValue );
       }
       return lReturn;
-   }
-   
-   /**
-    * returns true if the key or value string is zero length or contains illegal characters
-    *
-    * ATTENTION: Taken from the JBossMQ ObjectName Implementation
-    */
-   private static boolean isIllegalKeyOrValue(String keyOrValue)
-   {
-      char[] chars = keyOrValue.toCharArray();
-      
-      if (chars.length == 0)
-      {
-         return true;
-      }
-      
-      for (int i = 0; i < chars.length; i++)
-      {
-         switch (chars[i])
-         {
-            case ':':
-            case ',':
-            case '=':
-            case '*':
-            case '?':
-               return true;
-         }
-      }
-      
-      return false;
    }
    
    private static Hashtable reverseProperties( Hashtable pProperties ) {
@@ -370,8 +361,9 @@ public class ObjectNameConverter
       while( i.hasNext() ) {
          String lKey = (String) i.next();
          String lValue = (String) pProperties.get( lKey );
-         String lConverted = convertCharacters( lValue, false );
-         lReturn.put( lKey, lConverted );
+         lKey = convertCharacters( lKey, false );
+         lValue = convertCharacters( lValue, false );
+         lReturn.put( lKey, lValue );
       }
       return lReturn;
    }
@@ -382,13 +374,14 @@ public class ObjectNameConverter
       while( i.hasNext() ) {
          String lKey = (String) i.next();
          String lValue = (String) pProperties.get( lKey );
-         String lConverted = convertCharacters( lValue, false );
+         lKey = convertCharacters( lKey, false );
+         lValue = convertCharacters( lValue, false );
          if( lReturn.length() > 0 ) {
             lReturn.append( "," );
          }
          lReturn.append( lKey );
          lReturn.append( "=" );
-         lReturn.append( lConverted );
+         lReturn.append( lValue );
       }
       return lReturn.toString();
    }

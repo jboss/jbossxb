@@ -43,7 +43,7 @@ public interface BasicThreadPoolMBean extends ThreadPoolMBean
    /**
     * @return the blocking mode
     */
-   String getBlockingMode();
+   BlockingMode getBlockingMode();
    
    /** Set the behavior of the pool when a task is added and the queue is full.
     * The mode string indicates one of the following modes:
@@ -57,7 +57,7 @@ public interface BasicThreadPoolMBean extends ThreadPoolMBean
     * @param mode one of run, wait, discard, discardOldest or abort without
     *    regard to case.
     */ 
-   void setBlockingMode(String mode);
+   void setBlockingMode(BlockingMode mode);
 
    /**
     * Retrieve the thread group name

@@ -193,6 +193,10 @@ public class XniJBossXBParser
       {
          parser.parse(xmlSource);
       }
+      catch(RuntimeException re)
+      {
+        throw re;
+      }
       catch(Exception e)
       {
          String msg = "Failed to parse document";

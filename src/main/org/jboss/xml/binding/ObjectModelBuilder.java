@@ -388,6 +388,9 @@ public class ObjectModelBuilder
       }
       catch(InvocationTargetException e)
       {
+         Throwable te = e.getCause();
+         if(te instanceof RuntimeException) throw (RuntimeException)te;
+
          String msg = "Failed to invoke method " + method.getName() + ", factory=" + factory;
          log.error(msg, e.getTargetException());
          throw new IllegalStateException(msg);

@@ -128,6 +128,7 @@
     <property name="build.lib" value="${module.output}/lib"/>
     <property name="build.api" value="${module.output}/api"/>
     <property name="build.etc" value="${module.output}/etc"/>
+    <property name="build.todo" value="${module.output}/todo"/>
 
     <!-- Install/Release structure -->
     <property name="install.id" value="${module.name}-${module.version}"/>
@@ -166,6 +167,19 @@
     <property name="junit.timeout" value="240000"/> <!-- 4 minutes -->
     <property name="junit.batchtest.todir" value="${build.reports}"/>
     <property name="junit.jvm.options" value="-Ddummy"/>
+
+    <!-- xdoclet -->
+    <path id="xdoclet.task.classpath">
+      <path refid="javac.classpath"/>
+      <pathelement location="${project.tools}/lib/xdoclet.jar"/>
+      <pathelement location="${project.tools}/lib/ant.jar"/>
+    </path>
+    <property name="xdoclet.task.classpath" 
+	      refid="xdoclet.task.classpath"/>
+
+    <taskdef name="todo" 
+             classname="xdoclet.doc.DocumentDocletTask"
+             classpathref="xdoclet.task.classpath"/>
   </target>
 
 
@@ -270,27 +284,13 @@
   <!-- Documents                                                          -->
   <!-- ================================================================== -->
 
-  <!-- 
-     | Create all generated documenation.
-     |
-     | This target should depend on other docs-* targets for each 
-     | different type of docuementation that is to be generated.
-   -->
-
   <target name="docs"
 	  description="Builds all documentation."
-	  depends="docs-api"/>
+	  depends="docs-api, docs-todo"/>
 
-  <!-- Javadocs is an exception, but provide a docs-api to conform. -->
-  <target name="docs-api" 
-	  depends="docs-javadocs"/>
-
-  <!-- 
-     | Check if we need to build javadocs 
-     |
-     | Javadocs will only be generated if one or more .java source files
-     | is newer than the generated index.html.
-   -->
+  <!-- ======== -->
+  <!-- JavaDocs -->
+  <!-- ======== -->
 
   <target name="docs-javadocs-check" depends="init">
     <!-- if index.html is newer than the sources we are up to date -->
@@ -324,7 +324,40 @@
     </javadoc>
   </target>
 
+  <target name="docs-api" depends="docs-javadocs"/>
+
   <target name="javadocs" depends="docs-javadocs"/>
+
+  <!-- ========= -->
+  <!-- TODO Docs -->
+  <!-- ========= -->
+
+  <target name="docs-todo-check" depends="init">
+    <!-- if index.html is newer than the sources we are up to date -->
+    <uptodate property="docs-todo.disable"
+	      targetfile="${build.todo}/index.html">
+      <srcfiles dir="${source.java}" includes="**/*.java"/>
+    </uptodate>
+  </target>
+
+  <!-- Generate TODO list from @todo tags -->
+  <target name="docs-todo" 
+	  depends="docs-todo-check" 
+	  unless="docs-todo.disable">
+
+    <todo sourcepath="${source.java}"
+          destdir="${build.todo}"
+          classpathref="xdoclet.task.classpath">
+
+      <fileset dir="${source.java}">
+        <include name="**/*.java"/>
+      </fileset>
+
+      <info/>
+    </todo>
+  </target>
+
+  <target name="todo" depends="docs-todo"/>
 
 
   <!-- ================================================================== -->

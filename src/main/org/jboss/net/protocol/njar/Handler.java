@@ -47,8 +47,7 @@ import java.util.Map;
  * storage when connections are opened into them.  So for the above 
  * example, 2 files would cached a temp files names similar to nested-xxxx.jar
  *
- * <p>
- * TODO: Add accessors so that the cache can be flushed.
+ * @todo Add accessors so that the cache can be flushed.
  *
  * @version <tt>$Revision$</tt>
  * @author <a href="mailto:cojonudo14@hotmail.com">Hiram Chirino</a>

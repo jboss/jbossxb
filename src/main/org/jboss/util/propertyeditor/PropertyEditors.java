@@ -12,8 +12,16 @@ package org.jboss.util.propertyeditor;
 import java.beans.IntrospectionException;
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.util.Properties;
+import java.util.Iterator;
+import java.util.HashMap;
+import java.lang.reflect.Method;
 
 import org.jboss.util.Classes;
+import org.jboss.logging.Logger;
 
 /**
  * A collection of PropertyEditor utilities.  Provides the same interface
@@ -23,9 +31,13 @@ import org.jboss.util.Classes;
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author Scott.Stark@jboss.org
+ * @version <tt>$Revision$</tt>
  */
 public class PropertyEditors
 {
+   private static Logger log = Logger.getLogger(PropertyEditors.class);
+
    /** Augment the PropertyEditorManager search path to incorporate the JBoss
     specific editors by appending the org.jboss.util.propertyeditor package
     to the PropertyEditorManager editor search path.
@@ -185,6 +197,68 @@ public class PropertyEditors
 
       editor.setAsText(text);
       return editor.getValue();
+   }
+
+   /**
+    * This method takes the properties found in the given beanProps
+    * to the bean using the property editor registered for the property.
+    * Any properties for which an editor cannot be found are ignored.
+    * 
+    * @param bean the java bean instance to apply the properties to
+    * @param beanProps
+    */ 
+   public static void mapJavaBeanProperties(Object bean, Properties beanProps)
+      throws IntrospectionException
+   {
+      HashMap propertyMap = new HashMap();
+      BeanInfo beanInfo = Introspector.getBeanInfo(bean.getClass());
+      PropertyDescriptor[] props = beanInfo.getPropertyDescriptors();
+      for (int p = 0; p < props.length; p++)
+      {
+         String fieldName = props[p].getName();
+         propertyMap.put(fieldName, props[p]);
+      }
+
+      boolean trace = log.isTraceEnabled();
+      Iterator keys = beanProps.keySet().iterator();
+      if( trace )
+         log.trace("Mapping properties for bean: "+bean);
+      while( keys.hasNext() )
+      {
+         String name = (String) keys.next();
+         String text = (String) beanProps.getProperty(name);
+         PropertyDescriptor pd = (PropertyDescriptor) propertyMap.get(name);
+         if (pd == null)
+         {
+            if( trace )
+               log.trace("No property found for: "+name);
+            continue;
+         }
+         Method setter = pd.getWriteMethod();
+         if( trace )
+            log.trace("Property editor found for: "+name+", editor: "+pd+", setter: "+setter);
+         if (setter != null)
+         {
+            Class ptype = pd.getPropertyType();
+            PropertyEditor editor = PropertyEditorManager.findEditor(ptype);
+            if (editor == null)
+            {
+               if( trace )
+                  log.trace("Failed to find property editor for: "+name);
+            }
+            try
+            {
+               editor.setAsText(text);
+               Object args[] = {editor.getValue()};
+               setter.invoke(bean, args);
+            }
+            catch (Exception e)
+            {
+               if( trace )
+                  log.trace("Failed to write property", e);
+            }
+         }
+      }
    }
 
    /**

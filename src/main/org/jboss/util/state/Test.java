@@ -39,7 +39,7 @@ public class Test
          }
       };
    static State FINAL = new AcceptableState(101, "FINAL") {
-         public boolean accept(State state) {
+         public boolean isAcceptable(State state) {
             finalChecking = true;
             return false;
          }
@@ -56,7 +56,7 @@ public class Test
       return model;
    }
 
-   public static class Assert
+   private static class Assert
    {
       public static void assertTrue(boolean rv)
       {
@@ -162,7 +162,7 @@ public class Test
       System.out.println("\nTesting serializaion...");
       Assert.assertTrue(canSerialize(new State(0, "")));
       Assert.assertTrue(canSerialize(new StateAdapter(0, "")));
-      Assert.assertTrue(canSerialize(new AcceptableState(0, "") { public boolean accept(State state) { return false; } }));
+      Assert.assertTrue(canSerialize(new AcceptableState(0, "") { public boolean isAcceptable(State state) { return false; } }));
       Assert.assertTrue(canSerialize(new DefaultStateMachineModel()));
       
       System.out.println("\nSetting up model for tests...");
@@ -287,7 +287,7 @@ public class Test
       
       // acceptable state
       State state = new AcceptableState(100, "FAILED") {
-            public boolean accept(State state) {
+            public boolean isAcceptable(State state) {
                throw new RuntimeException("Accetable");
             }
          };

@@ -2,7 +2,6 @@
 <!DOCTYPE project [
   <!ENTITY buildmagic SYSTEM "resource://org/jboss/tools/buildmagic/common.xml">
   <!ENTITY xdoclet SYSTEM "../tools/etc/buildfragments/xdoclet.ent">
-  <!ENTITY libraries-jmx SYSTEM "../tools/etc/buildfragments/libraries-jmx.ent">
   <!ENTITY libraries SYSTEM "../tools/etc/buildfragments/libraries.ent">
   <!ENTITY modules SYSTEM "../tools/etc/buildfragments/modules.ent">
   <!ENTITY locations SYSTEM "../tools/etc/buildfragments/locations.ent">
@@ -60,7 +59,10 @@
      | should contain module specific configuration elements.
    -->
 
-  <target name="configure" unless="configure.disable">
+  &libraries;
+  &xdoclet;
+
+  <target name="configure" depends="libraries, xdoclet" unless="configure.disable">
 
     <!-- =================== -->
     <!-- Basic Configuration -->
@@ -74,8 +76,6 @@
     <!-- ========= -->
     <!-- Libraries -->
     <!-- ========= -->
-    &libraries-jmx;
-    &libraries;
 
     <!-- The combined library classpath -->
     <path id="library.classpath">
@@ -132,7 +132,6 @@
     <property name="junit.batchtest.todir" value="${build.reports}"/>
     <property name="junit.jvm.options" value="-Ddummy"/>
 
-    &xdoclet;
   </target>
 
 

@@ -88,24 +88,6 @@ public class Unmarshaller
       builder.mapFactoryToNamespace(getGenericObjectModelFactory(factory), namespaceUri);
    }
 
-   public Object unmarshal(InputSource is, ObjectModelFactory factory, Object root) throws JBossXBException
-   {
-      Object result;
-      if(is.getCharacterStream() != null)
-      {
-         result = unmarshal(is.getCharacterStream(), factory, root);
-      }
-      else if(is.getByteStream() != null)
-      {
-         result = unmarshal(is.getByteStream(), factory, root);
-      }
-      else
-      {
-         result = unmarshal(is.getSystemId(), factory, root);
-      }
-      return result;
-   }
-
    public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException
    {
       builder.init(getGenericObjectModelFactory(factory), root);

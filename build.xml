@@ -172,6 +172,7 @@
     <path id="xdoclet.task.classpath">
       <path refid="javac.classpath"/>
       <pathelement location="${project.tools}/lib/xdoclet.jar"/>
+      <pathelement location="${project.tools}/lib/xjavadoc.jar"/>
       <pathelement location="${project.tools}/lib/ant.jar"/>
     </path>
     <property name="xdoclet.task.classpath" 

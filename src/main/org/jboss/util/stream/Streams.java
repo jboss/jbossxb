@@ -12,6 +12,8 @@ package org.jboss.util.stream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 
 import org.jboss.util.ThrowableHandler;
 
@@ -315,6 +317,29 @@ public final class Streams
       return copy(input, output, DEFAULT_BUFFER_SIZE);
    }
 
+   /**
+    * Copy all of the bytes from the input stream to the output stream
+    * wrapping streams in buffers as needed.
+    *
+    * @param input   Stream to read bytes from.
+    * @param output  Stream to write bytes to.
+    * @return        The total number of bytes copied.
+    *
+    * @throws IOException  Failed to copy bytes.
+    */
+   public static long copyb(InputStream input, 
+                            OutputStream output)
+      throws IOException
+   {
+      if (!(input instanceof BufferedInputStream))
+         input = new BufferedInputStream(input);
+      
+      if (!(output instanceof BufferedOutputStream))
+         output = new BufferedOutputStream(output);
+      
+      return copy(input, output, DEFAULT_BUFFER_SIZE);
+   }
+   
    /**
     * Copy a limited number of bytes from the input stream to the 
     * output stream.

@@ -19,7 +19,7 @@ public interface BindingCursor
 
    void endElement(String namespaceURI, String localName);
 
-   BasicElementBinding getElementBinding();
+   Object getElementBinding();
 
    class Factory
    {
@@ -64,7 +64,7 @@ public interface BindingCursor
             stack.removeLast();
          }
 
-         public BasicElementBinding getElementBinding()
+         public Object getElementBinding()
          {
             return (BasicElementBinding)stack.getLast();
          }
@@ -87,7 +87,7 @@ public interface BindingCursor
          {
          }
 
-         public BasicElementBinding getElementBinding()
+         public Object getElementBinding()
          {
             return null;
          }

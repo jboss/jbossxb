@@ -10,6 +10,7 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
 
 import java.io.Reader;
 import java.io.InputStream;
@@ -51,5 +52,8 @@ public interface Unmarshaller
    Object unmarshal(InputStream is, ObjectModelFactory factory, Object root) throws JBossXBException;
 
    Object unmarshal(String systemId, ObjectModelFactory factory, Object root)
+      throws JBossXBException;
+
+   Object unmarshal(String systemId, BindingCursor cursor, ObjectModelFactory factory)
       throws JBossXBException;
 }

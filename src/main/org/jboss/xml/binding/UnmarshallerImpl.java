@@ -10,6 +10,8 @@ import org.jboss.xml.binding.parser.JBossXBParser;
 import org.jboss.xml.binding.parser.xni.XniJBossXBParser;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBindingFactory;
+import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
+import org.jboss.xml.binding.metadata.unmarshalling.DocumentBindingStack;
 import org.jboss.xml.binding.metadata.unmarshalling.impl.RuntimeDocumentBinding;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.xml.sax.EntityResolver;
@@ -80,10 +82,11 @@ public class UnmarshallerImpl
 
    public Object unmarshal(String xmlFile) throws JBossXBException
    {
-      builder.init(new MetadataDrivenObjectModelFactory(), null,
-         DocumentBindingFactory.newInstance()
+      DocumentBindingStack docBinding = DocumentBindingFactory.newInstance()
          .newDocumentBindingStack()
-         .push(RuntimeDocumentBinding.class));
+         .push(RuntimeDocumentBinding.class);
+      BindingCursor cursor = BindingCursor.Factory.newCursor(docBinding);
+      builder.init(new MetadataDrivenObjectModelFactory(), null, cursor);
       parser.parse(xmlFile, builder);
       return builder.getRoot();
    }
@@ -91,7 +94,8 @@ public class UnmarshallerImpl
    public Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata)
       throws JBossXBException
    {
-      builder.init(factory, null, metadata);
+      BindingCursor cursor = BindingCursor.Factory.newCursor(metadata);
+      builder.init(factory, null, cursor);
       parser.parse(xmlFile, builder);
       return builder.getRoot();
    }
@@ -99,28 +103,36 @@ public class UnmarshallerImpl
    public Object unmarshal(Reader xmlFile, ObjectModelFactory factory, DocumentBinding metadata)
       throws JBossXBException
    {
-      builder.init(factory, null, metadata);
+      BindingCursor cursor = BindingCursor.Factory.newCursor(metadata);
+      builder.init(factory, null, cursor);
       parser.parse(xmlFile, builder);
       return builder.getRoot();
    }
 
    public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      builder.init(factory, root, null);
+      builder.init(factory, root, BindingCursor.Factory.newCursor(null));
       parser.parse(reader, builder);
       return builder.getRoot();
    }
 
    public Object unmarshal(InputStream is, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      builder.init(factory, root, null);
+      builder.init(factory, root, BindingCursor.Factory.newCursor(null));
       parser.parse(is, builder);
       return builder.getRoot();
    }
 
    public Object unmarshal(String systemId, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      builder.init(factory, root, null);
+      builder.init(factory, root, BindingCursor.Factory.newCursor(null));
+      parser.parse(systemId, builder);
+      return builder.getRoot();
+   }
+
+   public Object unmarshal(String systemId, BindingCursor cursor, ObjectModelFactory factory) throws JBossXBException
+   {
+      builder.init(factory, null, cursor);
       parser.parse(systemId, builder);
       return builder.getRoot();
    }

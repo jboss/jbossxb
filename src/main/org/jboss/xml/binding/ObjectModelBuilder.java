@@ -10,8 +10,6 @@ import org.xml.sax.Attributes;
 import org.jboss.logging.Logger;
 import org.jboss.xml.binding.parser.JBossXBParser;
 import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
-import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
-import org.jboss.xml.binding.metadata.unmarshalling.BasicElementBinding;
 import org.apache.xerces.xs.XSTypeDefinition;
 
 import javax.xml.namespace.QName;
@@ -103,15 +101,48 @@ public class ObjectModelBuilder
       factoriesToNs.put(namespaceUri, getGenericObjectModelFactory(factory));
    }
 
-   public void init(ObjectModelFactory defaultFactory, Object root, DocumentBinding docBinding)
+   public void init(ObjectModelFactory defaultFactory, Object root, BindingCursor cursor)
    {
       this.defaultFactory = getGenericObjectModelFactory(defaultFactory);
-      this.metadataCursor = BindingCursor.Factory.newCursor(docBinding);
+      this.metadataCursor = cursor;
 
       all.clear();
       accepted.clear();
       value.delete(0, value.length());
       this.root = root;
+   }
+
+   public void pushFactory(String namespaceURI, String localName, GenericObjectModelFactory factory)
+   {
+      if(curNsSwitchingFactory != null)
+      {
+         if(nsSwitchingFactory == null)
+         {
+            nsSwitchingFactory = new StackImpl();
+            nameSwitchingFactory = new StackImpl();
+         }
+         nsSwitchingFactory.push(curNsSwitchingFactory);
+         nameSwitchingFactory.push(curNameSwitchingFactory);
+      }
+      curNsSwitchingFactory = namespaceURI;
+      curNameSwitchingFactory = localName;
+      curFactory = factory;
+   }
+
+   public void popFactory()
+   {
+      if(nsSwitchingFactory == null || nsSwitchingFactory.isEmpty())
+      {
+         curNameSwitchingFactory = null;
+         curNsSwitchingFactory = null;
+      }
+      else
+      {
+         curNameSwitchingFactory = (String)nameSwitchingFactory.pop();
+         curNsSwitchingFactory = (String)nsSwitchingFactory.pop();
+      }
+
+      curFactory = getFactory(curNsSwitchingFactory);
    }
 
    // UnmarshallingContext implementation
@@ -126,7 +157,7 @@ public class ObjectModelBuilder
       return nsRegistry;
    }
 
-   public BasicElementBinding getMetadata()
+   public Object getMetadata()
    {
       return metadataCursor.getElementBinding();
    }
@@ -268,19 +299,11 @@ public class ObjectModelBuilder
       Object element;
       if(!namespaceURI.equals(curNsSwitchingFactory))
       {
-         if(curNsSwitchingFactory != null)
+         GenericObjectModelFactory newFactory = getFactory(namespaceURI);
+         if(newFactory != curFactory)
          {
-            if(nsSwitchingFactory == null)
-            {
-               nsSwitchingFactory = new StackImpl();
-               nameSwitchingFactory = new StackImpl();
-            }
-            nsSwitchingFactory.push(curNsSwitchingFactory);
-            nameSwitchingFactory.push(curNameSwitchingFactory);
+            pushFactory(namespaceURI, localName, newFactory);
          }
-         curNsSwitchingFactory = namespaceURI;
-         curNameSwitchingFactory = localName;
-         curFactory = getFactory(namespaceURI);
 
          element = curFactory.newRoot(parent, this, namespaceURI, localName, atts);
       }
@@ -330,18 +353,7 @@ public class ObjectModelBuilder
 
       if(localName.equals(curNameSwitchingFactory) && namespaceURI.equals(curNsSwitchingFactory))
       {
-         if(nsSwitchingFactory == null || nsSwitchingFactory.isEmpty())
-         {
-            curNameSwitchingFactory = null;
-            curNsSwitchingFactory = null;
-         }
-         else
-         {
-            curNameSwitchingFactory = (String)nameSwitchingFactory.pop();
-            curNsSwitchingFactory = (String)nsSwitchingFactory.pop();
-         }
-
-         curFactory = getFactory(curNsSwitchingFactory);
+         popFactory();
       }
 
       Object element = all.pop();

@@ -38,7 +38,7 @@ public interface UnmarshallingContext
     */
    NamespaceContext getNamespaceContext();
 
-   BasicElementBinding getMetadata();
+   Object getMetadata();
 
    /**
     * Returns child's content.

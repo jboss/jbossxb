@@ -963,7 +963,7 @@ public final class SimpleTypeBindings
          }
          catch(ParseException e)
          {
-            throw new IllegalStateException(
+            throw new JBossXBRuntimeException(
                "Failed to parse date accroding to " + FORMAT + " format: " + value + ": " + e.getMessage()
             );
          }
@@ -974,7 +974,7 @@ public final class SimpleTypeBindings
       }
       else
       {
-         throw new IllegalStateException("Unexpected field type " + javaType);
+         throw new JBossXBRuntimeException("Unexpected field type " + javaType);
       }
 
       return result;

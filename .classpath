@@ -8,5 +8,5 @@
     <classpathentry exported="true" kind="lib" path="/thirdparty/apache-log4j/lib/log4j.jar"/>
     <classpathentry exported="true" kind="lib" path="/thirdparty/sun-jmx/lib/jmxri.jar"/>
     <classpathentry exported="true" kind="lib" path="/thirdparty/gnu-regexp/lib/gnu-regexp.jar"/>
-    <classpathentry kind="output" path="bin"/>
+    <classpathentry kind="output" path="output\eclipse-classes"/>
 </classpath>

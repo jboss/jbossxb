@@ -64,7 +64,7 @@
     &libraries;
     <!-- The combined library classpath -->
     <path id="library.classpath">
-      <path refid="apache.crimson.classpath"/>
+      <path refid="apache.xerces.classpath"/>
       <path refid="apache.commons.classpath"/>
       <path refid="apache.log4j.classpath"/>
       <path refid="apache.jaxme.classpath"/>

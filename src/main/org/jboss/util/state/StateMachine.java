@@ -372,22 +372,33 @@ public class StateMachine
     * Change the state of the machine and send change events
     * to all listeners and to the previous and new state objects
     * if they implement {@link ChangeListener}.
+    *
+    * <p>If a change listener throws an Error or RuntimeException
+    *    the state of the machine should remain in the changed state.
     */
-   protected ChangeEvent changeState(State state)
+   protected ChangeEvent changeState(final State state)
    {
       // assert state != null
 
+      //
+      // jason: Change to allow event to contain the given state as
+      //        well as the mapped state.
+      // 
+
       // Replace state with the mapped version
-      state = model.getMappedState(state);
+      State mappedState = model.getMappedState(state);
          
       State prev = model.getCurrentState();
-      model.setCurrentState(state);
+      model.setCurrentState(mappedState);
 
-      ChangeEvent event = new ChangeEvent(this, prev, state);
+      ChangeEvent event = new ChangeEvent(this, prev, mappedState, state);
 
-      // Let the previous and current states deal if they want
+      // Let the previous, current and user states deal if they want
       if (prev instanceof ChangeListener) {
          ((ChangeListener)prev).stateChanged(event);
+      }
+      if (mappedState instanceof ChangeListener) {
+         ((ChangeListener)mappedState).stateChanged(event);
       }
       if (state instanceof ChangeListener) {
          ((ChangeListener)state).stateChanged(event);
@@ -543,6 +554,9 @@ public class StateMachine
     *
     * <p>This method (as well as add and remove methods) are protected
     *    from concurrent modification exceptions.
+    *
+    * <p>Any Error or RuntimeException thrown by a change listener will
+    *    prevent notification of listeners added after the throwing listener.
     */
    protected void fireStateChanged(final ChangeEvent event)
    {
@@ -566,17 +580,29 @@ public class StateMachine
    public static class ChangeEvent
       extends EventObject
    {
+      public final StateMachine machine;
       public final State previous;
       public final State current;
-      
+      public final State user;
+
       public ChangeEvent(final StateMachine source,
                          final State previous,
-                         final State current)
+                         final State current,
+                         final State user)
       {
          super(source);
 
+         if (previous == null)
+            throw new NullArgumentException("previous");
+         if (current == null)
+            throw new NullArgumentException("current");
+         if (user == null)
+            throw new NullArgumentException("user");
+
+         this.machine = source;
          this.previous = previous;
          this.current = current;
+         this.user = user;
       }
 
       /**
@@ -605,6 +631,17 @@ public class StateMachine
       }
 
       /**
+       * Returns the state instance which the was passed to the machine
+       * by the user.
+       *
+       * @return The state instance the user passed the machine.
+       */
+      public State getUserState()
+      {
+         return user;
+      }
+      
+      /**
        * The state machine which generated the event.
        */
       public StateMachine getStateMachine()
@@ -614,7 +651,7 @@ public class StateMachine
 
       public String toString()
       {
-         return super.toString() +
+         return getClass().getName() + // don't use super, it will mess up formating
             "{ previous=" + previous +
             ", current=" + current +
             " }";
@@ -647,6 +684,10 @@ public class StateMachine
    public interface Model
       extends CloneableObject.Cloneable, PrettyString.Appendable
    {
+      //
+      // jason: Expose StateMapping here
+      //
+      
       /**
        * Add a non-final state.
        *
@@ -856,7 +897,7 @@ public class StateMachine
                }
             }
 
-            public void transition(final State state)
+            public void transition(final State state) 
             {
                synchronized (lock) {
                   machine.transition(state);

@@ -321,7 +321,7 @@ public class Logger
       }
       catch(Throwable e)
       {
-         System.err.println("Failed to initalize pulgin: "+plugin);
+         System.err.println("Failed to initalize plugin: "+plugin);
          plugin = new NullLoggerPlugin();
       }
 

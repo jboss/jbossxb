@@ -13,6 +13,7 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 
 import java.io.InputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Hashtable;
@@ -111,21 +112,36 @@ public class JBossEntityResolver implements EntityResolver
       entityResolved = false;
 
       // nothing to resolve
-      if (publicId == null && systemId == null)
+      if( publicId == null && systemId == null )
          return null;
 
       InputSource inputSource = null;
       String entityFileName = getLocalEntityName(publicId, systemId);
-      if (entityFileName != null)
+      if( entityFileName != null )
       {
          try
          {
             ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            InputStream inputStream = loader.getResourceAsStream(entityFileName);
-            if (inputStream != null)
+            URL url = loader.getResource(entityFileName);
+            InputStream inputStream = null;
+            if( url != null )
+            {
+               if( log.isTraceEnabled() )
+                  log.trace(entityFileName+" maps to URL: "+url);
+               try
+               {
+                  inputStream = url.openStream();
+               }
+               catch(IOException e)
+               {
+                  log.debug("Failed to open url stream", e);
+               }
+            }
+
+            if( inputStream != null )
                inputSource = new InputSource(inputStream);
          }
-         catch (Exception e)
+         catch(Exception e)
          {
             log.error("Cannot load local entity: " + entityFileName);
          }
@@ -147,15 +163,15 @@ public class JBossEntityResolver implements EntityResolver
       String filename = null;
 
       // First try the public id
-      if (publicId != null)
+      if( publicId != null )
          filename = (String) entities.get(publicId);
 
       // Next try the system id
-      if (filename == null && systemId != null)
+      if( filename == null && systemId != null )
          filename = (String) entities.get(systemId);
 
       // Finally see if we know the file name
-      if (filename == null && systemId != null)
+      if( filename == null && systemId != null )
       {
          try
          {
@@ -164,7 +180,7 @@ public class JBossEntityResolver implements EntityResolver
             int slash = path.lastIndexOf('/');
             filename = path.substring(slash + 1);
          }
-         catch (MalformedURLException ignored)
+         catch(MalformedURLException ignored)
          {
             log.trace("SystemId is not a url: " + systemId, ignored);
             return null;
@@ -173,12 +189,12 @@ public class JBossEntityResolver implements EntityResolver
 
       // at this point we have a filename, even if it is not
       // registered with this entity resolver
-      if (entities.values().contains(filename) == false)
+      if( entities.values().contains(filename) == false )
          log.warn("Entity is not registered, publicId=" + publicId + " systemId=" + systemId);
 
-      if (filename.endsWith(".dtd"))
+      if( filename.endsWith(".dtd") )
          filename = "dtd/" + filename;
-      else if (filename.endsWith(".xsd"))
+      else if( filename.endsWith(".xsd") )
          filename = "schema/" + filename;
 
       return filename;

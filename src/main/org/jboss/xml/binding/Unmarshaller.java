@@ -8,30 +8,26 @@ package org.jboss.xml.binding;
 
 import org.apache.log4j.Category;
 import org.apache.xml.resolver.tools.CatalogResolver;
-import org.xml.sax.XMLReader;
-import org.xml.sax.SAXException;
 import org.xml.sax.DTDHandler;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.SAXNotSupportedException;
+import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
-import org.jboss.xml.binding.Content;
-import org.jboss.xml.binding.ContentPopulator;
-import org.jboss.xml.binding.ObjectModelBuilder;
-import org.jboss.xml.binding.ObjectModelFactory;
+import org.xml.sax.SAXNotSupportedException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.XMLReader;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.SAXParser;
-import java.io.InputStream;
-import java.io.IOException;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
-import java.util.Map;
-import java.util.HashMap;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Unmarshaller implementation.
@@ -62,7 +58,7 @@ public class Unmarshaller
 
    // Constructor
 
-   public Unmarshaller()
+   public Unmarshaller(boolean hasDTD)
       throws SAXException, ParserConfigurationException
    {
       SAXParserFactory saxFactory = SAXParserFactory.newInstance();
@@ -70,8 +66,9 @@ public class Unmarshaller
       saxFactory.setNamespaceAware(true);
 
       parser = saxFactory.newSAXParser();
-      parser.setProperty(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
 
+      if (hasDTD == false)
+         parser.setProperty(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
 
       reader = parser.getXMLReader();
       reader.setContentHandler(new ContentPopulator());
@@ -113,10 +110,8 @@ public class Unmarshaller
 
    public void setEntityResolver(EntityResolver entityResolver)
    {
-      /*
       reader.setEntityResolver(entityResolver);
       this.entityResolver = entityResolver;
-      */
    }
 
    public void setErrorHandler(ErrorHandler errorHandler)
@@ -197,7 +192,7 @@ public class Unmarshaller
       }
 
       protected InputSource tryToResolveEntity(String publicId, String systemId)
-         throws SAXException, IOException
+         throws IOException
       {
          if(publicId == null && systemId == null)
             throw new IllegalStateException("Validation error: neither publicId nor systemId is specified.");
@@ -274,7 +269,6 @@ public class Unmarshaller
       implements ErrorHandler
    {
       public void warning(SAXParseException exception)
-         throws SAXException
       {
          log.warn(formatMessage(exception));
       }
@@ -317,13 +311,11 @@ public class Unmarshaller
       implements DTDHandler
    {
       public void notationDecl(String name, String publicId, String systemId)
-         throws SAXException
       {
          log.debug("notationDecl: name=" + name + ", publicId=" + publicId + ", systemId=" + systemId);
       }
 
       public void unparsedEntityDecl(String name, String publicId, String systemId, String notationName)
-         throws SAXException
       {
          log.debug("unparsedEntityDecl: name=" + name + ", publicId=" + publicId + ", systemId=" + systemId
             + ", notationName=" + notationName);

@@ -17,6 +17,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.StringTokenizer;
@@ -1321,7 +1322,15 @@ public final class TypeBinding
       result += ':';
       result += marshalInt(value.get(Calendar.SECOND), 2);
       result += '.';
-      result += String.valueOf(value.get(Calendar.MILLISECOND));
+
+      int millis = value.get(Calendar.MILLISECOND);
+      if (millis > 99)
+         result += String.valueOf(millis);
+      else if (millis > 9)
+         result += "0" + String.valueOf(millis);
+      else
+         result += "00" + String.valueOf(millis);
+
       result += marshalTimeZone(value.getTimeZone());
       return result;
    }
@@ -1380,7 +1389,15 @@ public final class TypeBinding
       result += ':';
       result += marshalInt(value.get(Calendar.SECOND), 2);
       result += '.';
-      result += String.valueOf(value.get(Calendar.MILLISECOND));
+
+      int millis = value.get(Calendar.MILLISECOND);
+      if (millis > 99)
+         result += String.valueOf(millis);
+      else if (millis > 9)
+         result += "0" + String.valueOf(millis);
+      else
+         result += "00" + String.valueOf(millis);
+
       result += marshalTimeZone(value.getTimeZone());
       return result;
    }
@@ -1664,15 +1681,26 @@ public final class TypeBinding
    }
 
    /**
-    * Parses timzone.
+    * Parses timezone.
     * Format: [+/-]HH:MM
     *
     * @return
     */
    private static String marshalTimeZone(TimeZone value)
    {
-      String result = value.toString();
-      return result;
+      int offset = value.getRawOffset();
+      if (offset == 0) return "Z";
+
+      StringBuffer buffer = new StringBuffer();
+      DecimalFormat hourFormat = new DecimalFormat("'+'00;-00");
+      DecimalFormat minuteFormat = new DecimalFormat("00");
+
+      int minutes = (int)offset / (1000 * 60);
+      int hours = minutes / 60;
+
+      minutes -= (hours * 60);
+
+      return hourFormat.format(hours) + ":" + minuteFormat.format(minutes);
    }
 
    private static String marshalInt(int value, int length)

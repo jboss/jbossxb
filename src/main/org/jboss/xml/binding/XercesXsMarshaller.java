@@ -6,34 +6,34 @@
  */
 package org.jboss.xml.binding;
 
-import org.xml.sax.SAXException;
-import org.jboss.logging.Logger;
 import org.apache.xerces.dom3.bootstrap.DOMImplementationRegistry;
+import org.apache.xerces.xs.XSAttributeDeclaration;
+import org.apache.xerces.xs.XSAttributeUse;
+import org.apache.xerces.xs.XSComplexTypeDefinition;
+import org.apache.xerces.xs.XSConstants;
+import org.apache.xerces.xs.XSElementDeclaration;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSLoader;
 import org.apache.xerces.xs.XSModel;
-import org.apache.xerces.xs.XSElementDeclaration;
-import org.apache.xerces.xs.XSTypeDefinition;
-import org.apache.xerces.xs.XSComplexTypeDefinition;
-import org.apache.xerces.xs.XSTerm;
-import org.apache.xerces.xs.XSConstants;
 import org.apache.xerces.xs.XSModelGroup;
-import org.apache.xerces.xs.XSWildcard;
-import org.apache.xerces.xs.XSObjectList;
-import org.apache.xerces.xs.XSAttributeUse;
-import org.apache.xerces.xs.XSAttributeDeclaration;
-import org.apache.xerces.xs.XSParticle;
 import org.apache.xerces.xs.XSNamedMap;
 import org.apache.xerces.xs.XSObject;
+import org.apache.xerces.xs.XSObjectList;
+import org.apache.xerces.xs.XSParticle;
+import org.apache.xerces.xs.XSTerm;
+import org.apache.xerces.xs.XSTypeDefinition;
+import org.apache.xerces.xs.XSWildcard;
+import org.jboss.logging.Logger;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -91,17 +91,23 @@ public class XercesXsMarshaller
 
    // AbstractMarshaller implementation
 
-   public void marshal(Reader schema, ObjectModelProvider provider, Object document, Writer writer)
+   public void marshal(Reader xsdReader, ObjectModelProvider provider, Object root, Writer writer)
       throws IOException, SAXException, ParserConfigurationException
    {
-      throw new UnsupportedOperationException();
+      XSModel model = loadSchema(xsdReader);
+      marshallInternal(provider, root, model, writer);
    }
 
-   public void marshal(String schemaUri, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
+   public void marshal(String xsdURL, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
       SAXException
    {
-      XSModel model = loadSchema(schemaUri);
+      XSModel model = loadSchema(xsdURL);
+      marshallInternal(provider, root, model, writer);
+   }
 
+   private void marshallInternal(ObjectModelProvider provider, Object root, XSModel model, Writer writer)
+      throws IOException, SAXException
+   {
       this.provider = provider instanceof GenericObjectModelProvider ?
          (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider);
 
@@ -109,10 +115,10 @@ public class XercesXsMarshaller
 
       content.startDocument();
 
-      if(rootQNames.isEmpty())
+      if (rootQNames.isEmpty())
       {
          XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
-         for(int i = 0; i < components.getLength(); ++i)
+         for (int i = 0; i < components.getLength(); ++i)
          {
             XSElementDeclaration element = (XSElementDeclaration)components.item(i);
             marshalElement(element, 1, 1);// todo fix min/max
@@ -120,26 +126,24 @@ public class XercesXsMarshaller
       }
       else
       {
-         for(int i = 0; i < rootQNames.size(); ++i)
+         for (int i = 0; i < rootQNames.size(); ++i)
          {
-            AbstractMarshaller.QName qName = (AbstractMarshaller.QName)rootQNames.get(i);
+            QName qName = (QName)rootQNames.get(i);
             XSElementDeclaration element = model.getElementDeclaration(qName.name, qName.namespaceUri);
-            if(element == null)
+            if (element == null)
             {
                XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
                String roots = "";
-               for(int j = 0; j < components.getLength(); ++j)
+               for (int j = 0; j < components.getLength(); ++j)
                {
                   XSObject xsObject = components.item(j);
-                  if(j > 0)
+                  if (j > 0)
                   {
                      roots += ", ";
                   }
                   roots += xsObject.getNamespace() + ":" + xsObject.getName();
                }
-               throw new IllegalStateException(
-                  "Root element not found: " + qName.namespaceUri + ":" + qName.name + " among " + roots
-               );
+               throw new IllegalStateException("Root element not found: " + qName.namespaceUri + ":" + qName.name + " among " + roots);
             }
 
             marshalElement(element, 1, 1);// todo fix min/max
@@ -158,17 +162,17 @@ public class XercesXsMarshaller
    private boolean marshalElement(XSElementDeclaration element, int minOccurs, int maxOccurs)
    {
       Object value;
-      if(stack.isEmpty())
+      if (stack.isEmpty())
       {
          value = provider.getRoot(root, element.getNamespace(), element.getName());
-         if(value == null)
+         if (value == null)
          {
             return false;
          }
       }
       else
       {
-         if(stack.peek() instanceof Collection)
+         if (stack.peek() instanceof Collection)
          {
             // collection is the provider
             value = (Collection)stack.peek();
@@ -176,20 +180,20 @@ public class XercesXsMarshaller
          else
          {
             value = provider.getChildren(stack.peek(), element.getNamespace(), element.getName());
-            if(value == null)
+            if (value == null)
             {
                value = provider.getElementValue(stack.peek(), element.getNamespace(), element.getName());
             }
          }
       }
 
-      if(value != null)
+      if (value != null)
       {
          stack.push(value);
 
-         if(maxOccurs != 1 && value instanceof Collection)
+         if (maxOccurs != 1 && value instanceof Collection)
          {
-            for(Iterator iter = ((Collection)value).iterator(); iter.hasNext();)
+            for (Iterator iter = ((Collection)value).iterator(); iter.hasNext();)
             {
                Object item = iter.next();
                stack.push(item);
@@ -211,7 +215,7 @@ public class XercesXsMarshaller
    private void marshalElementType(XSElementDeclaration element)
    {
       XSTypeDefinition type = element.getTypeDefinition();
-      switch(type.getTypeCategory())
+      switch (type.getTypeCategory())
       {
          case XSTypeDefinition.SIMPLE_TYPE:
             marshalSimpleType(element);
@@ -244,19 +248,18 @@ public class XercesXsMarshaller
 
       XSObjectList attributeUses = type.getAttributeUses();
       AttributesImpl attrs = attributeUses.getLength() > 0 ? new AttributesImpl(attributeUses.getLength()) : null;
-      for(int i = 0; i < attributeUses.getLength(); ++i)
+      for (int i = 0; i < attributeUses.getLength(); ++i)
       {
          XSAttributeUse attrUse = (XSAttributeUse)attributeUses.item(i);
          XSAttributeDeclaration attrDec = attrUse.getAttrDeclaration();
          Object attrValue = provider.getAttributeValue(stack.peek(), attrDec.getNamespace(), attrDec.getName());
-         if(attrValue != null)
+         if (attrValue != null)
          {
             attrs.add(attrDec.getNamespace(),
                attrDec.getName(),
                attrDec.getName(),
                attrDec.getTypeDefinition().getName(),
-               attrValue.toString()
-            );
+               attrValue.toString());
          }
       }
 
@@ -264,7 +267,7 @@ public class XercesXsMarshaller
       String qName = prefix == null ? element.getName() : prefix + ':' + element.getName();
       content.startElement(element.getNamespace(), element.getName(), qName, attrs);
 
-      if(particle != null)
+      if (particle != null)
       {
          marshalParticle(particle);
       }
@@ -276,7 +279,7 @@ public class XercesXsMarshaller
    {
       boolean marshalled;
       XSTerm term = particle.getTerm();
-      switch(term.getType())
+      switch (term.getType())
       {
          case XSConstants.MODEL_GROUP:
             marshalled = marshalModelGroup((XSModelGroup)term);
@@ -297,7 +300,7 @@ public class XercesXsMarshaller
    {
       // todo class resolution
       ClassMapping mapping = getClassMapping(stack.peek().getClass());
-      if(mapping == null)
+      if (mapping == null)
       {
          throw new IllegalStateException("Failed to marshal wildcard. Class mapping not found for " + stack.peek());
       }
@@ -313,7 +316,7 @@ public class XercesXsMarshaller
       boolean marshalled = false;
       XSModel model = loadSchema(mapping.schemaUrl);
       XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
-      for(int i = 0; i < components.getLength(); ++i)
+      for (int i = 0; i < components.getLength(); ++i)
       {
          XSElementDeclaration element = (XSElementDeclaration)components.item(i);
          marshalled = marshalElement(element, 1, 1);// todo fix min/max
@@ -329,7 +332,7 @@ public class XercesXsMarshaller
    private boolean marshalModelGroup(XSModelGroup modelGroup)
    {
       boolean marshalled;
-      switch(modelGroup.getCompositor())
+      switch (modelGroup.getCompositor())
       {
          case XSModelGroup.COMPOSITOR_ALL:
             marshalled = marshalModelGroupAll(modelGroup.getParticles());
@@ -349,7 +352,7 @@ public class XercesXsMarshaller
    private boolean marshalModelGroupAll(XSObjectList particles)
    {
       boolean marshalled = false;
-      for(int i = 0; i < particles.getLength(); ++i)
+      for (int i = 0; i < particles.getLength(); ++i)
       {
          XSParticle particle = (XSParticle)particles.item(i);
          marshalled |= marshalParticle(particle);
@@ -361,14 +364,14 @@ public class XercesXsMarshaller
    {
       boolean marshalled = false;
       Content mainContent = this.content;
-      for(int i = 0; i < particles.getLength() && !marshalled; ++i)
+      for (int i = 0; i < particles.getLength() && !marshalled; ++i)
       {
          XSParticle particle = (XSParticle)particles.item(i);
          this.content = new Content();
          marshalled = marshalParticle(particle);
       }
 
-      if(marshalled)
+      if (marshalled)
       {
          mainContent.append(this.content);
       }
@@ -380,7 +383,7 @@ public class XercesXsMarshaller
    private boolean marshalModelGroupSequence(XSObjectList particles)
    {
       boolean marshalled = true;
-      for(int i = 0; i < particles.getLength(); ++i)
+      for (int i = 0; i < particles.getLength(); ++i)
       {
          XSParticle particle = (XSParticle)particles.item(i);
          marshalled &= marshalParticle(particle);
@@ -388,12 +391,37 @@ public class XercesXsMarshaller
       return marshalled;
    }
 
-   private XSModel loadSchema(String schemaUri)
+   private XSModel loadSchema(String xsdURL)
+   {
+      XSImplementation impl = getXSImplementation();
+      XSLoader schemaLoader = impl.createXSLoader(null);
+      XSModel model = schemaLoader.loadURI(xsdURL);
+      if (model == null)
+      {
+         throw new IllegalArgumentException("Invalid URI for schema: " + xsdURL);
+      }
+
+      return model;
+   }
+
+   private XSModel loadSchema(Reader xsdReader)
+   {
+      XSImplementation impl = getXSImplementation();
+      XSLoader schemaLoader = impl.createXSLoader(null);
+      // [TODO] load from reader
+      XSModel model = schemaLoader.load(null);
+      if (model == null)
+      {
+         throw new IllegalArgumentException("Cannot load schema");
+      }
+
+      return model;
+   }
+
+   private XSImplementation getXSImplementation()
    {
       // Get DOM Implementation using DOM Registry
-      System.setProperty(DOMImplementationRegistry.PROPERTY,
-         "org.apache.xerces.dom.DOMXSImplementationSourceImpl"
-      );
+      System.setProperty(DOMImplementationRegistry.PROPERTY, "org.apache.xerces.dom.DOMXSImplementationSourceImpl");
 
       XSImplementation impl;
       try
@@ -401,19 +429,11 @@ public class XercesXsMarshaller
          DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
          impl = (XSImplementation)registry.getDOMImplementation("XS-Loader");
       }
-      catch(Exception e)
+      catch (Exception e)
       {
          log.error("Failed to create schema loader.", e);
          throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());
       }
-
-      XSLoader schemaLoader = impl.createXSLoader(null);
-      XSModel model = schemaLoader.loadURI(schemaUri);
-      if(model == null)
-      {
-         throw new IllegalArgumentException("Invalid URI for schema: " + schemaUri);
-      }
-
-      return model;
+      return impl;
    }
 }

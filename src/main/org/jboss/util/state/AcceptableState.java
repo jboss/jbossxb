@@ -13,7 +13,7 @@ package org.jboss.util.state;
  * An abstract state to build dynamicily state acceptabile states.
  *
  * <p>Sub-classes must implement
- *    {@link StateMachine.Acceptable#accept(State)}.
+ *    {@link StateMachine.Acceptable#isAcceptable(State)}.
  *      
  * @version <tt>$Revision$</tt>
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>

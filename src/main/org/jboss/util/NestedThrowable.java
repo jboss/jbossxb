@@ -87,7 +87,7 @@ public interface NestedThrowable
          if (nested != null) {
             synchronized (stream) {
                stream.print(" + nested throwable: ");
-               nested.printStackTrace();
+               nested.printStackTrace(stream);
             }
          }
       }
@@ -107,7 +107,7 @@ public interface NestedThrowable
          if (nested != null) {
             synchronized (writer) {
                writer.print(" + nested throwable: ");
-               nested.printStackTrace();
+               nested.printStackTrace(writer);
             }
          }
       }

@@ -314,7 +314,7 @@ public final class JarUtils
 
     @param jarURL the URL to validate and extract the referenced entry if its
       a jar protocol URL
-    @param dest, the directory into which the nested jar will be extracted.
+    @param dest the directory into which the nested jar will be extracted.
     @return the file: URL for the jar referenced by the jarURL parameter.
     */
    public static URL extractNestedJar(URL jarURL, File dest)

@@ -88,10 +88,6 @@
     <!-- Tasks -->
     <!-- ===== -->
 
-    <property name="mbean.includes"
-      value="**/jmx/*.java"
-      />
-
     <call target="_default:task-init"/>
   </target>
 
@@ -109,7 +105,7 @@
 
   <target name="compile"
     description="Compile all source files."
-    depends="_default:compile-mbean-sources, _default:compile-classes, _default:compile-etc"/>
+    depends="_default:compile-classes, _default:compile-etc"/>
 
   <!-- ================================================================== -->
   <!-- Archives                                                           -->

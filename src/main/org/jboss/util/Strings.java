@@ -20,9 +20,10 @@ import java.util.Properties;
  * A collection of String utilities.
  *
  * @version <tt>$Revision$</tt>
- * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @author <a href="Scott.Stark@jboss.org">Scott Stark</a>
  * @author <a href="claudio.vesco@previnet.it">Claudio Vesco</a>
+ * @author <a href="mailto:dimitris@jboss.org">Dimitris Andreadis</a>
  */
 public final class Strings
 {
@@ -919,6 +920,33 @@ public final class Strings
       return true;
    }
 
+   /**
+    * Returns a new string with all the whitespace removed
+    * 
+    * @param s the source string
+    * 
+    * @return the string without whitespace or null
+    */
+   public static String removeWhiteSpace(String s)
+   {
+      String retn = null;
+      
+      if (s != null)
+      {
+         int len = s.length();
+         StringBuffer sbuf = new StringBuffer(len);
+         
+         for (int i = 0; i < len; i++)
+         {
+            char c = s.charAt(i);
+            
+            if (!Character.isWhitespace(c))
+                sbuf.append(c);
+         }
+         retn = sbuf.toString();
+      }
+      return retn;
+   }
 }
 
 /*

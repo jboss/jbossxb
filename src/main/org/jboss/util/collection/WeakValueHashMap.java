@@ -68,7 +68,11 @@ public class WeakValueHashMap
    {
       WeakValueRef ref;
       while ((ref = (WeakValueRef)queue.poll()) != null) {
-         hash.remove(ref.key);
+         if (ref == (WeakValueRef) hash.get(ref.key)) {
+            // only remove if it is the *exact* same WeakValueRef
+            //
+            hash.remove(ref.key);
+         }
       }
    }
 

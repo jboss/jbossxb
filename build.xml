@@ -72,7 +72,7 @@
       <path refid="apache.slide.classpath"/>
       <path refid="dom4j.dom4j.classpath"/>
       <path refid="gnu.regexp.classpath"/>
-      <path refid="wutka.dtdparser.classpath" />
+      <path refid="wutka.dtdparser.classpath"/>
       <path refid="oswego.concurrent.classpath"/>
     </path>
 
@@ -89,8 +89,8 @@
     <!-- ===== -->
 
     <property name="mbean.includes"
-              value="**/jmx/*.java"
-    />
+      value="**/jmx/*.java"
+      />
 
     <call target="_default:task-init"/>
   </target>
@@ -107,9 +107,9 @@
      | documentation compiles.
    -->
 
-  <target name="compile" 
-          description="Compile all source files."
-          depends="_default:compile-mbean-sources, _default:compile-classes, _default:compile-etc"/>
+  <target name="compile"
+    description="Compile all source files."
+    depends="_default:compile-mbean-sources, _default:compile-classes, _default:compile-etc"/>
 
   <!-- ================================================================== -->
   <!-- Archives                                                           -->
@@ -134,10 +134,11 @@
       manifest="${build.etc}/default.mf">
       <fileset dir="${build.classes}">
         <include name="org/jboss/**"/>
+        <include name="org/apache/xerces/**"/>
       </fileset>
     </jar>
 
-    <!-- Build jboss-common-client.jar -->
+    <!-- Build namespace.jar -->
     <jar jarfile="${build.lib}/namespace.jar"
       manifest="${build.etc}/default.mf">
       <fileset dir="${build.classes}">

@@ -80,7 +80,7 @@ public class UnmarshallerImpl
 
    public Object unmarshal(String xmlFile) throws JBossXBException
    {
-      builder.init(new MappingObjectModelFactory(), null,
+      builder.init(new MetadataDrivenObjectModelFactory(), null,
          DocumentBindingFactory.newInstance()
          .newDocumentBindingStack()
          .push(RuntimeDocumentBinding.class));

@@ -340,12 +340,20 @@ public class XsdBinder
             try
             {
                getter = parentType.getMethod("get" + elBasedClsName, null);
-               setter = parentType.getMethod("set" + elBasedClsName, new Class[]{getter.getReturnType()});
                fieldType = getter.getReturnType();
+               try
+               {
+                  setter = parentType.getMethod("set" + elBasedClsName, new Class[]{getter.getReturnType()});
+               }
+               catch(NoSuchMethodException e)
+               {
+                  // todo immutable!!!
+                  setter = null;
+               }
             }
             catch(NoSuchMethodException e)
             {
-               String fieldName = Character.toLowerCase(elBasedClsName.charAt(0)) + elBasedClsName.substring(1);
+               String fieldName = Util.xmlNameToFieldName(elementDecl.getName(), true);
                try
                {
                   field = parentType.getField(fieldName);
@@ -386,7 +394,13 @@ public class XsdBinder
          if(javaType == null)
          {
             throw new JBossXBRuntimeException(
-               "Failed to bind element " + elementName + " to any non-abstract Java type. Field type is " + fieldType
+               "Failed to bind element " +
+               elementName +
+               " to any non-abstract Java type. Parent is " +
+               parentType +
+               ", field is " +
+               fieldType
+               + ", base=" + elBasedClsName
             );
          }
       }

@@ -28,6 +28,30 @@ public class MethodHashing
    // Static --------------------------------------------------------
    static Map hashMap = new WeakHashMap();
    
+
+   public static long methodHash(Method method)
+      throws Exception
+   {
+      Class[] parameterTypes = method.getParameterTypes();
+      String methodDesc = method.getName()+"(";
+      for(int j = 0; j < parameterTypes.length; j++)
+      {
+         methodDesc += getTypeString(parameterTypes[j]);
+      }
+      methodDesc += ")"+getTypeString(method.getReturnType());
+      
+      long hash = 0;
+      ByteArrayOutputStream bytearrayoutputstream = new ByteArrayOutputStream(512);
+      MessageDigest messagedigest = MessageDigest.getInstance("SHA");
+      DataOutputStream dataoutputstream = new DataOutputStream(new DigestOutputStream(bytearrayoutputstream, messagedigest));
+      dataoutputstream.writeUTF(methodDesc);
+      dataoutputstream.flush();
+      byte abyte0[] = messagedigest.digest();
+      for(int j = 0; j < Math.min(8, abyte0.length); j++)
+         hash += (long)(abyte0[j] & 0xff) << j * 8;
+      return hash;
+   }
+
    /**
    * Calculate method hashes. This algo is taken from RMI.
    *
@@ -42,30 +66,13 @@ public class MethodHashing
       for (int i = 0; i < methods.length; i++)
       {
          Method method = methods[i];
-         Class[] parameterTypes = method.getParameterTypes();
-         String methodDesc = method.getName()+"(";
-         for(int j = 0; j < parameterTypes.length; j++)
-         {
-            methodDesc += getTypeString(parameterTypes[j]);
-         }
-         methodDesc += ")"+getTypeString(method.getReturnType());
-         
          try
          {
-            long hash = 0;
-            ByteArrayOutputStream bytearrayoutputstream = new ByteArrayOutputStream(512);
-            MessageDigest messagedigest = MessageDigest.getInstance("SHA");
-            DataOutputStream dataoutputstream = new DataOutputStream(new DigestOutputStream(bytearrayoutputstream, messagedigest));
-            dataoutputstream.writeUTF(methodDesc);
-            dataoutputstream.flush();
-            byte abyte0[] = messagedigest.digest();
-            for(int j = 0; j < Math.min(8, abyte0.length); j++)
-               hash += (long)(abyte0[j] & 0xff) << j * 8;
+            long hash = methodHash(method);
             map.put(method.toString(), new Long(hash));
          }
          catch (Exception e)
          {
-            e.printStackTrace();
          }
       }
       

@@ -64,6 +64,7 @@ public class JBossEntityResolver implements EntityResolver
       // jboss-specific
       registerEntity("-//JBoss//DTD J2EE Application 1.3//EN", "jboss-app_3_0.dtd");
       registerEntity("-//JBoss//DTD J2EE Application 1.3V2//EN", "jboss-app_3_2.dtd");
+      registerEntity("-//JBoss//DTD J2EE Application 1.4//EN", "jboss-app_4_0.dtd");
       registerEntity("-//JBoss//DTD JAWS//EN", "jaws.dtd");
       registerEntity("-//JBoss//DTD JAWS 2.4//EN", "jaws_2_4.dtd");
       registerEntity("-//JBoss//DTD JAWS 3.0//EN", "jaws_3_0.dtd");
@@ -77,8 +78,10 @@ public class JBossEntityResolver implements EntityResolver
       registerEntity("-//JBoss//DTD Web Application 2.2//EN", "jboss-web.dtd");
       registerEntity("-//JBoss//DTD Web Application 2.3//EN", "jboss-web_3_0.dtd");
       registerEntity("-//JBoss//DTD Web Application 2.3V2//EN", "jboss-web_3_2.dtd");
-      registerEntity("-//JBoss//DTD MBean Service 3.2//EN", "jboss-service_3_2.dtd");
+      registerEntity("-//JBoss//DTD Web Application 2.4//EN", "jboss-web_4_0.dtd");
       registerEntity("-//JBoss//DTD Application Client 3.2//EN", "jboss-client_3_2.dtd");
+      registerEntity("-//JBoss//DTD Application Client 4.0//EN", "jboss-client_4_0.dtd");
+      registerEntity("-//JBoss//DTD MBean Service 3.2//EN", "jboss-service_3_2.dtd");
       // xml
       registerEntity("-//W3C//DTD/XMLSCHEMA 200102//EN", "XMLSchema.dtd");
       registerEntity("datatypes", "datatypes.dtd"); // This dtd doesn't have a publicId - see XMLSchema.dtd

@@ -57,11 +57,12 @@ public class XercesXsMarshaller
    /**
     * Attributes added to the root element
     */
-   private AttributesImpl addedAttributes = new AttributesImpl(10);
+   //private AttributesImpl addedAttributes = new AttributesImpl(10);
    /**
     * Declared namespaces
     */
-   private final Map uriByNsName = new HashMap();
+   //private final Map uriByNsName = new HashMap();
+   private final Map prefixByUri = new HashMap();
 
    private Object root;
 
@@ -77,16 +78,20 @@ public class XercesXsMarshaller
     */
    public void declareNamespace(String name, String uri)
    {
+      /*
       boolean nonEmptyName = (name != null && name.length() > 0);
       String localName = (nonEmptyName ? name : "xmlns");
-      String qName = (nonEmptyName ? getQName("xmlns", localName) : localName);
+      //String qName = (nonEmptyName ? getQName("xmlns", localName) : localName);
 
       final Object prev = uriByNsName.put(localName, uri);
 
       if(prev == null)
       {
-         addedAttributes.add(null, localName, qName, "string", uri);
+      //   addedAttributes.add(null, localName, qName, "string", uri);
       }
+      */
+
+      prefixByUri.put(uri, name);
    }
 
    /**
@@ -101,6 +106,7 @@ public class XercesXsMarshaller
     */
    public void addAttribute(String prefix, String localName, String type, String value)
    {
+      /*
       final String uri;
       if(prefix != null && prefix.length() > 0)
       {
@@ -114,9 +120,9 @@ public class XercesXsMarshaller
       {
          uri = null;
       }
-
-      String qName = getQName(prefix, localName);
-      addedAttributes.add(uri, prefix, qName, type, value);
+      */
+      //String qName = getQName(prefix, localName);
+      //addedAttributes.add(uri, prefix, qName, type, value);
    }
 
    // AbstractMarshaller implementation
@@ -130,29 +136,7 @@ public class XercesXsMarshaller
    public void marshal(String schemaUri, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
       SAXException
    {
-      // Get DOM Implementation using DOM Registry
-      System.setProperty(DOMImplementationRegistry.PROPERTY,
-         "org.apache.xerces.dom.DOMXSImplementationSourceImpl"
-      );
-
-      XSImplementation impl;
-      try
-      {
-         DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
-         impl = (XSImplementation)registry.getDOMImplementation("XS-Loader");
-      }
-      catch(Exception e)
-      {
-         log.error("Failed to create schema loader.", e);
-         throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());
-      }
-
-      XSLoader schemaLoader = impl.createXSLoader(null);
-      XSModel model = schemaLoader.loadURI(schemaUri);
-      if(model == null)
-      {
-         throw new IllegalArgumentException("Invalid URI for schema: " + schemaUri);
-      }
+      XSModel model = loadSchema(schemaUri);
 
       this.provider = provider instanceof GenericObjectModelProvider ?
          (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider);
@@ -235,7 +219,6 @@ public class XercesXsMarshaller
          }
       }
 
-      log.info("marshalling " + element.getName() + ": " + value);
       if(value != null)
       {
          stack.push(value);
@@ -279,9 +262,13 @@ public class XercesXsMarshaller
    {
       Object value = stack.peek();
       String valueStr = value.toString();
-      content.startElement(element.getNamespace(), element.getName(), element.getName(), null);
+
+      String prefix = (String)prefixByUri.get(element.getNamespace());
+      String qName = prefix == null ? element.getName() : prefix + ':' + element.getName();
+
+      content.startElement(element.getNamespace(), element.getName(), qName, null);
       content.characters(valueStr.toCharArray(), 0, valueStr.length());
-      content.endElement(element.getNamespace(), element.getName(), element.getName());
+      content.endElement(element.getNamespace(), element.getName(), qName);
    }
 
    private void marshalComplexType(XSElementDeclaration element)
@@ -307,14 +294,16 @@ public class XercesXsMarshaller
          }
       }
 
-      content.startElement(element.getNamespace(), element.getName(), element.getName(), attrs);
+      String prefix = (String)prefixByUri.get(element.getNamespace());
+      String qName = prefix == null ? element.getName() : prefix + ':' + element.getName();
+      content.startElement(element.getNamespace(), element.getName(), qName, attrs);
 
       if(particle != null)
       {
          marshalParticle(particle);
       }
 
-      content.endElement(element.getNamespace(), element.getName(), element.getName());
+      content.endElement(element.getNamespace(), element.getName(), qName);
    }
 
    private void marshalParticle(XSParticle particle)
@@ -338,8 +327,32 @@ public class XercesXsMarshaller
 
    private void marshalWildcard(XSWildcard wildcard)
    {
-      // todo
-      throw new UnsupportedOperationException();
+      // todo class resolution
+      ClassMapping mapping = getClassMapping(stack.peek().getClass());
+      if(mapping == null)
+      {
+         throw new IllegalStateException("Failed to marshal wildcard. Class mapping not found for " + stack.peek());
+      }
+
+      GenericObjectModelProvider parentProvider = this.provider;
+      Object parentRoot = this.root;
+      Stack parentStack = this.stack;
+
+      this.root = stack.peek();
+      this.provider = mapping.provider;
+      this.stack = new StackImpl();
+
+      XSModel model = loadSchema(mapping.schemaUrl);
+      XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
+      for(int i = 0; i < components.getLength(); ++i)
+      {
+         XSElementDeclaration element = (XSElementDeclaration)components.item(i);
+         marshalElement(element, 1);
+      }
+
+      this.root = parentRoot;
+      this.provider = parentProvider;
+      this.stack = parentStack;
    }
 
    private void marshalModelGroup(XSModelGroup modelGroup)
@@ -387,8 +400,32 @@ public class XercesXsMarshaller
       }
    }
 
-   private static String getQName(String prefix, String localName)
+   private XSModel loadSchema(String schemaUri)
    {
-      return (prefix == null || prefix.length() == 0 ? localName : prefix + ':' + localName);
+      // Get DOM Implementation using DOM Registry
+      System.setProperty(DOMImplementationRegistry.PROPERTY,
+         "org.apache.xerces.dom.DOMXSImplementationSourceImpl"
+      );
+
+      XSImplementation impl;
+      try
+      {
+         DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
+         impl = (XSImplementation)registry.getDOMImplementation("XS-Loader");
+      }
+      catch(Exception e)
+      {
+         log.error("Failed to create schema loader.", e);
+         throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());
+      }
+
+      XSLoader schemaLoader = impl.createXSLoader(null);
+      XSModel model = schemaLoader.loadURI(schemaUri);
+      if(model == null)
+      {
+         throw new IllegalArgumentException("Invalid URI for schema: " + schemaUri);
+      }
+
+      return model;
    }
 }

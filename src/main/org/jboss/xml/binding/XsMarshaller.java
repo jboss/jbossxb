@@ -19,7 +19,6 @@ import org.apache.ws.jaxme.xs.XSParticle;
 import org.apache.ws.jaxme.xs.XSGroup;
 import org.apache.ws.jaxme.xs.XSAttributable;
 import org.apache.ws.jaxme.xs.XSAttribute;
-import org.apache.ws.jaxme.xs.XSModelGroup;
 import org.apache.ws.jaxme.xs.xml.XsQName;
 import org.jboss.logging.Logger;
 
@@ -52,8 +51,6 @@ public class XsMarshaller
    private GenericObjectModelProvider provider;
    /** Content the result is written to */
    private Content content = new Content();
-   /** Attributes added to the root element */
-   private AttributesImpl addedAttributes = new AttributesImpl(10);
    /** Declared namespaces */
    private final Map uriByNsName = new HashMap();
 
@@ -82,7 +79,8 @@ public class XsMarshaller
          for(int i = 0; i < elements.length; ++i)
          {
             log.info("marshalling " + elements[i].getName().getLocalName());
-            processElement(elements[i], addedAttributes, 1);
+            //processElement(elements[i], addedAttributes, 1);
+            processElement(elements[i], null, 1);
          }
       }
       else
@@ -98,7 +96,8 @@ public class XsMarshaller
                throw new IllegalStateException("Root element not found: " + rootName);
             }
 
-            processElement(xsRoot, addedAttributes, 1);
+            //processElement(xsRoot, addedAttributes, 1);
+            processElement(xsRoot, null, 1);
          }
       }
 
@@ -129,14 +128,7 @@ public class XsMarshaller
    {
       boolean nonEmptyName = (name != null && name.length() > 0);
       String localName = (nonEmptyName ? name : "xmlns");
-      String qName = (nonEmptyName ? getQName("xmlns", localName) : localName);
-
-      final Object prev = uriByNsName.put(localName, uri);
-
-      if(prev == null)
-      {
-         addedAttributes.add(null, localName, qName, "string", uri);
-      }
+      uriByNsName.put(localName, uri);
    }
 
    /**
@@ -164,9 +156,6 @@ public class XsMarshaller
       {
          uri = null;
       }
-
-      String qName = getQName(prefix, localName);
-      addedAttributes.add(uri, prefix, qName, type, value);
    }
 
    /**
@@ -543,7 +532,7 @@ public class XsMarshaller
    private void handleChildrenIterator(XSElement parent, XSComplexType type, Iterator children, AttributesImpl addedAttrs, int maxOccurs)
       throws SAXException
    {
-      XSParticle particle = type.getParticle();
+      //XSParticle particle = type.getParticle();
       XsQName name = parent.getName();
       String qName = null;
       if(maxOccurs == -1 || maxOccurs > 0)
@@ -627,7 +616,7 @@ public class XsMarshaller
          {
             ClassMapping mapping = getClassMapping(child.getClass());
 
-            InputSource source = new InputSource(mapping.schemaReader);
+            InputSource source = new InputSource(mapping.schemaUrl);
 
             XSParser xsParser = new XSParser();
             xsParser.setValidating(false);
@@ -671,8 +660,10 @@ public class XsMarshaller
       stack.pop();
    }
 
+   /*
    private static String getQName(String prefix, String localName)
    {
       return (prefix == null || prefix.length() == 0 ? localName : prefix + ':' + localName);
    }
+   */
 }

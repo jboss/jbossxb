@@ -78,7 +78,11 @@ public abstract class AbstractMarshaller
       }
    }
 
-   public void mapClassToNamespace(Class cls, String root, String namespaceUri, Reader schemaReader, ObjectModelProvider provider)
+   public void mapClassToNamespace(Class cls,
+                                   String root,
+                                   String namespaceUri,
+                                   Reader schemaReader,
+                                   ObjectModelProvider provider)
    {
       if(classMappings == Collections.EMPTY_MAP)
       {
@@ -86,8 +90,38 @@ public abstract class AbstractMarshaller
       }
 
       ClassMapping mapping = new ClassMapping(
-         cls, root, namespaceUri, schemaReader, provider instanceof GenericObjectModelProvider ?
-         (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider)
+         cls,
+         root,
+         namespaceUri,
+         schemaReader,
+         null,
+         provider instanceof GenericObjectModelProvider ?
+         (GenericObjectModelProvider)provider :
+         new DelegatingObjectModelProvider(provider)
+      );
+      classMappings.put(mapping.cls, mapping);
+   }
+
+   public void mapClassToNamespace(Class cls,
+                                   String root,
+                                   String namespaceUri,
+                                   String schemaUrl,
+                                   ObjectModelProvider provider)
+   {
+      if(classMappings == Collections.EMPTY_MAP)
+      {
+         classMappings = new HashMap();
+      }
+
+      ClassMapping mapping = new ClassMapping(
+         cls,
+         root,
+         namespaceUri,
+         null,
+         schemaUrl,
+         provider instanceof GenericObjectModelProvider ?
+         (GenericObjectModelProvider)provider :
+         new DelegatingObjectModelProvider(provider)
       );
       classMappings.put(mapping.cls, mapping);
    }
@@ -132,7 +166,8 @@ public abstract class AbstractMarshaller
       Object container = null;
       Method method = getProviderMethod(providerClass,
          methodName,
-         new Class[]{parentClass, String.class, String.class});
+         new Class[]{parentClass, String.class, String.class}
+      );
       if(method != null)
       {
          try
@@ -164,7 +199,8 @@ public abstract class AbstractMarshaller
       Object value = null;
       Method method = getProviderMethod(providerClass,
          methodName,
-         new Class[]{parentClass, String.class, String.class});
+         new Class[]{parentClass, String.class, String.class}
+      );
       if(method != null)
       {
          try
@@ -195,7 +231,8 @@ public abstract class AbstractMarshaller
       Object value = null;
       Method method = getProviderMethod(providerClass,
          methodName,
-         new Class[]{objectClass, String.class, String.class});
+         new Class[]{objectClass, String.class, String.class}
+      );
       if(method != null)
       {
          try
@@ -245,14 +282,29 @@ public abstract class AbstractMarshaller
 
       public boolean equals(Object o)
       {
-         if(this == o) return true;
-         if(!(o instanceof QName)) return false;
+         if(this == o)
+         {
+            return true;
+         }
+         if(!(o instanceof QName))
+         {
+            return false;
+         }
 
-         final QName qName = (QName) o;
+         final QName qName = (QName)o;
 
-         if(name != null ? !name.equals(qName.name) : qName.name != null) return false;
-         if(namespaceUri != null ? !namespaceUri.equals(qName.namespaceUri) : qName.namespaceUri != null) return false;
-         if(prefix != null ? !prefix.equals(qName.prefix) : qName.prefix != null) return false;
+         if(name != null ? !name.equals(qName.name) : qName.name != null)
+         {
+            return false;
+         }
+         if(namespaceUri != null ? !namespaceUri.equals(qName.namespaceUri) : qName.namespaceUri != null)
+         {
+            return false;
+         }
+         if(prefix != null ? !prefix.equals(qName.prefix) : qName.prefix != null)
+         {
+            return false;
+         }
 
          return true;
       }
@@ -275,26 +327,45 @@ public abstract class AbstractMarshaller
       public final String root;
       public final String namespaceUri;
       public final Reader schemaReader;
+      public final String schemaUrl;
       public final GenericObjectModelProvider provider;
 
-      public ClassMapping(Class cls, String root, String namespaceUri, Reader schemaReader, GenericObjectModelProvider provider)
+      public ClassMapping(Class cls,
+                          String root,
+                          String namespaceUri,
+                          Reader schemaReader,
+                          String schemaUrl,
+                          GenericObjectModelProvider provider)
       {
          this.cls = cls;
          this.root = root;
          this.namespaceUri = namespaceUri;
          this.schemaReader = schemaReader;
+         this.schemaUrl = schemaUrl;
          this.provider = provider;
       }
 
       public boolean equals(Object o)
       {
-         if(this == o) return true;
-         if(!(o instanceof ClassMapping)) return false;
+         if(this == o)
+         {
+            return true;
+         }
+         if(!(o instanceof ClassMapping))
+         {
+            return false;
+         }
 
-         final ClassMapping classMapping = (ClassMapping) o;
+         final ClassMapping classMapping = (ClassMapping)o;
 
-         if(cls != null ? !cls.equals(classMapping.cls) : classMapping.cls != null) return false;
-         if(namespaceUri != null ? !namespaceUri.equals(classMapping.namespaceUri) : classMapping.namespaceUri != null) return false;
+         if(cls != null ? !cls.equals(classMapping.cls) : classMapping.cls != null)
+         {
+            return false;
+         }
+         if(namespaceUri != null ? !namespaceUri.equals(classMapping.namespaceUri) : classMapping.namespaceUri != null)
+         {
+            return false;
+         }
 
          return true;
       }

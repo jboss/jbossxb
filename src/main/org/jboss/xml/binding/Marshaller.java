@@ -25,7 +25,7 @@ public interface Marshaller
 
    class FACTORY
    {
-      static Marshaller getInstance()
+      public static Marshaller getInstance()
       {
          String impl = System.getProperty(MARSHALLER_IMPL);
          if(impl == null)
@@ -63,6 +63,8 @@ public interface Marshaller
    void mapPublicIdToSystemId(String publicId, String systemId);
 
    void mapClassToNamespace(Class cls, String root, String namespaceUri, Reader schemaReader, ObjectModelProvider provider);
+
+   void mapClassToNamespace(Class cls, String root, String namespaceUri, String schemaUrl, ObjectModelProvider provider);
 
    void addRootElement(String namespaceUri, String prefix, String name);
 

@@ -9,6 +9,8 @@
 
 package org.jboss.util.id;
 
+import org.jboss.util.CloneableObject;
+
 /**
  * A globally unique identifier (globally across a cluster of virtual 
  * machines).
@@ -32,6 +34,7 @@ package org.jboss.util.id;
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
 public class GUID
+   extends CloneableObject
    implements ID
 {
    /** The virtual machine identifier */
@@ -47,15 +50,23 @@ public class GUID
     * Construct a new GUID.
     */
    public GUID() {
-      this.vmid = VMID.getInstance();
-      this.uid = new UID();
+      this(VMID.getInstance(), new UID());
+   }
+
+   /**
+    * Initialze a new GUID with specific values.
+    */
+   protected GUID(final VMID vmid, final UID uid)
+   {
+      this.vmid = vmid;
+      this.uid = uid;
 
       // generate a hash code for this GUID
       int code = vmid.hashCode();
       code ^= uid.hashCode();
       hashCode = code;
    }
-
+   
    /**
     * Copy a GUID.
     *
@@ -127,25 +138,35 @@ public class GUID
    }
 
    /**
-    * Returns a copy of this GUID.
-    *
-    * @return  A copy of this GUID.
-    */
-   public Object clone() {
-      try {
-         return super.clone();
-      }
-      catch (CloneNotSupportedException e) {
-         throw new InternalError();
-      }
-   }
-
-   /**
     * Returns a GUID as a string.
     *
     * @return  GUID as a string.
     */
    public static String asString() {
       return new GUID().toString();
+   }
+
+   
+   /////////////////////////////////////////////////////////////////////////
+   //                            Factory Access                           //
+   /////////////////////////////////////////////////////////////////////////
+
+   /**
+    * Creates GUID instances which are unique to the factory instance.
+    * The UID portion of the GUID areare generated from a UID.Factory.
+    */
+   public static class Factory
+   {
+      /** A factory for creating UIDs */
+      protected final UID.Factory factory = new UID.Factory();
+      protected final VMID vmid = VMID.getInstance();
+      
+      /**
+       * Create a new UID.
+       */
+      public GUID create()
+      {
+         return new GUID(vmid, factory.create());
+      }
    }
 }

@@ -80,7 +80,17 @@ public class XLevel
    {
       return toLevel(name, TRACE);
    }
-   
+
+   /**
+    * Convert an integer passed as argument to a priority. If the conversion
+    * fails, then this method returns the specified default.
+    * @return the Level object for i if one exists, defaultLevel otherwize.
+    */
+   public static Level toLevel(int i)
+   {
+      return toLevel(i, TRACE);
+   }
+
    /** 
     * Convert an integer passed as argument to a level. If the conversion
     * fails, then this method returns the specified default.

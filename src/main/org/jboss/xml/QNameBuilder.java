@@ -47,12 +47,12 @@ public final class QNameBuilder
       String localPart = combinedName.substring(colonIndex + 1);
 
       Node currNode = element;
-      String namespaceURI = getNamespaceURI (currNode, prefix);
+      String namespaceURI = getNamespaceURI(currNode, prefix);
       while (namespaceURI == null && currNode != null)
       {
          Node parentNode = currNode.getParentNode();
          if (parentNode != null && parentNode != currNode)
-            namespaceURI = getNamespaceURI (parentNode, prefix);
+            namespaceURI = getNamespaceURI(parentNode, prefix);
 
          if (parentNode == currNode)
             break;
@@ -63,7 +63,7 @@ public final class QNameBuilder
       if (namespaceURI != null)
          return new QName(namespaceURI, localPart);
 
-      log.warn ("Cannot find namespaceURI for name: " + combinedName);
+      log.warn("Cannot find namespaceURI for name: " + combinedName);
       return new QName(localPart);
    }
 
@@ -76,10 +76,10 @@ public final class QNameBuilder
       NamedNodeMap attrs = node.getAttributes();
       if (attrs != null)
       {
-         for (int i=0; namespaceURI == null && i < attrs.getLength(); i++)
+         for (int i = 0; namespaceURI == null && i < attrs.getLength(); i++)
          {
             Node attr = attrs.item(i);
-            if (prefix.equals(attr.getLocalName()))
+            if (("xmlns:" + prefix).equals(attr.getNodeName()))
                namespaceURI = attr.getNodeValue();
          }
       }

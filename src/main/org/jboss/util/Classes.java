@@ -38,6 +38,61 @@ public final class Classes
    public static final String DEFAULT_PACKAGE_NAME = "<default>";
 
    /**
+    * Describe the class of an object
+    *
+    * @param object the object
+    * @return the description
+    */
+   public static String getDescription(Object object)
+   {
+      StringBuffer buffer = new StringBuffer();
+      describe(buffer, object);
+      return buffer.toString();
+   }
+
+   /**
+    * Describe the class of an object
+    *
+    * @param buffer the string buffer 
+    * @param object the object
+    */
+   public static void describe(StringBuffer buffer, Object object)
+   {
+      if (object == null)
+         buffer.append("**null**");
+      else
+         describe(buffer, object.getClass());
+   }
+
+   /**
+    * Describe the class
+    *
+    * @param buffer the string buffer 
+    * @param clazz the clazz
+    */
+   public static void describe(StringBuffer buffer, Class clazz)
+   {
+      if (clazz == null)
+         buffer.append("**null**");
+      else
+      {
+         buffer.append("{class=").append(clazz.getName());
+         Class[] intfs = clazz.getInterfaces();
+         if (intfs.length > 0)
+         {
+            buffer.append(" intfs=");
+            for (int i = 0; i < intfs.length; ++i)
+            {
+               buffer.append(intfs[i].getName());
+               if (i < intfs.length-1)
+                  buffer.append(", ");
+            }
+         }
+         buffer.append("}");
+      }
+   }
+   
+   /**
     * Get the short name of the specified class by striping off the package
     * name.
     *
@@ -483,7 +538,3 @@ public final class Classes
    }
 
 }
-
-/*
-vim:ts=3:sw=3:et
-*/

@@ -862,7 +862,7 @@ public final class SimpleTypeBindings
       else if(typeCode == XS_NONPOSITIVEINTEGER)
       {
          result = new BigInteger(value);
-         if(BigInteger.ZERO.compareTo(result) < 0)
+         if(BigInteger.ZERO.compareTo((BigInteger)result) < 0)
          {
             throw new JBossXBValueFormatException("Invalid nonPositiveInteger value: " + value);
          }
@@ -870,7 +870,7 @@ public final class SimpleTypeBindings
       else if(typeCode == XS_NEGATIVEINTEGER)
       {
          result = new BigInteger(value);
-         if(BigInteger.ZERO.compareTo(result) <= 0)
+         if(BigInteger.ZERO.compareTo((BigInteger)result) <= 0)
          {
             throw new JBossXBValueFormatException("Invalid negativeInteger value: " + value);
          }
@@ -878,7 +878,7 @@ public final class SimpleTypeBindings
       else if(typeCode == XS_NONNEGATIVEINTEGER)
       {
          result = new BigInteger(value);
-         if(BigInteger.ZERO.compareTo(result) > 0)
+         if(BigInteger.ZERO.compareTo((BigInteger)result) > 0)
          {
             throw new JBossXBValueFormatException("Invalid nonNegativeInteger value: " + value);
          }
@@ -886,7 +886,7 @@ public final class SimpleTypeBindings
       else if(typeCode == XS_POSITIVEINTEGER)
       {
          result = new BigInteger(value);
-         if(BigInteger.ZERO.compareTo(result) >= 0)
+         if(BigInteger.ZERO.compareTo((BigInteger)result) >= 0)
          {
             throw new JBossXBValueFormatException("Invalid positiveInteger value: " + value);
          }

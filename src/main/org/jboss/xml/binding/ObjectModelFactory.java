@@ -99,4 +99,6 @@ public interface ObjectModelFactory
                   String namespaceURI,
                   String localName,
                   Attributes attrs);
+
+   Object completeRoot(Object root, UnmarshallingContext navigator, String namespaceURI, String localName);
 }

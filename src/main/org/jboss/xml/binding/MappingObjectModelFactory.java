@@ -377,11 +377,11 @@ public class MappingObjectModelFactory
       setAttribute(o, localName, value, navigator.getType());
    }
 
-   public Object completedRoot(Object root, UnmarshallingContext navigator, String namespaceURI, String localName)
+   public Object completeRoot(Object root, UnmarshallingContext navigator, String namespaceURI, String localName)
    {
       if(log.isTraceEnabled())
       {
-         log.trace("completedRoot root=" +
+         log.trace("completeRoot root=" +
             root +
             " navigator=" +
             navigator +

@@ -176,7 +176,7 @@ public class SchemalessObjectModelFactory
       return root;
    }
 
-   public Object completedRoot(Object root, UnmarshallingContext navigator, String namespaceURI, String localName)
+   public Object completeRoot(Object root, UnmarshallingContext navigator, String namespaceURI, String localName)
    {
       return root;
    }

@@ -384,7 +384,7 @@ public class ObjectModelBuilder
          }
          else
          {
-            root = curFactory.completedRoot(element, this, namespaceURI, localName);
+            root = curFactory.completeRoot(element, this, namespaceURI, localName);
          }
       }
    }

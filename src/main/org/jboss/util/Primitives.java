@@ -18,6 +18,20 @@ package org.jboss.util;
 public final class Primitives
 {
    /**
+    * Get a Boolean from a boolean, equivalent to the java 1.4 method Boolean.valueOf(boolean)
+    *
+    * @param value the boolean
+    * @return the Boolean equivalent
+    */
+   public static Boolean valueOf(boolean value)
+   {
+      if (value)
+         return Boolean.TRUE;
+      else
+         return Boolean.FALSE;
+   }
+
+   /**
     * Test the equality of two doubles by converting their values into
     * IEEE 754 floating-point "double format" long values.
     *

@@ -23,8 +23,13 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.management.MalformedObjectNameException;
 
+import org.jboss.util.NestedRuntimeException;
+
 /**
  * A factory for producing MBean proxies.
+ *
+ * <p>Created proxies will also implement {@link MBeanProxyInstance}
+ *    allowing access to the proxies configuration.
  *
  * <p><b>Revisions:</b>
  * <p><b>20020321 Adrian Brock:</b>
@@ -32,13 +37,13 @@ import javax.management.MalformedObjectNameException;
  * <li>Don't process attributes using invoke.
  * </ul>
  *
+ * @version <tt>$Revision$</tt>
  * @author <a href="mailto:rickard.oberg@telkel.com">Rickard Öberg</a>.
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @author <a href="mailto:adrian.brock@happeningtimes.com">Adrian Brock</a>.
- * @version $Revision$
  */
 public class MBeanProxy
-   implements InvocationHandler
+   implements InvocationHandler, MBeanProxyInstance
 {
    /** The server to proxy invoke calls to. */
    private final MBeanServer server;
@@ -47,15 +52,7 @@ public class MBeanProxy
    private final ObjectName name;
 
    /** The MBean's attributes */
-   private HashMap attributeMap  = new HashMap();
-   
-   /**
-    * Construct a MBeanProxy.
-    */
-   MBeanProxy(final ObjectName name)
-   {
-      this(name, MBeanServerLocator.locate());
-   }
+   private final HashMap attributeMap = new HashMap();
    
    /**
     * Construct a MBeanProxy.
@@ -76,19 +73,28 @@ public class MBeanProxy
       }
       catch (Exception e)
       {
-         throw new RuntimeException("Error creating MBeanProxy: " + name);
+         throw new NestedRuntimeException("Error creating MBeanProxy: " + name, e);
       }
    }
-       
+
+   /** Used when args is null. */
+   private static final Object EMPTY_ARGS[] = {};
+
    /**
     * Invoke the configured MBean via the target MBeanServer and decode
     * any resulting JMX exceptions that are thrown.
     */
    public Object invoke(final Object proxy,
                         final Method method,
-                        Object[] args)
+                        final Object[] args)
       throws Throwable
    {
+      // if the method belongs to ProxyInstance, then invoke locally
+      Class type = method.getDeclaringClass();
+      if (type == MBeanProxyInstance.class) {
+         return method.invoke(this, args);
+      }
+
       String methodName = method.getName();
 
       // Get attribute
@@ -155,7 +161,6 @@ public class MBeanProxy
       }
 
       // Operation
-      if (args == null) args = new Object[0];
 
       // convert the parameter types to strings for JMX
       Class[] types = method.getParameterTypes();
@@ -166,11 +171,26 @@ public class MBeanProxy
 
       // invoke the server and decode JMX exceptions
       try {
-         return server.invoke(name, methodName, args, sig);
+         return server.invoke(name, methodName, args == null ? EMPTY_ARGS : args, sig);
       }
       catch (Exception e) {
          throw JMXExceptionDecoder.decode(e);
       }
+   }
+
+
+   ///////////////////////////////////////////////////////////////////////////
+   //                          MBeanProxyInstance                           //
+   ///////////////////////////////////////////////////////////////////////////
+
+   public final ObjectName getMBeanProxyObjectName()
+   {
+      return name;
+   }
+
+   public final MBeanServer getMBeanProxyMBeanServer()
+   {
+      return server;
    }
 
 
@@ -191,9 +211,7 @@ public class MBeanProxy
    public static Object create(final Class intf, final String name)
       throws MalformedObjectNameException
    {
-      return Proxy.newProxyInstance(intf.getClassLoader(),
-                                    new Class[] { intf },
-                                    new MBeanProxy(new ObjectName(name)));
+      return create(intf, new ObjectName(name));
    }
 
    /**
@@ -212,10 +230,7 @@ public class MBeanProxy
                                final MBeanServer server)
       throws MalformedObjectNameException
    {
-      return Proxy.newProxyInstance
-         (intf.getClassLoader(),
-          new Class[] { intf },
-          new MBeanProxy(new ObjectName(name), server));
+      return create(intf, new ObjectName(name), server);
    }    
    
    /**
@@ -227,9 +242,7 @@ public class MBeanProxy
     */
    public static Object create(final Class intf, final ObjectName name)
    {
-      return Proxy.newProxyInstance(intf.getClassLoader(),
-                                    new Class[] { intf },
-                                    new MBeanProxy(name));
+      return create(intf, name, MBeanServerLocator.locate());
    }
 
    /**
@@ -244,8 +257,28 @@ public class MBeanProxy
                                final ObjectName name,
                                final MBeanServer server)
    {
-      return Proxy.newProxyInstance(intf.getClassLoader(),
-                                    new Class[] { intf },
+      // make a which delegates to MBeanProxyInstance's cl for it's class resolution
+      ClassLoader cl = new ClassLoader(intf.getClassLoader()) 
+      {
+         public Class loadClass(final String name) throws ClassNotFoundException
+         {
+            try {
+               return super.loadClass(name);
+            }
+            catch (ClassNotFoundException e) {
+               // only allow loading of MBeanProxyInstance from this loader
+               if (name.equals(MBeanProxyInstance.class.getName())) {
+                  return MBeanProxyInstance.class.getClassLoader().loadClass(name);
+               }
+               
+               // was some other classname, throw the CNFE
+               throw e;
+            }
+         }
+      };
+
+      return Proxy.newProxyInstance(cl, 
+                                    new Class[] { MBeanProxyInstance.class, intf },
                                     new MBeanProxy(name, server));
    }
 }

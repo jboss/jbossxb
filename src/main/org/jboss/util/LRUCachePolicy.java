@@ -109,6 +109,10 @@ public class LRUCachePolicy
     */
    public void destroy()
    {
+      if( m_map != null )
+         m_map.clear();
+      if( m_list != null )
+         m_list.clear();
    }
 
    public Object get(Object key)
@@ -397,6 +401,13 @@ public class LRUCachePolicy
        * @param oldCapacity the capacity before the change happened
        */
       protected void capacityChanged(int oldCapacity) {}
+
+      protected void clear()
+      {
+         m_head = null;
+         m_tail = null;
+         m_count = 0;         
+      }
 
       public String toString()
       {

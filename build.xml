@@ -143,7 +143,10 @@
 
   <target name="output"
 	  description="Generate all target output."
-	  depends="compile">
+          depends="_buildmagic:build-bypass-check"
+	  unless="build-bypass.on">
+
+    <call target="compile"/>
 
     <mkdir dir="${build.lib}"/>
     
@@ -173,6 +176,10 @@
 
     <!-- Generate checksums -->
     <call target="_default:compile-checksums"/>
+
+    <!-- Update the build marker to allow bypassing -->
+    <touch file="${build-bypass.marker}"/>
+
   </target>
 
 

@@ -350,6 +350,16 @@ public class MuLong
       return (double)value;
    }
 
+   /**
+    * Set the value of this mutable long integer.
+    *
+    * @param value    The new value.
+    */
+   public void set(long value)
+   {
+      this.value = value;
+   }
+
 
    /////////////////////////////////////////////////////////////////////////
    //                            Mutable Support                          //

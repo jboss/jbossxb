@@ -28,6 +28,10 @@ import org.jboss.util.CloneableObject;
  *
  * <p>Accepting to acceptable state mappings are backed up
  *    by a HashMap and HashSets.
+ *
+ * <p>Implements clonable so that the model can be used as a
+ *    prototype.  Nested containers are cloned, so that changes
+ *    will not effect the master or other clones.
  *      
  * @version <tt>$Revision$</tt>
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
@@ -39,7 +43,9 @@ public class DefaultStateMachineModel
    /**
     * A container for entiries in the state acceptable map.
     */
-   protected class MappingEntry
+   protected static class MappingEntry
+      extends CloneableObject
+      implements Serializable
    {
       public State state;
       public Set acceptableStates;
@@ -48,6 +54,47 @@ public class DefaultStateMachineModel
       {
          this.state = state;
          this.acceptableStates = acceptableStates;
+      }
+
+      public boolean equals(final Object obj)
+      {
+         if (obj == this) return true;
+
+         if (obj != null && obj.getClass() == getClass()) {
+            MappingEntry entry = (MappingEntry)obj;
+
+            return
+               ((entry.state == null && state == null) ||
+                (entry.state != null && entry.state.equals(state))) &&
+               equals(entry.acceptableStates, acceptableStates);
+         }
+
+         return false;
+      }
+
+      private boolean equals(final Set a, final Set b)
+      {
+         if (a == b || a == null && b == null) return true;
+         if (a == null || b == null || a.size() != b.size()) return false;
+
+         return a.equals(b);
+      }
+      
+      public String toString()
+      {
+         return
+            state.toString() +
+            (acceptableStates == null ? " final" : " accepts: " + acceptableStates);
+      }
+
+      public Object clone()
+      {
+         MappingEntry entry = (MappingEntry)super.clone();
+         if (entry.acceptableStates != null) {
+            entry.acceptableStates = new HashSet(acceptableStates);
+         }
+
+         return entry;
       }
    }
 
@@ -68,6 +115,57 @@ public class DefaultStateMachineModel
       super();
    }
 
+   public String toString()
+   {
+      StringBuffer buff = new StringBuffer(super.toString()).append(" {").append("\n");
+
+      buff.append("    Accepting state mappings:\n");
+      Iterator iter = acceptingMap.keySet().iterator();
+      while (iter.hasNext()) {
+         buff.append("        ").append(acceptingMap.get((State)iter.next()));
+         buff.append("\n");
+      }
+      buff.append("    Initial state: ")
+         .append(initial == null ? null : initial.state)
+         .append("\n");
+      
+      buff.append("    Current state: ")
+         .append(current == null ? null : current.state)
+         .append("\n");
+      
+      buff.append("}");
+      
+      return buff.toString();
+   }
+
+   public boolean equals(final Object obj)
+   {
+      if (obj == this) return true;
+
+      if (obj != null && obj.getClass() == getClass()) {
+         DefaultStateMachineModel model = (DefaultStateMachineModel)obj;
+
+         return
+            ((model.current == null && current == null) ||
+             (model.current != null && model.current.equals(current))) &&
+            ((model.initial == null && initial == null) ||
+             (model.initial != null && model.initial.equals(initial))) &&
+            equals(model.acceptingMap, acceptingMap);
+      }
+
+      return false;
+   }
+
+   private boolean equals(final Map a, final Map b)
+   {
+      if (a == null && b == null) return true;
+      if (a == null || b == null) return false;
+      if (a == b) return true;
+      if (a.size() != b.size()) return false;
+
+      return a.equals(b);
+   }
+   
    /**
     * Get an entry from the map.
     *
@@ -106,15 +204,8 @@ public class DefaultStateMachineModel
       
       // If we will replace the state, do some clean up before
       if (containsState(state)) {
-         //
-         // This looks odd, because of the typing by value and
-         // not typing by value + class.  This will replace
-         // the previous version of this state with the new
-         // version.
-         //
-         
          // update mapping to reflect new state value
-         updateAcceptableMapping(prevEntry.state, prevEntry.state);
+         updateAcceptableMapping(state, false);
       }
       
       // Now replace it
@@ -147,6 +238,10 @@ public class DefaultStateMachineModel
    {
       if (acceptable == null)
          throw new NullArgumentException("acceptable");
+
+      if (acceptable.length == 0) {
+         return addState(state, (Set)null);
+      }
       
       HashSet set = new HashSet(acceptable.length);
       
@@ -162,7 +257,9 @@ public class DefaultStateMachineModel
 
    public Set addState(final State state, final State acceptable)
    {
-      return addState(state, new State[] { acceptable });
+      HashSet set = new HashSet(1);
+      set.add(acceptable);
+      return addState(state, set);
    }
    
    public Set addState(final State state)
@@ -207,17 +304,17 @@ public class DefaultStateMachineModel
    {
       if (state == null)
          throw new NullArgumentException("state");
-      if (state.equals(current.state))
+      if (current != null && state.equals(current.state))
          throw new IllegalArgumentException
             ("Can not remove current state: " + state);
 
       MappingEntry prevEntry = getEntry(state);
 
-      // If state is non-final then update acceptable mappings
-      if (prevEntry.acceptableStates != null) {
-         // remove the mappings for this state
-         updateAcceptableMapping(state, null);
-      }
+      // remove the mappings for this state
+      updateAcceptableMapping(state, true);
+
+      // Finally remove it
+      acceptingMap.remove(state);
       
       return prevEntry.acceptableStates;
    }
@@ -225,10 +322,10 @@ public class DefaultStateMachineModel
    /**
     * Update acceptable mappings.
     *
-    * @param prev   The previous state to update/remove.
-    * @param next   The next value for the state or null to remove previous.
+    * @param state   The state value to update or remove
+    * @param remove  True to remove the state from all mappings.
     */
-   protected void updateAcceptableMapping(final State prev, final State next)
+   protected void updateAcceptableMapping(final State state, final boolean remove)
    {
       Iterator iter = acceptingMap.entrySet().iterator();
 
@@ -236,9 +333,12 @@ public class DefaultStateMachineModel
          MappingEntry entry = (MappingEntry)((Map.Entry)iter.next()).getValue();
 
          // only attempt to update non-final states
-         if (entry.acceptableStates != null && entry.acceptableStates.contains(prev)) {
-            entry.acceptableStates.remove(prev);
-            entry.acceptableStates.add(next);
+         if (entry.acceptableStates != null && entry.acceptableStates.contains(state)) {
+            entry.acceptableStates.remove(state);
+
+            if (!remove) {
+               entry.acceptableStates.add(state);
+            }
          }
       }
    }
@@ -266,12 +366,25 @@ public class DefaultStateMachineModel
 
    public Object clone()
    {
-      // deeply (well sort of) clone the acceptingMap, else clones
-      // will share the same map
+      // clone one level deeper so that the model can be used as a prototype.
       
       DefaultStateMachineModel model = (DefaultStateMachineModel)super.clone();
-      model.acceptingMap = new HashMap(model.acceptingMap);
+      model.acceptingMap = new HashMap();
 
+      // Need to make sure that value entries are cloned too
+      Iterator iter = acceptingMap.entrySet().iterator();
+      while (iter.hasNext()) {
+         Map.Entry entry = (Map.Entry)iter.next();
+         model.acceptingMap.put(entry.getKey(),
+                                ((MappingEntry)entry.getValue()).clone());
+      }
+       
+      if (model.current != null)
+         model.current = (MappingEntry)current.clone();
+
+      if (model.initial != null)
+         model.initial = (MappingEntry)initial.clone();
+      
       return model;
    }
 }

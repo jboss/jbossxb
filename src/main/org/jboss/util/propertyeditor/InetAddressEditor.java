@@ -36,7 +36,7 @@ public class InetAddressEditor
    {
       try
       {
-		 String text = getAtText();
+		 String text = getAsText();
 		 if (text==null)
 		 {
 			 return null;

@@ -9,19 +9,20 @@
 
 package org.jboss.util.property;
 
+import java.util.List;
+import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Collections;
+import java.util.Properties;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
 
 import org.jboss.util.NullArgumentException;
 
@@ -31,6 +32,7 @@ import org.jboss.util.NullArgumentException;
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author Scott.Stark@jboss.org
  */
 public class PropertyMap
    extends Properties
@@ -48,11 +50,22 @@ public class PropertyMap
    protected transient Map boundListeners;
 
    /**
+    * This map avoids heavy contention for the properties that JNDI looks
+    * up everytime a new InitialContext instance is created. Once the container is
+    * up and running getProperty calls other than for the JNDI property are very rare,
+    * so the double lookup is not much of a performance problem.
+    * If at all possible, this class should be read-only and use no locks at all.
+    */
+   private transient Map jndiMap;
+   private final static Object NULL_VALUE = new Object();
+
+   /**
     * Construct a PropertyMap with default properties.
     *
     * @param defaults   Default properties.
     */
-   public PropertyMap(Properties defaults) {
+   public PropertyMap(Properties defaults)
+   {
       super(defaults);
       init();
    }
@@ -60,14 +73,46 @@ public class PropertyMap
    /**
     * Construct a PropertyMap.
     */
-   public PropertyMap() {
+   public PropertyMap()
+   {
       this(null);
    }
 
    /** Initialized listener lists */
-   private void init() {
+   private void init()
+   {
       unboundListeners = Collections.synchronizedList(new ArrayList());
       boundListeners = Collections.synchronizedMap(new HashMap());
+      Object value;
+      jndiMap = new HashMap();
+
+      value = System.getProperty(javax.naming.Context.PROVIDER_URL);
+      if (value == null) value = NULL_VALUE;
+      jndiMap.put(javax.naming.Context.PROVIDER_URL, value);
+
+      value = System.getProperty(javax.naming.Context.INITIAL_CONTEXT_FACTORY);
+      if (value == null) value = NULL_VALUE;
+      jndiMap.put(javax.naming.Context.INITIAL_CONTEXT_FACTORY, value);
+
+      value = System.getProperty(javax.naming.Context.OBJECT_FACTORIES);
+      if (value == null) value = NULL_VALUE;
+      jndiMap.put(javax.naming.Context.OBJECT_FACTORIES, value);
+
+      value = System.getProperty(javax.naming.Context.URL_PKG_PREFIXES);
+      if (value == null) value = NULL_VALUE;
+      jndiMap.put(javax.naming.Context.URL_PKG_PREFIXES, value);
+
+      value = System.getProperty(javax.naming.Context.STATE_FACTORIES);
+      if (value == null) value = NULL_VALUE;
+      jndiMap.put(javax.naming.Context.STATE_FACTORIES, value);
+
+      value = System.getProperty(javax.naming.Context.DNS_URL);
+      if (value == null) value = NULL_VALUE;
+      jndiMap.put(javax.naming.Context.DNS_URL, value);
+
+      value = System.getProperty(javax.naming.ldap.LdapContext.CONTROL_FACTORIES);
+      if (value == null) value = NULL_VALUE;
+      jndiMap.put(javax.naming.ldap.LdapContext.CONTROL_FACTORIES, value);
    }
 
 
@@ -75,19 +120,6 @@ public class PropertyMap
    //                     Properties Override Methods                     //
    /////////////////////////////////////////////////////////////////////////
 
-   /**
-    * Check if this PropertyMap contains a given property name.
-    *
-    * @param name    Property name.
-    * @return        True if property map or defaults contains key.
-    */
-   public boolean containsKey(Object name) {
-      if (name == null)
-         throw new NullArgumentException("name");
-         
-      boolean contains = super.containsKey(name);
-      return (contains || defaults == null) ? contains : defaults.containsKey(name);
-   }
 
    /**
     * Set a property.
@@ -96,7 +128,8 @@ public class PropertyMap
     * @param value   Property value.
     * @return        Previous property value or null.
     */
-   public Object put(Object name, Object value) {
+   public Object put(Object name, Object value)
+   {
       if (name == null)
          throw new NullArgumentException("name");
       // value can be null
@@ -105,40 +138,20 @@ public class PropertyMap
       boolean add = !containsKey(name);
       Object prev = super.put(name, value);
 
-      PropertyEvent event = 
+      PropertyEvent event =
          new PropertyEvent(this, String.valueOf(name), String.valueOf(value));
       
       // fire propertyAdded or propertyChanged
-      if (add) {
+      if (add)
+      {
          firePropertyAdded(event);
       }
-      else {
+      else
+      {
          firePropertyChanged(event);
       }
-      
+
       return prev;
-   }
-
-   /**
-    * Get a property.
-    *
-    * @param name    Property name.
-    * @return        Property value or null.
-    *
-    * @throws IllegalArgumentException    Name is empty or null.
-    */
-   public Object get(Object name) {
-      if (name == null || name.equals(""))
-         throw new IllegalArgumentException("name");
-
-      Object obj = super.get(name);
-      String value = (obj instanceof String) ? (String)obj : null;
-
-      if (value == null && defaults != null) {
-         value = defaults.getProperty(String.valueOf(name));
-      }
-
-      return value;
    }
 
    /**
@@ -147,7 +160,8 @@ public class PropertyMap
     * @param name    Property name.
     * @return        Removed property value.
     */
-   public Object remove(Object name) {
+   public Object remove(Object name)
+   {
       if (name == null)
          throw new NullArgumentException("name");
 
@@ -155,19 +169,22 @@ public class PropertyMap
       boolean contains = containsKey(name);
       String value = null;
 
-      if (contains) {
-         value = (String)super.remove(name);
-         if (defaults != null) {
+      if (contains)
+      {
+         value = (String) super.remove(name);
+         if (defaults != null)
+         {
             Object obj = defaults.remove(name);
-            if (value == null) {
-               value = (String)obj;
+            if (value == null)
+            {
+               value = (String) obj;
             }
          }
 
-         PropertyEvent event = new PropertyEvent(this, (String)name, value);
+         PropertyEvent event = new PropertyEvent(this, (String) name, value);
          firePropertyRemoved(event);
       }
-      
+
       return value;
    }
 
@@ -177,15 +194,16 @@ public class PropertyMap
     */
    public Set keySet(final boolean includeDefaults)
    {
-      if (includeDefaults) {
+      if (includeDefaults)
+      {
          Set set = new HashSet();
          set.addAll(defaults.keySet());
          set.addAll(super.keySet());
          return Collections.synchronizedSet(set);
       }
-      
+
       return super.keySet();
-   }   
+   }
 
    /**
     * Returns a set of entrys for all entries in this group and optionally
@@ -193,13 +211,14 @@ public class PropertyMap
     */
    public Set entrySet(final boolean includeDefaults)
    {
-      if (includeDefaults) {
+      if (includeDefaults)
+      {
          Set set = new HashSet();
          set.addAll(defaults.entrySet());
          set.addAll(super.entrySet());
          return Collections.synchronizedSet(set);
       }
-      
+
       return super.entrySet();
    }   
    
@@ -213,16 +232,19 @@ public class PropertyMap
     *
     * @param listener   Property listener to add.
     */
-   public void addPropertyListener(PropertyListener listener) {
+   public void addPropertyListener(PropertyListener listener)
+   {
       if (listener == null)
          throw new NullArgumentException("listener");
 
-      if (listener instanceof BoundPropertyListener) {
-         addPropertyListener((BoundPropertyListener)listener);
+      if (listener instanceof BoundPropertyListener)
+      {
+         addPropertyListener((BoundPropertyListener) listener);
       }
-      else {
+      else
+      {
          // only add the listener if it is not in the list already
-         if (! unboundListeners.contains(listener))
+         if (!unboundListeners.contains(listener))
             unboundListeners.add(listener);
       }
    }
@@ -232,21 +254,24 @@ public class PropertyMap
     *
     * @param listener   Bound property listener to add.
     */
-   protected void addPropertyListener(BoundPropertyListener listener) {
+   protected void addPropertyListener(BoundPropertyListener listener)
+   {
       // get the bound property name
       String name = listener.getPropertyName();
 
       // get the bound listener list for the property
-      List list = (List)boundListeners.get(name);
+      List list = (List) boundListeners.get(name);
       
       // if list is null, then add a new list
-      if (list == null) {
+      if (list == null)
+      {
          list = Collections.synchronizedList(new ArrayList());
          boundListeners.put(name, list);
       }
       
       // if listener is not in the list already, then add it
-      if (! list.contains(listener)) {
+      if (!list.contains(listener))
+      {
          list.add(listener);
          // notify listener that is is bound
          listener.propertyBound(this);
@@ -258,11 +283,13 @@ public class PropertyMap
     *
     * @param listeners     Array of property listeners to add.
     */
-   public void addPropertyListeners(PropertyListener[] listeners) {
+   public void addPropertyListeners(PropertyListener[] listeners)
+   {
       if (listeners == null)
          throw new NullArgumentException("listeners");
 
-      for (int i=0; i<listeners.length; i++) {
+      for (int i = 0; i < listeners.length; i++)
+      {
          addPropertyListener(listeners[i]);
       }
    }
@@ -273,15 +300,18 @@ public class PropertyMap
     * @param listener   Property listener to remove.
     * @return           True if listener was removed.
     */
-   public boolean removePropertyListener(PropertyListener listener) {
+   public boolean removePropertyListener(PropertyListener listener)
+   {
       if (listener == null)
          throw new NullArgumentException("listener");
 
       boolean removed = false;
-      if (listener instanceof BoundPropertyListener) {
-         removed = removePropertyListener((BoundPropertyListener)listener);
+      if (listener instanceof BoundPropertyListener)
+      {
+         removed = removePropertyListener((BoundPropertyListener) listener);
       }
-      else {
+      else
+      {
          removed = unboundListeners.remove(listener);
       }
 
@@ -294,14 +324,16 @@ public class PropertyMap
     * @param listener   Bound property listener to remove.
     * @return           True if listener was removed.
     */
-   protected boolean removePropertyListener(BoundPropertyListener listener) {
+   protected boolean removePropertyListener(BoundPropertyListener listener)
+   {
       // get the bound property name
       String name = listener.getPropertyName();
       
       // get the bound listener list for the property
-      List list = (List)boundListeners.get(name);
+      List list = (List) boundListeners.get(name);
       boolean removed = false;
-      if (list != null) {
+      if (list != null)
+      {
          removed = list.remove(listener);
          
          // notify listener that is was unbound
@@ -321,12 +353,14 @@ public class PropertyMap
     * @param list    Listener list.
     * @param event   Property event.
     */
-   private void firePropertyAdded(List list, PropertyEvent event) {
+   private void firePropertyAdded(List list, PropertyEvent event)
+   {
       if (list == null) return;
 
       int size = list.size();
-      for (int i=0; i<size; i++) {
-         PropertyListener listener = (PropertyListener)list.get(i);
+      for (int i = 0; i < size; i++)
+      {
+         PropertyListener listener = (PropertyListener) list.get(i);
          listener.propertyAdded(event);
       }
    }
@@ -336,11 +370,14 @@ public class PropertyMap
     *
     * @param event   Property event.
     */
-   protected void firePropertyAdded(PropertyEvent event) {
+   protected void firePropertyAdded(PropertyEvent event)
+   {
       // fire all bound listeners (if any) first
-      if (boundListeners != null) {
-         List list = (List)boundListeners.get(event.getPropertyName());
-         if (list != null) {
+      if (boundListeners != null)
+      {
+         List list = (List) boundListeners.get(event.getPropertyName());
+         if (list != null)
+         {
             firePropertyAdded(list, event);
          }
       }
@@ -355,12 +392,14 @@ public class PropertyMap
     * @param list    Listener list.
     * @param event   Property event.
     */
-   private void firePropertyRemoved(List list, PropertyEvent event) {
+   private void firePropertyRemoved(List list, PropertyEvent event)
+   {
       if (list == null) return;
 
       int size = list.size();
-      for (int i=0; i<size; i++) {
-         PropertyListener listener = (PropertyListener)list.get(i);
+      for (int i = 0; i < size; i++)
+      {
+         PropertyListener listener = (PropertyListener) list.get(i);
          listener.propertyRemoved(event);
       }
    }
@@ -370,11 +409,14 @@ public class PropertyMap
     *
     * @param event   Property event.
     */
-   protected void firePropertyRemoved(PropertyEvent event) {
+   protected void firePropertyRemoved(PropertyEvent event)
+   {
       // fire all bound listeners (if any) first
-      if (boundListeners != null) {
-         List list = (List)boundListeners.get(event.getPropertyName());
-         if (list != null) {
+      if (boundListeners != null)
+      {
+         List list = (List) boundListeners.get(event.getPropertyName());
+         if (list != null)
+         {
             firePropertyRemoved(list, event);
          }
       }
@@ -389,12 +431,14 @@ public class PropertyMap
     * @param list    Listener list.
     * @param event   Property event.
     */
-   private void firePropertyChanged(List list, PropertyEvent event) {
+   private void firePropertyChanged(List list, PropertyEvent event)
+   {
       if (list == null) return;
 
       int size = list.size();
-      for (int i=0; i<size; i++) {
-         PropertyListener listener = (PropertyListener)list.get(i);
+      for (int i = 0; i < size; i++)
+      {
+         PropertyListener listener = (PropertyListener) list.get(i);
          listener.propertyChanged(event);
       }
    }
@@ -405,11 +449,14 @@ public class PropertyMap
     * @param event   Property event.
     * @param value   Property value.
     */
-   protected void firePropertyChanged(PropertyEvent event) {
+   protected void firePropertyChanged(PropertyEvent event)
+   {
       // fire all bound listeners (if any) first
-      if (boundListeners != null) {
-         List list = (List)boundListeners.get(event.getPropertyName());
-         if (list != null) {
+      if (boundListeners != null)
+      {
+         List list = (List) boundListeners.get(event.getPropertyName());
+         if (list != null)
+         {
             firePropertyChanged(list, event);
          }
       }
@@ -430,12 +477,15 @@ public class PropertyMap
     * @param prefix  Optional prefix (can be null).
     * @return        Property name.
     */
-   protected String makePrefixedPropertyName(String base, String prefix) {
+   protected String makePrefixedPropertyName(String base, String prefix)
+   {
       String name = base;
 
-      if (prefix != null) {
+      if (prefix != null)
+      {
          StringBuffer buff = new StringBuffer(base);
-         if (prefix != null) {
+         if (prefix != null)
+         {
             buff.insert(0, PROPERTY_NAME_SEPARATOR);
             buff.insert(0, prefix);
          }
@@ -451,14 +501,16 @@ public class PropertyMap
     * @param prefix  Prefix to append to all map keys (or null).
     * @param map     Map containing properties to load.
     */
-   public void load(String prefix, Map map) throws PropertyException {
+   public void load(String prefix, Map map) throws PropertyException
+   {
       // prefix can be null
       if (map == null)
          throw new NullArgumentException("map");
 
       // set properties for each key in map
       Iterator iter = map.keySet().iterator();
-      while (iter.hasNext()) {
+      while (iter.hasNext())
+      {
          // make a string key with optional prefix
          String key = String.valueOf(iter.next());
          String name = makePrefixedPropertyName(key, prefix);
@@ -474,7 +526,8 @@ public class PropertyMap
     *
     * @param map  Map containing properties to load.
     */
-   public void load(Map map) throws PropertyException {
+   public void load(Map map) throws PropertyException
+   {
       load(null, map);
    }
 
@@ -483,7 +536,8 @@ public class PropertyMap
     *
     * @param reader  PropertyReader to read properties from.
     */
-   public void load(PropertyReader reader) throws PropertyException, IOException {
+   public void load(PropertyReader reader) throws PropertyException, IOException
+   {
       if (reader == null)
          throw new NullArgumentException("reader");
 
@@ -495,17 +549,20 @@ public class PropertyMap
     *
     * @param className     Class name of a PropertyReader to read from.
     */
-   public void load(String className) throws PropertyException, IOException {
+   public void load(String className) throws PropertyException, IOException
+   {
       if (className == null)
          throw new NullArgumentException("className");
 
       PropertyReader reader = null;
 
-      try {
+      try
+      {
          Class type = Class.forName(className);
-         reader = (PropertyReader)type.newInstance();
+         reader = (PropertyReader) type.newInstance();
       }
-      catch (Exception e) {
+      catch (Exception e)
+      {
          throw new PropertyException(e);
       }
          
@@ -528,8 +585,20 @@ public class PropertyMap
     * @param value   Property value.
     * @return        Previous property value or null.
     */
-   public Object setProperty(String name, String value) {
+   public Object setProperty(String name, String value)
+   {
       return put(name, value);
+   }
+
+   public String getProperty(String name)
+   {
+      Object value = jndiMap.get(name);
+      if (value != null)
+      {
+         // key was in the map
+         return (value == NULL_VALUE) ? null : (String) value;
+      }
+      return super.getProperty(name);
    }
 
    /**
@@ -538,31 +607,11 @@ public class PropertyMap
     * @param name    Property name.
     * @return        Removed property value or null.
     */
-   public String removeProperty(String name) {
-      return (String)remove(name);
+   public String removeProperty(String name)
+   {
+      return (String) remove(name);
    }
 
-   /**
-    * Get a property.
-    *
-    * @param name          Property name.
-    * @param defaultValue  Default property value.
-    * @return              Property value or default.
-    */
-   public String getProperty(String name, String defaultValue) {
-      String value = (String)get(name);
-      return (value != null) ? value : defaultValue;
-   }
-
-   /**
-    * Get a property.
-    *
-    * @param name       Property name.
-    * @return           Property value or null.
-    */
-   public String getProperty(String name) {
-      return getProperty(name, null);
-   }
 
    /**
     * Make an indexed property name.
@@ -571,7 +620,8 @@ public class PropertyMap
     * @param index   Property index.
     * @return        Indexed property name.
     */
-   protected String makeIndexPropertyName(String base, int index) {
+   protected String makeIndexPropertyName(String base, int index)
+   {
       return base + PROPERTY_NAME_SEPARATOR + index;
    }
 
@@ -588,36 +638,41 @@ public class PropertyMap
     * @param defaultValues Default property values.
     * @return              Array of property values or default.
     */
-   public String[] getArrayProperty(String base, String[] defaultValues) {
+   public String[] getArrayProperty(String base, String[] defaultValues)
+   {
       if (base == null)
          throw new NullArgumentException("base");
 
       // create a new list to store indexed values into
       List list = new LinkedList();
-      
-      int i=0;
-      while (true) {
+
+      int i = 0;
+      while (true)
+      {
          // make the index property name
          String name = makeIndexPropertyName(base, i);
 
          // see if there is a value for this property
          String value = getProperty(name);
 
-         if (value != null) {
+         if (value != null)
+         {
             list.add(value);
          }
-         else if (i >= 0) {
+         else if (i >= 0)
+         {
             break; // no more index properties
          }
-         
+
          i++;
       }
 
       String values[] = defaultValues;
 
       // if the list is not empty, then return it as an array
-      if (list.size() != 0) {
-         values = (String[])list.toArray(new String[list.size()]);
+      if (list.size() != 0)
+      {
+         values = (String[]) list.toArray(new String[list.size()]);
       }
 
       return values;
@@ -629,7 +684,8 @@ public class PropertyMap
     * @param name       Property name.
     * @return           Array of property values or empty array.
     */
-   public String[] getArrayProperty(String name) {
+   public String[] getArrayProperty(String name)
+   {
       return getArrayProperty(name, EMPTY_ARRAY_PROPERTY);
    }
 
@@ -643,7 +699,8 @@ public class PropertyMap
     *
     * @return     Property name iterator.
     */
-   public Iterator names() {
+   public Iterator names()
+   {
       return keySet().iterator();
    }
 
@@ -658,7 +715,8 @@ public class PropertyMap
     * @param name    Property name.
     * @return        True if contains property.
     */
-   public boolean containsProperty(String name) {
+   public boolean containsProperty(String name)
+   {
       return containsKey(name);
    }
 
@@ -673,7 +731,8 @@ public class PropertyMap
     * @param basename   Base property name.
     * @return           Property group.
     */
-   public PropertyGroup getPropertyGroup(String basename) {
+   public PropertyGroup getPropertyGroup(String basename)
+   {
       return new PropertyGroup(basename, this);
    }
 
@@ -684,7 +743,8 @@ public class PropertyMap
     * @param index      Array property index.
     * @return           Property group.
     */
-   public PropertyGroup getPropertyGroup(String basename, int index) {
+   public PropertyGroup getPropertyGroup(String basename, int index)
+   {
       String name = makeIndexPropertyName(basename, index);
       return getPropertyGroup(name);
    }

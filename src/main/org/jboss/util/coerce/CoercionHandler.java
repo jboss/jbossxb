@@ -26,6 +26,10 @@ import org.jboss.util.NotImplementedException;
  * an unrelated class.  Also provides a registry for all of the 
  * currently installed handlers.
  *
+ * @todo Implement a URL package handler style method for finding
+ *       handlers as well as the current explict methods.
+ * @todo Add URL handler.
+ *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */

@@ -53,6 +53,16 @@ public class Logger
       return log;
    }
 
+   /**
+    * Return the category name of this logger.
+    *
+    * @return The category name of this logger.
+    */
+   public String getName()
+   {
+      return name;
+   }
+   
    /** 
     * Check to see if the TRACE priority is enabled for this category.
     *

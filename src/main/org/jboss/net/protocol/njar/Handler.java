@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A protocol handler for the 'njar' protocol.
+ * A protocol handler for the n(ested)jar protocol.
  *
  * <p>
  * This is class allows you to use the njar: URL protocol. It is very
@@ -37,9 +37,8 @@ import java.util.Map;
  * An example of how to use this class is:
  * <pre>
  *
- *    NestedJarURLHandlerFactory.start();
- *    URL u = new URL("njar:njar:file:c:/test1.zip^/test2.zip^/hello.txt");
- *    u.openStream();
+ *    URL url = new URL("njar:njar:file:c:/test1.zip^/test2.zip^/hello.txt");
+ *    url.openStream();
  *
  * </pre>
  *

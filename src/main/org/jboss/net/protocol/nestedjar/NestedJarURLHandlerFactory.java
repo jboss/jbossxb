@@ -66,6 +66,8 @@ public class NestedJarURLHandlerFactory implements URLStreamHandlerFactory
        */
       protected URLConnection openConnection(URL u) throws IOException
       {
+         System.out.println("Using old factory style n(ested)jar protocol...");
+
          String file = u.getFile();
          String embeddedURL = file;
          String jarPath = "";

@@ -286,9 +286,26 @@ public final class JarUtils
          }
          entry = jin.getNextEntry();
       }
+      /* Explicity write out the META-INF/MANIFEST.MF so that any headers such
+      as the Class-Path are see for the unpackaged jar
+      */
+      Manifest mf = jin.getManifest();
+      if (mf != null)
+      {
+         File file = new File(dest, "META-INF/MANIFEST.MF");
+         File parent = file.getParentFile();
+         if( parent.exists() == false )
+         {
+            parent.mkdirs();
+         }
+         OutputStream out = new FileOutputStream(file);
+         mf.write(out);
+         out.flush();
+         out.close();
+      }
       jin.close();
    }
-   
+
    /** Given a URL check if its a jar url(jar:<url>!/archive) and if it is,
     extract the archive entry into the given dest directory and return a file
     URL to its location. If jarURL is not a jar url then it is simply returned

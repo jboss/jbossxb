@@ -130,18 +130,4 @@ public class NestedException
    public void printStackTrace() {
       printStackTrace(System.err);
    }
-
-   /**
-    * Wraps the give throwable in a NestedException unless it is already
-    * a NestedException.
-    * 
-    * @param t   The target throwable to wrap.
-    * @return    A NestedException.
-    */
-   public static NestedException wrap(Throwable t) {
-      if (t instanceof NestedException) {
-         return (NestedException)t;
-      }
-      return new NestedException(t);
-   }
 }

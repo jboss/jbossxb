@@ -9,6 +9,7 @@
 
 package org.jboss.util.propertyeditor;
 
+import java.beans.IntrospectionException;
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
 
@@ -25,30 +26,27 @@ import org.jboss.util.Classes;
  */
 public class PropertyEditors
 {
-   /**
-    * Augment the PropertyEditorManager search path to incorporate the JBoss
-    * specific editors by appending the org.jboss.util.propertyeditor package
-    * to the PropertyEditorManager editor search path.
+   /** Augment the PropertyEditorManager search path to incorporate the JBoss
+    specific editors by appending the org.jboss.util.propertyeditor package
+    to the PropertyEditorManager editor search path.
     */
    static
    {
       String[] currentPath = PropertyEditorManager.getEditorSearchPath();
       int length = currentPath != null ? currentPath.length : 0;
-      String[] newPath = new String[length+1];
+      String[] newPath = new String[length+2];
       System.arraycopy(currentPath, 0, newPath, 0, length);
-      
       // May want to put the JBoss editor path first, for now append it
       newPath[length] = "org.jboss.util.propertyeditor";
+      newPath[length+1] = "org.jboss.mx.util.propertyeditor";
       PropertyEditorManager.setEditorSearchPath(newPath);
 
-      // Some editors must be installed, as they do not follow naming conventions
-      Class[] map = {
-         String[].class, org.jboss.util.propertyeditor.StringArrayEditor.class,
-      };
-
-      for (int i=0; i<map.length; i++) {
-         PropertyEditorManager.registerEditor(map[i++], map[i]);
-      }
+      /* Register the editor types that will not be found using the standard
+      class name to editor name algorithm. For example, the type String[] has
+      a name '[Ljava.lang.String;' which does not map to a XXXEditor name.
+      */
+      Class strArrayType = String[].class;
+      PropertyEditorManager.registerEditor(strArrayType, StringArrayEditor.class);
    }
 
    /**
@@ -77,15 +75,9 @@ public class PropertyEditors
       {
          // nope try look up
          ClassLoader loader = Thread.currentThread().getContextClassLoader();
-         try {
-            type = loader.loadClass(typeName);
-         }
-         catch (ClassNotFoundException e) {
-            // look for a nested class
-            type = loader.loadClass(typeName + "$PropertyEditor");
-         }
+         type = loader.loadClass(typeName);
       }
-      
+
       return PropertyEditorManager.findEditor(type);
    }
 
@@ -127,7 +119,7 @@ public class PropertyEditors
 
       return editor;
    }
-   
+
    /**
     * Register an editor class to be used to editor values of a given target class.
     *
@@ -154,6 +146,40 @@ public class PropertyEditors
       Class editorType = loader.loadClass(editorTypeName);
 
       PropertyEditorManager.registerEditor(type, editorType);
+   }
+
+   /** Convert a string value into the true value for typeName using the
+    * PropertyEditor associated with typeName.
+    *
+    * @param text the string represention of the value. This is passed to
+    * the PropertyEditor.setAsText method.
+    * @param typeName the fully qualified class name of the true value type
+    * @return the PropertyEditor.getValue() result
+    * @exception ClassNotFoundException thrown if the typeName class cannot
+    *    be found
+    * @exception IntrospectionException thrown if a PropertyEditor for typeName
+    *    cannot be found
+    */
+   public static Object convertValue(String text, String typeName)
+         throws ClassNotFoundException, IntrospectionException
+   {
+      // see if it is a primitive type first
+      Class typeClass = Classes.getPrimitiveTypeForName(typeName);
+      if (typeClass == null)
+      {
+         ClassLoader loader = Thread.currentThread().getContextClassLoader();
+         typeClass = loader.loadClass(typeName);
+      }
+
+      PropertyEditor editor = PropertyEditorManager.findEditor(typeClass);
+      if (editor == null)
+      {
+         throw new IntrospectionException
+               ("No property editor for type=" + typeClass);
+      }
+
+      editor.setAsText(text);
+      return editor.getValue();
    }
 
    /**

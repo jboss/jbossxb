@@ -9,9 +9,9 @@
 
 package org.jboss.util.state;
 
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
+import java.util.Iterator;
+import java.util.HashSet;
 
 /**
  * ???
@@ -58,9 +58,6 @@ public class Test
 
    private static class Assert
    {
-      public static int failed = 0;
-      public static int total = 0;
-      
       public static void assertTrue(boolean rv)
       {
          assertTrue(rv, null);
@@ -68,13 +65,10 @@ public class Test
 
       public static void assertTrue(boolean rv, String msg)
       {
-         total++;
-         if (!rv) failed++;
-         
          if (!rv && msg != null) {
             System.out.println(rv + ": " + msg);
          }
-         else if (!rv) {
+         else {
             System.out.println(rv);
          }
       }
@@ -93,19 +87,6 @@ public class Test
    
    public static void main(String[] args)
       throws Exception
-   {
-      try {
-         doit();
-      }
-      catch (Exception e) {
-         e.printStackTrace();
-      }
-
-      System.out.println("\n\nTotal: " + Assert.total);
-      System.out.println("Failed: " + Assert.failed);
-   }
-
-   private static void doit() throws Exception
    {
       System.out.println("\nTesting data structure equality...");
       Assert.assertTrue(new DefaultStateMachineModel().equals(new DefaultStateMachineModel()));
@@ -154,65 +135,65 @@ public class Test
       DefaultStateMachineModel modelC2 = (DefaultStateMachineModel)modelC1.clone();
       DefaultStateMachineModel modelD2 = (DefaultStateMachineModel)modelD1.clone();
       
-      Assert.assertTrue(modelA.equals(modelA) == true, "Equality is broken 1");
-      Assert.assertTrue(modelA.equals(modelB) == true, "Equality is broken 2");
-      Assert.assertTrue(modelB.equals(modelA) == true, "Equality is broken 3");
-      Assert.assertTrue(modelA.equals(modelC) != true, "Equality is broken 4");
+      Assert.assertTrue(modelA.equals(modelA) == true);
+      Assert.assertTrue(modelA.equals(modelB) == true);
+      Assert.assertTrue(modelB.equals(modelA) == true);
+      Assert.assertTrue(modelA.equals(modelC) != true);
 
-      Assert.assertTrue(modelA1.equals(modelA1) == true, "Equality is broken 5");
-      Assert.assertTrue(modelA1.equals(modelB1) == true, "Equality is broken 6");
-      Assert.assertTrue(modelB1.equals(modelA1) == true, "Equality is broken 7");
-      Assert.assertTrue(modelA1.equals(modelC1) != true, "Equality is broken 8");
-      Assert.assertTrue(modelD1.equals(modelD1) == true, "Equality is broken 9");
-      Assert.assertTrue(modelD1.equals(modelA1) != true, "Equality is broken a");
+      Assert.assertTrue(modelA1.equals(modelA1) == true);
+      Assert.assertTrue(modelA1.equals(modelB1) == true);
+      Assert.assertTrue(modelB1.equals(modelA1) == true);
+      Assert.assertTrue(modelA1.equals(modelC1) != true);
+      Assert.assertTrue(modelD1.equals(modelD1) == true);
+      Assert.assertTrue(modelD1.equals(modelA1) != true);
 
-      Assert.assertTrue(modelA.equals(modelA1) != true, "Equality is broken b");
-      Assert.assertTrue(modelB.equals(modelB1) != true, "Equality is broken c");
-      Assert.assertTrue(modelC.equals(modelC1) != true, "Equality is broken d");
-      Assert.assertTrue(modelD.equals(modelD1) != true, "Equality is broken e");
+      Assert.assertTrue(modelA.equals(modelA1) != true);
+      Assert.assertTrue(modelB.equals(modelB1) != true);
+      Assert.assertTrue(modelC.equals(modelC1) != true);
+      Assert.assertTrue(modelD.equals(modelD1) != true);
 
-      Assert.assertTrue(modelA1.equals(modelA2) == true, "Equality is broken f");
-      Assert.assertTrue(modelB1.equals(modelB2) == true, "Equality is broken g");
-      Assert.assertTrue(modelC1.equals(modelC2) == true, "Equality is broken h");
-      Assert.assertTrue(modelD1.equals(modelD2) == true, "Equality is broken h");
+      Assert.assertTrue(modelA1.equals(modelA2) == true);
+      Assert.assertTrue(modelB1.equals(modelB2) == true);
+      Assert.assertTrue(modelC1.equals(modelC2) == true);
+      Assert.assertTrue(modelD1.equals(modelD2) == true);
 
       modelD.removeState(NEW);
 
       System.out.println("\nTesting serializaion...");
-      Assert.assertTrue(canSerialize(new State(0, "")), "State is not serializable");
-      Assert.assertTrue(canSerialize(new StateAdapter(0, "")), "StateAdapter is not serializable");
-      Assert.assertTrue(canSerialize(new AcceptableState(0, "") { public boolean isAcceptable(State state) { return false; } }), "AcceptableState is not serializable");
-      Assert.assertTrue(canSerialize(new DefaultStateMachineModel()), "DefaultStateMachineModel is not serializable");
+      Assert.assertTrue(canSerialize(new State(0, "")));
+      Assert.assertTrue(canSerialize(new StateAdapter(0, "")));
+      Assert.assertTrue(canSerialize(new AcceptableState(0, "") { public boolean isAcceptable(State state) { return false; } }));
+      Assert.assertTrue(canSerialize(new DefaultStateMachineModel()));
       
       System.out.println("\nSetting up model for tests...");
 
       DefaultStateMachineModel model = new DefaultStateMachineModel();
       
-      Assert.assertTrue(model.equals(new DefaultStateMachineModel()) == true, "Equality is broken");
-      Assert.assertTrue(model.equals((StateMachine.Model)model.clone()) == true, "Equality is broken");
+      Assert.assertTrue(model.equals(new DefaultStateMachineModel()) == true);
+      Assert.assertTrue(model.equals((StateMachine.Model)model.clone()) == true);
    
       set = model.addState(NEW, INITIALIZING);
-      Assert.assertTrue(((set == null) == true), "Should have returned a null replacement set");
+      Assert.assertTrue(((set == null) == true), "1");
 
-      Assert.assertTrue(model.equals(new DefaultStateMachineModel()) != true, "Equality is broken");
-      Assert.assertTrue(model.equals((StateMachine.Model)model.clone()) == true, "Equality is broken");
+      Assert.assertTrue(model.equals(new DefaultStateMachineModel()) != true);
+      Assert.assertTrue(model.equals((StateMachine.Model)model.clone()) == true);
       
       model.addState(INITIALIZING, new State[] { INITIALIZED, FAILED });
       model.addState(INITIALIZED, new State[] { STARTING, FAILED });
       model.addState(STARTING, INITIALIZED);
       
-      Assert.assertTrue(model.equals((StateMachine.Model)model.clone()) == true, "Cloned equality is broken 1");
+      Assert.assertTrue(model.equals((StateMachine.Model)model.clone()) == true);
 
       // test set replacement returns
       model.addState(STARTED, INITIALIZED); // invalid state
       set = model.addState(STARTED, STARTING); // this is what we want
-      Assert.assertTrue(set.size() == 1 && set.contains(INITIALIZED), "State replacement is broken 2");
+      Assert.assertTrue(set.size() == 1 && set.contains(INITIALIZED));
 
-      Assert.assertTrue(model.equals((StateMachine.Model)model.clone()) == true, "Cloned equality is broken 3");
+      Assert.assertTrue(model.equals((StateMachine.Model)model.clone()) == true);
       
       model.addState(FINAL);
 
-      Assert.assertTrue(model.equals((StateMachine.Model)model.clone()) == true, "Cloned equality is broken 4");
+      Assert.assertTrue(model.equals((StateMachine.Model)model.clone()) == true);
       
       Set mostStates = new HashSet(model.states());
       mostStates.remove(NEW); // new can only transition to INITIALIZED, not FAILED
@@ -228,7 +209,7 @@ public class Test
 
       StateMachine.Model aModel;
 
-      Assert.assertTrue(model.equals(makeClone()) == true, "Cloned equality is broken 5");
+      Assert.assertTrue(model.equals(makeClone()) == true);
 
       aModel = (StateMachine.Model)model.clone();
       Assert.assertTrue(model.equals(aModel) == true);
@@ -236,20 +217,20 @@ public class Test
 
       aModel.clear();
 
-      Assert.assertTrue(model.equals(aModel) != true, "Cloned equality is broken 6");
+      Assert.assertTrue(model.equals(aModel) != true);
 
       aModel = (StateMachine.Model)model.clone();
-      Assert.assertTrue(model.equals(aModel) == true, "Cloned equality is broken 7");
+      Assert.assertTrue(model.equals(aModel) == true);
       
       aModel.removeState(FINAL);
-      Assert.assertTrue(model.equals(aModel) != true, "Cloned equality is broken 8");
+      Assert.assertTrue(model.equals(aModel) != true);
       
       aModel = (StateMachine.Model)model.clone();
-      Assert.assertTrue(model.equals(aModel) == true, "Cloned equality is broken 9");
+      Assert.assertTrue(model.equals(aModel) == true);
       
       aModel.addState(new State(FINAL.getValue(), "NEW FINAL"));
 
-      Assert.assertTrue(model.equals(aModel) == true, "Cloned equality is broken a");
+      Assert.assertTrue(model.equals(aModel) == true);
 
       machine = new StateMachine(makeClone());
       System.out.println(machine);
@@ -257,9 +238,6 @@ public class Test
       
       test("new machine");
 
-      Assert.assertTrue(machine.isStateFinal(FINAL), "State FINAL should be final");
-      Assert.assertTrue(!machine.isStateFinal(NEW), "State NEW should not be final");
-      
       Assert.assertTrue(finalChecking, "Acceptable State broken");
       Assert.assertTrue(startedGotEvent, "ChangeListener broken");
       Assert.assertTrue(failedGotEvent, "ChangeListener broken");
@@ -267,35 +245,6 @@ public class Test
       machine.reset();
       test("reset");
 
-      /*
-      machine = new StateMachine(makeClone(), true);
-      test("chainable");
-
-      System.out.println("\nTesting isAcceptable w/chaining...");
-      
-      machine = new StateMachine(makeClone(), true);
-      Assert.assertTrue(machine.isAcceptable(INITIALIZED), "Chaining to valid state is broken");
-      machine.transition(INITIALIZED);
-      Assert.assertTrue(machine.getCurrentState().equals(INITIALIZED));
-      Assert.assertTrue(!machine.isAcceptable(NEW), "Chaining to invalid state is broken");
-      try {
-         machine.transition(NEW);
-         System.out.println(false);
-      }
-      catch (Exception e) {
-         System.out.println(true);
-      }
-      Assert.assertTrue(machine.getCurrentState().equals(INITIALIZED), "State should have been INITIALIZED");
-      Assert.assertTrue(!machine.isAcceptable(INITIALIZED), "Can transition to current state");
-      try {
-         machine.transition(INITIALIZED);
-         Assert.assertTrue(false, "Invalid state change allowed");
-      }
-      catch (Exception e) {
-         Assert.assertTrue(true);
-      }
-      */
-      
       machine = new StateMachine(makeClone());
       // System.out.println("Prototype model: " + model);
       // System.out.println("Machine model: " + machine.getModel());
@@ -333,8 +282,8 @@ public class Test
          // should not make it here
       }
       catch (RuntimeException e) {
-         Assert.assertTrue(e.getMessage().equals("ChangeListener"), "Invalid message from change listener");
-         Assert.assertTrue(machine.getCurrentState().equals(INITIALIZING), "State should be INITAILIZING");
+         Assert.assertTrue(e.getMessage().equals("ChangeListener"));
+         Assert.assertTrue(machine.getCurrentState().equals(INITIALIZING));
       }
 
       machine = new StateMachine(makeClone());
@@ -356,17 +305,17 @@ public class Test
       // System.out.println("new states: " + aModel.states());
 
       machine.transition(INITIALIZING);
-      Assert.assertTrue(machine.getCurrentState().equals(INITIALIZING), "State should be INITALIAING");
+      Assert.assertTrue(machine.getCurrentState().equals(INITIALIZING));
       machine.transition(FAILED);
-      Assert.assertTrue(machine.getCurrentState().equals(FAILED), "State should be FAILED");
+      Assert.assertTrue(machine.getCurrentState().equals(FAILED));
       
       try {
          machine.transition(FINAL);
          // should not make it here
       }
       catch (Exception e) {
-         Assert.assertTrue(e.getMessage().equals("Accetable"), "Invalid message from Acceptable");
-         Assert.assertTrue(machine.getCurrentState().equals(FAILED), "State should be FAILED");
+         Assert.assertTrue(e.getMessage().equals("Accetable"));
+         Assert.assertTrue(machine.getCurrentState().equals(FAILED));
       }
 
       System.out.println("\nDone.");
@@ -393,8 +342,8 @@ public class Test
       StateMachine.Model model = machine.getModel();
       // System.out.println("Using model: " + model);
 
-      Assert.assertTrue(model.getInitialState().equals(NEW), "Initial state should have been NEW");
-      Assert.assertTrue(machine.getCurrentState().equals(NEW), "State should have been NEW");
+      Assert.assertTrue(model.getInitialState().equals(NEW));
+      Assert.assertTrue(machine.getCurrentState().equals(NEW));
       
       // dumpStates(machine.getModel().states());
 
@@ -402,32 +351,32 @@ public class Test
 
       // try some valid state changes
       machine.transition(INITIALIZING);
-      Assert.assertTrue(machine.getCurrentState().equals(INITIALIZING), "State should have been INITIALIZING");
+      Assert.assertTrue(machine.getCurrentState().equals(INITIALIZING));
       machine.transition(INITIALIZED);
-      Assert.assertTrue(machine.getCurrentState().equals(INITIALIZED), "State should have been INITIALIZED");
+      Assert.assertTrue(machine.getCurrentState().equals(INITIALIZED));
 
       // now for an invalid state change
       try {
          machine.transition(NEW);
-         Assert.assertTrue(false, "Invalid state change allowed; can not trans from INITIALIZED to NEW");
+         Assert.assertTrue(false);
       }
       catch (IllegalStateException e) {
-         Assert.assertTrue(machine.getCurrentState().equals(INITIALIZED), "State should be INITIALIZED");
+         Assert.assertTrue(machine.getCurrentState().equals(INITIALIZED));
       }
 
       // now for an invalid when we are in a final state
       machine.transition(FAILED);
-      Assert.assertTrue(machine.getCurrentState().equals(FAILED), "State should be FAILED");
+      Assert.assertTrue(machine.getCurrentState().equals(FAILED));
 
       machine.transition(FINAL);
-      Assert.assertTrue(machine.getCurrentState().equals(FINAL), "State should be FINAL");
+      Assert.assertTrue(machine.getCurrentState().equals(FINAL));
       
       try {
          machine.transition(NEW);
-         Assert.assertTrue(false, "Invalid state change allowed; can not trans from FINAL to NEW");
+         Assert.assertTrue(false);
       }
       catch (IllegalStateException e) {
-         Assert.assertTrue(machine.getCurrentState().equals(FINAL), "State should be FINAL");
+         Assert.assertTrue(machine.getCurrentState().equals(FINAL));
       }
    }
    

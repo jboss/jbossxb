@@ -80,7 +80,7 @@ public class XLevel
    {
       return toLevel(name, TRACE);
    }
-
+   
    /**
     * Convert an integer passed as argument to a priority. If the conversion
     * fails, then this method returns the specified default.

@@ -10,17 +10,18 @@
 package org.jboss.util.state;
 
 import java.io.Serializable;
+
+import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Collections;
 import java.util.EventListener;
 import java.util.EventObject;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
 
-import org.jboss.util.CloneableObject;
 import org.jboss.util.NullArgumentException;
+import org.jboss.util.CloneableObject;
 import org.jboss.util.PrettyString;
 
 /**
@@ -137,7 +138,7 @@ public class StateMachine
    /**
     * Construct a state machine with the given model.
     *
-    * @param model    The model for the machine; must not be null.
+    * @param model   The model for the machine; must not be null.
     */
    public StateMachine(final Model model)
    {
@@ -156,7 +157,7 @@ public class StateMachine
    }
 
    /** For sync and immutable wrappers. */
-   private StateMachine(final Model model, final Object hereForSigChangeOnly)
+   private StateMachine(final Model model, final boolean hereForSigChangeOnly)
    {
       // must be initialized (they are final), but never used.
       this.model = model;
@@ -176,7 +177,7 @@ public class StateMachine
       
       return buff.toString();
    }
-
+   
    /**
     * Return the model which provides data encapsulation for the machine.
     *
@@ -246,50 +247,41 @@ public class StateMachine
     *
     * @param state   The state check.
     * @return        True if the given state is acceptable for transition; else false.
+    *
+    * @throws IllegalArgumentException   State not found in model.
     */
    public boolean isAcceptable(State state)
    {
       if (state == null)
          throw new NullArgumentException("state");
 
-      
-      return isAcceptable(model.getCurrentState(), state);
-   }
-
-   /**
-    * Actually checks the acceptability of a state.
-    */
-   protected boolean isAcceptable(final State origin, final State target)
-   {
-      // assert origin != null
-      // assert target != null
-      // assert model.conains(origin)
-
-      // state is not acceptable if the model does not contain this state
-      // or the origin is final
-      if (!model.containsState(target) || isStateFinal(origin)) {
+      // if the model does not contain this state or the current state is final,
+      // then we can not go anywhere
+      if (!model.containsState(state) || isStateFinal()) {
          return false;
       }
       
+      State currentState = model.getCurrentState();
+
       // Do not allow the current state to accept itself
-      if (target.equals(origin)) {
+      if (state.equals(currentState)) {
          return false;
       }
       
       boolean rv = false;
 
       // Replace state with the mapped version
-      State state = model.getMappedState(target);
+      state = model.getMappedState(state);
       
       // If the current state implements Acceptable let it have a whack
-      if (origin instanceof Acceptable) {
-         rv = ((Acceptable)origin).isAcceptable(state);
+      if (currentState instanceof Acceptable) {
+         rv = ((Acceptable)currentState).isAcceptable(state);
       }
 
       // If we still have not accepted, then check the accept list
-      Set states = model.acceptableStates(origin);
-      if (!rv) {
-         rv = states.contains(state);
+      Set states = model.acceptableStates(model.getCurrentState());
+      if (!rv && states.contains(state)) {
+         rv = true;
       }
       
       return rv;
@@ -309,20 +301,10 @@ public class StateMachine
     */
    public void transition(final State state)
    {
-      // Make sure we are in an acceptable state
-      ensureAcceptable(state);
-      
-      // state is acceptable, let any listeners know about it
-      changeState(state);
-   }
-
-   protected void ensureAcceptable(final State state)
-   {
       if (!isAcceptable(state)) {
-         State currentState = model.getCurrentState();
-         
          // make an informative exception message
          StringBuffer buff = new StringBuffer();
+         State current = model.getCurrentState();
          
          if (isStateFinal()) {
             buff.append("Current state is final");
@@ -330,7 +312,7 @@ public class StateMachine
          else {
             buff.append("State must be ");
          
-            Set temp = model.acceptableStates(currentState);
+            Set temp = model.acceptableStates(current);
             State[] states = (State[])temp.toArray(new State[temp.size()]);
          
             for (int i=0; i<states.length; i++) {
@@ -346,12 +328,15 @@ public class StateMachine
          buff.append("; cannot accept state: ")
             .append(state.getName())
             .append("; state=")
-            .append(currentState.getName());
+            .append(current.getName());
          
          throw new IllegalStateException(buff.toString());
       }
+
+      // state is acceptable, let any listeners know about it
+      changeState(state);
    }
-   
+
    /**
     * Reset the state machine.
     *
@@ -387,28 +372,22 @@ public class StateMachine
     * Change the state of the machine and send change events
     * to all listeners and to the previous and new state objects
     * if they implement {@link ChangeListener}.
-    *
-    * <p>If a change listener throws an Error or RuntimeException
-    *    the state of the machine should remain in the changed state.
     */
-   protected ChangeEvent changeState(final State state)
+   protected ChangeEvent changeState(State state)
    {
       // assert state != null
 
       // Replace state with the mapped version
-      State mappedState = model.getMappedState(state);
+      state = model.getMappedState(state);
          
       State prev = model.getCurrentState();
-      model.setCurrentState(mappedState);
+      model.setCurrentState(state);
 
-      ChangeEvent event = new ChangeEvent(this, prev, mappedState, state);
+      ChangeEvent event = new ChangeEvent(this, prev, state);
 
-      // Let the previous, current and user states deal if they want
+      // Let the previous and current states deal if they want
       if (prev instanceof ChangeListener) {
          ((ChangeListener)prev).stateChanged(event);
-      }
-      if (mappedState instanceof ChangeListener) {
-         ((ChangeListener)mappedState).stateChanged(event);
       }
       if (state instanceof ChangeListener) {
          ((ChangeListener)state).stateChanged(event);
@@ -564,9 +543,6 @@ public class StateMachine
     *
     * <p>This method (as well as add and remove methods) are protected
     *    from concurrent modification exceptions.
-    *
-    * <p>Any Error or RuntimeException thrown by a change listener will
-    *    prevent notification of listeners added after the throwing listener.
     */
    protected void fireStateChanged(final ChangeEvent event)
    {
@@ -590,28 +566,17 @@ public class StateMachine
    public static class ChangeEvent
       extends EventObject
    {
-      public final StateMachine machine;
       public final State previous;
       public final State current;
-      public final State user;
-
+      
       public ChangeEvent(final StateMachine source,
                          final State previous,
-                         final State current,
-                         final State user)
+                         final State current)
       {
          super(source);
 
-         // previous may be null
-         if (current == null)
-            throw new NullArgumentException("current");
-         if (user == null)
-            throw new NullArgumentException("user");
-
-         this.machine = source;
          this.previous = previous;
          this.current = current;
-         this.user = user;
       }
 
       /**
@@ -640,17 +605,6 @@ public class StateMachine
       }
 
       /**
-       * Returns the state instance which the was passed to the machine
-       * by the user.
-       *
-       * @return The state instance the user passed the machine.
-       */
-      public State getUserState()
-      {
-         return user;
-      }
-      
-      /**
        * The state machine which generated the event.
        */
       public StateMachine getStateMachine()
@@ -660,10 +614,9 @@ public class StateMachine
 
       public String toString()
       {
-         return getClass().getName() + // don't use super, it will mess up formating
+         return super.toString() +
             "{ previous=" + previous +
             ", current=" + current +
-            (user != current ? (", user=" + user) : "") +
             " }";
       }
    }
@@ -694,10 +647,6 @@ public class StateMachine
    public interface Model
       extends CloneableObject.Cloneable, PrettyString.Appendable
    {
-      //
-      // jason: Expose StateMapping here
-      //
-      
       /**
        * Add a non-final state.
        *
@@ -861,7 +810,7 @@ public class StateMachine
       if (machine == null)
          throw new NullArgumentException("machine");
       
-      return new StateMachine(null, null)
+      return new StateMachine(null, true)
          {
             private Object lock = (mutex == null ? this : mutex);
 
@@ -907,7 +856,7 @@ public class StateMachine
                }
             }
 
-            public void transition(final State state) 
+            public void transition(final State state)
             {
                synchronized (lock) {
                   machine.transition(state);
@@ -1000,7 +949,7 @@ public class StateMachine
       if (machine == null)
          throw new NullArgumentException("machine");
       
-      return new StateMachine(machine.getModel(), null)
+      return new StateMachine(machine.getModel(), true)
          {
             public Model getModel()
             {

@@ -20,7 +20,7 @@ import java.util.Map;
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
- * @author Scott.Stark@jboss.org
+ * @author <a href="Scott.Stark@jboss.org">Scott Stark</a>
  */
 public final class Strings
 {
@@ -29,6 +29,94 @@ public final class Strings
 
    /** New line string constant */
    public static final String NEWLINE = org.jboss.util.platform.Constants.LINE_SEPARATOR;
+
+   /**
+    * List of valid Java keywords, see The Java Language Specification
+    * Second Edition Section 3.9, 3.10.3 and 3.10.7
+    */
+   private static final String[] keywords =
+   {
+      "abstract",
+      "boolean",
+      "break",
+      "byte",
+      "case",
+      "catch",
+      "char",
+      "class",
+      "const",
+      "continue",
+      "default",
+      "do",
+      "double",
+      "else",
+      "extends",
+      "final",
+      "finally",
+      "float",
+      "for",
+      "goto",
+      "if",
+      "implements",
+      "import",
+      "instanceof",
+      "int",
+      "interface",
+      "long",
+      "native",
+      "new",
+      "package",
+      "private",
+      "protected",
+      "public",
+      "return",
+      "short",
+      "static",
+      "strictfp",
+      "super",
+      "switch",
+      "synchronized",
+      "this",
+      "throw",
+      "throws",
+      "transient",
+      "try",
+      "void",
+      "volatile",
+      "while",
+
+      "true",     // technically no keywords but we are not picky
+      "false",
+      "null"
+   };
+
+   /**
+    * List of EJB-QL Identifiers as defined in the EJB 2.0 Specification
+    * Section 11.2.6.1
+    */
+   private static final String[] ejbQlIdentifiers =
+   {
+      "AND",
+      "AS",
+      "BETWEEN",
+      "DISTINCT",
+      "EMPTY",
+      "FALSE",
+      "FROM",
+      "IN",
+      "IS",
+      "LIKE",
+      "MEMBER",
+      "NOT",
+      "NULL",
+      "OBJECT",
+      "OF",
+      "OR",
+      "SELECT",
+      "UNKNOWN",
+      "TRUE",
+      "WHERE",
+   };
 
    // States used in property parsing
    private static final int NORMAL = 0;
@@ -769,4 +857,99 @@ public final class Strings
    {
       return toURL(urlspec, null);
    }
+
+   /**
+    * Check whether the given String is a reserved Java Keyword
+    * according to the Java Language Specifications.
+    *
+    * @param s String to check
+    *
+    * @return <code>true</code> if the given String is a reserved Java
+    *         keyword, <code>false</code> otherwise.
+    */
+   public final static boolean isJavaKeyword( String s )
+   {
+      if( s == null || s.length() == 0 )
+      {
+         return false;
+      }
+
+      for( int i = 0; i < keywords.length; i++ )
+      {
+         if( keywords[i].equals(s) )
+         {
+            return true;
+         }
+      }
+
+      return false;
+   }
+
+   /**
+    * Check whether the given String is an identifier according to the
+    * EJB-QL definition. See The EJB 2.0 Documentation Section 11.2.6.1.
+    *
+    * @param s String to check
+    *
+    * @return <code>true</code> if the given String is a reserved
+    *         identifier in EJB-QL, <code>false</code> otherwise.
+    */
+   public final static boolean isEjbQlIdentifier( String s )
+   {
+      if( s == null || s.length() == 0 )
+      {
+         return false;
+      }
+
+      for( int i = 0; i < ejbQlIdentifiers.length; i++ )
+      {
+         if( ejbQlIdentifiers[i].equalsIgnoreCase(s) )
+         {
+            return true;
+         }
+      }
+
+      return false;
+   }
+
+   /**
+    * Check whether the given String is a valid identifier according
+    * to the Java Language specifications.
+    *
+    * See The Java Language Specification Second Edition, Section 3.8
+    * for the definition of what is a valid identifier.
+    *
+    * @param s String to check
+    *
+    * @return <code>true</code> if the given String is a valid Java
+    *         identifier, <code>false</code> otherwise.
+    */
+   public final static boolean isValidJavaIdentifier( String s )
+   {
+      // an empty or null string cannot be a valid identifier
+      if( s == null || s.length() == 0 )
+      {
+         return false;
+      }
+
+      char[] c = s.toCharArray();
+      if( !Character.isJavaIdentifierStart(c[0]) )
+      {
+         return false;
+      }
+
+      for( int i = 1; i < c.length; i++ )
+      {
+         if( !Character.isJavaIdentifierPart(c[i]) )
+         {
+            return false;
+         }
+      }
+
+      return true;
+   }
+
 }
+/*
+vim:ts=3:sw=3:et
+*/

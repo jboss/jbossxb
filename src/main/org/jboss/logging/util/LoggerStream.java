@@ -15,6 +15,8 @@ import java.io.PrintStream;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
 
+import org.jboss.logging.XLevel;
+
 /**
  * A subclass of PrintStream that redirects its output to a log4j Logger.
  * 

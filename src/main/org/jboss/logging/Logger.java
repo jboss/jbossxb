@@ -313,10 +313,17 @@ public class Logger
       }
       catch (Throwable e)
       {
-         e.printStackTrace();
          plugin = new NullLoggerPlugin();
       }
-      plugin.init(name);
+      try
+      {
+         plugin.init(name);
+      }
+      catch(Throwable e)
+      {
+         System.err.println("Failed to initalize pulgin: "+plugin);
+         plugin = new NullLoggerPlugin();
+      }
 
       return plugin;
    }
@@ -346,8 +353,6 @@ public class Logger
       {
          // The plugin could not be setup, default to a null logger
          pluginClass = org.jboss.logging.NullLoggerPlugin.class;
-         e.printStackTrace();
       }
    }
 }
-

@@ -9,12 +9,12 @@
 
 package org.jboss.util.collection;
 
-import java.util.AbstractSet;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
+import java.util.AbstractSet;
+import java.util.Iterator;
+import java.util.Collection;
 
 import org.jboss.util.NullArgumentException;
 

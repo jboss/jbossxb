@@ -20,8 +20,5 @@ import java.io.Serializable;
 public interface ID
    extends Serializable, Cloneable
 {
-   /**
-    * Expose clone as a public method.
-    */
-   Object clone();
+   // empty
 }

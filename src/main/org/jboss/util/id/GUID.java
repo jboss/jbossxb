@@ -9,7 +9,6 @@
 
 package org.jboss.util.id;
 
-import org.jboss.util.CloneableObject;
 /**
  * A globally unique identifier (globally across a cluster of virtual 
  * machines).
@@ -33,44 +32,30 @@ import org.jboss.util.CloneableObject;
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
 public class GUID
-   extends CloneableObject
-   implements ID, Comparable, java.io.Serializable
+   implements ID
 {
    /** The virtual machine identifier */
-   protected VMID vmid;
+   protected final VMID vmid;
 
    /** The unique identifier */
-   protected UID uid;
+   protected final UID uid;
 
    /** The hash code of this GUID */
-   protected int hashCode;
-
-   /** string represntation **/
-   protected String cacheString;
+   protected final int hashCode;
 
    /**
     * Construct a new GUID.
     */
-   public GUID() 
-   {
-      this(VMID.getInstance(), new UID());
-   }
-
-   /**
-    * Initialze a new GUID with specific values.
-    */
-   protected GUID(final VMID vmid, final UID uid)
-   {
-      this.vmid = vmid;
-      this.uid = uid;
+   public GUID() {
+      this.vmid = VMID.getInstance();
+      this.uid = new UID();
 
       // generate a hash code for this GUID
       int code = vmid.hashCode();
       code ^= uid.hashCode();
       hashCode = code;
-      cacheString = vmid.toString() + "-" + uid.toString();
    }
-   
+
    /**
     * Copy a GUID.
     *
@@ -80,7 +65,6 @@ public class GUID
       this.vmid = guid.vmid;
       this.uid = guid.uid;
       this.hashCode = guid.hashCode;
-      this.cacheString = guid.cacheString;
    }
 
    /**
@@ -100,15 +84,6 @@ public class GUID
    public final UID getUID() {
       return uid;
    }
-
-   /**
-    *
-    */
-   public int compareTo(Object obj)
-   {
-      GUID guid = (GUID)obj;
-      return toString().compareTo(guid.toString());
-   }
    
    /**
     * Return a string representation of this GUID.
@@ -116,7 +91,7 @@ public class GUID
     * @return  A string representation of this GUID.
     */
    public String toString() {
-      return cacheString;
+      return vmid.toString() + "-" + uid.toString();
    }
 
    /**
@@ -152,35 +127,25 @@ public class GUID
    }
 
    /**
+    * Returns a copy of this GUID.
+    *
+    * @return  A copy of this GUID.
+    */
+   public Object clone() {
+      try {
+         return super.clone();
+      }
+      catch (CloneNotSupportedException e) {
+         throw new InternalError();
+      }
+   }
+
+   /**
     * Returns a GUID as a string.
     *
     * @return  GUID as a string.
     */
    public static String asString() {
       return new GUID().toString();
-   }
-
-   
-   /////////////////////////////////////////////////////////////////////////
-   //                            Factory Access                           //
-   /////////////////////////////////////////////////////////////////////////
-
-   /**
-    * Creates GUID instances which are unique to the factory instance.
-    * The UID portion of the GUID areare generated from a UID.Factory.
-    */
-   public static class Factory
-   {
-      /** A factory for creating UIDs */
-      protected final UID.Factory factory = new UID.Factory();
-      protected final VMID vmid = VMID.getInstance();
-      
-      /**
-       * Create a new UID.
-       */
-      public GUID create()
-      {
-         return new GUID(vmid, factory.create());
-      }
    }
 }

@@ -11,21 +11,18 @@ package org.jboss.util.propertyeditor;
 
 import java.beans.PropertyEditorSupport;
 
-/**
- * A property editor for {@link java.lang.Integer}.
+/** A property editor for {@link java.lang.Integer}.
  *
- * @version <tt>$Revision$</tt>
+ * @version $Revision$
  * @author Scott.Stark@jboss.org
  */
-public class IntegerEditor
-   extends PropertyEditorSupport
+public class IntegerEditor extends PropertyEditorSupport
 {
-   /**
-    * Map the argument text into and Integer using Integer.valueOf.
+   /** Map the argument text into and Integer using Integer.valueOf.
     */
    public void setAsText(final String text)
    {
-      Integer newValue = Integer.valueOf(text);
+      Object newValue = Integer.valueOf(text);
       setValue(newValue);
    }
 

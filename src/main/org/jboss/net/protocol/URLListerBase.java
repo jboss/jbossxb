@@ -7,7 +7,6 @@
  *                                     *
  ***************************************/
 
-
 package org.jboss.net.protocol;
 
 import java.util.Arrays;
@@ -41,39 +40,44 @@ public abstract class URLListerBase implements URLLister
       return listMembers (baseUrl, filter, scanNonDottedSubDirs);
    }
 
-   public Collection listMembers (URL baseUrl, String patterns)
-      throws IOException
+   public Collection listMembers (URL baseUrl, String patterns) throws IOException
    {
       return listMembers (baseUrl, patterns, false);
    }
-
-
+   
    /**
     * Inner class representing Filter criteria to be applied to the members
     * of the returned Collection
     */
-   public static class URLFilterImpl implements URLFilter  {
+   public static class URLFilterImpl implements URLFilter
+   {
       protected boolean allowAll;
       protected HashSet constants;
-
-      public URLFilterImpl(String[] patterns) {
-         constants = new HashSet(Arrays.asList(patterns));
-         allowAll = constants.contains("*");
+      
+      public URLFilterImpl (String[] patterns)
+      {
+         constants = new HashSet (Arrays.asList (patterns));
+         allowAll = constants.contains ("*");
       }
-
-      public boolean accept(URL baseUrl, String name) {
-         if (allowAll) {
+      
+      public boolean accept (URL baseUrl, String name)
+      {
+         if (allowAll)
+         {
             return true;
          }
-         if (constants.contains(name)) {
+         if (constants.contains (name))
+         {
             return true;
          }
          return false;
       }
    }
-
-   protected static final URLFilter acceptAllFilter = new URLFilter() {
-      public boolean accept(URL baseURL, String memberName) {
+   
+   protected static final URLFilter acceptAllFilter = new URLFilter ()
+   {
+      public boolean accept (URL baseURL, String memberName)
+      {
          return true;
       }
    };

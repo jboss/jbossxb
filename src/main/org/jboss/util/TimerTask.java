@@ -33,7 +33,8 @@ public abstract class TimerTask
    // Attributes ----------------------------------------------------
    private final Object m_lock = new Object();
    private int m_state;
-   private long m_period;
+   // this is a constant, and need not be locked
+   private final long m_period;
    private long m_nextExecutionTime;
 
    /**
@@ -41,9 +42,8 @@ public abstract class TimerTask
     */
    protected TimerTask() 
    {
-      setState(NEW);
+      m_state = NEW;
       m_period = 0;
-      m_nextExecutionTime = 0;
    }
    
    /**
@@ -53,7 +53,7 @@ public abstract class TimerTask
     */
    protected TimerTask(long period) 
    {
-      this();
+      m_state = NEW;
       if (period < 0) throw new IllegalArgumentException("Period can't be negative");
       m_period = period;
    }
@@ -68,8 +68,8 @@ public abstract class TimerTask
    {
       synchronized (getLock()) 
       {
-         boolean ret = (getState() == SCHEDULED);
-         setState(CANCELLED);
+         boolean ret = (m_state == SCHEDULED);
+         m_state = CANCELLED;
          return ret;
       }
    }
@@ -85,31 +85,14 @@ public abstract class TimerTask
    
    /**
     * A TimerTask is less than another if it will be scheduled before.
+    * @throws ClassCastException if other is not a TimerTask, according to the Comparable contract
     */
    public int compareTo(Object other)
    {
-      if (!(other instanceof TimerTask))
-         throw new IllegalArgumentException("Can't compare a TimerTask with something else");
       if (other == this) return 0;
-      // Avoid deadlock
-      TimerTask one = this;
-      TimerTask two = (TimerTask)other;
-      boolean swapped = false;
-      if (one.hashCode() > two.hashCode())
-      {
-         one = two;
-         two = this;
-         swapped = true;
-      }
-      synchronized (one) 
-      {
-         synchronized (two)
-         {
-            int res = (int)(one.getNextExecutionTime() - two.getNextExecutionTime());
-            if (swapped) {return -res;}
-            else {return res;}
-         }
-      }
+      TimerTask t = (TimerTask) other;
+      long diff = getNextExecutionTime() - t.getNextExecutionTime();
+      return (int) diff;
    }
 
    /** Returns the mutex that syncs the access to this object */
@@ -139,10 +122,7 @@ public abstract class TimerTask
    /** Returns whether this TimerTask is periodic */
    boolean isPeriodic() 
    {
-      synchronized (getLock())
-      {
-         return m_period > 0;
-      }
+      return m_period > 0;
    }
    
    /** Returns the next execution time for this TimerTask */
@@ -166,9 +146,6 @@ public abstract class TimerTask
    /** Returns the period of this TimerTask */
    protected long getPeriod() 
    {
-      synchronized (getLock())
-      {
-         return m_period;
-      }
+      return m_period;
    }
 }

@@ -9,62 +9,52 @@
 
 package org.jboss.util.propertyeditor;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.ArrayList;
 import java.util.StringTokenizer;
+import java.beans.PropertyEditorSupport;
 
 /**
  * A property editor for String[].
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
- * total code replacement...
- * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
+ * @author Scott.Stark@jboss.org
  */
 public class StringArrayEditor
-   extends TextPropertyEditorSupport
+   extends PropertyEditorSupport
 {
-   /**
-    * Returns a String[] by spliting up the input string where 
-    * elements are separated by commas.
+   /** Build a String[]
     *
-    * @return a URL object
-    *
-    * @throws NestedRuntimeException   An MalformedURLException occured.
     */
-   public void setAsText(String text)
+   public void setAsText(final String text)
    {
-      if (text == null || text.length() == 0) 
+      StringTokenizer stok = new StringTokenizer(text, ",");
+      ArrayList list = new ArrayList();
+      while (stok.hasMoreTokens())
       {
-	 setValue(null);
-      } // end of if ()
-      else 
-      {
-	 StringTokenizer stok = new StringTokenizer(text, ",");
-	 List list = new LinkedList();
-      
-	 while (stok.hasMoreTokens()) 
-	 {
-	    list.add(stok.nextToken());
-	 }
+         list.add(stok.nextToken());
+      }
 
-	 setValue((String[])list.toArray(new String[list.size()]));
-      } // end of else
+      String[] theValue = new String[list.size()];
+      list.toArray(theValue);
+      setValue(theValue);
    }
 
+   /**
+    * @return a comma seperated string of the array elements
+    */
    public String getAsText()
    {
-      String[] strings = (String[])getValue();
-      if (strings == null || strings.length == 0)
+      String[] theValue = (String[]) getValue();
+      StringBuffer text = new StringBuffer();
+      int length = theValue == null ? 0 : theValue.length;
+      for(int n = 0; n < length; n ++)
       {
-	 return null; 
-      } // end of if ()
-      StringBuffer result = new StringBuffer(strings[0]);
-      for (int i = 1; i < strings.length; i++)
-      {
-	 result.append(",").append(strings[i]); 
-      } // end of for ()
-      return result.toString();
+         text.append(theValue[n]);
+         text.append(',');
+      }
+      // Remove the trailing ','
+      text.setLength(text.length()-1);
+      return text.toString();
    }
-
 }

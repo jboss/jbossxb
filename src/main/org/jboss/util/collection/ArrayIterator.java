@@ -9,9 +9,10 @@
 
 package org.jboss.util.collection;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+
+import java.io.Serializable;
 
 import org.jboss.util.NullArgumentException;
 

@@ -9,9 +9,9 @@
 
 package org.jboss.util.collection;
 
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.LinkedList;
+import java.util.Iterator;
 
 import org.jboss.util.NullArgumentException;
 

@@ -57,9 +57,10 @@ public class TCLStack
       boolean trace = log.isTraceEnabled();
       
       // push the old cl and set the new cl
-      ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
+      Thread currentThread = Thread.currentThread();
+      ClassLoader oldCL = currentThread.getContextClassLoader();
 
-      Thread.currentThread().setContextClassLoader(cl);
+      currentThread.setContextClassLoader(cl);
       getStack().push(oldCL);
       
       if (log.isTraceEnabled()) {
@@ -79,10 +80,11 @@ public class TCLStack
    {
       // get the last cl in the stack & make it the current
       try {
+         Thread currentThread = Thread.currentThread();
          ClassLoader cl = (ClassLoader)getStack().pop();
-         ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
+         ClassLoader oldCL = currentThread.getContextClassLoader();
 
-         Thread.currentThread().setContextClassLoader(cl);
+         currentThread.setContextClassLoader(cl);
 
          if (log.isTraceEnabled()) {
             log.trace("Setting TCL to " + cl + "; popped: " + oldCL);

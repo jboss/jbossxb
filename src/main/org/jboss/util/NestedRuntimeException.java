@@ -27,7 +27,7 @@ public class NestedRuntimeException
    protected final Throwable nested;
 
    /**
-    * Construct a <tt>NestedRuntimeException</tt> with the specified
+    * Construct a <tt>NestedRuntimeException</tt> with the specified 
     * detail message.
     *
     * @param msg  Detail message.
@@ -76,7 +76,7 @@ public class NestedRuntimeException
    public Throwable getNested() {
       return nested;
    }
-
+   
    /**
     * Return the nested <tt>Throwable</tt>.
     *
@@ -124,24 +124,10 @@ public class NestedRuntimeException
    }
 
    /**
-    * Prints the composite message and the embedded stack trace to
+    * Prints the composite message and the embedded stack trace to 
     * <tt>System.err</tt>.
     */
    public void printStackTrace() {
       printStackTrace(System.err);
-   }
-
-   /**
-    * Wraps the give throwable in a NestedRuntimeException unless it is already
-    * a NestedRuntimeException.
-    *
-    * @param t   The target throwable to wrap.
-    * @return    A NestedRuntimeException.
-    */
-   public static NestedRuntimeException wrap(Throwable t) {
-      if (t instanceof NestedRuntimeException) {
-         return (NestedRuntimeException)t;
-      }
-      return new NestedRuntimeException(t);
    }
 }

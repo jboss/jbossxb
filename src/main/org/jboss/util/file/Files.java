@@ -13,13 +13,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 
-import org.jboss.util.stream.Streams;
 import org.jboss.logging.Logger;
+import org.jboss.util.stream.Streams;
 
 /**
  * A collection of file utilities.
@@ -30,7 +28,9 @@ import org.jboss.logging.Logger;
  */
 public final class Files
 {
-   static final Logger log = Logger.getLogger(Files.class);
+   private static final Logger log = Logger.getLogger(Files.class);
+   /** The default size of the copy buffer. */
+   public static final int DEFAULT_BUFFER_SIZE = 8192;
 
    /** Delete a file, or a directory and all of its contents.
     *
@@ -100,9 +100,6 @@ public final class Files
       return delete(containingDir);
    }
 
-   /** The default size of the copy buffer. */
-   public static final int DEFAULT_BUFFER_SIZE = 8192; // 8k
-
    /**
     * Copy a file.
     *
@@ -117,11 +114,8 @@ public final class Files
          final byte buff[])
          throws IOException
    {
-      DataInputStream in = new DataInputStream
-            (new BufferedInputStream(new FileInputStream(source)));
-
-      DataOutputStream out = new DataOutputStream
-            (new BufferedOutputStream(new FileOutputStream(target)));
+      BufferedInputStream in = new BufferedInputStream(new FileInputStream(source));
+      BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(target));
 
       int read;
 

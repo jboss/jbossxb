@@ -1,148 +1,238 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE project [
-  <!ENTITY buildmagic SYSTEM "../tools/etc/buildfragments/buildmagic.ent">
-  <!ENTITY tools      SYSTEM "../tools/etc/buildfragments/tools.ent">
-  <!ENTITY libraries  SYSTEM "../tools/etc/buildfragments/libraries.ent">
-  <!ENTITY modules    SYSTEM "../tools/etc/buildfragments/modules.ent">
-  <!ENTITY defaults   SYSTEM "../tools/etc/buildfragments/defaults.ent">
-  <!ENTITY targets    SYSTEM "../tools/etc/buildfragments/targets.ent">
+   <!ENTITY buildmagic SYSTEM "../tools/etc/buildmagic/buildmagic.ent">
+   <!ENTITY libraries SYSTEM "../tools/etc/buildmagic/libraries.ent">
 ]>
+
+<!-- ====================================================================== -->
+<!--                                                                        -->
+<!--  JBoss, the OpenSource J2EE webOS                                      -->
+<!--                                                                        -->
+<!--  Distributable under LGPL license.                                     -->
+<!--  See terms of license at http://www.gnu.org.                           -->
+<!--                                                                        -->
+<!-- ====================================================================== -->
 
 <!-- $Id$ -->
 
-<!--+======================================================================+-->
-<!--| JBoss (The OpenSource J2EE WebOS) Build File                         |-->
-<!--|                                                                      |-->
-<!--| Distributable under LGPL license.                                    |-->
-<!--| See terms of license at http://www.gnu.org.                          |-->
-<!--|                                                                      |-->
-<!--| This file has been designed to work with the 'tools' module and      |-->
-<!--| Buildmagic extentions.                                               |-->
-<!--+======================================================================+-->
-
 <project default="main" name="JBoss/Common">
 
-  <!--+====================================================================+-->
-  <!--| Setup                                                              |-->
-  <!--|                                                                    |-->
-  <!--| Include the common build elements.                                 |-->
-  <!--|                                                                    |-->
-  <!--| This defines several different targets, properties and paths.      |-->
-  <!--| It also sets up the basic extention tasks amoung other things.     |-->
-  <!--+====================================================================+-->
+  <!-- ================================================================== -->
+  <!-- Setup                                                              -->
+  <!-- ================================================================== -->
+
+  <!--
+     | Include the common Buildmagic elements.
+     |
+     | This defines several different targets, properties and paths.
+     | It also sets up the basic extention tasks amoung other things.
+   -->
 
   &buildmagic;
-  &libraries;
-  &modules;
-  &defaults;
-  &tools;
-  &targets;
 
 
-  <!--+====================================================================+-->
-  <!--| Initialization                                                     |-->
-  <!--|                                                                    |-->
-  <!--| Initialize the build system.  Other targets should depend on       |-->
-  <!--| 'init'.                                                            |-->
-  <!--+====================================================================+-->
+  <!-- ================================================================== -->
+  <!-- Initialization                                                     -->
+  <!-- ================================================================== -->
 
-  <target name="init" depends="_default:init">
-    <!-- Add module specific elements here. -->
+  <!--
+     | Initialize the build system.  Must depend on '_buildmagic:init'.  
+     | Other targets should depend on 'init' or things will mysteriously fail.
+   -->
+
+  <target name="init" unless="init.disable" depends="_buildmagic:init">
   </target>
 
 
-  <!--+====================================================================+-->
-  <!--| Configuration                                                      |-->
-  <!--|                                                                    |-->
-  <!--| This target is invoked by the Buildmagic initialization logic      |-->
-  <!--| and should contain module specific configuration elements.         |-->
-  <!--+====================================================================+-->
+  <!-- ================================================================== -->
+  <!-- Configuration                                                      -->
+  <!-- ================================================================== -->
+
+  <!--
+     | Configure the build system.  
+     |
+     | This target is invoked by the Buildmagic initialization logic and 
+     | should contain module specific configuration elements.
+   -->
 
   <target name="configure" unless="configure.disable">
+
+    <!-- =================== -->
+    <!-- Basic Configuration -->
+    <!-- =================== -->
 
     <!-- Module name(s) & version -->
     <property name="module.name" value="common"/>
     <property name="module.Name" value="JBoss/Common"/>
+    <property name="module.version" value="DEV"/>
 
-    <!-- Configure thirdparty libraries -->
-    <call target="configure-libraries"/>
+    <!-- ========= -->
+    <!-- Libraries -->
+    <!-- ========= -->
+    &libraries;
+    <!-- The combined library classpath -->
     <path id="library.classpath">
+      <path refid="apache.crimson.classpath"/>
+      <path refid="apache.commons.classpath"/>
       <path refid="apache.log4j.classpath"/>
       <path refid="apache.slide.classpath"/>
-      <path refid="junit.junit.classpath"/>
       <path refid="gnu.regexp.classpath"/>
-      <path refid="sun.jmx.classpath"/>
-      <path refid="sun.jaxp.classpath"/>
-      <path refid="dom4j.dom4j.classpath"/>
+      <path refid="oswego.concurrent.classpath"/>
+      <path refid="junit.junit.classpath"/>
     </path>
 
-    <!-- Configure modules -->
-    <call target="configure-modules"/>
+    <!-- ======= -->
+    <!-- Modules -->
+    <!-- ======= -->
+
+    <!-- The combined dependent module classpath -->
     <path id="dependentmodule.classpath">
     </path>
 
-    <!--+=======================================+-->
-    <!--| Override any default properties here. |-->
-    <!--+=======================================+-->
+    <!-- ===== -->
+    <!-- Tasks -->
+    <!-- ===== -->
 
-    <!-- Configure defaults & build tools --> 
-    <call target="configure-defaults"/>
-    <call target="configure-tools"/>
+    <!-- Where source files live -->
+    <property name="source.java" value="${module.source}/main"/>
+    <property name="source.etc" value="${module.source}/etc"/>
 
-    <!--+=======================================+-->
-    <!--| Define module specific elements here. |-->
-    <!--+=======================================+-->
+    <!-- Where build generated files will go -->
+    <property name="build.reports" value="${module.output}/reports"/>
+    <property name="build.classes" value="${module.output}/classes"/>
+    <property name="build.lib" value="${module.output}/lib"/>
+    <property name="build.api" value="${module.output}/api"/>
+    <property name="build.etc" value="${module.output}/etc"/>
+    <property name="build.gen-src" value="${module.output}/gen-src"/>
+    <property name="build.todo" value="${module.output}/todo"/>
 
+    <!-- Install/Release structure -->
+    <property name="install.id" value="${module.name}-${module.version}"/>
+    <property name="release.id" value="${install.id}"/>
+    <property name="install.root" value="${module.output}/${install.id}"/>
+
+    <!-- The combined thirdparty classpath -->
+    <path id="thirdparty.classpath">
+      <path refid="library.classpath"/>
+      <path refid="dependentmodule.classpath"/>
+    </path>
+
+    <!-- This module is based on Java 1.2 -->
+    <property name="javac.target" value="1.2"/>
+
+    <!-- classpath and local.classpath must have a value using with a path -->
+    <property name="classpath" value=""/>
+    <property name="local.classpath" value=""/>
+
+    <!-- The classpath required to build classes. -->
+    <path id="javac.classpath">
+      <pathelement path="${classpath}"/>
+      <pathelement path="${local.classpath}"/>
+      <path refid="thirdparty.classpath"/>
+    </path>
+
+    <!-- The classpath required to build javadocs. -->
+    <path id="javadoc.classpath">
+      <path refid="javac.classpath"/>
+    </path>
+
+    <!-- Packages to include when generating api documentation -->
+    <property name="javadoc.packages" value="org.jboss.*"/>
+
+    <!-- Override JUnit defaults -->
+    <property name="junit.timeout" value="240000"/> <!-- 4 minutes -->
+    <property name="junit.batchtest.todir" value="${build.reports}"/>
+    <property name="junit.jvm.options" value="-Ddummy"/>
+
+    <!-- xdoclet -->
+    <path id="xdoclet.task.classpath">
+      <path refid="javac.classpath"/>
+      <fileset dir="${project.thirdparty}/xdoclet-xdoclet/lib">
+        <include name="**/*.jar"/>
+      </fileset>
+    </path>
+    <property name="xdoclet.task.classpath" 
+	      refid="xdoclet.task.classpath"/>
+
+    <taskdef name="todo" 
+             classname="xdoclet.modules.doc.DocumentDocletTask"
+             classpathref="xdoclet.task.classpath"/>
   </target>
 
 
-  <!--+====================================================================+-->
-  <!--| Compile                                                            |-->
-  <!--|                                                                    |-->
-  <!--| This target should depend on other compile-* targets for each      |-->
-  <!--| different type of compile that needs to be performed, short of     |-->
-  <!--| documentation compiles.                                            |-->
-  <!--+====================================================================+-->
+  <!-- ================================================================== -->
+  <!-- Compile                                                            -->
+  <!-- ================================================================== -->
+
+  <!-- 
+     | Compile everything.
+     |
+     | This target should depend on other compile-* targets for each 
+     | different type of compile that needs to be performed, short of
+     | documentation compiles.
+   -->
 
   <target name="compile" 
 	  description="Compile all source files."
-	  depends="compile-mbean-sources,
-                   _default:compile-classes,
-                   _default:compile-etc,
-                   _default:compile-test-classes">
-    <!-- Add module specific elements here. -->
-  </target>
+	  depends="compile-classes, compile-etc"/>
 
   <!-- Compile mbeans with XDoclet -->
   <target name="compile-mbean-sources" depends="init">
+    <taskdef name="jmxdoclet" classname="xdoclet.modules.jmx.JMXDocletTask" classpathref="xdoclet.task.classpath"/>
+
     <mkdir dir="${build.gen-src}"/>
-    <jmxdoclet destdir="${build.gen-src}" excludedtags="@version,@author">
+    <jmxdoclet
+	     destdir="${build.gen-src}"
+	     excludedtags="@version,@author">
       <fileset dir="${source.java}">
         <include name="**/*.java"/>
       </fileset>
-
       <mbeaninterface mergedir="${project.tools}/etc/xdoclet/templates"/>
     </jmxdoclet>
   </target>
 
-  <!--+====================================================================+-->
-  <!--| test this module                                                   |-->
-  <!--|                                                                    |-->
-  <!--+====================================================================+-->
-  <target name="tests" depends="_default:tests"/>
+  <!-- Compile all class files -->
+  <target name="compile-classes" depends="compile-mbean-sources">
+    <mkdir dir="${build.classes}"/>
+    <javac destdir="${build.classes}"
+           optimize="${javac.optimize}"
+	   target="${javac.target}"
+           debug="${javac.debug}"
+	   depend="${javac.depend}"
+	   verbose="${javac.verbose}"
+	   deprecation="${javac.deprecation}"
+	   includeAntRuntime="${javac.include.ant.runtime}"
+	   includeJavaRuntime="${javac.include.java.runtime}"
+	   failonerror="${javac.fail.onerror}">
+       <src path="${source.java}"/>
+       <src path="${build.gen-src}"/>
+       <classpath refid="javac.classpath"/>
+       <include name="${javac.includes}"/>
+       <exclude name="${javac.excludes}"/>
+    </javac>
+  </target>
+
+  <!-- Compile manifests -->
+  <target name="compile-etc" depends="init">
+    <mkdir dir="${build.etc}"/>
+    <copy todir="${build.etc}" filtering="yes">
+      <fileset dir="${source.etc}">
+         <include name="**"/>
+      </fileset>
+    </copy>
+  </target>
 
 
-  <!--+====================================================================+-->
-  <!--| Generate Output                                                    |-->
-  <!--|                                                                    |-->
-  <!--| Generates the target output for this module. Target output is      |-->
-  <!--| the output which is ment to be released or used by external        |-->
-  <!--| modules.                                                           |-->
-  <!--+====================================================================+-->
+  <!-- ================================================================== -->
+  <!-- Archives                                                           -->
+  <!-- ================================================================== -->
 
-  <target name="output"
-	  description="Generate all target output."
-          depends="_buildmagic:build-bypass-check"
+  <!-- 
+     | Build all jar files.
+   -->
+  <target name="jars" 
+	  description="Builds all jar files."
+     depends="_buildmagic:build-bypass-check"
 	  unless="build-bypass.on">
 
     <call target="compile"/>
@@ -150,67 +240,70 @@
     <mkdir dir="${build.lib}"/>
     
     <!-- Build the jboss-common.jar -->
-    <jar destfile="${build.lib}/jboss-common.jar" manifest="${build.etc}/default.mf"
-	 update="${jar.update}" index="${jar.index}">
+    <jar jarfile="${build.lib}/jboss-common.jar" manifest="${build.etc}/default.mf">
       <fileset dir="${build.classes}">
         <include name="**"/>
       </fileset>
     </jar>
 
     <!-- Build the jboss-common-client.jar -->
-    <jar destfile="${build.lib}/jboss-common-client.jar" manifest="${build.etc}/default.mf"
-         update="${jar.update}" index="${jar.index}">
+    <jar jarfile="${build.lib}/jboss-common-client.jar" manifest="${build.etc}/default.mf">
       <fileset dir="${build.classes}">
         <include name="**"/>
       </fileset>
     </jar>
 
+    <!--
+       | JBoss/Testsuite Support
+     -->
+
     <!-- testsuite-support.jar -->
-    <jar destfile="${build.lib}/testsuite-support.jar" manifest="${build.etc}/default.mf"
-         update="${jar.update}" index="${jar.index}">
+    <jar jarfile="${build.lib}/testsuite-support.jar" manifest="${build.etc}/default.mf">
       <fileset dir="${build.classes}">
          <include name="org/jboss/logging/**"/>
       </fileset>
     </jar>
-
-    <!-- Generate checksums -->
-    <call target="_default:compile-checksums"/>
 
     <!-- Update the build marker to allow bypassing -->
     <touch file="${build-bypass.marker}"/>
 
   </target>
 
+  <!-- ================================================================== -->
+  <!-- Cleaning                                                           -->
+  <!-- ================================================================== -->
 
-  <!--+====================================================================+-->
-  <!--| Documents                                                          |-->
-  <!--|                                                                    |-->
-  <!--| Generate all documentation for this module.                        |-->
-  <!--+====================================================================+-->
+  <!-- Clean up all build output -->
+  <target name="clean" 
+	  description="Cleans up most generated files."
+	  depends="_buildmagic:clean">
+  </target>
 
-  <target name="docs" depends="_default:docs">
-    <!-- Add module specific elements here. -->
+  <!-- Clean up all generated files -->
+  <target name="clobber" 
+	  description="Cleans up all generated files."
+	  depends="_buildmagic:clobber, clean">
   </target>
 
 
-  <!--+====================================================================+-->
-  <!--| Misc.                                                              |-->
-  <!--|                                                                    |-->
-  <!--| Standard targets and psuedo-targets.                               |-->
-  <!--+====================================================================+-->
+  <!-- ================================================================== -->
+  <!-- Misc.                                                              -->
+  <!-- ================================================================== -->
 
-  <target name="clean" depends="_default:clean">
-    <!-- Add module specific elements here. -->
-  </target>
+  <target name="main"
+	  description="Executes the default target (most)."
+	  depends="most"/>
+    
+  <target name="all"
+	  description="Builds everything."
+	  depends="jars, docs"/>
 
-  <target name="clobber" depends="_default:clobber">
-    <!-- Add module specific elements here. -->
-  </target>
+  <target name="most" 
+	  description="Builds almost everything."
+	  depends="jars"/>
 
-  <!-- main, all, most and help are primary psuedo-targets -->
-  <target name="main" depends="most"/>
-  <target name="all" depends="_default:all"/>
-  <target name="most" depends="_default:most"/>
-  <target name="help" depends="_default:help"/>
+  <target name="help" 
+          description="Show this help message."
+	  depends="_buildmagic:help:standard"/>
 
 </project>

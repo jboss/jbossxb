@@ -9,8 +9,7 @@
 
 package org.jboss.util.id;
 
-import org.jboss.util.CloneableObject;
-import org.jboss.util.LongCounter;
+import org.jboss.util.MuLong;
 
 /**
  * A unique identifier (uniqueness only guarantied inside of the virtual
@@ -37,12 +36,10 @@ import org.jboss.util.LongCounter;
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
 public class UID
-   extends CloneableObject
    implements ID
 {
    /** A counter for generating identity values */
-   protected static final LongCounter COUNTER =
-      LongCounter.makeSynchronized(new LongCounter(0));
+   protected static final MuLong COUNTER = new MuLong(0);
 
    /** The time portion of the UID */
    protected final long time;
@@ -55,18 +52,11 @@ public class UID
     */
    public UID() {
       time = System.currentTimeMillis();
-      id = COUNTER.increment();
+      synchronized (COUNTER) {
+         id = COUNTER.increment();
+      }
    }
 
-   /**
-    * Initialze a new UID with specific values.
-    */
-   protected UID(final long time, final long id)
-   {
-      this.time = time;
-      this.id = id;
-   }
-   
    /**
     * Copy a UID.
     */
@@ -135,36 +125,25 @@ public class UID
    }
 
    /**
+    * Returns a copy of this UID.
+    *
+    * @return  A copy of this UID.
+    */
+   public Object clone() {
+      try {
+         return super.clone();
+      }
+      catch (CloneNotSupportedException e) {
+         throw new InternalError();
+      }
+   }
+
+   /**
     * Returns a UID as a string.
     *
     * @return  UID as a string.
     */
    public static String asString() {
       return new UID().toString();
-   }
-
-
-   /////////////////////////////////////////////////////////////////////////
-   //                            Factory Access                           //
-   /////////////////////////////////////////////////////////////////////////
-
-   /**
-    * Creates UID instances which are unique to the factory instance.
-    * The [ counter ] (or ID) portion of the UID are generated from a
-    * counter field instead of the global COUNTER instance.
-    */
-   public static class Factory
-   {
-      /** A counter for generating identity values */
-      protected final LongCounter counter =
-         LongCounter.makeSynchronized(new LongCounter(0));
-
-      /**
-       * Create a new UID.
-       */
-      public UID create()
-      {
-         return new UID(System.currentTimeMillis(), counter.increment());
-      }
    }
 }

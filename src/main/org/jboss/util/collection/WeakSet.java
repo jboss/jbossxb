@@ -10,11 +10,12 @@
 package org.jboss.util.collection;
 
 import java.lang.ref.ReferenceQueue;
-import java.util.AbstractSet;
+
+import java.util.Set;
 import java.util.HashSet;
+import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import org.jboss.util.NullArgumentException;
 import org.jboss.util.WeakObject;

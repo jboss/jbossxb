@@ -13,8 +13,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Array;
 
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * A collection of <code>Class</code> utilities.
@@ -261,15 +263,7 @@ public final class Classes
     * @throws ClassNotFoundException when the <code>classLoader</code> can not find the requested class
     */
    public static Class loadClass(String className) throws ClassNotFoundException {
-      return loadClass( className,  Thread.currentThread().getContextClassLoader() );
-   }
-
-   /**
-    * This method acts equivalently to invoking Thread.currentThread().getContextClassLoader()
-    * @return             the ClassLoader
-    */
-   public static ClassLoader getContextClassLoader() {
-      return Thread.currentThread().getContextClassLoader();
+      return loadClass( className, Thread.currentThread().getContextClassLoader() );
    }
    
    /**
@@ -349,4 +343,85 @@ public final class Classes
       // construct array class
       return Array.newInstance(componentType, new int[arrayDimension]).getClass();
    }
+
+   /**
+    * Convert a list of Strings from an Interator into an array of
+    * Classes (the Strings are taken as classnames).
+    *
+    * @param it A java.util.Iterator pointing to a Collection of Strings
+    * @param cl The ClassLoader to use
+    *
+    * @return Array of Classes
+    *
+    * @throws ClassNotFoundException When a class could not be loaded from
+    *         the specified ClassLoader
+    */
+   public final static Class[] convertToJavaClasses( Iterator it,
+      ClassLoader cl )
+      throws ClassNotFoundException
+   {
+      ArrayList classes = new ArrayList();
+      while( it.hasNext() )
+      {
+         classes.add( convertToJavaClass((String)it.next(), cl) );
+      }
+      return (Class[]) classes.toArray( new Class[classes.size()] );
+   }
+
+   /**
+    * Convert a given String into the appropriate Class.
+    *
+    * @param name Name of class
+    * @param cl ClassLoader to use
+    *
+    * @return The class for the given name
+    *
+    * @throws ClassNotFoundException When the class could not be found by
+    *         the specified ClassLoader
+    */
+   private final static Class convertToJavaClass( String name,
+      ClassLoader cl )
+      throws ClassNotFoundException
+   {
+      int arraySize = 0;
+      while( name.endsWith("[]"))
+      {
+         name = name.substring( 0, name.length() - 2 );
+         arraySize++;
+      }
+
+      // Check for a primitive type
+      Class c = (Class)PRIMITIVE_NAME_TYPE_MAP.get( name );
+
+      if( c == null )
+      {
+         // No primitive, try to load it from the given ClassLoader
+         try
+         {
+            c = cl.loadClass( name );
+         }
+         catch( ClassNotFoundException cnfe )
+         {
+            throw new ClassNotFoundException( "Parameter class not found: " +
+               name );
+         }
+      }
+
+      // if we have an array get the array class
+      if( arraySize > 0 )
+      {
+         int[] dims = new int[arraySize];
+         for( int i = 0; i < arraySize; i++ )
+         {
+            dims[i] = 1;
+         }
+         c = Array.newInstance(c, dims).getClass();
+      }
+
+      return c;
+   }
+
 }
+/*
+vim:ts=3:sw=3:et
+*/

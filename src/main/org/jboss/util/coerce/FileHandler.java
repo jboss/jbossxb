@@ -9,10 +9,10 @@
 
 package org.jboss.util.coerce;
 
-import java.io.File;
-
 import org.jboss.util.CoercionException;
 import org.jboss.util.NotCoercibleException;
+
+import java.io.File;
 
 /**
  * A <tt>java.io.File</tt> coercion handler.

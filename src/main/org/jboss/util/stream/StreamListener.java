@@ -7,22 +7,21 @@
  *                                     *
  ***************************************/
 
-package org.jboss.util.propertyeditor;
-
-import java.util.List;
-import java.util.Stack;
+package org.jboss.util.stream;
 
 /**
- * A property editor for {@link java.util.Stack}
+ * A stream listener
  *
  * @version <tt>$Revision$</tt>
- * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author  <a href="mailto:Adrian@jboss.org">Adrian Brock</a>
  */
-public class StackEditor
-   extends ListEditor
+public interface StreamListener
 {
-   protected List createList()
-   {
-      return new Stack();
-   }
+   /**
+    * Invoked by notifiying streams
+    *
+    * @param source the stream
+    * @param size the number of bytes since the last notification
+    */
+   void onStreamNotification(Object source, int size);
 }

@@ -19,7 +19,7 @@ public class MuLong
    extends MuNumber
 {
    /** Long value */
-   protected long value;
+   private long value;
 
    /**
     * Construct a new mutable long integer.

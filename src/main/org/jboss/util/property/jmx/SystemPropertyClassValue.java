@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
  * The class is first checked for availablity before setting the system
  * property.
 
- * @jmx:mbean
+ * @jmx.mbean
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:Adrian.Brock@HappeningTimes.com">Adrian Brock</a>
@@ -45,7 +45,7 @@ public class SystemPropertyClassValue
    /**
     * The system property value
     *
-    * @jmx:managed-attribute
+    * @jmx.managed-attribute
     */
    public String getProperty()
    {
@@ -55,7 +55,7 @@ public class SystemPropertyClassValue
    /**
     * The system property value
     *
-    * @jmx:managed-attribute
+    * @jmx.managed-attribute
     */
    public void setProperty(String property)
    {
@@ -66,7 +66,7 @@ public class SystemPropertyClassValue
     * The class name to use a value for the system property
     * when it is available
     *
-    * @jmx:managed-attribute
+    * @jmx.managed-attribute
     */
    public String getClassName()
    {
@@ -77,7 +77,7 @@ public class SystemPropertyClassValue
     * The class name to use a value for the system property
     * when it is available
     *
-    * @jmx:managed-attribute
+    * @jmx.managed-attribute
     */
    public void setClassName(String className)
    {
@@ -87,7 +87,7 @@ public class SystemPropertyClassValue
    /**
     * JBoss lifecycle
     *
-    * @jmx:managed-operation
+    * @jmx.managed-operation
     */
    public void create()
    {

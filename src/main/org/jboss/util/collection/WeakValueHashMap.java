@@ -9,12 +9,16 @@
 
 package org.jboss.util.collection;
 
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.AbstractMap;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
+import java.util.AbstractSet;
+import java.util.NoSuchElementException;
+
+import java.lang.ref.WeakReference;
+import java.lang.ref.ReferenceQueue;
 
 
 /**

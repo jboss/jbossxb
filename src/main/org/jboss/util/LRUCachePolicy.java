@@ -155,30 +155,25 @@ public class LRUCachePolicy
    {
       if (o == null) {throw new IllegalArgumentException("Cannot insert a null object in the cache");}
       if (key == null) {throw new IllegalArgumentException("Cannot insert an object in the cache with null key");}
-      Object obj = m_map.get(key);
-      if (obj == null)
-      {
-         m_list.demote();
-         LRUCacheEntry entry = createCacheEntry(key, o);
-         m_list.promote(entry);
-         m_map.put(key, entry);
-      }
-      else
+      if (m_map.containsKey(key))
       {
          throw new IllegalStateException("Attempt to put in the cache an object that is already there");
       }
+      m_list.demote();
+      LRUCacheEntry entry = createCacheEntry(key, o);
+      m_map.put(key, entry);
+      m_list.promote(entry);
    }
    public void remove(Object key)
    {
       if (key == null) {throw new IllegalArgumentException("Removing an object using a null key");}
 
-      Object value = m_map.get(key);
+      Object value = m_map.remove(key);
       if (value != null)
       {
          m_list.remove((LRUCacheEntry)value);
       }
-      else {} // Do nothing, the object isn't in the cache list
-      m_map.remove(key);
+      //else Do nothing, the object isn't in the cache list
    }
    public void flush()
    {

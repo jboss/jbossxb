@@ -9,9 +9,10 @@
 
 package org.jboss.util.propertyeditor;
 
+import java.util.Properties;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.Properties;
 
 import org.jboss.util.NestedRuntimeException;
 

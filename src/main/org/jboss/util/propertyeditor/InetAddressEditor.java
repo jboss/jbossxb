@@ -35,21 +35,21 @@ public class InetAddressEditor
    {
       try
       {
-		 String text = getAsText();
-		 if (text==null)
-		 {
-			 return null;
-		 }
-		 if (text.startsWith("/"))
-		 {
-			 // seems like localhost sometimes will look like:
-			 // /127.0.0.1 and the getByNames barfs on the slash - JGH
-			 text = text.substring(1);
-		 }
+         String text = getAsText();
+         if (text == null)
+         {
+            return null;
+         }
+         if (text.startsWith("/"))
+         {
+            // seems like localhost sometimes will look like:
+            // /127.0.0.1 and the getByNames barfs on the slash - JGH
+            text = text.substring(1);
+         }
          return InetAddress.getByName(Strings.replaceProperties(text));
       }
       catch (UnknownHostException e)
-     {
+      {
          throw new NestedRuntimeException(e);
       }
    }

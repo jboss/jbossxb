@@ -9,13 +9,16 @@
 
 package org.jboss.util.property;
 
-import java.io.BufferedInputStream;
+import java.util.Properties;
+import java.util.Map;
+
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
-import java.util.Properties;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+
+import java.net.URL;
 
 import org.jboss.util.NullArgumentException;
 

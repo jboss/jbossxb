@@ -26,7 +26,8 @@ import java.util.*;
  * <p>Based on java.util.WeakHashMap</p>
  *
  * @author      Dawid Kurzyniec
- * @version     1.0
+ * @version <tt>$Revision$</tt>
+ * @author  <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  * @see		java.util.IdentityHashMap
  * @see		java.util.WeakHashMap
  */

@@ -114,18 +114,26 @@ public class MetadataDrivenObjectModelFactory
             {
                setFieldValue(metadata.getName(), metadata.getField(), metadata.getSetter(), parent, child);
             }
+         }
 
-            if(attrs != null && attrs.getLength() > 0)
+         if(attrs != null && attrs.getLength() > 0)
+         {
+            for(int i = 0; i < attrs.getLength(); ++i)
             {
-               for(int i = 0; i < attrs.getLength(); ++i)
+               QName attrName = new QName(attrs.getURI(i), attrs.getLocalName(i));
+               AttributeBinding attrBinding = metadata.getAttribute(attrName);
+               if(attrBinding != null)
                {
-                  QName attrName = new QName(attrs.getURI(i), attrs.getLocalName(i));
-                  AttributeBinding attrBinding = metadata.getAttribute(attrName);
-                  if(attrBinding != null)
+                  Object unmarshalledValue = SimpleTypeBindings.unmarshal(attrs.getValue(i),
+                     attrBinding.getJavaType()
+                  );
+
+                  if(child instanceof ImmutableContainer)
                   {
-                     Object unmarshalledValue = SimpleTypeBindings.unmarshal(attrs.getValue(i),
-                        attrBinding.getJavaType()
-                     );
+                     ((ImmutableContainer)child).addChild(attrName.getLocalPart(), unmarshalledValue);
+                  }
+                  else
+                  {
                      setFieldValue(attrBinding.getAttributeName(),
                         attrBinding.getField(),
                         attrBinding.getGetter(),

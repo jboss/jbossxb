@@ -10,7 +10,6 @@
 
 package org.jboss.net.protocol.file;
 
-import java.io.*;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -18,7 +17,6 @@ import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 import org.jboss.net.protocol.URLListerBase;

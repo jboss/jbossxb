@@ -18,8 +18,6 @@ import java.io.InputStream;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 
-import java.net.URL;
-
 import org.jboss.util.NullArgumentException;
 
 /**

@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.Collections;
 
 import org.jboss.util.CoercionException;
-import org.jboss.util.NotCoercibleException;
 import org.jboss.util.NullArgumentException;
 import org.jboss.util.NotImplementedException;
 

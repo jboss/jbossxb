@@ -12,7 +12,6 @@ package org.jboss.util;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Array;
-import java.lang.*;
 import java.lang.NoSuchMethodException;
 
 import java.util.ArrayList;

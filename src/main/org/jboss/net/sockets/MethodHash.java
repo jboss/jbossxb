@@ -4,9 +4,7 @@ import java.util.Map;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.io.DataOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 

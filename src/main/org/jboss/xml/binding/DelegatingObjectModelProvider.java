@@ -6,8 +6,6 @@
  */
 package org.jboss.xml.binding;
 
-import org.jboss.logging.Logger;
-
 /**
  * todo come up with a nicer class name
  * 

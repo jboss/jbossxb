@@ -12,7 +12,6 @@ package org.jboss.util.propertyeditor;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.beans.PropertyEditorSupport;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;

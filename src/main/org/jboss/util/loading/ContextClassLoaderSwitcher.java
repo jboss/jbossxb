@@ -12,8 +12,6 @@ package org.jboss.util.loading;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 
-import org.jboss.logging.Logger;
-
 /**
  * A helper for context classloading switching.<p>
  *

@@ -7,8 +7,6 @@
 
 package org.jboss.util.deadlock;
 
-import java.rmi.RemoteException;
-
 /**
  * This exception class is thrown when application deadlock is detected when trying to lock an entity bean
  * This is probably NOT a result of a jboss bug, but rather that the application is access the same entity

@@ -9,7 +9,6 @@
 
 package org.jboss.util.propertyeditor;
 
-import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.beans.PropertyEditorSupport;
 

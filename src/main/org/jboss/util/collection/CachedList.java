@@ -12,7 +12,6 @@ package org.jboss.util.collection;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.AbstractList;
-import java.util.Iterator;
 
 import java.lang.ref.ReferenceQueue;
 

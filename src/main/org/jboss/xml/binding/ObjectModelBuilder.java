@@ -190,7 +190,7 @@ public class ObjectModelBuilder
       String nsURI = nsRegistry.getNamespaceURI(prefix);
 
       //return new QName(nsURI, local);
-      return new QName(nsURI,local,prefix);
+      return new QName(nsURI, local, prefix);
    }
 
    public String getChildContent(String namespaceURI, String qName)
@@ -253,13 +253,17 @@ public class ObjectModelBuilder
          }
          catch(Exception e)
          {
-            throw new JBossXBRuntimeException("Failed to instantiate factory " + factoryProp + ": " + e.getMessage(), e);
+            throw new JBossXBRuntimeException("Failed to instantiate factory " + factoryProp + ": " + e.getMessage(),
+               e
+            );
          }
 
          i = data.indexOf("ns=\"");
          if(i == -1)
          {
-            throw new JBossXBRuntimeException("Property 'ns' not found in factory mapping processing instruction: " + data);
+            throw new JBossXBRuntimeException(
+               "Property 'ns' not found in factory mapping processing instruction: " + data
+            );
          }
 
          end = data.indexOf("\"", i + 4);
@@ -275,7 +279,9 @@ public class ObjectModelBuilder
       }
       else
       {
-         throw new JBossXBRuntimeException("Unexpected data in processing instruction: target=" + target + ", data=" + data);
+         throw new JBossXBRuntimeException(
+            "Unexpected data in processing instruction: target=" + target + ", data=" + data
+         );
       }
    }
 
@@ -308,7 +314,7 @@ public class ObjectModelBuilder
          //if(newFactory != curFactory)
          //{ still have to push since curNsSwitchingFactory needs to be updated to prevent
          //  newRoot calls for the children
-            pushFactory(namespaceURI, localName, newFactory);
+         pushFactory(namespaceURI, localName, newFactory);
          //}
 
          element = curFactory.newRoot(parent, this, namespaceURI, localName, atts);
@@ -343,17 +349,11 @@ public class ObjectModelBuilder
    {
       if(value.length() > 0)
       {
-         Object element;
-         try
+         if(!accepted.isEmpty())
          {
-            element = accepted.peek();
+            Object element = accepted.peek();
+            curFactory.setValue(element, this, namespaceURI, localName, value.toString().trim());
          }
-         catch(java.util.NoSuchElementException e)
-         {
-            log.error("value=" + value, e);
-            throw e;
-         }
-         curFactory.setValue(element, this, namespaceURI, localName, value.toString().trim());
          value.delete(0, value.length());
       }
 
@@ -407,11 +407,14 @@ public class ObjectModelBuilder
       catch(InvocationTargetException e)
       {
          Throwable te = e.getCause();
-         if(te instanceof RuntimeException) throw (RuntimeException)te;
+         if(te instanceof RuntimeException)
+         {
+            throw (RuntimeException)te;
+         }
 
          String msg = "Failed to invoke method " + method + ", factory=" + factory;
          log.error(msg, e.getTargetException());
-         
+
          IllegalStateException ise = new IllegalStateException(msg);
          ise.initCause(te);
          throw ise;
@@ -450,7 +453,9 @@ public class ObjectModelBuilder
       {
          factory = new DelegatingObjectModelFactory(factory);
       }
-      return factory instanceof GenericObjectModelFactory ? (GenericObjectModelFactory)factory : new DelegatingObjectModelFactory(factory);
+      return factory instanceof GenericObjectModelFactory ?
+         (GenericObjectModelFactory)factory :
+         new DelegatingObjectModelFactory(factory);
    }
 
    private static interface Stack

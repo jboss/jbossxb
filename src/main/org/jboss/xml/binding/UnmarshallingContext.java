@@ -7,11 +7,9 @@
 package org.jboss.xml.binding;
 
 import org.apache.xerces.xs.XSTypeDefinition;
-import org.jboss.xml.binding.metadata.unmarshalling.BasicElementBinding;
 
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
-import java.util.Map;
 import java.util.Iterator;
 
 /**
@@ -39,7 +37,6 @@ public interface UnmarshallingContext
    NamespaceContext getNamespaceContext();
 
    Object getMetadata();
-
 
    Object getParentMetadata();
 

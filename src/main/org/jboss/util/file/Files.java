@@ -15,6 +15,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
 
 import org.jboss.logging.Logger;
 import org.jboss.util.stream.Streams;
@@ -22,9 +25,10 @@ import org.jboss.util.stream.Streams;
 /**
  * A collection of file utilities.
  *
- * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
- * @author Scott.Stark@jboss.org
+ * @author  Scott.Stark@jboss.org
+ * @author  <a href="mailto:dimitris@jboss.org">Dimitris Andreadis</a>
+ * @version <tt>$Revision$</tt>
  */
 public final class Files
 {
@@ -163,5 +167,43 @@ public final class Files
          throws IOException
    {
       copy(source, target, DEFAULT_BUFFER_SIZE);
+   }
+   
+   /**
+    * Copy a remote/local URL to a local file
+    * 
+    * @param src the remote or local URL
+    * @param dest the local file
+    * @throws IOException upon error
+    */
+   public static void copy(URL src, File dest) throws IOException
+   {
+      log.debug("Copying " + src + " -> " + dest);
+      
+      // Validate that the dest parent directory structure exists
+      File dir = dest.getParentFile();
+      if (!dir.exists())
+      {
+         if (!dir.mkdirs())
+         {
+            throw new IOException("mkdirs failed for: " + dir.getAbsolutePath());
+         }
+      }
+      // Remove any existing dest content
+      if (dest.exists())
+      {
+         if (!Files.delete(dest))
+         {
+            throw new IOException("delete of previous content failed for: " + dest.getAbsolutePath());
+         }
+      }
+      // Treat local and remote URLs the same
+      // prepare streams, do the copy and flush
+      InputStream in = new BufferedInputStream(src.openStream());
+      OutputStream out = new BufferedOutputStream(new FileOutputStream(dest));
+      Streams.copy(in, out);
+      out.flush();
+      out.close();
+      in.close();
    }
 }

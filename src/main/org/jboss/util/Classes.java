@@ -12,6 +12,8 @@ package org.jboss.util;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Array;
+import java.lang.*;
+import java.lang.NoSuchMethodException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -267,7 +269,7 @@ public final class Classes
       return false;
    }
    /** Check type against boolean, byte, char, short, int, long, float, double.
-    * @param The java type name
+    * @param type  The java type name
     * @return true if this is a primative type name.
     */ 
    public static boolean isPrimitive(final String type)
@@ -399,6 +401,33 @@ public final class Classes
          classes.add(convertToJavaClass((String) it.next(), cl));
       }
       return (Class[]) classes.toArray(new Class[classes.size()]);
+   }
+
+   /**
+    * Returns attribute's getter method. If the method not found then NoSuchMethodException will be thrown.
+    * @param cls  the class the attribute belongs too
+    * @param attr  the attribute's name
+    * @return  attribute's getter method
+    * @throws NoSuchMethodException  if the getter was not found
+    */
+   public final static Method getAttributeGetter(Class cls, String attr) throws NoSuchMethodException
+   {
+      String getterName = "get" + Character.toUpperCase(attr.charAt(0)) + attr.substring(1);
+      return cls.getMethod(getterName, null);
+   }
+
+   /**
+    * Returns attribute's setter method. If the method not found then NoSuchMethodException will be thrown.
+    * @param cls   the class the attribute belongs to
+    * @param attr  the attribute's name
+    * @param type  the attribute's type
+    * @return  attribute's setter method
+    * @throws NoSuchMethodException  if the setter was not found
+    */
+   public final static Method getAttributeSetter(Class cls, String attr, Class type) throws NoSuchMethodException
+   {
+      String setterName = "set" + Character.toUpperCase(attr.charAt(0)) + attr.substring(1);
+      return cls.getMethod(setterName, new Class[]{type});
    }
 
    /**

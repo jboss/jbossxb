@@ -162,6 +162,11 @@ public class ObjectModelBuilder
       return metadataCursor.getElementBinding();
    }
 
+   public Object getParentMetadata()
+   {
+      return metadataCursor.getParentElementBinding();
+   }
+
    /**
     * Construct a QName from a value
     *

@@ -50,4 +50,9 @@ public class CursorImpl
    {
       return (XmlElement)stack.getLast();
    }
+
+   public Object getParentElementBinding()
+   {
+      return stack.size() - 2 >= 0 ? stack.get(stack.size() - 2) : null;
+   }
 }

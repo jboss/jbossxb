@@ -40,6 +40,9 @@ public interface UnmarshallingContext
 
    Object getMetadata();
 
+
+   Object getParentMetadata();
+
    /**
     * Returns child's content.
     * todo consider deprecating this method

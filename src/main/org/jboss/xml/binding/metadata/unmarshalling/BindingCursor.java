@@ -21,6 +21,8 @@ public interface BindingCursor
 
    Object getElementBinding();
 
+   Object getParentElementBinding();
+
    class Factory
    {
       private Factory()
@@ -68,6 +70,11 @@ public interface BindingCursor
          {
             return (BasicElementBinding)stack.getLast();
          }
+
+         public Object getParentElementBinding()
+         {
+            return stack.size() - 2 >= 0 ? (BasicElementBinding)stack.get(stack.size() - 2) : null;
+         }
       }
 
       private static class NoopBindingCursor
@@ -88,6 +95,11 @@ public interface BindingCursor
          }
 
          public Object getElementBinding()
+         {
+            return null;
+         }
+
+         public Object getParentElementBinding()
          {
             return null;
          }

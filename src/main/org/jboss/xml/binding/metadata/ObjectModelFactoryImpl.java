@@ -14,11 +14,8 @@ import org.jboss.xml.binding.SimpleTypeBindings;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
@@ -69,7 +66,7 @@ public class ObjectModelFactoryImpl
          }
          else
          {
-            col = (Collection)getFieldValue(metadata, parent);
+            col = (Collection)getFieldValue(metadata.getType().getJavaValue(), parent, metadata.getName());
             if(col == null)
             {
                col = (Collection)newInstance(metadata.getType().getJavaValue(), metadata.getName());
@@ -97,10 +94,11 @@ public class ObjectModelFactoryImpl
             {
                ((ImmutableContainer)parent).addChild(localName, child);
             }
+            /*
             else if(metadata.getType().getJavaValue().getFieldType() != null &&
                Collection.class.isAssignableFrom(metadata.getType().getJavaValue().getFieldType()))
             {
-               Collection col = (Collection)getFieldValue(metadata, parent);
+               Collection col = (Collection)getFieldValue(metadata.getType().getJavaValue(), parent, metadata.getName());
                if(col == null)
                {
                   if(Set.class.isAssignableFrom(metadata.getType().getJavaValue().getFieldType()))
@@ -119,7 +117,9 @@ public class ObjectModelFactoryImpl
                   );
                }
                col.add(child);
+               log.info("added child " + metadata.getName() + " " + child.getClass() + ": " + child + " to collection");
             }
+            */
             else
             {
                setFieldValue(metadata.getName(),
@@ -182,6 +182,8 @@ public class ObjectModelFactoryImpl
          else if(metadata.getType().getJavaValue().getFieldType() == null ||
             Collection.class.isAssignableFrom(metadata.getType().getJavaValue().getFieldType()))
          {
+            XmlElement parentMetadata = (XmlElement)ctx.getParentMetadata();
+
             Collection col;
             if(parent instanceof ImmutableContainer)
             {
@@ -189,16 +191,34 @@ public class ObjectModelFactoryImpl
                col = (Collection)imm.getChild(localName);
                if(col == null)
                {
-                  col = new ArrayList();
+                  col = (Collection)newInstance(metadata.getType().getJavaValue(), metadata.getName());
                   imm.addChild(localName, col);
                }
             }
             else
             {
-               col = (Collection)getFieldValue(metadata, parent);
+               JavaFieldValue javaValue = metadata.getType().getJavaValue();
+               while(!(javaValue instanceof CollectionValue ||
+                  javaValue == parentMetadata.getType().getJavaValue()
+                  ))
+               {
+                  javaValue = (JavaFieldValue)javaValue.getJavaValue();
+               }
+
+               if(javaValue == parentMetadata.getType().getJavaValue())
+               {
+                  throw new JBossXBRuntimeException(
+                     "Failed to find CollectionValue java value. parent: " +
+                     javaValue.getClass() +
+                     " -> " +
+                     javaValue.getType()
+                  );
+               }
+
+               col = (Collection)getFieldValue(javaValue, parent, metadata.getName());
                if(col == null)
                {
-                  col = new ArrayList();
+                  col = (Collection)newInstance(metadata.getType().getJavaValue(), metadata.getName());
                   setFieldValue(metadata.getName(),
                      metadata.getType().getJavaValue().getField(),
                      metadata.getType().getJavaValue().getSetter(),
@@ -254,10 +274,10 @@ public class ObjectModelFactoryImpl
             {
                if(Collection.class.isAssignableFrom(metadata.getType().getJavaValue().getFieldType()))
                {
-                  Collection col = (Collection)getFieldValue(metadata, o);
+                  Collection col = (Collection)getFieldValue(metadata.getType().getJavaValue(), o, metadata.getName());
                   if(col == null)
                   {
-                     col = new ArrayList();
+                     col = (Collection)newInstance(metadata.getType().getJavaValue(), metadata.getName());
                      setFieldValue(metadata.getName(),
                         metadata.getType().getJavaValue().getField(),
                         metadata.getType().getJavaValue().getSetter(),
@@ -325,19 +345,15 @@ public class ObjectModelFactoryImpl
 
    // Private
 
-   private static void unmarshalValue(JavaValue stopAtMe,
-                                      JavaFieldValue valueBinding,
-                                      Object value,
-                                      Object o,
-                                      String name)
+   private static Object unmarshalValue(JavaValue stopAtMe,
+                                        JavaFieldValue valueBinding,
+                                        Object value,
+                                        Object o,
+                                        String name)
    {
-      log.info(
-         "unmarshalValue> name=" + name + ", value=" + value + ", o=" + o + ", binding=" + valueBinding.getType()
-      );
-
       Object unmarshalled;
 
-      if(Util.isAttributeType(valueBinding.getFieldType()))
+      if(valueBinding.getFieldType() != null && Util.isAttributeType(valueBinding.getFieldType()))
       {
          try
          {
@@ -354,25 +370,41 @@ public class ObjectModelFactoryImpl
          unmarshalled = newInstance(valueBinding, name);
       }
 
+      Object unmarshalledOwner;
       if(valueBinding.getJavaValue() != null && valueBinding.getJavaValue() != stopAtMe)
       {
-         unmarshalValue(stopAtMe, (JavaFieldValue)valueBinding.getJavaValue(), unmarshalled, o, name);
+         unmarshalledOwner = unmarshalValue(stopAtMe,
+            (JavaFieldValue)valueBinding.getJavaValue(),
+            unmarshalled,
+            o,
+            name
+         );
+      }
+      else
+      {
+         unmarshalledOwner = o;
       }
 
       // todo o instanceof java.util.Collection?
-      if(o instanceof ImmutableContainer)
+      if(unmarshalledOwner instanceof ImmutableContainer)
       {
-         ((ImmutableContainer)o).addChild(name, unmarshalled);
+         ((ImmutableContainer)unmarshalledOwner).addChild(name, unmarshalled);
+      }
+      else if(unmarshalledOwner instanceof Collection)
+      {
+         ((Collection)unmarshalledOwner).add(unmarshalled);
       }
       else
       {
          setFieldValue(name,
             ((JavaFieldValue)valueBinding).getField(),
             ((JavaFieldValue)valueBinding).getSetter(),
-            o,
+            unmarshalledOwner,
             unmarshalled
          );
       }
+
+      return unmarshalled;
    }
 
    private static final void setFieldValue(String elementName,
@@ -432,20 +464,19 @@ public class ObjectModelFactoryImpl
       }
    }
 
-   private static final Object getFieldValue(XmlElement element, Object parent)
+   private static final Object getFieldValue(JavaFieldValue javaValue, Object parent, String name)
    {
       Object value;
-      JavaFieldValue metadata = element.getType().getJavaValue();
-      if(metadata.getGetter() != null)
+      if(javaValue.getGetter() != null)
       {
          try
          {
-            value = metadata.getGetter().invoke(parent, null);
+            value = javaValue.getGetter().invoke(parent, null);
          }
          catch(Exception e)
          {
             throw new JBossXBRuntimeException("Failed to get value using getter " +
-               metadata.getGetter().getName() +
+               javaValue.getGetter().getName() +
                " from " +
                parent.getClass() +
                ":" +
@@ -453,16 +484,16 @@ public class ObjectModelFactoryImpl
             );
          }
       }
-      else if(metadata.getField() != null)
+      else if(javaValue.getField() != null)
       {
          try
          {
-            value = metadata.getField().get(parent);
+            value = javaValue.getField().get(parent);
          }
          catch(IllegalAccessException e)
          {
             throw new JBossXBRuntimeException("Illegal access exception getting value using field " +
-               metadata.getField().getName() +
+               javaValue.getField().getName() +
                " from " +
                parent.getClass() +
                ":" +
@@ -470,11 +501,15 @@ public class ObjectModelFactoryImpl
             );
          }
       }
+      else if(parent instanceof ImmutableContainer)
+      {
+         value = ((ImmutableContainer)parent).getChild(name);
+      }
       else
       {
          throw new JBossXBRuntimeException("Element " +
-            element.getName() +
-            " is not bound to any field!"
+            name +
+            " is not bound to any field in " + parent.getClass() + ":" + parent
          );
       }
 
@@ -520,9 +555,9 @@ public class ObjectModelFactoryImpl
    {
       private final Class cls;
 
-      private final List names = new ArrayList();
+      private final List names = new java.util.ArrayList();
 
-      private final List values = new ArrayList();
+      private final List values = new java.util.ArrayList();
 
       public ImmutableContainer(Class cls)
       {

@@ -163,8 +163,8 @@ public class PropertyMap
       Object prev = super.put(name, value);
 
       PropertyEvent event =
-         new PropertyEvent(this, String.valueOf(name), String.valueOf(value));
-      
+         new PropertyEvent(this, name.toString(), value.toString());
+
       // fire propertyAdded or propertyChanged
       if (add)
       {
@@ -191,23 +191,23 @@ public class PropertyMap
 
       // check if there is a property with this name
       boolean contains = containsKey(name);
-      String value = null;
+      Object value = null;
 
       if (contains)
       {
-         value = (String) super.remove(name);
+         value = super.remove(name);
          if (defaults != null)
          {
             Object obj = defaults.remove(name);
             if (value == null)
             {
-               value = (String) obj;
+               value = obj;
             }
          }
          // Remove any JNDI property value
          jndiMap.remove(name);
 
-         PropertyEvent event = new PropertyEvent(this, (String) name, value);
+         PropertyEvent event = new PropertyEvent(this, name.toString(), value.toString());
          firePropertyRemoved(event);
       }
 
@@ -473,7 +473,6 @@ public class PropertyMap
     * Fire a property changed event to all listeners.
     *
     * @param event   Property event.
-    * @param value   Property value.
     */
    protected void firePropertyChanged(PropertyEvent event)
    {

@@ -22,7 +22,8 @@ import org.apache.log4j.Priority;
  * @see #trace(Object,Throwable)
  *
  * @version <tt>$Revision$</tt>
- * @author Scott.Stark@jboss.org
+ * @author  Scott.Stark@jboss.org
+ * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
 public class Logger
    implements java.io.Serializable
@@ -254,6 +255,19 @@ public class Logger
    }
 
    /** 
+    * Create a Logger instance given the category name with the given suffix.
+    *
+    * <p>This will include a category seperator between classname and suffix
+    *
+    * @param name     The category name
+    * @param suffix   A suffix to append to the classname.
+    */
+   public static Logger getLogger(String name, String suffix)
+   {
+      return new Logger(name + "." + suffix);
+   }
+
+   /** 
     * Create a Logger instance given the category class. This simply
     * calls create(clazz.getName()).
     *
@@ -263,5 +277,18 @@ public class Logger
    {
       Logger logger = new Logger(clazz.getName());
       return logger;
+   }
+
+   /** 
+    * Create a Logger instance given the category class with the given suffix.
+    *
+    * <p>This will include a category seperator between classname and suffix
+    *
+    * @param clazz    The Class whose name will be used as the category name.
+    * @param suffix   A suffix to append to the classname.
+    */
+   public static Logger getLogger(Class clazz, String suffix)
+   {
+      return new Logger(clazz.getName() + "." + suffix);
    }
 }

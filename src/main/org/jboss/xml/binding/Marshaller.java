@@ -21,18 +21,32 @@ import java.io.Writer;
  */
 public interface Marshaller
 {
-   String XML_VERSION = "org.jboss.xml.binding.marshalling.version";
-   String MARSHALLER_IMPL = "org.jboss.xml.binding.Marshaller";
-   String MARSHALLING_INDENT = "org.jboss.xml.binding.marshalling.indent";
+   /**
+    * Allowed values are true and false. If not set, true is assumed.
+    * If true, xml version and encoding will be included into the marshalled XML content.
+    */
+   String PROP_OUTPUT_XML_VERSION = "org.jboss.xml.binding.marshalling.version";
+
+   /**
+    * The value should be a fully qualified class name of the Marshaller implementation.
+    * Used by the FACTORY.getInstance().
+    */
+   String PROP_MARSHALLER = "org.jboss.xml.binding.Marshaller";
+
+   /**
+    * Allowed values are true and false. If not set, true is assumed.
+    * If true, XML content will be written with indentations, otherwise in one string.
+    */
+   String PROP_OUTPUT_INDENTATION = "org.jboss.xml.binding.marshalling.indent";
 
    class FACTORY
    {
       public static Marshaller getInstance()
       {
-         String impl = System.getProperty(MARSHALLER_IMPL);
+         String impl = System.getProperty(PROP_MARSHALLER);
          if(impl == null)
          {
-            throw new IllegalStateException("Required system property is not set: " + MARSHALLER_IMPL);
+            throw new IllegalStateException("Required system property is not set: " + PROP_MARSHALLER);
          }
 
          Class implCls;

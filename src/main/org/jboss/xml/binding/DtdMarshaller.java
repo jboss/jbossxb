@@ -110,7 +110,7 @@ public class DtdMarshaller
       writer.write(systemId);
       writer.write("\">\n");
 
-      ContentWriter contentWriter = new ContentWriter(writer, propertyIsTrueOrNotSet(Marshaller.MARSHALLING_INDENT));
+      ContentWriter contentWriter = new ContentWriter(writer, propertyIsTrueOrNotSet(Marshaller.PROP_OUTPUT_INDENTATION));
       content.handleContent(contentWriter);
    }
 

@@ -174,7 +174,7 @@ public abstract class AbstractMarshaller
 
    protected void writeXmlVersion(Writer writer) throws IOException
    {
-      String xmlVersion = getProperty(Marshaller.XML_VERSION);
+      String xmlVersion = getProperty(Marshaller.PROP_OUTPUT_XML_VERSION);
       if(xmlVersion == null || "true".equalsIgnoreCase(xmlVersion))
       {
          writer.write("<?xml version=\"");

@@ -112,7 +112,7 @@ public class XsMarshaller
       // version & encoding
       writeXmlVersion(writer);
 
-      ContentWriter contentWriter = new ContentWriter(writer, propertyIsTrueOrNotSet(Marshaller.MARSHALLING_INDENT));
+      ContentWriter contentWriter = new ContentWriter(writer, propertyIsTrueOrNotSet(Marshaller.PROP_OUTPUT_INDENTATION));
       content.handleContent(contentWriter);
    }
 

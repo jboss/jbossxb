@@ -6,8 +6,6 @@
  */
 package org.jboss.xml.binding;
 
-// $Id$
-
 import org.xml.sax.Attributes;
 import org.jboss.logging.Logger;
 

@@ -23,6 +23,7 @@ import org.apache.ws.jaxme.xs.xml.XsQName;
 import org.jboss.logging.Logger;
 
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.namespace.QName;
 import java.io.Reader;
 import java.io.Writer;
 import java.io.IOException;
@@ -93,8 +94,8 @@ public class XsMarshaller
       {
          for(int i = 0; i < rootQNames.size(); ++i)
          {
-            AbstractMarshaller.QName qName = (AbstractMarshaller.QName)rootQNames.get(i);
-            XsQName rootName = new XsQName(qName.namespaceUri, qName.name, qName.prefix);
+            QName qName = (QName)rootQNames.get(i);
+            XsQName rootName = new XsQName(qName.getNamespaceURI(), qName.getLocalPart(), qName.getPrefix());
 
             final XSElement xsRoot = xsSchema.getElement(rootName);
             if(xsRoot == null)

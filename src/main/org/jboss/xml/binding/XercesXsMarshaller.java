@@ -27,6 +27,7 @@ import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.namespace.QName;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -129,7 +130,7 @@ public class XercesXsMarshaller
          for (int i = 0; i < rootQNames.size(); ++i)
          {
             QName qName = (QName)rootQNames.get(i);
-            XSElementDeclaration element = model.getElementDeclaration(qName.name, qName.namespaceUri);
+            XSElementDeclaration element = model.getElementDeclaration(qName.getLocalPart(), qName.getNamespaceURI());
             if (element == null)
             {
                XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
@@ -141,9 +142,9 @@ public class XercesXsMarshaller
                   {
                      roots += ", ";
                   }
-                  roots += xsObject.getNamespace() + ":" + xsObject.getName();
+                  roots += "{" + xsObject.getNamespace() + "}" + xsObject.getName();
                }
-               throw new IllegalStateException("Root element not found: " + qName.namespaceUri + ":" + qName.name + " among " + roots);
+               throw new IllegalStateException("Root element not found: " + qName.getNamespaceURI() + ":" + qName.getLocalPart() + " among " + roots);
             }
 
             marshalElement(element, 1, 1);// todo fix min/max

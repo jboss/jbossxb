@@ -10,6 +10,7 @@ import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.namespace.QName;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.ArrayList;
@@ -23,7 +24,6 @@ import java.io.Writer;
 import java.io.InputStreamReader;
 import java.io.InputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
 import java.net.MalformedURLException;
 
@@ -146,7 +146,11 @@ public abstract class AbstractMarshaller
 
    public void addRootElement(String namespaceUri, String prefix, String name)
    {
-      QName qName = new QName(namespaceUri, prefix, name);
+      addRootElement(new QName(namespaceUri, prefix, name));
+   }
+
+   public void addRootElement(QName qName)
+   {
       rootQNames.add(qName);
    }
 
@@ -298,60 +302,6 @@ public abstract class AbstractMarshaller
          // no method
       }
       return method;
-   }
-
-   // Inner
-
-   protected final static class QName
-   {
-      public final String namespaceUri;
-      public final String prefix;
-      public final String name;
-
-      public QName(String namespaceUri, String prefix, String name)
-      {
-         this.namespaceUri = namespaceUri;
-         this.prefix = prefix;
-         this.name = name;
-      }
-
-      public boolean equals(Object o)
-      {
-         if(this == o)
-         {
-            return true;
-         }
-         if(!(o instanceof QName))
-         {
-            return false;
-         }
-
-         final QName qName = (QName)o;
-
-         if(name != null ? !name.equals(qName.name) : qName.name != null)
-         {
-            return false;
-         }
-         if(namespaceUri != null ? !namespaceUri.equals(qName.namespaceUri) : qName.namespaceUri != null)
-         {
-            return false;
-         }
-         if(prefix != null ? !prefix.equals(qName.prefix) : qName.prefix != null)
-         {
-            return false;
-         }
-
-         return true;
-      }
-
-      public int hashCode()
-      {
-         int result;
-         result = (namespaceUri != null ? namespaceUri.hashCode() : 0);
-         result = 29 * result + (prefix != null ? prefix.hashCode() : 0);
-         result = 29 * result + (name != null ? name.hashCode() : 0);
-         return result;
-      }
    }
 
    // Inner

@@ -117,9 +117,7 @@ public abstract class DocumentBindingFactory
                                             String nsUri,
                                             String javaPackage)
       {
-         NamespaceBinding ns = new NamespaceBindingImpl(nsUri, javaPackage, doc.getNamespace(nsUri));
-         ((DocumentBindingImpl)doc).addNamespace(ns);
-         return ns;
+         return ((DocumentBindingImpl)doc).addNamespace(doc.getNamespace(nsUri), nsUri, javaPackage);
       }
 
       /**
@@ -132,11 +130,12 @@ public abstract class DocumentBindingFactory
                                               String elementName,
                                               Class javaClass)
       {
-         TopElementBinding el = new TopElementBindingImpl(elementName,
+         TopElementBinding el = new TopElementBindingImpl(ns,
+            elementName,
             javaClass,
             ns.getTopElement(elementName)
          );
-         ((NamespaceBindingImpl)ns).addElement(el);
+         ((ExposedNamespaceBinding)ns).ns.addElement(el);
          return el;
       }
 
@@ -151,7 +150,8 @@ public abstract class DocumentBindingFactory
                                         String fieldName,
                                         Class javaType)
       {
-         ElementBinding child = new ElementBindingImpl(elementName,
+         ElementBinding child = new ElementBindingImpl(parent.getNamespace(),
+            elementName,
             parent.getJavaType(),
             fieldName,
             javaType,
@@ -175,9 +175,35 @@ public abstract class DocumentBindingFactory
          super(delegate);
       }
 
-      void addNamespace(NamespaceBinding ns)
+      NamespaceBinding addNamespace(NamespaceBinding delegate, String nsUri, String pkg)
       {
-         nsBindings.put(ns.getNamespaceURI(), ns);
+         ExposedNamespaceBinding topNs = (ExposedNamespaceBinding)nsBindings.get(nsUri);
+
+         if(topNs == null)
+         {
+            if(delegate != null)
+            {
+               topNs = (ExposedNamespaceBinding)delegate;
+               topNs.createNewDelegate(nsUri, pkg);
+            }
+            else
+            {
+               topNs = new ExposedNamespaceBinding(nsUri, pkg);
+            }
+            nsBindings.put(topNs.getNamespaceURI(), topNs);
+         }
+         else
+         {
+            if(topNs != delegate)
+            {
+               throw new JBossXBRuntimeException(
+                  "Document binding already has an instance of ExposedNamespaceBinding!"
+               );
+            }
+            topNs.createNewDelegate(nsUri, pkg);
+         }
+
+         return topNs;
       }
 
       protected NamespaceBinding getNamespaceLocal(String nsUri)
@@ -209,6 +235,48 @@ public abstract class DocumentBindingFactory
       public int hashCode()
       {
          return (nsBindings != null ? nsBindings.hashCode() : 0);
+      }
+   }
+
+   /**
+    * An implementation of NamespaceBinding which is always on the top of the stack, i.e. the one a client sees.
+    * The aim is to make any element binding on any level reference the same top level namespace binding.
+    */
+   private static class ExposedNamespaceBinding
+      extends NamespaceBinding
+   {
+      NamespaceBindingImpl ns;
+
+      public ExposedNamespaceBinding(String namespaceUri, String pkg)
+      {
+         super(null);
+         ns = createNewDelegate(namespaceUri, pkg);
+      }
+
+      NamespaceBindingImpl createNewDelegate(String nsUri, String pkg)
+      {
+         ns = new NamespaceBindingImpl(nsUri, pkg, ns);
+         return ns;
+      }
+
+      public String getNamespaceURI()
+      {
+         return ns.getNamespaceURI();
+      }
+
+      public String getJavaPackage()
+      {
+         return ns.getJavaPackage();
+      }
+
+      public TopElementBinding getTopElement(String elementName)
+      {
+         return ns.getTopElement(elementName);
+      }
+
+      protected TopElementBinding getTopElementLocal(String elementName)
+      {
+         throw new UnsupportedOperationException("getTopElementLocal is not implemented.");
       }
    }
 
@@ -292,9 +360,9 @@ public abstract class DocumentBindingFactory
       protected final String elementName;
       private final Map children = new HashMap();
 
-      public BasicElementBindingImpl(String elementName, AbstractBasicElementBinding delegate)
+      public BasicElementBindingImpl(NamespaceBinding ns, String elementName, AbstractBasicElementBinding delegate)
       {
-         super(delegate);
+         super(ns, delegate);
          this.elementName = elementName;
       }
 
@@ -323,9 +391,12 @@ public abstract class DocumentBindingFactory
    {
       private final Class javaClass;
 
-      public TopElementBindingImpl(String elementName, Class javaClass, TopElementBinding delegate)
+      public TopElementBindingImpl(NamespaceBinding ns,
+                                   String elementName,
+                                   Class javaClass,
+                                   TopElementBinding delegate)
       {
-         super(elementName, (AbstractBasicElementBinding)delegate);
+         super(ns, elementName, (AbstractBasicElementBinding)delegate);
          this.javaClass = javaClass;
       }
 
@@ -376,13 +447,14 @@ public abstract class DocumentBindingFactory
       private final Field field;
       private final Class javaType;
 
-      public ElementBindingImpl(String elementName,
+      public ElementBindingImpl(NamespaceBinding ns,
+                                String elementName,
                                 Class parentClass,
                                 String fieldName,
                                 Class javaType,
                                 ElementBinding delegate)
       {
-         super(elementName, (AbstractBasicElementBinding)delegate);
+         super(ns, elementName, (AbstractBasicElementBinding)delegate);
 
          this.fieldName = fieldName;
 

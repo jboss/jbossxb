@@ -20,9 +20,20 @@ public abstract class AbstractBasicElementBinding
     */
    private final AbstractBasicElementBinding delegate;
 
-   protected AbstractBasicElementBinding(AbstractBasicElementBinding delegate)
+   /**
+    * The namespace binding this element belongs to
+    */
+   private final NamespaceBinding ns;
+
+   protected AbstractBasicElementBinding(NamespaceBinding ns, AbstractBasicElementBinding delegate)
    {
       this.delegate = delegate;
+      this.ns = ns;
+   }
+
+   public NamespaceBinding getNamespace()
+   {
+      return ns;
    }
 
    /**

@@ -65,7 +65,7 @@ shift
 goto setupArgs
 :doneSetupArgs
 
-for %%j in (%SUBFOLDERS%) do call :testIfExists %%j\%SUBDIR%\bin\ant.bat %OTHER_ARGS%
+for %%j in (%SUBFOLDERS%) do call :testIfExists %%j\%SUBDIR%\bin\ant.bat -logger org.apache.tools.ant.NoBannerLogger %OTHER_ARGS%
 
 goto :EOF
 

@@ -27,7 +27,20 @@ public class MethodHashing
    
    // Static --------------------------------------------------------
    static Map hashMap = new WeakHashMap();
-   
+
+   public static Method findMethodByHash(Class clazz, long hash) throws Exception
+   {
+      Method[] methods = clazz.getDeclaredMethods();
+      for (int i = 0; i < methods.length; i++)
+      {
+         if (methodHash(methods[i]) == hash) return methods[i];
+      }
+      if (clazz.getSuperclass() != null)
+      {
+         return findMethodByHash(clazz.getSuperclass(), hash);
+      }
+      return null;
+   }
 
    public static long methodHash(Method method)
       throws Exception

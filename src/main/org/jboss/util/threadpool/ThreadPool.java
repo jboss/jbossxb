@@ -25,6 +25,21 @@ public interface ThreadPool
     */
    public void stop(boolean immediate);
 
+   /** Wait on the queued tasks to complete. This can only be called after
+    * after stop.
+    * 
+    * @throws InterruptedException
+    */ 
+   public void waitForTasks() throws InterruptedException;
+
+   /** Wait on the queued tasks to complete upto maxWaitTime milliseconds. This
+    * can only be called after after stop.
+    * 
+    * @param maxWaitTime
+    * @throws InterruptedException
+    */ 
+   public void waitForTasks(long maxWaitTime) throws InterruptedException;
+
    /**
     * Run a task wrapper
     *

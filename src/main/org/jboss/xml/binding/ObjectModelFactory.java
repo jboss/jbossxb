@@ -16,11 +16,14 @@ import org.xml.sax.Attributes;
  * So the following methods should be implemented:
  * <p/>
  * <ul>
- * <li><code>public Object newRoot(java.lang.Object root,
- * org.jboss.xml.binding.ContentNavigator navigator,
- * java.lang.String namespaceURI,
- * java.lang.String localName,
- * org.xml.sax.Attributes attrs)</code>
+ * <li><code>newRoot</code> method
+ * <pre>
+ * public Object newRoot(java.lang.Object root,
+ *                       org.jboss.xml.binding.ContentNavigator navigator,
+ *                       java.lang.String namespaceURI,
+ *                       java.lang.String localName,
+ *                       org.xml.sax.Attributes attrs)
+ * </pre>
  * This method is called on the object model factory by the framework and returns the root of the object model.
  * If the <code>root</code> argument is null the factory is supposed to create and return a new one.
  * If the <code>root</code> argument is not null (i.e. the user provided the root object through the

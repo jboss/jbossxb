@@ -16,8 +16,8 @@ import java.util.Collections;
 import java.util.HashMap;
 
 /**
- * @version <tt>$Revision$</tt>
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @version <tt>$Revision$</tt>
  */
 public abstract class AbstractMarshaller
    implements Marshaller
@@ -28,13 +28,20 @@ public abstract class AbstractMarshaller
    protected String encoding = ENCODING;
    protected List rootQNames = new ArrayList();
 
-   /** object model providers mapped to namespace URIs */
+   /**
+    * object model providers mapped to namespace URIs
+    */
    private Map providerToNs = Collections.EMPTY_MAP;
 
    // Marshaller implementation
 
    public void mapProviderToNamespace(ObjectModelProvider provider, String namespaceUri)
    {
+      if(!(provider instanceof GenericObjectModelProvider))
+      {
+         provider = new DelegatingObjectModelProvider(provider);
+      }
+
       if(providerToNs.isEmpty())
       {
          providerToNs = new HashMap();
@@ -65,9 +72,9 @@ public abstract class AbstractMarshaller
 
    // Protected
 
-   protected ObjectModelProvider getProvider(String namespaceUri, ObjectModelProvider defaultProvider)
+   protected GenericObjectModelProvider getProvider(String namespaceUri, GenericObjectModelProvider defaultProvider)
    {
-      ObjectModelProvider provider = (ObjectModelProvider)providerToNs.get(namespaceUri);
+      GenericObjectModelProvider provider = (GenericObjectModelProvider) providerToNs.get(namespaceUri);
       if(provider == null)
       {
          provider = defaultProvider;
@@ -75,18 +82,17 @@ public abstract class AbstractMarshaller
       return provider;
    }
 
-   protected static final Object provideChildren(ObjectModelProvider provider,
-                                                 Object parent,
-                                                 String namespaceUri,
-                                                 String name)
+   static final Object provideChildren(ObjectModelProvider provider,
+                                       Object parent,
+                                       String namespaceUri,
+                                       String name)
    {
       Class providerClass = provider.getClass();
       Class parentClass = parent.getClass();
-      String methodName = "provideChildren";
+      String methodName = "getChildren";
 
       Object container = null;
-      Method method = getProviderMethod(
-         providerClass,
+      Method method = getProviderMethod(providerClass,
          methodName,
          new Class[]{parentClass, String.class, String.class});
       if(method != null)
@@ -108,18 +114,17 @@ public abstract class AbstractMarshaller
       return container;
    }
 
-   protected static final Object provideValue(ObjectModelProvider provider,
-                                              Object parent,
-                                              String namespaceUri,
-                                              String name)
+   static final Object provideValue(ObjectModelProvider provider,
+                                    Object parent,
+                                    String namespaceUri,
+                                    String name)
    {
       Class providerClass = provider.getClass();
       Class parentClass = parent.getClass();
-      String methodName = "provideValue";
+      String methodName = "getElementValue";
 
       Object value = null;
-      Method method = getProviderMethod(
-         providerClass,
+      Method method = getProviderMethod(providerClass,
          methodName,
          new Class[]{parentClass, String.class, String.class});
       if(method != null)
@@ -140,18 +145,17 @@ public abstract class AbstractMarshaller
       return value;
    }
 
-   protected static final Object provideAttributeValue(ObjectModelProvider provider,
-                                                       Object object,
-                                                       String namespaceUri,
-                                                       String name)
+   static final Object provideAttributeValue(ObjectModelProvider provider,
+                                             Object object,
+                                             String namespaceUri,
+                                             String name)
    {
       Class providerClass = provider.getClass();
       Class objectClass = object.getClass();
-      String methodName = "provideAttributeValue";
+      String methodName = "getAttributeValue";
 
       Object value = null;
-      Method method = getProviderMethod(
-         providerClass,
+      Method method = getProviderMethod(providerClass,
          methodName,
          new Class[]{objectClass, String.class, String.class});
       if(method != null)
@@ -206,7 +210,7 @@ public abstract class AbstractMarshaller
          if(this == o) return true;
          if(!(o instanceof QName)) return false;
 
-         final QName qName = (QName)o;
+         final QName qName = (QName) o;
 
          if(name != null ? !name.equals(qName.name) : qName.name != null) return false;
          if(namespaceUri != null ? !namespaceUri.equals(qName.namespaceUri) : qName.namespaceUri != null) return false;

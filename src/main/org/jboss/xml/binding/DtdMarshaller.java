@@ -48,7 +48,7 @@ public class DtdMarshaller
 
    private final Stack stack = new Stack();
    private DTD dtd;
-   private ObjectModelProvider provider;
+   private GenericObjectModelProvider provider;
    private Content content = new Content();
 
    private final LinkedList elementStack = new LinkedList();
@@ -62,7 +62,7 @@ public class DtdMarshaller
    public void marshal(Reader dtdReader, ObjectModelProvider provider, Writer writer)
       throws IOException, SAXException
    {
-      marshal(dtdReader, provider, provider.getDocument(), writer);
+      marshal(dtdReader, provider, provider.getRoot(), writer);
    }
 
    public void marshal(Reader dtdReader, ObjectModelProvider provider, Object document, Writer writer)
@@ -71,7 +71,8 @@ public class DtdMarshaller
       DTDParser parser = new DTDParser(dtdReader);
       dtd = parser.parse(true);
 
-      this.provider = provider;
+      this.provider = provider instanceof GenericObjectModelProvider ?
+         (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider);
       stack.push(document);
 
       DTDElement[] roots = null;
@@ -144,8 +145,8 @@ public class DtdMarshaller
       }
       else if(item instanceof DTDEmpty)
       {
-         ObjectModelProvider provider = getProvider(systemId, this.provider);
-         final Object value = provideValue(provider, stack.peek(), systemId, element.getName());
+         GenericObjectModelProvider provider = getProvider(systemId, this.provider);
+         final Object value = provider.getElementValue(stack.peek(), systemId, element.getName());
          if(Boolean.TRUE.equals(value))
          {
             content.startElement("", element.getName(), element.getName(), attrs);
@@ -173,8 +174,8 @@ public class DtdMarshaller
          DTDItem item = items[i];
          if(item instanceof DTDPCData)
          {
-            ObjectModelProvider provider = getProvider(systemId, this.provider);
-            Object value = provideValue(provider, parent, systemId, elementName);
+            GenericObjectModelProvider provider = getProvider(systemId, this.provider);
+            Object value = provider.getElementValue(parent, systemId, elementName);
             if(value != null)
             {
                char[] ch = value.toString().toCharArray();
@@ -189,8 +190,8 @@ public class DtdMarshaller
    private final void handleChildren(DTD dtd, DTDElement element)
    {
       Object parent = stack.peek();
-      ObjectModelProvider provider = getProvider(systemId, this.provider);
-      Object children = provideChildren(provider, parent, systemId, element.getName());
+      GenericObjectModelProvider provider = getProvider(systemId, this.provider);
+      Object children = provider.getChildren(parent, systemId, element.getName());
 
       if(children != null)
       {
@@ -296,8 +297,8 @@ public class DtdMarshaller
       for(Iterator attrIter = attributes.values().iterator(); attrIter.hasNext();)
       {
          DTDAttribute attr = (DTDAttribute)attrIter.next();
-         ObjectModelProvider provider = getProvider(systemId, this.provider);
-         final Object attrValue = provideAttributeValue(provider, container, systemId, attr.getName());
+         GenericObjectModelProvider provider = getProvider(systemId, this.provider);
+         final Object attrValue = provider.getAttributeValue(container, systemId, attr.getName());
 
          if(attrValue != null)
          {

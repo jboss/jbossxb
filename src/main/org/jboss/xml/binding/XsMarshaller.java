@@ -48,7 +48,7 @@ public class XsMarshaller
    private final Stack stack = new Stack();
 
    /** ObjectModelProvider for this marshaller */
-   private ObjectModelProvider provider;
+   private GenericObjectModelProvider provider;
    /** Content the result is written to */
    private Content content = new Content();
    /** Attributes added to the root element */
@@ -59,7 +59,7 @@ public class XsMarshaller
    public void marshal(Reader schema, ObjectModelProvider provider, Writer writer)
       throws IOException, SAXException, ParserConfigurationException
    {
-      marshal(schema, provider, provider.getDocument(), writer);
+      marshal(schema, provider, provider.getRoot(), writer);
    }
 
    public void marshal(Reader schema, ObjectModelProvider provider, Object document, Writer writer)
@@ -71,7 +71,9 @@ public class XsMarshaller
       xsParser.setValidating(false);
       XSSchema xsSchema = xsParser.parse(source);
 
-      this.provider = provider;
+      this.provider = provider instanceof GenericObjectModelProvider ?
+         (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider);
+
       stack.push(document);
       content.startDocument();
 
@@ -236,8 +238,8 @@ public class XsMarshaller
          );
 
       Object parent = stack.peek();
-      ObjectModelProvider provider = getProvider(name.getNamespaceURI(), this.provider);
-      Object value = provideValue(provider, parent, name.getNamespaceURI(), name.getLocalName());
+      GenericObjectModelProvider provider = getProvider(name.getNamespaceURI(), this.provider);
+      Object value = provider.getElementValue(parent, name.getNamespaceURI(), name.getLocalName());
 
       if(value != null)
       {
@@ -253,8 +255,8 @@ public class XsMarshaller
    {
       Object parent = stack.peek();
       final XsQName xsName = element.getName();
-      ObjectModelProvider provider = getProvider(xsName.getNamespaceURI(), this.provider);
-      Object children = provideChildren(provider, parent, xsName.getNamespaceURI(), xsName.getLocalName());
+      GenericObjectModelProvider provider = getProvider(xsName.getNamespaceURI(), this.provider);
+      Object children = provider.getChildren(parent, xsName.getNamespaceURI(), xsName.getLocalName());
 
       if(children != null)
       {
@@ -272,7 +274,7 @@ public class XsMarshaller
             {
                final XsQName name = element.getName();
 
-               final Object value = provideValue(provider, parent, name.getNamespaceURI(), name.getLocalName());
+               final Object value = provider.getElementValue(parent, name.getNamespaceURI(), name.getLocalName());
                if(Boolean.TRUE.equals(value))
                {
                   final String prefix = name.getPrefix();
@@ -353,9 +355,9 @@ public class XsMarshaller
             final XSAttribute attr = (XSAttribute)attributable;
 
             final XsQName attrQName = attr.getName();
-            ObjectModelProvider provider = getProvider(attrQName.getNamespaceURI(), this.provider);
-            final Object attrValue = provideAttributeValue(
-               provider, container, attrQName.getNamespaceURI(), attrQName.getLocalName()
+            GenericObjectModelProvider provider = getProvider(attrQName.getNamespaceURI(), this.provider);
+            final Object attrValue = provider.getAttributeValue(
+               container, attrQName.getNamespaceURI(), attrQName.getLocalName()
             );
 
             if(attrValue != null)

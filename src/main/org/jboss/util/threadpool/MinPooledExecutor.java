@@ -27,38 +27,88 @@ size must be > 0.
  */
 public class MinPooledExecutor extends PooledExecutor
 {
+   // Constants -----------------------------------------------------
+
+
+   // Attributes ----------------------------------------------------
+
+   /** The number of threads to keep alive threads */
+   protected int keepAliveSize;
+
+   // Static --------------------------------------------------------
+
+   // Constructors --------------------------------------------------
+
+   /**
+    * Construct a new executor
+    * 
+    * @param poolSize the minimum pool size
+    */
+   public MinPooledExecutor(int poolSize)
+   {
+      super(poolSize);
+   }
+   
+   /**
+    * Construct a new executor
+    * 
+    * @param channel the queue for any requests
+    * @param poolSize the minimum pool size
+    */
    public MinPooledExecutor(Channel channel, int poolSize)
    {
       super(channel, poolSize);
    }
 
-   public MinPooledExecutor(int poolSize)
+   // Public --------------------------------------------------------
+
+   /**
+    * @return the number of threads to keep alive
+    */
+   public int getKeepAliveSize()
    {
-      super(poolSize);
+      return keepAliveSize;
    }
 
+   /**
+    * @param keepAliveSize the number of threads to keep alive
+    */
+   public void setKeepAliveSize(int keepAliveSize)
+   {
+      this.keepAliveSize = keepAliveSize;
+   }
+
+   // PooledExecutor overrides --------------------------------------
+   
    protected Runnable getTask() throws InterruptedException
    {
       Runnable task = super.getTask();
-      while (task == null && keepRunning())
+      while (task == null && keepAlive())
       {
          task = super.getTask();
       }
       return task;
    }
 
+   // Package protected ---------------------------------------------
+
+   // Protected -----------------------------------------------------
+
    /**
-    * We keep running unless we are told to shutdown
-    * or there are more than minimumPoolSize_ threads in the pool
+    * We keep alive unless we are told to shutdown
+    * or there are more than keepAliveSize threads in the pool
     *
-    * @return whether to keep running
+    * @return whether to keep alive
     */
-   protected synchronized boolean keepRunning()
+   protected synchronized boolean keepAlive()
    {
       if (shutdown_)
          return false;
 
-      return poolSize_ <= minimumPoolSize_;
+      return poolSize_ <= keepAliveSize;
    }
 
+   // Private -------------------------------------------------------
+
+   // Inner classes -------------------------------------------------
 }

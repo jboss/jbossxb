@@ -24,22 +24,27 @@ public interface BasicThreadPoolMBean extends ThreadPoolMBean
    *
     * @return the queue size
     */
-   public int getQueueSize();
+   int getQueueSize();
 
    /**
     * Get the maximum queue size
     *
     * @return the maximum queue size
     */
-   public int getMaximumQueueSize();
+   int getMaximumQueueSize();
 
    /**
     * Set the maximum queue size
     *
     * @param size the new maximum queue size
     */
-   public void setMaximumQueueSize(int size);
+   void setMaximumQueueSize(int size);
 
+   /**
+    * @return the blocking mode
+    */
+   String getBlockingMode();
+   
    /** Set the behavior of the pool when a task is added and the queue is full.
     * The mode string indicates one of the following modes:
     * abort - a RuntimeException is thrown
@@ -52,7 +57,7 @@ public interface BasicThreadPoolMBean extends ThreadPoolMBean
     * @param mode one of run, wait, discard, discardOldest or abort without
     *    regard to case.
     */ 
-   public void setBlockingMode(String mode);
+   void setBlockingMode(String mode);
 
    /**
     * Retrieve the thread group name

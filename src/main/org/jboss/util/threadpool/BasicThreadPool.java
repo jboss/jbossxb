@@ -45,8 +45,11 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    /** The internal pool number */
    private int poolNumber;
 
+   /** The blocking mode */
+   private String blockingMode = "abort";
+   
    /** The pooled executor */
-   private PooledExecutor executor;
+   private MinPooledExecutor executor;
 
    /** The queue */
    private BoundedLinkedQueue queue;
@@ -219,12 +222,15 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
 
    public void setMinimumPoolSize(int size)
    {
-      synchronized( executor )
+      synchronized (executor)
       {
-         executor.setMinimumPoolSize(size);
+         executor.setKeepAliveSize(size);
          // Don't let the min size > max size
-         if( executor.getMaximumPoolSize() < size )
+         if (executor.getMaximumPoolSize() < size)
+         {
+            executor.setMinimumPoolSize(size);
             executor.setMaximumPoolSize(size);
+         }
       }
    }
 
@@ -232,14 +238,16 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    {
       return executor.getMaximumPoolSize();
    }
+   
    public void setMaximumPoolSize(int size)
    {
-      synchronized( executor )
+      synchronized (executor)
       {
+         executor.setMinimumPoolSize(size);
          executor.setMaximumPoolSize(size);
          // Don't let the min size > max size
-         if( executor.getMinimumPoolSize() > size )
-            executor.setMinimumPoolSize(size);
+         if (executor.getKeepAliveSize() > size)
+            executor.setKeepAliveSize(size);
       }
    }
 
@@ -253,8 +261,15 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       executor.setKeepAliveTime(time);
    }
 
+   public String getBlockingMode()
+   {
+      return blockingMode;
+   }
+   
    public void setBlockingMode(String mode)
    {
+      blockingMode = mode;
+      
       if( mode.equalsIgnoreCase("run") )
       {
          executor.runWhenBlocked();
@@ -273,6 +288,7 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       }
       else
       {
+         blockingMode = "abort";
          executor.abortWhenBlocked();
       }
    }

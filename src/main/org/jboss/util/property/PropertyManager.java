@@ -53,8 +53,9 @@ public final class PropertyManager
     * Initialize the property system.
     */
    static {
-      // construct default property container with system props as default
-      props = new PropertyMap(System.getProperties());
+      // construct default property container and initialze from system props
+      props = new PropertyMap();
+      props.putAll(System.getProperties());
 
       // replace system props to enable notifications via System.setProperty()
       System.setProperties(props);

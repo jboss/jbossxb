@@ -8,5 +8,7 @@
     <classpathentry kind="lib" path="/thirdparty/gnu-regexp/lib/gnu-regexp.jar"/>
     <classpathentry kind="lib" path="/thirdparty/apache-slide/client/lib/webdavlib.jar"/>
     <classpathentry kind="lib" path="/thirdparty/apache-slide/client/lib/commons-httpclient.jar"/>
+    <classpathentry kind="lib" path="/thirdparty/wutka-dtdparser/lib/dtdparser121.jar"/>
+    <classpathentry kind="lib" path="/thirdparty/apache-jaxme/lib/jaxmexs.jar"/>
     <classpathentry kind="output" path="output/eclipse-classes"/>
 </classpath>

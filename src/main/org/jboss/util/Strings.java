@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * A collection of String utilities.
@@ -946,8 +947,18 @@ public final class Strings
       }
       return retn;
    }
-}
 
-/*
-vim:ts=3:sw=3:et
-*/
+   /**
+    * The default toString implementation of an object
+    * 
+    * @param object the object
+    * @return a string in the form className@hexHashCode
+    */
+   public static final String defaultToString(Object object)
+   {
+      if (object == null)
+         return "null";
+      else
+         return object.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(object));
+   }
+}

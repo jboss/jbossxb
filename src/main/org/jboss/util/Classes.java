@@ -261,7 +261,15 @@ public final class Classes
     * @throws ClassNotFoundException when the <code>classLoader</code> can not find the requested class
     */
    public static Class loadClass(String className) throws ClassNotFoundException {
-      return loadClass( className, Thread.currentThread().getContextClassLoader() );
+      return loadClass( className,  Thread.currentThread().getContextClassLoader() );
+   }
+
+   /**
+    * This method acts equivalently to invoking Thread.currentThread().getContextClassLoader()
+    * @return             the ClassLoader
+    */
+   public static ClassLoader getContextClassLoader() {
+      return Thread.currentThread().getContextClassLoader();
    }
    
    /**

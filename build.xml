@@ -264,8 +264,6 @@
              private="${javadoc.private}"
              use="${javadoc.use}"
 	     verbose="${javadoc.verbose}"> 
-      <group title="JDBC Extension" packages="javax.sql*"/>
-      <group title="J2EE" packages="javax*"/>
     </javadoc>
   </target>
 

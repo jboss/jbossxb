@@ -130,7 +130,7 @@ main() {
     fi
 
     # need to specify planet57/buildmagic protocol handler package
-    ANT_OPTS="$ANT_OPTS -Djava.protocol.handler.pkgs=planet57.net.protocol"
+    ANT_OPTS="$ANT_OPTS -Djava.protocol.handler.pkgs=org.jboss.net.protocol"
 
     # setup some build properties
     ANT_OPTS="$ANT_OPTS -Dbuild.script=$0"

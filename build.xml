@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE project [
-  <!ENTITY buildmagic SYSTEM "resource://planet57/tools/buildmagic/common.xml">
+  <!ENTITY buildmagic SYSTEM "resource://org/jboss/tools/buildmagic/common.xml">
 ]>
 
 <!-- ====================================================================== -->
@@ -62,7 +62,7 @@
 
     <!-- Module name(s) & version -->
     <property name="module.name" value="common"/>
-    <property name="module.Name" value="JBoss Common"/>
+    <property name="module.Name" value="JBoss/Common"/>
     <property name="module.version" value="DEV"/>
 
     <!-- ========= -->
@@ -312,7 +312,6 @@
              classpathref="javadoc.classpath"
              windowtitle="${javadoc.windowtitle}"
 	     splitindex="${javadoc.splitindex}"
-             doctitle="${javadoc.doctitle}"
              author="${javadoc.author}"
              version="${javadoc.version}"
              public="${javadoc.public}"
@@ -321,6 +320,11 @@
              private="${javadoc.private}"
              use="${javadoc.use}"
 	     verbose="${javadoc.verbose}"> 
+      <doctitle><![CDATA[<h1>${module.Name} API Documentation</h1>]]></doctitle>
+      <bottom><![CDATA[<i><div align="center"><font size="-1">Copyright &#169; 2002 JBoss Group, LLC. All Rights Reserved.</font></div></i>]]></bottom>
+      <!--
+      <link href="http://java.sun.com/j2se/1.3/docs/api"/>
+      -->
     </javadoc>
   </target>
 

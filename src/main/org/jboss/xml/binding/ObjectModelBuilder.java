@@ -325,7 +325,7 @@ public class ObjectModelBuilder
          element = accepted.pop();
          Object parent = (accepted.isEmpty() ? null : accepted.peek());
 
-         if(parent != null)
+         if(parent != null && parent != element)
          {
             curFactory.addChild(parent, element, this, namespaceURI, localName);
          }

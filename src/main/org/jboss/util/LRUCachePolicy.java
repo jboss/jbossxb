@@ -406,7 +406,7 @@ public class LRUCachePolicy
       {
          m_head = null;
          m_tail = null;
-         m_count = 0;         
+         m_count = 0;
       }
 
       public String toString()
@@ -450,7 +450,7 @@ public class LRUCachePolicy
       }
       public String toString()
       {
-         return "key: " + m_key + ", object: " + Integer.toHexString(m_object.hashCode()) + ", entry: " + Integer.toHexString(super.hashCode());
+         return "key: " + m_key + ", object: " + ( m_object==null ? "null" : Integer.toHexString(m_object.hashCode())) + ", entry: " + Integer.toHexString(super.hashCode());
       }
    }
 }

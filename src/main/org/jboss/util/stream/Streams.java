@@ -34,10 +34,15 @@ public final class Streams
     * Attempt to close an <tt>InputStream</tt>.
     *
     * @param stream  <tt>InputStream</tt> to attempt to close.
-    * @return        <tt>True</tt> if stream was closed, or <tt>false</tt> if
-    *                an exception was thrown.
+    * @return        <tt>True</tt> if stream was closed (or stream was null),
+    *                or <tt>false</tt> if an exception was thrown.
     */
    public static boolean close(final InputStream stream) {
+      // do not attempt to close null stream, but return sucess
+      if (stream == null) {
+         return true;
+      }
+      
       boolean success = true;
 
       try {
@@ -55,10 +60,15 @@ public final class Streams
     * Attempt to close an <tt>OutputStream</tt>.
     *
     * @param stream  <tt>OutputStream</tt> to attempt to close.
-    * @return        <tt>True</tt> if stream was closed, or <tt>false</tt> if
-    *                an exception was thrown.
+    * @return        <tt>True</tt> if stream was closed (or stream was null),
+    *                or <tt>false</tt> if an exception was thrown.
     */
    public static boolean close(final OutputStream stream) {
+      // do not attempt to close null stream, but return sucess
+      if (stream == null) {
+         return true;
+      }
+
       boolean success = true;
 
       try {
@@ -76,8 +86,8 @@ public final class Streams
     * Attempt to close an <tt>InputStream</tt> or <tt>OutputStream</tt>.
     *
     * @param stream  Stream to attempt to close.
-    * @return        <tt>True</tt> if stream was closed, or <tt>false</tt> if
-    *                an exception was thrown.
+    * @return        <tt>True</tt> if stream was closed (or stream was null),
+    *                or <tt>false</tt> if an exception was thrown.
     *
     * @throws IllegalArgumentException    Stream is not an <tt>InputStream</tt>
     *                                     or <tt>OuputStream</tt>.
@@ -197,10 +207,15 @@ public final class Streams
     * Attempt to flush an <tt>OutputStream</tt>.
     *
     * @param stream  <tt>OutputStream</tt> to attempt to flush.
-    * @return        <tt>True</tt> if stream was flushed, or <tt>false</tt> if
-    *                an exception was thrown.
+    * @return        <tt>True</tt> if stream was flushed (or stream was null),
+    *                or <tt>false</tt> if an exception was thrown.
     */
    public static boolean flush(final OutputStream stream) {
+      // do not attempt to close null stream, but return sucess
+      if (stream == null) {
+         return true;
+      }
+      
       boolean success = true;
 
       try {

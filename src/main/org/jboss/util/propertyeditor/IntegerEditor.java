@@ -18,11 +18,11 @@ import java.beans.PropertyEditorSupport;
  */
 public class IntegerEditor extends PropertyEditorSupport
 {
-   /** Map the argument text into and Integer using Integer.valueOf.
+   /** Map the argument text into an Integer using Integer.decode.
     */
    public void setAsText(final String text)
    {
-      Object newValue = Integer.valueOf(text);
+      Object newValue = Integer.decode(text);
       setValue(newValue);
    }
 

@@ -33,14 +33,14 @@ public class ShortEditor extends PropertyEditorSupport
 {
 
    /**
-    * Map the argument text into and Integer using Integer.valueOf.
+    * Map the argument text into a Short using Short.decode.
     */
 
    public void setAsText(final String text)
 
    {
 
-      Object newValue = Short.valueOf(text);
+      Object newValue = Short.decode(text);
 
       setValue(newValue);
 

@@ -33,14 +33,14 @@ public class LongEditor extends PropertyEditorSupport
 {
 
    /**
-    * Map the argument text into and Integer using Integer.valueOf.
+    * Map the argument text into a Long using Long.decode.
     */
 
    public void setAsText(final String text)
 
    {
 
-      Object newValue = Long.valueOf(text);
+      Object newValue = Long.decode(text);
 
       setValue(newValue);
 

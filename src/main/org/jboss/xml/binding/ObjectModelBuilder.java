@@ -305,10 +305,11 @@ public class ObjectModelBuilder
       if(!namespaceURI.equals(curNsSwitchingFactory))
       {
          GenericObjectModelFactory newFactory = getFactory(namespaceURI);
-         if(newFactory != curFactory)
-         {
+         //if(newFactory != curFactory)
+         //{ still have to push since curNsSwitchingFactory needs to be updated to prevent
+         //  newRoot calls for the children
             pushFactory(namespaceURI, localName, newFactory);
-         }
+         //}
 
          element = curFactory.newRoot(parent, this, namespaceURI, localName, atts);
       }

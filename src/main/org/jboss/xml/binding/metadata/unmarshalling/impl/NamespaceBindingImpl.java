@@ -8,6 +8,7 @@ package org.jboss.xml.binding.metadata.unmarshalling.impl;
 
 import org.jboss.xml.binding.metadata.unmarshalling.NamespaceBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.TopElementBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -19,19 +20,26 @@ import java.util.HashMap;
 public class NamespaceBindingImpl
    implements NamespaceBinding
 {
+   private final DelegatingDocumentBinding doc;
    private final String namespaceUri;
    private final String javaPackage;
    private final Map tops = new HashMap();
 
-   public NamespaceBindingImpl(String namespaceUri, String javaPackage)
+   public NamespaceBindingImpl(DelegatingDocumentBinding doc, String namespaceUri, String javaPackage)
    {
       this.namespaceUri = namespaceUri;
       this.javaPackage = javaPackage;
+      this.doc = doc;
    }
 
    void addTopElement(TopElementBinding top)
    {
       tops.put(top.getElementName(), top);
+   }
+
+   public DocumentBinding getDocument()
+   {
+      return doc;
    }
 
    public String getNamespaceUri()

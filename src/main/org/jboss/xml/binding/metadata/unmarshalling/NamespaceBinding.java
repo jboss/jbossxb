@@ -16,5 +16,7 @@ public interface NamespaceBinding
 
    String getJavaPackage();
 
+   DocumentBinding getDocument();
+
    TopElementBinding getTopElement(String elementName);
 }

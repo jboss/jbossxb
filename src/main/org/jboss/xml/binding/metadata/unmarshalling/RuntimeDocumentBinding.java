@@ -54,6 +54,12 @@ public class RuntimeDocumentBinding
          return javaPackage;
       }
 
+      public DocumentBinding getDocument()
+      {
+         // todo: implement getDocument
+         throw new UnsupportedOperationException("getDocument is not implemented.");
+      }
+
       public TopElementBinding getTopElement(String elementName)
       {
          TopElementBinding topEl;
@@ -208,6 +214,12 @@ public class RuntimeDocumentBinding
       public Class getJavaType()
       {
          return javaType;
+      }
+
+      public DocumentBinding getDocument()
+      {
+         // todo: implement getDocument
+         throw new UnsupportedOperationException("getDocument is not implemented.");
       }
 
       private ElementBinding createElementBinding(QName elementName,

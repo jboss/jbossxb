@@ -8,6 +8,7 @@ package org.jboss.xml.binding.metadata.unmarshalling.impl;
 
 import org.jboss.xml.binding.metadata.unmarshalling.NamespaceBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.TopElementBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
 
 import javax.xml.namespace.QName;
 import java.util.List;
@@ -22,14 +23,16 @@ import java.util.HashMap;
 public class DelegatingNamespaceBinding
    implements NamespaceBinding
 {
+   private final DelegatingDocumentBinding doc;
    private final String namespaceUri;
    private final Map tops = new HashMap();
    private final List delegates = new ArrayList();
 
-   public DelegatingNamespaceBinding(NamespaceBinding delegate)
+   public DelegatingNamespaceBinding(DelegatingDocumentBinding doc, NamespaceBinding delegate)
    {
       this.namespaceUri = delegate.getNamespaceUri();
       delegates.add(delegate);
+      this.doc = doc;
    }
 
    void addDelegate(NamespaceBinding ns)
@@ -39,11 +42,11 @@ public class DelegatingNamespaceBinding
 
    DelegatingTopElementBinding bindTopElement(String elementName, Class javaType)
    {
-      TopElementBinding top = new TopElementBindingImpl(new QName(namespaceUri, elementName), javaType);
+      TopElementBinding top = new TopElementBindingImpl(new QName(namespaceUri, elementName), javaType, doc);
       DelegatingTopElementBinding delegatingTop = (DelegatingTopElementBinding)tops.get(elementName);
       if(delegatingTop == null)
       {
-         delegatingTop = new DelegatingTopElementBinding(top);
+         delegatingTop = new DelegatingTopElementBinding(doc, top);
          tops.put(elementName, delegatingTop);
       }
       else
@@ -51,6 +54,11 @@ public class DelegatingNamespaceBinding
          delegatingTop.addDelegate(top);
       }
       return delegatingTop;
+   }
+
+   public DocumentBinding getDocument()
+   {
+      return doc;
    }
 
    public String getNamespaceUri()
@@ -81,7 +89,7 @@ public class DelegatingNamespaceBinding
                }
                else
                {
-                  cachedTop = new DelegatingTopElementBinding(top);
+                  cachedTop = new DelegatingTopElementBinding(doc, top);
                }
                tops.put(elementName, cachedTop);
                break;

@@ -17,6 +17,7 @@ public interface BasicElementBinding
 {
    QName getElementName();
    Class getJavaType();
+   DocumentBinding getDocument();
    ElementBinding getElement(QName elementName);
    AttributeBinding getAttribute(QName attributeName);
 }

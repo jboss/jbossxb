@@ -177,11 +177,10 @@ public class XsdBinder
       }
       else
       {
-         String ns = typeDef.getNamespace();
-         NamespaceBinding nsBinding = doc.getNamespace(ns);
+         NamespaceBinding nsBinding = doc.getNamespace(typeDef.getNamespace());
          if(nsBinding == null)
          {
-            throw new JBossXBRuntimeException("Namespace is not bound: " + ns);
+            throw new JBossXBRuntimeException("Namespace is not bound: " + typeDef.getName());
          }
 
          String fqClsName = nsBinding.getJavaPackage() +
@@ -279,6 +278,7 @@ public class XsdBinder
          }
       }
 
+      // todo: should it be element's namespace or its type's one?
       ElementBinding el = factory.bindElement(parent,
          elementDecl.getNamespace(),
          elementDecl.getName(),

@@ -6,8 +6,8 @@
  */
 package org.jboss.xml.binding.metadata.unmarshalling.impl;
 
-import org.jboss.xml.binding.metadata.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.JBossXBRuntimeException;
+import org.jboss.xml.binding.metadata.unmarshalling.ElementBinding;
 
 import javax.xml.namespace.QName;
 import java.lang.reflect.Field;
@@ -18,8 +18,7 @@ import java.lang.reflect.Method;
  * @version <tt>$Revision$</tt>
  */
 public class ElementBindingImpl
-   extends BasicElementBindingImpl
-   implements ElementBinding
+   extends AbstractElementBinding
 {
    private final Field field;
    private final Method getter;
@@ -27,9 +26,9 @@ public class ElementBindingImpl
    private final Class fieldType;
    private final Class javaType;
 
-   public ElementBindingImpl(ElementBinding element)
+   public ElementBindingImpl(AbstractElementBinding element)
    {
-      super(element.getElementName());
+      super(element.getElementName(), element.getParent());
       field = element.getField();
       getter = element.getGetter();
       setter = element.getSetter();
@@ -37,27 +36,30 @@ public class ElementBindingImpl
       javaType = element.getJavaType();
    }
 
-   public ElementBindingImpl(QName elementName, Class javaType, Class parentClass, String fieldName)
+   public ElementBindingImpl(QName elementName,
+                             Class javaType,
+                             Class parentClass,
+                             String fieldName,
+                             DelegatingBasicElementBinding parent)
    {
-      super(elementName);
-
-      Field field = null;
-      Method getter = null;
-      Method setter = null;
+      super(elementName, parent);
+      Field field1 = null;
+      Method getter1 = null;
+      Method setter1 = null;
 
       if(fieldName != null)
       {
          try
          {
-            field = parentClass.getField(fieldName);
+            field1 = parentClass.getField(fieldName);
          }
          catch(NoSuchFieldException e)
          {
             String baseMethodName = Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
             try
             {
-               getter = parentClass.getMethod("get" + baseMethodName, null);
-               setter = parentClass.getMethod("set" + baseMethodName, new Class[]{getter.getReturnType()});
+               getter1 = parentClass.getMethod("get" + baseMethodName, null);
+               setter1 = parentClass.getMethod("set" + baseMethodName, new Class[]{getter1.getReturnType()});
             }
             catch(NoSuchMethodException e1)
             {
@@ -72,11 +74,11 @@ public class ElementBindingImpl
          }
       }
 
-      this.field = field;
-      this.getter = getter;
-      this.setter = setter;
+      field = field1;
+      getter = getter1;
+      setter = setter1;
 
-      fieldType = field == null ? (getter == null ? null : getter.getReturnType()) : field.getType();
+      fieldType = field1 == null ? (getter1 == null ? null : getter1.getReturnType()) : field1.getType();
 
       this.javaType = (javaType == null ? fieldType : javaType);
    }
@@ -104,5 +106,10 @@ public class ElementBindingImpl
    public Class getJavaType()
    {
       return javaType;
+   }
+
+   public ElementBinding getElement(QName elementName)
+   {
+      return null;
    }
 }

@@ -7,8 +7,8 @@
 package org.jboss.xml.binding.metadata.unmarshalling.impl;
 
 import org.jboss.xml.binding.metadata.unmarshalling.BasicElementBinding;
-import org.jboss.xml.binding.metadata.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.AttributeBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
 
 import javax.xml.namespace.QName;
 import java.util.Map;
@@ -21,28 +21,32 @@ import java.util.HashMap;
 public abstract class BasicElementBindingImpl
    implements BasicElementBinding
 {
-   private final QName elementName;
-   private final Map children = new HashMap();
+   protected final DelegatingDocumentBinding doc;
+   protected final QName elementName;
+   //private final Map children = new HashMap();
    private final Map attributes = new HashMap();
 
-   public BasicElementBindingImpl(QName elementName)
+   public BasicElementBindingImpl(QName elementName, DelegatingDocumentBinding doc)
    {
       this.elementName = elementName;
+      this.doc = doc;
    }
 
+   /*
    void addElement(ElementBinding child)
    {
       children.put(child.getElementName(), child);
    }
+   */
 
    void addAttribute(AttributeBinding attr)
    {
       attributes.put(attr.getAttributeName(), attr);
    }
 
-   public QName getElementQName()
+   public DocumentBinding getDocument()
    {
-      return elementName;
+      return doc;
    }
 
    public QName getElementName()
@@ -50,10 +54,12 @@ public abstract class BasicElementBindingImpl
       return elementName;
    }
 
+   /*
    public ElementBinding getElement(QName elementName)
    {
       return (ElementBinding)children.get(elementName);
    }
+   */
 
    public AttributeBinding getAttribute(QName attributeName)
    {

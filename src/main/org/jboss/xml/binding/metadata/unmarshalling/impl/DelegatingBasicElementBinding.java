@@ -9,6 +9,7 @@ package org.jboss.xml.binding.metadata.unmarshalling.impl;
 import org.jboss.xml.binding.metadata.unmarshalling.BasicElementBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.AttributeBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
 
 import javax.xml.namespace.QName;
 import java.util.List;
@@ -23,14 +24,16 @@ import java.util.HashMap;
 public abstract class DelegatingBasicElementBinding
    implements BasicElementBinding
 {
+   protected final DelegatingDocumentBinding doc;
    private final QName elementName;
    private final Map children = new HashMap();
    protected final List delegates = new ArrayList();
 
-   public DelegatingBasicElementBinding(BasicElementBinding delegate)
+   public DelegatingBasicElementBinding(DelegatingDocumentBinding doc, BasicElementBinding delegate)
    {
       this.elementName = delegate.getElementName();
       delegates.add(delegate);
+      this.doc = doc;
    }
 
    void addDelegate(BasicElementBinding delegate)
@@ -38,13 +41,20 @@ public abstract class DelegatingBasicElementBinding
       delegates.add(delegate);
    }
 
-   DelegatingElementBinding bindElement(QName elementName, String fieldName, Class javaType)
+   DelegatingElementBinding bindElement(QName elementName,
+                                        String fieldName,
+                                        Class javaType)
    {
-      ElementBinding child = new ElementBindingImpl(elementName, javaType, getJavaType(), fieldName);
+      AbstractElementBinding child = new ElementBindingImpl(elementName,
+         javaType,
+         getJavaType(),
+         fieldName,
+         this
+      );
       DelegatingElementBinding delegatingChild = (DelegatingElementBinding)children.get(elementName);
       if(delegatingChild == null)
       {
-         delegatingChild = new DelegatingElementBinding(child);
+         delegatingChild = new DelegatingElementBinding(doc, child);
          children.put(delegatingChild.getElementName(), delegatingChild);
       }
       else
@@ -54,9 +64,9 @@ public abstract class DelegatingBasicElementBinding
       return delegatingChild;
    }
 
-   public QName getElementQName()
+   public DocumentBinding getDocument()
    {
-      return elementName;
+      return doc;
    }
 
    public QName getElementName()
@@ -86,7 +96,7 @@ public abstract class DelegatingBasicElementBinding
                }
                else
                {
-                  cachedChild = new DelegatingElementBinding(child);
+                  cachedChild = new DelegatingElementBinding(doc, child);
                }
                children.put(elementName, cachedChild);
                break;
@@ -127,7 +137,6 @@ public abstract class DelegatingBasicElementBinding
          {
             BasicElementBindingImpl newBinding = cloneLastBinding();
             newBinding.addAttribute(attribute);
-            addDelegate(newBinding);
             break;
          }
       }
@@ -136,7 +145,6 @@ public abstract class DelegatingBasicElementBinding
       {
          BasicElementBindingImpl newBinding = cloneLastBinding();
          newBinding.addAttribute(attribute);
-         addDelegate(newBinding);
       }
       return attribute;
    }

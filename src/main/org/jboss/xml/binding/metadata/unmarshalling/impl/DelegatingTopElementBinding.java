@@ -17,14 +17,14 @@ public class DelegatingTopElementBinding
    extends DelegatingBasicElementBinding
    implements TopElementBinding
 {
-   public DelegatingTopElementBinding(TopElementBinding delegate)
+   public DelegatingTopElementBinding(DelegatingDocumentBinding doc, TopElementBinding delegate)
    {
-      super(delegate);
+      super(doc, delegate);
    }
 
    BasicElementBindingImpl cloneLastBinding()
    {
       TopElementBinding last = (TopElementBinding)delegates.get(delegates.size() - 1);
-      return new TopElementBindingImpl(last);
+      return new TopElementBindingImpl(last, doc);
    }
 }

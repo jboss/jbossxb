@@ -31,6 +31,8 @@ import org.apache.xerces.xni.QName;
 import org.apache.xerces.xni.XMLResourceIdentifier;
 import org.apache.xerces.impl.xs.XSMessageFormatter;
 import org.apache.xerces.impl.xs.JBossXBSchemaValidator;
+import org.apache.xerces.xs.XSElementDeclaration;
+import org.apache.xerces.xs.XSTypeDefinition;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.SAXException;
 import org.xml.sax.InputSource;
@@ -262,33 +264,21 @@ public class XniJBossXBParser
       public void startElement(QName name, XMLAttributes attributes, Augmentations augs)
          throws XNIException
       {
-         /*
-         JBossXBSchemaValidator validator = null;
+         XSTypeDefinition type = null;
          if(augs != null)
          {
-            validator = (JBossXBSchemaValidator)augs.getItem("jbossxb.validator");
+            JBossXBSchemaValidator validator = (JBossXBSchemaValidator)augs.getItem("jbossxb.validator");
             if(validator != null)
             {
                XSElementDeclaration element = validator.getCurrentElementDelcaration();
-               log.info("element: " + element.getName() + ", expected=" + name.localpart);
-
-               XSTypeDefinition type = element.getTypeDefinition();
-               if(type.getTypeCategory() == XSTypeDefinition.COMPLEX_TYPE)
-               {
-               }
-               else
-               {
-                  log.info("   simple type: " + type.getName());
-               }
+               type = element.getTypeDefinition();
             }
          }
 
-         if(validator == null)
+         if(type == null)
          {
-            log.warn("validator is null");
+            log.warn("Type is not availble for " + name.rawname);
          }
-         */
-
 
          if(namespaces)
          {
@@ -327,16 +317,16 @@ public class XniJBossXBParser
          String uri = name.uri != null ? name.uri : "";
          String localpart = namespaces ? name.localpart : "";
          saxAttrs.setAttrs(attributes);
-         contentHandler.startElement(uri, localpart, name.rawname, saxAttrs);
+         contentHandler.startElement(uri, localpart, name.rawname, saxAttrs, type);
       }
-
+/*
       public void emptyElement(QName element, XMLAttributes attributes, Augmentations augs)
          throws XNIException
       {
          AttributesImpl attrs = toSaxAttributes(attributes);
          contentHandler.startElement(element.uri, element.localpart, element.rawname, attrs);
       }
-
+*/
       public void startGeneralEntity(String name,
                                      XMLResourceIdentifier identifier,
                                      String encoding,

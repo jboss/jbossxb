@@ -221,7 +221,7 @@ public class SaxJBossXBParser
 
       public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
       {
-         contentHandler.startElement(namespaceURI, localName, qName, atts);
+         contentHandler.startElement(namespaceURI, localName, qName, atts, null);
       }
    }
 

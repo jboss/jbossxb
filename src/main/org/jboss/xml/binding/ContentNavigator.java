@@ -6,6 +6,8 @@
  */
 package org.jboss.xml.binding;
 
+import org.apache.xerces.xs.XSTypeDefinition;
+
 import javax.xml.namespace.QName;
 import java.util.Map;
 
@@ -32,4 +34,6 @@ public interface ContentNavigator
    QName resolveQName(String value);
 
    String getChildContent(String namespaceURI, String qName);
+
+   XSTypeDefinition getType();
 }

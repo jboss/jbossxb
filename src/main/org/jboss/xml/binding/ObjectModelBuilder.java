@@ -9,6 +9,7 @@ package org.jboss.xml.binding;
 import org.xml.sax.Attributes;
 import org.jboss.logging.Logger;
 import org.jboss.xml.binding.parser.JBossXBParser;
+import org.apache.xerces.xs.XSTypeDefinition;
 
 import javax.xml.namespace.QName;
 import java.util.Map;
@@ -67,6 +68,8 @@ public class ObjectModelBuilder
     * the value of a simple element (i.e. the element that does not contain nested elements) being read
     */
    private StringBuffer value = new StringBuffer();
+
+   private XSTypeDefinition currentType;
 
    // Public
 
@@ -179,6 +182,11 @@ public class ObjectModelBuilder
       //return content.getChildContent(namespaceURI, qName);
    }
 
+   public XSTypeDefinition getType()
+   {
+      return currentType;
+   }
+   
    // Public
 
    public void startPrefixMapping(String prefix, String uri)
@@ -211,13 +219,16 @@ public class ObjectModelBuilder
       return root;
    }
 
-   public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
+   public void startElement(String namespaceURI, String localName, String qName, Attributes atts, XSTypeDefinition type)
    {
       Object parent = null;
       if(!accepted.isEmpty())
       {
          parent = accepted.peek();
       }
+
+      // todo currentType assignment
+      currentType = type;
 
       GenericObjectModelFactory factory = getFactory(namespaceURI);
       Object element;

@@ -10,6 +10,7 @@ import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 import org.jboss.util.NestedRuntimeException;
 import org.xml.sax.Attributes;
+import org.apache.xerces.xs.XSTypeDefinition;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
@@ -123,57 +124,6 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
       return instance;
    }
 
-   private static final TypeConverter getTypeConverter(Class type)
-   {
-      TypeConverter result;
-      if (String.class == type)
-      {
-         result = TypeConverter.STRING;
-      }
-      else if (int.class == type || Integer.class == type)
-      {
-         result = TypeConverter.INT;
-      }
-      else if (long.class == type || Long.class == type)
-      {
-         result = TypeConverter.LONG;
-      }
-      else if (double.class == type || Double.class == type)
-      {
-         result = TypeConverter.DOUBLE;
-      }
-      else if (float.class == type || Float.class == type)
-      {
-         result = TypeConverter.FLOAT;
-      }
-      else if (short.class == type || Short.class == type)
-      {
-         result = TypeConverter.SHORT;
-      }
-      else if (byte.class == type || Byte.class == type)
-      {
-         result = TypeConverter.BYTE;
-      }
-      else if (char.class == type || Character.class == type)
-      {
-         result = TypeConverter.CHAR;
-      }
-      else if (java.util.Date.class == type)
-      {
-         result = TypeConverter.JAVA_UTIL_DATE;
-      }
-      else if (java.lang.Object.class == type)
-      {
-         result = TypeConverter.STRING;
-      }
-      else
-      {
-         //todo do something
-         throw new IllegalStateException("Unexpected field type " + type);
-      }
-      return result;
-   }
-
    // Constructors --------------------------------------------------
 
    // Public --------------------------------------------------------
@@ -182,7 +132,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
     * Map an element to a class
     * 
     * @param element the element name
-    * @param class the class
+    * @param cls the class
     */
    public void mapElementToClass(String element, Class cls)
    {
@@ -196,9 +146,9 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
     * Map an element to a field
     * 
     * @param element the element name
-    * @param class the class
+    * @param cls the class
     * @param field the field name
-    * @param convertor the type convertor
+    * @param converter the type convertor
     */
    public void mapElementToField(String element, Class cls, String field, TypeConverter converter)
    {
@@ -227,9 +177,14 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          }
          else
          {
-            if (trace)
-               log.trace("creating root using xml->java");
-            root = create(namespaceURI, localName);
+            root = create(namespaceURI, localName, navigator.getType());
+         }
+
+         if(root == null)
+         {
+            throw new IllegalStateException(
+               "Failed to resolve root element binding: ns=" + namespaceURI + ", local=" + localName
+            );
          }
       }
 
@@ -239,12 +194,19 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
          {
             try
             {
-               if (attrs.getLocalName(i).length() > 0)
-                  setAttribute(root, attrs.getLocalName(i), attrs.getValue(i));
+               if(attrs.getLocalName(i).length() > 0)
+               {
+                  if(!attrs.getQName(i).startsWith("xsi:")) //todo horrible
+                  {
+                     setAttribute(root, attrs.getLocalName(i), attrs.getValue(i), navigator.getType());
+                  }
+               }
             }
             catch (Exception e)
             {
-               throw new NestedRuntimeException("Failed to set attribute: " + attrs.getLocalName(i), e);
+               String msg = "Failed to set attribute " + attrs.getQName(i) + "=" + attrs.getValue(i);
+               log.error(msg, e);
+               throw new IllegalStateException(msg + ": " + e.getMessage());
             }
          }
       }
@@ -261,8 +223,9 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
 
       Object child = null;
 
-      ElementToClassMapping mapping = (ElementToClassMapping) elementToClassMapping.get(localName);
-      if (mapping != null)
+      ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
+      XSTypeDefinition type = navigator.getType();
+      if(mapping != null)
       {
          if (trace)
            log.trace("newChild using mapping " + mapping);
@@ -293,8 +256,13 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
             {
                for (int i = 0; i < attrs.getLength(); ++i)
                {
-                  if (attrs.getLocalName(i).length() > 0)
-                     setAttribute(child, attrs.getLocalName(i), attrs.getValue(i));
+                  if(attrs.getLocalName(i).length() > 0)
+                  {
+                     if(!attrs.getQName(i).startsWith("xsi:")) //todo horrible
+                     {
+                        setAttribute(child, attrs.getLocalName(i), attrs.getValue(i), type);
+                     }
+                  }
                }
             }
          }
@@ -312,7 +280,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
       {
          if (o instanceof Collection)
          {
-            child = create(namespaceURI, localName);
+            child = create(namespaceURI, localName, type);
          }
          else
          {
@@ -339,35 +307,37 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
             }
 
             Class childType = getter.getReturnType();
-            if (!Util.isAttributeType(childType))
+            if(Collection.class.isAssignableFrom(childType))
             {
-               if (Collection.class.isAssignableFrom(childType))
-               {
-                  child = get(o, localName, getter);
+               child = get(o, localName, getter);
 
-                  // now does this element really represent a Java collection or is it an element that can appear more than once?
-                  // try to load the class and create an instance
-                  Object item = create(namespaceURI, localName);
-                  if (item != null)
+               // now does this element really represent a Java collection or is it an element that can appear more than once?
+               // try to load the class and create an instance
+               Object item = null;
+               if(type == null || type != null && type.getTypeCategory() == XSTypeDefinition.COMPLEX_TYPE)
+               {
+                  item = create(namespaceURI, localName, type);
+               }
+
+               if(item != null)
+               {
+                  if(child == null)
                   {
-                     if (child == null)
-                     {
-                        setChild(new ArrayList(), o, localName);
-                     }
-                     child = item;
+                     setChild(new ArrayList(), o, localName);
                   }
-                  else
-                  {
-                     if (child == null)
-                     {
-                        child = new ArrayList();
-                     }
-                  }
+                  child = item;
                }
                else
                {
-                  child = newInstance(childType);
+                  if(child == null)
+                  {
+                     child = new ArrayList();
+                  }
                }
+            }
+            else if(!Util.isAttributeType(childType))
+            {
+               child = newInstance(childType);
             }
          }
       }
@@ -391,7 +361,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
    {
       if (trace)
          log.trace("setValue object=" + o + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName + " value=" + value);
-      setAttribute(o, localName, value);
+      setAttribute(o, localName, value, navigator.getType());
    }
 
    public Object completedRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName)
@@ -486,7 +456,7 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
                   }
                   catch (NoSuchMethodException e)
                   {
-                     log.warn("No setter for " + localName + " in " + parent);
+                     log.warn("No setter for " + localName + " in " + parentCls);
                   }
 
                   set(parent, value, localName, setter);
@@ -496,12 +466,25 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
       }
    }
 
-   private final void setAttribute(Object o, String localName, String value)
+   private final void setAttribute(Object o, String localName, String value, XSTypeDefinition type)
    {
       if (o instanceof Collection)
       {
-         // todo type convertion
-         ((Collection) o).add(value);
+         if(type == null)
+         {
+            log.warn("Type is not available for collection item " + localName + "=" + value + " -> adding as string.");
+            ((Collection)o).add(value);
+         }
+         else
+         {
+            if(type.getName() == null)
+            {
+               throw new IllegalStateException("Name is null for simple type?!");
+            }
+
+            Object trgValue = TypeBinding.unmarshal(type.getName(), value);
+            ((Collection)o).add(trgValue);
+         }
       }
       else
       {
@@ -529,12 +512,12 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
             {
                final String xmlToCls = Util.xmlNameToClassName(localName, true);
                Method getter = oCls.getMethod("get" + xmlToCls, null);
-               fieldValue = getTypeConverter(getter.getReturnType()).unmarshal(value);
-               setter = oCls.getMethod("set" + xmlToCls, new Class[] { getter.getReturnType() });
+               fieldValue = TypeBinding.unmarshal(value, getter.getReturnType());
+               setter = oCls.getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
             }
             catch (NoSuchMethodException e)
             {
-               log.warn("no setter found for " + localName + " in " + o + ", value=" + value);
+               log.warn("no setter found for " + localName + " in " + oCls);
             }
          }
 
@@ -550,25 +533,27 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
     * @param localName    element's local name
     * @return null if the class could not be loaded, otherwise an instance of the loaded class
     */
-   private Object create(String namespaceURI, String localName)
+   private Object create(String namespaceURI, String localName, XSTypeDefinition type)
    {
       Object o = null;
 
-      String clsName = Util.xmlNameToClassName(namespaceURI, localName, true);
+      String clsName = type != null && type.getName() != null ?
+         Util.xmlNameToClassName(namespaceURI, type.getName(), true) :
+         Util.xmlNameToClassName(namespaceURI, localName, true);
 
-      Class type = null;
+      Class cls = null;
       try
       {
-         type = Thread.currentThread().getContextClassLoader().loadClass(clsName);
+         cls = Thread.currentThread().getContextClassLoader().loadClass(clsName);
       }
       catch (ClassNotFoundException e)
       {
          log.debug("create: failed to load class " + clsName);
       }
 
-      if (type != null)
+      if(cls != null)
       {
-         o = newInstance(type);
+         o = newInstance(cls);
       }
 
       return o;

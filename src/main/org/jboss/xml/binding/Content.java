@@ -193,14 +193,6 @@ public class Content
 
    private int index;
 
-   public void build(ObjectModelBuilder builder)
-   {
-      for(index = 0; index < content.size(); ++index)
-      {
-         ((Node)content.get(index)).read(builder);
-      }
-   }
-
    public void append(Content content)
    {
       for(int i = 0; i < content.content.size(); ++i)
@@ -213,7 +205,6 @@ public class Content
 
    private static interface Node
    {
-      void read(ObjectModelBuilder builder);
    }
 
    public static class Characters
@@ -240,13 +231,6 @@ public class Content
       {
          return String.valueOf(ch, start, length);
       }
-
-      // Node implementation
-
-      public void read(ObjectModelBuilder builder)
-      {
-         builder.characters(ch, start, length);
-      }
    }
 
    public static class EndElement
@@ -266,13 +250,6 @@ public class Content
       public String toString()
       {
          return '[' + namespaceURI + ',' + localName + ',' + qName + ']';
-      }
-
-      // Node implementation
-
-      public void read(ObjectModelBuilder builder)
-      {
-         builder.endElement(namespaceURI, localName, qName);
       }
    }
 
@@ -307,13 +284,6 @@ public class Content
       public String toString()
       {
          return '[' + namespaceURI + ',' + localName + ',' + qName + ']';
-      }
-
-      // Node implementation
-
-      public void read(ObjectModelBuilder builder)
-      {
-         builder.startElement(namespaceURI, localName, qName, attrs);
       }
    }
 

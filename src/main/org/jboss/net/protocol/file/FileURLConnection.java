@@ -75,13 +75,42 @@ public class FileURLConnection
       return super.getHeaderField(name);
    }
 
-   /* FIXME (or remove me) 
    public Permission getPermission() throws IOException {
-      // should probably return a FilePermission here... 
-      // but I don't understand that crap, so just return the default
-      return super.getPermission();
+      // this sucks... must be a better way, but screw it for now
+      // if you know how this should be done, please fix it... please
+      java.util.List list = new java.util.ArrayList(4);
+      if (file.canRead()) list.add("read");
+      if (file.canWrite()) list.add("write");
+
+      SecurityManager security = System.getSecurityManager();
+      if (security != null) {
+         try {
+            security.checkExec(file.getPath());
+            list.add("execute");
+         }
+         catch (SecurityException ignore) {}
+
+         try {
+            security.checkDelete(file.getPath());
+            list.add("delete");
+         }
+         catch (SecurityException ignore) {}
+      }
+      else {
+         // ?? sure, whatever
+         list.add("execute");
+         list.add("delete");
+      }
+
+      StringBuffer actions = new StringBuffer();
+      java.util.Iterator iter = list.iterator();
+      while (iter.hasNext()) {
+         actions.append(iter.next());
+         if (iter.hasNext()) actions.append(",");
+      }
+
+      return new FilePermission(file.getPath(), actions.toString());
    }
-   */
 
    public long getLastModified() {
       return file.lastModified();

@@ -9,13 +9,16 @@
 
 package org.jboss.util;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Array;
 import java.lang.NoSuchMethodException;
 import java.net.URL;
 
+import java.security.AccessController;
 import java.security.CodeSource;
+import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -415,6 +418,45 @@ public final class Classes
       return PRIMITIVE_NAME_TYPE_MAP.containsKey(type); 
    }
 
+   /**
+    * Instantiate a java class object
+    * 
+    * @param expected the expected class type
+    * @param property the system property defining the class
+    * @param defaultClassName the default class name
+    * @return the instantiated object
+    */
+   public static Object instantiate(Class expected, String property, String defaultClassName)
+   {
+      String className = getProperty(property, defaultClassName);
+      Class clazz = null;
+      try
+      {
+         clazz = loadClass(className);
+      }
+      catch (ClassNotFoundException e)
+      {
+         throw new NestedRuntimeException("Cannot load class " + className, e);
+      }
+      Object result = null;
+      try
+      {
+         result = clazz.newInstance();
+      }
+      catch (InstantiationException e)
+      {
+         throw new NestedRuntimeException("Error instantiating " + className, e);
+      }
+      catch (IllegalAccessException e)
+      {
+         throw new NestedRuntimeException("Error instantiating " + className, e);
+      }
+      if (expected.isAssignableFrom(clazz) == false)
+         throw new NestedRuntimeException("Class " + className + " from classloader " + clazz.getClassLoader() +
+            " is not of the expected class " + expected + " loaded from " + expected.getClassLoader());
+      return result;
+   }
+   
    /////////////////////////////////////////////////////////////////////////
    //                            Class Loading                            //
    /////////////////////////////////////////////////////////////////////////
@@ -621,4 +663,22 @@ public final class Classes
       return c;
    }
 
+   /**
+    * Get a system property
+    * 
+    * @param name the property name
+    * @param defaultValue the default value
+    */
+   private static String getProperty(final String name, final String defaultValue)
+   {
+      return (String) AccessController.doPrivileged(
+      new PrivilegedAction()
+      {
+         public Object run()
+         {
+            return System.getProperty(name, defaultValue);
+         }
+         
+      });
+   }
 }

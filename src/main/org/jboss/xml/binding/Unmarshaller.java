@@ -45,6 +45,4 @@ public interface Unmarshaller
 
    Object unmarshal(String systemId, ObjectModelFactory factory, Object root)
       throws JBossXBException;
-
-   Object unmarshal(InputSource is, ObjectModelFactory factory, Object root) throws JBossXBException;
 }

@@ -13,7 +13,6 @@ import org.jboss.xml.binding.parser.sax.SaxJBossXBParser;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
 
 import java.io.Reader;
 import java.io.InputStream;
@@ -99,22 +98,5 @@ public class UnmarshallerImpl implements Unmarshaller
       builder.init(factory, root);
       parser.parse(systemId, builder);
       return builder.getRoot();
-   }
-   public Object unmarshal(InputSource is, ObjectModelFactory factory, Object root) throws JBossXBException
-   {
-      Object result;
-      if(is.getCharacterStream() != null)
-      {
-         result = unmarshal(is.getCharacterStream(), factory, root);
-      }
-      else if(is.getByteStream() != null)
-      {
-         result = unmarshal(is.getByteStream(), factory, root);
-      }
-      else
-      {
-         result = unmarshal(is.getSystemId(), factory, root);
-      }
-      return result;
    }
 }

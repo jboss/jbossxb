@@ -635,12 +635,14 @@ public final class Strings
     * If the string is an invalid URL then it will be converted into a
     * file URL.
     *
-    * @param urlspec    The string to construct a URL for.
-    * @return           A URL for the given string.
+    * @param urlspec           The string to construct a URL for.
+    * @param relativePrefix    The string to prepend to relative file
+    *                          paths, or null to disable prepending.
+    * @return                  A URL for the given string.
     *
     * @throws MalformedURLException  Could not make a URL for the given string.
     */
-   public static URL toURL(String urlspec) throws MalformedURLException
+   public static URL toURL(String urlspec, final String relativePrefix) throws MalformedURLException
    {
       urlspec = urlspec.trim();
       
@@ -649,22 +651,55 @@ public final class Strings
       try {
          url = new URL(urlspec);
          if (url.getProtocol().equals("file")) {
-            // make sure the file is absolute & canonical file url
-            File file = new File(url.getFile()).getCanonicalFile();
-            url = file.toURL();
+            url = makeURLFromFilespec(url.getFile(), relativePrefix);
          }
       }
       catch (Exception e) {
          // make sure we have a absolute & canonical file url
          try {
-            File file = new File(urlspec).getCanonicalFile();
-            url = file.toURL();
+            url = makeURLFromFilespec(urlspec, relativePrefix);
          }
          catch (IOException n) {
+            //
+            // jason: or should we rethrow e?
+            //
             throw new MalformedURLException(n.toString());
          }
       }
       
       return url;
+   }
+
+   /** A helper to make a URL from a filespec. */
+   private static URL makeURLFromFilespec(final String filespec, final String relativePrefix)
+      throws IOException
+   {
+      // make sure the file is absolute & canonical file url
+      File file = new File(filespec);
+      
+      // if we have a prefix and the file is not abs then prepend
+      if (relativePrefix != null && !file.isAbsolute()) {
+         file = new File(relativePrefix, filespec);
+      }
+      
+      // make sure it is canonical (no ../ and such)
+      file = file.getCanonicalFile();
+      
+      return file.toURL();
+   }
+   
+   /**
+    * Make a URL from the given string.
+    *
+    * @see #toURL(String,String)
+    *
+    * @param urlspec    The string to construct a URL for.
+    * @return           A URL for the given string.
+    *
+    * @throws MalformedURLException  Could not make a URL for the given string.
+    */
+   public static URL toURL(final String urlspec) throws MalformedURLException
+   {
+      return toURL(urlspec, null);
    }
 }

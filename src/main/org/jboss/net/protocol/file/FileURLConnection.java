@@ -86,7 +86,13 @@ public class FileURLConnection
    {
       if (!connected)
          connect();
-      
+      SecurityManager sm = System.getSecurityManager();
+      if( sm != null )
+      {
+         // Check for write access
+         FilePermission p = new FilePermission(file.getPath(), "write");
+         sm.checkPermission(p);
+      }
       return new FileOutputStream(file);
    }
 
@@ -128,13 +134,11 @@ public class FileURLConnection
       return headerField;
    }
 
-   /**
-    * Return a permission for both read & write since both
-    * input and output streams are supported.
+   /** Return a permission for reading of the file
     */
    public Permission getPermission() throws IOException
    {
-      return new FilePermission(file.getPath(), "read,write");
+      return new FilePermission(file.getPath(), "read");
    }
 
    /**

@@ -32,25 +32,46 @@ public final class Files
     * Delete a directory and all of its contents.
     *
     * @param dir  The directory to delete.
-    *
-    * @throws IOException  Failed to delete directory.
+    * @return     True if all delete operations were successfull.
     */
-   public static void delete(File dir) throws IOException {
+   public static boolean delete(final File dir)
+   {
+      boolean success = true;
+      
       File files[] = dir.listFiles();
       if (files != null) {
          for (int i=0; i<files.length; i++) {
             if (files[i].isDirectory()) {
                // delete the directory and all of its contents.
-               delete(files[i]);
+               if (!delete(files[i])) {
+                  success = false;
+               }
             }
 
             // delete each file in the directory
-            files[i].delete();
+            if (!files[i].delete()) {
+               success = false;
+            }
          }
       }
 
       // finally delete the directory
-      dir.delete();
+      if (!dir.delete()) {
+         success = false;
+      }
+
+      return success;
+   }
+
+   /**
+    * Delete a directory and all of its contents.
+    *
+    * @param dirname  The name of the directory to delete.
+    * @return         True if all delete operations were successfull.
+    */
+   public static boolean delete(final String dirname)
+   {
+      return delete(new File(dirname));
    }
 
    /** The default size of the copy buffer. */

@@ -253,33 +253,7 @@
     <!-- Build the jboss-common-client.jar -->
     <jar jarfile="${build.lib}/jboss-common-client.jar" manifest="${build.etc}/default.mf">
       <fileset dir="${build.classes}">
-        <!-- All MBean interfaces -->
-        <include name="**/*MBean.class"/>
-
-        <!-- All Exceptions, Errors and Throwable Support Classes -->
-        <include name="**/*Exception*.class"/>
-        <include name="**/*Error*.class"/>
-        <include name="**/*Throwable*.class"/>
-
-        <!-- Misc Fluff clients need -->
-        <include name="org/jboss/util/jmx/*"/>
-        <include name="org/jboss/util/id/*"/>
-        <include name="org/jboss/util/platform/*"/>
-        <include name="org/jboss/util/Mu*.class"/>
-        <include name="org/jboss/util/Strings*.class"/>
-        <include name="org/jboss/util/Null*.class"/>
-        <include name="org/jboss/util/StopWatch*.class"/>
-        <include name="org/jboss/util/HashCode*.class"/>
-        <include name="org/jboss/util/Counter*.class"/>
-        <include name="org/jboss/util/SoftObject*.class"/>
-        <include name="org/jboss/util/WeakObject*.class"/>
-
-        <!-- Client Logging support -->
-        <include name="org/jboss/logging/Logger*.class"/>
-        <include name="org/jboss/logging/XPriority*.class"/>
-
-        <!-- Needed by EJB clients -->
-        <include name="org/jboss/util/collection/SerializableEnumeration*"/>
+        <include name="**"/>
       </fileset>
     </jar>
 

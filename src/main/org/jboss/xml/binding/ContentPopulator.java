@@ -23,12 +23,14 @@ public class ContentPopulator
    private Content content = new Content();
 
    // Public
+
    public Content getContent()
    {
       return content;
    }
 
    // ContentHandler implementation
+
    public void setDocumentLocator(Locator locator)
    {
    }

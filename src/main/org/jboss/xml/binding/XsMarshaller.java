@@ -20,7 +20,7 @@ import org.apache.ws.jaxme.xs.XSGroup;
 import org.apache.ws.jaxme.xs.XSAttributable;
 import org.apache.ws.jaxme.xs.XSAttribute;
 import org.apache.ws.jaxme.xs.xml.XsQName;
-import org.apache.log4j.Category;
+import org.jboss.logging.Logger;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.Reader;
@@ -43,7 +43,7 @@ import java.util.HashMap;
 public class XsMarshaller
    extends AbstractMarshaller
 {
-   private static final Category log = Category.getInstance(XsMarshaller.class);
+   private static final Logger log = Logger.getLogger(XsMarshaller.class);
 
    private final Stack stack = new Stack();
 
@@ -82,7 +82,9 @@ public class XsMarshaller
 
          final XSElement root = xsSchema.getElement(rootName);
          if(root == null)
+         {
             throw new IllegalStateException("Root element not found: " + rootName);
+         }
 
          processElement(root, addedAttributes);
       }
@@ -195,19 +197,31 @@ public class XsMarshaller
    {
       if(type.isAtomic())
       {
-         log.debug("atomic simple type");
+         if(log.isTraceEnabled())
+         {
+            log.trace("atomic simple type");
+         }
       }
       else if(type.isList())
       {
-         log.debug("list of types");
+         if(log.isTraceEnabled())
+         {
+            log.trace("list of types");
+         }
       }
       else if(type.isRestriction())
       {
-         log.debug("restricted type");
+         if(log.isTraceEnabled())
+         {
+            log.trace("restricted type");
+         }
       }
       else if(type.isUnion())
       {
-         log.debug("union of types");
+         if(log.isTraceEnabled())
+         {
+            log.trace("union of types");
+         }
       }
       else
       {
@@ -379,7 +393,10 @@ public class XsMarshaller
       }
       else if(particle.isWildcard())
       {
-         log.debug("any");
+         if(log.isTraceEnabled())
+         {
+            log.trace("any");
+         }
       }
       else
       {

@@ -6,10 +6,10 @@
  */
 package org.jboss.xml.binding;
 
-import org.apache.log4j.Category;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+import org.jboss.logging.Logger;
 
 import java.util.LinkedList;
 import java.io.StringWriter;
@@ -26,7 +26,7 @@ import java.io.StringWriter;
  */
 public class Content
 {
-   private static Category log = Category.getInstance(Content.class);
+   private static Logger log = Logger.getLogger(Content.class);
 
    private LinkedList content = new LinkedList();
 
@@ -156,13 +156,22 @@ public class Content
    {
       StartElement startElement = new StartElement(namespaceURI, localName, qName, atts);
       content.addLast(startElement);
+
+      if(log.isTraceEnabled())
+      {
+         log.trace("startElement> uri=" + namespaceURI + ", local=" + localName + ", qn=" + qName + ", attrs=" + atts);
+      }
    }
 
    public void endElement(String namespaceURI, String localName, String qName)
    {
       EndElement endElement = new EndElement(namespaceURI, localName, qName);
       content.addLast(endElement);
-      log.debug("endElement> " + endElement);
+
+      if(log.isTraceEnabled())
+      {
+         log.trace("endElement> uri=" + namespaceURI + ", local=" + localName + ", qn=" + qName);
+      }
    }
 
    public void characters(char[] ch, int start, int length)
@@ -172,7 +181,11 @@ public class Content
       if (characters.toString().trim().length() > 0)
       {
          content.addLast(characters);
-         log.debug("characters> " + characters);
+
+         if(log.isTraceEnabled())
+         {
+            log.trace("characters> " + characters);
+         }
       }
    }
 

@@ -8,15 +8,14 @@ package org.jboss.xml.binding;
 
 // $Id$
 
-import org.apache.log4j.Category;
 import org.xml.sax.Attributes;
+import org.jboss.logging.Logger;
 
 import javax.xml.namespace.QName;
 import java.util.Stack;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
-import java.util.List;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 import java.lang.reflect.InvocationTargetException;
@@ -34,7 +33,7 @@ public class ObjectModelBuilder
    implements ContentNavigator
 {
    /** logger */
-   private static final Category log = Category.getInstance(ObjectModelBuilder.class);
+   private static final Logger log = Logger.getLogger(ObjectModelBuilder.class);
 
    /** the object that is pushed in the stack when the element read from the XML field is ignored by the
     *  metadata factory */
@@ -80,7 +79,10 @@ public class ObjectModelBuilder
       value.delete(0, value.length());
 
       if(root == null)
+      {
          root = defaultFactory.startDocument();
+      }
+
       all.push(root);
       accepted.push(root);
 
@@ -167,13 +169,21 @@ public class ObjectModelBuilder
       if(element == null)
       {
          all.push(IGNORED);
-         log.debug("ignored> " + namespaceURI + ':' + qName);
+
+         if(log.isTraceEnabled())
+         {
+            log.debug("ignored " + namespaceURI + ':' + qName);
+         }
       }
       else
       {
          all.push(element);
          accepted.push(element);
-         log.debug("accepted> " + namespaceURI + ':' + qName);
+
+         if(log.isTraceEnabled())
+         {
+            log.debug("accepted " + namespaceURI + ':' + qName);
+         }
       }
    }
 
@@ -255,9 +265,9 @@ public class ObjectModelBuilder
             }
          );
       }
-      else
+      else if(log.isTraceEnabled())
       {
-         log.debug("No newChild method found for " + element.getClass().getName());
+            log.trace("No newChild method for " + element.getClass().getName());
       }
 
       return child;
@@ -277,7 +287,6 @@ public class ObjectModelBuilder
 
       if(method != null)
       {
-         log.debug("addChild> element=" + element.getClass().getName());
          invokeFactory(
             factory,
             method,
@@ -288,9 +297,9 @@ public class ObjectModelBuilder
             }
          );
       }
-      else
+      else if(log.isTraceEnabled())
       {
-         log.debug("No addChild method found for " + element.getClass().getName());
+         log.trace("No addChild method for " + element.getClass().getName());
       }
    }
 
@@ -315,9 +324,6 @@ public class ObjectModelBuilder
 
       if(method != null)
       {
-         log.debug("setValue> element=" + element.getClass().getName()
-            + ", namespaceURI=" + namespaceURI + ", qName=" + qName + ", value=" + value
-         );
          invokeFactory(
             factory,
             method,
@@ -330,11 +336,11 @@ public class ObjectModelBuilder
             }
          );
       }
-      else
+      else if(log.isTraceEnabled())
       {
-         log.debug(
-            "No setValue method found for " + element.getClass().getName()
-            + ", namespaceURI=" + namespaceURI + ", qName=" + qName + ", value=" + value
+         log.trace(
+            "No setValue method for " + element.getClass().getName()
+            + ", uri=" + namespaceURI + ", qn=" + qName + ", value=" + value
          );
       }
    }

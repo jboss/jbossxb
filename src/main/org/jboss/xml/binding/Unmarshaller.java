@@ -6,8 +6,8 @@
  */
 package org.jboss.xml.binding;
 
-import org.apache.log4j.Category;
 import org.jboss.util.xml.JBossEntityResolver;
+import org.jboss.logging.Logger;
 import org.xml.sax.DTDHandler;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -33,7 +33,7 @@ import java.io.Reader;
  */
 public class Unmarshaller
 {
-   private static final Category log = Category.getInstance(Unmarshaller.class);
+   private static final Logger log = Logger.getLogger(Unmarshaller.class);
 
    private static final String VALIDATION = "http://xml.org/sax/features/validation";
    private static final String NAMESPACES = "http://xml.org/sax/features/namespaces";
@@ -54,7 +54,7 @@ public class Unmarshaller
     * The constructor for DTD and XSD client awareness.
     */
    public Unmarshaller()
-           throws SAXException, ParserConfigurationException
+      throws SAXException, ParserConfigurationException
    {
       SAXParserFactory saxFactory = SAXParserFactory.newInstance();
       saxFactory.setValidating(true);

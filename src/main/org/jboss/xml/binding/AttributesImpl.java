@@ -10,7 +10,6 @@ import org.xml.sax.Attributes;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * org.xml.sax.Attributes implementation.

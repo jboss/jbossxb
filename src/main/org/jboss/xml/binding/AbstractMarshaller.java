@@ -6,7 +6,7 @@
  */
 package org.jboss.xml.binding;
 
-import org.apache.log4j.Category;
+import org.jboss.logging.Logger;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.HashMap;
 public abstract class AbstractMarshaller
    implements Marshaller
 {
-   private static final Category log = Category.getInstance(AbstractMarshaller.class);
+   private static final Logger log = Logger.getLogger(AbstractMarshaller.class);
 
    protected String version = VERSION;
    protected String encoding = ENCODING;
@@ -100,9 +100,9 @@ public abstract class AbstractMarshaller
             throw new IllegalStateException("Failed to invoke method " + methodName);
          }
       }
-      else
+      else if(log.isTraceEnabled())
       {
-         log.debug("No " + methodName + " for " + name);
+         log.trace("No " + methodName + " for " + name);
       }
       return container;
    }
@@ -132,9 +132,9 @@ public abstract class AbstractMarshaller
             throw new IllegalStateException("Failed to invoke method " + methodName);
          }
       }
-      else
+      else if(log.isTraceEnabled())
       {
-         log.debug("No " + methodName + " for " + name);
+         log.trace("No " + methodName + " for " + name);
       }
       return value;
    }
@@ -164,9 +164,9 @@ public abstract class AbstractMarshaller
             throw new IllegalStateException("Failed to invoke method " + methodName);
          }
       }
-      else
+      else if(log.isTraceEnabled())
       {
-         log.debug("No " + methodName + " for " + name);
+         log.trace("No " + methodName + " for " + name);
       }
       return value;
    }
@@ -181,10 +181,6 @@ public abstract class AbstractMarshaller
       catch(NoSuchMethodException e)
       {
          // no method
-      }
-      catch(SecurityException e)
-      {
-         throw new IllegalStateException(e.getMessage());
       }
       return method;
    }

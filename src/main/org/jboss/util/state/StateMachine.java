@@ -206,8 +206,7 @@ public class StateMachine
          State current = model.getCurrentState();
          
          if (isStateFinal()) {
-            buff.append("Current state is final; cannot accept state: ")
-               .append(state.getName());
+            buff.append("Current state is final");
          }
          else {
 
@@ -230,12 +229,11 @@ public class StateMachine
                else if (i < states.length - 1)
                   buff.append(" or ");
             }
-
-            buff.append(" to accept state ")
-               .append(state.getName());
          }
          
-         buff.append("; state=")
+         buff.append("; cannot accept state: ")
+            .append(state.getName())
+            .append("; state=")
             .append(current.getName());
          
          throw new IllegalStateException(buff.toString());

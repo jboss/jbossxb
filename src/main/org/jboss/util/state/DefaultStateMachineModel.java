@@ -251,7 +251,10 @@ public class DefaultStateMachineModel
    public Set acceptableStates(final State state)
    {
       MappingEntry entry = getEntry(state);
-      return Collections.unmodifiableSet(entry.acceptableStates);
+
+      if (entry.acceptableStates != null)
+         return Collections.unmodifiableSet(entry.acceptableStates);
+      return null;
    }
 
    public void clear()

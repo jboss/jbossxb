@@ -10,7 +10,8 @@
 package org.jboss.util.state;
 
 /**
- * ???
+ * A helper state for instances which need to be
+ * {@link StateMachine.Acceptable} and/or {@link StateMachine.ChangeListener}s.
  *
  * @version <tt>$Revision$</tt>
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
@@ -29,6 +30,11 @@ public class StateAdapter
       super(value);
    }
 
+   /**
+    * Always returns false.
+    *
+    * @return  False;
+    */
    public boolean accept(final State state) { return false; }
 
    public void stateChanged(final StateMachine.ChangeEvent event) {}

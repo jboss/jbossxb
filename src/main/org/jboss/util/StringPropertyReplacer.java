@@ -45,8 +45,11 @@ public final class StringPropertyReplacer
    /**
     * Go through the input string and replace any occurance of ${p} with
     * the System.getProperty(p) value. If there is no such property p defined, then
-    * the ${p} reference will remain unchanged. The property ${/} is replaced with
-    * System.getProperty("file.separator") value and the property ${:} is replaced with
+    * the ${p} reference will remain unchanged. If the property reference is
+    * of the form ${p:v} and there is no such property p, then the default
+    * value v will be returned.
+    * The property ${/} is replaced with System.getProperty("file.separator")
+    * value and the property ${:} is replaced with
     * system.getProperty("path.separator").
     *
     * @param string - the string with possible ${} references
@@ -124,6 +127,18 @@ public final class StringPropertyReplacer
                {
                   // check from System properties
                   value = props.getProperty(key);
+                  if( value == null )
+                  {
+                     // Check for a default value ${key:default}
+                     int colon = key.indexOf(':');
+                     if( colon > 0 )
+                     {
+                        String realKey = key.substring(0, colon);
+                        value = System.getProperty(realKey);
+                        if( value == null )
+                           value = key.substring(colon+1);
+                     }
+                  }
                }
 
                if (value != null)

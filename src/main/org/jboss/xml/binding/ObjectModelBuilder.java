@@ -391,15 +391,20 @@ public class ObjectModelBuilder
          Throwable te = e.getCause();
          if(te instanceof RuntimeException) throw (RuntimeException)te;
 
-         String msg = "Failed to invoke method " + method.getName() + ", factory=" + factory;
+         String msg = "Failed to invoke method " + method + ", factory=" + factory;
          log.error(msg, e.getTargetException());
-         throw new IllegalStateException(msg);
+         
+         IllegalStateException ise = new IllegalStateException(msg);
+         ise.initCause(te);
+         throw ise;
       }
       catch(Exception e)
       {
          String msg = "Failed to invoke method " + method.getName() + ", factory=" + factory;
          log.error(msg, e);
-         throw new IllegalStateException(msg);
+         IllegalStateException ise = new IllegalStateException(msg);
+         ise.initCause(e);
+         throw ise;
       }
    }
 
@@ -415,7 +420,7 @@ public class ObjectModelBuilder
       }
       catch(SecurityException e)
       {
-         throw new IllegalStateException(e.getMessage());
+         throw e;
       }
 
       return method;

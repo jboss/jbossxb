@@ -58,8 +58,21 @@ public class Unmarshaller
 
    // Constructor
 
+   /**
+    * The general purpose constructor that should work for DTD and XSD.
+    * At the moment it uses hardcoded XSD unmarshalling.
+    */
+   public Unmarshaller()
+           throws SAXException, ParserConfigurationException
+   {
+      this(false);
+   }
+
+   /**
+    * The constructor for DTD and XSD client awareness.
+    */
    public Unmarshaller(boolean hasDTD)
-      throws SAXException, ParserConfigurationException
+           throws SAXException, ParserConfigurationException
    {
       SAXParserFactory saxFactory = SAXParserFactory.newInstance();
       saxFactory.setValidating(true);

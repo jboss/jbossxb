@@ -9,8 +9,6 @@
 
 package org.jboss.util.platform;
 
-import org.jboss.util.property.Property;
-
 /**
  * Platform constants.
  *
@@ -20,11 +18,11 @@ import org.jboss.util.property.Property;
 public interface Constants
 {
    /** Platform dependent line separator. */
-   String LINE_SEPARATOR = Property.get("line.separator");
+   String LINE_SEPARATOR = System.getProperty("line.separator");
 
    /** Platform dependant file separator. */
-   String FILE_SEPARATOR = Property.get("file.separator");
+   String FILE_SEPARATOR = System.getProperty("file.separator");
 
    /** Platform dependant path separator. */
-   String PATH_SEPARATOR = Property.get("path.separator");
+   String PATH_SEPARATOR = System.getProperty("path.separator");
 }

@@ -21,11 +21,6 @@ import org.jboss.util.collection.Iterators;
  * A thread context class loader (TCL) stack.
  *
  * <p>
- * Attempts to push or pop a CL that is the same at the current TCL will
- * be ignored.  In the case of an ingored push, the state is preserved such
- * that a pop will function as expected and not corrupt the stack.
- *
- * <p>
  * Also provides TRACE level logging for a better view of TCL usage and
  * provides an immutable view of the stack for inspection.
  * 
@@ -55,28 +50,21 @@ public class TCLStack
    /**
     * Push the current TCL and set the given CL to the TCL.
     *
-    * <p>If the given cl is the same as the current cl, then the TCL is not
-    * changed, though the value will be pushed to allow poping to function.
-    *
     * @param cl   The class loader to set as the TCL.
     */
    public static void push(final ClassLoader cl)
    {
+      boolean trace = log.isTraceEnabled();
+      
       // push the old cl and set the new cl
       ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
 
-      if (cl != oldCL) {
-         getStack().push(oldCL);
-         Thread.currentThread().setContextClassLoader(cl);
-
-         if (log.isTraceEnabled()) {
-            log.trace("Setting TCL to " + cl + "; pushing " + oldCL);
-         }
-      }
-      else {
-         if (log.isTraceEnabled()) {
-            log.trace("TCL to push is the same as current TCL; TCL will not be changed; pushing: " + oldCL);
-         }
+      Thread.currentThread().setContextClassLoader(cl);
+      getStack().push(oldCL);
+      
+      if (log.isTraceEnabled()) {
+         log.trace("Setting TCL to " + cl + "; pushing " + oldCL);
+         log.trace("Stack: " + getStack());
       }
    }
 
@@ -84,8 +72,6 @@ public class TCLStack
     * Pop the last CL from the stack and make it the TCL.
     *
     * <p>If the stack is empty, then no change is made to the TCL.
-    *
-    * <p>If the poped cl is the same as the current cl, then the TCL is not changed.
     *
     * @return   The previous CL or null if there was none.
     */
@@ -96,17 +82,11 @@ public class TCLStack
          ClassLoader cl = (ClassLoader)getStack().pop();
          ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
 
-         if (cl != oldCL) {
-            Thread.currentThread().setContextClassLoader(cl);
+         Thread.currentThread().setContextClassLoader(cl);
 
-            if (log.isTraceEnabled()) {
-               log.trace("Setting TCL to " + cl + "; popped: " + oldCL);
-            }
-         }
-         else {
-            if (log.isTraceEnabled()) {
-               log.trace("TCL popped is the same as current TCL; TCL will not be changed; popped: " + oldCL);
-            }
+         if (log.isTraceEnabled()) {
+            log.trace("Setting TCL to " + cl + "; popped: " + oldCL);
+            log.trace("Stack: " + getStack());
          }
          
          return oldCL;

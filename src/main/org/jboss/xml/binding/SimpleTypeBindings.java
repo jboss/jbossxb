@@ -132,6 +132,125 @@ public final class SimpleTypeBindings
    public static final int XS_ENTITY = XS_ENTITY_NAME.hashCode();
    public static final int XS_ENTITIES = XS_ENTITIES_NAME.hashCode();
 
+   public static final TypeBinding STRING = new TypeBinding()
+   {
+      public Object unmarshal(String value)
+      {
+         return value;
+      }
+
+      public String marshal(Object value)
+      {
+         return (String)value;
+      }
+   };
+
+   public static final TypeBinding INT = new TypeBinding()
+   {
+      public Object unmarshal(String value)
+      {
+         return Integer.valueOf(value);
+      }
+
+      public String marshal(Object value)
+      {
+         return String.valueOf(value);
+      }
+   };
+
+   public static final TypeBinding LONG = new TypeBinding()
+   {
+      public Object unmarshal(String value)
+      {
+         return Long.valueOf(value);
+      }
+
+      public String marshal(Object value)
+      {
+         return String.valueOf(value);
+      }
+   };
+
+   public static final TypeBinding DOUBLE = new TypeBinding()
+   {
+      public Object unmarshal(String value)
+      {
+         return Double.valueOf(value);
+      }
+
+      public String marshal(Object value)
+      {
+         return String.valueOf(value);
+      }
+   };
+
+   public static final TypeBinding FLOAT = new TypeBinding()
+   {
+      public Object unmarshal(String value)
+      {
+         return Float.valueOf(value);
+      }
+
+      public String marshal(Object value)
+      {
+         return String.valueOf(value);
+      }
+   };
+
+   public static final TypeBinding SHORT = new TypeBinding()
+   {
+      public Object unmarshal(String value)
+      {
+         return Short.valueOf(value);
+      }
+
+      public String marshal(Object value)
+      {
+         return String.valueOf(value);
+      }
+   };
+
+   public static final TypeBinding BYTE = new TypeBinding()
+   {
+      public Object unmarshal(String value)
+      {
+         return Byte.valueOf(value);
+      }
+
+      public String marshal(Object value)
+      {
+         return String.valueOf(value);
+      }
+   };
+
+   public static final TypeBinding CHAR = new TypeBinding()
+   {
+      public Object unmarshal(String value)
+      {
+         return value == null ? null : new Character(value.charAt(0));
+      }
+
+      public String marshal(Object value)
+      {
+         return String.valueOf(value);
+      }
+   };
+
+   public static final TypeBinding JAVA_UTIL_DATE = new TypeBinding()
+   {
+      public Object unmarshal(String value)
+      {
+         return unmarshalDate(value).getTime();
+      }
+
+      public String marshal(Object value)
+      {
+         Calendar c = Calendar.getInstance();
+         c.setTime((java.util.Date)value);
+         return marshalDate(c);
+      }
+   };
+
    // check for uniqueness of hashCode's
    static
    {
@@ -1689,7 +1808,6 @@ public final class SimpleTypeBindings
       int offset = value.getRawOffset();
       if (offset == 0) return "Z";
 
-      StringBuffer buffer = new StringBuffer();
       DecimalFormat hourFormat = new DecimalFormat("'+'00;-00");
       DecimalFormat minuteFormat = new DecimalFormat("00");
 

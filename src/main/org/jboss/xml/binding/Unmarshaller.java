@@ -112,6 +112,7 @@ public class Unmarshaller
 
    public void setEntityResolver(EntityResolver entityResolver)
    {
+      reader.setEntityResolver(entityResolver);
       this.entityResolver = entityResolver;
    }
 
@@ -271,28 +272,40 @@ public class Unmarshaller
       public void warning(SAXParseException exception)
          throws SAXException
       {
-         log.warn(
-            exception.getMessage()
-            + "[" + exception.getColumnNumber() + ":" + exception.getLineNumber() + "]"
-         );
+         log.warn(formatMessage(exception));
       }
 
       public void error(SAXParseException exception)
          throws SAXException
       {
-         throw new SAXException(
-            exception.getMessage()
-            + "[" + exception.getColumnNumber() + ":" + exception.getLineNumber() + "]"
-         );
+         throw new SAXException(formatMessage(exception));
       }
 
       public void fatalError(SAXParseException exception)
          throws SAXException
       {
-         throw new SAXException(
-            exception.getMessage()
-            + "[" + exception.getColumnNumber() + ":" + exception.getLineNumber() + "]"
-         );
+         throw new SAXException(formatMessage(exception));
+      }
+      
+      public String formatMessage(SAXParseException exception)
+      {
+         StringBuffer buffer = new StringBuffer(50);
+         buffer.append(exception.getMessage()).append(" @ ");
+         String location = exception.getPublicId();
+         if (location != null)
+            buffer.append(location);
+         else
+         {
+            location = exception.getSystemId();
+            if (location != null)
+               buffer.append(location);
+            else
+               buffer.append("*unknown*");
+         }
+         buffer.append('[');
+         buffer.append(exception.getLineNumber()).append(',');
+         buffer.append(exception.getColumnNumber()).append(']');
+         return buffer.toString();
       }
    }
 

@@ -41,6 +41,20 @@ public interface ThreadPoolMBean
    int getPoolNumber();
 
    /**
+    * Get the minimum pool size
+    *
+    * @return the minimum pool size
+    */
+   int getMinimumPoolSize();
+
+   /**
+    * Set the minimum pool size
+    *
+    * @param size the minimum pool size
+    */
+   void setMinimumPoolSize(int size);
+
+   /**
     * Get the maximum pool size
     *
     * @return the maximum pool size

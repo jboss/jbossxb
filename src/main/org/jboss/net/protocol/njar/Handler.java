@@ -90,7 +90,10 @@ public class Handler
          File tempJar = (File) savedJars.get(embeddedURL);
          if (tempJar == null)
          {
-            InputStream embededData = new URL(embeddedURL).openStream();
+            URLConnection embededDataConnection = new URL(embeddedURL).openConnection();
+            if (trace) log.trace("Content length: " + embededDataConnection.getContentLength());
+            
+            InputStream embededData = embededDataConnection.getInputStream();
             tempJar = File.createTempFile("nested-", ".jar");
             tempJar.deleteOnExit();
             
@@ -99,9 +102,12 @@ public class Handler
             
             try {
                // copyb will buffer the streams for us
-               Streams.copyb(embededData, output);
+               long bytes = Streams.copyb(embededData, output);
+               if (trace) log.trace("copied " + bytes + " bytes");
             }
             finally {
+               Streams.flush(output);
+               
                // close an pass errors to throwable handler (we don't care about them)
                Streams.close(embededData);
                Streams.close(output);

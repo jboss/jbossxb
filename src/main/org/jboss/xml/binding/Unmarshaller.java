@@ -52,7 +52,7 @@ public class Unmarshaller
    private ObjectModelBuilder builder = new ObjectModelBuilder();
    private XMLReader reader;
    private SAXParser parser;
-   private LocalEntityResolver entityResolver = new LocalEntityResolver();
+   private EntityResolver entityResolver;
 
    public static void mapPublicIdToSystemId(String publicId, String dtdLocation)
    {
@@ -71,13 +71,14 @@ public class Unmarshaller
       parser = saxFactory.newSAXParser();
       parser.setProperty(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
 
-      entityResolver.setCustom(new MetaDataEntityResolver());
 
       reader = parser.getXMLReader();
       reader.setContentHandler(new ContentPopulator());
       reader.setDTDHandler(new MetaDataDTDHandler());
-      reader.setEntityResolver(entityResolver);
       reader.setErrorHandler(new MetaDataErrorHandler());
+
+      entityResolver = new MetaDataEntityResolver(null);
+      reader.setEntityResolver(entityResolver);
    }
 
    public void setValidation(boolean validation)
@@ -111,7 +112,7 @@ public class Unmarshaller
 
    public void setEntityResolver(EntityResolver entityResolver)
    {
-      this.entityResolver.setCustom(entityResolver);
+      this.entityResolver = entityResolver;
    }
 
    public void setErrorHandler(ErrorHandler errorHandler)
@@ -164,49 +165,8 @@ public class Unmarshaller
 
    // Inner
 
-   private final class LocalEntityResolver
-      implements EntityResolver
-   {
-      private EntityResolver custom;
-
-      public void setCustom(EntityResolver custom)
-      {
-         this.custom = custom;
-      }
-
-      public InputSource resolveEntity(String publicId, String systemId)
-         throws SAXException, IOException
-      {
-         try
-         {
-            InputSource source;
-            if(custom != null)
-            {
-               source = custom.resolveEntity(publicId, systemId);
-            }
-            else
-            {
-               throw new IllegalStateException(
-                  "Failed to resolve entity: publicId=" + publicId + ", systemId=" + systemId
-               );
-            }
-            return source;
-         }
-         catch(IOException e)
-         {
-            log.error("Failed to resolve entity: " + e.getMessage(), e);
-            throw e;
-         }
-         catch(SAXException e)
-         {
-            log.error("Failed to resolve entity: " + e.getMessage(), e);
-            throw e;
-         }
-      }
-   }
-
    private static final class MetaDataEntityResolver
-      implements EntityResolver
+      extends ChainedEntityResolver
    {
       private static final String EJB_JAR_20 = "-//Sun Microsystems, Inc.//DTD Enterprise JavaBeans 2.0//EN";
       private static final String JBOSS_32 = "-//JBoss//DTD JBOSS 3.2//EN";
@@ -226,21 +186,26 @@ public class Unmarshaller
          DTD_FOR_ID.put(publicId, systemId);
       }
 
-      public InputSource resolveEntity(String publicId, String systemId)
+      public MetaDataEntityResolver(ChainedEntityResolver next)
+      {
+         super(next);
+      }
+
+      protected InputSource tryToResolveEntity(String publicId, String systemId)
          throws SAXException, IOException
       {
          if(publicId == null && systemId == null)
             throw new IllegalStateException("Validation error: neither publicId nor systemId is specified.");
 
-         InputSource source;
+         InputSource source = null;
          if(publicId != null)
          {
             String dtd = (String)DTD_FOR_ID.get(publicId);
-            if(dtd == null)
-               throw new IllegalStateException("Unsupported publicId: " + publicId);
-
-            String dtdPath = getResource(dtd);
-            source = new InputSource(dtdPath);
+            if(dtd != null)
+            {
+               String dtdPath = getResource(dtd);
+               source = new InputSource(dtdPath);
+            }
          }
          else
          {
@@ -250,6 +215,54 @@ public class Unmarshaller
 
          return source;
       }
+   }
+
+   private static abstract class ChainedEntityResolver
+      implements EntityResolver
+   {
+      private final ChainedEntityResolver next;
+
+      public ChainedEntityResolver(ChainedEntityResolver next)
+      {
+         this.next = next;
+      }
+
+      // EntityResolver implementation
+
+      public InputSource resolveEntity(String publicId, String systemId)
+         throws SAXException, IOException
+      {
+         InputSource source = tryToResolveEntity(publicId, systemId);
+         if(source == null)
+         {
+            if(next != null)
+            {
+               source = next.resolveEntity(publicId, systemId);
+            }
+         }
+
+         if(source == null)
+         {
+            if(systemId != null)
+            {
+               source = new InputSource(systemId);
+            }
+            else
+            {
+
+               throw new IllegalStateException(
+                  "Failed to resolve entity: publicId=" + publicId + ", systemId=" + systemId
+               );
+            }
+         }
+
+         return source;
+      }
+
+      // Protected
+
+      protected abstract InputSource tryToResolveEntity(String publicId, String systemId)
+         throws SAXException, IOException;
    }
 
    private static final class MetaDataErrorHandler

@@ -13,6 +13,7 @@ import org.jboss.xml.binding.sunday.unmarshalling.TextContentHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.ObjectModelStack;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContentBinding;
+import org.jboss.xml.binding.sunday.unmarshalling.ElementHandlerCallback;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.ElementBindingImpl;
 import org.xml.sax.Attributes;
 
@@ -76,18 +77,22 @@ public class RtElementBinding
       super.addElement(name, binding);
    }
 
-   public int start(Object parent, QName name, Attributes attrs, ObjectModelStack stack, int startIndex)
+   public void start(Object parent,
+                    QName name,
+                    Attributes attrs,
+                    ElementHandlerCallback callback,
+                    int handlerIndex)
    {
-      return super.start(parent, name, attrs, stack, startIndex);
+      super.start(parent, name, attrs, callback, handlerIndex);
    }
 
    public Object end(Object parent,
                      QName name,
                      ObjectModelStack stack,
-                     int startIndex,
-                     int endIndex,
+                     int stackStartIndex,
+                     int stackEndIndex,
                      String dataContent)
    {
-      return super.end(parent, name, stack, startIndex, endIndex, dataContent);
+      return super.end(parent, name, stack, stackStartIndex, stackEndIndex, dataContent);
    }
 }

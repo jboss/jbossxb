@@ -12,6 +12,8 @@ import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContentBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContentHandler;
+import org.jboss.xml.binding.sunday.unmarshalling.ElementTypeBinding;
+import org.jboss.xml.binding.sunday.unmarshalling.ElementHandlerCallback;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.ElementHandlerImpl;
 import org.jboss.xml.binding.Immutable;
 import org.jboss.xml.binding.JBossXBRuntimeException;
@@ -32,6 +34,16 @@ public class RtElementHandler
 
    private static final AttributeBinding ATTRIBUTE_BINDING = new RtAttributeBinding();
    private static final TextContentBinding TC_BINDING = new RtTextContentBinding();
+
+   public RtElementHandler()
+   {
+      super();
+   }
+
+   public RtElementHandler(ElementTypeBinding typeBinding)
+   {
+      super(typeBinding);
+   }
 
    public AttributeBinding addAttribute(QName name)
    {
@@ -79,7 +91,7 @@ public class RtElementHandler
       return element;
    }
 
-   public Object start(Object parent, QName name, Attributes attrs)
+   public void start(Object parent, QName name, Attributes attrs, ElementHandlerCallback callback)
    {
       Object child = null;
 
@@ -120,7 +132,7 @@ public class RtElementHandler
          }
       }
 
-      return child;
+      callback.accept(child, true);
    }
 
    public void end(Object parent, Object child, QName name, String dataContent)

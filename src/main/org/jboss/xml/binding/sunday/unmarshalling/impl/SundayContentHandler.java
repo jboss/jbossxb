@@ -11,6 +11,7 @@ import org.jboss.xml.binding.sunday.unmarshalling.ObjectModelStack;
 import org.jboss.xml.binding.sunday.unmarshalling.DocumentHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xml.binding.sunday.unmarshalling.ElementHandlerCallback;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 import org.apache.xerces.xs.XSTypeDefinition;
@@ -24,7 +25,7 @@ import java.util.List;
  * @version <tt>$Revision$</tt>
  */
 public class SundayContentHandler
-   implements JBossXBParser.ContentHandler
+   implements JBossXBParser.ContentHandler, ElementHandlerCallback
 {
    private final static Logger log = Logger.getLogger(SundayContentHandler.class);
 
@@ -32,6 +33,9 @@ public class SundayContentHandler
 
    private ElementStack elementStack = new ElementStack();
    private ObjectModelStack objectStack = new StackImpl();
+
+   private int handlerIndex;
+   private Attributes attrs;
 
    private StringBuffer textContent = new StringBuffer();
 
@@ -41,6 +45,8 @@ public class SundayContentHandler
    {
       this.docHandler = docHandler;
    }
+
+   // ContentHandler implementation
 
    public void characters(char[] ch, int start, int length)
    {
@@ -101,7 +107,7 @@ public class SundayContentHandler
          {
             ElementBinding element = null;
             List handlers = parentItem.binding.getElementHandlers();
-            for(int i = 0; i < handlers.size(); ++i)
+            for(int i = 0; i < handlers.size() && parentItem.startIndex + i < objectStack.size(); ++i)
             {
                ElementHandler handler = (ElementHandler)handlers.get(i);
                element = handler.getElement(startName);
@@ -126,11 +132,22 @@ public class SundayContentHandler
       elementStack.push(stackItem);
       if(stackItem != ElementStack.NULL_ITEM)
       {
+         handlerIndex = 0;
+         attrs = atts;
+         /*
          stackItem.endIndex = stackItem.binding.start(stackItem.parent,
             stackItem.name,
             atts,
             objectStack,
-            stackItem.startIndex
+            stackItem.startIndex,
+            handlerIndex
+         );
+         */
+         stackItem.binding.start(stackItem.parent,
+            stackItem.name,
+            atts,
+            this,
+            handlerIndex
          );
       }
    }
@@ -150,6 +167,28 @@ public class SundayContentHandler
    public Object getRoot()
    {
       return root;
+   }
+
+   public void accept(Object child, boolean invokeNext)
+   {
+      if(child != null)
+      {
+         objectStack.push(child);
+         ElementStack.StackItem stackItem = elementStack.peek();
+         stackItem.endIndex = objectStack.size();
+
+         if(invokeNext)
+         {
+            ++handlerIndex;
+            stackItem.binding.start(child,
+               stackItem.name,
+               attrs,
+               this,
+               handlerIndex
+            );
+            --handlerIndex;
+         }
+      }
    }
 
    // Inner

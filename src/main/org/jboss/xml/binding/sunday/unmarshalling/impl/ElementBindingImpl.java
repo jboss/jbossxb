@@ -13,6 +13,7 @@ import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContentBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.TextContentHandler;
+import org.jboss.xml.binding.sunday.unmarshalling.ElementHandlerCallback;
 import org.xml.sax.Attributes;
 
 import javax.xml.namespace.QName;
@@ -84,49 +85,37 @@ public class ElementBindingImpl
       return getLastHandler().pushTextContentHandler(handler);
    }
 
-   public int start(Object parent, QName name, Attributes attrs, ObjectModelStack stack, int startIndex)
+   public void start(Object parent,
+                     QName name,
+                     Attributes attrs,
+                     ElementHandlerCallback callback,
+                     int handlerIndex)
    {
       if(handlers.isEmpty())
       {
          throw new IllegalStateException("Element binding has no handlers: " + name);
       }
 
-      ElementHandler handler = (ElementHandler)handlers.get(0);
-      Object child = handler.start(parent, name, attrs);
-      int i = 0;
-      if(child != null)
+      if(handlerIndex < handlers.size())
       {
-         stack.push(child);
-         while(++i < handlers.size())
-         {
-            handler = (ElementHandler)handlers.get(i);
-            child = handler.start(child, name, attrs);
-            if(child == null)
-            {
-               break;
-            }
-            else
-            {
-               stack.push(child);
-            }
-         }
+         ElementHandler handler = (ElementHandler)handlers.get(handlerIndex);
+         handler.start(parent, name, attrs, callback);
       }
-      return startIndex + i;
    }
 
    public Object end(Object parent,
                      QName name,
                      ObjectModelStack stack,
-                     int startIndex,
-                     int endIndex,
+                     int stackStartIndex,
+                     int stackEndIndex,
                      String dataContent)
    {
       Object child = null;
-      if(endIndex - startIndex > 0)
+      if(stackEndIndex - stackStartIndex > 0)
       {
          child = stack.pop();
          ElementHandler handler;
-         for(int i = endIndex - startIndex - 1; i > 0; --i)
+         for(int i = stackEndIndex - stackStartIndex - 1; i > 0; --i)
          {
             Object localParent = stack.pop();
             handler = (ElementHandler)handlers.get(i);

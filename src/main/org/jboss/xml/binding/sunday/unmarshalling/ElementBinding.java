@@ -35,7 +35,16 @@ public interface ElementBinding
 
    void addElement(QName name, ElementBinding binding);
 
-   int start(Object parent, QName name, Attributes attrs, ObjectModelStack stack, int startIndex);
+   void start(Object parent,
+              QName name,
+              Attributes attrs,
+              ElementHandlerCallback callback,
+              int handlerIndex);
 
-   Object end(Object parent, QName name, ObjectModelStack stack, int startIndex, int endIndex, String dataContent);
+   Object end(Object parent,
+              QName name,
+              ObjectModelStack stack,
+              int stackStartIndex,
+              int stackEndIndex,
+              String dataContent);
 }

@@ -34,6 +34,8 @@ package org.jboss.util.id;
 public class GUID
    implements ID, Comparable
 {
+   /** The serial version id, @since 1.6 */
+   static final long serialVersionUID = 3289509836244263718L;
    /** The virtual machine identifier */
    protected final VMID vmid;
 

@@ -37,6 +37,10 @@ public class InetAddressEditor
       try
       {
 		 String text = getAtText();
+		 if (text==null)
+		 {
+			 return null;
+		 }
 		 if (text.startsWith("/"))
 		 {
 			 // seems like localhost sometimes will look like:

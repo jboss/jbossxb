@@ -9,5 +9,7 @@
     <classpathentry exported="true" kind="lib" path="/thirdparty/gnu-regexp/lib/gnu-regexp.jar"/>
     <classpathentry exported="true" kind="lib" path="/thirdparty/sun-jaxp/lib/crimson.jar"/>
     <classpathentry exported="true" kind="lib" path="/thirdparty/sun-jaxp/lib/jaxp.jar"/>
+    <classpathentry kind="lib" path="/thirdparty/apache-slide/client/lib/commons-httpclient.jar"/>
+    <classpathentry kind="lib" path="/thirdparty/apache-slide/client/lib/webdavlib.jar"/>
     <classpathentry kind="output" path="output/eclipse-classes"/>
 </classpath>

@@ -8,6 +8,7 @@ package org.jboss.xml.binding;
 
 import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
+import org.jboss.util.NestedRuntimeException;
 import org.xml.sax.Attributes;
 
 import java.lang.reflect.Method;
@@ -19,66 +20,231 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * An ObjectModelFactory that uses mappings
+ * 
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @author <a href="mailto:adrian@jboss.com">Adrian Brock</a>
  * @version <tt>$Revision$</tt>
  */
-public class MappingObjectModelFactory
-   implements GenericObjectModelFactory
+public class MappingObjectModelFactory implements GenericObjectModelFactory
 {
+   // Constants -----------------------------------------------------
+
+   /** The log */
    private final static Logger log = Logger.getLogger(MappingObjectModelFactory.class);
 
+   // Attributes ----------------------------------------------------
+
+   /** Whether trace is enabled */
+   private boolean trace = log.isTraceEnabled();
+
+   /** The class mappings */
    private final Map elementToClassMapping = new HashMap();
+
+   /** The field mappings */
    private final Map elementToFieldMapping = new HashMap();
 
+   // Static --------------------------------------------------------
+
+   private static Object get(Object o, String localName, Method getter)
+   {
+      if (log.isTraceEnabled())
+         log.trace("get object=" + o + " localName=" + localName + " getter=" + getter);
+      
+      Object value;
+      if (o instanceof ImmutableContainer)
+      {
+         ImmutableContainer con = ((ImmutableContainer) o);
+         value = con.getChild(localName);
+      }
+      else
+      {
+         try
+         {
+            value = getter.invoke(o, null);
+         }
+         catch (Exception e)
+         {
+            throw new NestedRuntimeException("Failed to invoke " + getter + " on " + o, e);
+         }
+      }
+      return value;
+   }
+
+   public static void set(Object parent, Object child, String localName, Method setter)
+   {
+      if (log.isTraceEnabled())
+         log.trace("set parent=" + parent + " child=" + child + " localName=" + localName + " setter=" + setter);
+
+      if (setter != null)
+      {
+         try
+         {
+            setter.invoke(parent, new Object[] { child });
+         }
+         catch (Exception e)
+         {
+            throw new NestedRuntimeException("Failed to set attribute value " + child + " with setter " + setter
+               + " on " + parent + ": ", e);
+         }
+      }
+      else if (parent instanceof ImmutableContainer)
+      {
+         ((ImmutableContainer) parent).addChild(localName, child);
+      }
+      else
+      {
+         throw new IllegalStateException("setter is null and it's not an immutable container: parent=" + parent.getClass() +
+            ", localName" + localName + ", parent=" + parent + ", child=" + child);
+      }
+   }
+
+   private static Object newInstance(Class cls)
+   {
+      if (log.isTraceEnabled())
+         log.trace("new " + cls.getName());
+
+      Object instance;
+      try
+      {
+         Constructor ctor = cls.getConstructor(null);
+         instance = ctor.newInstance(null);
+      }
+      catch (NoSuchMethodException e)
+      {
+         log.warn("No no-arg constructor in " + cls);
+         instance = new ImmutableContainer(cls);
+      }
+      catch (Exception e)
+      {
+         throw new IllegalStateException("Failed to create an instance of " + cls + " with the no-arg constructor: "
+            + e.getMessage());
+      }
+      return instance;
+   }
+
+   private static final TypeConverter getTypeConverter(Class type)
+   {
+      TypeConverter result;
+      if (String.class == type)
+      {
+         result = TypeConverter.STRING;
+      }
+      else if (int.class == type || Integer.class == type)
+      {
+         result = TypeConverter.INT;
+      }
+      else if (long.class == type || Long.class == type)
+      {
+         result = TypeConverter.LONG;
+      }
+      else if (double.class == type || Double.class == type)
+      {
+         result = TypeConverter.DOUBLE;
+      }
+      else if (float.class == type || Float.class == type)
+      {
+         result = TypeConverter.FLOAT;
+      }
+      else if (short.class == type || Short.class == type)
+      {
+         result = TypeConverter.SHORT;
+      }
+      else if (byte.class == type || Byte.class == type)
+      {
+         result = TypeConverter.BYTE;
+      }
+      else if (char.class == type || Character.class == type)
+      {
+         result = TypeConverter.CHAR;
+      }
+      else if (java.util.Date.class == type)
+      {
+         result = TypeConverter.JAVA_UTIL_DATE;
+      }
+      else if (java.lang.Object.class == type)
+      {
+         result = TypeConverter.STRING;
+      }
+      else
+      {
+         //todo do something
+         throw new IllegalStateException("Unexpected field type " + type);
+      }
+      return result;
+   }
+
+   // Constructors --------------------------------------------------
+
+   // Public --------------------------------------------------------
+
+   /**
+    * Map an element to a class
+    * 
+    * @param element the element name
+    * @param class the class
+    */
    public void mapElementToClass(String element, Class cls)
    {
       ElementToClassMapping mapping = new ElementToClassMapping(element, cls);
       addElementToClassMapping(mapping);
+      if (trace)
+         log.trace(mapping);
    }
 
+   /**
+    * Map an element to a field
+    * 
+    * @param element the element name
+    * @param class the class
+    * @param field the field name
+    * @param convertor the type convertor
+    */
    public void mapElementToField(String element, Class cls, String field, TypeConverter converter)
    {
       ElementToFieldMapping mapping = new ElementToFieldMapping(element, cls, field, converter);
       addElementToFieldMapping(mapping);
+      if (trace)
+         log.trace(mapping);
    }
 
-   // GenericObjectModelFactory implementation
+   // ObjectModelFactory implementation -----------------------------
 
-   public Object newRoot(Object root,
-                         ContentNavigator navigator,
-                         String namespaceURI,
-                         String localName,
-                         Attributes attrs)
+   public Object newRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName,
+      Attributes attrs)
    {
-      if(root == null)
+      if (trace)
+         log.trace("newRoot root=" + root + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName + " attributes=" + attrs);
+
+      if (root == null)
       {
-         ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
-         if(mapping != null)
+         ElementToClassMapping mapping = (ElementToClassMapping) elementToClassMapping.get(localName);
+         if (mapping != null)
          {
+            if (trace)
+               log.trace("creating root using " + mapping);
             root = newInstance(mapping.cls);
          }
          else
          {
+            if (trace)
+               log.trace("creating root using xml->java");
             root = create(namespaceURI, localName);
          }
       }
 
-      if(attrs != null)
+      if (attrs != null)
       {
-         for(int i = 0; i < attrs.getLength(); ++i)
+         for (int i = 0; i < attrs.getLength(); ++i)
          {
             try
             {
-               if(attrs.getLocalName(i).length() > 0)
-               {
+               if (attrs.getLocalName(i).length() > 0)
                   setAttribute(root, attrs.getLocalName(i), attrs.getValue(i));
-               }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-               throw new IllegalStateException(
-                  "Failed to set attribute " + attrs.getLocalName(i) + "=" + attrs.getValue(i) + ": " + e.getMessage()
-               );
+               throw new NestedRuntimeException("Failed to set attribute: " + attrs.getLocalName(i), e);
             }
          }
       }
@@ -86,24 +252,27 @@ public class MappingObjectModelFactory
       return root;
    }
 
-   public Object newChild(Object o,
-                          ContentNavigator navigator,
-                          String namespaceURI,
-                          String localName,
-                          Attributes attrs)
+   // GenericObjectModelFactory implementation ----------------------
+
+   public Object newChild(Object o, ContentNavigator navigator, String namespaceURI, String localName, Attributes attrs)
    {
+      if (trace)
+         log.trace("newChild object=" + o + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName + " attributes=" + attrs);
+
       Object child = null;
 
-      ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
-      if(mapping != null)
+      ElementToClassMapping mapping = (ElementToClassMapping) elementToClassMapping.get(localName);
+      if (mapping != null)
       {
+         if (trace)
+           log.trace("newChild using mapping " + mapping);
          try
          {
-            if(!(o instanceof Collection))
+            if (!(o instanceof Collection))
             {
                Method getter;
-               ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(localName);
-               if(fieldMapping != null)
+               ElementToFieldMapping fieldMapping = (ElementToFieldMapping) elementToFieldMapping.get(new ElementToFieldMappingKey(localName, o.getClass()));
+               if (fieldMapping != null)
                {
                   getter = fieldMapping.getter;
                }
@@ -115,45 +284,42 @@ public class MappingObjectModelFactory
                child = get(o, localName, getter);
             }
 
-            if(child == null)
+            if (child == null)
             {
                child = newInstance(mapping.cls);
             }
 
-            if(attrs != null)
+            if (attrs != null)
             {
-               for(int i = 0; i < attrs.getLength(); ++i)
+               for (int i = 0; i < attrs.getLength(); ++i)
                {
-                  if(attrs.getLocalName(i).length() > 0)
-                  {
+                  if (attrs.getLocalName(i).length() > 0)
                      setAttribute(child, attrs.getLocalName(i), attrs.getValue(i));
-                  }
                }
             }
          }
-         catch(IllegalStateException e)
+         catch (IllegalStateException e)
          {
             throw e;
          }
-         catch(Exception e)
+         catch (Exception e)
          {
-            throw new IllegalStateException(
-               "newChild failed for o=" + o + ", uri=" + namespaceURI + ", local=" + localName + ", attrs=" + attrs
-            );
+            throw new NestedRuntimeException("newChild failed for o=" + o + ", uri=" + namespaceURI + ", local="
+               + localName + ", attrs=" + attrs, e);
          }
       }
       else
       {
-         if(o instanceof Collection)
+         if (o instanceof Collection)
          {
             child = create(namespaceURI, localName);
          }
          else
          {
             Class oCls;
-            if(o instanceof ImmutableContainer)
+            if (o instanceof ImmutableContainer)
             {
-               oCls = ((ImmutableContainer)o).cls;
+               oCls = ((ImmutableContainer) o).cls;
             }
             else
             {
@@ -166,33 +332,25 @@ public class MappingObjectModelFactory
             {
                getter = oCls.getMethod(getterStr, null);
             }
-            catch(NoSuchMethodException e)
+            catch (NoSuchMethodException e)
             {
-               throw new IllegalStateException("newChild failed for o=" +
-                  o +
-                  ", uri=" +
-                  namespaceURI +
-                  ", local=" +
-                  localName +
-                  ", attrs=" +
-                  attrs +
-                  ": no getter"
-               );
+               throw new IllegalStateException("newChild failed for o=" + o + ", uri=" + namespaceURI + ", local="
+                  + localName + ", attrs=" + attrs + ": no getter");
             }
 
             Class childType = getter.getReturnType();
-            if(!Util.isAttributeType(childType))
+            if (!Util.isAttributeType(childType))
             {
-               if(Collection.class.isAssignableFrom(childType))
+               if (Collection.class.isAssignableFrom(childType))
                {
                   child = get(o, localName, getter);
 
                   // now does this element really represent a Java collection or is it an element that can appear more than once?
                   // try to load the class and create an instance
                   Object item = create(namespaceURI, localName);
-                  if(item != null)
+                  if (item != null)
                   {
-                     if(child == null)
+                     if (child == null)
                      {
                         setChild(new ArrayList(), o, localName);
                      }
@@ -200,7 +358,7 @@ public class MappingObjectModelFactory
                   }
                   else
                   {
-                     if(child == null)
+                     if (child == null)
                      {
                         child = new ArrayList();
                      }
@@ -217,38 +375,41 @@ public class MappingObjectModelFactory
       return child;
    }
 
-   public void addChild(Object parent,
-                        Object child,
-                        ContentNavigator navigator,
-                        String namespaceURI,
-                        String localName)
+   public void addChild(Object parent, Object child, ContentNavigator navigator, String namespaceURI, String localName)
    {
-      if(child instanceof ImmutableContainer)
+      if (trace)
+         log.trace("addChild parent=" + parent + " child=" + child + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName);
+
+      if (child instanceof ImmutableContainer)
       {
-         child = ((ImmutableContainer)child).newInstance();
+         child = ((ImmutableContainer) child).newInstance();
       }
       setChild(child, parent, localName);
    }
 
-   public void setValue(Object o,
-                        ContentNavigator navigator,
-                        String namespaceURI,
-                        String localName,
-                        String value)
+   public void setValue(Object o, ContentNavigator navigator, String namespaceURI, String localName, String value)
    {
+      if (trace)
+         log.trace("setValue object=" + o + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName + " value=" + value);
       setAttribute(o, localName, value);
    }
 
    public Object completedRoot(Object root, ContentNavigator navigator, String namespaceURI, String localName)
    {
-      if(root instanceof ImmutableContainer)
+      if (trace)
+         log.trace("completedRoot root=" + root + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName);
+      if (root instanceof ImmutableContainer)
       {
-         root = ((ImmutableContainer)root).newInstance();
+         root = ((ImmutableContainer) root).newInstance();
       }
       return root;
    }
 
-   // Private
+   // Package protected ---------------------------------------------
+
+   // Protected -----------------------------------------------------
+   
+   // Private -------------------------------------------------------
 
    private void addElementToClassMapping(ElementToClassMapping mapping)
    {
@@ -257,33 +418,40 @@ public class MappingObjectModelFactory
 
    private void addElementToFieldMapping(ElementToFieldMapping mapping)
    {
-      elementToFieldMapping.put(mapping.element, mapping);
+      elementToFieldMapping.put(mapping.key, mapping);
    }
 
    private void setChild(Object child, Object parent, String localName)
    {
+      boolean trace = log.isTraceEnabled();
       Object value = child;
-      if(parent instanceof Collection)
+      if (parent instanceof Collection)
       {
-         ((Collection)parent).add(value);
+         if (trace)
+            log.trace("Add " + value + " to collection " + parent);
+         ((Collection) parent).add(value);
       }
       else
       {
          Method setter = null;
-         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(localName);
-         if(fieldMapping != null)
+         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping) elementToFieldMapping.get(new ElementToFieldMappingKey(localName, parent.getClass()));
+         if (fieldMapping != null)
          {
+            if (trace)
+               log.trace("Add " + value + " to " + parent + " using field mapping " + fieldMapping);
             setter = fieldMapping.setter;
             set(parent, value, localName, setter);
          }
          else
          {
             final String xmlToCls = Util.xmlNameToClassName(localName, true);
+            if (trace)
+               log.trace("Add " + value + " to xml mapped class " + xmlToCls);
             Method getter = null;
             Class parentCls;
-            if(parent instanceof ImmutableContainer)
+            if (parent instanceof ImmutableContainer)
             {
-               parentCls = ((ImmutableContainer)parent).cls;
+               parentCls = ((ImmutableContainer) parent).cls;
             }
             else
             {
@@ -294,26 +462,29 @@ public class MappingObjectModelFactory
             {
                getter = parentCls.getMethod("get" + xmlToCls, null);
             }
-            catch(NoSuchMethodException e)
+            catch (NoSuchMethodException e)
             {
                log.warn("no getter found for " + localName + " in " + parent);
             }
 
-            if(getter != null)
+            if (getter != null)
             {
-               if(!(child instanceof Collection) && Collection.class.isAssignableFrom(getter.getReturnType()))
+               if (!(child instanceof Collection) && Collection.class.isAssignableFrom(getter.getReturnType()))
                {
                   Object o = get(parent, localName, getter);
-                  Collection col = (Collection)o;
+                  Collection col = (Collection) o;
+                  if (trace)
+                     log.trace("Add " + value + " to collection " + col + " retrieved from getter " + getter);
                   col.add(child);
                }
                else
                {
+                  
                   try
                   {
-                     setter = parentCls.getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
+                     setter = parentCls.getMethod("set" + xmlToCls, new Class[] { getter.getReturnType() });
                   }
-                  catch(NoSuchMethodException e)
+                  catch (NoSuchMethodException e)
                   {
                      log.warn("No setter for " + localName + " in " + parent);
                   }
@@ -327,17 +498,17 @@ public class MappingObjectModelFactory
 
    private final void setAttribute(Object o, String localName, String value)
    {
-      if(o instanceof Collection)
+      if (o instanceof Collection)
       {
          // todo type convertion
-         ((Collection)o).add(value);
+         ((Collection) o).add(value);
       }
       else
       {
          Method setter = null;
          Object fieldValue = null;
-         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(localName);
-         if(fieldMapping != null)
+         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping) elementToFieldMapping.get(new ElementToFieldMappingKey(localName, o.getClass()));
+         if (fieldMapping != null)
          {
             fieldValue = fieldMapping.converter.unmarshal(value);
             setter = fieldMapping.setter;
@@ -345,9 +516,9 @@ public class MappingObjectModelFactory
          else
          {
             Class oCls;
-            if(o instanceof ImmutableContainer)
+            if (o instanceof ImmutableContainer)
             {
-               oCls = ((ImmutableContainer)o).cls;
+               oCls = ((ImmutableContainer) o).cls;
             }
             else
             {
@@ -359,9 +530,9 @@ public class MappingObjectModelFactory
                final String xmlToCls = Util.xmlNameToClassName(localName, true);
                Method getter = oCls.getMethod("get" + xmlToCls, null);
                fieldValue = getTypeConverter(getter.getReturnType()).unmarshal(value);
-               setter = oCls.getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
+               setter = oCls.getMethod("set" + xmlToCls, new Class[] { getter.getReturnType() });
             }
-            catch(NoSuchMethodException e)
+            catch (NoSuchMethodException e)
             {
                log.warn("no setter found for " + localName + " in " + o + ", value=" + value);
             }
@@ -369,53 +540,6 @@ public class MappingObjectModelFactory
 
          set(o, fieldValue, localName, setter);
       }
-   }
-
-   private static final TypeConverter getTypeConverter(Class type)
-   {
-      TypeConverter result;
-      if(String.class == type)
-      {
-         result = TypeConverter.STRING;
-      }
-      else if(int.class == type || Integer.class == type)
-      {
-         result = TypeConverter.INT;
-      }
-      else if(long.class == type || Long.class == type)
-      {
-         result = TypeConverter.LONG;
-      }
-      else if(double.class == type || Double.class == type)
-      {
-         result = TypeConverter.DOUBLE;
-      }
-      else if(float.class == type || Float.class == type)
-      {
-         result = TypeConverter.FLOAT;
-      }
-      else if(short.class == type || Short.class == type)
-      {
-         result = TypeConverter.SHORT;
-      }
-      else if(byte.class == type || Byte.class == type)
-      {
-         result = TypeConverter.BYTE;
-      }
-      else if(char.class == type || Character.class == type)
-      {
-         result = TypeConverter.CHAR;
-      }
-      else if(java.util.Date.class == type)
-      {
-         result = TypeConverter.JAVA_UTIL_DATE;
-      }
-      else
-      {
-         //todo do something
-         throw new IllegalStateException("Unexpected field type " + type);
-      }
-      return result;
    }
 
    /**
@@ -437,12 +561,12 @@ public class MappingObjectModelFactory
       {
          type = Thread.currentThread().getContextClassLoader().loadClass(clsName);
       }
-      catch(ClassNotFoundException e)
+      catch (ClassNotFoundException e)
       {
          log.debug("create: failed to load class " + clsName);
       }
 
-      if(type != null)
+      if (type != null)
       {
          o = newInstance(type);
       }
@@ -450,94 +574,12 @@ public class MappingObjectModelFactory
       return o;
    }
 
-   private static Object get(Object o, String localName, Method getter)
-   {
-      Object value;
-      if(o instanceof ImmutableContainer)
-      {
-         ImmutableContainer con = ((ImmutableContainer)o);
-         value = con.getChild(localName);
-      }
-      else
-      {
-         try
-         {
-            value = getter.invoke(o, null);
-         }
-         catch(Exception e)
-         {
-            throw new IllegalStateException("Failed to invoke getter " + getter.getName() + " on " + o);
-         }
-      }
-      return value;
-   }
-
-   public static void set(Object parent, Object child, String localName, Method setter)
-   {
-      if(setter != null)
-      {
-         try
-         {
-            setter.invoke(parent, new Object[]{child});
-         }
-         catch(Exception e)
-         {
-            throw new IllegalStateException("Failed to set value " +
-               child +
-               " with setter " +
-               setter.getName() +
-               " on " +
-               parent +
-               ": " +
-               e.getMessage()
-            );
-         }
-      }
-      else if(parent instanceof ImmutableContainer)
-      {
-         ((ImmutableContainer)parent).addChild(localName, child);
-      }
-      else
-      {
-         throw new IllegalStateException("Setter is null and it's not an immutable container: " +
-            parent.getClass() +
-            ", localName=" +
-            localName +
-            ", parent=" +
-            parent +
-            ", child=" +
-            child
-         );
-      }
-   }
-
-   private static Object newInstance(Class cls)
-   {
-      Object instance;
-      try
-      {
-         Constructor ctor = cls.getConstructor(null);
-         instance = ctor.newInstance(null);
-      }
-      catch(NoSuchMethodException e)
-      {
-         log.warn("No no-arg constructor in " + cls);
-         instance = new ImmutableContainer(cls);
-      }
-      catch(Exception e)
-      {
-         throw new IllegalStateException(
-            "Failed to create an instance of " + cls + " with the no-arg constructor: " + e.getMessage()
-         );
-      }
-      return instance;
-   }
-
-   // Inner
+   // Inner classes -------------------------------------------------
 
    private class ElementToClassMapping
    {
       public final String element;
+
       public final Class cls;
 
       public ElementToClassMapping(String element, Class cls)
@@ -546,20 +588,31 @@ public class MappingObjectModelFactory
          this.cls = cls;
       }
 
+      public String toString()
+      {
+         StringBuffer buffer = new StringBuffer();
+         buffer.append("ElementToClass@").append(System.identityHashCode(this));
+         buffer.append("{element=").append(element);
+         if (cls != null)
+            buffer.append(" class=").append(cls.getName());
+         buffer.append("}");
+         return buffer.toString();
+      }
+
       public boolean equals(Object o)
       {
-         if(this == o)
+         if (this == o)
          {
             return true;
          }
-         if(!(o instanceof ElementToClassMapping))
+         if (!(o instanceof ElementToClassMapping))
          {
             return false;
          }
 
-         final ElementToClassMapping classMapping = (ElementToClassMapping)o;
+         final ElementToClassMapping classMapping = (ElementToClassMapping) o;
 
-         if(cls != null ? !cls.equals(classMapping.cls) : classMapping.cls != null)
+         if (cls != null ? !cls.equals(classMapping.cls) : classMapping.cls != null)
          {
             return false;
          }
@@ -573,13 +626,66 @@ public class MappingObjectModelFactory
       }
    }
 
+   private class ElementToFieldMappingKey
+   {
+      public final String element;
+      
+      public final Class cls;
+
+      public ElementToFieldMappingKey(String element, Class cls)
+      {
+         this.element = element;
+         this.cls = cls;
+      }
+
+      public boolean equals(Object o)
+      {
+         if (this == o)
+         {
+            return true;
+         }
+         if (!(o instanceof ElementToFieldMappingKey))
+         {
+            return false;
+         }
+
+         final ElementToFieldMappingKey elementToFieldMappingKey = (ElementToFieldMappingKey) o;
+
+         if (cls != null ? !cls.equals(elementToFieldMappingKey.cls) : elementToFieldMappingKey.cls != null)
+         {
+            return false;
+         }
+         if (element != null ? !element.equals(elementToFieldMappingKey.element) : elementToFieldMappingKey.element != null)
+         {
+            return false;
+         }
+
+         return true;
+      }
+
+      public int hashCode()
+      {
+         int result;
+         result = (element != null ? element.hashCode() : 0);
+         result = 29 * result + (cls != null ? cls.hashCode() : 0);
+         return result;
+      }
+   }
+   
    private class ElementToFieldMapping
    {
       public final String element;
+
       public final Class cls;
+
       public final String field;
+
       public final TypeConverter converter;
+
+      public final ElementToFieldMappingKey key;
+      
       public final Method getter;
+
       public final Method setter;
 
       public ElementToFieldMapping(String element, Class cls, String field, TypeConverter converter)
@@ -588,12 +694,13 @@ public class MappingObjectModelFactory
          this.cls = cls;
          this.field = field;
          this.converter = converter;
-
+         key = new ElementToFieldMappingKey(element, cls);
+         
          try
          {
             getter = Classes.getAttributeGetter(cls, field);
          }
-         catch(NoSuchMethodException e)
+         catch (NoSuchMethodException e)
          {
             throw new IllegalStateException("Getter not found for " + field + " in class " + cls.getName());
          }
@@ -602,34 +709,50 @@ public class MappingObjectModelFactory
          {
             setter = Classes.getAttributeSetter(cls, field, getter.getReturnType());
          }
-         catch(NoSuchMethodException e)
+         catch (NoSuchMethodException e)
          {
             throw new IllegalStateException("Setter not found for " + field + " in class " + cls.getName());
          }
       }
 
+      public String toString()
+      {
+         StringBuffer buffer = new StringBuffer();
+         buffer.append("ElementToField@").append(System.identityHashCode(this));
+         buffer.append("{element=").append(element);
+         if (cls != null)
+            buffer.append(" class=").append(cls.getName());
+         buffer.append(" field=").append(field);
+         buffer.append(" getter=").append(getter);
+         buffer.append(" setter=").append(setter);
+         if (converter != null)
+            buffer.append(" convertor=").append(converter.getClass().getName());
+         buffer.append("}");
+         return buffer.toString();
+      }
+
       public boolean equals(Object o)
       {
-         if(this == o)
+         if (this == o)
          {
             return true;
          }
-         if(!(o instanceof ElementToFieldMapping))
+         if (!(o instanceof ElementToFieldMapping))
          {
             return false;
          }
 
-         final ElementToFieldMapping elementToFieldMapping = (ElementToFieldMapping)o;
+         final ElementToFieldMapping elementToFieldMapping = (ElementToFieldMapping) o;
 
-         if(cls != null ? !cls.equals(elementToFieldMapping.cls) : elementToFieldMapping.cls != null)
+         if (cls != null ? !cls.equals(elementToFieldMapping.cls) : elementToFieldMapping.cls != null)
          {
             return false;
          }
-         if(element != null ? !element.equals(elementToFieldMapping.element) : elementToFieldMapping.element != null)
+         if (element != null ? !element.equals(elementToFieldMapping.element) : elementToFieldMapping.element != null)
          {
             return false;
          }
-         if(field != null ? !field.equals(elementToFieldMapping.field) : elementToFieldMapping.field != null)
+         if (field != null ? !field.equals(elementToFieldMapping.field) : elementToFieldMapping.field != null)
          {
             return false;
          }
@@ -650,22 +773,26 @@ public class MappingObjectModelFactory
    private static class ImmutableContainer
    {
       private final Class cls;
+
       private final List names = new ArrayList();
+
       private final List values = new ArrayList();
 
       public ImmutableContainer(Class cls)
       {
          this.cls = cls;
+         log.info("created immutable container for " + cls);
       }
 
       public void addChild(String localName, Object child)
       {
-         if(!names.isEmpty() && names.get(names.size() - 1).equals(localName))
+         if (!names.isEmpty() && names.get(names.size() - 1).equals(localName))
          {
-            throw new IllegalStateException("Attempt to add duplicate element: " + localName);
+            throw new IllegalStateException("Attempt to add duplicate element " + localName);
          }
          names.add(localName);
          values.add(child);
+         log.info("added child " + localName + " for " + cls + ": " + child);
       }
 
       public Object getChild(String localName)
@@ -681,7 +808,7 @@ public class MappingObjectModelFactory
       public Class[] getValueTypes()
       {
          Class[] types = new Class[values.size()];
-         for(int i = 0; i < values.size(); ++i)
+         for (int i = 0; i < values.size(); ++i)
          {
             types[i] = values.get(i).getClass();
          }
@@ -692,37 +819,37 @@ public class MappingObjectModelFactory
       {
          Constructor ctor = null;
          Constructor[] ctors = cls.getConstructors();
-         for(int i = 0; i < ctors.length; ++i)
+         for (int i = 0; i < ctors.length; ++i)
          {
             Class[] types = ctors[i].getParameterTypes();
 
-            if(types == null || types.length == 0)
+            if (types == null || types.length == 0)
             {
                throw new IllegalStateException("Found no-arg constructor for immutable " + cls);
             }
 
-            if(types.length == values.size())
+            if (types.length == values.size())
             {
                ctor = ctors[i];
 
                int typeInd = 0;
-               while(typeInd < types.length)
+               while (typeInd < types.length)
                {
-                  if(!types[typeInd].isAssignableFrom(values.get(typeInd++).getClass()))
+                  if (!types[typeInd].isAssignableFrom(values.get(typeInd++).getClass()))
                   {
                      ctor = null;
                      break;
                   }
                }
 
-               if(ctor != null)
+               if (ctor != null)
                {
                   break;
                }
             }
          }
 
-         if(ctor == null)
+         if (ctor == null)
          {
             throw new IllegalStateException("No constructor in " + cls + " that would take arguments " + values);
          }
@@ -731,11 +858,10 @@ public class MappingObjectModelFactory
          {
             return ctor.newInstance(values.toArray());
          }
-         catch(Exception e)
+         catch (Exception e)
          {
-            throw new IllegalStateException(
-               "Failed to create immutable instance of " + cls + " using arguments: " + values + ": " + e.getMessage()
-            );
+            throw new IllegalStateException("Failed to create immutable instance of " + cls + " using arguments: "
+               + values + ": " + e.getMessage());
          }
       }
    }

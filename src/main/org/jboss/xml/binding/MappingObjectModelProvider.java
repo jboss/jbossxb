@@ -22,7 +22,7 @@ public class MappingObjectModelProvider
    implements GenericObjectModelProvider
 {
    private static final Logger log = Logger.getLogger(MappingObjectModelProvider.class);
-
+   
    private final Map classMappings = new HashMap();
    private final Map fieldMappings = new HashMap();
 

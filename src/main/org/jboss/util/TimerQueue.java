@@ -85,6 +85,8 @@ public class TimerQueue
       {
        case TimerTask.CANCELLED:
        case TimerTask.EXECUTED:
+          //don't hold onto last dead task if we wait.
+          task = null;
           return getJobImpl();
        case TimerTask.NEW:
        case TimerTask.SCHEDULED:

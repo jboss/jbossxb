@@ -206,15 +206,38 @@ public class PropertyEditors
     * values are converted to the true java bean property type using the
     * java bean PropertyEditor framework. If a property in beanProps does not
     * have a PropertyEditor registered it will be ignored.
-    * 
+    *
     * @param bean - the java bean instance to apply the properties to
     * @param beanProps - map of java bean property name to property value.
     * @throws IntrospectionException thrown on introspection of bean and if
     *    a property in beanProps does not map to a property of bean.
-    */ 
+    */
    public static void mapJavaBeanProperties(Object bean, Properties beanProps)
       throws IntrospectionException
    {
+      mapJavaBeanProperties(bean, beanProps, true);
+   }
+
+   /**
+    * This method takes the properties found in the given beanProps
+    * to the bean using the property editor registered for the property.
+    * Any property in beanProps that does not have an associated java bean
+    * property will result in an IntrospectionException. The string property
+    * values are converted to the true java bean property type using the
+    * java bean PropertyEditor framework. If a property in beanProps does not
+    * have a PropertyEditor registered it will be ignored.
+    *
+    * @param bean - the java bean instance to apply the properties to
+    * @param beanProps - map of java bean property name to property value.
+    * @param isStrict - indicates if should throw exception if bean property can not
+    * be matched.  True for yes, false for no.
+    * @throws IntrospectionException thrown on introspection of bean and if
+    *    a property in beanProps does not map to a property of bean.
+    */
+   public static void mapJavaBeanProperties(Object bean, Properties beanProps, boolean isStrict)
+      throws IntrospectionException
+   {
+
       HashMap propertyMap = new HashMap();
       BeanInfo beanInfo = Introspector.getBeanInfo(bean.getClass());
       PropertyDescriptor[] props = beanInfo.getPropertyDescriptors();
@@ -240,7 +263,7 @@ public class PropertyEditors
             property name would be DLQMaxResent since the JavaBean
             Introspector would view setDLQMaxResent as the setter for a
             DLQMaxResent property whose Introspector.decapitalize() method
-            would also return "DLQMaxResent". 
+            would also return "DLQMaxResent".
             */
             if( name.length() > 1 )
             {
@@ -251,8 +274,16 @@ public class PropertyEditors
 
             if( pd == null )
             {
-               String msg = "No property found for: "+name+" on JavaBean: "+bean;
-               throw new IntrospectionException(msg);
+               if(isStrict)
+               {
+                  String msg = "No property found for: "+name+" on JavaBean: "+bean;
+                  throw new IntrospectionException(msg);
+               }
+               else
+               {
+                  // since is not strict, ignore that this property was not found
+                  continue;
+               }
             }
          }
          Method setter = pd.getWriteMethod();

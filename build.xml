@@ -67,13 +67,11 @@
     <!-- Configure thirdparty libraries -->
     <call target="configure-libraries"/>
     <path id="library.classpath">
-      <path refid="apache.xalan.classpath"/>
       <path refid="apache.log4j.classpath"/>
       <path refid="apache.slide.classpath"/>
       <path refid="junit.junit.classpath"/>
       <path refid="gnu.regexp.classpath"/>
       <path refid="sun.jmx.classpath"/>
-      <path refid="sun.jaxp.classpath"/>
       <path refid="dom4j.dom4j.classpath"/>
     </path>
 

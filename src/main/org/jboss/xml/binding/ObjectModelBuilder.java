@@ -9,12 +9,14 @@ package org.jboss.xml.binding;
 import org.apache.log4j.Category;
 import org.xml.sax.Attributes;
 
+import javax.xml.namespace.QName;
 import java.util.Stack;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.StringTokenizer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -104,6 +106,25 @@ public class ObjectModelBuilder
          uri = null;
       }
       return uri;
+   }
+
+   /** Construct a QName from a value
+    * @param value A value that is of the form [prefix:]localpart
+    */
+   public QName resolveQName(String value)
+   {
+      StringTokenizer st = new StringTokenizer(value, ":");
+      if (st.countTokens() == 1)
+         return new QName(value);
+
+      if (st.countTokens() != 2)
+         throw new IllegalArgumentException("Illegal QName: " + value);
+
+      String prefix = st.nextToken();
+      String local = st.nextToken();
+      String nsURI = resolveNamespacePrefix(prefix);
+
+      return new QName(nsURI, local);
    }
 
    public String getChildContent(String namespaceURI, String qName)

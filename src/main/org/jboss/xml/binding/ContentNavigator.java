@@ -6,6 +6,8 @@
  */
 package org.jboss.xml.binding;
 
+import javax.xml.namespace.QName;
+
 /**
  * An interface for content navigation. At the moment it has only one method to get child's content.
  * But it could also implement XPath navigation.
@@ -20,6 +22,11 @@ public interface ContentNavigator
     * @return the namespace URI the prefix was mapped to
     */
    String resolveNamespacePrefix(String prefix);
+
+   /** Construct a QName from a value
+    * @param value A value that is of the form [prefix:]localpart
+    */
+   QName resolveQName(String value);
 
    String getChildContent(String namespaceURI, String qName);
 }

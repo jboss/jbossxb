@@ -23,7 +23,7 @@ public abstract class AbstractBasicElementBinding
    /**
     * The namespace binding this element belongs to
     */
-   private final NamespaceBinding ns;
+   protected final NamespaceBinding ns;
 
    protected AbstractBasicElementBinding(NamespaceBinding ns, AbstractBasicElementBinding delegate)
    {

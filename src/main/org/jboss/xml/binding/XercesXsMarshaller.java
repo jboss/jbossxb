@@ -392,7 +392,7 @@ public class XercesXsMarshaller
       return marshalled;
    }
 
-   private XSModel loadSchema(String xsdURL)
+   private static XSModel loadSchema(String xsdURL)
    {
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
@@ -405,7 +405,7 @@ public class XercesXsMarshaller
       return model;
    }
 
-   private XSModel loadSchema(Reader xsdReader)
+   private static XSModel loadSchema(Reader xsdReader)
    {
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
@@ -419,7 +419,7 @@ public class XercesXsMarshaller
       return model;
    }
 
-   private XSImplementation getXSImplementation()
+   private static XSImplementation getXSImplementation()
    {
       // Get DOM Implementation using DOM Registry
       System.setProperty(DOMImplementationRegistry.PROPERTY, "org.apache.xerces.dom.DOMXSImplementationSourceImpl");

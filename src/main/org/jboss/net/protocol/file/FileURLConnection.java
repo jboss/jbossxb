@@ -28,8 +28,9 @@ import java.io.FilePermission;
  * Provides local file access via URL semantics, correctly returning
  * the last modified time of the underlying file.
  *
- * @version <tt>$Revision$</tt>
+ * @version $Revision$
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author  Scott.Stark@jboss.org
  */
 public class FileURLConnection
    extends URLConnection
@@ -40,7 +41,7 @@ public class FileURLConnection
       throws MalformedURLException, IOException
    {
       super(url);
-
+      
       file = new File(url.getPath().replace('/', File.separatorChar).replace('|', ':'));
 
       doOutput = false;
@@ -49,7 +50,8 @@ public class FileURLConnection
    /**
     * Returns the underlying file for this connection.
     */
-   public File getFile() {
+   public File getFile()
+   {
       return file;
    }
 
@@ -58,25 +60,32 @@ public class FileURLConnection
     *
     * @throws FileNotFoundException
     */
-   public void connect() throws IOException {
-      if (connected) return;
+   public void connect() throws IOException
+   {
+      if (connected)
+         return;
 
-      if (!file.exists()) {
+      if (!file.exists())
+      {
          throw new FileNotFoundException(file.getPath());
       }
-
+      
       connected = true;
    }
 
-   public InputStream getInputStream() throws IOException {
-      if (!connected) connect();
+   public InputStream getInputStream() throws IOException
+   {
+      if (!connected)
+         connect();
 
       return new FileInputStream(file);
    }
 
-   public OutputStream getOutputStream() throws IOException {
-      if (!connected) connect();
-
+   public OutputStream getOutputStream() throws IOException
+   {
+      if (!connected)
+         connect();
+      
       return new FileOutputStream(file);
    }
 
@@ -84,15 +93,26 @@ public class FileURLConnection
     * Provides support for returning the value for the
     * <tt>last-modified</tt> header.
     */
-   public String getHeaderField(final String name) {
-      if (name.equalsIgnoreCase("last-modified")) {
-         return String.valueOf(getLastModified());
+   public String getHeaderField(final String name)
+   {
+      String headerField = null;
+      if (name.equalsIgnoreCase("last-modified"))
+         headerField = String.valueOf(getLastModified());
+      else if (name.equalsIgnoreCase("content-length"))
+         headerField = String.valueOf(file.length());
+      else if (name.equalsIgnoreCase("content-type"))
+         headerField = getFileNameMap().getContentTypeFor(file.getName());
+      else if (name.equalsIgnoreCase("date"))
+         headerField = String.valueOf(file.lastModified());
+      else
+      {
+         // This always returns null currently
+         headerField = super.getHeaderField(name);
       }
-
-      return super.getHeaderField(name);
+      return headerField;
    }
 
-   /** 
+   /**
     * Return a permission for both read & write since both
     * input and output streams are supported.
     */
@@ -104,7 +124,8 @@ public class FileURLConnection
    /**
     * Returns the last modified time of the underlying file.
     */
-   public long getLastModified() {
+   public long getLastModified()
+   {
       return file.lastModified();
    }
 }

@@ -54,7 +54,8 @@ public class StringArrayEditor
          text.append(',');
       }
       // Remove the trailing ','
-      text.setLength(text.length()-1);
+      if( text.length() > 0 )
+         text.setLength(text.length()-1);
       return text.toString();
    }
 }

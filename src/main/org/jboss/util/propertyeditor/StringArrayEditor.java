@@ -11,10 +11,14 @@ package org.jboss.util.propertyeditor;
 
 import java.util.ArrayList;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.beans.PropertyEditorSupport;
 
 /**
- * A property editor for String[].
+ * A property editor for String[]. The text format of a string array is a
+ * comma or \n, \r seperated list with \, representing an escaped comma to
+ * include in the string element.
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
@@ -23,20 +27,52 @@ import java.beans.PropertyEditorSupport;
 public class StringArrayEditor
    extends PropertyEditorSupport
 {
-   /** Build a String[] from comma or eol seperated elements
+   Pattern commaDelim = Pattern.compile("','|[^,\r\n]+");
+
+   static String[] parseList(String text)
+   {
+      ArrayList list = new ArrayList();
+      StringBuffer tmp = new StringBuffer();
+      for(int n = 0; n < text.length(); n ++)
+      {
+         char c = text.charAt(n);
+         switch( c)
+         {
+            case '\\':
+               tmp.append(c);
+               if( n < text.length() && text.charAt(n+1) == ',' )
+               {
+                  tmp.setCharAt(tmp.length()-1, ',');
+                  n ++;
+               }               
+               break;
+            case ',':
+            case '\n':
+            case '\r':
+               if( tmp.length() > 0 )
+                  list.add(tmp.toString());
+               tmp.setLength(0);
+               break;
+            default:
+               tmp.append(c);
+               break;
+         }
+      }
+      if( tmp.length() > 0 )
+         list.add(tmp.toString());
+
+      String[] x = new String[list.size()];
+      list.toArray(x);
+      return x;
+   }
+
+   /** Build a String[] from comma or eol seperated elements with a \,
+    * representing a ',' to include in the current string element.
     *
     */
    public void setAsText(final String text)
    {
-      StringTokenizer stok = new StringTokenizer(text, ",\r\n");
-      ArrayList list = new ArrayList();
-      while (stok.hasMoreTokens())
-      {
-         list.add(stok.nextToken());
-      }
-
-      String[] theValue = new String[list.size()];
-      list.toArray(theValue);
+      String[] theValue = parseList(text);
       setValue(theValue);
    }
 
@@ -50,7 +86,10 @@ public class StringArrayEditor
       int length = theValue == null ? 0 : theValue.length;
       for(int n = 0; n < length; n ++)
       {
-         text.append(theValue[n]);
+         String s = theValue[n];
+         if( s.equals(",") )
+            text.append('\\');
+         text.append(s);
          text.append(',');
       }
       // Remove the trailing ','

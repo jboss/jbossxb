@@ -13,12 +13,11 @@ import org.xml.sax.Attributes;
  * to build the object model.
  * <p>Each object model factory should have the following methods:
  * <ul>
- * <li>
- * <code>public Object newRoot(Object root,
- *                                ContentNavigator navigator,
- *                                String namespaceURI,
- *                                String localName,
- *                                Attributes attrs)</code>
+ * <li><code>public Object newRoot(Object root,
+ *                                 ContentNavigator navigator,
+ *                                 String namespaceURI,
+ *                                 String localName,
+ *                                 Attributes attrs)</code>
  * This method is called by the object model factory and returns the root of the object model.
  * If the <code>root</code> argument is null the factory is supposed to create and return a new one.
  * If the <code>root</code> is not null (i.e. the user provided the root object through the

@@ -11,8 +11,10 @@ package org.jboss.util;
 
 import java.io.Serializable;
 
+import java.util.Date;
+
 /**
- * Simulates a stop watch with a <i>lap</i> counter.
+ * Simulates a stop watch with a <em>lap</em> counter.
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
@@ -45,7 +47,8 @@ public class StopWatch
     *
     * @param running    Start the watch
     */
-   public StopWatch(final boolean running) {
+   public StopWatch(final boolean running)
+   {
       if (running) start();
    }
 
@@ -54,7 +57,8 @@ public class StopWatch
     *
     * @param reset   True to reset the watch prior to starting.
     */
-   public void start(final boolean reset) {
+   public void start(final boolean reset)
+   {
       if (!running) {
          if (reset) reset();
          start = System.currentTimeMillis();
@@ -65,7 +69,8 @@ public class StopWatch
    /**
     * Start the watch.
     */
-   public void start() {
+   public void start()
+   {
       start(false);
    }
 
@@ -74,7 +79,8 @@ public class StopWatch
     *
     * @return  Elapsed time or 0 if the watch was never started.
     */
-   public long stop() {
+   public long stop()
+   {
       long lap = 0;
 
       if (running) {
@@ -91,7 +97,8 @@ public class StopWatch
    /**
     * Reset the watch.
     */
-   public void reset() {
+   public void reset()
+   {
       start = -1;
       stop = -1;
       total = 0;
@@ -104,7 +111,8 @@ public class StopWatch
     *
     * @return  The <i>lap</i> count.
     */
-   public int getLapCount() {
+   public int getLapCount()
+   {
       return count;
    }
 
@@ -113,7 +121,8 @@ public class StopWatch
     *
     * @return  Elapsed <i>lap</i> time or 0 if the watch was never started
     */
-   public long getLapTime() {
+   public long getLapTime()
+   {
       if (start == -1) {
          return 0;
       }
@@ -130,7 +139,8 @@ public class StopWatch
     *
     * @return  Average <i>lap</i> time since the watch was started.
     */
-   public long getAverageLapTime() {
+   public long getAverageLapTime()
+   {
       return (count == 0) ? 0 : getLapTime() / getLapCount();
    }
 
@@ -139,7 +149,8 @@ public class StopWatch
     *
     * @return  Elapsed time or 0 if the watch was never started.
     */
-   public long getTime() {
+   public long getTime()
+   {
       if (start == -1) {
          return 0;
       }
@@ -156,34 +167,60 @@ public class StopWatch
     *
     * @return  True if the watch is running.
     */
-   public boolean isRunning() {
+   public boolean isRunning()
+   {
       return running;
    }
 
    /**
     * Return a string representation.
-    *
-    * @return  If the lap count is zero then the string value of
-    *          elapsed time since the watch was created or last reset
-    *          {@link #getTime} is returned.  If the lap count is greater
-    *          than one, then a string in format of
-    *          <code>total/average[count]</code> is returned.
     */
-   public String toString() {
-      if (count <= 1 || running) {
-         return String.valueOf(getTime());
+   public String toString()
+   {
+      StringBuffer buff = new StringBuffer();
+      
+      if (running) {
+         // the watch has not been stopped
+         formatElapsedTime(buff, getTime());
+
+         // add the current lap time too if there is more than one lap
+         if (count >= 1) {
+            buff.append(", count=").append(count);
+            buff.append(", current=");
+            formatElapsedTime(buff, getLapTime());
+         }
+      }
+      else {
+         // the watch has been stopped
+         formatElapsedTime(buff, getTime());
+
+         // add extra info if there is more than one lap
+         if (count > 1) {
+            buff.append(", count=").append(count);
+            buff.append(", average=");
+            formatElapsedTime(buff, getAverageLapTime());
+         }
       }
 
-      return String.valueOf(getTime()) + "/" + 
-         getAverageLapTime() + "[" + getLapCount() + "]";
+      return buff.toString();
    }
 
+   private void formatElapsedTime(final StringBuffer buff, final long lapsed)
+   {
+      long m = lapsed / 60000;
+      long s = (lapsed - 60000 * m) / 1000;
+      long ms = (lapsed - 60000 * m - 1000 * s);
+
+      buff.append(m).append("m:").append(s).append("s:").append(ms).append("ms");
+   }
+   
    /**
     * Return a cloned copy of this object.
     *
     * @return  A cloned copy of this object.
     */
-   public Object clone() {
+   public Object clone()
+   {
       try {
          return super.clone();
       }
@@ -256,8 +293,10 @@ public class StopWatch
     * @param watch    StopWatch to synchronize.
     * @return         Synchronized stop watch.
     */
-   public static StopWatch makeSynchronized(final StopWatch watch) {
-      return new Wrapper(watch) {
+   public static StopWatch makeSynchronized(final StopWatch watch)
+   {
+      return new Wrapper(watch)
+         {
             public synchronized void start(final boolean reset) {
                this.watch.start(reset);
             }

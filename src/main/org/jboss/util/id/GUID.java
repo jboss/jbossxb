@@ -34,24 +34,25 @@ import org.jboss.util.CloneableObject;
  */
 public class GUID
    extends CloneableObject
-   implements ID, Comparable
+   implements ID, Comparable, java.io.Serializable
 {
    /** The virtual machine identifier */
-   protected final VMID vmid;
+   protected VMID vmid;
 
    /** The unique identifier */
-   protected final UID uid;
+   protected UID uid;
 
    /** The hash code of this GUID */
-   protected final int hashCode;
+   protected int hashCode;
 
    /** string represntation **/
-   protected final String asString;
+   protected String cacheString;
 
    /**
     * Construct a new GUID.
     */
-   public GUID() {
+   public GUID() 
+   {
       this(VMID.getInstance(), new UID());
    }
 
@@ -67,7 +68,7 @@ public class GUID
       int code = vmid.hashCode();
       code ^= uid.hashCode();
       hashCode = code;
-      asString = toString();
+      cacheString = vmid.toString() + "-" + uid.toString();
    }
    
    /**
@@ -79,7 +80,7 @@ public class GUID
       this.vmid = guid.vmid;
       this.uid = guid.uid;
       this.hashCode = guid.hashCode;
-      this.asString = guid.asString;
+      this.cacheString = guid.cacheString;
    }
 
    /**
@@ -115,7 +116,7 @@ public class GUID
     * @return  A string representation of this GUID.
     */
    public String toString() {
-      return asString;
+      return cacheString;
    }
 
    /**

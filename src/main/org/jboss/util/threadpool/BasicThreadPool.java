@@ -9,7 +9,6 @@ package org.jboss.util.threadpool;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Comparator;
 
 import org.jboss.util.collection.WeakValueHashMap;
 
@@ -23,6 +22,7 @@ import EDU.oswego.cs.dl.util.concurrent.Heap;
  * A basic thread pool.
  *
  * @author <a href="mailto:adrian@jboss.org">Adrian Brock</a>
+ * @author Scott.Stark@jboss.org
  * @version $Revision$
  */
 public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
@@ -47,8 +47,8 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    private int poolNumber;
 
    /** The blocking mode */
-   private String blockingMode = "abort";
-   
+   private BlockingMode blockingMode = BlockingMode.ABORT;
+
    /** The pooled executor */
    private MinPooledExecutor executor;
 
@@ -99,7 +99,6 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
 
       poolNumber = lastPoolNumber.increment();
       setName(name);
-      timeoutTask = new TimeoutMonitor(name);
    }
 
    // Public --------------------------------------------------------
@@ -138,6 +137,7 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       TimeoutInfo info = null;
       if( completionTimeout > 0 )
       {
+         checkTimeoutMonitor();
          // Install the task in the
          info = new TimeoutInfo(wrapper, completionTimeout);
          tasksWithTimeouts.insert(info);
@@ -277,36 +277,50 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       executor.setKeepAliveTime(time);
    }
 
-   public String getBlockingMode()
+   public BlockingMode getBlockingMode()
    {
       return blockingMode;
    }
-   
-   public void setBlockingMode(String mode)
+
+   public void setBlockingMode(BlockingMode mode)
    {
       blockingMode = mode;
       
-      if( mode.equalsIgnoreCase("run") )
+      if( blockingMode == BlockingMode.RUN )
       {
          executor.runWhenBlocked();
       }
-      else if( mode.equalsIgnoreCase("wait") )
+      else if( blockingMode == BlockingMode.WAIT )
       {
          executor.waitWhenBlocked();
       }
-      else if( mode.equalsIgnoreCase("discard") )
+      else if( blockingMode == BlockingMode.DISCARD )
       {
          executor.discardWhenBlocked();
       }
-      else if( mode.equalsIgnoreCase("discardOldest") )
+      else if( blockingMode == BlockingMode.DISCARD_OLDEST )
       {
          executor.discardOldestWhenBlocked();
       }
-      else
+      else if( blockingMode == BlockingMode.ABORT )
       {
-         blockingMode = "abort";
          executor.abortWhenBlocked();
       }
+      else
+      {
+         throw new IllegalArgumentException("Failed to recognize mode: "+mode);
+      }
+   }
+
+   /**
+    * For backward compatibility with the previous string based mode
+    * @param name - the string form of the mode enum
+    */ 
+   public void setBlockingMode(String name)
+   {
+      blockingMode = BlockingMode.toBlockingMode(name);
+      if( blockingMode == null )
+         blockingMode = BlockingMode.ABORT;
    }
 
    public ThreadPool getInstance()
@@ -367,6 +381,14 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       wrapper.waitForTask();
    }
 
+   /**
+    * Used to lazily create the task completion timeout thread and monitor
+    */ 
+   protected synchronized void checkTimeoutMonitor()
+   {
+      if( timeoutTask == null )
+         timeoutTask = new TimeoutMonitor(name);      
+   }
    protected TimeoutInfo getNextTimeout()
    {
       TimeoutInfo info = (TimeoutInfo) this.tasksWithTimeouts.extract();
@@ -391,6 +413,8 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       }
    }
 
+   /** An encapsulation of a task and its completion timeout
+    */ 
    private static class TimeoutInfo implements Comparable
    {
       long start;
@@ -402,6 +426,11 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
          this.timeoutMS = start + timeout;
          this.wrapper = wrapper;
       }
+      /** Order TimeoutInfo based on the timestamp at which the task needs to
+       * be completed by.
+       * @param o a TimeoutInfo
+       * @return the diff between this timeoutMS and the argument timeoutMS
+       */ 
       public int compareTo(Object o)
       {
          TimeoutInfo ti = (TimeoutInfo) o;
@@ -418,11 +447,19 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       {
          return wrapper.getTaskCompletionTimeout();
       }
+      /** Get the time remaining to the complete timeout timestamp in MS.
+       * @param now - the current System.currentTimeMillis value
+       * @return the time remaining to the complete timeout timestamp in MS.
+       */ 
       public long getTaskCompletionTimeout(long now)
       {
          return timeoutMS - now;
       }
    }
+   /**
+    * The monitor runnable which validates that threads are completing within
+    * the task completion timeout limits.
+    */ 
    private class TimeoutMonitor implements Runnable
    {
       TimeoutMonitor(String name)
@@ -431,6 +468,20 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
          t.setDaemon(true);
          t.start();
       }
+      /** The monitor thread loops until the pool is shutdown. It waits for
+       * tasks with completion timeouts and sleeps until the next completion
+       * timeout and then interrupts the associated task thread, and invokes
+       * stopTask on the TaskWrapper. A new timeout check is then inserted with
+       * a 1 second timeout to validate that the TaskWrapper has exited the
+       * run method. If it has not, then the associated task thread is stopped
+       * using the deprecated Thread.stop method since this is the only way to
+       * abort a thread that is in spin loop for example.
+       * 
+       * @todo this is not responsive to new tasks with timeouts smaller than
+       * the current shortest completion expiration. We probably should interrupt
+       * the thread on each insertion into the timeout heap to ensure better
+       * responsiveness.
+       */ 
       public void run()
       {
          boolean isStopped = stopped.get();

@@ -126,12 +126,22 @@ public class QName implements Serializable
       return prefix;
    }
 
-   /** Returns '{' + namespaceURI + '}' + localPart
+   /** There is NO standard specification for representing a QName as a String.
+    * The returned String is not portable across implementations and will change when a standard String representation is defined.
+    * This implementation currently represents a QName as: "{" + Namespace URI + "}" + local part.
+    * If the Namespace URI .equals(""), only the local part is returned.
+    * An appropriate use of this method is for debugging or logging for human consumption.
+    *
+    * Note the prefix value is NOT returned as part of the String representation.
+    *
     * @return '{' + namespaceURI + '}' + localPart
     */ 
    public String toString()
    {
-      return '{' + namespaceURI + '}' + localPart;
+      if (namespaceURI.equals(""))
+         return localPart;
+      else
+         return '{' + namespaceURI + '}' + localPart;
    }
 
    /** Equality is based on the namespaceURI and localPart

@@ -41,7 +41,7 @@ public class DelegatingDocumentBinding
    DelegatingNamespaceBinding bindNamespace(String namespaceUri, String javaPackage)
    {
       NamespaceBinding ns = new NamespaceBindingImpl(this, namespaceUri, javaPackage);
-      DelegatingNamespaceBinding cachedNs = (DelegatingNamespaceBinding)getNamespace(namespaceUri);//(DelegatingNamespaceBinding)namespaceBindings.get(namespaceUri);
+      DelegatingNamespaceBinding cachedNs = (DelegatingNamespaceBinding)getNamespace(namespaceUri);
       if(cachedNs == null)
       {
          cachedNs = new DelegatingNamespaceBinding(this, ns);
@@ -59,22 +59,28 @@ public class DelegatingDocumentBinding
       DelegatingNamespaceBinding cachedNs = (DelegatingNamespaceBinding)namespaceBindings.get(namespaceUri);
       if(cachedNs == null)
       {
-         for(int i = delegates.size() - 1; i >= 0; --i)
+         for(int i = 0; i < delegates.size(); ++i)
          {
             DocumentBinding doc = (DocumentBinding)delegates.get(i);
             NamespaceBinding ns = doc.getNamespace(namespaceUri);
             if(ns != null)
             {
-               if(ns instanceof DelegatingNamespaceBinding)
+               if(cachedNs == null)
                {
-                  cachedNs = (DelegatingNamespaceBinding)ns;
+                  if(ns instanceof DelegatingNamespaceBinding)
+                  {
+                     cachedNs = (DelegatingNamespaceBinding)ns;
+                  }
+                  else
+                  {
+                     cachedNs = new DelegatingNamespaceBinding(this, ns);
+                  }
+                  namespaceBindings.put(namespaceUri, cachedNs);
                }
                else
                {
-                  cachedNs = new DelegatingNamespaceBinding(this, ns);
+                  cachedNs.addDelegate(ns);
                }
-               namespaceBindings.put(namespaceUri, cachedNs);
-               break;
             }
          }
       }

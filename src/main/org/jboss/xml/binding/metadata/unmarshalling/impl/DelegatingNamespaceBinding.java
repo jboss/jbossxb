@@ -31,8 +31,8 @@ public class DelegatingNamespaceBinding
    public DelegatingNamespaceBinding(DelegatingDocumentBinding doc, NamespaceBinding delegate)
    {
       this.namespaceUri = delegate.getNamespaceUri();
-      delegates.add(delegate);
       this.doc = doc;
+      addDelegate(delegate);
    }
 
    void addDelegate(NamespaceBinding ns)
@@ -77,22 +77,28 @@ public class DelegatingNamespaceBinding
       DelegatingTopElementBinding cachedTop = (DelegatingTopElementBinding)tops.get(elementName);
       if(cachedTop == null)
       {
-         for(int i = delegates.size() - 1; i >= 0; --i)
+         for(int i = 0; i < delegates.size(); ++i)
          {
             NamespaceBinding ns = (NamespaceBinding)delegates.get(i);
             TopElementBinding top = ns.getTopElement(elementName);
             if(top != null)
             {
-               if(top instanceof DelegatingTopElementBinding)
+               if(cachedTop == null)
                {
-                  cachedTop = (DelegatingTopElementBinding)top;
+                  if(top instanceof DelegatingTopElementBinding)
+                  {
+                     cachedTop = (DelegatingTopElementBinding)top;
+                  }
+                  else
+                  {
+                     cachedTop = new DelegatingTopElementBinding(doc, top);
+                  }
+                  tops.put(elementName, cachedTop);
                }
                else
                {
-                  cachedTop = new DelegatingTopElementBinding(doc, top);
+                  cachedTop.addDelegate(top);
                }
-               tops.put(elementName, cachedTop);
-               break;
             }
          }
       }

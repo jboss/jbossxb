@@ -9,6 +9,11 @@ package org.jboss.xml.binding.metadata.unmarshalling;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.SimpleTypeBindings;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.BasicElementBindingImpl;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.AttributeBindingImpl;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.AbstractElementBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.PluggableDocumentBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.DelegatingDocumentBinding;
 import org.jboss.logging.Logger;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSModel;
@@ -23,13 +28,15 @@ import org.apache.xerces.xs.XSParticle;
 import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSModelGroup;
 import org.apache.xerces.xs.XSObjectList;
-import org.apache.xerces.xs.XSAttributeUse;
-import org.apache.xerces.xs.XSAttributeDeclaration;
 import org.apache.xerces.dom3.bootstrap.DOMImplementationRegistry;
 
+import javax.xml.namespace.QName;
 import java.util.Collection;
+import java.util.Map;
+import java.util.HashMap;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -41,61 +48,45 @@ public class XsdBinder
 
    public static DocumentBinding bindXsd(String xsdUrl)
    {
-      DocumentBindingFactory factory = DocumentBindingFactory.newInstance();
-      DocumentBinding doc = factory.newDocumentBinding(null);
+      DocumentBindingImpl localDoc = new DocumentBindingImpl();
+      DocumentBinding doc = DocumentBindingFactory.newInstance().newDocumentBinding(localDoc);
 
       XSModel model = loadSchema(xsdUrl);
       StringList namespaces = model.getNamespaces();
       for(int i = 0; i < namespaces.getLength(); ++i)
       {
          String ns = namespaces.item(i);
-         factory.bindNamespace(doc, ns, Util.xmlNamespaceToJavaPackage(ns));
+         localDoc.bindNamespace(ns);
       }
 
       XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
       for(int i = 0; i < components.getLength(); ++i)
       {
          XSElementDeclaration element = (XSElementDeclaration)components.item(i);
-         bindTopElement(factory, doc, element);
+         bindTopElement(localDoc, element);
       }
 
       return doc;
    }
 
-   private static final void bindTopElement(DocumentBindingFactory factory,
-                                            DocumentBinding doc,
+   private static final void bindTopElement(DocumentBindingImpl doc,
                                             XSElementDeclaration element)
    {
       String ns = element.getNamespace();
-      NamespaceBinding nsBinding = doc.getNamespace(ns);
+      NamespaceBindingImpl nsBinding = (NamespaceBindingImpl)doc.getNamespace(ns);
       if(nsBinding == null)
       {
          throw new JBossXBRuntimeException("Namespace is not bound: " + ns);
       }
+      TopElementBindingImpl top = new TopElementBindingImpl(doc.proxy, element);
+      nsBinding.addTopElement(top);
 
-      String baseXmlName = getBaseForClassName(element);
-      String javaClassName = nsBinding.getJavaPackage() + "." + Util.xmlNameToClassName(baseXmlName, true);
-      Class javaClass;
-      try
-      {
-         javaClass = Thread.currentThread().getContextClassLoader().loadClass(javaClassName);
-      }
-      catch(ClassNotFoundException e)
-      {
-         throw new JBossXBRuntimeException(
-            "Failed to bind {" + ns + ":" + element.getName() + "}: class not found " + javaClassName
-         );
-      }
-
-      TopElementBinding topElement = factory.bindTopElement(nsBinding, element.getName(), javaClass);
-
-      bindComplexElement(element, factory, doc, topElement);
+      bindComplexElement(element, doc.proxy, top);
    }
 
    private static void bindComplexElement(XSElementDeclaration elementDecl,
-                                          DocumentBindingFactory factory,
                                           DocumentBinding doc,
-                                          BasicElementBinding parentBinding)
+                                          ParentElement parentBinding)
    {
       XSTypeDefinition type = elementDecl.getTypeDefinition();
       if(type.getTypeCategory() == XSTypeDefinition.COMPLEX_TYPE)
@@ -104,9 +95,10 @@ public class XsdBinder
          XSParticle particle = complexType.getParticle();
          if(particle != null)
          {
-            bindParticle(factory, doc, parentBinding, particle);
+            bindParticle(doc, parentBinding, particle);
          }
 
+         /* todo attributes
          XSObjectList attributeUses = complexType.getAttributeUses();
          for(int i = 0; i < attributeUses.getLength(); ++i)
          {
@@ -133,180 +125,53 @@ public class XsdBinder
 
             factory.bindAttribute(parentBinding, attrDec.getNamespace(), attrDec.getName(), fieldName, javaType);
          }
-
-      }
-      else
-      {
-         //bindComplexElement(factory, parentBinding, elementDecl);
+         */
       }
    }
 
-   private static void bindParticle(DocumentBindingFactory factory,
-                                    DocumentBinding doc,
-                                    BasicElementBinding parent,
+   private static void bindParticle(DocumentBinding doc,
+                                    ParentElement parent,
                                     XSParticle particle)
    {
       XSTerm term = particle.getTerm();
       switch(term.getType())
       {
          case XSConstants.MODEL_GROUP:
-            bindModelGroup(factory, doc, parent, (XSModelGroup)term);
+            bindModelGroup(doc, parent, (XSModelGroup)term);
             break;
          case XSConstants.WILDCARD:
             // todo bindWildcard((XSWildcard)term);
             break;
          case XSConstants.ELEMENT_DECLARATION:
-            bindElement(factory, doc, parent, (XSElementDeclaration)term);
+            bindElement(doc, parent, (XSElementDeclaration)term);
             break;
          default:
             throw new IllegalStateException("Unexpected term type: " + term.getType());
       }
    }
 
-   private static void bindElement(DocumentBindingFactory factory,
-                                   DocumentBinding doc,
-                                   BasicElementBinding parent,
+   private static void bindElement(DocumentBinding doc,
+                                   ParentElement parent,
                                    XSElementDeclaration elementDecl)
    {
-      Class javaType = null;
-
-      XSTypeDefinition typeDef = elementDecl.getTypeDefinition();
-      if("http://www.w3.org/2001/XMLSchema".equals(typeDef.getNamespace()))
-      {
-         javaType = SimpleTypeBindings.classForType(typeDef.getName());
-      }
-      else
-      {
-         NamespaceBinding nsBinding = doc.getNamespace(typeDef.getNamespace());
-         if(nsBinding == null)
-         {
-            throw new JBossXBRuntimeException("Namespace is not bound: " + typeDef.getName());
-         }
-
-         String fqClsName = nsBinding.getJavaPackage() +
-            "." +
-            Util.xmlNameToClassName(getBaseForClassName(elementDecl), true);
-
-         try
-         {
-            javaType = Thread.currentThread().getContextClassLoader().loadClass(fqClsName);
-         }
-         catch(ClassNotFoundException e)
-         {
-            log.warn("Failed to load class: " + fqClsName);
-         }
-      }
-
-      String fieldName = null;
-
-      if(Collection.class.isAssignableFrom(parent.getJavaType()))
-      {
-         // use java.lang.String
-         if(javaType == null)
-         {
-            javaType = String.class;
-         }
-      }
-      else
-      {
-         String baseFieldName = Util.xmlNameToClassName(elementDecl.getName(), true);
-         fieldName = Character.toLowerCase(baseFieldName.charAt(0)) + baseFieldName.substring(1);
-         Class fieldType;
-         try
-         {
-            Method getter = parent.getJavaType().getMethod("get" + baseFieldName, null);
-            fieldType = getter.getReturnType();
-         }
-         catch(NoSuchMethodException e)
-         {
-            try
-            {
-               Field field = parent.getJavaType().getField(fieldName);
-               fieldType = field.getType();
-            }
-            catch(NoSuchFieldException e1)
-            {
-               throw new JBossXBRuntimeException("Failed to bind {" +
-                  elementDecl.getNamespace() +
-                  ":" +
-                  elementDecl.getName() +
-                  "}: neither getter/setter pair nor field were found in " +
-                  parent.getJavaType()
-               );
-            }
-         }
-
-         if(javaType == null)
-         {
-            javaType = fieldType;
-         }
-         else if(!Collection.class.isAssignableFrom(fieldType) &&
-            javaType != fieldType &&
-            !fieldType.isAssignableFrom(javaType))
-         {
-            log.warn("Field's type in the class (" +
-               fieldType +
-               ") is not assignable from the type the element is bound to in the XSD (" +
-               javaType +
-               "). " +
-               fieldType +
-               " will be used for this element: {" +
-               elementDecl.getNamespace() +
-               ":" +
-               elementDecl.getName() +
-               "}"
-            );
-            javaType = fieldType;
-         }
-      }
-
-      if((javaType.getModifiers() & (java.lang.reflect.Modifier.INTERFACE | java.lang.reflect.Modifier.ABSTRACT)) > 0)
-      {
-         if(Collection.class.isAssignableFrom(javaType))
-         {
-            javaType = java.util.ArrayList.class;
-         }
-         else
-         {
-            throw new JBossXBRuntimeException("Failed to bind {" +
-               elementDecl.getNamespace() +
-               ":" +
-               elementDecl.getName() +
-               "}: Java typeDef is an interface of an abstract class " +
-               parent.getJavaType()
-            );
-         }
-      }
-
-      // todo: should it be element's namespace or its type's one?
-      ElementBinding el = factory.bindElement(parent,
-         elementDecl.getNamespace(),
-         elementDecl.getName(),
-         fieldName,
-         javaType
-      );
-      bindComplexElement(elementDecl, factory, doc, el);
+      ElementBindingImpl child = new ElementBindingImpl(parent.getSelfReference(), elementDecl);
+      parent.addChild(child);
+      bindComplexElement(elementDecl, doc, child);
    }
 
-   private static void bindModelGroup(DocumentBindingFactory factory,
-                                      DocumentBinding doc,
-                                      BasicElementBinding parent,
+   private static void bindModelGroup(DocumentBinding doc,
+                                      ParentElement parent,
                                       XSModelGroup modelGroup)
    {
       XSObjectList particles = modelGroup.getParticles();
       for(int i = 0; i < particles.getLength(); ++i)
       {
          XSParticle particle = (XSParticle)particles.item(i);
-         bindParticle(factory, doc, parent, particle);
+         bindParticle(doc, parent, particle);
       }
    }
 
    // Private
-
-   private static String getBaseForClassName(XSElementDeclaration element)
-   {
-      return element.getTypeDefinition().getName() == null ? element.getName() : element.getTypeDefinition().getName();
-   }
 
    private static XSModel loadSchema(String xsdURL)
    {
@@ -338,5 +203,365 @@ public class XsdBinder
          throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());
       }
       return impl;
+   }
+
+   // Private
+
+   private static final class DocumentBindingImpl
+      implements DocumentBinding, PluggableDocumentBinding
+   {
+      private DocumentBinding proxy;
+      private DocumentBinding delegate;
+      private final Map namespaces = new HashMap();
+
+      public DocumentBindingImpl()
+      {
+         this.delegate = this;
+         this.proxy = new DocumentBinding()
+         {
+            public NamespaceBinding getNamespace(String namespaceUri)
+            {
+               return delegate.getNamespace(namespaceUri);
+            }
+         };
+      }
+
+      NamespaceBinding bindNamespace(String namespaceUri)
+      {
+         NamespaceBinding ns = new NamespaceBindingImpl(proxy, namespaceUri);
+         namespaces.put(namespaceUri, ns);
+         return ns;
+      }
+
+      public NamespaceBinding getNamespace(String namespaceUri)
+      {
+         return (NamespaceBinding)namespaces.get(namespaceUri);
+      }
+
+      public void setDocumentBinding(final DelegatingDocumentBinding delegate)
+      {
+         this.delegate = delegate;
+      }
+   }
+
+   private static final class NamespaceBindingImpl
+      implements NamespaceBinding
+   {
+      private final DocumentBinding doc;
+      private final String namespaceUri;
+      private final Map tops = new HashMap();
+
+      public NamespaceBindingImpl(DocumentBinding doc, String namespaceUri)
+      {
+         this.doc = doc;
+         this.namespaceUri = namespaceUri;
+      }
+
+      void addTopElement(TopElementBinding top)
+      {
+         tops.put(top.getElementName().getLocalPart(), top);
+      }
+
+      public String getNamespaceUri()
+      {
+         return namespaceUri;
+      }
+
+      public String getJavaPackage()
+      {
+         return Util.xmlNamespaceToJavaPackage(namespaceUri);
+      }
+
+      public DocumentBinding getDocument()
+      {
+         return doc;
+      }
+
+      public TopElementBinding getTopElement(String elementName)
+      {
+         return (TopElementBinding)tops.get(elementName);
+      }
+   }
+
+   private static final class ElementBindingImpl
+      extends AbstractElementBinding
+      implements ElementBinding, ParentElement
+   {
+      private final XSElementDeclaration elementDecl;
+      private final Map children = new HashMap();
+      private Class javaType;
+      private Class fieldType;
+      private Method getter;
+      private Method setter;
+      private Field field;
+
+      public ElementBindingImpl(BasicElementBinding parent, XSElementDeclaration elementDecl)
+      {
+         super(new QName(elementDecl.getNamespace(), elementDecl.getName()), parent);
+         this.elementDecl = elementDecl;
+      }
+
+      private void init()
+      {
+         // first try to use XSD type
+         XSTypeDefinition typeDef = elementDecl.getTypeDefinition();
+         String typeBasedClsName = null;
+         if("http://www.w3.org/2001/XMLSchema".equals(typeDef.getNamespace()))
+         {
+            javaType = SimpleTypeBindings.classForType(typeDef.getName());
+         }
+         else if(typeDef.getName() != null)
+         {
+            NamespaceBinding ns = doc.getNamespace(typeDef.getNamespace());
+            typeBasedClsName = ns.getJavaPackage() + "." + Util.xmlNameToClassName(typeDef.getName(), true);
+            try
+            {
+               javaType = Thread.currentThread().getContextClassLoader().loadClass(typeBasedClsName);
+            }
+            catch(ClassNotFoundException e)
+            {
+            }
+         }
+
+         String elBasedClsName = Util.xmlNameToClassName(elementDecl.getName(), true);
+         if(javaType == null)
+         {
+            NamespaceBinding ns = doc.getNamespace(elementDecl.getNamespace());
+            // using type didn't help, let's try element's name
+            // note: here we use element's namespace, not type's one
+            try
+            {
+               javaType =
+                  Thread.currentThread().getContextClassLoader().loadClass(ns.getJavaPackage() + "." + elBasedClsName);
+            }
+            catch(ClassNotFoundException e1)
+            {
+               // this also didn't work
+            }
+         }
+
+         Class parentType = parent.getJavaType();
+         if(Collection.class.isAssignableFrom(parentType))
+         {
+            if(javaType == null)
+            {
+               javaType = String.class;
+            }
+         }
+         else
+         {
+            try
+            {
+               getter = parentType.getMethod("get" + elBasedClsName, null);
+               setter = parentType.getMethod("set" + elBasedClsName, new Class[]{getter.getReturnType()});
+               fieldType = getter.getReturnType();
+            }
+            catch(NoSuchMethodException e)
+            {
+               String fieldName = Character.toLowerCase(elBasedClsName.charAt(0)) + elBasedClsName.substring(1);
+               try
+               {
+                  field = parentType.getField(fieldName);
+                  fieldType = field.getType();
+               }
+               catch(NoSuchFieldException e1)
+               {
+               }
+            }
+
+            if(fieldType != null)
+            {
+               if(Modifier.isFinal(fieldType.getModifiers()) ||
+                  javaType == null &&
+                  !Modifier.isInterface(fieldType.getModifiers()) &&
+                  !Modifier.isAbstract(fieldType.getModifiers()))
+               {
+                  javaType = fieldType;
+               }
+               else if(fieldType == Collection.class || Collection.class.isAssignableFrom(fieldType))
+               {
+                  if(javaType == null)
+                  {
+                     // todo: other collection types
+                     javaType = java.util.ArrayList.class;
+                  }
+               }
+               else if(javaType != null)
+               {
+                  if(javaType != fieldType && !fieldType.isAssignableFrom(javaType))
+                  {
+                     javaType = null;
+                  }
+               }
+            }
+         }
+
+         if(javaType == null)
+         {
+            throw new JBossXBRuntimeException(
+               "Failed to bind element " + elementName + " to any non-abstract Java type. Field type is " + fieldType
+            );
+         }
+      }
+
+      public void addChild(ElementBinding child)
+      {
+         children.put(child.getElementName(), child);
+      }
+
+      public BasicElementBinding getSelfReference()
+      {
+         return parent.getElement(elementName);
+      }
+
+      public Class getJavaType()
+      {
+         if(javaType == null)
+         {
+            init();
+         }
+         return javaType;
+      }
+
+      public ElementBinding getElement(QName elementName)
+      {
+         return (ElementBinding)children.get(elementName);
+      }
+
+      public Field getField()
+      {
+         if(javaType == null)
+         {
+            init();
+         }
+         return field;
+      }
+
+      public Method getGetter()
+      {
+         if(javaType == null)
+         {
+            init();
+         }
+         return getter;
+      }
+
+      public Method getSetter()
+      {
+         if(javaType == null)
+         {
+            init();
+         }
+         return setter;
+      }
+
+      public Class getFieldType()
+      {
+         if(javaType == null)
+         {
+            init();
+         }
+         return fieldType;
+      }
+   }
+
+   private static final class TopElementBindingImpl
+      extends BasicElementBindingImpl
+      implements ParentElement, TopElementBinding
+   {
+      private final XSElementDeclaration elementDecl;
+      private final Map children = new HashMap();
+      protected Class javaType;
+
+      public TopElementBindingImpl(DocumentBinding doc, XSElementDeclaration elementDecl)
+      {
+         super(new QName(elementDecl.getNamespace(), elementDecl.getName()), doc);
+         this.elementDecl = elementDecl;
+      }
+
+      protected void init()
+      {
+         // first try to use XSD type
+         XSTypeDefinition typeDef = elementDecl.getTypeDefinition();
+         String typeBasedClsName = null;
+         if("http://www.w3.org/2001/XMLSchema".equals(typeDef.getNamespace()))
+         {
+            javaType = SimpleTypeBindings.classForType(typeDef.getName());
+         }
+         else if(typeDef.getName() != null)
+         {
+            NamespaceBinding ns = doc.getNamespace(typeDef.getNamespace());
+            typeBasedClsName = ns.getJavaPackage() + "." + Util.xmlNameToClassName(typeDef.getName(), true);
+            try
+            {
+               javaType = Thread.currentThread().getContextClassLoader().loadClass(typeBasedClsName);
+            }
+            catch(ClassNotFoundException e)
+            {
+            }
+         }
+
+         if(javaType == null)
+         {
+            // using type didn't help, let's try element's name
+            // note: here we use element's namespace, not type's one
+            NamespaceBinding ns = doc.getNamespace(elementDecl.getNamespace());
+            String elBasedClsName = ns.getJavaPackage() + "." + Util.xmlNameToClassName(elementDecl.getName(), true);
+            try
+            {
+               javaType = Thread.currentThread().getContextClassLoader().loadClass(elBasedClsName);
+            }
+            catch(ClassNotFoundException e1)
+            {
+               throw new JBossXBRuntimeException("Failed to bind element " +
+                  elementName +
+                  " using XSD type (" +
+                  typeBasedClsName +
+                  ") and element name (" +
+                  elBasedClsName +
+                  "): classes not found."
+               );
+            }
+         }
+      }
+
+      public BasicElementBinding getSelfReference()
+      {
+         return doc.getNamespace(elementDecl.getNamespace()).getTopElement(elementDecl.getName());
+      }
+
+      public void addChild(ElementBinding child)
+      {
+         children.put(child.getElementName(), child);
+      }
+
+      public Class getJavaType()
+      {
+         if(javaType == null)
+         {
+            init();
+         }
+         return javaType;
+      }
+
+      public ElementBinding getElement(QName elementName)
+      {
+         return (ElementBinding)children.get(elementName);
+      }
+
+      public AttributeBinding getAttribute(QName attributeName)
+      {
+         String fieldName = Util.xmlNameToClassName(attributeName.getLocalPart(), true);
+         fieldName = Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1);
+         return new AttributeBindingImpl(attributeName, null, getJavaType(), fieldName);
+      }
+   }
+
+   private interface ParentElement
+      extends BasicElementBinding
+   {
+      void addChild(ElementBinding el);
+
+      BasicElementBinding getSelfReference();
    }
 }

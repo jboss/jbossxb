@@ -24,7 +24,7 @@ import org.jboss.util.NullArgumentException;
 import org.jboss.util.CloneableObject;
 
 /**
- * A generalization of a finite-state machine.
+ * A generalization of a programmable finite-state machine (with a twist).
  *
  * <p>A state machine is backed up by a {@link Model}
  *    which simply provides data encapsulation.  The machine starts
@@ -53,6 +53,74 @@ import org.jboss.util.CloneableObject;
  * <p>State machine is not synchronized.  Use {@link #makeSynchronized}
  *    to make a machine thread safe.
  *
+ * <p>Example of how to program a state machine:
+ * <pre>
+ * <code>
+ *    // Create some states
+ *    State NEW = new State(0, "NEW");
+ *    State INITALIZEING = new State(1, "INITALIZING");
+ *    State INITIALIZED = new State(2, "INITIALIZED");
+ *    State STARTING = new State(3, "STARTING");
+ *    State STARTED = new State(4, "STARTED");
+ *    State FAILED = new State(5, "FAILED");
+ *    
+ *    // Create a model for the state machine
+ *    StateMachine.Model model = new DefaultStateMachineModel();
+ *
+ *    // Add some state mappings
+ *    model.addState(NEW, INITIALIZING);
+ *    model.addState(INITIALIZING, new State[] { INITIALIZED, FAILED });
+ *    model.addState(INITIALIZED, new State[] { STARTING });
+ *    model.addState(STARTING, new State[] { STARTED, FAILED });
+ *
+ *    // These states are final (they do not accept any states)
+ *    model.addState(STARTED);
+ *    model.addState(FAILED);
+ *
+ *    // Set the initial state
+ *    model.setInitialState(NEW);
+ *
+ *    // Create the machine
+ *    StateMachine machine = new StateMachine(model);
+ * </code>
+ * </pre>
+ *
+ * <p>Once you have created a StateMachine instance, using it is simple:
+ * <pre>
+ * <code>
+ *    // Change to the INITIALIZING state
+ *    machine.transition(INITIALIZING);
+ *
+ *    // Change to the INITIALIZED state
+ *    machine.transition(INITIALIZED); *
+ *
+ *    // Try to change to an invalid state:
+ *    try {
+ *       // As programmed, the INITIALIZED state does not accept the NEW
+ *       // state, it only accepts the STARTING state.
+ *       machine.transition(NEW);
+ *    }
+ *    catch (IllegalStateException e) {
+ *       // Do something with the exception; The state of the machine is
+ *       // still INITIALIZED.
+ *    }
+ *
+ *    // Transition to a final state
+ *    machine.transition(STARTING);
+ *    machine.transition(FAILED);
+ *
+ *    // Any attempt to transition to any state will fail, the FAILED is
+ *    // a final state, as it does not accept any other states.
+ *
+ *    // Reset the machine so we can use it again
+ *    machine.reset();
+ *
+ *    // The state of the machine is now the same as it was when the
+ *    // state machine was first created (short of any added change
+ *    // listeners... they do not reset).
+ * </code>
+ * </pre>
+ * 
  * @version <tt>$Revision$</tt>
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
@@ -60,9 +128,11 @@ public class StateMachine
    extends CloneableObject
    implements Serializable
 {
-   protected Model model;
+   /** The data model for the machine. */
+   protected final Model model;
 
-   protected List changeListeners = new ArrayList();
+   /** The list of change listeners which are registered. */
+   protected final List changeListeners;
 
    /**
     * Construct a state machine with the given model.
@@ -75,7 +145,8 @@ public class StateMachine
          throw new NullArgumentException("model");
 
       this.model = model;
-
+      this.changeListeners = new ArrayList();
+      
       // Set the current state to the initial state
       State initialState = model.getInitialState();
       if (initialState == null)
@@ -84,8 +155,13 @@ public class StateMachine
       reset();
    }
 
-   /** For synchronization */
-   private StateMachine() {}
+   /** For sync and immutable wrappers. */
+   private StateMachine(final Model model, final boolean hereForSigChange)
+   {
+      // must be initialized (they are final), but never used.
+      this.model = model;
+      this.changeListeners = null;
+   }
 
    /**
     * Return the model which provides data encapsulation for the machine.
@@ -100,13 +176,29 @@ public class StateMachine
    /**
     * Returns the current state of the machine.
     *
-    * @return The current state; must not be null.
+    * @see Model#getCurrentState
+    * @see StateMachine#getModel
+    *    
+    * @return The current state; will not be null.
     */
    public State getCurrentState()
    {
       return model.getCurrentState();
    }
 
+   /**
+    * Returns the initial state of the machine.
+    *
+    * @see Model#getInitialState
+    * @see StateMachine#getModel
+    *
+    * @return The current state; will not be null.
+    */
+   public State getInitialState()
+   {
+      return model.getInitialState();
+   }
+   
    /**
     * Provides the interface for dynmaic state acceptability.
     *
@@ -122,7 +214,7 @@ public class StateMachine
        * @param state   The state to determine acceptability; must not be null.
        * @return        True if the state is acceptable, else false.
        */
-      boolean accept(State state);
+      boolean isAcceptable(State state);
    }
    
    /**
@@ -143,17 +235,14 @@ public class StateMachine
     *
     * @throws IllegalArgumentException   State not found in model.
     */
-   public boolean accept(State state)
+   public boolean isAcceptable(State state)
    {
       if (state == null)
          throw new NullArgumentException("state");
 
-      if (!model.containsState(state)) {
-         return false;
-      }
-      
-      // if the current state is final, then we can not go anywhere
-      if (isStateFinal()) {
+      // if the model does not contain this state or the current state is final,
+      // then we can not go anywhere
+      if (!model.containsState(state) || isStateFinal()) {
          return false;
       }
       
@@ -171,7 +260,7 @@ public class StateMachine
       
       // If the current state implements Acceptable let it have a whack
       if (currentState instanceof Acceptable) {
-         rv = ((Acceptable)currentState).accept(state);
+         rv = ((Acceptable)currentState).isAcceptable(state);
       }
 
       // If we still have not accepted, then check the accept list
@@ -197,7 +286,7 @@ public class StateMachine
     */
    public void transition(final State state)
    {
-      if (!accept(state)) {
+      if (!isAcceptable(state)) {
          // make an informative exception message
          StringBuffer buff = new StringBuffer();
          State current = model.getCurrentState();
@@ -341,9 +430,13 @@ public class StateMachine
          Acceptable a = (Acceptable)state;
          Iterator iter = model.states().iterator();
 
+         //
+         // jason: Could potentially cache the results for better performance.
+         //        Would have to expose control of the cachability to the user.
+         // 
          while (iter.hasNext()) {
             // if at least one state is acceptable then the state is not final
-            if (a.accept((State)iter.next())) {
+            if (a.isAcceptable((State)iter.next())) {
                return false;
             }
          }
@@ -407,9 +500,11 @@ public class StateMachine
    {
       if (listener == null)
          throw new NullArgumentException("listener");
-      
-      if (!changeListeners.contains(listener)) {
-         changeListeners.add(listener);
+
+      synchronized (changeListeners) {
+         if (!changeListeners.contains(listener)) {
+            changeListeners.add(listener);
+         }
       }
    }
 
@@ -420,16 +515,31 @@ public class StateMachine
     */
    public void removeChangeListener(final ChangeListener listener)
    {
-      if (listener != null)
-         changeListeners.remove(listener);
+      synchronized (changeListeners) {
+         if (listener != null)
+            changeListeners.remove(listener);
+      }
    }
 
-   /** Send a change event to all listeners. */
+   /**
+    * Send a change event to all listeners.
+    *
+    * <p>Listeners are invoked in the same order which they have been added.
+    *
+    * <p>This method (as well as add and remove methods) are protected
+    *    from concurrent modification exceptions.
+    */
    protected void fireStateChanged(final ChangeEvent event)
    {
-      ChangeListener[] listeners = (ChangeListener[])
-         changeListeners.toArray(new ChangeListener[changeListeners.size()]);
-
+      // assert event != null
+      
+      ChangeListener[] listeners;
+      
+      synchronized (changeListeners) {
+         listeners = (ChangeListener[])
+            changeListeners.toArray(new ChangeListener[changeListeners.size()]);
+      }
+      
       for (int i=0; i<listeners.length; i++) {
          listeners[i].stateChanged(event);
       }
@@ -441,8 +551,8 @@ public class StateMachine
    public static class ChangeEvent
       extends EventObject
    {
-      protected final State previous;
-      protected final State current;
+      public final State previous;
+      public final State current;
       
       public ChangeEvent(final StateMachine source,
                          final State previous,
@@ -504,6 +614,9 @@ public class StateMachine
    {
       /**
        * Invoked after a state has been changed.
+       *
+       * @param event  The state event, which encodes that data for the
+       *               state change.
        */
       void stateChanged(ChangeEvent event);
    }
@@ -528,6 +641,15 @@ public class StateMachine
        *    will be added as final states.
        *
        * <p>If the acceptable set is null, then the added state will be final.
+       *
+       * <p>Note, states are added based on the valid states which can be
+       *    transitioned to from the given state, not on the states which
+       *    accept the given state.
+       *
+       * <p>For example, if adding state A which accepts B and C, this means
+       *    that when the machine is in state A, it will allow transitions
+       *    to B or C and not from C to A or B to A (unless of course a state
+       *    mapping is setup up such that C and B both accept A).
        *
        * @param state        The accepting state; must not be null.
        * @param acceptable   The valid acceptable states; must not contain null elements.
@@ -567,6 +689,16 @@ public class StateMachine
       State getState(State state);
       
       /**
+       * Set the initial state.
+       *
+       * <p>Does not need to validate the state, {@link StateMachine} will
+       *    handle those details.
+       *
+       * @param state   The initial state; must not be null.
+       */
+      void setInitialState(State state);
+
+      /**
        * Return the initial state which the state machine should start in.
        *
        * @return The initial state of the state machine; must not be null.
@@ -586,7 +718,9 @@ public class StateMachine
       /**
        * Get the current state.
        *
-       * @return The current state; must not be null.
+       * @return The current state; can be null if not used by a state machine.
+       *         Once it has been given to a state machine this must not be
+       *         null.
        */
       State getCurrentState();
 
@@ -634,20 +768,23 @@ public class StateMachine
 
    
    /////////////////////////////////////////////////////////////////////////
-   //                          Synchronization                            //
+   //                           Synchronization                           //
    /////////////////////////////////////////////////////////////////////////
 
    /**
     * Return a synchronized state machine.
     *
-    * @param machine    State machine to synchronize.
+    * @param machine    State machine to synchronize; must not be null.
     * @param mutex      The object to lock on; null to use returned instance.
     * @return           Synchronized state machine.
     */
    public static StateMachine makeSynchronized(final StateMachine machine,
                                                final Object mutex)
    {
-      return new StateMachine()
+      if (machine == null)
+         throw new NullArgumentException("machine");
+      
+      return new StateMachine(null, true)
          {
             private Object lock = (mutex == null ? this : mutex);
 
@@ -658,6 +795,13 @@ public class StateMachine
                }
             }
             
+            public State getInitailState()
+            {
+               synchronized (lock) {
+                  return machine.getInitialState();
+               }
+            }
+
             public State getCurrentState()
             {
                synchronized (lock) {
@@ -665,10 +809,24 @@ public class StateMachine
                }
             }
 
-            public boolean accept(final State state)
+            public boolean isInitialState(final State state)
             {
                synchronized (lock) {
-                  return machine.accept(state);
+                  return machine.isInitialState(state);
+               }
+            }
+            
+            public boolean isCurrentState(final State state)
+            {
+               synchronized (lock) {
+                  return machine.isCurrentState(state);
+               }
+            }
+            
+            public boolean isAcceptable(final State state)
+            {
+               synchronized (lock) {
+                  return machine.isAcceptable(state);
                }
             }
 
@@ -733,11 +891,87 @@ public class StateMachine
    /**
     * Return a synchronized state machine.
     *
-    * @param machine    State machine to synchronize.
+    * @param machine    State machine to synchronize; must not be null.
     * @return           Synchronized state machine.
     */
    public static StateMachine makeSynchronized(final StateMachine machine)
    {
       return makeSynchronized(machine, null);
    }   
+
+
+   /////////////////////////////////////////////////////////////////////////
+   //                            Immutablility                            //
+   /////////////////////////////////////////////////////////////////////////
+
+   /**
+    * Return a immutable state machine.
+    *
+    * <p>Immutable state machines can not be transitioned or reset; methods
+    *    will throw a <tt>UnsupportedOperationException</tt>.
+    *
+    * <p>If model is not hidden, then users can still mess up the model
+    *    if they want, thus corrupting the state machine.
+    *
+    * @param machine    State machine to make immutable; must not be null.
+    * @param hideModel  Make the model inaccessable too.
+    * @return           Immutable state machine with hidden model.
+    */
+   public static StateMachine makeImmutable(final StateMachine machine,
+                                            final boolean hideModel)
+   {
+      if (machine == null)
+         throw new NullArgumentException("machine");
+      
+      return new StateMachine(machine.getModel(), true)
+         {
+            public Model getModel()
+            {
+               if (hideModel) {
+                  throw new UnsupportedOperationException
+                     ("Model has been hidden; state machine is immutable");
+               }
+               
+               return super.getModel();
+            }
+            
+            public void transition(final State state)
+            {
+               throw new UnsupportedOperationException
+                  ("Can not transition; state machine is immutable");
+            }
+
+            public void reset()
+            {
+               throw new UnsupportedOperationException
+                  ("Can not reset; state machine is immutable");
+            }
+
+            public void addChangeListener(final ChangeListener listener)
+            {
+               throw new UnsupportedOperationException
+                  ("Can not add change listener; state machine is immutable");
+            }
+
+            public void removeChangeListener(final ChangeListener listener)
+            {
+               throw new UnsupportedOperationException
+                  ("Can not remove change listener; state machine is immutable");
+            }
+         };
+   }
+      
+   /**
+    * Return a immutable state machine.
+    *
+    * <p>Immutable state machines can not be transitioned or reset; methods
+    *    will throw a <tt>UnsupportedOperationException</tt>.
+    *
+    * @param machine    State machine to make immutable; must not be null.
+    * @return           Immutable state machine.
+    */
+   public static StateMachine makeImmutable(final StateMachine machine)
+   {
+      return makeImmutable(machine, true);
+   }
 }

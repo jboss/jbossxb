@@ -146,7 +146,7 @@ public abstract class AbstractMarshaller
 
    public void addRootElement(String namespaceUri, String prefix, String name)
    {
-      addRootElement(new QName(namespaceUri, prefix, name));
+      addRootElement(new QName(namespaceUri, name, prefix));
    }
 
    public void addRootElement(QName qName)

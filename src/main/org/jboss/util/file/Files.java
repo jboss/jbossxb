@@ -17,6 +17,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
 import org.jboss.logging.Logger;
@@ -32,7 +33,13 @@ import org.jboss.util.stream.Streams;
  */
 public final class Files
 {
+   /** The Logger instance */
    private static final Logger log = Logger.getLogger(Files.class);
+   
+   /** for byte-to-hex conversions */
+   private static final char[] hexDigits = new char[]
+      { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+   
    /** The default size of the copy buffer. */
    public static final int DEFAULT_BUFFER_SIZE = 8192;
 
@@ -206,4 +213,128 @@ public final class Files
       out.close();
       in.close();
    }
+   
+   /**
+    * Used to encode any string into a string that is safe to use as 
+    * a file name on most operating systems.
+    * 
+    * Use decodeFileName() to get back the original string.
+    * 
+    * Copied by Adrian's org.jboss.mq.pm.file.PersistenceManager
+    * and adapted to use hex instead of decimal digits
+    * 
+    * @param name the filename to encode
+    * @return a filesystem-friendly filename
+    */
+   public static String encodeFileName(String name)
+   {
+      StringBuffer rc = new StringBuffer();
+      for (int i = 0; i < name.length(); i++ )
+      {
+         switch (name.charAt(i))
+         {
+            // These are the safe characters...
+            case 'a': case 'A': case 'b': case 'B': case 'c': case 'C':
+            case 'd': case 'D': case 'e': case 'E': case 'f': case 'F':
+            case 'g': case 'G': case 'h': case 'H': case 'i': case 'I':
+            case 'j': case 'J': case 'k': case 'K': case 'l': case 'L':
+            case 'm': case 'M': case 'n': case 'N': case 'o': case 'O':
+            case 'p': case 'P': case 'q': case 'Q': case 'r': case 'R':
+            case 's': case 'S': case 't': case 'T': case 'u': case 'U':
+            case 'v': case 'V': case 'w': case 'W': case 'x': case 'X':
+            case 'y': case 'Y': case 'z': case 'Z':
+            case '1': case '2': case '3': case '4': case '5': 
+            case '6': case '7': case '8': case '9': case '0': 
+            case '-': case '_': case '.':
+               rc.append(name.charAt(i));
+               break;
+
+            // Any other character needs to be encoded.
+            default:
+            
+               // We encode the characters as %hh where
+               // hh is the hex value of the UTF8 byte of the character.
+               // You might get %hh%hh since UTF8 can produce multiple
+               // bytes for a since character.
+               try
+               {
+                  byte data[] = ("" + name.charAt(i)).getBytes("UTF8");
+                  for (int j = 0; j < data.length; j++)
+                  {
+                     rc.append('%');
+                     rc.append(hexDigits[ (data[j] >> 4) & 0xF ]); // high order digit
+                     rc.append(hexDigits[ (data[j]     ) & 0xF ]); // low order digit                     
+                  }
+               }
+               catch (UnsupportedEncodingException wonthappen)
+               {
+                  // nada
+               }
+         }
+      }
+      return rc.toString();
+   }
+   
+   /**
+    * Used to decode a file system friendly filename produced
+    * by encodeFileName() method, above.
+    * 
+    * Copied by Adrian's org.jboss.mq.pm.file.PersistenceManager
+    * and adapted to use hex instead of decimal digits
+    * 
+    * Note:
+    *   Decoding will not work if encoding produced
+    *   multi-byte encoded characters. If this is truly
+    *   needed we'll have to revise the encoding.
+    * 
+    * @param name the filename to decode
+    * @return the original name
+    */
+   public static String decodeFileName(String name)
+   {
+      if (name == null)
+      {
+         return null;
+      }
+      StringBuffer sbuf = new StringBuffer(name.length());
+      
+      for (int i = 0; i < name.length(); i++)
+      {
+         char c = name.charAt(i);
+         if (c == '%')
+         {
+            char h1 = name.charAt(++i);
+            char h2 = name.charAt(++i);
+
+            // convert hex digits to integers
+            int d1 = (h1 >= 'a') ? (10 + h1 - 'a')
+                  : ((h1 >= 'A') ? (10 + h1 - 'A') 
+                                     :  (h1 - '0'));
+            
+            int d2 = (h2 >= 'a') ? (10 + h2 - 'a')
+                  : ((h2 >= 'A') ? (10 + h2 - 'A')
+                                      : (h2 - '0'));
+            
+            // handling only the %hh case here, as we don't know
+            // if %hh%hh belong to the same character
+            // (and we are lazy to change the encoding) - REVISIT
+            byte[] bytes = new byte[] { (byte)(d1 * 16 + d2) };
+            
+            try 
+            {
+               String s = new String(bytes, "UTF8");
+               sbuf.append(s);
+            }
+            catch (UnsupportedEncodingException wonthappen)
+            {
+               // nada
+            }
+         }
+         else
+         {
+            sbuf.append(c);
+         }
+      }
+      return sbuf.toString();
+   }   
 }

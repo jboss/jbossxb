@@ -69,8 +69,7 @@ public class AttributeBindingImpl
       fieldType = field == null ? (getter == null ? null : getter.getReturnType()) : field.getType();
       if(fieldType == null)
       {
-         throw new JBossXBRuntimeException(
-            "Failed to bind attribute " +
+         throw new JBossXBRuntimeException("Failed to bind attribute " +
             attributeName +
             " to field " +
             fieldName +

@@ -15,10 +15,6 @@ import java.net.URL;
 import java.net.MalformedURLException;
 import java.util.Map;
 
-import gnu.regexp.RE;
-import gnu.regexp.REException;
-import gnu.regexp.REMatch;
-
 /**
  * A collection of String utilities.
  *
@@ -28,14 +24,16 @@ import gnu.regexp.REMatch;
  */
 public final class Strings
 {
-   private static RE PROPERTY_REF_REGEX;
-
    /** An empty string constant */
    public static final String EMPTY = "";
 
    /** New line string constant */
    public static final String NEWLINE = org.jboss.util.platform.Constants.LINE_SEPARATOR;
 
+   // States used in property parsing
+   private static final int NORMAL = 0;
+   private static final int SEEN_DOLLAR = 1;
+   private static final int IN_BRACKET = 2;
 
    /////////////////////////////////////////////////////////////////////////
    //                         Substitution Methods                        //
@@ -233,38 +231,58 @@ public final class Strings
     */
    public static String replaceProperties(final String string)
    {
-      synchronized( Strings.class )
+      final char[] chars = string.toCharArray();
+      StringBuffer buffer = new StringBuffer();
+      boolean properties = false;
+      int state = NORMAL;
+      int start = 0;
+      for (int i = 0; i < chars.length; ++i)
       {
-      if( PROPERTY_REF_REGEX == null )
-      {
-         try
+         char c = chars[i];
+
+         // Dollar sign outside brackets
+         if (c == '$' && state != IN_BRACKET)
+            state = SEEN_DOLLAR;
+
+         // Open bracket immediatley after dollar
+         else if (c == '{' && state == SEEN_DOLLAR)
          {
-            PROPERTY_REF_REGEX = new RE("([^$]*)\\${([^}]+)}([^$]*)");
+            buffer.append(string.substring(start, i-1));
+            state = IN_BRACKET;
+            start = i-1;
          }
-         catch(REException e)
+
+         // No open bracket after dollar
+         else if (state == SEEN_DOLLAR)
+            state = NORMAL;
+
+         // Closed bracket after open bracket
+         else if (c == '}' && state == IN_BRACKET)
          {
-            throw new NestedRuntimeException("Failed to init RE(([^$]*)\\${([^}]+)}([^$]*)", e);
+            // No content
+            if (start+2 == i)
+               buffer.append("${}"); // REVIEW: Correct?
+
+            // Collect the system property
+            else
+            {
+               properties = true;
+               buffer.append(System.getProperty(string.substring(start+2, i)));
+            }
+            start = i+1;
+            state = NORMAL;
          }
-      }
       }
 
-      REMatch[] matches = PROPERTY_REF_REGEX.getAllMatches(string);
-      if( matches.length == 0 )
+      // No properties
+      if (properties == false)
          return string;
 
-      StringBuffer buffer = new StringBuffer();
-      for(int m = 0; m < matches.length; m ++)
-      {
-         REMatch match = matches[m];
-         String prefix = match.toString(1);
-         String prop = match.toString(2);
-         String suffix = match.toString(3);
-         String value = System.getProperty(prop);
-         buffer.append(prefix);
-         if( value != null )
-            buffer.append(value);
-         buffer.append(suffix);
-      }
+      // Collect the trailing characters
+      if (start != chars.length)
+         buffer.append(string.substring(start, chars.length));
+
+      // Done
       return buffer.toString();
    }
 

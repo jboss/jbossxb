@@ -25,7 +25,7 @@ import java.rmi.RemoteException;
  *  <li>Initial revision
  *  </ol>
  */
-public class ApplicationDeadlockException extends RemoteException
+public class ApplicationDeadlockException extends RuntimeException
 {
    protected boolean retry = false;
 
@@ -47,5 +47,24 @@ public class ApplicationDeadlockException extends RemoteException
    }
 
    
+   /**
+    * Detects exception contains is or a ApplicationDeadlockException.
+    */
+   public static ApplicationDeadlockException isADE(Throwable t)
+   {
+      while (t!=null)
+      {
+         if (t instanceof ApplicationDeadlockException)
+         {
+            return (ApplicationDeadlockException)t;
+         }
+         else
+         {
+            t = t.getCause();
+         }
+      }
+      return null;
+   }
+
 }
 

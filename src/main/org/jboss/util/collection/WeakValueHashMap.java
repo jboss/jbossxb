@@ -7,7 +7,7 @@
  *                                     *
  ***************************************/
 
-package org.jboss.util;
+package org.jboss.util.collection;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -28,18 +28,22 @@ import java.lang.ref.ReferenceQueue;
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:bill@jboss.org">Bill Burke</a>
  */
-public class WeakValueHashMap extends AbstractMap implements Map 
+public class WeakValueHashMap
+   extends AbstractMap
+   implements Map 
 {
    private static class WeakValueRef extends WeakReference
    {
       public Object key;
 
-      private WeakValueRef(Object key, Object val, ReferenceQueue q) {
+      private WeakValueRef(Object key, Object val, ReferenceQueue q)
+      {
          super(val, q);
          this.key = key;
       }
       
-      private static WeakValueRef create(Object key, Object val, ReferenceQueue q) {
+      private static WeakValueRef create(Object key, Object val, ReferenceQueue q)
+      {
          if (val == null) return null;
          else return new WeakValueRef(key, val, q);
       }
@@ -57,18 +61,18 @@ public class WeakValueHashMap extends AbstractMap implements Map
    /* Reference queue for cleared WeakKeys */
    private ReferenceQueue queue = new ReferenceQueue();
    
-   
    /* Remove all invalidated entries from the map, that is, remove all entries
       whose values have been discarded.  
     */
-   private void processQueue() {
+   private void processQueue()
+   {
       WeakValueRef ref;
       while ((ref = (WeakValueRef)queue.poll()) != null) {
          hash.remove(ref.key);
       }
    }
 
-   
+
    /* -- Constructors -- */
 
    /**
@@ -84,7 +88,8 @@ public class WeakValueHashMap extends AbstractMap implements Map
     *                                   zero, or if the load factor is
     *                                   nonpositive
     */
-   public WeakValueHashMap(int initialCapacity, float loadFactor) {
+   public WeakValueHashMap(int initialCapacity, float loadFactor)
+   {
       hash = new HashMap(initialCapacity, loadFactor);
    }
 
@@ -99,7 +104,8 @@ public class WeakValueHashMap extends AbstractMap implements Map
     * @throws IllegalArgumentException  If the initial capacity is less than
     *                                   zero
     */
-   public WeakValueHashMap(int initialCapacity) {
+   public WeakValueHashMap(int initialCapacity)
+   {
       hash = new HashMap(initialCapacity);
    }
 
@@ -108,7 +114,8 @@ public class WeakValueHashMap extends AbstractMap implements Map
     * initial capacity and the default load factor, which is
     * <code>0.75</code>.
     */
-   public WeakValueHashMap() {
+   public WeakValueHashMap()
+   {
       hash = new HashMap();
    }
 
@@ -122,11 +129,12 @@ public class WeakValueHashMap extends AbstractMap implements Map
     * @param   t the map whose mappings are to be placed in this map.
     * @since	1.3
     */
-   public WeakValueHashMap(Map t) {
+   public WeakValueHashMap(Map t)
+   {
       this(Math.max(2*t.size(), 11), 0.75f);
       putAll(t);
    }
-   
+
    /* -- Simple queries -- */
 
    /**
@@ -135,7 +143,8 @@ public class WeakValueHashMap extends AbstractMap implements Map
     * <code>Map</code> interface, the time required by this operation is
     * linear in the size of the map.</em>
     */
-   public int size() {
+   public int size()
+   {
       processQueue();
       return hash.size();
    }
@@ -143,7 +152,8 @@ public class WeakValueHashMap extends AbstractMap implements Map
    /**
     * Returns <code>true</code> if this map contains no key-value mappings.
     */
-   public boolean isEmpty() {
+   public boolean isEmpty()
+   {
       processQueue();
       return hash.isEmpty();
    }
@@ -154,7 +164,8 @@ public class WeakValueHashMap extends AbstractMap implements Map
     *
     * @param   key   The key whose presence in this map is to be tested
     */
-   public boolean containsKey(Object key) {
+   public boolean containsKey(Object key)
+   {
       processQueue();
       return hash.containsKey(key);
    }
@@ -168,7 +179,8 @@ public class WeakValueHashMap extends AbstractMap implements Map
     *
     * @param  key  The key whose associated value, if any, is to be returned
     */
-   public Object get(Object key) {
+   public Object get(Object key)
+   {
       processQueue();
       WeakReference ref = (WeakReference)hash.get(key);
       if (ref != null) return ref.get();
@@ -215,9 +227,9 @@ public class WeakValueHashMap extends AbstractMap implements Map
    /**
     * Removes all mappings from this map.
     */
-   public void clear() {
+   public void clear()
+   {
       processQueue();
       hash.clear();
    }
-
 }

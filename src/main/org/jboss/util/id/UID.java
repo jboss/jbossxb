@@ -33,8 +33,6 @@ import org.jboss.util.LongCounter;
  *
  * <p>This <i>should</i> provide adequate uniqueness for most purposes.
  *
- * @see UIDFactory
- *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */

@@ -90,7 +90,6 @@ public class ObjectNameConverter
       if( pProperties == null || pProperties.size() == 0 ) {
          throw new MalformedObjectNameException(" null or empty properties" );
       }
-      
       Hashtable lProperties = initProperties( pProperties, false );
       return new ObjectName( pDomainName, lProperties );
    }
@@ -121,7 +120,13 @@ public class ObjectNameConverter
       return pObjectName.getDomain() + ":" + reverseString( pObjectName.getKeyPropertyList() );
    }
    
-   private static String convertCharacters( String pValue, boolean pEncrypt ) {
+   /**
+    * Encrypt or decrypt the forbidden characters in an Object Name value property
+    *
+    * @param pValue Property Value of the Object Name's property list to be en- or decrypted
+    * @param pEncrypt True if the value must be encrypted otherwise decrypted
+    **/
+   public static String convertCharacters( String pValue, boolean pEncrypt ) {
       String lReturn = pValue;
       if( pEncrypt ) {
          int lIndex = lReturn.indexOf( "%" );
@@ -284,7 +289,7 @@ public class ObjectNameConverter
     *
     * precomputes the hashcode
     *
-    * ATTENTION: Originally taken from the JBossMQ ObjectName Implementation
+    * ATTENTION: Originally taken from the JBossMX ObjectName Implementation
     * but adjusted to our need here.
     */
    private static Hashtable initProperties(Hashtable properties, boolean pPattern ) throws MalformedObjectNameException

@@ -73,7 +73,8 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    }
 
    /**
-    * Create a new thread pool
+    * Create a new thread pool with a default queue size of 1024, min/max pool
+    * sizes of 100 and a keep alive of 60 seconds.
     *
     * @param name the pool name
     */
@@ -83,7 +84,7 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
 
       queue = new BoundedLinkedQueue(1024);
 
-      executor = new PooledExecutor(queue, 100);
+      executor = new MinPooledExecutor(queue, 100);
       executor.setMinimumPoolSize(100);
       executor.setKeepAliveTime(60 * 1000);
       executor.setThreadFactory(factory);
@@ -211,18 +212,25 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       return executor.getPoolSize();
    }
 
+   public int getMinimumPoolSize()
+   {
+      return executor.getMinimumPoolSize();
+   }
+
+   public void setMinimumPoolSize(int size)
+   {
+      executor.setMinimumPoolSize(size);
+   }
+
    public int getMaximumPoolSize()
    {
       return executor.getMaximumPoolSize();
    }
-
    public void setMaximumPoolSize(int size)
    {
-      synchronized (executor)
-      {
-         executor.setMinimumPoolSize(size);
-         executor.setMaximumPoolSize(size);
-      }
+      // This is no longer called since it can be set independently
+      // executor.setMinimumPoolSize(size);
+      executor.setMaximumPoolSize(size);
    }
 
    public long getKeepAliveTime()

@@ -1632,7 +1632,7 @@ public final class SimpleTypeBindings
             throw new IllegalStateException("No namespace URI registered for prefix: " + prefix);
 
          String localPart = value.substring(colonIndex + 1);
-         return new QName(nsURI, localPart);
+         return new QName(nsURI, localPart, prefix);
       }
       else
       {
@@ -1646,13 +1646,17 @@ public final class SimpleTypeBindings
    public static String marshalQName(QName value, NamespaceContext nsRegistry)
    {
       String nsURI = value.getNamespaceURI();
-      if (nsURI.length() > 0)
+      if(value.getPrefix() != null)
+      {
+         return value.getPrefix().length() > 0 ? value.getPrefix() + ":" + value.getLocalPart() : value.getLocalPart();
+      }
+      else if (nsURI.length() > 0)
       {
          String prefix = nsRegistry.getPrefix(nsURI);
          if (prefix == null)
             throw new IllegalStateException("Namespace URI not registered: " + nsURI);
 
-         return prefix + ":" + value.getLocalPart();
+         return prefix.length() > 0 ? prefix + ":" + value.getLocalPart() : value.getLocalPart();
       }
       else
       {

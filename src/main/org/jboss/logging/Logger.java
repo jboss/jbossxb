@@ -55,7 +55,7 @@ public class Logger
    /** 
     * Check to see if the TRACE priority is enabled for this category.
     *
-    * @return true if a {@link #trace(String)} method invocation would pass
+    * @return true if a {@link #trace(Object)} method invocation would pass
     * the msg to the configured appenders, false otherwise.
     */
    public boolean isTraceEnabled()
@@ -86,7 +86,7 @@ public class Logger
    /**
     * Check to see if the TRACE priority is enabled for this category.
     *
-    * @return true if a {@link #trace(String)} method invocation would pass
+    * @return true if a {@link #trace(Object)} method invocation would pass
     * the msg to the configured appenders, false otherwise.
     */
    public boolean isDebugEnabled()
@@ -118,7 +118,7 @@ public class Logger
    /** 
     * Check to see if the INFO priority is enabled for this category.
     *
-    * @return true if a {@link #info(String)} method invocation would pass
+    * @return true if a {@link #info(Object)} method invocation would pass
     * the msg to the configured appenders, false otherwise.
     */
    public boolean isInfoEnabled()

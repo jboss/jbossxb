@@ -68,7 +68,7 @@ public class MappingObjectModelFactory
     * @param field     the field name
     * @param converter the type convertor
     */
-   public void mapElementToField(String element, Class cls, String field, TypeConverter converter)
+   public void mapElementToField(String element, Class cls, String field, TypeBinding converter)
    {
       ElementToFieldMapping mapping = new ElementToFieldMapping(element, cls, field, converter);
       addElementToFieldMapping(mapping);
@@ -315,7 +315,7 @@ public class MappingObjectModelFactory
                ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
                   new ElementToFieldMappingKey(localName, o.getClass())
                );
-               TypeConverter converter = fieldMapping == null ? null : fieldMapping.converter;
+               TypeBinding converter = fieldMapping == null ? null : fieldMapping.converter;
 
                // if converter != null it will be used in setValue
                if(converter == null)
@@ -796,7 +796,7 @@ public class MappingObjectModelFactory
 
       public final String field;
 
-      public final TypeConverter converter;
+      public final TypeBinding converter;
 
       public final ElementToFieldMappingKey key;
 
@@ -804,7 +804,7 @@ public class MappingObjectModelFactory
 
       public final Method setter;
 
-      public ElementToFieldMapping(String element, Class cls, String field, TypeConverter converter)
+      public ElementToFieldMapping(String element, Class cls, String field, TypeBinding converter)
       {
          this.element = element;
          this.cls = cls;

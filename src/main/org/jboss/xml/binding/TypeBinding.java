@@ -12,9 +12,9 @@ import java.text.ParseException;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface TypeConverter
+public interface TypeBinding
 {
-   TypeConverter STRING = new TypeConverter()
+   TypeBinding STRING = new TypeBinding()
    {
       public Object unmarshal(String value)
       {
@@ -27,7 +27,7 @@ public interface TypeConverter
       }
    };
 
-   TypeConverter INT = new TypeConverter()
+   TypeBinding INT = new TypeBinding()
    {
       public Object unmarshal(String value)
       {
@@ -40,7 +40,7 @@ public interface TypeConverter
       }
    };
 
-   TypeConverter LONG = new TypeConverter()
+   TypeBinding LONG = new TypeBinding()
    {
       public Object unmarshal(String value)
       {
@@ -53,7 +53,7 @@ public interface TypeConverter
       }
    };
 
-   TypeConverter DOUBLE = new TypeConverter()
+   TypeBinding DOUBLE = new TypeBinding()
    {
       public Object unmarshal(String value)
       {
@@ -66,7 +66,7 @@ public interface TypeConverter
       }
    };
 
-   TypeConverter FLOAT = new TypeConverter()
+   TypeBinding FLOAT = new TypeBinding()
    {
       public Object unmarshal(String value)
       {
@@ -79,7 +79,7 @@ public interface TypeConverter
       }
    };
 
-   TypeConverter SHORT = new TypeConverter()
+   TypeBinding SHORT = new TypeBinding()
    {
       public Object unmarshal(String value)
       {
@@ -92,7 +92,7 @@ public interface TypeConverter
       }
    };
 
-   TypeConverter BYTE = new TypeConverter()
+   TypeBinding BYTE = new TypeBinding()
    {
       public Object unmarshal(String value)
       {
@@ -105,7 +105,7 @@ public interface TypeConverter
       }
    };
 
-   TypeConverter CHAR = new TypeConverter()
+   TypeBinding CHAR = new TypeBinding()
    {
       public Object unmarshal(String value)
       {
@@ -118,7 +118,7 @@ public interface TypeConverter
       }
    };
 
-   TypeConverter JAVA_UTIL_DATE = new TypeConverter()
+   TypeBinding JAVA_UTIL_DATE = new TypeBinding()
    {
       private static final String FORMAT = "yyyy-MM-dd";
 

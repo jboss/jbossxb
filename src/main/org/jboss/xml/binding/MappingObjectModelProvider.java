@@ -39,7 +39,7 @@ public class MappingObjectModelProvider
                                  String field,
                                  String namespaceURI,
                                  String localName,
-                                 TypeConverter converter)
+                                 TypeBinding converter)
    {
       FieldToElementMapping mapping = new FieldToElementMapping(cls, field, namespaceURI, localName, converter);
       fieldMappings.put(mapping.localName, mapping);
@@ -230,7 +230,7 @@ public class MappingObjectModelProvider
       public final String field;
       public final String namespaceURI;
       public final String localName;
-      public final TypeConverter converter;
+      public final TypeBinding converter;
       public final Method getter;
       public final Method setter;
 
@@ -238,7 +238,7 @@ public class MappingObjectModelProvider
                                    String field,
                                    String namespaceURI,
                                    String localName,
-                                   TypeConverter converter)
+                                   TypeBinding converter)
       {
          this.cls = cls;
          this.field = field;

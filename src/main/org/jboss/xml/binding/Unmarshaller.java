@@ -49,8 +49,8 @@ public class Unmarshaller
    public Unmarshaller()
       throws JBossXBException
    {
-      parser = new SaxJBossXBParser();
-      //parser = new XniJBossXBParser();
+      //parser = new SaxJBossXBParser();
+      parser = new XniJBossXBParser();
 
       parser.setFeature(VALIDATION, true);
       parser.setFeature(SCHEMA_VALIDATION, true);

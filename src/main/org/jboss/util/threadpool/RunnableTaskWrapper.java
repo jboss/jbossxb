@@ -92,10 +92,13 @@ public class RunnableTaskWrapper implements TaskWrapper
 
    public void stopTask()
    {
+      boolean trace = log.isTraceEnabled();
       // Interrupt the run thread if its not null
       if( runThread != null && runThread.isInterrupted() == false )
       {
          runThread.interrupt();
+         if( trace )
+            log.trace("stopTask, interrupted thread="+runThread);
       }
       else if( runThread != null )
       {
@@ -103,6 +106,8 @@ public class RunnableTaskWrapper implements TaskWrapper
          use the deprecated stop method to try to force the thread abort.
          */
          runThread.stop();
+         if( trace )
+            log.trace("stopTask, stopped thread="+runThread);
       }
    }
 
@@ -119,12 +124,17 @@ public class RunnableTaskWrapper implements TaskWrapper
 
    public void run()
    {
+      boolean trace = log.isTraceEnabled();
       try
       {
+         if( trace )
+            log.trace("Begin run, wrapper="+this);
          runThread = Thread.currentThread();
          started = true;
          runnable.run();
          runThread = null;
+         if( trace )
+            log.trace("End run, wrapper="+this);
       }
       catch (Throwable t)
       {

@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.jboss.util.collection.WeakValueHashMap;
+import org.jboss.logging.Logger;
 
 import EDU.oswego.cs.dl.util.concurrent.BoundedLinkedQueue;
 import EDU.oswego.cs.dl.util.concurrent.SynchronizedBoolean;
@@ -38,6 +39,8 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    /** The internal pool number */
    private static final SynchronizedInt lastPoolNumber = new SynchronizedInt(0);
 
+   private static Logger log = Logger.getLogger(BasicThreadPool.class);
+
    // Attributes ----------------------------------------------------
 
    /** The thread pool name */
@@ -63,9 +66,12 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
 
    /** Has the pool been stopped? */
    private SynchronizedBoolean stopped = new SynchronizedBoolean(false);
-
+   /** The Heap<TimeoutInfo> of tasks ordered by their completion timeout */
    private Heap tasksWithTimeouts = new Heap(13);
-   TimeoutMonitor timeoutTask;
+   /** The task completion timeout monitor runnable */
+   private TimeoutMonitor timeoutTask;
+   /** The trace level logging flag */
+   private boolean trace;
 
    // Static --------------------------------------------------------
 
@@ -87,6 +93,7 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
     */
    public BasicThreadPool(String name)
    {
+      trace = log.isTraceEnabled();
       ThreadFactory factory = new ThreadPoolThreadFactory();
 
       queue = new BoundedLinkedQueue(1024);
@@ -107,6 +114,7 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
 
    public void stop(boolean immediate)
    {
+      log.debug("stop, immediate="+immediate);
       stopped.set(true);
       if (immediate)
          executor.shutdownNow();
@@ -125,6 +133,8 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
 
    public void runTaskWrapper(TaskWrapper wrapper)
    {
+      if( trace )
+         log.trace("runTaskWrapper, wrapper="+wrapper);
       if (stopped.get())
       {
          wrapper.rejectTask(new ThreadPoolStoppedException("Thread pool has been stopped"));
@@ -351,6 +361,8 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
     */
    protected void executeOnThread(TaskWrapper wrapper)
    {
+      if( trace )
+         log.trace("executeOnThread, wrapper="+wrapper);
       wrapper.run();
    }
 
@@ -361,6 +373,8 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
     */
    protected void execute(TaskWrapper wrapper)
    {
+      if( trace )
+         log.trace("execute, wrapper="+wrapper);
       try
       {
          executor.execute(wrapper);
@@ -387,7 +401,7 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    protected synchronized void checkTimeoutMonitor()
    {
       if( timeoutTask == null )
-         timeoutTask = new TimeoutMonitor(name);      
+         timeoutTask = new TimeoutMonitor(name, log);      
    }
    protected TimeoutInfo getNextTimeout()
    {
@@ -420,11 +434,17 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       long start;
       long timeoutMS;
       TaskWrapper wrapper;
+      boolean firstStop;
       TimeoutInfo(TaskWrapper wrapper, long timeout)
       {
          this.start = System.currentTimeMillis();
          this.timeoutMS = start + timeout;
          this.wrapper = wrapper;
+      }
+      public void setTimeout(long timeout)
+      {
+         this.start = System.currentTimeMillis();
+         this.timeoutMS = start + timeout;         
       }
       /** Order TimeoutInfo based on the timestamp at which the task needs to
        * be completed by.
@@ -455,6 +475,17 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       {
          return timeoutMS - now;
       }
+      /** Invoke stopTask on the wrapper and indicate whether this was the first
+       * time the task has been notified to stop.
+       * @return true if this is the first stopTask, false on the second.
+       */ 
+      public boolean stopTask()
+      {
+         wrapper.stopTask();
+         boolean wasFirstStop = firstStop == false;
+         firstStop = true;
+         return wasFirstStop;
+      }
    }
    /**
     * The monitor runnable which validates that threads are completing within
@@ -462,8 +493,10 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
     */ 
    private class TimeoutMonitor implements Runnable
    {
-      TimeoutMonitor(String name)
+      final Logger log;
+      TimeoutMonitor(String name, Logger log)
       {
+         this.log = log;
          Thread t = new Thread(this, name+" TimeoutMonitor");
          t.setDaemon(true);
          t.start();
@@ -487,6 +520,7 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
          boolean isStopped = stopped.get();
          while( isStopped == false )
          {
+            boolean trace = log.isTraceEnabled();
             try
             {
                TimeoutInfo info = getNextTimeout();
@@ -494,17 +528,29 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
                {
                   long now = System.currentTimeMillis();
                   long timeToTimeout = info.getTaskCompletionTimeout(now);
-                  if( timeToTimeout < 0 )
-                     timeToTimeout = 1;
-                  Thread.sleep(timeToTimeout);
+                  if( timeToTimeout > 0 )
+                  {
+                     if( trace )
+                     {
+                        log.trace("Will check wrapper="+info.getTaskWrapper()
+                           +" after "+timeToTimeout);
+                     }
+                     Thread.sleep(timeToTimeout);
+                  }
                   // Check the status of the task
                   TaskWrapper wrapper = info.getTaskWrapper();
                   if( wrapper.isComplete() == false )
                   {
-                     wrapper.stopTask();
-                     // Requeue the TimeoutInfo
-                     TimeoutInfo recheck = new TimeoutInfo(wrapper, 1000);
-                     tasksWithTimeouts.insert(recheck);
+                     if( trace )
+                        log.trace("Failed completion check for wrapper="+wrapper);
+                     if( info.stopTask() == true )
+                     {
+                        // Requeue the TimeoutInfo to see that the task exits run
+                        info.setTimeout(1000);
+                        tasksWithTimeouts.insert(info);
+                        if( trace )
+                           log.trace("Rescheduled completion check for wrapper="+wrapper);
+                     }
                   }
                }
                else
@@ -514,10 +560,11 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
             }
             catch(InterruptedException e)
             {
+               log.debug("Timeout monitor has been interrupted", e);
             }
             catch(Throwable e)
             {
-               
+               log.debug("Timeout monitor saw unexpected error", e);               
             }
             isStopped = stopped.get();            
          }

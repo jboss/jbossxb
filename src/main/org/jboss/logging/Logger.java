@@ -20,6 +20,19 @@ import java.io.Serializable;
  * To set
  *
  * <p>Only exposes the relevent factory and logging methods.
+ * 
+ * <p>For JBoss the logging should be done as follows:
+ * <ul>
+ * <li>FATAL - JBoss is likely to/will crash
+ * <li>ERROR - A definite problem
+ * <li>WARN - Likely to be a problem, or it could be JBoss
+ *            detected a problem it can recover from
+ * <li>INFO - Lifecycle low volume, e.g. "Bound x into jndi",
+ *            things that are of interest to a user
+ * <li>DEBUG - Lifecycle low volume but necessarily of interest 
+ *             to the user, e.g. "Starting listener thread"
+ * <li>TRACE - High volume detailed logging
+ * </ul>
  *
  * @see #isTraceEnabled
  * @see #trace(Object)
@@ -124,8 +137,9 @@ public class Logger implements Serializable
    }
 
    /**
-    * Check to see if the TRACE level is enabled for this logger.
+    * Check to see if the DEBUG level is enabled for this logger.
     *
+    * @deprecated DEBUG is for low volume logging, you don't need this
     * @return true if a {@link #trace(Object)} method invocation would pass
     * the msg to the configured appenders, false otherwise.
     */
@@ -155,6 +169,7 @@ public class Logger implements Serializable
    /**
     * Check to see if the INFO level is enabled for this logger.
     *
+    * @deprecated INFO is for low volume information, you don't need this
     * @return true if a {@link #info(Object)} method invocation would pass
     * the msg to the configured appenders, false otherwise.
     */

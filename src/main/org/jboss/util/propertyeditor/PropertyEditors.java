@@ -47,6 +47,8 @@ public class PropertyEditors
       */
       Class strArrayType = String[].class;
       PropertyEditorManager.registerEditor(strArrayType, StringArrayEditor.class);
+      Class clsArrayType = Class[].class;
+      PropertyEditorManager.registerEditor(clsArrayType, ClassArrayEditor.class);
    }
 
    /**

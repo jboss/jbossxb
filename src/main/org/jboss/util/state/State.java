@@ -73,11 +73,7 @@ public class State
    
    public String toString()
    {
-      if (name == null) {
-         return getName();
-      }
-
-      return name + " (" + value + ")";
+      return getName();
    }
 
    public String toIdentityString()

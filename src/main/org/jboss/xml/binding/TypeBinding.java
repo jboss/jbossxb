@@ -496,6 +496,10 @@ public final class TypeBinding
             );
          }
       }
+      else if(Object.class == javaType)
+      {
+         result = value;
+      }
       else
       {
          //todo do something

@@ -49,8 +49,8 @@ public class Unmarshaller
    public Unmarshaller()
       throws JBossXBException
    {
-      //parser = new SaxJBossXBParser();
-      parser = new XniJBossXBParser();
+      parser = new SaxJBossXBParser();
+      //parser = new XniJBossXBParser();
 
       parser.setFeature(VALIDATION, true);
       parser.setFeature(SCHEMA_VALIDATION, true);
@@ -108,6 +108,23 @@ public class Unmarshaller
       builder.init(getGenericObjectModelFactory(factory), root);
       parser.parse(systemId, builder);
       return builder.getRoot();
+   }
+   public Object unmarshal(InputSource is, ObjectModelFactory factory, Object root) throws JBossXBException
+   {
+      Object result;
+      if(is.getCharacterStream() != null)
+      {
+         result = unmarshal(is.getCharacterStream(), factory, root);
+      }
+      else if(is.getByteStream() != null)
+      {
+         result = unmarshal(is.getByteStream(), factory, root);
+      }
+      else
+      {
+         result = unmarshal(is.getSystemId(), factory, root);
+      }
+      return result;
    }
 
    private static final GenericObjectModelFactory getGenericObjectModelFactory(ObjectModelFactory factory)

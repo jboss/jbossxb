@@ -178,8 +178,7 @@ public class XniJBossXBParser
       }
       catch(Exception e)
       {
-         log.error("Failed to parse document " + systemId + ": " + e.getMessage(), e);
-         throw new JBossXBException("Failed to parse document", e);
+         throw new JBossXBException("Failed to parse document " + systemId, e);
       }
    }
 
@@ -194,7 +193,6 @@ public class XniJBossXBParser
       }
       catch(Exception e)
       {
-         log.error("Failed to parse document : " + e.getMessage(), e);
          throw new JBossXBException("Failed to parse document", e);
       }
    }
@@ -210,7 +208,6 @@ public class XniJBossXBParser
       }
       catch(Exception e)
       {
-         log.error("Failed to parse document : " + e.getMessage(), e);
          throw new JBossXBException("Failed to parse document", e);
       }
    }
@@ -277,7 +274,7 @@ public class XniJBossXBParser
 
          if(type == null)
          {
-            log.warn("Type is not availble for " + name.rawname);
+            log.warn("Type is not available for " + name.rawname);
          }
 
          if(namespaces)

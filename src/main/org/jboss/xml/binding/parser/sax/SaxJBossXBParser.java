@@ -50,7 +50,6 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         log.error("Failed to create a new SAX parser: " + e.getMessage(), e);
          throw new JBossXBException("Failed to create a new SAX parser", e);
       }
 
@@ -61,7 +60,6 @@ public class SaxJBossXBParser
       }
       catch(SAXException e)
       {
-         log.error("Failed to get parser's XMLReader: " + e.getMessage(), e);
          throw new JBossXBException("Failed to get parser's XMLReader", e);
       }
 
@@ -87,7 +85,6 @@ public class SaxJBossXBParser
       }
       catch(SAXException e)
       {
-         log.error("Failed tp set EntityResolver: " + e.getMessage(), e);
          throw new JBossXBException("Failed to set EntityResolver", e);
       }
    }
@@ -100,7 +97,6 @@ public class SaxJBossXBParser
       }
       catch(SAXException e)
       {
-         log.error("Failed to get parser's XMLReader: " + e.getMessage(), e);
          throw new JBossXBException("Failed to get parser's XMLReader", e);
       }
    }
@@ -113,7 +109,6 @@ public class SaxJBossXBParser
       }
       catch(SAXException e)
       {
-         log.error("Failed to get parser's XMLReader: " + e.getMessage(), e);
          throw new JBossXBException("Failed to get parser's XMLReader", e);
       }
    }
@@ -127,8 +122,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         log.error("Failed to parse source: " + e.getMessage(), e);
-         throw new JBossXBException("Failed to parser source.", e);
+         throw new JBossXBException("Failed to parse source.", e);
       }
    }
 
@@ -141,8 +135,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         log.error("Failed to parse source: " + e.getMessage(), e);
-         throw new JBossXBException("Failed to parser source.", e);
+         throw new JBossXBException("Failed to parse source.", e);
       }
    }
 
@@ -155,8 +148,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         log.error("Failed to parse source: " + e.getMessage(), e);
-         throw new JBossXBException("Failed to parser source.", e);
+         throw new JBossXBException("Failed to parse source.", e);
       }
    }
 

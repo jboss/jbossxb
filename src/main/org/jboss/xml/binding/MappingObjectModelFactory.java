@@ -221,8 +221,11 @@ public class MappingObjectModelFactory implements GenericObjectModelFactory
       if (trace)
          log.trace("newChild object=" + o + " navigator=" + navigator + " namespaceURI=" + namespaceURI + " localName=" + localName + " attributes=" + attrs);
 
-      Object child = null;
+      if (o == null)
+         throw new RuntimeException("Attempt to add a new child to a null parent localName=" + localName);
 
+      Object child = null;
+      
       ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
       XSTypeDefinition type = navigator.getType();
       if(mapping != null)

@@ -35,10 +35,11 @@ public class PropertyEditors
       String[] currentPath = PropertyEditorManager.getEditorSearchPath();
       int length = currentPath != null ? currentPath.length : 0;
       String[] newPath = new String[length+2];
-      System.arraycopy(currentPath, 0, newPath, 0, length);
-      // May want to put the JBoss editor path first, for now append it
-      newPath[length] = "org.jboss.util.propertyeditor";
-      newPath[length+1] = "org.jboss.mx.util.propertyeditor";
+      System.arraycopy(currentPath, 0, newPath, 2, length);
+      // Put the JBoss editor path first
+      // The default editors are not very flexible
+      newPath[0] = "org.jboss.util.propertyeditor";
+      newPath[1] = "org.jboss.mx.util.propertyeditor";
       PropertyEditorManager.setEditorSearchPath(newPath);
 
       /* Register the editor types that will not be found using the standard
@@ -49,6 +50,8 @@ public class PropertyEditors
       PropertyEditorManager.registerEditor(strArrayType, StringArrayEditor.class);
       Class clsArrayType = Class[].class;
       PropertyEditorManager.registerEditor(clsArrayType, ClassArrayEditor.class);
+      Class intArrayType = int[].class;
+      PropertyEditorManager.registerEditor(intArrayType, IntArrayEditor.class);
    }
 
    /**

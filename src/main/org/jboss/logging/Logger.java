@@ -9,13 +9,16 @@
 
 package org.jboss.logging;
 
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Level;
 import org.apache.log4j.Category;
 import org.apache.log4j.Priority;
 
 /** 
- * A custom log4j Category wrapper that adds a trace level priority, 
- * is serializable and only exposes the relevent factory and logging 
- * methods.
+ * A custom Log4j Logger wrapper that adds a trace level and
+ * is serializable.
+ *
+ * <p>Only exposes the relevent factory and logging methods.
  *
  * @see #isTraceEnabled
  * @see #trace(Object)
@@ -28,25 +31,28 @@ import org.apache.log4j.Priority;
 public class Logger
    implements java.io.Serializable
 {
-   /** The category name. */
+   /** The logger name. */
    private final String name;
 
    /** The Log4j delegate logger. */
-   private transient Category log;
+   private transient org.apache.log4j.Logger log;
 
    /** 
-    * Creates new JBossCategory with the given category name.
+    * Creates new Logger the given logger name.
     *
-    * @param name    the category name.
+    * @param name    the logger name.
     */
    protected Logger(final String name)
    {
       this.name = name;
-      log = Category.getInstance(name);
+
+      log = LogManager.getLogger(name);
    }
 
    /**
-    * Expose the raw category for this logger.
+    * Expose the raw logger for this logger.
+    *
+    * @deprecated Use {@link #getLogger} instead.
     */
    public Category getCategory()
    {
@@ -54,9 +60,17 @@ public class Logger
    }
 
    /**
-    * Return the category name of this logger.
+    * Exposes the delegate Log4j Logger.
+    */
+   public org.apache.log4j.Logger getLogger()
+   {
+      return log;
+   }
+   
+   /**
+    * Return the name of this logger.
     *
-    * @return The category name of this logger.
+    * @return The name of this logger.
     */
    public String getName()
    {
@@ -64,157 +78,159 @@ public class Logger
    }
    
    /** 
-    * Check to see if the TRACE priority is enabled for this category.
+    * Check to see if the TRACE level is enabled for this logger.
     *
     * @return true if a {@link #trace(Object)} method invocation would pass
-    * the msg to the configured appenders, false otherwise.
+    *         the msg to the configured appenders, false otherwise.
     */
    public boolean isTraceEnabled()
    {
-      if (log.isEnabledFor(XPriority.TRACE) == false)
+      if (log.isEnabledFor(XLevel.TRACE) == false)
          return false;
-      return XPriority.TRACE.isGreaterOrEqual(log.getChainedPriority());
+      return XLevel.TRACE.isGreaterOrEqual(log.getEffectiveLevel());
    }
 
    /** 
-    * Issue a log msg with a priority of TRACE.
-    * Invokes log.log(XPriority.TRACE, message);
+    * Issue a log msg with a level of TRACE.
+    * Invokes log.log(XLevel.TRACE, message);
     */
    public void trace(Object message)
    {
-      log.log(XPriority.TRACE, message);
+      log.log(XLevel.TRACE, message);
    }
 
    /** 
-    * Issue a log msg and throwable with a priority of TRACE.
-    * Invokes log.log(XPriority.TRACE, message, t);
+    * Issue a log msg and throwable with a level of TRACE.
+    * Invokes log.log(XLevel.TRACE, message, t);
     */
    public void trace(Object message, Throwable t)
    {
-      log.log(XPriority.TRACE, message, t);
+      log.log(XLevel.TRACE, message, t);
    }
 
    /**
-    * Check to see if the TRACE priority is enabled for this category.
+    * Check to see if the TRACE level is enabled for this logger.
     *
     * @return true if a {@link #trace(Object)} method invocation would pass
     * the msg to the configured appenders, false otherwise.
     */
    public boolean isDebugEnabled()
    {
-      Priority p = Priority.DEBUG;
-      if (log.isEnabledFor(p) == false)
+      Level l = Level.DEBUG;
+      if (log.isEnabledFor(l) == false)
          return false;
-      return p.isGreaterOrEqual(log.getChainedPriority());
+      return l.isGreaterOrEqual(log.getEffectiveLevel());
    }
 
    /** 
-    * Issue a log msg with a priority of DEBUG.
-    * Invokes log.log(Priority.DEBUG, message);
+    * Issue a log msg with a level of DEBUG.
+    * Invokes log.log(Level.DEBUG, message);
     */
    public void debug(Object message)
    {
-      log.log(Priority.DEBUG, message);
+      log.log(Level.DEBUG, message);
    }
 
    /** 
-    * Issue a log msg and throwable with a priority of DEBUG.
-    * Invokes log.log(Priority.DEBUG, message, t);
+    * Issue a log msg and throwable with a level of DEBUG.
+    * Invokes log.log(Level.DEBUG, message, t);
     */
    public void debug(Object message, Throwable t)
    {
-      log.log(Priority.DEBUG, message, t);
+      log.log(Level.DEBUG, message, t);
    }
 
    /** 
-    * Check to see if the INFO priority is enabled for this category.
+    * Check to see if the INFO level is enabled for this logger.
     *
     * @return true if a {@link #info(Object)} method invocation would pass
     * the msg to the configured appenders, false otherwise.
     */
    public boolean isInfoEnabled()
    {
-      Priority p = Priority.INFO;
-      if (log.isEnabledFor(p) == false)
+      Level l = Level.INFO;
+      if (log.isEnabledFor(l) == false)
          return false;
-      return p.isGreaterOrEqual(log.getChainedPriority());
+      return l.isGreaterOrEqual(log.getEffectiveLevel());
    }
 
    /** 
-    * Issue a log msg with a priority of INFO.
-    * Invokes log.log(Priority.INFO, message);
+    * Issue a log msg with a level of INFO.
+    * Invokes log.log(Level.INFO, message);
     */
    public void info(Object message)
    {
-      log.log(Priority.INFO, message);
+      log.log(Level.INFO, message);
    }
 
    /**
-    * Issue a log msg and throwable with a priority of INFO.
-    * Invokes log.log(Priority.INFO, message, t);
+    * Issue a log msg and throwable with a level of INFO.
+    * Invokes log.log(Level.INFO, message, t);
     */
    public void info(Object message, Throwable t)
    {
-      log.log(Priority.INFO, message, t);
+      log.log(Level.INFO, message, t);
    }
 
    /** 
-    * Issue a log msg with a priority of WARN.
-    * Invokes log.log(Priority.WARN, message);
+    * Issue a log msg with a level of WARN.
+    * Invokes log.log(Level.WARN, message);
     */
    public void warn(Object message)
    {
-      log.log(Priority.WARN, message);
+      log.log(Level.WARN, message);
    }
 
    /** 
-    * Issue a log msg and throwable with a priority of WARN.
-    * Invokes log.log(Priority.WARN, message, t);
+    * Issue a log msg and throwable with a level of WARN.
+    * Invokes log.log(Level.WARN, message, t);
     */
    public void warn(Object message, Throwable t)
    {
-      log.log(Priority.WARN, message, t);
+      log.log(Level.WARN, message, t);
    }
 
    /** 
-    * Issue a log msg with a priority of ERROR.
-    * Invokes log.log(Priority.ERROR, message);
+    * Issue a log msg with a level of ERROR.
+    * Invokes log.log(Level.ERROR, message);
     */
    public void error(Object message)
    {
-      log.log(Priority.ERROR, message);
+      log.log(Level.ERROR, message);
    }
 
    /** 
-    * Issue a log msg and throwable with a priority of ERROR.
-    * Invokes log.log(Priority.ERROR, message, t);
+    * Issue a log msg and throwable with a level of ERROR.
+    * Invokes log.log(Level.ERROR, message, t);
     */
    public void error(Object message, Throwable t)
    {
-      log.log(Priority.ERROR, message, t);
+      log.log(Level.ERROR, message, t);
    }
 
    /** 
-    * Issue a log msg with a priority of FATAL.
-    * Invokes log.log(Priority.FATAL, message);
+    * Issue a log msg with a level of FATAL.
+    * Invokes log.log(Level.FATAL, message);
     */
    public void fatal(Object message)
    {
-      log.log(Priority.FATAL, message);
+      log.log(Level.FATAL, message);
    }
 
    /** 
-    * Issue a log msg and throwable with a priority of FATAL.
-    * Invokes log.log(Priority.FATAL, message, t);
+    * Issue a log msg and throwable with a level of FATAL.
+    * Invokes log.log(Level.FATAL, message, t);
     */
    public void fatal(Object message, Throwable t)
    {
-      log.log(Priority.FATAL, message, t);
+      log.log(Level.FATAL, message, t);
    }
 
    /** 
-    * Issue a log msg with the given priority.
+    * Issue a log msg with the given level.
     * Invokes log.log(p, message);
+    *
+    * @deprecated  Use Level versions.
     */
    public void log(Priority p, Object message)
    {
@@ -224,12 +240,32 @@ public class Logger
    /** 
     * Issue a log msg with the given priority.
     * Invokes log.log(p, message, t);
+    *
+    * @deprecated  Use Level versions.
     */
    public void log(Priority p, Object message, Throwable t)
    {
       log.log(p, message, t);
    }
 
+   /** 
+    * Issue a log msg with the given level.
+    * Invokes log.log(l, message);
+    */
+   public void log(Level l, Object message)
+   {
+      log.log(l, message);
+   }
+
+   /** 
+    * Issue a log msg with the given level.
+    * Invokes log.log(l, message, t);
+    */
+   public void log(Level l, Object message, Throwable t)
+   {
+      log.log(l, message, t);
+   }
+   
 
    /////////////////////////////////////////////////////////////////////////
    //                         Custom Serialization                        //
@@ -245,7 +281,7 @@ public class Logger
       throws java.io.IOException, ClassNotFoundException
    {
       // Restore logging
-      log = Category.getInstance(name);
+      log = LogManager.getLogger(name);
    }
 
 
@@ -254,22 +290,21 @@ public class Logger
    /////////////////////////////////////////////////////////////////////////
 
    /** 
-    * Create a Logger instance given the category name.
+    * Create a Logger instance given the logger name.
     *
-    * @param name    the category name
+    * @param name    the logger name
     */
    public static Logger getLogger(String name)
    {
-      Logger logger = new Logger(name);
-      return logger;
+      return new Logger(name);
    }
 
    /** 
-    * Create a Logger instance given the category name with the given suffix.
+    * Create a Logger instance given the logger name with the given suffix.
     *
-    * <p>This will include a category seperator between classname and suffix
+    * <p>This will include a logger seperator between classname and suffix
     *
-    * @param name     The category name
+    * @param name     The logger name
     * @param suffix   A suffix to append to the classname.
     */
    public static Logger getLogger(String name, String suffix)
@@ -278,23 +313,22 @@ public class Logger
    }
 
    /** 
-    * Create a Logger instance given the category class. This simply
+    * Create a Logger instance given the logger class. This simply
     * calls create(clazz.getName()).
     *
-    * @param clazz    the Class whose name will be used as the category name
+    * @param clazz    the Class whose name will be used as the logger name
     */
    public static Logger getLogger(Class clazz)
    {
-      Logger logger = new Logger(clazz.getName());
-      return logger;
+      return new Logger(clazz.getName());
    }
 
    /** 
-    * Create a Logger instance given the category class with the given suffix.
+    * Create a Logger instance given the logger class with the given suffix.
     *
-    * <p>This will include a category seperator between classname and suffix
+    * <p>This will include a logger seperator between classname and suffix
     *
-    * @param clazz    The Class whose name will be used as the category name.
+    * @param clazz    The Class whose name will be used as the logger name.
     * @param suffix   A suffix to append to the classname.
     */
    public static Logger getLogger(Class clazz, String suffix)

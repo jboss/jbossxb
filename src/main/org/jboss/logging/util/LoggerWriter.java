@@ -13,64 +13,63 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 
-import org.apache.log4j.Category;
-import org.apache.log4j.Priority;
+import org.apache.log4j.Logger;
+import org.apache.log4j.Level;
 
 /**
- *  A subclass of PrintWriter that redirects its output to a log4j Category. <p>
+ *  A subclass of PrintWriter that redirects its output to a log4j Logger. <p>
  *
  *  This class is used to have something to give api methods that require a
  *  PrintWriter for logging. JBoss-owned classes of this nature generally ignore
  *  the PrintWriter and do their own log4j logging.
- *
- * @deprecated Use {@link LoggerWriter} instead.
  *
  * @author     <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  *      .
  * @created    August 19, 2001
  * @version    $$
  */
-public class CategoryWriter
-       extends PrintWriter {
-   private Category category;
-   private Priority priority;
+public class LoggerWriter
+   extends PrintWriter
+{
+   private Logger logger;
+   private Level level;
    private boolean  inWrite;
    private boolean  issuedWarning;
 
    /**
-    *  Redirect logging to the indicated category using Priority.INFO
+    *  Redirect logging to the indicated logger using Level.INFO
     *
-    * @param  category  Description of Parameter
+    * @param  logger  Description of Parameter
     */
-   public CategoryWriter( final Category category ) {
-      this( category, Priority.INFO );
+   public LoggerWriter( final Logger logger ) {
+      this( logger, Level.INFO );
    }
 
    /**
-    *  Redirect logging to the indicated category using the given priority. The
+    *  Redirect logging to the indicated logger using the given level. The
     *  ps is simply passed to super but is not used.
     *
-    * @param  category  Description of Parameter
-    * @param  priority  Description of Parameter
+    * @param  logger  Description of Parameter
+    * @param  level  Description of Parameter
     */
-   public CategoryWriter( final Category category,
-         final Priority priority ) {
-      super( new InternalCategoryWriter( category, priority ), true );
+   public LoggerWriter( final Logger logger,
+         final Level level ) {
+      super( new InternalLoggerWriter( logger, level ), true );
    }
 
    /**
     * @created    August 19, 2001
     */
-   static class InternalCategoryWriter extends Writer {
-      private Category category;
-      private Priority priority;
+   static class InternalLoggerWriter extends Writer {
+      private Logger logger;
+      private Level level;
       private boolean closed;
 
-      public InternalCategoryWriter( final Category category, final Priority priority ) {
-         lock = category;
-         //synchronize on this category
-         this.category = category;
-         this.priority = priority;
+      public InternalLoggerWriter( final Logger logger, final Level level ) {
+         lock = logger;
+         //synchronize on this logger
+         this.logger = logger;
+         this.level = level;
       }
 
       public void write( char[] cbuf, int off, int len )
@@ -83,7 +82,7 @@ public class CategoryWriter
             len--;
          }
          if ( len > 0 ) {
-            category.log( priority, String.copyValueOf( cbuf, off, len ) );
+            logger.log( level, String.copyValueOf( cbuf, off, len ) );
          }
       }
 

@@ -20,6 +20,8 @@ import org.apache.log4j.Priority;
  * represents a lower priority useful for logging events that should only
  * be displayed when deep debugging is required.
  *
+ * @deprecated Use {@link XLevel} instead.
+ * 
  * @see org.apache.log4j.Category
  * @see org.apache.log4j.Priority
  *

@@ -88,6 +88,7 @@ public class FilePropertyReader
 
       InputStream in = new BufferedInputStream(getInputStream(filename));
       props.load(in);
+      in.close();
    }
 
    /**

@@ -193,11 +193,9 @@ public class MetadataDrivenObjectModelFactory
       }
       else
       {
-         throw new JBossXBRuntimeException("Element {" +
-            metadata.getNamespace().getNamespaceURI() +
-            ":" +
+         throw new JBossXBRuntimeException("Element " +
             metadata.getElementName() +
-            "} is not bound to any field!"
+            " is not bound to any field!"
          );
       }
    }
@@ -241,11 +239,9 @@ public class MetadataDrivenObjectModelFactory
       }
       else
       {
-         throw new JBossXBRuntimeException("Element {" +
-            metadata.getNamespace().getNamespaceURI() +
-            ":" +
+         throw new JBossXBRuntimeException("Element " +
             metadata.getElementName() +
-            "} is not bound to any field!"
+            " is not bound to any field!"
          );
       }
 

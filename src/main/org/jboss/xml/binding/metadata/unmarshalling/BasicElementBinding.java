@@ -6,38 +6,17 @@
  */
 package org.jboss.xml.binding.metadata.unmarshalling;
 
+import javax.xml.namespace.QName;
+
+
 /**
- * The interface top and non-top level element bindings implement.
- *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
 public interface BasicElementBinding
 {
-   /**
-    * @return namespace binding the element belongs to
-    */
-   NamespaceBinding getNamespace();
-
-   /**
-    * @return element name this binding is defined for
-    */
-   String getElementName();
-
-   /**
-    * @return Java type this element is bound to
-    */
+   QName getElementName();
    Class getJavaType();
-
-   /**
-    * @param name name of a child element
-    * @return child element binding or null if the child element binding was not found
-    */
-   ElementBinding getChildElement(String name);
-
-   /**
-    * @param name attribute name
-    * @return attribute binding
-    */
-   AttributeBinding getAttribute(String name);
+   ElementBinding getElement(QName elementName);
+   AttributeBinding getAttribute(QName attributeName);
 }

@@ -6,9 +6,8 @@
  */
 package org.jboss.xml.binding.metadata.unmarshalling;
 
+
 /**
- * Represents top-level element binding.
- *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */

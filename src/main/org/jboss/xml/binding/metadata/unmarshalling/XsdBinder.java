@@ -42,7 +42,7 @@ public class XsdBinder
    public static DocumentBinding bindXsd(String xsdUrl)
    {
       DocumentBindingFactory factory = DocumentBindingFactory.newInstance();
-      DocumentBinding doc = factory.newDocumentBinding();
+      DocumentBinding doc = factory.newDocumentBinding(null);
 
       XSModel model = loadSchema(xsdUrl);
       StringList namespaces = model.getNamespaces();
@@ -108,7 +108,7 @@ public class XsdBinder
          }
 
          XSObjectList attributeUses = complexType.getAttributeUses();
-         for (int i = 0; i < attributeUses.getLength(); ++i)
+         for(int i = 0; i < attributeUses.getLength(); ++i)
          {
             XSAttributeUse attrUse = (XSAttributeUse)attributeUses.item(i);
             XSAttributeDeclaration attrDec = attrUse.getAttrDeclaration();
@@ -116,7 +116,8 @@ public class XsdBinder
             String baseFieldName = Util.xmlNameToClassName(elementDecl.getName(), true);
             String fieldName = Character.toLowerCase(baseFieldName.charAt(0)) + baseFieldName.substring(1);
 
-            String fqClsName = parentBinding.getNamespace().getJavaPackage() +
+            NamespaceBinding ns = doc.getNamespace(elementDecl.getNamespace());
+            String fqClsName = ns.getJavaPackage() +
                "." +
                Util.xmlNameToClassName(getBaseForClassName(elementDecl), true);
 
@@ -130,7 +131,7 @@ public class XsdBinder
                javaType = null;
             }
 
-            factory.bindAttribute(parentBinding, attrDec.getName(), fieldName, javaType);
+            factory.bindAttribute(parentBinding, attrDec.getNamespace(), attrDec.getName(), fieldName, javaType);
          }
 
       }
@@ -278,7 +279,12 @@ public class XsdBinder
          }
       }
 
-      ElementBinding el = factory.bindElement(parent, elementDecl.getName(), fieldName, javaType);
+      ElementBinding el = factory.bindElement(parent,
+         elementDecl.getNamespace(),
+         elementDecl.getName(),
+         fieldName,
+         javaType
+      );
       bindComplexElement(elementDecl, factory, doc, el);
    }
 

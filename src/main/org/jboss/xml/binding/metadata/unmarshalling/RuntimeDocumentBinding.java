@@ -7,7 +7,9 @@
 package org.jboss.xml.binding.metadata.unmarshalling;
 
 import org.jboss.xml.binding.Util;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.AttributeBindingImpl;
 
+import javax.xml.namespace.QName;
 import java.util.Collection;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
@@ -21,34 +23,28 @@ import java.lang.reflect.Field;
  * @version <tt>$Revision$</tt>
  */
 public class RuntimeDocumentBinding
-   extends DocumentBinding
+   implements DocumentBinding
 {
-   public RuntimeDocumentBinding()
+   public NamespaceBinding getNamespace(String namespaceUri)
    {
-      super(null);
-   }
-
-   protected NamespaceBinding getNamespaceLocal(String nsUri)
-   {
-      return new NamespaceBindingImpl(nsUri);
+      return new NamespaceBindingImpl(namespaceUri);
    }
 
    // Inner
 
    private static final class NamespaceBindingImpl
-      extends NamespaceBinding
+      implements NamespaceBinding
    {
       private final String namespaceUri;
       private final String javaPackage;
 
       public NamespaceBindingImpl(String namespaceUri)
       {
-         super(null);
          this.namespaceUri = namespaceUri;
          javaPackage = Util.xmlNamespaceToJavaPackage(namespaceUri);
       }
 
-      public String getNamespaceURI()
+      public String getNamespaceUri()
       {
          return namespaceUri;
       }
@@ -58,14 +54,14 @@ public class RuntimeDocumentBinding
          return javaPackage;
       }
 
-      protected TopElementBinding getTopElementLocal(String elementName)
+      public TopElementBinding getTopElement(String elementName)
       {
          TopElementBinding topEl;
          String javaTypeName = javaPackage + "." + Util.xmlNameToClassName(elementName, true);
          try
          {
             Class javaType = Thread.currentThread().getContextClassLoader().loadClass(javaTypeName);
-            topEl = new TopElementBindingImpl(this, elementName, javaType);
+            topEl = new TopElementBindingImpl(new QName(namespaceUri, elementName), javaType);
          }
          catch(ClassNotFoundException e)
          {
@@ -76,27 +72,26 @@ public class RuntimeDocumentBinding
       }
    }
 
-   private static abstract class BasicElementBindingImpl
-      extends AbstractBasicElementBinding
+   private static class BasicElementBindingImpl
+      implements BasicElementBinding
    {
-      private final String elementName;
+      private final QName elementName;
       private final Class javaType;
 
-      public BasicElementBindingImpl(NamespaceBinding ns, String elementName, Class javaType)
+      public BasicElementBindingImpl(QName elementName, Class javaType)
       {
-         super(ns, null);
          this.elementName = elementName;
          this.javaType = javaType;
       }
 
-      protected ElementBinding getChildElementLocal(String elementName)
+      public ElementBinding getElement(QName elementName)
       {
          ElementBinding el = null;
-         String clsName = Util.xmlNameToClassName(elementName, true);
+         String clsName = Util.xmlNameToClassName(elementName.getLocalPart(), true);
 
          if(Collection.class.isAssignableFrom(javaType))
          {
-            clsName = ns.getJavaPackage() + "." + clsName;
+            clsName = Util.xmlNamespaceToJavaPackage(elementName.getNamespaceURI()) + "." + clsName;
             Class javaType;
             try
             {
@@ -107,7 +102,7 @@ public class RuntimeDocumentBinding
                // use java.lang.String
                javaType = String.class;
             }
-            el = new ElementBindingImpl(ns, elementName, javaType, null, null, null);
+            el = new ElementBindingImpl(elementName, javaType, null, null, null);
          }
          else
          {
@@ -140,7 +135,7 @@ public class RuntimeDocumentBinding
                Class childType = fieldType;
                if(Collection.class.isAssignableFrom(fieldType))
                {
-                  clsName = ns.getJavaPackage() + "." + clsName;
+                  clsName = Util.xmlNamespaceToJavaPackage(elementName.getNamespaceURI()) + "." + clsName;
                   try
                   {
                      childType = Thread.currentThread().getContextClassLoader().loadClass(clsName);
@@ -159,10 +154,10 @@ public class RuntimeDocumentBinding
          return el;
       }
 
-      protected AttributeBinding getAttributeLocal(String attributeName)
+      public AttributeBinding getAttribute(QName attributeName)
       {
          AttributeBinding attr = null;
-         String clsName = Util.xmlNameToClassName(attributeName, true);
+         String clsName = Util.xmlNameToClassName(attributeName.getLocalPart(), true);
 
          Method getter = null;
          Field field = null;
@@ -188,7 +183,7 @@ public class RuntimeDocumentBinding
 
          if(fieldType != null)
          {
-            clsName = ns.getJavaPackage() + "." + clsName;
+            clsName = Util.xmlNamespaceToJavaPackage(attributeName.getNamespaceURI()) + "." + clsName;
             Class attrJavaType;
             try
             {
@@ -199,13 +194,13 @@ public class RuntimeDocumentBinding
                attrJavaType = fieldType;
             }
 
-            attr = new AttributeBinding(ns, attributeName, attrJavaType, fieldName, javaType);
+            attr = new AttributeBindingImpl(attributeName, attrJavaType, javaType, fieldName);
          }
 
          return attr;
       }
 
-      public String getElementName()
+      public QName getElementName()
       {
          return elementName;
       }
@@ -215,7 +210,7 @@ public class RuntimeDocumentBinding
          return javaType;
       }
 
-      private ElementBinding createElementBinding(String elementName,
+      private ElementBinding createElementBinding(QName elementName,
                                                   Method getter,
                                                   Method setter,
                                                   Field field,
@@ -232,7 +227,7 @@ public class RuntimeDocumentBinding
          {
             return null;
          }
-         return new ElementBindingImpl(ns, elementName, javaType, getter, setter, field);
+         return new ElementBindingImpl(elementName, javaType, getter, setter, field);
       }
    }
 
@@ -244,14 +239,13 @@ public class RuntimeDocumentBinding
       private final Method setter;
       private final Field field;
 
-      public ElementBindingImpl(NamespaceBinding ns,
-                                String elementName,
+      public ElementBindingImpl(QName elementName,
                                 Class javaType,
                                 Method getter,
                                 Method setter,
                                 Field field)
       {
-         super(ns, elementName, javaType);
+         super(elementName, javaType);
          this.getter = getter;
          this.setter = setter;
          this.field = field;
@@ -282,9 +276,9 @@ public class RuntimeDocumentBinding
       extends BasicElementBindingImpl
       implements TopElementBinding
    {
-      public TopElementBindingImpl(NamespaceBinding ns, String elementName, Class javaType)
+      public TopElementBindingImpl(QName elementName, Class javaType)
       {
-         super(ns, elementName, javaType);
+         super(elementName, javaType);
       }
    }
 }

@@ -6,6 +6,7 @@
  */
 package org.jboss.xml.binding.metadata.unmarshalling;
 
+import javax.xml.namespace.QName;
 import java.util.LinkedList;
 
 /**
@@ -52,7 +53,7 @@ public interface BindingCursor
             else
             {
                elBinding = (BasicElementBinding)stack.getLast();
-               elBinding = elBinding.getChildElement(localName);
+               elBinding = elBinding.getElement(new QName(namespaceURI, localName));
             }
             stack.addLast(elBinding);
          }

@@ -64,13 +64,15 @@
     &libraries;
     <!-- The combined library classpath -->
     <path id="library.classpath">
-      <path refid="apache.xalan.classpath"/>
+      <path refid="apache.crimson.classpath"/>
       <path refid="apache.commons.classpath"/>
       <path refid="apache.log4j.classpath"/>
+      <path refid="apache.jaxme.classpath"/>
       <path refid="apache.slide.classpath"/>
+      <path refid="dom4j.dom4j.classpath"/>
       <path refid="gnu.regexp.classpath"/>
+      <path refid="wutka.dtdparser.classpath" />
       <path refid="oswego.concurrent.classpath"/>
-      <path refid="junit.junit.classpath"/>
     </path>
 
     <!-- ======= -->

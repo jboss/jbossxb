@@ -10,9 +10,11 @@
 package org.jboss.util.collection;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.AbstractSet;
 import java.util.Iterator;
+import java.util.Collection;
 
 import org.jboss.util.NullArgumentException;
 
@@ -25,7 +27,7 @@ import org.jboss.util.NullArgumentException;
  */
 public class ListSet
    extends AbstractSet
-   implements Set
+   implements Set, Cloneable
 {
    /** The <tt>List</tt> which will be used for element storage. */
    protected final List list;
@@ -55,6 +57,28 @@ public class ListSet
       this.list = list;
    }
 
+   /**
+    * Construct a <tt>ListSet</tt> using an <tt>ArrayList</tt> for backing.
+    */
+   public ListSet() {
+      this(new ArrayList());
+   }
+
+   /**
+    * Construct a <tt>ListSet</tt> using an <tt>ArrayList</tt> for backing
+    * and populated with the given elements.
+    *
+    * @param elements   The elements for the list.
+    */
+   public ListSet(final Collection elements) {
+      this(new ArrayList(elements));
+   }
+   
+   public List getList()
+   {
+      return list;
+   }
+   
    /**
     * Return the size of the set.
     *
@@ -126,8 +150,7 @@ public class ListSet
    }
 
    /**
-     * Returns a shallow copy of this <tt>ListSet</tt> instance: the elements
-     * themselves are not cloned.
+     * Returns a shallow copy of this <tt>ListSet</tt> instance.
      *
      * @return    A shallow copy of this set.
      */

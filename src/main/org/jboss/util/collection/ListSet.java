@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.AbstractSet;
 import java.util.Iterator;
 import java.util.Collection;
+import java.io.Serializable;
 
 import org.jboss.util.NullArgumentException;
 
@@ -27,7 +28,7 @@ import org.jboss.util.NullArgumentException;
  */
 public class ListSet
    extends AbstractSet
-   implements Set, Cloneable
+   implements Set, Cloneable, Serializable
 {
    /** The <tt>List</tt> which will be used for element storage. */
    protected final List list;

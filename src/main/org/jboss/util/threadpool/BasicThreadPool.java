@@ -122,6 +122,7 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
          case Task.WAIT_FOR_COMPLETE:
          {
             executeOnThread(wrapper);
+            break;
          }
          default:
          {

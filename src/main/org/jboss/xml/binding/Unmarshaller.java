@@ -130,7 +130,7 @@ public class Unmarshaller
 
    public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
    {
-      builder.mapFactoryToNamespace(factory, namespaceUri);
+      builder.mapFactoryToNamespace(getGenericObjectModelFactory(factory), namespaceUri);
    }
 
    public Object unmarshal(InputStream is, ObjectModelFactory factory, Object root)
@@ -153,7 +153,7 @@ public class Unmarshaller
       reader.parse(source);
       ContentPopulator populator = (ContentPopulator)reader.getContentHandler();
       Content content = populator.getContent();
-      return builder.build(factory, root, content);
+      return builder.build(getGenericObjectModelFactory(factory), root, content);
    }
 
    private static final class MetaDataErrorHandler
@@ -211,5 +211,14 @@ public class Unmarshaller
          log.debug("unparsedEntityDecl: name=" + name + ", publicId=" + publicId + ", systemId=" + systemId
             + ", notationName=" + notationName);
       }
+   }
+
+   private static final GenericObjectModelFactory getGenericObjectModelFactory(ObjectModelFactory factory)
+   {
+      if(!(factory instanceof GenericObjectModelFactory))
+      {
+         factory = new DelegatingObjectModelFactory(factory);
+      }
+      return factory instanceof GenericObjectModelFactory ? (GenericObjectModelFactory)factory : new DelegatingObjectModelFactory(factory);
    }
 }

@@ -21,7 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * An instance of this class translates SAX events into org.jboss.xml.binding.ObjectModelFactory calls
+ * An instance of this class translates SAX events into org.jboss.xml.binding.GenericObjectModelFactory calls
  * such as newChild, addChild and setValue.
  * This implementation is not thread-safe.
  *
@@ -56,7 +56,7 @@ public class ObjectModelBuilder
    /**
     * default object model factory
     */
-   private ObjectModelFactory defaultFactory;
+   private GenericObjectModelFactory defaultFactory;
    /**
     * factories mapped to namespace URIs
     */
@@ -76,7 +76,7 @@ public class ObjectModelBuilder
 
    // Public
 
-   public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
+   public void mapFactoryToNamespace(GenericObjectModelFactory factory, String namespaceUri)
    {
       if(factoriesToNs == Collections.EMPTY_MAP)
       {
@@ -85,7 +85,7 @@ public class ObjectModelBuilder
       factoriesToNs.put(namespaceUri, factory);
    }
 
-   public Object build(ObjectModelFactory defaultFactory, Object root, Content content)
+   public Object build(GenericObjectModelFactory defaultFactory, Object root, Content content)
       throws Exception
    {
       this.defaultFactory = defaultFactory;
@@ -191,16 +191,16 @@ public class ObjectModelBuilder
          parent = accepted.peek();
       }
 
-      Object factory = getFactory(namespaceURI);
+      GenericObjectModelFactory factory = getFactory(namespaceURI);
       Object element;
       if(root == null)
       {
-         element = ((ObjectModelFactory) factory).newRoot(parent, this, namespaceURI, localName, atts);
+         element = factory.newRoot(parent, this, namespaceURI, localName, atts);
          root = element;
       }
       else
       {
-         element = newChild(factory, parent, this, namespaceURI, localName, atts);
+         element = factory.newChild(parent, this, namespaceURI, localName, atts);
       }
 
       if(element == null)
@@ -226,7 +226,7 @@ public class ObjectModelBuilder
 
    public void endElement(String namespaceURI, String localName, String qName)
    {
-      Object factory = null;
+      GenericObjectModelFactory factory = null;
 
       if(value.length() > 0)
       {
@@ -241,7 +241,7 @@ public class ObjectModelBuilder
             throw e;
          }
          factory = getFactory(namespaceURI);
-         setValue(factory, element, this, namespaceURI, localName, value.toString().trim());
+         factory.setValue(element, this, namespaceURI, localName, value.toString().trim());
          value.delete(0, value.length());
       }
 
@@ -258,7 +258,7 @@ public class ObjectModelBuilder
                factory = getFactory(namespaceURI);
             }
 
-            addChild(factory, parent, element, this, namespaceURI, localName);
+            factory.addChild(parent, element, this, namespaceURI, localName);
          }
       }
    }
@@ -270,9 +270,9 @@ public class ObjectModelBuilder
 
    // Private
 
-   private Object getFactory(String namespaceUri)
+   private GenericObjectModelFactory getFactory(String namespaceUri)
    {
-      Object factory = factoriesToNs.get(namespaceUri);
+      GenericObjectModelFactory factory = (GenericObjectModelFactory)factoriesToNs.get(namespaceUri);
       if(factory == null)
       {
          factory = defaultFactory;
@@ -280,169 +280,7 @@ public class ObjectModelBuilder
       return factory;
    }
 
-   private static Object newChild(Object factory,
-                                  Object element,
-                                  ContentNavigator navigator,
-                                  String namespaceURI,
-                                  String qName,
-                                  Attributes atts)
-   {
-      Method method = getMethodForElement(factory,
-         "newChild",
-         new Class[]{
-            element.getClass(),
-            ContentNavigator.class,
-            String.class,
-            String.class,
-            Attributes.class
-         });
-
-      if(method == null)
-      {
-         method = getMethodForElement(factory,
-            "newChild",
-            new Class[]{
-               Object.class,
-               ContentNavigator.class,
-               String.class,
-               String.class,
-               Attributes.class
-            });
-      }
-
-      Object child = null;
-      if(method != null)
-      {
-         child = invokeFactory(factory,
-            method,
-            new Object[]{
-               element,
-               navigator,
-               namespaceURI,
-               qName,
-               atts
-            });
-      }
-      else if(log.isTraceEnabled())
-      {
-         log.trace("No newChild method for " + element.getClass().getName());
-      }
-
-      return child;
-   }
-
-   private static void addChild(Object factory,
-                                Object parent,
-                                Object element,
-                                ContentNavigator navigator,
-                                String namespaceURI,
-                                String localName)
-   {
-      Method method = getMethodForElement(factory,
-         "addChild",
-         new Class[]{
-            parent.getClass(),
-            element.getClass(),
-            ContentNavigator.class,
-            String.class,
-            String.class
-         });
-
-      if(method == null)
-      {
-         method = getMethodForElement(factory,
-            "addChild",
-            new Class[]{
-               parent.getClass(),
-               Object.class,
-               ContentNavigator.class,
-               String.class,
-               String.class
-            });
-      }
-
-      if(method == null)
-      {
-         method = getMethodForElement(factory,
-            "addChild",
-            new Class[]{
-               Object.class,
-               Object.class,
-               ContentNavigator.class,
-               String.class,
-               String.class
-            });
-      }
-
-      if(method != null)
-      {
-         invokeFactory(factory,
-            method,
-            new Object[]{
-               parent,
-               element,
-               navigator,
-               namespaceURI,
-               localName
-            });
-      }
-      else if(log.isTraceEnabled())
-      {
-         log.trace("No addChild for parent=" + parent.getClass().getName() + ", child=" + element.getClass().getName());
-      }
-   }
-
-   private static void setValue(Object factory,
-                                Object element,
-                                ContentNavigator navigator,
-                                String namespaceURI,
-                                String qName,
-                                String value)
-   {
-      Method method = getMethodForElement(factory,
-         "setValue",
-         new Class[]{
-            element.getClass(),
-            ContentNavigator.class,
-            String.class,
-            String.class,
-            String.class
-         });
-
-      if(method == null)
-      {
-         method = getMethodForElement(factory,
-            "setValue",
-            new Class[]{
-               Object.class,
-               ContentNavigator.class,
-               String.class,
-               String.class,
-               String.class
-            });
-      }
-
-      if(method != null)
-      {
-         invokeFactory(factory,
-            method,
-            new Object[]{
-               element,
-               navigator,
-               namespaceURI,
-               qName,
-               value
-            });
-      }
-      else if(log.isTraceEnabled())
-      {
-         log.trace("No setValue method for " +
-            element.getClass().getName()
-            + ", uri=" + namespaceURI + ", qn=" + qName + ", value=" + value);
-      }
-   }
-
-   private static Object invokeFactory(Object factory, Method method, Object[] args)
+   static Object invokeFactory(Object factory, Method method, Object[] args)
    {
       try
       {
@@ -460,7 +298,7 @@ public class ObjectModelBuilder
       }
    }
 
-   private static Method getMethodForElement(Object factory, String name, Class[] params)
+   static Method getMethodForElement(Object factory, String name, Class[] params)
    {
       Method method = null;
       try

@@ -125,6 +125,7 @@
       manifest="${build.etc}/default.mf">
       <fileset dir="${build.classes}">
         <include name="org/jboss/**"/>
+        <include name="org/apache/xerces/**"/>
       </fileset>
     </jar>
 

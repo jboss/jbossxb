@@ -9,12 +9,13 @@
 
 package org.jboss.logging;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Level;
-import org.apache.log4j.Category;
-import org.apache.log4j.Priority;
-
 /** 
+ * Logger wrapper that tries to dynamically load a log4j class to
+ * determine if log4j is available in the VM. If it is the case,
+ * a log4j delegate is built and used. In the contrary, a null
+ * logger is used. This class cannot directly reference log4j
+ * classes otherwise the JVM will try to load it and make it fail.
+ * 
  * A custom Log4j Logger wrapper that adds a trace level and
  * is serializable.
  *
@@ -27,15 +28,36 @@ import org.apache.log4j.Priority;
  * @version <tt>$Revision$</tt>
  * @author  Scott.Stark@jboss.org
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author  <a href="mailto:sacha.labourey@cogito-info.ch">Sacha Labourey</a>
+ *
+ * <p><b>Revisions:</b>
+ *
+ * <p><b>30 mai 2002 Sacha Labourey:</b>
+ * <ul>
+ * <li> No more dedicated to log4j: uses a delegate for logging
+ *      and only uses log4j delegate if log4j classes are available on classpath</li>
+ * </ul>
  */
 public class Logger
    implements java.io.Serializable
 {
+   protected static Class pluginClass = null;
+   
+   // We don't directly reference the class so that this class can be loaded
+   // without the JVM to try to load any log4j classes
+   //
+   protected static final String LOG4J_PLUGIN_CLASS_NAME = "org.jboss.logging.Log4jLoggerPlugin";
+   protected static final String LOG4j_DETECTOR_CLASS_NAME = "org.apache.log4j.Logger";
+   
+   static
+   {
+      init();
+   }
+   
    /** The logger name. */
    private final String name;
-
-   /** The Log4j delegate logger. */
-   private transient org.apache.log4j.Logger log;
+   
+   protected transient LoggerPlugin loggerDelegate = null;
 
    /** 
     * Creates new Logger the given logger name.
@@ -45,28 +67,9 @@ public class Logger
    protected Logger(final String name)
    {
       this.name = name;
-
-      log = LogManager.getLogger(name);
+      this.loggerDelegate = getDelegatePlugin (name);     
    }
 
-   /**
-    * Expose the raw logger for this logger.
-    *
-    * @deprecated Use {@link #getLogger} instead.
-    */
-   public Category getCategory()
-   {
-      return log;
-   }
-
-   /**
-    * Exposes the delegate Log4j Logger.
-    */
-   public org.apache.log4j.Logger getLogger()
-   {
-      return log;
-   }
-   
    /**
     * Return the name of this logger.
     *
@@ -77,6 +80,10 @@ public class Logger
       return name;
    }
    
+   public LoggerPlugin getLoggerPlugin ()
+   {
+      return this.loggerDelegate;
+   }
    /** 
     * Check to see if the TRACE level is enabled for this logger.
     *
@@ -84,10 +91,8 @@ public class Logger
     *         the msg to the configured appenders, false otherwise.
     */
    public boolean isTraceEnabled()
-   {
-      if (log.isEnabledFor(XLevel.TRACE) == false)
-         return false;
-      return XLevel.TRACE.isGreaterOrEqual(log.getEffectiveLevel());
+   {      
+      return loggerDelegate.isTraceEnabled ();
    }
 
    /** 
@@ -96,7 +101,7 @@ public class Logger
     */
    public void trace(Object message)
    {
-      log.log(XLevel.TRACE, message);
+      loggerDelegate.trace (message);
    }
 
    /** 
@@ -105,7 +110,7 @@ public class Logger
     */
    public void trace(Object message, Throwable t)
    {
-      log.log(XLevel.TRACE, message, t);
+      loggerDelegate.trace (message, t);
    }
 
    /**
@@ -116,10 +121,7 @@ public class Logger
     */
    public boolean isDebugEnabled()
    {
-      Level l = Level.DEBUG;
-      if (log.isEnabledFor(l) == false)
-         return false;
-      return l.isGreaterOrEqual(log.getEffectiveLevel());
+      return loggerDelegate.isDebugEnabled ();
    }
 
    /** 
@@ -128,7 +130,7 @@ public class Logger
     */
    public void debug(Object message)
    {
-      log.log(Level.DEBUG, message);
+      loggerDelegate.debug (message);
    }
 
    /** 
@@ -137,7 +139,7 @@ public class Logger
     */
    public void debug(Object message, Throwable t)
    {
-      log.log(Level.DEBUG, message, t);
+      loggerDelegate.debug (message, t);
    }
 
    /** 
@@ -148,10 +150,7 @@ public class Logger
     */
    public boolean isInfoEnabled()
    {
-      Level l = Level.INFO;
-      if (log.isEnabledFor(l) == false)
-         return false;
-      return l.isGreaterOrEqual(log.getEffectiveLevel());
+      return loggerDelegate.isInfoEnabled ();
    }
 
    /** 
@@ -160,7 +159,7 @@ public class Logger
     */
    public void info(Object message)
    {
-      log.log(Level.INFO, message);
+      loggerDelegate.info (message);
    }
 
    /**
@@ -169,7 +168,7 @@ public class Logger
     */
    public void info(Object message, Throwable t)
    {
-      log.log(Level.INFO, message, t);
+      loggerDelegate.info (message, t);
    }
 
    /** 
@@ -178,7 +177,7 @@ public class Logger
     */
    public void warn(Object message)
    {
-      log.log(Level.WARN, message);
+      loggerDelegate.warn (message);
    }
 
    /** 
@@ -187,7 +186,7 @@ public class Logger
     */
    public void warn(Object message, Throwable t)
    {
-      log.log(Level.WARN, message, t);
+      loggerDelegate.warn (message, t);      
    }
 
    /** 
@@ -196,7 +195,7 @@ public class Logger
     */
    public void error(Object message)
    {
-      log.log(Level.ERROR, message);
+      loggerDelegate.error (message);
    }
 
    /** 
@@ -205,7 +204,7 @@ public class Logger
     */
    public void error(Object message, Throwable t)
    {
-      log.log(Level.ERROR, message, t);
+      loggerDelegate.error (message, t);      
    }
 
    /** 
@@ -214,7 +213,7 @@ public class Logger
     */
    public void fatal(Object message)
    {
-      log.log(Level.FATAL, message);
+      loggerDelegate.fatal (message);      
    }
 
    /** 
@@ -223,49 +222,8 @@ public class Logger
     */
    public void fatal(Object message, Throwable t)
    {
-      log.log(Level.FATAL, message, t);
+      loggerDelegate.fatal (message, t);      
    }
-
-   /** 
-    * Issue a log msg with the given level.
-    * Invokes log.log(p, message);
-    *
-    * @deprecated  Use Level versions.
-    */
-   public void log(Priority p, Object message)
-   {
-      log.log(p, message);
-   }
-
-   /** 
-    * Issue a log msg with the given priority.
-    * Invokes log.log(p, message, t);
-    *
-    * @deprecated  Use Level versions.
-    */
-   public void log(Priority p, Object message, Throwable t)
-   {
-      log.log(p, message, t);
-   }
-
-   /** 
-    * Issue a log msg with the given level.
-    * Invokes log.log(l, message);
-    */
-   public void log(Level l, Object message)
-   {
-      log.log(l, message);
-   }
-
-   /** 
-    * Issue a log msg with the given level.
-    * Invokes log.log(l, message, t);
-    */
-   public void log(Level l, Object message, Throwable t)
-   {
-      log.log(l, message, t);
-   }
-   
 
    /////////////////////////////////////////////////////////////////////////
    //                         Custom Serialization                        //
@@ -281,7 +239,9 @@ public class Logger
       throws java.io.IOException, ClassNotFoundException
    {
       // Restore logging
-      log = LogManager.getLogger(name);
+      if (pluginClass == null)
+         init();
+      this.loggerDelegate = getDelegatePlugin (name);     
    }
 
 
@@ -334,5 +294,39 @@ public class Logger
    public static Logger getLogger(Class clazz, String suffix)
    {
       return new Logger(clazz.getName() + "." + suffix);
+   }
+   
+   protected static LoggerPlugin getDelegatePlugin (String name)
+   {
+      LoggerPlugin plugin = null;
+      try
+      {
+         plugin = (LoggerPlugin)pluginClass.newInstance ();            
+      }
+      catch (Exception ie)
+      {
+         ie.printStackTrace ();
+         plugin = new NullLoggerPlugin ();
+      }
+      plugin.init (name);
+      
+      return plugin;
+   }
+   
+   protected static void init ()
+   {
+      pluginClass = org.jboss.logging.NullLoggerPlugin.class;
+      try
+      {
+         // try to load the class...
+         //
+         Thread.currentThread ().getContextClassLoader ().loadClass (LOG4j_DETECTOR_CLASS_NAME);
+         
+         // if we arrive here, it means that we can use log4j in this VM (or CL scope)
+         //
+         pluginClass = Thread.currentThread ().getContextClassLoader ().loadClass (LOG4J_PLUGIN_CLASS_NAME);
+      }
+      catch (ClassNotFoundException cnfe) { /* log4j not present*/ }
+         
    }
 }

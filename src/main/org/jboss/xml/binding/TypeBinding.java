@@ -8,12 +8,16 @@ package org.jboss.xml.binding;
 
 import org.jboss.logging.Logger;
 
+import javax.xml.namespace.QName;
 import java.io.Serializable;
+import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.TimeZone;
+import java.util.StringTokenizer;
+import java.net.URISyntaxException;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -312,8 +316,14 @@ public final class TypeBinding
       }
       else if(typeCode == XS_ANYURI)
       {
-         // todo XS_ANYURI
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_ANYURI_NAME);
+         try
+         {
+            result = new java.net.URI(value);
+         }
+         catch(URISyntaxException e)
+         {
+            throw new JBossXBValueFormatException("Failed to unmarshal anyURI value " + value, e);
+         }
       }
       else if(typeCode == XS_UNSIGNEDINT)
       {
@@ -342,8 +352,7 @@ public final class TypeBinding
       }
       else if(typeCode == XS_HEXBINARY)
       {
-         // todo XS_HEXBINARY
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_HEXBINARY_NAME);
+         result = unmarshalHexBinary(value);
       }
       else if(typeCode == XS_ANYSIMPLETYPE)
       {
@@ -357,23 +366,19 @@ public final class TypeBinding
       }
       else if(typeCode == XS_GYEARMONTH)
       {
-         // todo XS_GYEARMONTH
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_GYEARMONTH_NAME);
+         result = unmarshalGYearMonth(value);
       }
       else if(typeCode == XS_GYEAR)
       {
-         // todo XS_GYEAR
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_GYEAR_NAME);
+         result = unmarshalGYear(value);
       }
       else if(typeCode == XS_GMONTHDAY)
       {
-         // todo XS_GMONTHDAY
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_GMONTHDAY_NAME);
+         result = unmarshalGMonthDay(value);
       }
       else if(typeCode == XS_GMONTH)
       {
-         // todo XS_GMONTH
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_GMONTH_NAME);
+         return unmarshalGMonth(value);
       }
       else if(typeCode == XS_GDAY)
       {
@@ -385,38 +390,31 @@ public final class TypeBinding
       }
       else if(typeCode == XS_TOKEN)
       {
-         // todo XS_TOKEN
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_TOKEN_NAME);
+         result = value;
       }
       else if(typeCode == XS_LANGUAGE)
       {
-         // todo XS_LANGUAGE
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_LANGUAGE_NAME);
+         result = value;
       }
       else if(typeCode == XS_NAME)
       {
-         // todo XS_NAME
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_NAME_NAME);
+         result = value;
       }
       else if(typeCode == XS_NCNAME)
       {
-         // todo XS_NCNAME
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_NCNAME_NAME);
+         result = value;
       }
       else if(typeCode == XS_ID)
       {
-         // todo XS_ID
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_ID_NAME);
+         result = value;
       }
       else if(typeCode == XS_NMTOKEN)
       {
-         // todo XS_NMTOKEN
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_NMTOKEN_NAME);
+         result = value;
       }
       else if(typeCode == XS_NMTOKENS)
       {
-         // todo XS_NMTOKENS
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_NMTOKENS_NAME);
+         result = unmarshalNMTokens(value);
       }
       else if(typeCode == XS_NONPOSITIVEINTEGER)
       {
@@ -507,6 +505,113 @@ public final class TypeBinding
       return result;
    }
 
+   public static String[] unmarshalNMTokens(String value)
+   {
+      StringTokenizer tokenizer = new StringTokenizer(value);
+      String[] tokens = new String[tokenizer.countTokens()];
+      for(int i = 0; i < tokens.length; ++i)
+      {
+         tokens[i] = tokenizer.nextToken();
+      }
+      return tokens;
+   }
+
+   /**
+    * --MM-DD[timezone]
+    *
+    * @param value
+    * @return
+    */
+   public static Calendar unmarshalGMonthDay(String value)
+   {
+      if(value.length() < 6 ||
+         value.charAt(0) != '-' ||
+         value.charAt(1) != '-' ||
+         value.charAt(4) != '-')
+      {
+         throw new JBossXBValueFormatException(
+            "gMonthDay value does not follow the format '--MM-DD[timezone]: " + value
+         );
+      }
+
+      Calendar cal = Calendar.getInstance();
+      cal.clear();
+      cal.set(Calendar.MONTH, Integer.parseInt(value.substring(2, 4)) - 1);
+      cal.set(Calendar.DAY_OF_MONTH, Integer.parseInt(value.substring(5, 7)));
+      if(value.length() > 7)
+      {
+         cal.setTimeZone(parseTimeZone(value, 7));
+      }
+      return cal;
+   }
+
+   /**
+    * --MM[timezone]
+    *
+    * @param value
+    * @return
+    */
+   public static Calendar unmarshalGMonth(String value)
+   {
+      if(value.length() < 4 || value.charAt(0) != '-' || value.charAt(1) != '-')
+      {
+         throw new JBossXBValueFormatException("gMonth value does not follow the format '--MM': " + value);
+      }
+
+      Calendar cal = Calendar.getInstance();
+      cal.clear();
+
+      cal.set(Calendar.MONTH, Integer.parseInt(value.substring(2, 4)) - 1);
+      if(value.length() > 4)
+      {
+         cal.setTimeZone(parseTimeZone(value, 4));
+      }
+      return cal;
+   }
+
+   public static Calendar unmarshalGYear(String value)
+   {
+      Calendar cal = Calendar.getInstance();
+      cal.clear();
+      int timeZone = parseGYear(value, 0, cal);
+      if(value.length() > timeZone)
+      {
+         TimeZone tz = parseTimeZone(value, timeZone);
+         cal.setTimeZone(tz);
+      }
+      return cal;
+   }
+
+   /**
+    * Unmarshals gYearDate string following the format [-]CCYY-MM[timezone]
+    *
+    * @param value
+    * @return
+    */
+   public static Calendar unmarshalGYearMonth(String value)
+   {
+      Calendar cal = Calendar.getInstance();
+      cal.clear();
+
+      int month = parseGYear(value, 0, cal);
+      if(value.charAt(month) != '-')
+      {
+         throw new JBossXBValueFormatException(
+            "gYearMonth value does not follow the format '[-]CCYY-MM[timezone]': " + value
+         );
+      }
+
+      cal.set(Calendar.MONTH, Integer.parseInt(value.substring(month + 1, month + 3)) - 1);
+
+      if(value.length() > month + 3)
+      {
+         TimeZone tz = parseTimeZone(value, month + 3);
+         cal.setTimeZone(tz);
+      }
+
+      return cal;
+   }
+
    public static Calendar unmarshalGDay(String value)
    {
       // the format is ---DD[timezonePart]
@@ -523,8 +628,7 @@ public final class TypeBinding
       }
 
       // validate timezonePart
-      String timezonePart = value.substring(5);
-      TimeZone tz = parseTimeZone(timezonePart);
+      TimeZone tz = parseTimeZone(value, 5);
 
       Calendar cal = Calendar.getInstance();
       cal.clear();
@@ -550,13 +654,12 @@ public final class TypeBinding
       Calendar cal = Calendar.getInstance();
       cal.clear();
 
-      int ind = parseDate(value, cal);
+      int ind = parseDate(value, 0, cal);
 
       TimeZone tz = null;
       if(ind < value.length())
       {
-         String timezonePart = value.substring(ind);
-         tz = parseTimeZone(timezonePart);
+         tz = parseTimeZone(value, ind);
       }
 
       if(tz != null)
@@ -578,13 +681,12 @@ public final class TypeBinding
       Calendar cal = Calendar.getInstance();
       cal.clear();
 
-      parseTime(value, cal);
+      parseTime(value, 0, cal);
 
       TimeZone tz = null;
       if(value.length() > 12)
       {
-         String timezonePart = value.substring(12);
-         tz = parseTimeZone(timezonePart);
+         tz = parseTimeZone(value, 12);
       }
 
       if(tz != null)
@@ -596,6 +698,7 @@ public final class TypeBinding
 
    /**
     * Parses string value of datetime following the format [-]yyyy-mm-ddThh:mm:ss[.s+][timezone].
+    *
     * @param value
     * @return
     */
@@ -604,22 +707,20 @@ public final class TypeBinding
       Calendar cal = Calendar.getInstance();
       cal.clear();
 
-      int timeInd = value.indexOf('T');
-      if(timeInd == -1)
+      int timeInd = parseDate(value, 0, cal);
+      if(value.charAt(timeInd) != 'T')
       {
-         throw new JBossXBValueFormatException(
-            "DateTime value does not follow the format '[-]yyyy-mm-ddThh:mm:ss[.s+][timezone]'"
+         throw new JBossXBValueFormatException("DateTime value does not follow the format '[-]yyyy-mm-ddThh:mm:ss[.s+][timezone]': expected 'T' but got " +
+            value.charAt(timeInd)
          );
       }
 
-      parseDate(value.substring(0, timeInd), cal);
-      parseTime(value.substring(timeInd + 1), cal);
+      parseTime(value, timeInd + 1, cal);
 
       TimeZone tz = null;
       if(value.length() > timeInd + 13)
       {
-         String timezonePart = value.substring(timeInd + 13);
-         tz = parseTimeZone(timezonePart);
+         tz = parseTimeZone(value, timeInd + 13);
       }
 
       if(tz != null)
@@ -630,45 +731,107 @@ public final class TypeBinding
       return cal;
    }
 
-   private static int parseDate(String value, Calendar cal)
+   /**
+    * Converts hexBinary value into byte array by encoding two subsequent hexadecimal digits into one byte.
+    * @param value
+    * @return
+    */
+   public static byte[] unmarshalHexBinary(String value)
    {
-      int i = 0;
-      if(value.charAt(i) == '-')
+      if(value.length() % 2 != 0)
       {
-         ++i;
+         throw new IllegalArgumentException("hexBinary value must have even length.");
       }
 
-      if(!Character.isDigit(value.charAt(i)))
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      for(int i = 0; i < value.length(); i += 2)
+      {
+         char c1 = value.charAt(i);
+         char c2 = value.charAt(i + 1);
+         byte b = 0;
+         if((c1 >= '0') && (c1 <= '9'))
+         {
+            b += ((c1 - '0') * 16);
+         }
+         else if((c1 >= 'a') && (c1 <= 'f'))
+         {
+            b += ((c1 - 'a' + 10) * 16);
+         }
+         else if((c1 >= 'A') && (c1 <= 'F'))
+         {
+            b += ((c1 - 'A' + 10) * 16);
+         }
+         else
+         {
+            throw new IllegalArgumentException("hexBinary value contains illegal character: " + value);
+         }
+
+         if((c2 >= '0') && (c2 <= '9'))
+         {
+            b += (c2 - '0');
+         }
+         else if((c2 >= 'a') && (c2 <= 'f'))
+         {
+            b += (c2 - 'a' + 10);
+         }
+         else if((c2 >= 'A') && (c2 <= 'F'))
+         {
+            b += (c2 - 'A' + 10);
+         }
+         else
+         {
+            throw new IllegalArgumentException("hexBinary value contains illegal character: " + value);
+         }
+         baos.write(b);
+      }
+      return (baos.toByteArray());
+   }
+
+   private static int parseGYear(String value, int start, Calendar cal)
+   {
+      int negative = (value.charAt(start) == '-' ? 1 : 0);
+      cal.set(Calendar.YEAR, Integer.parseInt(value.substring(start, start + 4 + negative)));
+      return start + 4 + negative;
+   }
+
+   private static int parseDate(String value, int start, Calendar cal)
+   {
+      if(value.charAt(start) == '-')
+      {
+         ++start;
+      }
+
+      if(!Character.isDigit(value.charAt(start)))
       {
          throw new JBossXBValueFormatException(
             "Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value
          );
       }
 
-      int nextToken = value.indexOf('-', i);
-      if(nextToken == -1 || nextToken - i < 4)
+      int nextToken = value.indexOf('-', start);
+      if(nextToken == -1 || nextToken - start < 4)
       {
          throw new JBossXBValueFormatException(
             "Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value
          );
       }
 
-      int year = Integer.parseInt(value.substring(i, nextToken));
+      int year = Integer.parseInt(value.substring(start, nextToken));
 
-      i = nextToken + 1;
-      nextToken = value.indexOf('-', i);
-      if(nextToken == -1 || nextToken - i < 2)
+      start = nextToken + 1;
+      nextToken = value.indexOf('-', start);
+      if(nextToken == -1 || nextToken - start < 2)
       {
          throw new JBossXBValueFormatException(
             "Date value does not follow the format '-'? yyyy '-' mm '-' dd: " + value
          );
       }
 
-      int month = Integer.parseInt(value.substring(i, nextToken));
+      int month = Integer.parseInt(value.substring(start, nextToken));
 
-      i = nextToken + 1;
+      start = nextToken + 1;
       nextToken += 3;
-      int day = Integer.parseInt(value.substring(i, nextToken));
+      int day = Integer.parseInt(value.substring(start, nextToken));
 
       cal.set(Calendar.YEAR, year);
       cal.set(Calendar.MONTH, month - 1);
@@ -684,17 +847,17 @@ public final class TypeBinding
     * @param value
     * @param cal
     */
-   private static void parseTime(String value, Calendar cal)
+   private static void parseTime(String value, int start, Calendar cal)
    {
-      if(value.charAt(2) != ':' || value.charAt(5) != ':' || value.charAt(8) != '.')
+      if(value.charAt(start + 2) != ':' || value.charAt(start + 5) != ':' || value.charAt(start + 8) != '.')
       {
          throw new JBossXBValueFormatException("Time value does not follow the format 'hh:mm:ss:sss': " + value);
       }
 
-      int hh = Integer.parseInt(value.substring(0, 2));
-      int mm = Integer.parseInt(value.substring(3, 5));
-      int ss = Integer.parseInt(value.substring(6, 8));
-      int sss = Integer.parseInt(value.substring(9, 12));
+      int hh = Integer.parseInt(value.substring(start, start + 2));
+      int mm = Integer.parseInt(value.substring(start + 3, start + 5));
+      int ss = Integer.parseInt(value.substring(start + 6, start + 8));
+      int sss = Integer.parseInt(value.substring(start + 9, start + 12));
 
       cal.set(Calendar.HOUR_OF_DAY, hh);
       cal.set(Calendar.MINUTE, mm);
@@ -706,35 +869,38 @@ public final class TypeBinding
     * Parses timzone.
     * Format: [+/-]HH:MM
     *
-    * @param timezonePart
     * @return
     */
-   private static TimeZone parseTimeZone(String timezonePart)
+   private static TimeZone parseTimeZone(String value, int start)
    {
       TimeZone tz = null;
-      if(timezonePart.charAt(0) == '+' || (timezonePart.charAt(0) == '-'))
+      if(value.charAt(start) == '+' || (value.charAt(start) == '-'))
       {
-         if(timezonePart.length() == 6 &&
-            Character.isDigit(timezonePart.charAt(1)) &&
-            Character.isDigit(timezonePart.charAt(2)) &&
-            timezonePart.charAt(3) == ':' &&
-            Character.isDigit(timezonePart.charAt(4)) &&
-            Character.isDigit(timezonePart.charAt(5)))
+         if(value.length() - start == 6 &&
+            Character.isDigit(value.charAt(start + 1)) &&
+            Character.isDigit(value.charAt(start + 2)) &&
+            value.charAt(start + 3) == ':' &&
+            Character.isDigit(value.charAt(start + 4)) &&
+            Character.isDigit(value.charAt(start + 5)))
          {
-            tz = TimeZone.getTimeZone("GMT" + timezonePart);
+            tz = TimeZone.getTimeZone("GMT" + value.substring(start));
          }
          else
          {
-            throw new NumberFormatException("Timezone value does not follow the format ([+/-]HH:MM): " + timezonePart);
+            throw new NumberFormatException(
+               "Timezone value does not follow the format ([+/-]HH:MM): " + value.substring(start)
+            );
          }
       }
-      else if(timezonePart.equals("Z"))
+      else if(value.charAt(start) == 'Z')
       {
          tz = TimeZone.getTimeZone("GMT");
       }
       else
       {
-         throw new NumberFormatException("Timezone value does not follow the format ([+/-]HH:MM): " + timezonePart);
+         throw new NumberFormatException(
+            "Timezone value does not follow the format ([+/-]HH:MM): " + value.substring(start)
+         );
       }
       return tz;
    }

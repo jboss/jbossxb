@@ -53,6 +53,38 @@ public class URLStreamHandlerFactory
     cleared.
     */
    private static Map handlerMap = Collections.synchronizedMap(new HashMap());
+
+   /** This thread local is used to prevent recursion in the
+    * createURLStreamHandler method. Resolving the protocol handler
+    * class can end up creating a new URL which can loop back into
+    * this factory with a stack like:
+    * <pre>
+      URLStreamHandlerFactory that use the TCL. See bug#669043
+      createURLStreamHandler():146, URLStreamHandlerFactory.java
+      getURLStreamHandler():1057, URL.java
+      <init>():405, URL.java
+      <init>():329, URL.java
+      <init>():321, URL.java
+      <init>():540, URLClassPath.java
+      run():319, URLClassPath.java
+      doPrivileged():-1, AccessController.java
+      getLoader():308, URLClassPath.java
+      getLoader():285, URLClassPath.java
+      findResource():136, URLClassPath.java
+      run():351, URLClassLoader.java
+      doPrivileged():-1, AccessController.java
+      findResource():348, URLClassLoader.java
+      getResource():780, ClassLoader.java
+      getResourceLocally():250, UnifiedClassLoader.java
+      getResourceFromClassLoader():333, UnifiedLoaderRepository3.java
+      getResource():243, UnifiedLoaderRepository3.java
+      getResource():228, UnifiedClassLoader3.java
+     </pre>
+    So we detect recursion based on the protocol value matches the current
+    createURLStreamHandlerProtocol setting.
+   */
+   private static ThreadLocal createURLStreamHandlerProtocol = new ThreadLocal();
+
    /** The current packages prefixes determined from the java.protocol.handler.pkgs
     property + the org.jboss.net.protocol default package.
     */
@@ -106,10 +138,16 @@ public class URLStreamHandlerFactory
     */
    public URLStreamHandler createURLStreamHandler(final String protocol)
    {
-      // Check the 
+      // Check the handler map
       URLStreamHandler handler = (URLStreamHandler) handlerMap.get(protocol);
       if( handler != null )
          return handler;
+
+      // Validate that createURLStreamHandler is not recursing
+      String prevProtocol = (String) createURLStreamHandlerProtocol.get();
+      if( prevProtocol != null && prevProtocol.equals(protocol) )
+         return null;
+      createURLStreamHandlerProtocol.set(protocol);
 
       // See if the handler pkgs definition has changed
       checkHandlerPkgs();
@@ -126,26 +164,7 @@ public class URLStreamHandlerFactory
 
             try
             {
-               /* Aparently a security mgr causes the getResource call to loop
-                  back into this method. Why this occurs still needs to be
-                  investigated but this check means that we do not load
-                  protocol handlers from the TCL if there is a security mgr.
-                  See bug #696633.
-               */
-               if( System.getSecurityManager() != null )
-               {
-                  // Trigger the Class.forName call below
-                  throw new ClassNotFoundException("SecurityManager bypass");
-               }
-
-               /* First see if the class exists as a resource. This is to work
-               around a bad interaction between the IBM VMs and custom
-               URLStreamHandlerFactory that use the TCL. See bug#669043
-               */
-               String resname = classname.replace('.', '/') + ".class";
-               URL typeURL = ctxLoader.getResource(resname);
-               if( typeURL != null )
-                  type = ctxLoader.loadClass(classname);
+               type = ctxLoader.loadClass(classname);
             }
             catch(ClassNotFoundException e)
             {
@@ -157,17 +176,15 @@ public class URLStreamHandlerFactory
             {
                handler = (URLStreamHandler) type.newInstance();
                handlerMap.put(protocol, handler);
-               if( log.isTraceEnabled() )
-                  log.trace("Found protocol:"+protocol+" handler:"+handler);
+               log.trace("Found protocol:"+protocol+" handler:"+handler);
             }
          }
-         catch (Exception ignore)
+         catch (Throwable ignore)
          {
-            if( log.isTraceEnabled() )
-               log.trace("Failed to find protocol handler:"+protocol, ignore);
          }
       }
 
+      createURLStreamHandlerProtocol.set(null);
       return handler;
    }
 

@@ -8,8 +8,9 @@ package org.jboss.xml.binding;
 
 import org.jboss.xml.binding.parser.JBossXBParser;
 import org.jboss.xml.binding.parser.xni.XniJBossXBParser;
-import org.jboss.xml.binding.metadata.unmarshalling.RuntimeDocumentBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.DocumentBindingFactory;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.RuntimeDocumentBinding;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -79,7 +80,10 @@ public class UnmarshallerImpl
 
    public Object unmarshal(String xmlFile) throws JBossXBException
    {
-      builder.init(new MappingObjectModelFactory(), null, new RuntimeDocumentBinding());
+      builder.init(new MappingObjectModelFactory(), null,
+         DocumentBindingFactory.newInstance()
+         .newDocumentBindingStack()
+         .push(RuntimeDocumentBinding.class));
       parser.parse(xmlFile, builder);
       return builder.getRoot();
    }

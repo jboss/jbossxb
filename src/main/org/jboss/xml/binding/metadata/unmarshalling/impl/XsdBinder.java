@@ -4,16 +4,17 @@
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
  */
-package org.jboss.xml.binding.metadata.unmarshalling;
+package org.jboss.xml.binding.metadata.unmarshalling.impl;
 
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.SimpleTypeBindings;
-import org.jboss.xml.binding.metadata.unmarshalling.impl.BasicElementBindingImpl;
-import org.jboss.xml.binding.metadata.unmarshalling.impl.AttributeBindingImpl;
-import org.jboss.xml.binding.metadata.unmarshalling.impl.AbstractElementBinding;
-import org.jboss.xml.binding.metadata.unmarshalling.impl.PluggableDocumentBinding;
-import org.jboss.xml.binding.metadata.unmarshalling.impl.DelegatingDocumentBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.NamespaceBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.TopElementBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.BasicElementBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.ElementBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.AttributeBinding;
 import org.jboss.logging.Logger;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSModel;
@@ -46,42 +47,53 @@ public class XsdBinder
 {
    private static final Logger log = Logger.getLogger(XsdBinder.class);
 
+   private XsdBinder()
+   {
+   }
+
    public static DocumentBinding bindXsd(String xsdUrl)
    {
-      DocumentBindingImpl localDoc = new DocumentBindingImpl();
-      DocumentBinding doc = DocumentBindingFactory.newInstance().newDocumentBinding(localDoc);
+      return bindXsd(xsdUrl, null);
+   }
+
+   public static DocumentBinding bindXsd(String xsdUrl, DocumentBinding delegate)
+   {
+      DocumentBindingImpl localDoc;
+      if(delegate instanceof DocumentBindingImpl)
+      {
+         localDoc = (DocumentBindingImpl)delegate;
+      }
+      else
+      {
+         localDoc = new DocumentBindingImpl(delegate);
+      }
 
       XSModel model = loadSchema(xsdUrl);
       StringList namespaces = model.getNamespaces();
       for(int i = 0; i < namespaces.getLength(); ++i)
       {
-         String ns = namespaces.item(i);
-         localDoc.bindNamespace(ns);
+         String namespaceUri = namespaces.item(i);
+         NamespaceBindingImpl ns = localDoc.bindNamespace(namespaceUri);
+
+         XSNamedMap components = model.getComponentsByNamespace(XSConstants.ELEMENT_DECLARATION, namespaceUri);
+         for(int j = 0; j < components.getLength(); ++j)
+         {
+            XSElementDeclaration element = (XSElementDeclaration)components.item(j);
+            bindTopElement(localDoc, ns, element);
+         }
       }
 
-      XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
-      for(int i = 0; i < components.getLength(); ++i)
-      {
-         XSElementDeclaration element = (XSElementDeclaration)components.item(i);
-         bindTopElement(localDoc, element);
-      }
-
-      return doc;
+      return localDoc;
    }
 
-   private static final void bindTopElement(DocumentBindingImpl doc,
+   private static final void bindTopElement(DocumentBinding doc,
+                                            NamespaceBindingImpl ns,
                                             XSElementDeclaration element)
    {
-      String ns = element.getNamespace();
-      NamespaceBindingImpl nsBinding = (NamespaceBindingImpl)doc.getNamespace(ns);
-      if(nsBinding == null)
-      {
-         throw new JBossXBRuntimeException("Namespace is not bound: " + ns);
-      }
-      TopElementBindingImpl top = new TopElementBindingImpl(doc.proxy, element);
-      nsBinding.addTopElement(top);
+      TopElementBindingImpl top = new TopElementBindingImpl(ns, element);
+      ns.addTopElement(top);
 
-      bindComplexElement(element, doc.proxy, top);
+      bindComplexElement(element, doc, top);
    }
 
    private static void bindComplexElement(XSElementDeclaration elementDecl,
@@ -154,7 +166,7 @@ public class XsdBinder
                                    ParentElement parent,
                                    XSElementDeclaration elementDecl)
    {
-      ElementBindingImpl child = new ElementBindingImpl(parent.getSelfReference(), elementDecl);
+      ElementBindingImpl child = new ElementBindingImpl(parent, elementDecl);
       parent.addChild(child);
       bindComplexElement(elementDecl, doc, child);
    }
@@ -207,85 +219,58 @@ public class XsdBinder
 
    // Private
 
-   private static final class DocumentBindingImpl
-      implements DocumentBinding, PluggableDocumentBinding
+   public static final class DocumentBindingImpl
+      extends DocumentBindingFactoryImpl.AbstractDocumentBinding
    {
-      private DocumentBinding proxy;
-      private DocumentBinding delegate;
       private final Map namespaces = new HashMap();
 
-      public DocumentBindingImpl()
+      public DocumentBindingImpl(DocumentBinding doc)
       {
-         this.delegate = this;
-         this.proxy = new DocumentBinding()
-         {
-            public NamespaceBinding getNamespace(String namespaceUri)
-            {
-               return delegate.getNamespace(namespaceUri);
-            }
-         };
+         super(doc);
       }
 
-      NamespaceBinding bindNamespace(String namespaceUri)
+      NamespaceBindingImpl bindNamespace(String namespaceUri)
       {
-         NamespaceBinding ns = new NamespaceBindingImpl(proxy, namespaceUri);
+         NamespaceBindingImpl ns = new NamespaceBindingImpl(doc, namespaceUri);
          namespaces.put(namespaceUri, ns);
          return ns;
       }
 
-      public NamespaceBinding getNamespace(String namespaceUri)
+      protected NamespaceBinding getNamespaceLocal(String namespaceUri)
       {
          return (NamespaceBinding)namespaces.get(namespaceUri);
-      }
-
-      public void setDocumentBinding(final DelegatingDocumentBinding delegate)
-      {
-         this.delegate = delegate;
       }
    }
 
    private static final class NamespaceBindingImpl
-      implements NamespaceBinding
+      extends DocumentBindingFactoryImpl.AbstractNamespaceBinding
    {
-      private final DocumentBinding doc;
-      private final String namespaceUri;
       private final Map tops = new HashMap();
 
       public NamespaceBindingImpl(DocumentBinding doc, String namespaceUri)
       {
-         this.doc = doc;
-         this.namespaceUri = namespaceUri;
+         super(doc, namespaceUri);
       }
 
-      void addTopElement(TopElementBinding top)
-      {
-         tops.put(top.getElementName().getLocalPart(), top);
-      }
-
-      public String getNamespaceUri()
-      {
-         return namespaceUri;
-      }
-
-      public String getJavaPackage()
+      protected String getJavaPackageLocal()
       {
          return Util.xmlNamespaceToJavaPackage(namespaceUri);
       }
 
-      public DocumentBinding getDocument()
-      {
-         return doc;
-      }
-
-      public TopElementBinding getTopElement(String elementName)
+      protected TopElementBinding getTopElementLocal(String elementName)
       {
          return (TopElementBinding)tops.get(elementName);
+      }
+
+      void addTopElement(TopElementBindingImpl top)
+      {
+         tops.put(top.getElementName().getLocalPart(), top);
       }
    }
 
    private static final class ElementBindingImpl
-      extends AbstractElementBinding
-      implements ElementBinding, ParentElement
+      extends DocumentBindingFactoryImpl.AbstractElementBinding
+      implements ParentElement
    {
       private final XSElementDeclaration elementDecl;
       private final Map children = new HashMap();
@@ -297,12 +282,14 @@ public class XsdBinder
 
       public ElementBindingImpl(BasicElementBinding parent, XSElementDeclaration elementDecl)
       {
-         super(new QName(elementDecl.getNamespace(), elementDecl.getName()), parent);
+         super(parent, new QName(elementDecl.getNamespace(), elementDecl.getName()));
          this.elementDecl = elementDecl;
       }
 
       private void init()
       {
+         DocumentBinding doc = parent.getDocument();
+
          // first try to use XSD type
          XSTypeDefinition typeDef = elementDecl.getTypeDefinition();
          String typeBasedClsName = null;
@@ -404,31 +391,7 @@ public class XsdBinder
          }
       }
 
-      public void addChild(ElementBinding child)
-      {
-         children.put(child.getElementName(), child);
-      }
-
-      public BasicElementBinding getSelfReference()
-      {
-         return parent.getElement(elementName);
-      }
-
-      public Class getJavaType()
-      {
-         if(javaType == null)
-         {
-            init();
-         }
-         return javaType;
-      }
-
-      public ElementBinding getElement(QName elementName)
-      {
-         return (ElementBinding)children.get(elementName);
-      }
-
-      public Field getField()
+      protected Field getFieldLocal()
       {
          if(javaType == null)
          {
@@ -437,7 +400,7 @@ public class XsdBinder
          return field;
       }
 
-      public Method getGetter()
+      protected Method getGetterLocal()
       {
          if(javaType == null)
          {
@@ -446,7 +409,7 @@ public class XsdBinder
          return getter;
       }
 
-      public Method getSetter()
+      protected Method getSetterLocal()
       {
          if(javaType == null)
          {
@@ -455,7 +418,7 @@ public class XsdBinder
          return setter;
       }
 
-      public Class getFieldType()
+      protected Class getFieldTypeLocal()
       {
          if(javaType == null)
          {
@@ -463,24 +426,52 @@ public class XsdBinder
          }
          return fieldType;
       }
+
+      protected Class getJavaTypeLocal()
+      {
+         if(javaType == null)
+         {
+            init();
+         }
+         return javaType;
+      }
+
+      protected ElementBinding getElementLocal(QName elementName)
+      {
+         return (ElementBinding)children.get(elementName);
+      }
+
+      protected AttributeBinding getAttributeLocal(QName attributeName)
+      {
+         String fieldName = Util.xmlNameToClassName(attributeName.getLocalPart(), true);
+         fieldName = Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1);
+         return new AttributeBindingImpl(attributeName, null, getJavaType(), fieldName);
+      }
+
+      public void addChild(BasicElementBinding child)
+      {
+         children.put(child.getElementName(), child);
+      }
    }
 
-   private static final class TopElementBindingImpl
-      extends BasicElementBindingImpl
-      implements ParentElement, TopElementBinding
+   private static class TopElementBindingImpl
+      extends DocumentBindingFactoryImpl.AbstractTopElementBinding
+      implements ParentElement
    {
       private final XSElementDeclaration elementDecl;
       private final Map children = new HashMap();
       protected Class javaType;
 
-      public TopElementBindingImpl(DocumentBinding doc, XSElementDeclaration elementDecl)
+      public TopElementBindingImpl(NamespaceBinding ns, XSElementDeclaration elementDecl)
       {
-         super(new QName(elementDecl.getNamespace(), elementDecl.getName()), doc);
+         super(ns, elementDecl.getName());
          this.elementDecl = elementDecl;
       }
 
-      protected void init()
+      private void init()
       {
+         DocumentBinding doc = ns.getDocument();
+
          // first try to use XSD type
          XSTypeDefinition typeDef = elementDecl.getTypeDefinition();
          String typeBasedClsName = null;
@@ -525,17 +516,7 @@ public class XsdBinder
          }
       }
 
-      public BasicElementBinding getSelfReference()
-      {
-         return doc.getNamespace(elementDecl.getNamespace()).getTopElement(elementDecl.getName());
-      }
-
-      public void addChild(ElementBinding child)
-      {
-         children.put(child.getElementName(), child);
-      }
-
-      public Class getJavaType()
+      protected Class getJavaTypeLocal()
       {
          if(javaType == null)
          {
@@ -544,24 +525,27 @@ public class XsdBinder
          return javaType;
       }
 
-      public ElementBinding getElement(QName elementName)
+      protected ElementBinding getElementLocal(QName elementName)
       {
          return (ElementBinding)children.get(elementName);
       }
 
-      public AttributeBinding getAttribute(QName attributeName)
+      protected AttributeBinding getAttributeLocal(QName attributeName)
       {
          String fieldName = Util.xmlNameToClassName(attributeName.getLocalPart(), true);
          fieldName = Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1);
          return new AttributeBindingImpl(attributeName, null, getJavaType(), fieldName);
       }
+
+      public void addChild(BasicElementBinding child)
+      {
+         children.put(child.getElementName(), child);
+      }
    }
 
-   private interface ParentElement
+   interface ParentElement
       extends BasicElementBinding
    {
-      void addChild(ElementBinding el);
-
-      BasicElementBinding getSelfReference();
+      void addChild(BasicElementBinding child);
    }
 }

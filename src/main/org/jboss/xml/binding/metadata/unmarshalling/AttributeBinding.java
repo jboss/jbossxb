@@ -17,9 +17,14 @@ import java.lang.reflect.Method;
 public interface AttributeBinding
 {
    QName getAttributeName();
+
    Class getJavaType();
+
    Field getField();
+
    Method getGetter();
+
    Method getSetter();
+
    Class getFieldType();
 }

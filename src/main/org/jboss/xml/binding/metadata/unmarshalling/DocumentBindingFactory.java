@@ -6,7 +6,7 @@
  */
 package org.jboss.xml.binding.metadata.unmarshalling;
 
-import org.jboss.xml.binding.metadata.unmarshalling.impl.DelegatingDocumentBindingFactory;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.DocumentBindingFactoryImpl;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -16,10 +16,12 @@ public abstract class DocumentBindingFactory
 {
    public static DocumentBindingFactory newInstance()
    {
-      return new DelegatingDocumentBindingFactory();
+      return new DocumentBindingFactoryImpl();
    }
 
-   public abstract DocumentBinding newDocumentBinding(DocumentBinding delegate);
+   public abstract DocumentBindingStack newDocumentBindingStack();
+
+   public abstract DocumentBinding newDocumentBinding();
 
    public abstract NamespaceBinding bindNamespace(DocumentBinding doc, String namespaceUri, String javaPackage);
 

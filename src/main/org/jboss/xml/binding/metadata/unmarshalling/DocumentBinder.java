@@ -6,22 +6,11 @@
  */
 package org.jboss.xml.binding.metadata.unmarshalling;
 
-import javax.xml.namespace.QName;
-
-
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface BasicElementBinding
+public interface DocumentBinder
 {
-   QName getElementName();
-
-   Class getJavaType();
-
-   DocumentBinding getDocument();
-
-   ElementBinding getElement(QName elementName);
-
-   AttributeBinding getAttribute(QName attributeName);
+   void bind(DocumentBinding doc);
 }

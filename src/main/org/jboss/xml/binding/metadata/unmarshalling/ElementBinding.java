@@ -18,7 +18,10 @@ public interface ElementBinding
    extends BasicElementBinding
 {
    Field getField();
+
    Method getGetter();
+
    Method getSetter();
+
    Class getFieldType();
 }

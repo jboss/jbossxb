@@ -32,7 +32,8 @@ public interface BindingCursor
          return doc == null ? NoopBindingCursor.INSTANCE : new BindingCursorImpl(doc);
       }
 
-      private static class BindingCursorImpl implements BindingCursor
+      private static class BindingCursorImpl
+         implements BindingCursor
       {
          private final DocumentBinding docBinding;
          private final LinkedList stack = new LinkedList();
@@ -69,7 +70,8 @@ public interface BindingCursor
          }
       }
 
-      private static class NoopBindingCursor implements BindingCursor
+      private static class NoopBindingCursor
+         implements BindingCursor
       {
          static final BindingCursor INSTANCE = new NoopBindingCursor();
 

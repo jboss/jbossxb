@@ -52,7 +52,7 @@ public interface NestedThrowable
     * <p>
     * Note then when running under 1.4 is is not possible to disable
     * the nested trace output, since that is handled by java.lang.Throwable
-    * which we delegate the parent printing too.
+    * which we delegate the parent printing to.
     */
    boolean NESTED_TRACE_ENABLED = Util.getBoolean("nestedTraceEnabled",
                                                   (Java.isCompatible(Java.VERSION_1_4) &&
@@ -97,7 +97,24 @@ public interface NestedThrowable
     */
    final class Util 
    {
-      private static final Logger log = Logger.getLogger(NestedThrowable.class);
+      // Can not be final due to init bug, see getLogger() for details
+      private static Logger log = Logger.getLogger(NestedThrowable.class);
+
+      /**
+       * Something is very broken with class nesting, which can sometimes
+       * leave log uninitialized durring one of the following method calls.
+       *
+       * <p>
+       * This is a HACK to keep those methods from NPE until this problem
+       * can be resolved.
+       */
+      private static Logger getLogger()
+      {
+         if (log == null)
+            log = Logger.getLogger(NestedThrowable.class);
+
+         return log;
+      }
       
       /** A helper to get a boolean property. */
       protected static boolean getBoolean(String name, boolean defaultValue)
@@ -105,6 +122,9 @@ public interface NestedThrowable
          name = NestedThrowable.class.getName() + "." + name;
          String value = System.getProperty(name, String.valueOf(defaultValue));
 
+         // HACK see getLogger() for details
+         log = getLogger();
+         
          log.debug(name + "=" + value);
 
          return new Boolean(value).booleanValue();
@@ -127,6 +147,9 @@ public interface NestedThrowable
          //
          
          if (parentType.isAssignableFrom(childType)) {
+            // HACK see getLogger() for details
+            log = getLogger();
+
             log.warn("Duplicate throwable nesting of same base type: " +
                      parentType + " is assignable from: " + childType);
          }

@@ -153,7 +153,8 @@ public class ObjectModelBuilder
       String local = st.nextToken();
       String nsURI = nsRegistry.getNamespaceURI(prefix);
 
-      return new QName(nsURI, local);
+      //return new QName(nsURI, local);
+      return new QName(nsURI,local,prefix);
    }
 
    public String getChildContent(String namespaceURI, String qName)

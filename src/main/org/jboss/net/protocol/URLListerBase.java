@@ -19,17 +19,34 @@ import java.io.IOException;
 
 /**
  * Support class for URLLister's providing protocol independent functionality.
+ *
+ * @author Scott.Stark@jboss.org
+ * @version $Revision$
  */
-public abstract class URLListerBase implements URLLister {
-   public Collection listMembers(URL baseUrl, String patterns) throws IOException {
-      StringTokenizer tokens = new StringTokenizer(patterns, ",");
-      String[] members = new String[tokens.countTokens()];
-      for (int i=0; tokens.hasMoreTokens(); i++) {
-         members[i] = tokens.nextToken();
+public abstract class URLListerBase implements URLLister
+{
+   public Collection listMembers (URL baseUrl, String patterns,
+      boolean scanNonDottedSubDirs) throws IOException
+   {
+      // @todo, externalize the separator?
+      StringTokenizer tokens = new StringTokenizer (patterns, ",");
+      String[] members = new String[tokens.countTokens ()];
+      for (int i=0; tokens.hasMoreTokens (); i++)
+      {
+         String token = tokens.nextToken ();
+         // Trim leading/trailing spaces as its unlikely they are meaningful
+         members[i] = token.trim();
       }
-      URLFilter filter = new URLFilterImpl(members);
-      return listMembers(baseUrl, filter);
+      URLFilter filter = new URLFilterImpl (members);
+      return listMembers (baseUrl, filter, scanNonDottedSubDirs);
    }
+
+   public Collection listMembers (URL baseUrl, String patterns)
+      throws IOException
+   {
+      return listMembers (baseUrl, patterns, false);
+   }
+
 
    /**
     * Inner class representing Filter criteria to be applied to the members

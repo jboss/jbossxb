@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 /**
  * An instance of this class translates SAX events into org.jboss.xml.binding.GenericObjectModelFactory calls
  * such as newChild, addChild and setValue.
- * WARN: this implementation is not thread-safe!!!
+ * WARN: this implementation is not thread-safe!
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>

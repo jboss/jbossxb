@@ -43,7 +43,8 @@ public class LRUCachePolicy
    // Constructors --------------------------------------------------
    /**
     * Creates a LRU cache policy object with zero cache capacity.
-    * @see #init
+    *
+    * @see #create
     */
    public LRUCachePolicy()
    {
@@ -51,7 +52,8 @@ public class LRUCachePolicy
    /**
     * Creates a LRU cache policy object with the specified minimum
     * and maximum capacity.
-    * @see #init
+    *
+    * @see #create
     */
    public LRUCachePolicy(int min, int max)
    {
@@ -79,7 +81,7 @@ public class LRUCachePolicy
    }
    /**
     * Starts this cache that is now ready to be used.
-    * @see #init
+    * @see #create
     * @see #stop
     */
    public void start()
@@ -100,9 +102,10 @@ public class LRUCachePolicy
    }
    /**
     * Destroys the cache that is now unusable. <br>
-    * To have it working again it must be re-{@link #init}ialized and
+    * To have it working again it must be re-{@link #create}ed and
     * re-{@link #start}ed.
-    * @see #init
+    *
+    * @see #create
     */
    public void destroy()
    {

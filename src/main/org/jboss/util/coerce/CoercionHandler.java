@@ -20,10 +20,11 @@ import org.jboss.util.NotImplementedException;
 
 /**
  * An abstract class to allow extending the default behavior of
- * {@link Objects#coerce(Object, Class)} when it is not possible to implement
- * {@link Coercible} directly in the target class or where coercion is desired
- * from an unrelated class.  Also provides a registry for all of the currently
- * installed handlers.
+ * {@link org.jboss.util.Objects#coerce(Object,Class)} when it is 
+ * not possible to implement {@link org.jboss.util.Coercible} 
+ * directly in the target class or where coercion is desired from 
+ * an unrelated class.  Also provides a registry for all of the 
+ * currently installed handlers.
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
@@ -41,7 +42,6 @@ public abstract class CoercionHandler
     */
    public abstract Object coerce(Object value, Class type)
       throws CoercionException;
-
 
    /**
     * Get the target class type for this CoercionHandler.

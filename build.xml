@@ -264,6 +264,7 @@
         <!-- Misc Fluff clients need -->
         <include name="org/jboss/util/jmx/ObjectNameFactory*.class"/>
         <include name="org/jboss/util/jmx/JMXExceptionDecoder*.class"/>
+        <include name="org/jboss/util/jmx/MBeanProxy*.class"/>
 
         <!-- Client Logging support -->
         <include name="org/jboss/logging/Logger*.class"/>

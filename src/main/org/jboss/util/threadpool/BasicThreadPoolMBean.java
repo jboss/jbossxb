@@ -40,6 +40,20 @@ public interface BasicThreadPoolMBean extends ThreadPoolMBean
     */
    public void setMaximumQueueSize(int size);
 
+   /** Set the behavior of the pool when a task is added and the queue is full.
+    * The mode string indicates one of the following modes:
+    * abort - a RuntimeException is thrown
+    * run - the calling thread executes the task
+    * wait - the calling thread blocks until the queue has room
+    * discard - the task is silently discarded without being run
+    * discardOldest - check to see if a task is about to complete and enque
+    *    the new task if possible, else run the task in the calling thread
+    * 
+    * @param mode one of run, wait, discard, discardOldest or abort without
+    *    regard to case.
+    */ 
+   public void setBlockingMode(String mode);
+
    /**
     * Retrieve the thread group name
     *
@@ -50,7 +64,7 @@ public interface BasicThreadPoolMBean extends ThreadPoolMBean
    /**
     * Set the thread group name
     *
-    * @param the thread group name
+    * @param threadGroupName - the thread group name
     */
    void setThreadGroupName(String threadGroupName);
 

@@ -16,11 +16,6 @@ import java.lang.reflect.InvocationHandler;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import javax.management.MalformedObjectNameException;
-import javax.management.MBeanException;
-import javax.management.ReflectionException;
-import javax.management.RuntimeOperationsException;
-import javax.management.RuntimeMBeanException;
-import javax.management.RuntimeErrorException;
 
 /**
  * A factory for producing MBean proxies.
@@ -77,20 +72,8 @@ public class MBeanProxy
       try {
          return server.invoke(name, method.getName(), args, sig);
       }
-      catch (MBeanException e) {
-         throw e.getTargetException();
-      }
-      catch (ReflectionException e) {
-         throw e.getTargetException();
-      }
-      catch (RuntimeOperationsException e) {
-         throw e.getTargetException();
-      }
-      catch (RuntimeMBeanException e) {
-         throw e.getTargetException();
-      }
-      catch (RuntimeErrorException e) {
-         throw e.getTargetError();
+      catch (Exception e) {
+         throw JMXExceptionDecoder.decode(e);
       }
    }
 

@@ -43,14 +43,14 @@ public class DefaultStateMachineModel
    /**
     * A container for entiries in the state acceptable map.
     */
-   protected static class MappingEntry
+   protected static class Entry
       extends CloneableObject
       implements Serializable
    {
       public State state;
       public Set acceptableStates;
 
-      public MappingEntry(final State state, Set acceptableStates)
+      public Entry(final State state, Set acceptableStates)
       {
          this.state = state;
          this.acceptableStates = acceptableStates;
@@ -61,7 +61,7 @@ public class DefaultStateMachineModel
          if (obj == this) return true;
 
          if (obj != null && obj.getClass() == getClass()) {
-            MappingEntry entry = (MappingEntry)obj;
+            Entry entry = (Entry)obj;
 
             return
                ((entry.state == null && state == null) ||
@@ -84,12 +84,12 @@ public class DefaultStateMachineModel
       {
          return
             state.toString() +
-            (acceptableStates == null ? " final" : " accepts: " + acceptableStates);
+            (acceptableStates == null ? " is final" : " accepts: " + acceptableStates);
       }
 
       public Object clone()
       {
-         MappingEntry entry = (MappingEntry)super.clone();
+         Entry entry = (Entry)super.clone();
          if (entry.acceptableStates != null) {
             entry.acceptableStates = new HashSet(acceptableStates);
          }
@@ -98,14 +98,14 @@ public class DefaultStateMachineModel
       }
    }
 
-   /** The mapping from State to MappingEntry. */
+   /** The mapping from State to Entry. */
    protected Map acceptingMap = new HashMap();
 
    /** The mapping entry for the initial state. */
-   protected MappingEntry initial;
+   protected Entry initial;
 
    /** The mapping entry for the current state. */
-   protected MappingEntry current;
+   protected Entry current;
 
    /**
     * Construct a new <tt>DefaultStateMachineModel</tt>.
@@ -171,12 +171,12 @@ public class DefaultStateMachineModel
     *
     * @param state   The state of the entry; must not be null.
     */
-   protected MappingEntry getEntry(final State state)
+   protected Entry getEntry(final State state)
    {
       if (state == null)
          throw new NullArgumentException("state");
       
-      return (MappingEntry)acceptingMap.get(state);
+      return (Entry)acceptingMap.get(state);
    }
 
    /**
@@ -184,15 +184,15 @@ public class DefaultStateMachineModel
     *
     * @return   The previous entry for the state or null if none.
     */
-   protected MappingEntry putEntry(final State state, final Set acceptable)
+   protected Entry putEntry(final State state, final Set acceptable)
    {
-      MappingEntry entry = new MappingEntry(state, acceptable);
-      return (MappingEntry)acceptingMap.put(state, entry);
+      Entry entry = new Entry(state, acceptable);
+      return (Entry)acceptingMap.put(state, entry);
    }
    
    public State getState(final State state)
    {
-      MappingEntry entry = getEntry(state);
+      Entry entry = getEntry(state);
       if (entry != null)
          return entry.state;
       return null;
@@ -200,7 +200,7 @@ public class DefaultStateMachineModel
    
    public Set addState(final State state, final Set acceptable)
    {
-      MappingEntry prevEntry = getEntry(state);
+      Entry prevEntry = getEntry(state);
       
       // If we will replace the state, do some clean up before
       if (containsState(state)) {
@@ -269,7 +269,7 @@ public class DefaultStateMachineModel
 
    public void setInitialState(final State state)
    {
-      MappingEntry entry = getEntry(state);
+      Entry entry = getEntry(state);
       if (entry == null)
          throw new IllegalArgumentException("State not mapped: " + state);
 
@@ -283,7 +283,7 @@ public class DefaultStateMachineModel
 
    public void setCurrentState(final State state)
    {
-      MappingEntry entry = getEntry(state);
+      Entry entry = getEntry(state);
       if (entry == null)
          throw new IllegalArgumentException("State not mapped: " + state);
       
@@ -308,7 +308,7 @@ public class DefaultStateMachineModel
          throw new IllegalArgumentException
             ("Can not remove current state: " + state);
 
-      MappingEntry prevEntry = getEntry(state);
+      Entry prevEntry = getEntry(state);
 
       // remove the mappings for this state
       updateAcceptableMapping(state, true);
@@ -330,7 +330,7 @@ public class DefaultStateMachineModel
       Iterator iter = acceptingMap.entrySet().iterator();
 
       while (iter.hasNext()) {
-         MappingEntry entry = (MappingEntry)((Map.Entry)iter.next()).getValue();
+         Entry entry = (Entry)((Map.Entry)iter.next()).getValue();
 
          // only attempt to update non-final states
          if (entry.acceptableStates != null && entry.acceptableStates.contains(state)) {
@@ -350,7 +350,7 @@ public class DefaultStateMachineModel
 
    public Set acceptableStates(final State state)
    {
-      MappingEntry entry = getEntry(state);
+      Entry entry = getEntry(state);
 
       if (entry.acceptableStates != null)
          return Collections.unmodifiableSet(entry.acceptableStates);
@@ -376,14 +376,14 @@ public class DefaultStateMachineModel
       while (iter.hasNext()) {
          Map.Entry entry = (Map.Entry)iter.next();
          model.acceptingMap.put(entry.getKey(),
-                                ((MappingEntry)entry.getValue()).clone());
+                                ((Entry)entry.getValue()).clone());
       }
        
       if (model.current != null)
-         model.current = (MappingEntry)current.clone();
+         model.current = (Entry)current.clone();
 
       if (model.initial != null)
-         model.initial = (MappingEntry)initial.clone();
+         model.initial = (Entry)initial.clone();
       
       return model;
    }

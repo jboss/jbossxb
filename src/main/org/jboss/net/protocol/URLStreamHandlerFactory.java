@@ -9,7 +9,10 @@
 
 package org.jboss.net.protocol;
 
+import java.net.URL;
 import java.net.URLStreamHandler;
+
+import org.jboss.logging.Logger;
 
 /**
  * A factory for loading JBoss specific protocols.  This is based
@@ -21,12 +24,18 @@ import java.net.URLStreamHandler;
  *    default URL logic to function when setting the
  *    <tt>java.protocol.handler.pkgs</tt> system property.
  *
+ * <p>Use {@link preload} to force the URL handler map to load the
+ *    handlers for each protocol listed in {@link #PROTOCOLS}.
+ *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
 public class URLStreamHandlerFactory
    implements java.net.URLStreamHandlerFactory
 {
+   /** Class logger. */
+   private static final Logger log = Logger.getLogger(URLStreamHandlerFactory.class);
+
    /** The package prefix where JBoss protocol handlers live. */
    public static final String PACKAGE_PREFIX = "org.jboss.net.protocol";
 
@@ -61,5 +70,28 @@ public class URLStreamHandlerFactory
       catch (Exception ignore) {}
 
       return handler;
+   }
+
+   /** A list of JBoss specific protocols for preloading. */
+   public static final String PROTOCOLS[] = {
+      "resource",
+      "file",
+      "njar",
+   };
+
+   /**
+    * Preload the JBoss specific protocol handlers, to that URL knows about 
+    * them even if the handler factory is changed.
+    */
+   public static void preload() {
+      for (int i=0; i<PROTOCOLS.length; i++) {
+         try {
+            URL url = new URL(PROTOCOLS[i], "", -1, "");
+            log.trace("Loaded protocol: " + PROTOCOLS[i]);
+         }
+         catch (Exception e) {
+            log.warn("Failed to load protocol: " + PROTOCOLS[i], e);
+         }
+      }
    }
 }

@@ -3,7 +3,6 @@
 	<name>common</name>
 	<comment></comment>
 	<projects>
-		<project>j2ee</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

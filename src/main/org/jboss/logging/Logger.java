@@ -13,31 +13,40 @@ import org.apache.log4j.Category;
 import org.apache.log4j.Priority;
 
 /** 
- * A custom log4j Category wrapper that adds a trace level priority and only
- * exposes the relevent factory and logging methods.
+ * A custom log4j Category wrapper that adds a trace level priority, 
+ * is serializable and only exposes the relevent factory and logging 
+ * methods.
  *
  * @see #isTraceEnabled
- * @see #trace(Object message)
- * @see #trace(Object, Throwable)
+ * @see #trace(Object)
+ * @see #trace(Object,Throwable)
  *
+ * @version <tt>$Revision$</tt>
  * @author Scott.Stark@jboss.org
- * @version $Revision$
  */
 public class Logger
+   implements java.io.Serializable
 {
+   /** The category name. */
+   private final String name;
+
    /** The Log4j delegate logger. */
-   private Category log;
+   private transient Category log;
 
    /** 
     * Creates new JBossCategory with the given category name.
     *
     * @param name    the category name.
     */
-   protected Logger(String name)
+   protected Logger(final String name)
    {
+      this.name = name;
       log = Category.getInstance(name);
    }
 
+   /**
+    * Expose the raw category for this logger.
+    */
    public Category getCategory()
    {
       return log;
@@ -208,6 +217,24 @@ public class Logger
    public void log(Priority p, Object message, Throwable t)
    {
       log.log(p, message, t);
+   }
+
+
+   /////////////////////////////////////////////////////////////////////////
+   //                         Custom Serialization                        //
+   /////////////////////////////////////////////////////////////////////////
+
+   private void writeObject(java.io.ObjectOutputStream stream)
+      throws java.io.IOException
+   {
+      // nothing
+   }
+
+   private void readObject(java.io.ObjectInputStream stream)
+      throws java.io.IOException, ClassNotFoundException
+   {
+      // Restore logging
+      log = Category.getInstance(name);
    }
 
 

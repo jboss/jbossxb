@@ -22,6 +22,7 @@ import java.util.Iterator;
 
 import org.jboss.util.NullArgumentException;
 import org.jboss.util.CloneableObject;
+import org.jboss.util.PrettyString;
 
 /**
  * A default implementation of a state machine model.
@@ -38,7 +39,7 @@ import org.jboss.util.CloneableObject;
  */
 public class DefaultStateMachineModel
    extends CloneableObject
-   implements StateMachine.Model, Serializable
+   implements StateMachine.Model, Serializable, PrettyString.Appendable
 {
    /**
     * A container for entiries in the state acceptable map.
@@ -64,27 +65,20 @@ public class DefaultStateMachineModel
             Entry entry = (Entry)obj;
 
             return
-               ((entry.state == null && state == null) ||
-                (entry.state != null && entry.state.equals(state))) &&
-               equals(entry.acceptableStates, acceptableStates);
+               ((state == entry.state) ||
+                (state != null && state.equals(entry.state))) &&
+               ((acceptableStates == entry.acceptableStates) ||
+                (acceptableStates != null && acceptableStates.equals(entry.acceptableStates)));
          }
 
          return false;
       }
 
-      private boolean equals(final Set a, final Set b)
-      {
-         if (a == b || a == null && b == null) return true;
-         if (a == null || b == null || a.size() != b.size()) return false;
-
-         return a.equals(b);
-      }
-      
       public String toString()
       {
-         return
-            state.toString() +
-            (acceptableStates == null ? " is final" : " accepts: " + acceptableStates);
+         return state + (acceptableStates == null
+                         ? " is final"
+                         : " accepts: " + acceptableStates);
       }
 
       public Object clone()
@@ -115,27 +109,31 @@ public class DefaultStateMachineModel
       super();
    }
 
-   public String toString()
+   public StringBuffer appendPrettyString(StringBuffer buff, String prefix)
    {
-      StringBuffer buff = new StringBuffer(super.toString()).append(" {").append("\n");
-
-      buff.append("    Accepting state mappings:\n");
+      buff.append(prefix).append(super.toString()).append(" {").append("\n");
+      buff.append(prefix).append("  Accepting state mappings:\n");
       Iterator iter = acceptingMap.keySet().iterator();
       while (iter.hasNext()) {
-         buff.append("        ").append(acceptingMap.get((State)iter.next()));
+         buff.append(prefix).append("    ").append(acceptingMap.get((State)iter.next()));
          buff.append("\n");
       }
-      buff.append("    Initial state: ")
+      buff.append(prefix).append("  Initial state: ")
          .append(initial == null ? null : initial.state)
          .append("\n");
       
-      buff.append("    Current state: ")
+      buff.append(prefix).append("  Current state: ")
          .append(current == null ? null : current.state)
          .append("\n");
       
-      buff.append("}");
-      
-      return buff.toString();
+      buff.append(prefix).append("}");
+
+      return buff;
+   }
+   
+   public String toString()
+   {
+      return appendPrettyString(new StringBuffer(), "").toString();
    }
 
    public boolean equals(final Object obj)
@@ -146,26 +144,17 @@ public class DefaultStateMachineModel
          DefaultStateMachineModel model = (DefaultStateMachineModel)obj;
 
          return
-            ((model.current == null && current == null) ||
-             (model.current != null && model.current.equals(current))) &&
-            ((model.initial == null && initial == null) ||
-             (model.initial != null && model.initial.equals(initial))) &&
-            equals(model.acceptingMap, acceptingMap);
+            ((current == model.current) ||
+             (current != null && current.equals(model.current))) &&
+            ((initial == model.initial) ||
+             (initial != null && initial.equals(model.initial))) &&
+            ((acceptingMap == model.acceptingMap) ||
+             (acceptingMap != null && acceptingMap.equals(model.acceptingMap)));
       }
 
       return false;
    }
 
-   private boolean equals(final Map a, final Map b)
-   {
-      if (a == null && b == null) return true;
-      if (a == null || b == null) return false;
-      if (a == b) return true;
-      if (a.size() != b.size()) return false;
-
-      return a.equals(b);
-   }
-   
    /**
     * Get an entry from the map.
     *
@@ -186,18 +175,25 @@ public class DefaultStateMachineModel
     */
    protected Entry putEntry(final State state, final Set acceptable)
    {
-      Entry entry = new Entry(state, acceptable);
-      return (Entry)acceptingMap.put(state, entry);
+      return (Entry)acceptingMap.put(state, new Entry(state, acceptable));
+   }
+
+   public boolean isMappedState(State state)
+   {
+      if (state == null) return false;
+      
+      return getEntry(state) != null;
    }
    
-   public State getState(final State state)
+   public State getMappedState(final State state)
    {
       Entry entry = getEntry(state);
       if (entry != null)
          return entry.state;
-      return null;
+
+      throw new IllegalArgumentException("State not mapped: " + state);
    }
-   
+
    public Set addState(final State state, final Set acceptable)
    {
       Entry prevEntry = getEntry(state);
@@ -217,7 +213,7 @@ public class DefaultStateMachineModel
          while (iter.hasNext()) {
             State temp = (State)iter.next();
             if (temp == null)
-               throw new NullArgumentException("acceptable", "?");
+               throw new NullArgumentException("acceptable", "Set Element");
          
             if (temp.equals(state)) {
                throw new IllegalArgumentException
@@ -384,7 +380,7 @@ public class DefaultStateMachineModel
 
       if (model.initial != null)
          model.initial = (Entry)initial.clone();
-      
+
       return model;
    }
 }

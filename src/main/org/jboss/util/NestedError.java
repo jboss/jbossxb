@@ -103,8 +103,8 @@ public class NestedError
     * @param stream  Stream to print to.
     */
    public void printStackTrace(final PrintStream stream) {
-      NestedThrowable.Util.print(this, stream);
       super.printStackTrace(stream);
+      NestedThrowable.Util.print(nested, stream);
    }
 
    /**
@@ -114,8 +114,8 @@ public class NestedError
     * @param writer  Writer to print to.
     */
    public void printStackTrace(final PrintWriter writer) {
-      NestedThrowable.Util.print(this, writer);
       super.printStackTrace(writer);
+      NestedThrowable.Util.print(nested, writer);
    }
 
    /**

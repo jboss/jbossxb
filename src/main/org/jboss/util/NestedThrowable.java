@@ -47,8 +47,8 @@ public interface NestedThrowable
     * Utilitiy methods for the various flavors of
     * <code>NestedThrowable</code>.
     */
-   final class Util {
-
+   final class Util 
+   {
       /**
        * Returns a formated message for the given detail message
        * and nested <code>Throwable</code>.
@@ -64,8 +64,9 @@ public interface NestedThrowable
 
          if (nested != null) {
             buff.append(msg == null ? "- " : "; - ")
-               .append("nested throwable is: ")
-               .append(nested);
+               .append("nested throwable: (")
+               .append(nested)
+               .append(")");
          }
  
          return buff.toString();
@@ -74,53 +75,39 @@ public interface NestedThrowable
       /**
        * Prints the nested <code>Throwable</code> to the given stream.
        *
-       * @param t       <code>NestedThrowable</code> to get nested from.
+       * @param nested  Nested <code>Throwable</code>.
        * @param stream  Stream to print to.
        */
-      public static void print(final NestedThrowable t,
+      public static void print(final Throwable nested,
                                final PrintStream stream)
       {
-         if (t == null)
-            throw new NullArgumentException("t");
-
-         Throwable nested = t.getNested();
+         if (stream == null)
+            throw new NullArgumentException("stream");
 
          if (nested != null) {
-            if (stream == null)
-               throw new NullArgumentException("stream");
-
             synchronized (stream) {
-               stream.println(t);
                stream.print(" + nested throwable: ");
-               nested.printStackTrace(stream);
-               stream.print(" + throwable: ");
+               nested.printStackTrace();
             }
          }
       }
 
       /**
-       * Prints the nested <code>Throwable</code> to the given stream.
+       * Prints the nested <code>Throwable</code> to the given writer.
        *
-       * @param t       <code>NestedThrowable</code> to get nested from.
+       * @param nested  Nested <code>Throwable</code>.
        * @param writer  Writer to print to.
        */
-      public static void print(final NestedThrowable t,
+      public static void print(final Throwable nested,
                                final PrintWriter writer)
       {
-         if (t == null)
-            throw new NullArgumentException("t");
-
-         Throwable nested = t.getNested();
+         if (writer == null)
+            throw new NullArgumentException("writer");
 
          if (nested != null) {
-            if (writer == null)
-               throw new NullArgumentException("writer");
-
             synchronized (writer) {
-               writer.println(t);
                writer.print(" + nested throwable: ");
-               nested.printStackTrace(writer);
-               writer.print(" + throwable: ");
+               nested.printStackTrace();
             }
          }
       }

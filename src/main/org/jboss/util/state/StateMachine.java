@@ -22,6 +22,7 @@ import java.util.EventObject;
 
 import org.jboss.util.NullArgumentException;
 import org.jboss.util.CloneableObject;
+import org.jboss.util.PrettyString;
 
 /**
  * A generalization of a programmable finite-state machine (with a twist).
@@ -156,13 +157,27 @@ public class StateMachine
    }
 
    /** For sync and immutable wrappers. */
-   private StateMachine(final Model model, final boolean hereForSigChange)
+   private StateMachine(final Model model, final boolean hereForSigChangeOnly)
    {
       // must be initialized (they are final), but never used.
       this.model = model;
       this.changeListeners = null;
    }
 
+   /**
+    * Returns a human readable snapshot of the current state of the machine.
+    */
+   public String toString()
+   {
+      StringBuffer buff = new StringBuffer(super.toString()).append(" {").append("\n");
+
+      buff.append("  Model:\n");
+      model.appendPrettyString(buff, "    ").append("\n");
+      buff.append("  Change listeners: ").append(changeListeners).append("\n}");
+      
+      return buff.toString();
+   }
+   
    /**
     * Return the model which provides data encapsulation for the machine.
     *
@@ -256,7 +271,7 @@ public class StateMachine
       boolean rv = false;
 
       // Replace state with the mapped version
-      state = model.getState(state);
+      state = model.getMappedState(state);
       
       // If the current state implements Acceptable let it have a whack
       if (currentState instanceof Acceptable) {
@@ -363,7 +378,7 @@ public class StateMachine
       // assert state != null
 
       // Replace state with the mapped version
-      state = model.getState(state);
+      state = model.getMappedState(state);
          
       State prev = model.getCurrentState();
       model.setCurrentState(state);
@@ -630,7 +645,7 @@ public class StateMachine
     * Defines the data model required by a {@link StateMachine}.
     */
    public interface Model
-      extends Cloneable
+      extends CloneableObject.Cloneable, PrettyString.Appendable
    {
       /**
        * Add a non-final state.
@@ -683,10 +698,24 @@ public class StateMachine
        * <p>Since states with the same value are equivlent, this provides
        *    access to the actual state instance which is bound in the model.
        *
-       * @param state   The state with the value of the bound state to return.
-       * @return        The bound state instance or null if not mapped.
+       * @param state   The state with the value of the bound state to return;
+       *                null will return false.
+       * @return        The bound state instance.
+       *
+       * @throws IllegalArgumentException  State not mapped.
        */
-      State getState(State state);
+      State getMappedState(State state);
+
+      /**
+       * Determins if there is a mapping for the given state object.
+       *
+       * @param state   The state with the value of the bound state to check for;
+       *                must not be null.
+       * @return        True if the state is mapped; else false.
+       *
+       * @throws IllegalArgumentException  State not mapped.
+       */
+      boolean isMappedState(State state);
       
       /**
        * Set the initial state.
@@ -761,9 +790,6 @@ public class StateMachine
        * @return        A set of accepting states.
        */
       Set acceptableStates(State state);
-
-      // Give clone() public access
-      Object clone();
    }
 
    

@@ -44,6 +44,8 @@ public interface Unmarshaller
 
    Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata) throws JBossXBException;
 
+   Object unmarshal(Reader xmlFile, ObjectModelFactory factory, DocumentBinding metadata) throws JBossXBException;
+
    Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException;
 
    Object unmarshal(InputStream is, ObjectModelFactory factory, Object root) throws JBossXBException;

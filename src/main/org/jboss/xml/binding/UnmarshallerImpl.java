@@ -92,6 +92,14 @@ public class UnmarshallerImpl
       return builder.getRoot();
    }
 
+   public Object unmarshal(Reader xmlFile, ObjectModelFactory factory, DocumentBinding metadata)
+      throws JBossXBException
+   {
+      builder.init(factory, null, metadata);
+      parser.parse(xmlFile, builder);
+      return builder.getRoot();
+   }
+
    public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException
    {
       builder.init(factory, root, null);

@@ -95,6 +95,20 @@ public abstract class DocumentBindingFactory
                                               String fieldName,
                                               Class javaType);
 
+   /**
+    * Binds XML attribute to Java field.
+    *
+    * @param element       the element the attribute belongs to
+    * @param attributeName attribute's name
+    * @param fieldName     field in a class the attribute is bound to
+    * @param javaType      Java class attribute is bound to
+    * @return attribute binding
+    */
+   public abstract AttributeBinding bindAttribute(BasicElementBinding element,
+                                                  String attributeName,
+                                                  String fieldName,
+                                                  Class javaType);
+
    // Inner
 
    /**
@@ -159,6 +173,21 @@ public abstract class DocumentBindingFactory
          );
          ((BasicElementBindingImpl)parent).addChild(child);
          return child;
+      }
+
+      public AttributeBinding bindAttribute(BasicElementBinding element,
+                                            String attributeName,
+                                            String fieldName,
+                                            Class javaType)
+      {
+         AttributeBinding attr = new AttributeBinding(element.getNamespace(),
+            attributeName,
+            javaType,
+            fieldName,
+            element.getJavaType()
+         );
+         ((BasicElementBindingImpl)element).addAttribute(attr);
+         return attr;
       }
    }
 
@@ -359,6 +388,7 @@ public abstract class DocumentBindingFactory
    {
       protected final String elementName;
       private final Map children = new HashMap();
+      private final Map attributes = new HashMap();
 
       public BasicElementBindingImpl(NamespaceBinding ns, String elementName, AbstractBasicElementBinding delegate)
       {
@@ -371,9 +401,19 @@ public abstract class DocumentBindingFactory
          children.put(child.getElementName(), child);
       }
 
+      void addAttribute(AttributeBinding attr)
+      {
+         attributes.put(attr.getAttributeName(), attr);
+      }
+
       public String getElementName()
       {
          return elementName;
+      }
+
+      protected AttributeBinding getAttributeLocal(String attributeName)
+      {
+         return (AttributeBinding)attributes.get(attributeName);
       }
 
       protected ElementBinding getChildElementLocal(String elementName)

@@ -54,16 +54,6 @@ public interface BindingCursor
                elBinding = (BasicElementBinding)stack.getLast();
                elBinding = elBinding.getChildElement(localName);
             }
-
-            if(elBinding == null)
-            {
-               System.out.println("Cursor> startElement: no binding for " + localName);
-            }
-            else
-            {
-               System.out.println("Cursor> startElement: " + elBinding.getElementName() + " -> " + elBinding.getJavaType());
-            }
-
             stack.addLast(elBinding);
          }
 

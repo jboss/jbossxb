@@ -148,6 +148,7 @@ public class RuntimeDocumentBinding
                   catch(ClassNotFoundException e)
                   {
                      // todo: so what is this?
+                     //childType = String.class;
                   }
                }
 
@@ -156,6 +157,52 @@ public class RuntimeDocumentBinding
          }
 
          return el;
+      }
+
+      protected AttributeBinding getAttributeLocal(String attributeName)
+      {
+         AttributeBinding attr = null;
+         String clsName = Util.xmlNameToClassName(attributeName, true);
+
+         Method getter = null;
+         Field field = null;
+         Class fieldType = null;
+         String fieldName = Character.toLowerCase(clsName.charAt(0)) + clsName.substring(1);
+         try
+         {
+            getter = javaType.getMethod("get" + clsName, null);
+            fieldType = getter.getReturnType();
+         }
+         catch(NoSuchMethodException e)
+         {
+            try
+            {
+               field = javaType.getField(fieldName);
+               fieldType = field.getType();
+            }
+            catch(NoSuchFieldException e1)
+            {
+               // neither field nor getter/setter pair were found
+            }
+         }
+
+         if(fieldType != null)
+         {
+            clsName = ns.getJavaPackage() + "." + clsName;
+            Class attrJavaType;
+            try
+            {
+               attrJavaType = Thread.currentThread().getContextClassLoader().loadClass(clsName);
+            }
+            catch(ClassNotFoundException e)
+            {
+               attrJavaType = fieldType;
+            }
+
+            attr = new AttributeBinding(ns, attributeName, attrJavaType, fieldName, javaType);
+         }
+
+         return attr;
       }
 
       public String getElementName()

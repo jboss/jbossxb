@@ -15,7 +15,7 @@ package org.jboss.xml.binding.metadata.unmarshalling;
 public interface BasicElementBinding
 {
    /**
-    * @return  namespace binding the element belongs to
+    * @return namespace binding the element belongs to
     */
    NamespaceBinding getNamespace();
 
@@ -34,4 +34,10 @@ public interface BasicElementBinding
     * @return child element binding or null if the child element binding was not found
     */
    ElementBinding getChildElement(String name);
+
+   /**
+    * @param name attribute name
+    * @return attribute binding
+    */
+   AttributeBinding getAttribute(String name);
 }

@@ -50,8 +50,17 @@ public abstract class AbstractBasicElementBinding
       {
          child = delegate == null ? null : delegate.getChildElement(elementName);
       }
-
       return child;
+   }
+
+   public AttributeBinding getAttribute(String attributeName)
+   {
+      AttributeBinding attr = getAttributeLocal(attributeName);
+      if(attr == null)
+      {
+         attr = delegate == null ? null : delegate.getAttribute(attributeName);
+      }
+      return attr;
    }
 
    // Protected
@@ -64,4 +73,6 @@ public abstract class AbstractBasicElementBinding
     * @return child element binding defined on this level or null if it is not defined on this level
     */
    protected abstract ElementBinding getChildElementLocal(String elementName);
+
+   protected abstract AttributeBinding getAttributeLocal(String attributeName);
 }

@@ -29,8 +29,6 @@ public interface Marshaller
 
    void mapPublicIdToSystemId(String publicId, String systemId);
 
-   void mapProviderToNamespace(ObjectModelProvider provider, String namespaceUri);
-
    void mapClassToNamespace(Class cls, String root, String namespaceUri, Reader schemaReader, ObjectModelProvider provider);
 
    void addRootElement(String namespaceUri, String prefix, String name);

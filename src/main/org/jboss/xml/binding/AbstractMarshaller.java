@@ -30,31 +30,13 @@ public abstract class AbstractMarshaller
    protected String encoding = ENCODING;
    protected List rootQNames = new ArrayList();
 
-   /**
-    * object model providers mapped to namespace URIs
-    */
-   private Map providerToNs = Collections.EMPTY_MAP;
    private Map classMappings = Collections.EMPTY_MAP;
 
    // Marshaller implementation
 
-   public void mapProviderToNamespace(ObjectModelProvider provider, String namespaceUri)
-   {
-      if(!(provider instanceof GenericObjectModelProvider))
-      {
-         provider = new DelegatingObjectModelProvider(provider);
-      }
-
-      if(providerToNs.isEmpty())
-      {
-         providerToNs = new HashMap();
-      }
-      providerToNs.put(namespaceUri, provider);
-   }
-
    public void mapClassToNamespace(Class cls, String root, String namespaceUri, Reader schemaReader, ObjectModelProvider provider)
    {
-      if(classMappings.isEmpty())
+      if(classMappings == Collections.EMPTY_MAP)
       {
          classMappings = new HashMap();
       }
@@ -88,16 +70,6 @@ public abstract class AbstractMarshaller
    }
 
    // Protected
-
-   protected GenericObjectModelProvider getProvider(String namespaceUri, GenericObjectModelProvider defaultProvider)
-   {
-      GenericObjectModelProvider provider = (GenericObjectModelProvider) providerToNs.get(namespaceUri);
-      if(provider == null)
-      {
-         provider = defaultProvider;
-      }
-      return provider;
-   }
 
    protected ClassMapping getClassMapping(Class cls)
    {

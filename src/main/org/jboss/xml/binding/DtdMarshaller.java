@@ -123,7 +123,6 @@ public class DtdMarshaller
       elementStack.addLast(el);
       content.startDocument();
 
-      GenericObjectModelProvider provider = getProvider(systemId, this.provider);
       Object root = provider.getRoot(o, systemId, dtdRoot.getName());
       stack.push(root);
 
@@ -143,7 +142,6 @@ public class DtdMarshaller
       }
       else if(item instanceof DTDEmpty)
       {
-         GenericObjectModelProvider provider = getProvider(systemId, this.provider);
          final Object value = provider.getElementValue(stack.peek(), systemId, element.getName());
          if(Boolean.TRUE.equals(value))
          {
@@ -172,7 +170,6 @@ public class DtdMarshaller
          DTDItem item = items[i];
          if(item instanceof DTDPCData)
          {
-            GenericObjectModelProvider provider = getProvider(systemId, this.provider);
             Object value = provider.getElementValue(parent, systemId, elementName);
             if(value != null)
             {
@@ -188,7 +185,6 @@ public class DtdMarshaller
    private final void handleChildren(DTD dtd, DTDElement element)
    {
       Object parent = stack.peek();
-      GenericObjectModelProvider provider = getProvider(systemId, this.provider);
       Object children = provider.getChildren(parent, systemId, element.getName());
 
       if(children != null)
@@ -295,7 +291,6 @@ public class DtdMarshaller
       for(Iterator attrIter = attributes.values().iterator(); attrIter.hasNext();)
       {
          DTDAttribute attr = (DTDAttribute)attrIter.next();
-         GenericObjectModelProvider provider = getProvider(systemId, this.provider);
          final Object attrValue = provider.getAttributeValue(container, systemId, attr.getName());
 
          if(attrValue != null)

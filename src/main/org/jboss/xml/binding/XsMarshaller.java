@@ -234,7 +234,6 @@ public class XsMarshaller
          name.getLocalName() : prefix + ':' + name.getLocalName()
          );
 
-      GenericObjectModelProvider provider = getProvider(name.getNamespaceURI(), this.provider);
       Object parent;
       if(stack.isEmpty())
       {
@@ -259,7 +258,6 @@ public class XsMarshaller
       throws SAXException
    {
       final XsQName xsName = element.getName();
-      GenericObjectModelProvider provider = getProvider(xsName.getNamespaceURI(), this.provider);
 
       Object parent;
       boolean popRoot = false;
@@ -378,7 +376,6 @@ public class XsMarshaller
             final XSAttribute attr = (XSAttribute)attributable;
 
             final XsQName attrQName = attr.getName();
-            GenericObjectModelProvider provider = getProvider(attrQName.getNamespaceURI(), this.provider);
             final Object attrValue = provider.getAttributeValue(
                container, attrQName.getNamespaceURI(), attrQName.getLocalName()
             );
@@ -546,9 +543,11 @@ public class XsMarshaller
                rootName.getLocalName() : rootPrefix + ':' + rootName.getLocalName());
 
             Stack oldStack = this.stack;
-            Object oldRoot = this.root;
             this.stack = new StackImpl();
+            Object oldRoot = this.root;
             this.root = child;
+            GenericObjectModelProvider oldProvider = this.provider;
+            this.provider = mapping.provider;
             content.startElement(rootName.getNamespaceURI(), rootName.getLocalName(), rootQName, addedAttrs);
 
             processElement(root, addedAttrs);
@@ -556,6 +555,7 @@ public class XsMarshaller
             content.endElement(rootName.getNamespaceURI(), rootName.getLocalName(), rootQName);
             this.root = oldRoot;
             this.stack = oldStack;
+            this.provider = oldProvider;
          }
          content.endElement(name.getNamespaceURI(), name.getLocalName(), qName);
       }

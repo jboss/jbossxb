@@ -26,18 +26,22 @@ public class DelegatingDocumentBinding
 
    public DelegatingDocumentBinding(DocumentBinding doc)
    {
-      delegates.add(doc);
+      addDelegate(doc);
    }
 
    void addDelegate(DocumentBinding doc)
    {
       delegates.add(doc);
+      if(doc instanceof PluggableDocumentBinding)
+      {
+         ((PluggableDocumentBinding)doc).setDocumentBinding(this);
+      }
    }
 
    DelegatingNamespaceBinding bindNamespace(String namespaceUri, String javaPackage)
    {
       NamespaceBinding ns = new NamespaceBindingImpl(this, namespaceUri, javaPackage);
-      DelegatingNamespaceBinding cachedNs = (DelegatingNamespaceBinding)namespaceBindings.get(namespaceUri);
+      DelegatingNamespaceBinding cachedNs = (DelegatingNamespaceBinding)getNamespace(namespaceUri);//(DelegatingNamespaceBinding)namespaceBindings.get(namespaceUri);
       if(cachedNs == null)
       {
          cachedNs = new DelegatingNamespaceBinding(this, ns);

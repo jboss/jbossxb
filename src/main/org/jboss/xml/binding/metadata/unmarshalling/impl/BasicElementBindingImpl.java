@@ -21,12 +21,12 @@ import java.util.HashMap;
 public abstract class BasicElementBindingImpl
    implements BasicElementBinding
 {
-   protected final DelegatingDocumentBinding doc;
+   protected final DocumentBinding doc;
    protected final QName elementName;
    //private final Map children = new HashMap();
    private final Map attributes = new HashMap();
 
-   public BasicElementBindingImpl(QName elementName, DelegatingDocumentBinding doc)
+   public BasicElementBindingImpl(QName elementName, DocumentBinding doc)
    {
       this.elementName = elementName;
       this.doc = doc;

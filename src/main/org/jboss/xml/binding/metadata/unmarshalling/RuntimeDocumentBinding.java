@@ -6,28 +6,42 @@
  */
 package org.jboss.xml.binding.metadata.unmarshalling;
 
-import org.jboss.xml.binding.Util;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.AbstractElementBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.BasicElementBindingImpl;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.PluggableDocumentBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.impl.DelegatingDocumentBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.impl.AttributeBindingImpl;
+import org.jboss.xml.binding.Util;
+import org.jboss.xml.binding.JBossXBRuntimeException;
 
 import javax.xml.namespace.QName;
-import java.util.Collection;
-import java.lang.reflect.Method;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
 
 /**
- * DocumentBinding implementation that binds XML namespaces, elements and attributes to Java classes and fields
- * at runtime using default XML name to Java identifier algorithms.
- * todo: cache generated bindings
- *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
 public class RuntimeDocumentBinding
-   implements DocumentBinding
+   implements DocumentBinding, PluggableDocumentBinding
 {
+   private DocumentBinding doc;
+
+   public RuntimeDocumentBinding()
+   {
+      this.doc = this;
+   }
+
    public NamespaceBinding getNamespace(String namespaceUri)
    {
-      return new NamespaceBindingImpl(namespaceUri);
+      return new NamespaceBindingImpl(doc, namespaceUri);
+   }
+
+   public void setDocumentBinding(DelegatingDocumentBinding delegating)
+   {
+      doc = delegating;
    }
 
    // Inner
@@ -35,13 +49,13 @@ public class RuntimeDocumentBinding
    private static final class NamespaceBindingImpl
       implements NamespaceBinding
    {
+      private final DocumentBinding doc;
       private final String namespaceUri;
-      private final String javaPackage;
 
-      public NamespaceBindingImpl(String namespaceUri)
+      public NamespaceBindingImpl(DocumentBinding doc, String namespaceUri)
       {
+         this.doc = doc;
          this.namespaceUri = namespaceUri;
-         javaPackage = Util.xmlNamespaceToJavaPackage(namespaceUri);
       }
 
       public String getNamespaceUri()
@@ -51,75 +65,68 @@ public class RuntimeDocumentBinding
 
       public String getJavaPackage()
       {
-         return javaPackage;
+         return Util.xmlNamespaceToJavaPackage(namespaceUri);
       }
 
       public DocumentBinding getDocument()
       {
-         // todo: implement getDocument
-         throw new UnsupportedOperationException("getDocument is not implemented.");
+         return doc;
       }
 
       public TopElementBinding getTopElement(String elementName)
       {
-         TopElementBinding topEl;
-         String javaTypeName = javaPackage + "." + Util.xmlNameToClassName(elementName, true);
-         try
-         {
-            Class javaType = Thread.currentThread().getContextClassLoader().loadClass(javaTypeName);
-            topEl = new TopElementBindingImpl(new QName(namespaceUri, elementName), javaType);
-         }
-         catch(ClassNotFoundException e)
-         {
-            // default naming approach didn't work
-            topEl = null;
-         }
-         return topEl;
+         return new TopElementBindingImpl(new QName(namespaceUri, elementName), doc);
       }
    }
 
-   private static class BasicElementBindingImpl
-      implements BasicElementBinding
+   private static final class ElementBindingImpl
+      extends AbstractElementBinding
    {
-      private final QName elementName;
-      private final Class javaType;
+      private Field field;
+      private Method getter;
+      private Method setter;
+      private Class fieldType;
+      private Class javaType;
 
-      public BasicElementBindingImpl(QName elementName, Class javaType)
+      public ElementBindingImpl(QName elementName,
+                                BasicElementBinding parent)
       {
-         this.elementName = elementName;
-         this.javaType = javaType;
+         super(elementName, parent);
       }
 
-      public ElementBinding getElement(QName elementName)
+      private void init()
       {
-         ElementBinding el = null;
-         String clsName = Util.xmlNameToClassName(elementName.getLocalPart(), true);
+         Class parentType = parent.getJavaType();
+         Class myType = null;
+         Field field = null;
+         Method getter = null;
+         Method setter = null;
+         Class fieldType = null;
 
-         if(Collection.class.isAssignableFrom(javaType))
+         String clsName = Util.xmlNameToClassName(elementName.getLocalPart(), true);
+         NamespaceBinding ns = doc.getNamespace(elementName.getNamespaceURI());
+         String clsQName = ns.getJavaPackage() + "." + Util.xmlNameToClassName(elementName.getLocalPart(), true);
+         try
          {
-            clsName = Util.xmlNamespaceToJavaPackage(elementName.getNamespaceURI()) + "." + clsName;
-            Class javaType;
-            try
+            myType = Thread.currentThread().getContextClassLoader().loadClass(clsQName);
+         }
+         catch(ClassNotFoundException e)
+         {
+         }
+
+         if(Collection.class.isAssignableFrom(parentType))
+         {
+            if(myType == null)
             {
-               javaType = Thread.currentThread().getContextClassLoader().loadClass(clsName);
+               myType = String.class;
             }
-            catch(ClassNotFoundException e)
-            {
-               // use java.lang.String
-               javaType = String.class;
-            }
-            el = new ElementBindingImpl(elementName, javaType, null, null, null);
          }
          else
          {
-            Method getter = null;
-            Method setter = null;
-            Field field = null;
-            Class fieldType = null;
             try
             {
-               getter = javaType.getMethod("get" + clsName, null);
-               setter = javaType.getMethod("set" + clsName, new Class[]{getter.getReturnType()});
+               getter = parentType.getMethod("get" + clsName, null);
+               setter = parentType.getMethod("set" + clsName, new Class[]{getter.getReturnType()});
                fieldType = getter.getReturnType();
             }
             catch(NoSuchMethodException e)
@@ -127,160 +134,115 @@ public class RuntimeDocumentBinding
                String fieldName = Character.toLowerCase(clsName.charAt(0)) + clsName.substring(1);
                try
                {
-                  field = javaType.getField(fieldName);
+                  field = parentType.getField(fieldName);
                   fieldType = field.getType();
                }
                catch(NoSuchFieldException e1)
                {
-                  // neither field nor getter/setter pair were found
                }
             }
 
             if(fieldType != null)
             {
-               Class childType = fieldType;
-               if(Collection.class.isAssignableFrom(fieldType))
+               if(Modifier.isFinal(fieldType.getModifiers()) ||
+                  myType == null &&
+                  !Modifier.isInterface(fieldType.getModifiers()) &&
+                  !Modifier.isAbstract(fieldType.getModifiers()))
                {
-                  clsName = Util.xmlNamespaceToJavaPackage(elementName.getNamespaceURI()) + "." + clsName;
-                  try
+                  myType = fieldType;
+               }
+               else if(fieldType == Collection.class || Collection.class.isAssignableFrom(fieldType))
+               {
+                  if(myType == null)
                   {
-                     childType = Thread.currentThread().getContextClassLoader().loadClass(clsName);
-                  }
-                  catch(ClassNotFoundException e)
-                  {
-                     // todo: so what is this?
-                     //childType = String.class;
+                     // todo: other collection types
+                     myType = java.util.ArrayList.class;
                   }
                }
-
-               el = createElementBinding(elementName, getter, setter, field, childType);
+               else if(myType != null)
+               {
+                  if(myType != fieldType && !fieldType.isAssignableFrom(myType))
+                  {
+                     myType = null;
+                  }
+               }
             }
          }
 
-         return el;
-      }
-
-      public AttributeBinding getAttribute(QName attributeName)
-      {
-         AttributeBinding attr = null;
-         String clsName = Util.xmlNameToClassName(attributeName.getLocalPart(), true);
-
-         Method getter = null;
-         Field field = null;
-         Class fieldType = null;
-         String fieldName = Character.toLowerCase(clsName.charAt(0)) + clsName.substring(1);
-         try
+         if(myType == null)
          {
-            getter = javaType.getMethod("get" + clsName, null);
-            fieldType = getter.getReturnType();
-         }
-         catch(NoSuchMethodException e)
-         {
-            try
-            {
-               field = javaType.getField(fieldName);
-               fieldType = field.getType();
-            }
-            catch(NoSuchFieldException e1)
-            {
-               // neither field nor getter/setter pair were found
-            }
+            throw new JBossXBRuntimeException(
+               "Failed to bind element " + elementName + " to any non-abstract Java type. Field type is " + fieldType
+            );
          }
 
-         if(fieldType != null)
-         {
-            clsName = Util.xmlNamespaceToJavaPackage(attributeName.getNamespaceURI()) + "." + clsName;
-            Class attrJavaType;
-            try
-            {
-               attrJavaType = Thread.currentThread().getContextClassLoader().loadClass(clsName);
-            }
-            catch(ClassNotFoundException e)
-            {
-               attrJavaType = fieldType;
-            }
-
-            attr = new AttributeBindingImpl(attributeName, attrJavaType, javaType, fieldName);
-         }
-
-         return attr;
-      }
-
-      public QName getElementName()
-      {
-         return elementName;
+         this.field = field;
+         this.getter = getter;
+         this.setter = setter;
+         this.fieldType = fieldType;
+         this.javaType = myType;
       }
 
       public Class getJavaType()
       {
+         if(javaType == null)
+         {
+            init();
+         }
          return javaType;
       }
 
-      public DocumentBinding getDocument()
+      public ElementBinding getElement(QName elementName)
       {
-         // todo: implement getDocument
-         throw new UnsupportedOperationException("getDocument is not implemented.");
+         return new ElementBindingImpl(elementName, getSelfReference());
       }
 
-      private ElementBinding createElementBinding(QName elementName,
-                                                  Method getter,
-                                                  Method setter,
-                                                  Field field,
-                                                  Class javaType)
+      public AttributeBinding getAttribute(QName attributeName)
       {
-         if(Collection.class.isAssignableFrom(javaType))
-         {
-            javaType = java.util.ArrayList.class;
-         }
-         else if(
-            (javaType.getModifiers() &
-            (java.lang.reflect.Modifier.INTERFACE | java.lang.reflect.Modifier.ABSTRACT)
-            ) > 0)
-         {
-            return null;
-         }
-         return new ElementBindingImpl(elementName, javaType, getter, setter, field);
-      }
-   }
-
-   private static final class ElementBindingImpl
-      extends BasicElementBindingImpl
-      implements ElementBinding
-   {
-      private final Method getter;
-      private final Method setter;
-      private final Field field;
-
-      public ElementBindingImpl(QName elementName,
-                                Class javaType,
-                                Method getter,
-                                Method setter,
-                                Field field)
-      {
-         super(elementName, javaType);
-         this.getter = getter;
-         this.setter = setter;
-         this.field = field;
+         String fieldName = Util.xmlNameToClassName(attributeName.getLocalPart(), true);
+         fieldName = Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1);
+         return new AttributeBindingImpl(attributeName, null, getJavaType(), fieldName);
       }
 
       public Field getField()
       {
+         if(javaType == null)
+         {
+            init();
+         }
          return field;
       }
 
       public Method getGetter()
       {
+         if(javaType == null)
+         {
+            init();
+         }
          return getter;
       }
 
       public Method getSetter()
       {
+         if(javaType == null)
+         {
+            init();
+         }
          return setter;
       }
 
       public Class getFieldType()
       {
-         return getter == null ? (field == null ? null : field.getType()) : getter.getReturnType();
+         if(javaType == null)
+         {
+            init();
+         }
+         return fieldType;
+      }
+
+      private ElementBinding getSelfReference()
+      {
+         return parent.getElement(this.elementName);
       }
    }
 
@@ -288,9 +250,41 @@ public class RuntimeDocumentBinding
       extends BasicElementBindingImpl
       implements TopElementBinding
    {
-      public TopElementBindingImpl(QName elementName, Class javaType)
+      public TopElementBindingImpl(QName elementName, DocumentBinding doc)
       {
-         super(elementName, javaType);
+         super(elementName, doc);
+      }
+
+      protected BasicElementBinding getSelfReference()
+      {
+         return doc.getNamespace(elementName.getNamespaceURI()).getTopElement(this.elementName.getLocalPart());
+      }
+
+      public Class getJavaType()
+      {
+         String clsName = doc.getNamespace(elementName.getNamespaceURI()).getJavaPackage() +
+            "." +
+            Util.xmlNameToClassName(elementName.getLocalPart(), true);
+         try
+         {
+            return Thread.currentThread().getContextClassLoader().loadClass(clsName);
+         }
+         catch(ClassNotFoundException e)
+         {
+            throw new JBossXBRuntimeException("Failed to load " + clsName);
+         }
+      }
+
+      public ElementBinding getElement(QName elementName)
+      {
+         return new ElementBindingImpl(elementName, getSelfReference());
+      }
+
+      public AttributeBinding getAttribute(QName attributeName)
+      {
+         String fieldName = Util.xmlNameToClassName(attributeName.getLocalPart(), true);
+         fieldName = Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1);
+         return new AttributeBindingImpl(attributeName, null, getJavaType(), fieldName);
       }
    }
 }

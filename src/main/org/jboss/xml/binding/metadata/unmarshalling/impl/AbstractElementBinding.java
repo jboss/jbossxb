@@ -7,6 +7,7 @@
 package org.jboss.xml.binding.metadata.unmarshalling.impl;
 
 import org.jboss.xml.binding.metadata.unmarshalling.ElementBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.BasicElementBinding;
 
 import javax.xml.namespace.QName;
 
@@ -18,16 +19,15 @@ public abstract class AbstractElementBinding
    extends BasicElementBindingImpl
    implements ElementBinding
 {
-   protected final DelegatingBasicElementBinding parent;
+   protected final BasicElementBinding parent;
 
-   public AbstractElementBinding(QName elementName,
-                                     DelegatingBasicElementBinding parent)
+   public AbstractElementBinding(QName elementName, BasicElementBinding parent)
    {
-      super(elementName, (DelegatingDocumentBinding)parent.getDocument());
+      super(elementName, parent.getDocument());
       this.parent = parent;
    }
 
-   public DelegatingBasicElementBinding getParent()
+   public BasicElementBinding getParent()
    {
       return parent;
    }

@@ -60,7 +60,7 @@ public class DelegatingDocumentBindingFactory
                                      Class javaType)
    {
       DelegatingBasicElementBinding delegatingParent = (DelegatingBasicElementBinding)parent;
-      return delegatingParent.bindElement(new QName(namespaceUri, elementName), fieldName, javaType);
+      return delegatingParent.bindChildElement(new QName(namespaceUri, elementName), fieldName, javaType);
    }
 
    public AttributeBinding bindAttribute(BasicElementBinding element,

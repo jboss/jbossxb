@@ -30,7 +30,6 @@ public class AttributeBindingImpl
    public AttributeBindingImpl(QName attributeName, Class javaType, Class parentClass, String fieldName)
    {
       this.attributeName = attributeName;
-      this.javaType = javaType;
 
       Field field = null;
       Method getter = null;
@@ -68,6 +67,20 @@ public class AttributeBindingImpl
       this.setter = setter;
 
       fieldType = field == null ? (getter == null ? null : getter.getReturnType()) : field.getType();
+      if(fieldType == null)
+      {
+         throw new JBossXBRuntimeException(
+            "Failed to bind attribute " +
+            attributeName +
+            " to field " +
+            fieldName +
+            " in " +
+            parentClass +
+            ": failed to resolve field's type."
+         );
+      }
+
+      this.javaType = javaType == null ? fieldType : javaType;
    }
 
    public QName getAttributeName()

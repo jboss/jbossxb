@@ -25,7 +25,7 @@ public abstract class DelegatingBasicElementBinding
    implements BasicElementBinding
 {
    protected final DelegatingDocumentBinding doc;
-   private final QName elementName;
+   protected final QName elementName;
    private final Map children = new HashMap();
    protected final List delegates = new ArrayList();
 
@@ -41,25 +41,25 @@ public abstract class DelegatingBasicElementBinding
       delegates.add(delegate);
    }
 
-   DelegatingElementBinding bindElement(QName elementName,
-                                        String fieldName,
-                                        Class javaType)
+   DelegatingElementBinding bindChildElement(QName elementName,
+                                             String fieldName,
+                                             Class javaType)
    {
-      AbstractElementBinding child = new ElementBindingImpl(elementName,
+      AbstractElementBinding newBinding = new ElementBindingImpl(elementName,
          javaType,
          getJavaType(),
          fieldName,
          this
       );
-      DelegatingElementBinding delegatingChild = (DelegatingElementBinding)children.get(elementName);
+      DelegatingElementBinding delegatingChild = (DelegatingElementBinding)getElement(elementName);
       if(delegatingChild == null)
       {
-         delegatingChild = new DelegatingElementBinding(doc, child);
+         delegatingChild = new DelegatingElementBinding(doc, newBinding);
          children.put(delegatingChild.getElementName(), delegatingChild);
       }
       else
       {
-         delegatingChild.addDelegate(child);
+         delegatingChild.addDelegate(newBinding);
       }
       return delegatingChild;
    }
@@ -84,22 +84,32 @@ public abstract class DelegatingBasicElementBinding
       DelegatingElementBinding cachedChild = (DelegatingElementBinding)children.get(elementName);
       if(cachedChild == null)
       {
-         for(int i = delegates.size() - 1; i >= 0; --i)
+         /* There is no binding or the binding has not been requested yet.
+          * We iterate through all the delegates in the order they were added (!) and create the stack for this
+          * element binding
+          */
+         for(int i = 0; i < delegates.size(); ++i)
          {
             BasicElementBinding parent = (BasicElementBinding)delegates.get(i);
             ElementBinding child = parent.getElement(elementName);
             if(child != null)
             {
-               if(child instanceof DelegatingElementBinding)
+               if(cachedChild == null)
                {
-                  cachedChild = (DelegatingElementBinding)child;
+                  if(child instanceof DelegatingElementBinding)
+                  {
+                     cachedChild = (DelegatingElementBinding)child;
+                  }
+                  else
+                  {
+                     cachedChild = new DelegatingElementBinding(doc, child);
+                  }
+                  children.put(cachedChild.getElementName(), cachedChild);
                }
                else
                {
-                  cachedChild = new DelegatingElementBinding(doc, child);
+                  cachedChild.addDelegate(child);
                }
-               children.put(elementName, cachedChild);
-               break;
             }
          }
       }
@@ -111,8 +121,8 @@ public abstract class DelegatingBasicElementBinding
       AttributeBinding attr = null;
       for(int i = delegates.size() - 1; i >= 0; --i)
       {
-         BasicElementBinding parent = (BasicElementBinding)delegates.get(i);
-         attr = parent.getAttribute(elementName);
+         BasicElementBinding delegate = (BasicElementBinding)delegates.get(i);
+         attr = delegate.getAttribute(attributeName);
          if(attr != null)
          {
             break;

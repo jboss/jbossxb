@@ -174,7 +174,7 @@
 
   <target name="compile" 
 	  description="Compile all source files."
-	  depends="compile-classes"/>
+	  depends="compile-classes, compile-etc"/>
 
   <!-- Compile all class files -->
   <target name="compile-classes" depends="init">
@@ -196,6 +196,23 @@
     </javac>
   </target>
 
+  <!-- Compile manifests -->
+  <target name="compile-etc" depends="init">
+    <mkdir dir="${build.etc}/manifest"/>
+    <!-- Copy with filtering to replace the following tokens that are
+         used to make up the jar manifest version information.
+     -->
+    <filter token="version.major" value="${version.major}"/>
+    <filter token="version.minor" value="${version.minor}"/>
+    <filter token="version.revision" value="${version.revision}"/>
+    <filter token="version.tag" value="${version.tag}"/>
+    <filter token="version.name" value="${version.name}"/>
+    <copy todir="${build.etc}/manifest" filtering="yes">
+      <fileset dir="${project.root}/build/etc">
+         <include name="version.mf"/>
+      </fileset>
+    </copy>
+  </target>
 
   <!-- ================================================================== -->
   <!-- Archives                                                           -->
@@ -211,14 +228,16 @@
     <mkdir dir="${build.lib}"/>
     
     <!-- Build the jboss-common.jar -->
-    <jar jarfile="${build.lib}/jboss-common.jar">
+    <jar jarfile="${build.lib}/jboss-common.jar"
+         manifest="${build.etc}/manifest/version.mf">
       <fileset dir="${build.classes}">
         <include name="**"/>
       </fileset>
     </jar>
 
     <!-- Build the jboss-common-client.jar -->
-    <jar jarfile="${build.lib}/jboss-common-client.jar">
+    <jar jarfile="${build.lib}/jboss-common-client.jar"
+         manifest="${build.etc}/manifest/version.mf">
       <fileset dir="${build.classes}">
         <!-- All Exceptions, Errors and Throwable Support Classes -->
         <include name="**/*Exception*"/>

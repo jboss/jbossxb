@@ -114,6 +114,11 @@ public class ObjectModelBuilder
 
    // ContentNavigator implementation
 
+   public Map getPrefixToNamespaceMap()
+   {
+      return Collections.unmodifiableMap(prefixToUri);
+   }
+
    public String resolveNamespacePrefix(String prefix)
    {
       String uri;

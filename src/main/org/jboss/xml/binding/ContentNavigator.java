@@ -7,6 +7,7 @@
 package org.jboss.xml.binding;
 
 import javax.xml.namespace.QName;
+import java.util.Map;
 
 /**
  * An interface for content navigation. At the moment it has only one method to get child's content.
@@ -17,6 +18,8 @@ import javax.xml.namespace.QName;
  */
 public interface ContentNavigator
 {
+   Map getPrefixToNamespaceMap();
+   
    /**
     * @param prefix  the prefix to resolve
     * @return the namespace URI the prefix was mapped to

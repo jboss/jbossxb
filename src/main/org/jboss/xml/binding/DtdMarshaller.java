@@ -199,6 +199,10 @@ public class DtdMarshaller
          {
             iter = (Iterator)children;
          }
+         else if(children instanceof Collection)
+         {
+            iter = ((Collection)children).iterator();
+         }
          else
          {
             iter = Collections.singletonList(children).iterator();

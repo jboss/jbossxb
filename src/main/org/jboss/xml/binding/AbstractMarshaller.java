@@ -97,6 +97,7 @@ public abstract class AbstractMarshaller
          }
          catch(Exception e)
          {
+            log.error("Failed to invoke method " + methodName, e);
             throw new IllegalStateException("Failed to invoke method " + methodName);
          }
       }

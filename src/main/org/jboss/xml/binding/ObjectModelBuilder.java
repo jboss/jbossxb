@@ -12,7 +12,6 @@ import org.xml.sax.Attributes;
 import org.jboss.logging.Logger;
 
 import javax.xml.namespace.QName;
-import java.util.Stack;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
@@ -43,14 +42,16 @@ public class ObjectModelBuilder
     */
    private static final Object IGNORED = new Object();
 
+   private Object root;
+
    /**
     * the stack of all the metadata objects including IGNORED
     */
-   private Stack all = new Stack();
+   private Stack all = new StackImpl();
    /**
     * the stack of only accepted metadata objects
     */
-   private Stack accepted = new Stack();
+   private Stack accepted = new StackImpl();
 
    /**
     * default object model factory
@@ -94,21 +95,23 @@ public class ObjectModelBuilder
       accepted.clear();
       value.delete(0, value.length());
 
-      if(root == null)
+      boolean popRoot = false;
+      if(root != null)
       {
-         root = defaultFactory.startDocument();
+         all.push(root);
+         accepted.push(root);
+         popRoot = true;
       }
-
-      all.push(root);
-      accepted.push(root);
 
       content.build(this);
 
-      root = all.pop();
-      accepted.pop();
-      defaultFactory.endDocument(root);
+      if(popRoot)
+      {
+         root = all.pop();
+         accepted.pop();
+      }
 
-      return root;
+      return this.root;
    }
 
    // ContentNavigator implementation
@@ -189,7 +192,17 @@ public class ObjectModelBuilder
       }
 
       Object factory = getFactory(namespaceURI);
-      Object element = newChild(factory, parent, this, namespaceURI, localName, atts);
+      Object element;
+      if(root == null)
+      {
+         element = ((ObjectModelFactory) factory).newRoot(parent, this, namespaceURI, localName, atts);
+         root = element;
+      }
+      else
+      {
+         element = newChild(factory, parent, this, namespaceURI, localName, atts);
+      }
+
       if(element == null)
       {
          all.push(IGNORED);
@@ -217,7 +230,16 @@ public class ObjectModelBuilder
 
       if(value.length() > 0)
       {
-         Object element = accepted.peek();
+         Object element;
+         try
+         {
+            element = accepted.peek();
+         }
+         catch(java.util.NoSuchElementException e)
+         {
+            log.error("value=" + value, e);
+            throw e;
+         }
          factory = getFactory(namespaceURI);
          setValue(factory, element, this, namespaceURI, localName, value.toString().trim());
          value.delete(0, value.length());
@@ -227,14 +249,17 @@ public class ObjectModelBuilder
       if(element != IGNORED)
       {
          element = accepted.pop();
-         Object parent = accepted.peek();
+         Object parent = (accepted.isEmpty() ? null : accepted.peek());
 
-         if(factory == null)
+         if(parent != null)
          {
-            factory = getFactory(namespaceURI);
-         }
+            if(factory == null)
+            {
+               factory = getFactory(namespaceURI);
+            }
 
-         addChild(factory, parent, element, this);
+            addChild(factory, parent, element, this, namespaceURI, localName);
+         }
       }
    }
 
@@ -306,15 +331,35 @@ public class ObjectModelBuilder
       return child;
    }
 
-   private static void addChild(Object factory, Object parent, Object element, ContentNavigator navigator)
+   private static void addChild(Object factory,
+                                Object parent,
+                                Object element,
+                                ContentNavigator navigator,
+                                String namespaceURI,
+                                String localName)
    {
       Method method = getMethodForElement(factory,
          "addChild",
          new Class[]{
             parent.getClass(),
             element.getClass(),
-            ContentNavigator.class
+            ContentNavigator.class,
+            String.class,
+            String.class
          });
+
+      if(method == null)
+      {
+         method = getMethodForElement(factory,
+            "addChild",
+            new Class[]{
+               parent.getClass(),
+               Object.class,
+               ContentNavigator.class,
+               String.class,
+               String.class
+            });
+      }
 
       if(method == null)
       {
@@ -324,6 +369,8 @@ public class ObjectModelBuilder
                Object.class,
                Object.class,
                ContentNavigator.class,
+               String.class,
+               String.class
             });
       }
 
@@ -334,12 +381,14 @@ public class ObjectModelBuilder
             new Object[]{
                parent,
                element,
-               navigator
+               navigator,
+               namespaceURI,
+               localName
             });
       }
       else if(log.isTraceEnabled())
       {
-         log.trace("No addChild method for " + element.getClass().getName());
+         log.trace("No addChild for parent=" + parent.getClass().getName() + ", child=" + element.getClass().getName());
       }
    }
 
@@ -427,5 +476,49 @@ public class ObjectModelBuilder
       }
 
       return method;
+   }
+
+   private static interface Stack
+   {
+      void clear();
+
+      void push(Object o);
+
+      Object pop();
+
+      Object peek();
+
+      boolean isEmpty();
+   }
+
+   private static class StackImpl
+      implements Stack
+   {
+      private LinkedList list = new LinkedList();
+
+      public void clear()
+      {
+         list.clear();
+      }
+
+      public void push(Object o)
+      {
+         list.addLast(o);
+      }
+
+      public Object pop()
+      {
+         return list.removeLast();
+      }
+
+      public Object peek()
+      {
+         return list.getLast();
+      }
+
+      public boolean isEmpty()
+      {
+         return list.isEmpty();
+      }
    }
 }

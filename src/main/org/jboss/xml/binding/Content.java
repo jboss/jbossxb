@@ -305,6 +305,7 @@ public class Content
 
       public void read(ObjectModelBuilder builder)
       {
+         log.info("read: qName=" + qName);
          builder.startElement(namespaceURI, localName, qName, attrs);
       }
    }

@@ -9,13 +9,13 @@
 
 package org.jboss.util.propertyeditor;
 
-
 import java.text.DateFormat;
-import org.jboss.util.NestedRuntimeException;
 import java.text.ParseException;
 
+import org.jboss.util.NestedRuntimeException;
+
 /**
- * A property editor for {@link java.math.BigDecimal}.
+ * A property editor for {@link java.math.Date}.
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
@@ -40,7 +40,6 @@ public class DateEditor
       catch (ParseException e)
       {
          throw new NestedRuntimeException(e);
-      } // end of try-catch
-      
+      }
    }
 }

@@ -53,11 +53,17 @@ public class NamespaceRegistry
       if (qname == null)
          return null;
 
-      String prefix = qname.getPrefix();
-      if (prefix.length() == 0)
-         prefix = null;
+      String nsURI = qname.getNamespaceURI();
+      String prefix = getPrefix(nsURI);
+      if (prefix == null)
+      {
+         prefix = qname.getPrefix();
+         if (prefix.length() == 0)
+            prefix = registerURI(nsURI, null);
+         else
+            prefix = registerURI(nsURI, prefix);
+      }
 
-      prefix = registerURI(qname.getNamespaceURI(), prefix);
       qname = new QName(qname.getNamespaceURI(), qname.getLocalPart(), prefix);
       return qname;
    }
@@ -305,17 +311,20 @@ public class NamespaceRegistry
       Object obj = uriByPrefix.get(prefix);
 
       String uri = null;
-      if (obj instanceof String)
+      if (obj != null)
       {
-         uri = (String)obj;
-      }
-      else if (obj instanceof LinkedList)
-      {
-         uri = (String)((LinkedList)obj).getLast();
-      }
-      else
-      {
-         throwUnexpectedEntryException(obj);
+         if (obj instanceof String)
+         {
+            uri = (String)obj;
+         }
+         else if (obj instanceof LinkedList)
+         {
+            uri = (String)((LinkedList)obj).getLast();
+         }
+         else
+         {
+            throwUnexpectedEntryException(obj);
+         }
       }
 
       return uri;

@@ -32,7 +32,7 @@ package org.jboss.util.id;
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
 public class GUID
-   implements ID
+   implements ID, Comparable
 {
    /** The virtual machine identifier */
    protected final VMID vmid;
@@ -148,4 +148,11 @@ public class GUID
    public static String asString() {
       return new GUID().toString();
    }
+
+   public int compareTo(Object o)
+   {
+      GUID guid = (GUID)o;
+      return this.toString().compareTo(guid.toString());
+   }
+   
 }

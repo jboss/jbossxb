@@ -24,7 +24,7 @@ import EDU.oswego.cs.dl.util.concurrent.ThreadFactory;
  * @author <a href="mailto:adrian@jboss.org">Adrian Brock</a>
  * @version $Revision$
  */
-public class BasicThreadPool implements ThreadPool, ThreadPoolMBean
+public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
 {
    // Constants -----------------------------------------------------
 

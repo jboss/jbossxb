@@ -2,7 +2,7 @@
 <classpath>
     <classpathentry kind="src" path="src/main"/>
     <classpathentry kind="src" path="output/gen/classes"/>
-    <classpathentry kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
+    <classpathentry kind="var" path="JRE_LIB" rootpath="JRE_SRCROOT" sourcepath="JRE_SRC"/>
     <classpathentry kind="src" path="/j2ee"/>
     <classpathentry exported="true" kind="lib" path="/thirdparty/apache-log4j/lib/log4j.jar"/>
     <classpathentry exported="true" kind="lib" path="/thirdparty/sun-jmx/lib/jmxri.jar"/>

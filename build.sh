@@ -34,6 +34,19 @@ ANT_OPTIONS="-find $ANT_BUILD_FILE"
 # Use the maximum available, or set MAX_FD != -1 to use that
 MAX_FD="maximum"
 
+# OS specific support (must be 'true' or 'false').
+cygwin=false;
+darwin=false;
+case "`uname`" in
+    CYGWIN*)
+        cygwin=true
+        ;;
+
+    Darwin*)
+        darwin=true
+        ;;
+esac
+
 # the jaxp parser to use
 if [ "x$JAXP" = "x" ]; then
     # Default to crimson
@@ -87,19 +100,21 @@ main() {
     maybe_source "$DIRNAME/build.conf" "$HOME/.build.conf"
 
     # Increase the maximum file descriptors if we can
-    MAX_FD_LIMIT=`ulimit -H -n`
-    if [ $? -eq 0 ]; then
-	if [ "$MAX_FD" = "maximum" -o "$MAX_FD" = "max" ]; then
-	    # use the system max
-	    MAX_FD="$MAX_FD_LIMIT"
-	fi
+    if [ $cygwin = "false" ]; then
+	MAX_FD_LIMIT=`ulimit -H -n`
+	if [ $? -eq 0 ]; then
+	    if [ "$MAX_FD" = "maximum" -o "$MAX_FD" = "max" ]; then
+		# use the system max
+		MAX_FD="$MAX_FD_LIMIT"
+	    fi
 
-	ulimit -n $MAX_FD
-	if [ $? -ne 0 ]; then
-	    warn "Could not set maximum file descriptor limit: $MAX_FD"
+	    ulimit -n $MAX_FD
+	    if [ $? -ne 0 ]; then
+		warn "Could not set maximum file descriptor limit: $MAX_FD"
+	    fi
+	else
+	    warn "Could not query system maximum file descriptor limit: $MAX_FD_LIMIT"
 	fi
-    else
-	warn "Could not query system maximum file descriptor limit: $MAX_FD_LIMIT"
     fi
 
     # try the search path

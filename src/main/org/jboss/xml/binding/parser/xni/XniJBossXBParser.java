@@ -274,7 +274,10 @@ public class XniJBossXBParser
 
          if(type == null)
          {
-            log.warn("Type is not available for " + name.rawname);
+            if(log.isTraceEnabled())
+            {
+               log.trace("Type is not available for " + name.rawname);
+            }
          }
 
          if(namespaces)

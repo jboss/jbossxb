@@ -16,8 +16,13 @@ package org.jboss.util;
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
 public class CloneableObject
-   implements Cloneable
+   implements java.lang.Cloneable
 {
+   /**
+    * Clone the object via {@link Object#clone}.  This will return
+    * and object of the correct type, with all fields shallowly
+    * cloned.
+    */
    public Object clone()
    {
       try {
@@ -26,5 +31,16 @@ public class CloneableObject
       catch (CloneNotSupportedException e) {
          throw new InternalError();
       }
+   }
+
+   /**
+    * An interface which exposes a <em>public</em> clone method, 
+    * unlike {@link Object#clone} which is protected and throws
+    * exceptions... how useless is that?
+    */
+   public static interface Cloneable
+      extends java.lang.Cloneable
+   {
+      Object clone();
    }
 }

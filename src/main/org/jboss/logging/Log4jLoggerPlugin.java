@@ -28,12 +28,24 @@ import org.apache.log4j.Priority;
  * <ul>
  * <li> First implementation </li>
  * </ul>
+ * </p>
+ * <p><b>4. february 2003 Dag Liodden:</b>
+ * <ul>
+ *   <li>Fixed Log4J locationinfo by sending the fully qualified classname of <code>Logger</code> to Log4J</li>
+ * </ul>
+ * </p>
  */
 
 public class Log4jLoggerPlugin implements LoggerPlugin
 {
    
    // Constants -----------------------------------------------------
+
+   /** 
+    *  Fully qualified classname for this class so Log4J locationinfo will be
+    *  correct
+    */
+   private static final String FQCN = Logger.class.getName();
    
    // Attributes ----------------------------------------------------
    
@@ -81,7 +93,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void trace(Object message)
    {
-      log.log(XLevel.TRACE, message);
+      log.log(FQCN, XLevel.TRACE, message, null);
    }
 
    /** 
@@ -90,7 +102,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void trace(Object message, Throwable t)
    {
-      log.log(XLevel.TRACE, message, t);
+      log.log(FQCN, XLevel.TRACE, message, t);
    }
 
    /**
@@ -113,7 +125,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void debug(Object message)
    {
-      log.log(Level.DEBUG, message);
+      log.log(FQCN, Level.DEBUG, message, null);
    }
 
    /** 
@@ -122,7 +134,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void debug(Object message, Throwable t)
    {
-      log.log(Level.DEBUG, message, t);
+      log.log(FQCN, Level.DEBUG, message, t);
    }
 
    /** 
@@ -145,7 +157,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void info(Object message)
    {
-      log.log(Level.INFO, message);
+      log.log(FQCN, Level.INFO, message, null);
    }
 
    /**
@@ -154,7 +166,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void info(Object message, Throwable t)
    {
-      log.log(Level.INFO, message, t);
+      log.log(FQCN, Level.INFO, message, t);
    }
 
    /** 
@@ -163,7 +175,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void warn(Object message)
    {
-      log.log(Level.WARN, message);
+      log.log(FQCN, Level.WARN, message, null);
    }
 
    /** 
@@ -172,7 +184,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void warn(Object message, Throwable t)
    {
-      log.log(Level.WARN, message, t);
+      log.log(FQCN, Level.WARN, message, t);
    }
 
    /** 
@@ -181,7 +193,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void error(Object message)
    {
-      log.log(Level.ERROR, message);
+      log.log(FQCN, Level.ERROR, message, null);
    }
 
    /** 
@@ -190,7 +202,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void error(Object message, Throwable t)
    {
-      log.log(Level.ERROR, message, t);
+      log.log(FQCN, Level.ERROR, message, t);
    }
 
    /** 
@@ -199,7 +211,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void fatal(Object message)
    {
-      log.log(Level.FATAL, message);
+      log.log(FQCN, Level.FATAL, message, null);
    }
 
    /** 
@@ -208,7 +220,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void fatal(Object message, Throwable t)
    {
-      log.log(Level.FATAL, message, t);
+      log.log(FQCN, Level.FATAL, message, t);
    }
 
    /** 
@@ -219,7 +231,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void log(Priority p, Object message)
    {
-      log.log(p, message);
+      log.log(FQCN, p, message, null);
    }
 
    /** 
@@ -230,7 +242,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void log(Priority p, Object message, Throwable t)
    {
-      log.log(p, message, t);
+      log.log(FQCN, p, message, t);
    }
 
    /** 
@@ -239,7 +251,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void log(Level l, Object message)
    {
-      log.log(l, message);
+      log.log(FQCN, l, message, null);
    }
 
    /** 
@@ -248,7 +260,7 @@ public class Log4jLoggerPlugin implements LoggerPlugin
     */
    public void log(Level l, Object message, Throwable t)
    {
-      log.log(l, message, t);
+      log.log(FQCN, l, message, t);
    }
 
    // Y overrides ---------------------------------------------------

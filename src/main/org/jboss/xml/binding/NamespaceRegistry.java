@@ -8,13 +8,13 @@ package org.jboss.xml.binding;
 
 // $Id$
 
-import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
+import javax.xml.namespace.QName;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.LinkedList;
-import java.util.Collections;
+import java.util.Map;
 
 /**
  * A simple namespace registry
@@ -26,7 +26,7 @@ import java.util.Collections;
  * @since 08-June-2004
  */
 public class NamespaceRegistry
-   implements NamespaceContext
+        implements NamespaceContext
 {
    public static final String PREFIX_XML_SCHEMA = "xsd";
    public static final String URI_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
@@ -53,7 +53,11 @@ public class NamespaceRegistry
       if (qname == null)
          return null;
 
-      String prefix = registerURI(qname.getNamespaceURI(), qname.getPrefix());
+      String prefix = qname.getPrefix();
+      if (prefix.length() == 0)
+         prefix = null;
+
+      prefix = registerURI(qname.getNamespaceURI(), prefix);
       qname = new QName(qname.getNamespaceURI(), qname.getLocalPart(), prefix);
       return qname;
    }
@@ -67,12 +71,12 @@ public class NamespaceRegistry
     */
    public String registerURI(String nsURI, String prefix)
    {
-      if(prefix == null)
+      if (prefix == null)
       {
          prefix = "ns" + (++namespaceIndex);
       }
 
-      addPrefixMapping(nsURI, prefix);
+      addPrefixMapping(prefix, nsURI);
 
       return prefix;
    }
@@ -85,50 +89,50 @@ public class NamespaceRegistry
     */
    public void addPrefixMapping(String prefix, String uri)
    {
-      Object o = uriByPrefix.get(prefix);
-      if(o == null)
+      Object obj = uriByPrefix.get(prefix);
+      assertMapEntry(obj);
+
+      if (obj == null)
       {
          uriByPrefix.put(prefix, uri);
       }
-      else if(o instanceof String)
+      else if (obj instanceof String)
       {
          LinkedList list = new LinkedList();
-         list.add(o);
+         list.add(obj);
          list.add(uri);
          uriByPrefix.put(prefix, list);
       }
-      else if(o instanceof LinkedList)
+      else if (obj instanceof LinkedList)
       {
-         ((LinkedList)o).add(uri);
-      }
-      else
-      {
-         throw new IllegalStateException(
-            "Unexpected entry type: expected java.lang.String or java.util.LinkedList but got " + o.getClass()
-         );
+         ((LinkedList)obj).add(uri);
       }
 
-      o = prefixByUri.get(uri);
-      if(o == null)
+      obj = prefixByUri.get(uri);
+      assertMapEntry(obj);
+
+      if (obj == null)
       {
          prefixByUri.put(uri, prefix);
       }
-      else if(o instanceof String)
+      else if (obj instanceof String)
       {
          LinkedList list = new LinkedList();
-         list.add(o);
+         list.add(obj);
          list.add(prefix);
          prefixByUri.put(uri, list);
       }
-      else if(o instanceof LinkedList)
+      else if (obj instanceof LinkedList)
       {
-         ((LinkedList)o).add(prefix);
+         ((LinkedList)obj).add(prefix);
       }
-      else
+   }
+
+   private void assertMapEntry(Object obj)
+   {
+      if ((obj == null || obj instanceof String || obj instanceof LinkedList) == false)
       {
-         throw new IllegalStateException(
-            "Unexpected entry type: expected java.lang.String or java.util.LinkedList but got " + o.getClass()
-         );
+         throw new IllegalStateException("Unexpected entry type: expected String or LinkedList but got " + obj.getClass());
       }
    }
 
@@ -139,47 +143,43 @@ public class NamespaceRegistry
     */
    public void removePrefixMapping(String prefix)
    {
-      Object o = uriByPrefix.get(prefix);
-      if(o != null)
+      Object obj = uriByPrefix.get(prefix);
+      assertMapEntry(obj);
+
+      if (obj != null)
       {
          String uri = null;
-         if(o instanceof String)
+         if (obj instanceof String)
          {
-            uri = (String)o;
+            uri = (String)obj;
             uriByPrefix.remove(prefix);
          }
-         else if(o instanceof LinkedList)
+         else if (obj instanceof LinkedList)
          {
-            LinkedList list = (LinkedList)o;
+            LinkedList list = (LinkedList)obj;
             uri = (String)list.removeLast();
-            if(list.isEmpty())
+            if (list.isEmpty())
             {
                uriByPrefix.remove(prefix);
             }
          }
-         else
-         {
-            throw new IllegalStateException(
-               "Unexpected entry type: expected java.lang.String or java.util.LinkedList but got " + o.getClass()
-            );
-         }
 
-         if(uri != null)
+         if (uri != null)
          {
-            o = prefixByUri.get(uri);
-            if(o instanceof String)
+            obj = prefixByUri.get(uri);
+            if (obj instanceof String)
             {
-               if(!prefix.equals(o))
+               if (!prefix.equals(obj))
                {
-                  throw new IllegalStateException("Inconsistent mapping: prefix=" + prefix + ", found=" + o);
+                  throw new IllegalStateException("Inconsistent mapping: prefix=" + prefix + ", found=" + obj);
                }
                prefixByUri.remove(uri);
             }
-            else if(o instanceof LinkedList)
+            else if (obj instanceof LinkedList)
             {
-               LinkedList list = (LinkedList)o;
+               LinkedList list = (LinkedList)obj;
                list.remove(prefix);
-               if(list.isEmpty())
+               if (list.isEmpty())
                {
                   prefixByUri.remove(uri);
                }
@@ -196,30 +196,26 @@ public class NamespaceRegistry
     */
    public void unregisterURI(String nsURI)
    {
-      Object o = prefixByUri.get(nsURI);
-      if(o != null)
+      Object obj = prefixByUri.get(nsURI);
+      assertMapEntry(obj);
+
+      if (obj != null)
       {
          String prefix = null;
-         if(o instanceof String)
+         if (obj instanceof String)
          {
-            prefix = (String)o;
+            prefix = (String)obj;
             prefixByUri.remove(nsURI);
             removePrefixMappingOnly(prefix, nsURI);
          }
-         else if(o instanceof LinkedList)
+         else if (obj instanceof LinkedList)
          {
-            LinkedList list = (LinkedList)o;
-            for(int i = 0; i < list.size(); ++i)
+            LinkedList list = (LinkedList)obj;
+            for (int i = 0; i < list.size(); ++i)
             {
                removePrefixMappingOnly((String)list.get(i), nsURI);
             }
             prefixByUri.remove(nsURI);
-         }
-         else
-         {
-            throw new IllegalStateException(
-               "Unexpected entry type: expected java.lang.String or java.util.LinkedList but got " + o.getClass()
-            );
          }
       }
    }
@@ -245,25 +241,19 @@ public class NamespaceRegistry
     */
    public String getPrefix(String nsURI)
    {
+      Object obj = prefixByUri.get(nsURI);
+      assertMapEntry(obj);
+
       String prefix = null;
-      Object o = prefixByUri.get(nsURI);
-      if(o != null)
+      if (obj instanceof String)
       {
-         if(o instanceof String)
-         {
-            prefix = (String)o;
-         }
-         else if(o instanceof LinkedList)
-         {
-            prefix = (String)((LinkedList)o).getLast();
-         }
-         else
-         {
-            throw new IllegalStateException(
-               "Unexpected entry type: expected java.lang.String or java.util.LinkedList but got " + o.getClass()
-            );
-         }
+         prefix = (String)obj;
       }
+      else if (obj instanceof LinkedList)
+      {
+         prefix = (String)((LinkedList)obj).getLast();
+      }
+
       return prefix;
    }
 
@@ -275,26 +265,23 @@ public class NamespaceRegistry
     */
    public Iterator getPrefixes(String namespaceURI)
    {
-      Iterator result;
-      Object o = prefixByUri.get(namespaceURI);
-      if(o == null)
+      Object obj = prefixByUri.get(namespaceURI);
+      assertMapEntry(obj);
+
+      Iterator result = null;
+      if (obj == null)
       {
          result = Collections.EMPTY_LIST.iterator();
       }
-      else if(o instanceof String)
+      else if (obj instanceof String)
       {
-         result = Collections.singletonList(o).iterator();
+         result = Collections.singletonList(obj).iterator();
       }
-      else if(o instanceof LinkedList)
+      else if (obj instanceof LinkedList)
       {
-         result = ((LinkedList)o).iterator();
+         result = ((LinkedList)obj).iterator();
       }
-      else
-      {
-         throw new IllegalStateException(
-            "Unexpected entry type: expected java.lang.String or java.util.LinkedList but got " + o.getClass()
-         );
-      }
+
       return result;
    }
 
@@ -302,25 +289,19 @@ public class NamespaceRegistry
     */
    public String getNamespaceURI(String prefix)
    {
+      Object obj = uriByPrefix.get(prefix);
+      assertMapEntry(obj);
+
       String uri = null;
-      Object o = uriByPrefix.get(prefix);
-      if(o != null)
+      if (obj instanceof String)
       {
-         if(o instanceof String)
-         {
-            uri = (String)o;
-         }
-         else if(o instanceof LinkedList)
-         {
-            uri = (String)((LinkedList)o).getLast();
-         }
-         else
-         {
-            throw new IllegalStateException(
-               "Unexpected entry type: expected java.lang.String or java.util.LinkedList but got " + o.getClass()
-            );
-         }
+         uri = (String)obj;
       }
+      else if (obj instanceof LinkedList)
+      {
+         uri = (String)((LinkedList)obj).getLast();
+      }
+
       return uri;
    }
 
@@ -328,21 +309,20 @@ public class NamespaceRegistry
 
    private void removePrefixMappingOnly(String prefix, String nsURI)
    {
-      Object o;
-      o = uriByPrefix.get(prefix);
-      if(o instanceof String)
+      Object obj = uriByPrefix.get(prefix);
+      if (obj instanceof String)
       {
-         if(!prefix.equals(o))
+         if (!obj.equals(nsURI))
          {
-            throw new IllegalStateException("Inconsistent mapping: uri=" + nsURI + ", found=" + o);
+            throw new IllegalStateException("Inconsistent mapping: uri=" + nsURI + ", found=" + obj);
          }
-         uriByPrefix.remove(nsURI);
+         uriByPrefix.remove(prefix);
       }
-      else if(o instanceof LinkedList)
+      else if (obj instanceof LinkedList)
       {
-         LinkedList list = (LinkedList)o;
+         LinkedList list = (LinkedList)obj;
          list.remove(prefix);
-         if(list.isEmpty())
+         if (list.isEmpty())
          {
             uriByPrefix.remove(prefix);
          }

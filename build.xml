@@ -82,6 +82,7 @@
       <path refid="apache.xalan.classpath"/>
       <path refid="apache.log4j.classpath"/>
       <path refid="junit.junit.classpath"/>
+      <path refid="gnu.regexp.classpath"/>
     </path>
 
     <!-- ======= -->

@@ -64,7 +64,7 @@ public class NamespaceRegistry
             prefix = registerURI(nsURI, prefix);
       }
 
-      qname = new QName(qname.getNamespaceURI(), qname.getLocalPart(), prefix);
+      qname = new QName(nsURI, qname.getLocalPart(), prefix);
       return qname;
    }
 
@@ -83,7 +83,6 @@ public class NamespaceRegistry
       }
 
       addPrefixMapping(prefix, nsURI);
-
       return prefix;
    }
 
@@ -91,42 +90,45 @@ public class NamespaceRegistry
     * Adds prefix mapping.
     *
     * @param prefix  prefix to map
-    * @param uri  the URI to prefix to
+    * @param nsURI  the URI to prefix to
     */
-   public void addPrefixMapping(String prefix, String uri)
+   public void addPrefixMapping(String prefix, String nsURI)
    {
+      if (nsURI == null || nsURI.length() == 0)
+         throw new IllegalArgumentException("Cannot add mapping for empty namespace URI");
+
       Object obj = uriByPrefix.get(prefix);
       if (obj == null)
       {
-         uriByPrefix.put(prefix, uri);
+         uriByPrefix.put(prefix, nsURI);
       }
       else if (obj instanceof String)
       {
          LinkedList list = new LinkedList();
          list.add(obj);
-         list.add(uri);
+         list.add(nsURI);
          uriByPrefix.put(prefix, list);
       }
       else if (obj instanceof LinkedList)
       {
-         ((LinkedList)obj).add(uri);
+         ((LinkedList)obj).add(nsURI);
       }
       else
       {
          throwUnexpectedEntryException(obj);
       }
 
-      obj = prefixByUri.get(uri);
+      obj = prefixByUri.get(nsURI);
       if (obj == null)
       {
-         prefixByUri.put(uri, prefix);
+         prefixByUri.put(nsURI, prefix);
       }
       else if (obj instanceof String)
       {
          LinkedList list = new LinkedList();
          list.add(obj);
          list.add(prefix);
-         prefixByUri.put(uri, list);
+         prefixByUri.put(nsURI, list);
       }
       else if (obj instanceof LinkedList)
       {

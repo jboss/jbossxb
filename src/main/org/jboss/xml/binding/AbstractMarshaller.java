@@ -7,7 +7,9 @@
 package org.jboss.xml.binding;
 
 import org.jboss.logging.Logger;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.ArrayList;
@@ -16,6 +18,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.io.Reader;
+import java.io.Writer;
+import java.io.InputStreamReader;
+import java.io.InputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -33,6 +42,41 @@ public abstract class AbstractMarshaller
    private Map classMappings = Collections.EMPTY_MAP;
 
    // Marshaller implementation
+
+   public void marshal(String schemaUri, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
+      ParserConfigurationException,
+      SAXException
+   {
+      URL url = null;
+      try
+      {
+         url = new URL(schemaUri);
+      }
+      catch(MalformedURLException e)
+      {
+         throw new IllegalArgumentException("Malformed schema URI " + schemaUri + ": " + e.getMessage());
+      }
+
+      InputStream is;
+      try
+      {
+         is = url.openStream();
+      }
+      catch(IOException e)
+      {
+         throw new IllegalStateException("Failed to open input stream for schema " + schemaUri + ": " + e.getMessage());
+      }
+
+      try
+      {
+         InputStreamReader reader = new InputStreamReader(is);
+         marshal(reader, provider, root, writer);
+      }
+      finally
+      {
+         is.close();
+      }
+   }
 
    public void mapClassToNamespace(Class cls, String root, String namespaceUri, Reader schemaReader, ObjectModelProvider provider)
    {

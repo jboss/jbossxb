@@ -93,23 +93,30 @@ public class ContentWriter
       if(namespaceURI != null && namespaceURI.length() > 1)
       {
          int colon = qName.indexOf(':');
+         /*
          if(colon < 0)
          {
             throw new IllegalStateException(
                "Namespace URI specified (" + namespaceURI + ") but no qName found in qualified name '" + qName
             );
          }
+         */
 
-         String prefix = qName.substring(0, colon);
-         write(writer, '\n');
-         for(int i = 0; i < depth + 1; ++i)
-            write(writer, indent);
-
-         write(writer, "xmlns:");
-         write(writer, prefix);
-         write(writer, "=\"");
-         write(writer, namespaceURI);
-         write(writer, "\"");
+         if(colon >= 0)
+         {
+            String prefix = qName.substring(0, colon);
+            write(writer, '\n');
+            for(int i = 0; i < depth + 1; ++i)
+            {
+               write(writer, indent);
+            }
+            
+            write(writer, "xmlns:");
+            write(writer, prefix);
+            write(writer, "=\"");
+            write(writer, namespaceURI);
+            write(writer, "\"");
+         }
       }
 
       write(writer, '>');

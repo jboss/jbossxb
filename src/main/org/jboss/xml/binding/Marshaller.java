@@ -21,6 +21,39 @@ import java.io.Writer;
  */
 public interface Marshaller
 {
+   String MARSHALLER_IMPL = "org.jboss.xml.binding.Marshaller";
+
+   class FACTORY
+   {
+      static Marshaller getInstance()
+      {
+         String impl = System.getProperty(MARSHALLER_IMPL);
+         if(impl == null)
+         {
+            throw new IllegalStateException("Required system property is not set: " + MARSHALLER_IMPL);
+         }
+
+         Class implCls;
+         try
+         {
+            implCls = Thread.currentThread().getContextClassLoader().loadClass(impl);
+         }
+         catch(ClassNotFoundException e)
+         {
+            throw new IllegalStateException("Failed to load marshaller implementation class: " + impl);
+         }
+
+         try
+         {
+            return (Marshaller)implCls.newInstance();
+         }
+         catch(Exception e)
+         {
+            throw new IllegalStateException("Failed to instantiate a marshaller: " + implCls);
+         }
+      }
+   }
+
    String VERSION = "1.0";
    String ENCODING = "UTF-8";
 
@@ -32,6 +65,10 @@ public interface Marshaller
    void mapClassToNamespace(Class cls, String root, String namespaceUri, Reader schemaReader, ObjectModelProvider provider);
 
    void addRootElement(String namespaceUri, String prefix, String name);
+
+   void marshal(String schemaUri, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
+      ParserConfigurationException,
+      SAXException;
 
    void marshal(Reader schema, ObjectModelProvider provider, Object document, Writer writer)
       throws IOException, SAXException, ParserConfigurationException;

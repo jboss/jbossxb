@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Properties;
 import java.lang.reflect.Method;
 import java.lang.reflect.Array;
 
@@ -29,9 +30,18 @@ public class SchemalessMarshaller
 {
    private static final Logger log = Logger.getLogger(SchemalessMarshaller.class);
 
+   public static final String PROPERTY_JAXB_SCHEMA_LOCATION = "jaxb.schemaLocation";
+
+   private final Properties props = new Properties();
+
    private final Map gettersPerClass = new HashMap();
 
    private final Content content = new Content();
+
+   public void setProperty(String name, String value)
+   {
+      props.setProperty(name, value);
+   }
 
    public void marshal(Object root, StringWriter writer)
    {
@@ -86,10 +96,9 @@ public class SchemalessMarshaller
          if(child != null)
          {
             String childName = getter.getName().substring(3);
-            String qName = childName;
             if(isAttributeType(child.getClass()))
             {
-               marshalAttributeType(qName, child);
+               marshalAttributeType(childName, child);
 
                /*
                attrs.add(null,
@@ -102,53 +111,48 @@ public class SchemalessMarshaller
             }
             else if(child.getClass().isArray())
             {
+               content.startElement(null, childName, childName, null);
                for(int arrInd = 0; arrInd < Array.getLength(child); ++arrInd)
                {
                   Object o = Array.get(child, arrInd);
-                  if(o != null)
-                  {
-                     if(isAttributeType(o.getClass()))
-                     {
-                        marshalAttributeType(childName, o);
-                     }
-                     else
-                     {
-                        marshalObject(o, qName, writer);
-                     }
-                  }
+                  marshalCollectionItem(o, o.getClass().getName(), o.getClass().getName(), writer);
                }
+               content.endElement(null, childName, childName);
             }
             else if(Collection.class.isAssignableFrom(child.getClass()))
             {
-               content.startElement(null, childName, qName, null);
-
+               content.startElement(null, childName, childName, null);
                Collection col = (Collection)child;
                for(Iterator iter = col.iterator(); iter.hasNext();)
                {
                   Object o = iter.next();
-                  if(o != null)
-                  {
-                     if(isAttributeType(o.getClass()))
-                     {
-                        marshalAttributeType(o.getClass().getName(), o);
-                     }
-                     else
-                     {
-                        marshalObject(o, o.getClass().getName(), writer);
-                     }
-                  }
+                  marshalCollectionItem(o, o.getClass().getName(), o.getClass().getName(), writer);
                }
-
-               content.endElement(null, childName, qName);
+               content.endElement(null, childName, childName);
             }
             else
             {
-               marshalObject(child, qName, writer);
+               marshalObject(child, childName, writer);
             }
          }
       }
 
       content.endElement(null, localName, localName);
+   }
+
+   private void marshalCollectionItem(Object o, String childName, String qName, StringWriter writer)
+   {
+      if(o != null)
+      {
+         if(isAttributeType(o.getClass()))
+         {
+            marshalAttributeType(childName, o);
+         }
+         else
+         {
+            marshalObject(o, qName, writer);
+         }
+      }
    }
 
    private void marshalAttributeType(String qName, Object child)

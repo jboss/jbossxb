@@ -24,6 +24,8 @@ import java.security.Permission;
 /**
  * An delegating URLConnection support class.
  *
+ * @todo resolve 1.4 specific issues.
+ *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
@@ -91,16 +93,18 @@ public class DelegatingURLConnection
       return delegateConnection.getHeaderField(name);
    }
 
+   /* This is specific to 1.4
    public Map getHeaderFields() {
       return delegateConnection.getHeaderFields();
    }
-
-   public int getHeaderFieldInt(String name, int Default) {
-      return delegateConnection.getHeaderFieldInt(name, Default);
+   */
+   
+   public int getHeaderFieldInt(String name, int _default) {
+      return delegateConnection.getHeaderFieldInt(name, _default);
    }
 
-   public long getHeaderFieldDate(String name, long Default) {
-      return delegateConnection.getHeaderFieldDate(name, Default);
+   public long getHeaderFieldDate(String name, long _default) {
+      return delegateConnection.getHeaderFieldDate(name, _default);
    }
 
    public String getHeaderFieldKey(int n) {
@@ -186,16 +190,20 @@ public class DelegatingURLConnection
    public void setRequestProperty(String key, String value) {
       delegateConnection.setRequestProperty(key, value);
    }
-   
+
+   /* This is specific to 1.4
    public void addRequestProperty(String key, String value) {
       delegateConnection.addRequestProperty(key, value);
    }
-
+   */
+   
    public String getRequestProperty(String key) {
       return delegateConnection.getRequestProperty(key);
    }
 
+   /* This is specific to 1.4
    public Map getRequestProperties() {
       return delegateConnection.getRequestProperties();
    }
+   */
 }

@@ -16,6 +16,8 @@ import java.util.Map;
 /**
  * A simple namespace registry
  *
+ * [TODO] This ought to be a stack, allowing prefix overlaying
+ *
  * @author Thomas.Diesler@jboss.org
  * @since 08-June-2004
  */
@@ -44,7 +46,7 @@ public class NamespaceRegistry
       if (qname == null)
          return null;
 
-      String prefix = registerNamespaceURI(qname.getNamespaceURI(), qname.getPrefix());
+      String prefix = registerURI(qname.getNamespaceURI(), qname.getPrefix());
       qname = new QName(qname.getNamespaceURI(), qname.getLocalPart(), prefix);
       return qname;
    }
@@ -56,7 +58,7 @@ public class NamespaceRegistry
     * @param prefix The corresponding prefix, maybe null
     * @return A prefix, never null
     */
-   public String registerNamespaceURI(String nsURI, String prefix)
+   public String registerURI(String nsURI, String prefix)
    {
       String regPrefix = (String)namespaceMap.get(nsURI);
 
@@ -70,11 +72,24 @@ public class NamespaceRegistry
       return regPrefix;
    }
 
+   /** Unregister the given nsURI.
+    *
+    * @param nsURI The nsURI
+    */
+   public void unregisterURI(String nsURI)
+   {
+      namespaceMap.remove(nsURI);
+   }
+
+   /** Get the prefix for a givven nsURI, maybe null
+    */
    public String getPrefix(String nsURI)
    {
       return (String)namespaceMap.get(nsURI);
    }
 
+   /** Get the nsURI for a given prefix, maybe null.
+    */
    public String getNamespaceURI(String prefix)
    {
       Iterator it = namespaceMap.entrySet().iterator();
@@ -87,12 +102,16 @@ public class NamespaceRegistry
       return null;
    }
 
-   public boolean isRegisteredNamespaceURI(String nsURI)
+   /** True if the given nsURI is registered.
+    */
+   public boolean isRegistered(String nsURI)
    {
       return namespaceMap.containsKey(nsURI);
    }
 
-   public Iterator getRegisteredNamespaceURIs()
+   /** Return an iterator over all registered nsURIs.
+    */
+   public Iterator getRegisteredURIs()
    {
       return namespaceMap.keySet().iterator();
    }

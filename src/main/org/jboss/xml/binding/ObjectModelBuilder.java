@@ -95,12 +95,7 @@ public class ObjectModelBuilder
       all.clear();
       accepted.clear();
       value.delete(0, value.length());
-
-      if(root != null)
-      {
-         all.push(root);
-         accepted.push(root);
-      }
+      this.root = root;
    }
 
    /*
@@ -227,11 +222,7 @@ public class ObjectModelBuilder
 
    public void startElement(String namespaceURI, String localName, String qName, Attributes atts, XSTypeDefinition type)
    {
-      Object parent = null;
-      if(!accepted.isEmpty())
-      {
-         parent = accepted.peek();
-      }
+      Object parent = accepted.isEmpty() ? root : accepted.peek();
 
       // todo currentType assignment
       currentType = type;
@@ -254,10 +245,6 @@ public class ObjectModelBuilder
          curFactory = getFactory(namespaceURI);
 
          element = curFactory.newRoot(parent, this, namespaceURI, localName, atts);
-         if(root == null)
-         {
-            root = element;
-         }
       }
       else
       {
@@ -325,7 +312,7 @@ public class ObjectModelBuilder
          element = accepted.pop();
          Object parent = (accepted.isEmpty() ? null : accepted.peek());
 
-         if(parent != null && parent != element)
+         if(parent != null)
          {
             curFactory.addChild(parent, element, this, namespaceURI, localName);
          }

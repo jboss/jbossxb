@@ -69,7 +69,7 @@ public class Unmarshaller
       saxFactory.setNamespaceAware(true);
 
       parser = saxFactory.newSAXParser();
-      parser.setProperty(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
+      //parser.setProperty(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
 
 
       reader = parser.getXMLReader();

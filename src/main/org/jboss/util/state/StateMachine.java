@@ -592,8 +592,7 @@ public class StateMachine
       {
          super(source);
 
-         if (previous == null)
-            throw new NullArgumentException("previous");
+         // previous may be null
          if (current == null)
             throw new NullArgumentException("current");
          if (user == null)

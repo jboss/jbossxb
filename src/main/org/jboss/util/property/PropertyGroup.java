@@ -12,6 +12,10 @@ package org.jboss.util.property;
 import java.util.Properties;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Iterator;
 
 import org.jboss.util.NullArgumentException;
 
@@ -76,17 +80,6 @@ public class PropertyGroup
       return makePropertyName(String.valueOf(suffix));
    }
    
-   /**
-    * Return a string representation of this object.
-    *
-    * @return  A string representation of this object.
-    */
-   public String toString() {
-      return super.toString() +
-         "{ basename=" + basename +
-         " }";
-   }
-
 
    /////////////////////////////////////////////////////////////////////////
    //                         Properties Overrides                        //
@@ -145,7 +138,88 @@ public class PropertyGroup
       return super.remove(makePropertyName(name));
    }
 
+   /**
+    * Returns an entry set for all properties in this group.
+    *
+    * <p>
+    * This is currently ver inefficient, but should get the
+    * job done for now.
+    */
+   public Set entrySet()
+   {
+      final Set superSet = super.entrySet(true);
+         
+      return new java.util.AbstractSet()
+         {
+            private boolean isInGroup(Map.Entry entry)
+            {
+               String key = (String)entry.getKey();
+               return key.startsWith(basename);
+            }
 
+            public int size()
+            {
+               Iterator iter = superSet.iterator();
+               int count = 0;
+               while (iter.hasNext()) {
+                  Map.Entry entry = (Map.Entry)iter.next();
+                  if (isInGroup(entry)) {
+                     count++;
+                  }
+               }
+
+               return count;
+            }
+
+            public Iterator iterator()
+            {
+               return new Iterator()
+                  {
+                     private Iterator iter = superSet.iterator();
+                     private Object next;
+                     
+                     public boolean hasNext()
+                     {
+                        if (next != null)
+                           return true;
+
+                        while (next == null) {
+                           if (iter.hasNext()) {
+                              Map.Entry entry = (Map.Entry)iter.next();
+                              if (isInGroup(entry)) {
+                                 next = entry;
+                                 return true;
+                              }
+                           }
+                           else {
+                              break;
+                           }
+                        }
+
+                        return false;
+                     }
+
+                     public Object next()
+                     {
+                        if (next == null)
+                           throw new java.util.NoSuchElementException();
+
+                        Object obj = next;
+                        next = null;
+
+                        return obj;
+                     }
+
+                     public void remove()
+                     {
+                        iter.remove();
+                     }
+                  };
+            }
+         };
+   }
+
+   
    /////////////////////////////////////////////////////////////////////////
    //                     Property Listener Overrides                     //
    /////////////////////////////////////////////////////////////////////////

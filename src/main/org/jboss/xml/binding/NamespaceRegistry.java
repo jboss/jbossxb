@@ -17,7 +17,10 @@ import java.util.LinkedList;
 import java.util.Map;
 
 /**
- * A simple namespace registry
+ * A simple namespace registry.
+ *
+ * It assignes namespace prefixes of the form 'ns?' where ? is an incrementing integer.
+ * {@see registerURI(String,String)}
  *
  * [TODO] cleanup the api
  *
@@ -25,15 +28,9 @@ import java.util.Map;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @since 08-June-2004
  */
-public class NamespaceRegistry
-   implements NamespaceContext
+public class NamespaceRegistry implements NamespaceContext
 {
-   public static final String PREFIX_XML_SCHEMA = "xsd";
-   public static final String URI_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
-
-   public static final String PREFIX_XML_SCHEMA_INSTANCE = "xsi";
-   public static final String URI_XML_SCHEMA_INSTANCE = "http://www.w3.org/2000/10/XMLSchema-instance";
-
+   // The index of the last assigned prefix
    private int namespaceIndex;
 
    private final Map prefixByUri = new HashMap();
@@ -41,9 +38,6 @@ public class NamespaceRegistry
 
    public NamespaceRegistry()
    {
-      // todo is this really a good idea to have it here?
-      registerURI(URI_XML_SCHEMA, PREFIX_XML_SCHEMA);
-      registerURI(URI_XML_SCHEMA_INSTANCE, PREFIX_XML_SCHEMA_INSTANCE);
    }
 
    /** Register a QName and return a QName that is guarantied to have a prefix
@@ -98,45 +92,48 @@ public class NamespaceRegistry
          throw new IllegalArgumentException("Cannot add mapping for empty namespace URI");
 
       Object obj = uriByPrefix.get(prefix);
-      if (obj == null)
+      if (nsURI.equals(obj) == false)
       {
-         uriByPrefix.put(prefix, nsURI);
-      }
-      else if (obj instanceof String)
-      {
-         LinkedList list = new LinkedList();
-         list.add(obj);
-         list.add(nsURI);
-         uriByPrefix.put(prefix, list);
-      }
-      else if (obj instanceof LinkedList)
-      {
-         ((LinkedList)obj).add(nsURI);
-      }
-      else
-      {
-         throwUnexpectedEntryException(obj);
-      }
+         if (obj == null)
+         {
+            uriByPrefix.put(prefix, nsURI);
+         }
+         else if (obj instanceof String)
+         {
+            LinkedList list = new LinkedList();
+            list.add(obj);
+            list.add(nsURI);
+            uriByPrefix.put(prefix, list);
+         }
+         else if (obj instanceof LinkedList)
+         {
+            ((LinkedList)obj).add(nsURI);
+         }
+         else
+         {
+            throwUnexpectedEntryException(obj);
+         }
 
-      obj = prefixByUri.get(nsURI);
-      if (obj == null)
-      {
-         prefixByUri.put(nsURI, prefix);
-      }
-      else if (obj instanceof String)
-      {
-         LinkedList list = new LinkedList();
-         list.add(obj);
-         list.add(prefix);
-         prefixByUri.put(nsURI, list);
-      }
-      else if (obj instanceof LinkedList)
-      {
-         ((LinkedList)obj).add(prefix);
-      }
-      else
-      {
-         throwUnexpectedEntryException(obj);
+         obj = prefixByUri.get(nsURI);
+         if (obj == null)
+         {
+            prefixByUri.put(nsURI, prefix);
+         }
+         else if (obj instanceof String)
+         {
+            LinkedList list = new LinkedList();
+            list.add(obj);
+            list.add(prefix);
+            prefixByUri.put(nsURI, list);
+         }
+         else if (obj instanceof LinkedList)
+         {
+            ((LinkedList)obj).add(prefix);
+         }
+         else
+         {
+            throwUnexpectedEntryException(obj);
+         }
       }
    }
 
@@ -256,7 +253,7 @@ public class NamespaceRegistry
       Object obj = prefixByUri.get(nsURI);
 
       String prefix = null;
-      if(obj != null)
+      if (obj != null)
       {
          if (obj instanceof String)
          {
@@ -358,8 +355,6 @@ public class NamespaceRegistry
 
    private void throwUnexpectedEntryException(Object entry)
    {
-      throw new IllegalStateException(
-         "Unexpected entry type: expected java.lang.String or java.util.LinkedList but got " + entry.getClass()
-      );
+      throw new IllegalStateException("Unexpected entry type: expected java.lang.String or java.util.LinkedList but got " + entry.getClass());
    }
 }

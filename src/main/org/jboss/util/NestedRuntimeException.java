@@ -47,6 +47,7 @@ public class NestedRuntimeException
    public NestedRuntimeException(final String msg, final Throwable nested) {
       super(msg);
       this.nested = nested;
+      NestedThrowable.Util.checkNested(this, nested);
    }
 
    /**
@@ -103,7 +104,9 @@ public class NestedRuntimeException
     * @param stream  Stream to print to.
     */
    public void printStackTrace(final PrintStream stream) {
-      super.printStackTrace(stream);
+      if (nested == null || NestedThrowable.PARENT_TRACE_ENABLED) {
+         super.printStackTrace(stream);
+      }
       NestedThrowable.Util.print(nested, stream);
    }
 
@@ -114,7 +117,9 @@ public class NestedRuntimeException
     * @param writer  Writer to print to.
     */
    public void printStackTrace(final PrintWriter writer) {
-      super.printStackTrace(writer);
+      if (nested == null || NestedThrowable.PARENT_TRACE_ENABLED) {
+         super.printStackTrace(writer);
+      }
       NestedThrowable.Util.print(nested, writer);
    }
 

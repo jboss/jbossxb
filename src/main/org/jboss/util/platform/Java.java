@@ -105,4 +105,16 @@ public final class Java
    public static boolean isVersion(final int version) {
       return VERSION == version;
    }
+
+   /**
+    * Retrurns true if the current virtual machine is compatible with
+    * the given version identifer.
+    *
+    * @param version    The version identifier to check compatibility of.
+    * @return           True if the current virtual machine is compatible.
+    */
+   public static boolean isCompatible(final int version) {
+      // if our vm is the same or newer then we are compatible
+      return VERSION >= version;
+   }
 }

@@ -259,7 +259,7 @@
         <!-- All Exceptions, Errors and Throwable Support Classes -->
         <include name="**/*Exception*.class"/>
         <include name="**/*Error*.class"/>
-        <include name="org/jboss/util/*NestedThrowable*.class"/>
+        <include name="**/*Throwable*.class"/>
 
         <!-- Misc Fluff clients need -->
         <include name="org/jboss/util/jmx/*"/>

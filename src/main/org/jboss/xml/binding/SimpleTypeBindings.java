@@ -12,6 +12,7 @@ import org.jboss.logging.Logger;
 import org.jboss.util.Base64;
 
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -419,7 +420,7 @@ public final class SimpleTypeBindings
       }
    }
 
-   public static Object unmarshal(String xsdType, String value)
+   public static Object unmarshal(String xsdType, String value, NamespaceContext nsCtx)
    {
       int typeCode = xsdType.hashCode();
       Object result;
@@ -509,8 +510,7 @@ public final class SimpleTypeBindings
       }
       else if (typeCode == XS_QNAME)
       {
-         // todo XS_QNAME
-         throw new IllegalStateException("Recognized but not supported xsdType: " + XS_QNAME_NAME);
+         result = unmarshalQName(value, nsCtx);
       }
       else if (typeCode == XS_ANYURI)
       {
@@ -777,7 +777,7 @@ public final class SimpleTypeBindings
       return result;
    }
 
-   public static String marshal(String xsdType, Object value)
+   public static String marshal(String xsdType, Object value, NamespaceContext nsCtx)
    {
       if (value == null)
       {
@@ -887,8 +887,8 @@ public final class SimpleTypeBindings
       }
       else if (typeCode == XS_QNAME)
       {
-         // todo XS_QNAME
-         throw new IllegalStateException("Recognized but not supported xsdType: " + xsdType);
+         QName qName = (QName)value;
+         result = marshalQName(qName, nsCtx);
       }
       else if (typeCode == XS_ANYURI)
       {
@@ -1621,7 +1621,7 @@ public final class SimpleTypeBindings
    /** Converts a value of form prefix:localPart into a QName
     * The prefix must be registered previously
     */
-   public static QName unmarshalQName(String value, NamespaceRegistry nsRegistry)
+   public static QName unmarshalQName(String value, NamespaceContext nsRegistry)
    {
       int colonIndex = value.lastIndexOf(":");
       if (colonIndex > 0)
@@ -1643,7 +1643,7 @@ public final class SimpleTypeBindings
    /** Converts a QName value to form prefix:localPart
     * The prefix must be registered previously
     */
-   public static String marshalQName(QName value, NamespaceRegistry nsRegistry)
+   public static String marshalQName(QName value, NamespaceContext nsRegistry)
    {
       String nsURI = value.getNamespaceURI();
       if (nsURI.length() > 0)

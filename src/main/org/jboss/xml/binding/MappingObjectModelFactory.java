@@ -81,7 +81,7 @@ public class MappingObjectModelFactory
    // ObjectModelFactory implementation
 
    public Object newRoot(Object root,
-                         UnmarshallingContext navigator,
+                         UnmarshallingContext ctx,
                          String namespaceURI,
                          String localName,
                          Attributes attrs)
@@ -90,8 +90,6 @@ public class MappingObjectModelFactory
       {
          log.trace("newRoot root=" +
             root +
-            " navigator=" +
-            navigator +
             " namespaceURI=" +
             namespaceURI +
             " localName=" +
@@ -114,7 +112,7 @@ public class MappingObjectModelFactory
          }
          else
          {
-            root = create(namespaceURI, localName, navigator.getType());
+            root = create(namespaceURI, localName, ctx.getType());
          }
 
          if(root == null)
@@ -135,7 +133,7 @@ public class MappingObjectModelFactory
                {
                   if(!attrs.getQName(i).startsWith("xsi:")) //todo horrible
                   {
-                     setAttribute(root, attrs.getLocalName(i), attrs.getValue(i), navigator.getType());
+                     setAttribute(root, attrs.getLocalName(i), attrs.getValue(i), ctx);
                   }
                }
             }
@@ -154,7 +152,7 @@ public class MappingObjectModelFactory
    // GenericObjectModelFactory implementation
 
    public Object newChild(Object o,
-                          UnmarshallingContext navigator,
+                          UnmarshallingContext ctx,
                           String namespaceURI,
                           String localName,
                           Attributes attrs)
@@ -163,8 +161,6 @@ public class MappingObjectModelFactory
       {
          log.trace("newChild object=" +
             o +
-            " navigator=" +
-            navigator +
             " namespaceURI=" +
             namespaceURI +
             " localName=" +
@@ -182,7 +178,7 @@ public class MappingObjectModelFactory
       Object child = null;
 
       ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
-      XSTypeDefinition type = navigator.getType();
+      XSTypeDefinition type = ctx.getType();
       if(mapping != null)
       {
          if(log.isTraceEnabled())
@@ -224,7 +220,7 @@ public class MappingObjectModelFactory
                   {
                      if(!attrs.getQName(i).startsWith("xsi:")) //todo horrible
                      {
-                        setAttribute(child, attrs.getLocalName(i), attrs.getValue(i), type);
+                        setAttribute(child, attrs.getLocalName(i), attrs.getValue(i), ctx);
                      }
                   }
                }
@@ -357,14 +353,14 @@ public class MappingObjectModelFactory
       setChild(child, parent, localName);
    }
 
-   public void setValue(Object o, UnmarshallingContext navigator, String namespaceURI, String localName, String value)
+   public void setValue(Object o, UnmarshallingContext ctx, String namespaceURI, String localName, String value)
    {
       if(log.isTraceEnabled())
       {
          log.trace("setValue object=" +
             o +
-            " navigator=" +
-            navigator +
+            " ctx=" +
+            ctx +
             " namespaceURI=" +
             namespaceURI +
             " localName=" +
@@ -374,7 +370,7 @@ public class MappingObjectModelFactory
          );
       }
 
-      setAttribute(o, localName, value, navigator.getType());
+      setAttribute(o, localName, value, ctx);
    }
 
    public Object completeRoot(Object root, UnmarshallingContext navigator, String namespaceURI, String localName)
@@ -496,10 +492,11 @@ public class MappingObjectModelFactory
       }
    }
 
-   private void setAttribute(Object o, String localName, String value, XSTypeDefinition type)
+   private void setAttribute(Object o, String localName, String value, UnmarshallingContext ctx)
    {
       if(o instanceof Collection)
       {
+         XSTypeDefinition type = ctx.getType();
          if(type == null)
          {
             log.warn("Type is not available for collection item " + localName + "=" + value + " -> adding as string.");
@@ -512,7 +509,7 @@ public class MappingObjectModelFactory
                throw new IllegalStateException("Name is null for simple type?!");
             }
 
-            Object trgValue = SimpleTypeBindings.unmarshal(type.getName(), value);
+            Object trgValue = SimpleTypeBindings.unmarshal(type.getName(), value, ctx.getNamespaceContext());
             ((Collection)o).add(trgValue);
          }
       }

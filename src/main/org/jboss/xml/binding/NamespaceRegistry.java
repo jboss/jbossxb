@@ -26,6 +26,7 @@ import java.util.Map;
  *
  * @author Thomas.Diesler@jboss.org
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @author <a href="mailto:anil.saldhana@jboss.org">Anil Saldhana</a>
  * @since 08-June-2004
  */
 public class NamespaceRegistry implements NamespaceContext
@@ -241,6 +242,13 @@ public class NamespaceRegistry implements NamespaceContext
    public Iterator getRegisteredURIs()
    {
       return prefixByUri.keySet().iterator();
+   }
+
+   /** Return an iterator over all registered nsURIs.
+    */
+   public Iterator getRegisteredPrefix()
+   {
+      return uriByPrefix.keySet().iterator();
    }
 
    // NamespaceContext implementation

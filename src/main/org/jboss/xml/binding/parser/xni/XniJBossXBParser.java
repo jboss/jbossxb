@@ -621,5 +621,21 @@ public class XniJBossXBParser
       {
          return attrs.getValue(uri, localName);
       }
+      
+      public String toString()
+      {
+         StringBuffer buffer = new StringBuffer();
+         buffer.append('(');
+         for (int i = 0; i < getLength(); ++i)
+         {
+            buffer.append(getLocalName(i));
+            buffer.append('=');
+            buffer.append(getValue(i));
+            if (i < getLength()-1)
+               buffer.append(", ");
+         }
+         buffer.append(')');
+         return buffer.toString();
+      }
    }
 }

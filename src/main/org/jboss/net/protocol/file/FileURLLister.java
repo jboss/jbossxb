@@ -13,6 +13,7 @@ package org.jboss.net.protocol.file;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
@@ -23,6 +24,9 @@ import org.jboss.net.protocol.URLListerBase;
 public class FileURLLister extends URLListerBase {
    public Collection listMembers(final URL baseUrl, final URLFilter filter) throws IOException {
       File directory = new File(baseUrl.getPath());
+      if (directory.exists() == false) {
+         throw new FileNotFoundException(directory.toString());
+      }
       File[] files = directory.listFiles(new FileFilter() {
          public boolean accept(File file) {
             return filter.accept(baseUrl, file.getName());

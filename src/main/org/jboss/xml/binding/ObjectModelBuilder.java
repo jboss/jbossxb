@@ -53,6 +53,12 @@ public class ObjectModelBuilder
     */
    private Stack accepted = new StackImpl();
 
+   private GenericObjectModelFactory curFactory;
+   private String curNameSwitchingFactory;
+   private String curNsSwitchingFactory;
+   private Stack nameSwitchingFactory;
+   private Stack nsSwitchingFactory;
+
    /**
     * default object model factory
     */
@@ -230,16 +236,32 @@ public class ObjectModelBuilder
       // todo currentType assignment
       currentType = type;
 
-      GenericObjectModelFactory factory = getFactory(namespaceURI);
       Object element;
-      if(root == null)
+      if(!namespaceURI.equals(curNsSwitchingFactory))
       {
-         element = factory.newRoot(parent, this, namespaceURI, localName, atts);
-         root = element;
+         if(curNsSwitchingFactory != null)
+         {
+            if(nsSwitchingFactory == null)
+            {
+               nsSwitchingFactory = new StackImpl();
+               nameSwitchingFactory = new StackImpl();
+            }
+            nsSwitchingFactory.push(curNsSwitchingFactory);
+            nameSwitchingFactory.push(curNameSwitchingFactory);
+         }
+         curNsSwitchingFactory = namespaceURI;
+         curNameSwitchingFactory = localName;
+         curFactory = getFactory(namespaceURI);
+
+         element = curFactory.newRoot(parent, this, namespaceURI, localName, atts);
+         if(root == null)
+         {
+            root = element;
+         }
       }
       else
       {
-         element = factory.newChild(parent, this, namespaceURI, localName, atts);
+         element = curFactory.newChild(parent, this, namespaceURI, localName, atts);
       }
 
       if(element == null)
@@ -265,8 +287,6 @@ public class ObjectModelBuilder
 
    public void endElement(String namespaceURI, String localName, String qName)
    {
-      GenericObjectModelFactory factory = null;
-
       if(value.length() > 0)
       {
          Object element;
@@ -279,9 +299,24 @@ public class ObjectModelBuilder
             log.error("value=" + value, e);
             throw e;
          }
-         factory = getFactory(namespaceURI);
-         factory.setValue(element, this, namespaceURI, localName, value.toString().trim());
+         curFactory.setValue(element, this, namespaceURI, localName, value.toString().trim());
          value.delete(0, value.length());
+      }
+
+      if(localName.equals(curNameSwitchingFactory) && namespaceURI.equals(curNsSwitchingFactory))
+      {
+         if(nsSwitchingFactory == null || nsSwitchingFactory.isEmpty())
+         {
+            curNameSwitchingFactory = null;
+            curNsSwitchingFactory = null;
+         }
+         else
+         {
+            curNameSwitchingFactory = (String)nameSwitchingFactory.pop();
+            curNsSwitchingFactory = (String)nsSwitchingFactory.pop();
+         }
+
+         curFactory = getFactory(curNsSwitchingFactory);
       }
 
       Object element = all.pop();
@@ -290,18 +325,13 @@ public class ObjectModelBuilder
          element = accepted.pop();
          Object parent = (accepted.isEmpty() ? null : accepted.peek());
 
-         if(factory == null)
-         {
-            factory = getFactory(namespaceURI);
-         }
-
          if(parent != null)
          {
-            factory.addChild(parent, element, this, namespaceURI, localName);
+            curFactory.addChild(parent, element, this, namespaceURI, localName);
          }
          else
          {
-            root = factory.completedRoot(element, this, namespaceURI, localName);
+            root = curFactory.completedRoot(element, this, namespaceURI, localName);
          }
       }
    }

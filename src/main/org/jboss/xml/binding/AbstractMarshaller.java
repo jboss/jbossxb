@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Properties;
 import java.io.Reader;
 import java.io.Writer;
 import java.io.InputStreamReader;
@@ -40,6 +41,8 @@ public abstract class AbstractMarshaller
    protected List rootQNames = new ArrayList();
 
    private Map classMappings = Collections.EMPTY_MAP;
+
+   private Properties props;
 
    // Marshaller implementation
 
@@ -147,8 +150,34 @@ public abstract class AbstractMarshaller
       rootQNames.add(qName);
    }
 
+   public void setProperty(String name, String value)
+   {
+      if(props == null)
+      {
+         props = new Properties();
+      }
+      props.setProperty(name, value);
+   }
+
+   public String getProperty(String name)
+   {
+      return props == null ? null : props.getProperty(name);
+   }
+
    // Protected
 
+   protected void writeXmlVersion(Writer writer) throws IOException
+   {
+      String xmlVersion = getProperty(Marshaller.XML_VERSION);
+      if(xmlVersion == null || "true".equalsIgnoreCase(xmlVersion))
+      {
+         writer.write("<?xml version=\"");
+         writer.write(version);
+         writer.write("\" encoding=\"");
+         writer.write(encoding);
+         writer.write("\"?>\n");
+      }
+   }
    protected ClassMapping getClassMapping(Class cls)
    {
       return (ClassMapping)classMappings.get(cls);

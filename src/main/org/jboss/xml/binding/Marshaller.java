@@ -21,6 +21,7 @@ import java.io.Writer;
  */
 public interface Marshaller
 {
+   String XML_VERSION = "org.jboss.xml.binding.marshalling.version";
    String MARSHALLER_IMPL = "org.jboss.xml.binding.Marshaller";
 
    class FACTORY
@@ -74,4 +75,8 @@ public interface Marshaller
 
    void marshal(Reader schema, ObjectModelProvider provider, Object document, Writer writer)
       throws IOException, SAXException, ParserConfigurationException;
+
+   void setProperty(String name, String value);
+
+   String getProperty(String name);
 }

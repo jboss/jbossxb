@@ -185,11 +185,7 @@ public class XercesXsMarshaller
       content.endDocument();
 
       // version & encoding
-      writer.write("<?xml version=\"");
-      writer.write(version);
-      writer.write("\" encoding=\"");
-      writer.write(encoding);
-      writer.write("\"?>\n");
+      writeXmlVersion(writer);
 
       ContentWriter contentWriter = new ContentWriter(writer);
       content.handleContent(contentWriter);
@@ -201,6 +197,10 @@ public class XercesXsMarshaller
       if(stack.isEmpty())
       {
          value = provider.getRoot(root, element.getNamespace(), element.getName());
+         if(value == null)
+         {
+            return;
+         }
       }
       else
       {

@@ -104,11 +104,7 @@ public class XsMarshaller
       content.endDocument();
 
       // version & encoding
-      writer.write("<?xml version=\"");
-      writer.write(version);
-      writer.write("\" encoding=\"");
-      writer.write(encoding);
-      writer.write("\"?>\n");
+      writeXmlVersion(writer);
 
       ContentWriter contentWriter = new ContentWriter(writer);
       content.handleContent(contentWriter);
@@ -248,6 +244,10 @@ public class XsMarshaller
       if(stack.isEmpty())
       {
          parent = provider.getRoot(this.root, name.getNamespaceURI(), name.getLocalName());
+         if(parent == null)
+         {
+            return;
+         }
          char[] ch = parent.toString().toCharArray();
          content.startElement(name.getNamespaceURI(), name.getLocalName(), qName, attrs);
          content.characters(ch, 0, ch.length);
@@ -278,6 +278,10 @@ public class XsMarshaller
       if(stack.isEmpty())
       {
          parent = provider.getRoot(this.root, xsName.getNamespaceURI(), xsName.getLocalName());
+         if(parent == null)
+         {
+            return;
+         }
 
          AttributesImpl attrs = addedAttrs;
          if(type.getAttributes() != null)

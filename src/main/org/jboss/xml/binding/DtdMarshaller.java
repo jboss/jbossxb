@@ -66,7 +66,7 @@ public class DtdMarshaller
       dtd = parser.parse(true);
 
       this.provider = provider instanceof GenericObjectModelProvider ?
-         (GenericObjectModelProvider) provider : new DelegatingObjectModelProvider(provider);
+         (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider);
       //stack.push(document);
 
       DTDElement[] roots = null;
@@ -86,11 +86,7 @@ public class DtdMarshaller
       //stack.pop();
 
       // version & encoding
-      writer.write("<?xml version=\"");
-      writer.write(version);
-      writer.write("\" encoding=\"");
-      writer.write(encoding);
-      writer.write("\"?>\n");
+      writeXmlVersion(writer);
 
       // DOCTYPE
       writer.write("<!DOCTYPE ");
@@ -125,6 +121,10 @@ public class DtdMarshaller
       content.startDocument();
 
       Object root = provider.getRoot(o, systemId, dtdRoot.getName());
+      if(root == null)
+      {
+         return;
+      }
       stack.push(root);
 
       Attributes attrs = provideAttributes(dtdRoot, root);
@@ -142,7 +142,7 @@ public class DtdMarshaller
       DTDItem item = element.content;
       if(item instanceof DTDMixed)
       {
-         handleMixedElement((DTDMixed) item, element.getName(), attrs);
+         handleMixedElement((DTDMixed)item, element.getName(), attrs);
       }
       else if(item instanceof DTDEmpty)
       {
@@ -156,7 +156,7 @@ public class DtdMarshaller
       }
       else if(item instanceof DTDContainer)
       {
-         processContainer(dtd, (DTDContainer) item);
+         processContainer(dtd, (DTDContainer)item);
       }
       else
       {
@@ -197,11 +197,11 @@ public class DtdMarshaller
          Iterator iter;
          if(children instanceof Iterator)
          {
-            iter = (Iterator) children;
+            iter = (Iterator)children;
          }
          else if(children instanceof Collection)
          {
-            iter = ((Collection) children).iterator();
+            iter = ((Collection)children).iterator();
          }
          else
          {
@@ -263,7 +263,7 @@ public class DtdMarshaller
 
          if(removeLast)
          {
-            Element el = (Element) elementStack.removeLast();
+            Element el = (Element)elementStack.removeLast();
             if(el.started)
             {
                DTDElement started = el.element;
@@ -281,12 +281,12 @@ public class DtdMarshaller
          DTDItem item = items[i];
          if(item instanceof DTDContainer)
          {
-            processContainer(dtd, (DTDContainer) item);
+            processContainer(dtd, (DTDContainer)item);
          }
          else if(item instanceof DTDName)
          {
-            DTDName name = (DTDName) item;
-            DTDElement element = (DTDElement) dtd.elements.get(name.value);
+            DTDName name = (DTDName)item;
+            DTDElement element = (DTDElement)dtd.elements.get(name.value);
             handleChildren(dtd, element, name.getCardinal());
          }
       }
@@ -294,13 +294,13 @@ public class DtdMarshaller
 
    private void writeSkippedElements()
    {
-      Element el = (Element) elementStack.getLast();
+      Element el = (Element)elementStack.getLast();
       if(!el.started)
       {
          int firstNotStarted = elementStack.size() - 1;
          do
          {
-            el = (Element) elementStack.get(--firstNotStarted);
+            el = (Element)elementStack.get(--firstNotStarted);
          }
          while(!el.started);
 
@@ -308,7 +308,7 @@ public class DtdMarshaller
 
          while(firstNotStarted < elementStack.size())
          {
-            el = (Element) elementStack.get(firstNotStarted++);
+            el = (Element)elementStack.get(firstNotStarted++);
             DTDElement notStarted = el.element;
 
             if(log.isTraceEnabled())
@@ -329,7 +329,7 @@ public class DtdMarshaller
 
       for(Iterator attrIter = attributes.values().iterator(); attrIter.hasNext();)
       {
-         DTDAttribute attr = (DTDAttribute) attrIter.next();
+         DTDAttribute attr = (DTDAttribute)attrIter.next();
          final Object attrValue = provider.getAttributeValue(container, systemId, attr.getName());
 
          if(attrValue != null)
@@ -338,7 +338,8 @@ public class DtdMarshaller
                attr.getName(),
                attr.getName(),
                attr.getType().toString(),
-               attrValue.toString());
+               attrValue.toString()
+            );
          }
       }
 
@@ -355,42 +356,42 @@ public class DtdMarshaller
       Enumeration e = dtd.elements.elements();
       while(e.hasMoreElements())
       {
-         DTDElement element = (DTDElement) e.nextElement();
+         DTDElement element = (DTDElement)e.nextElement();
          roots.put(element.name, element);
       }
 
       e = dtd.elements.elements();
       while(e.hasMoreElements())
       {
-         DTDElement element = (DTDElement) e.nextElement();
+         DTDElement element = (DTDElement)e.nextElement();
          if(!(element.content instanceof DTDContainer))
          {
             continue;
          }
 
-         Enumeration items = ((DTDContainer) element.content).getItemsVec().elements();
+         Enumeration items = ((DTDContainer)element.content).getItemsVec().elements();
          while(items.hasMoreElements())
          {
-            removeElements(roots, dtd, (DTDItem) items.nextElement());
+            removeElements(roots, dtd, (DTDItem)items.nextElement());
          }
       }
 
       final Collection rootCol = roots.values();
-      return (DTDElement[]) rootCol.toArray(new DTDElement[rootCol.size()]);
+      return (DTDElement[])rootCol.toArray(new DTDElement[rootCol.size()]);
    }
 
    protected static void removeElements(Hashtable h, DTD dtd, DTDItem item)
    {
       if(item instanceof DTDName)
       {
-         h.remove(((DTDName) item).value);
+         h.remove(((DTDName)item).value);
       }
       else if(item instanceof DTDContainer)
       {
-         Enumeration e = ((DTDContainer) item).getItemsVec().elements();
+         Enumeration e = ((DTDContainer)item).getItemsVec().elements();
          while(e.hasMoreElements())
          {
-            removeElements(h, dtd, (DTDItem) e.nextElement());
+            removeElements(h, dtd, (DTDItem)e.nextElement());
          }
       }
    }

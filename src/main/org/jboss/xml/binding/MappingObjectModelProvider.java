@@ -10,6 +10,7 @@ import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -29,7 +30,8 @@ public class MappingObjectModelProvider
    {
       ClassToElementMapping mapping = new ClassToElementMapping(cls, namespaceURI, localName,
          provider instanceof GenericObjectModelProvider ?
-         (GenericObjectModelProvider) provider : new DelegatingObjectModelProvider(provider));
+         (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider)
+      );
       classMappings.put(mapping.cls, mapping);
    }
 
@@ -48,40 +50,9 @@ public class MappingObjectModelProvider
    public Object getChildren(Object o, String namespaceURI, String localName)
    {
       Object children = null;
-      final Class cls = o.getClass();
-      if(!writeAsValue(cls))
+      if(!writeAsValue(o.getClass()))
       {
-         try
-         {
-            Method getter;
-
-            final FieldToElementMapping mapping = (FieldToElementMapping) fieldMappings.get(localName);
-            if(mapping != null)
-            {
-               getter = mapping.getter;
-            }
-            else
-            {
-               String getterStr = Util.xmlNameToGetMethodName(localName, true);
-               getter = cls.getMethod(getterStr, null);
-            }
-
-            if(!writeAsValue(getter.getReturnType()))
-            {
-               children = getter.invoke(o, null);
-            }
-         }
-         catch(NoSuchMethodException e)
-         {
-            if(log.isDebugEnabled())
-            {
-               log.debug("getChildren: no getter for " + localName + " in " + cls);
-            }
-         }
-         catch(Exception e)
-         {
-            throw new IllegalStateException("Failed to invoke getter for field " + localName + " in " + cls);
-         }
+         children = getJavaValue(localName, o, true);
       }
       return children;
    }
@@ -95,41 +66,7 @@ public class MappingObjectModelProvider
       }
       else
       {
-         final Class cls = o.getClass();
-
-         try
-         {
-            Method getter;
-
-            final FieldToElementMapping mapping = (FieldToElementMapping) fieldMappings.get(localName);
-            if(mapping != null)
-            {
-               getter = mapping.getter;
-            }
-            else
-            {
-               String getterStr = Util.xmlNameToGetMethodName(localName, true);
-               getter = cls.getMethod(getterStr, null);
-            }
-
-            value = getter.invoke(o, null);
-
-            if(mapping != null)
-            {
-               value = mapping.converter.marshal(value);
-            }
-         }
-         catch(NoSuchMethodException e)
-         {
-            if(log.isDebugEnabled())
-            {
-               log.debug("getElementValue: no getter for " + localName + " in " + cls);
-            }
-         }
-         catch(Exception e)
-         {
-            throw new IllegalStateException("Failed to invoke getter for field " + localName + " in " + cls);
-         }
+         value = getJavaValue(localName, o, false);
       }
       return value;
    }
@@ -143,50 +80,79 @@ public class MappingObjectModelProvider
       }
       else
       {
-         final Class cls = o.getClass();
-         try
-         {
-            Method getter;
-
-            final FieldToElementMapping mapping = (FieldToElementMapping) fieldMappings.get(localName);
-            if(mapping != null)
-            {
-               getter = mapping.getter;
-            }
-            else
-            {
-               String getterStr = Util.xmlNameToGetMethodName(localName, true);
-               getter = cls.getMethod(getterStr, null);
-            }
-
-            value = getter.invoke(o, null);
-
-            if(mapping != null)
-            {
-               value = mapping.converter.marshal(value);
-            }
-         }
-         catch(NoSuchMethodException e)
-         {
-            if(log.isDebugEnabled())
-            {
-               log.debug("getElementValue: no getter for " + localName + " in " + cls);
-            }
-         }
-         catch(Exception e)
-         {
-            throw new IllegalStateException("Failed to invoke getter for field " + localName + " in " + cls);
-         }
+         value = getJavaValue(localName, o, false);
       }
       return value;
    }
 
    public Object getRoot(Object o, String namespaceURI, String localName)
    {
-      return o;
+      String correspCls = Util.xmlNameToClassName(localName, true);
+      String shortName = Classes.stripPackageName(o.getClass());
+      return correspCls.equals(shortName) ? o : null;
    }
 
    // Private
+
+   private Object getJavaValue(String localName, Object o, boolean forComplexType)
+   {
+      Method getter = null;
+      Field field = null;
+
+      final FieldToElementMapping mapping = (FieldToElementMapping)fieldMappings.get(localName);
+      if(mapping != null)
+      {
+         getter = mapping.getter;
+      }
+      else
+      {
+         String getterStr = Util.xmlNameToGetMethodName(localName, true);
+         try
+         {
+            getter = o.getClass().getMethod(getterStr, null);
+         }
+         catch(NoSuchMethodException e)
+         {
+            String attr = Util.xmlNameToClassName(localName, true);
+            attr = Character.toLowerCase(attr.charAt(0)) + attr.substring(1);
+            try
+            {
+               field = o.getClass().getField(attr);
+            }
+            catch(NoSuchFieldException e1)
+            {
+               if(log.isDebugEnabled())
+               {
+                  log.debug("getChildren: found neither getter nor field for " + localName + " in " + o.getClass());
+               }
+            }
+         }
+      }
+
+      Object value = null;
+      try
+      {
+         if(getter != null && (!forComplexType || forComplexType && !writeAsValue(getter.getReturnType())))
+         {
+            value = getter.invoke(o, null);
+         }
+         else if(field != null && (!forComplexType || forComplexType && !writeAsValue(field.getType())))
+         {
+            value = field.get(o);
+         }
+      }
+      catch(Exception e)
+      {
+         log.error("Failed to provide value for " + localName + " from " + o, e);
+      }
+
+      if(value != null && mapping != null)
+      {
+         value = mapping.converter.marshal(value);
+      }
+
+      return value;
+   }
 
    private boolean writeAsValue(final Class type)
    {
@@ -217,12 +183,21 @@ public class MappingObjectModelProvider
 
       public boolean equals(Object o)
       {
-         if(this == o) return true;
-         if(!(o instanceof ClassToElementMapping)) return false;
+         if(this == o)
+         {
+            return true;
+         }
+         if(!(o instanceof ClassToElementMapping))
+         {
+            return false;
+         }
 
-         final ClassToElementMapping classToElementMapping = (ClassToElementMapping) o;
+         final ClassToElementMapping classToElementMapping = (ClassToElementMapping)o;
 
-         if(cls != null ? !cls.equals(classToElementMapping.cls) : classToElementMapping.cls != null) return false;
+         if(cls != null ? !cls.equals(classToElementMapping.cls) : classToElementMapping.cls != null)
+         {
+            return false;
+         }
          if(localName != null ?
             !localName.equals(classToElementMapping.localName) :
             classToElementMapping.localName != null)
@@ -292,13 +267,25 @@ public class MappingObjectModelProvider
 
       public boolean equals(Object o)
       {
-         if(this == o) return true;
-         if(!(o instanceof FieldToElementMapping)) return false;
+         if(this == o)
+         {
+            return true;
+         }
+         if(!(o instanceof FieldToElementMapping))
+         {
+            return false;
+         }
 
-         final FieldToElementMapping fieldToElementMapping = (FieldToElementMapping) o;
+         final FieldToElementMapping fieldToElementMapping = (FieldToElementMapping)o;
 
-         if(cls != null ? !cls.equals(fieldToElementMapping.cls) : fieldToElementMapping.cls != null) return false;
-         if(field != null ? !field.equals(fieldToElementMapping.field) : fieldToElementMapping.field != null) return false;
+         if(cls != null ? !cls.equals(fieldToElementMapping.cls) : fieldToElementMapping.cls != null)
+         {
+            return false;
+         }
+         if(field != null ? !field.equals(fieldToElementMapping.field) : fieldToElementMapping.field != null)
+         {
+            return false;
+         }
          if(localName != null ?
             !localName.equals(fieldToElementMapping.localName) :
             fieldToElementMapping.localName != null)

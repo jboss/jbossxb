@@ -20,6 +20,7 @@ import org.jboss.util.ThrowableHandler;
  *
  * <p>Classes are loaded in the following order:
  *    <ol>
+ *    <li><tt>java.lang.Enum</tt> was introduced in JDK 1.5</li>
  *    <li><tt>java.lang.StackTraceElement</tt> was introduced in JDK 1.4</li>
  *    <li><tt>java.lang.StrictMath</tt> was introduced in JDK 1.3</li>
  *    <li><tt>java.lang.ThreadLocal</tt> was introduced in JDK 1.2</li>
@@ -29,6 +30,7 @@ import org.jboss.util.ThrowableHandler;
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author  <a href="mailto:dimitris@jboss.org">Dimitris Andreadis</a>
  */
 public final class Java
 {
@@ -50,6 +52,9 @@ public final class Java
    /** Java version 1.4 token */
    public static final int VERSION_1_4 = 0x05;
    
+   /** Java version 1.5 token */
+   public static final int VERSION_1_5 = 0x06;
+   
    /** 
     * Private to avoid over optimization by the compiler.
     *
@@ -58,11 +63,13 @@ public final class Java
    private static final int VERSION;
 
    /** Initialize VERSION. */ 
-   static {
+   static
+   {
       // default to 1.0
       int version = VERSION_1_0;
 
-      try {
+      try
+      {
          // check for 1.1
          Class.forName("java.lang.Void");
          version = VERSION_1_1;
@@ -78,11 +85,15 @@ public final class Java
          // check for 1.4
          Class.forName("java.lang.StackTraceElement");
          version = VERSION_1_4;
+         
+         // check for 1.5
+         Class.forName("java.lang.Enum");
+         version = VERSION_1_5;
       }
-      catch (ClassNotFoundException e) {
+      catch (ClassNotFoundException e)
+      {
          ThrowableHandler.add(e);
       }
-      
       VERSION = version;
    }
 
@@ -91,29 +102,32 @@ public final class Java
     *
     * @return  The version of <em>Java</em> supported by the VM.
     */
-   public static int getVersion() {
+   public static int getVersion()
+   {
       return VERSION;
    }
 
    /**
-    * Retrurns true if the given version identifer is equal to the
+    * Returns true if the given version identifer is equal to the
     * version identifier of the current virtuial machine.
     *
     * @param version    The version identifier to check for.
     * @return           True if the current virtual machine is the same version.
     */
-   public static boolean isVersion(final int version) {
+   public static boolean isVersion(final int version)
+   {
       return VERSION == version;
    }
 
    /**
-    * Retrurns true if the current virtual machine is compatible with
+    * Returns true if the current virtual machine is compatible with
     * the given version identifer.
     *
     * @param version    The version identifier to check compatibility of.
     * @return           True if the current virtual machine is compatible.
     */
-   public static boolean isCompatible(final int version) {
+   public static boolean isCompatible(final int version)
+   {
       // if our vm is the same or newer then we are compatible
       return VERSION >= version;
    }

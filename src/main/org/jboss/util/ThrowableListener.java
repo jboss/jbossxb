@@ -23,7 +23,8 @@ public interface ThrowableListener
    /**
     * Process a throwable.
     *
-    * @param t    Throwable to process.
+    * @param type    The type off the throwable.
+    * @param t       Throwable
     */
-   void onThrowable(Throwable t);
+   void onThrowable(int type, Throwable t);
 }

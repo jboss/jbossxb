@@ -23,10 +23,20 @@ import java.util.Collections;
 public final class ThrowableHandler
 {
    /**
-    * Do not allow direct public instantiation of this class.
+    * Container for throwable types.
     */
-   private ThrowableHandler() {}
+   public static interface Type
+   {
+      /** Unknown throwable. */
+      int UNKNOWN = 0;
 
+      /** Error throwable. */
+      int ERROR = 1;
+
+      /** Warning throwable. */
+      int WARNING = 2;
+   }
+   
 
    /////////////////////////////////////////////////////////////////////////
    //                            Listener Methods                         //
@@ -59,14 +69,15 @@ public final class ThrowableHandler
 
    /**
     * Fire onThrowable to all registered listeners.
-    *
-    * @param t    Throwable
+    * 
+    * @param type    The type off the throwable.
+    * @param t       Throwable
     */
-   protected static void fireOnThrowable(Throwable t) {
+   protected static void fireOnThrowable(int type, Throwable t) {
       Object[] list = listeners.toArray();
 
       for (int i=0; i<list.length; i++) {
-         ((ThrowableListener)list[i]).onThrowable(t);
+         ((ThrowableListener)list[i]).onThrowable(type, t);
       }
    }
 
@@ -78,12 +89,29 @@ public final class ThrowableHandler
    /**
     * Add a throwable that is to be handled.
     *
-    * @param t    Throwable to be handled.
+    * @param type    The type off the throwable.
+    * @param t       Throwable to be handled.
     */
-   public static void add(Throwable t) {
+   public static void add(int type, Throwable t) {
       // don't add null throwables
       if (t == null) return;
 
-      fireOnThrowable(t);
+      try {
+         fireOnThrowable(type, t);
+      }
+      catch (Throwable bad) {
+         // don't let these propagate, that could introduce unwanted side-effects
+         System.err.println("Unable to handle throwable: " + t + " because of:");
+         bad.printStackTrace();
+      }
+   }
+      
+   /**
+    * Add a throwable that is to be handled with unknown type.
+    *
+    * @param t    Throwable to be handled.
+    */
+   public static void add(Throwable t) {
+      add(Type.UNKNOWN, t);
    }
 }

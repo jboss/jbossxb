@@ -363,7 +363,9 @@ public class XniJBossXBParser
 
       public void endElement(QName element, Augmentations augs) throws XNIException
       {
-         contentHandler.endElement(element.uri, element.localpart, element.rawname);
+         String uri = element.uri != null ? element.uri : "";
+         String localpart = namespaces ? element.localpart : "";
+         contentHandler.endElement(uri, localpart, element.rawname);
       }
 
       public void startCDATA(Augmentations augs) throws XNIException

@@ -15,7 +15,7 @@ import java.text.ParseException;
 import org.jboss.util.NestedRuntimeException;
 
 /**
- * A property editor for {@link java.math.Date}.
+ * A property editor for {@link Date}.
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>

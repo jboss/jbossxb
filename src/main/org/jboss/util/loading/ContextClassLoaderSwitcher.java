@@ -105,7 +105,21 @@ public class ContextClassLoaderSwitcher
    }
 
    /**
-    * A helper class to remember to original classloader and
+    * Retrieve a switch context for the classloader of a given class
+    *
+    * @deprecated using a class to determine the classloader is a 
+    *             bad idea, it has the same problems as Class.forName()
+    * @param clazz the class whose classloader should be set
+    *        as the context classloader
+    * @return the switch context
+    */
+   public SwitchContext getSwitchContext(final Class clazz)
+   {
+      return new SwitchContext(clazz.getClassLoader());
+   }
+
+   /**
+    * A helper class to remember the original classloader and
     * avoid continually retrieveing the current thread.
     */
    public class SwitchContext
@@ -191,7 +205,9 @@ public class ContextClassLoaderSwitcher
       }
 
       /**
-       * Force a reset back to the original classloader
+       * Force a reset back to the original classloader,
+       * useful when somebody else might have changed
+       * the thread context classloader so we cannot optimize
        */
       public void forceReset()
       {

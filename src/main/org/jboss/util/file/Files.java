@@ -19,59 +19,85 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 
 import org.jboss.util.stream.Streams;
+import org.jboss.logging.Logger;
 
 /**
  * A collection of file utilities.
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author Scott.Stark@jboss.org
  */
 public final class Files
 {
-   /**
-    * Delete a directory and all of its contents.
+   static final Logger log = Logger.getLogger(Files.class);
+
+   /** Delete a file, or a directory and all of its contents.
     *
-    * @param dir  The directory to delete.
-    * @return     True if all delete operations were successfull.
+    * @param dir The directory or file to delete.
+    * @return True if all delete operations were successfull.
     */
    public static boolean delete(final File dir)
    {
       boolean success = true;
-      
+
       File files[] = dir.listFiles();
-      if (files != null) {
-         for (int i=0; i<files.length; i++) {
-            if (files[i].isDirectory()) {
+      if (files != null)
+      {
+         for (int i = 0; i < files.length; i++)
+         {
+            File f = files[i];
+            if( f.isDirectory() == true )
+            {
                // delete the directory and all of its contents.
-               if (!delete(files[i])) {
+               if( delete(f) == false )
+               {
                   success = false;
+                  log.debug("Failed to delete dir: "+f.getAbsolutePath());
                }
             }
-
             // delete each file in the directory
-            if (!files[i].delete()) {
+            else if( f.delete() == false )
+            {
                success = false;
+               log.debug("Failed to delete file: "+f.getAbsolutePath());
             }
          }
       }
 
       // finally delete the directory
-      if (!dir.delete()) {
+      if( dir.delete() == false )
+      {
          success = false;
+         log.debug("Failed to delete dir: "+dir.getAbsolutePath());
       }
 
       return success;
    }
 
    /**
-    * Delete a directory and all of its contents.
+    * Delete a file or directory and all of its contents.
     *
-    * @param dirname  The name of the directory to delete.
-    * @return         True if all delete operations were successfull.
+    * @param dirname  The name of the file or directory to delete.
+    * @return True if all delete operations were successfull.
     */
    public static boolean delete(final String dirname)
    {
       return delete(new File(dirname));
+   }
+
+   /**
+    * Delete a directory contaning the given file and all its contents.
+    *
+    * @param filename a file or directory in the containing directory to delete
+    * @return true if all delete operations were successfull, false if any
+    * delete failed.
+    */
+   public static boolean deleteContaining(final String filename)
+   {
+      File file = new File(filename);
+      File containingDir = file.getParentFile();
+      return delete(containingDir);
    }
 
    /** The default size of the copy buffer. */
@@ -87,24 +113,27 @@ public final class Files
     * @throws IOException  Failed to copy file.
     */
    public static void copy(final File source,
-                           final File target,
-                           final byte buff[])
-      throws IOException
+         final File target,
+         final byte buff[])
+         throws IOException
    {
       DataInputStream in = new DataInputStream
-         (new BufferedInputStream(new FileInputStream(source)));
+            (new BufferedInputStream(new FileInputStream(source)));
 
       DataOutputStream out = new DataOutputStream
-         (new BufferedOutputStream(new FileOutputStream(target)));
+            (new BufferedOutputStream(new FileOutputStream(target)));
 
       int read;
 
-      try {
-         while ((read = in.read(buff)) != -1) {
+      try
+      {
+         while ((read = in.read(buff)) != -1)
+         {
             out.write(buff, 0, read);
          }
       }
-      finally {
+      finally
+      {
          Streams.flush(out);
          Streams.close(in);
          Streams.close(out);
@@ -121,9 +150,9 @@ public final class Files
     * @throws IOException  Failed to copy file.
     */
    public static void copy(final File source,
-                           final File target,
-                           final int size)
-      throws IOException
+         final File target,
+         final int size)
+         throws IOException
    {
       copy(source, target, new byte[size]);
    }
@@ -137,7 +166,7 @@ public final class Files
     * @throws IOException  Failed to copy file.
     */
    public static void copy(final File source, final File target)
-      throws IOException
+         throws IOException
    {
       copy(source, target, DEFAULT_BUFFER_SIZE);
    }

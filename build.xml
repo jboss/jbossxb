@@ -71,12 +71,13 @@
       <path refid="apache.log4j.classpath"/>
       <path refid="junit.junit.classpath"/>
       <path refid="gnu.regexp.classpath"/>
+      <path refid="sun.jmx.classpath"/>
+      <path refid="sun.jaxp.classpath"/>
     </path>
 
     <!-- Configure modules -->
     <call target="configure-modules"/>
     <path id="dependentmodule.classpath">
-      <path refid="jboss.jmx.classpath"/>
     </path>
 
     <!--+=======================================+-->

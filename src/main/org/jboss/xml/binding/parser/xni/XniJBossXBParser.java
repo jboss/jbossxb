@@ -178,6 +178,7 @@ public class XniJBossXBParser
       }
       catch(Exception e)
       {
+         log.error(e);
          throw new JBossXBException("Failed to parse document " + systemId, e);
       }
    }
@@ -193,6 +194,7 @@ public class XniJBossXBParser
       }
       catch(Exception e)
       {
+         log.error(e);
          throw new JBossXBException("Failed to parse document", e);
       }
    }
@@ -208,6 +210,7 @@ public class XniJBossXBParser
       }
       catch(Exception e)
       {
+         log.error(e);
          throw new JBossXBException("Failed to parse document", e);
       }
    }

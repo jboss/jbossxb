@@ -9,13 +9,12 @@
 
 package org.jboss.util.property;
 
-import java.util.Properties;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 import org.jboss.util.NullArgumentException;
 

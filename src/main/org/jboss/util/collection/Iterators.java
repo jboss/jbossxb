@@ -9,11 +9,11 @@
 
 package org.jboss.util.collection;
 
-import java.util.Iterator;
 import java.util.Enumeration;
-import java.util.NoSuchElementException;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 import org.jboss.util.Null;
 

@@ -9,8 +9,8 @@
 
 package org.jboss.util.propertyeditor;
 
-import javax.management.ObjectName;
 import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
 import org.jboss.util.NestedRuntimeException;
 

@@ -58,13 +58,11 @@
 package org.jboss.util.xml;
 
 
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 
 import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -144,7 +142,7 @@ public class DOMWriter {
         // print document
         case Node.DOCUMENT_NODE: {
                 if ( !canonical ) {
-                    String  Encoding = this.getWriterEncoding();
+                    String  Encoding = getWriterEncoding();
                     if ( Encoding.equalsIgnoreCase( "DEFAULT" ) )
                         Encoding = "UTF-8";
                     else if ( Encoding.equalsIgnoreCase( "Unicode" ) )

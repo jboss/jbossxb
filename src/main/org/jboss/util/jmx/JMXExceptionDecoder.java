@@ -9,12 +9,11 @@
 
 package org.jboss.util.jmx;
 
-import javax.management.MalformedObjectNameException;
 import javax.management.MBeanException;
 import javax.management.ReflectionException;
-import javax.management.RuntimeOperationsException;
-import javax.management.RuntimeMBeanException;
 import javax.management.RuntimeErrorException;
+import javax.management.RuntimeMBeanException;
+import javax.management.RuntimeOperationsException;
 
 /**
  * A simple helper to rethrow and/or decode those pesky 

@@ -11,9 +11,9 @@ package org.jboss.util.collection;
 
 import java.io.Serializable;
 
+import org.jboss.util.HashCode;
 import org.jboss.util.NullArgumentException;
 import org.jboss.util.Objects;
-import org.jboss.util.HashCode;
 import org.jboss.util.Strings;
 
 /**

@@ -12,13 +12,9 @@ package org.jboss.net.protocol;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import java.net.URLConnection;
-import java.net.URL;
 import java.net.MalformedURLException;
-
-import java.util.Map;
-
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.Permission;
 
 /**

@@ -9,24 +9,20 @@
 
 package org.jboss.net.protocol.njar;
 
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLStreamHandler;
-
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
-
-import org.jboss.util.stream.Streams;
 import org.jboss.util.ThrowableHandler;
+import org.jboss.util.stream.Streams;
 
 /**
  * A protocol handler for the n(ested)jar protocol.

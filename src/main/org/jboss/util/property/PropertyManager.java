@@ -9,10 +9,9 @@
 
 package org.jboss.util.property;
 
-import java.util.Map;
-import java.util.Iterator;
-
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.jboss.util.ThrowableHandler;
    

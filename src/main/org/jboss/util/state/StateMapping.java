@@ -10,12 +10,11 @@
 package org.jboss.util.state;
 
 import java.io.Serializable;
-
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
-import org.jboss.util.NullArgumentException;
 import org.jboss.util.CloneableObject;
+import org.jboss.util.NullArgumentException;
 
 /**
  * A container for a state mapping, which maps an accepting state

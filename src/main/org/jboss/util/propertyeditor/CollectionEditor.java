@@ -9,11 +9,10 @@
 
 package org.jboss.util.propertyeditor;
 
+import java.beans.PropertyEditorSupport;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
-
-import java.beans.PropertyEditorSupport;
 
 /**
  * A property editor for {@link java.util.Collection}.

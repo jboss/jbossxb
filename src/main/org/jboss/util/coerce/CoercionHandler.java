@@ -9,14 +9,13 @@
 
 package org.jboss.util.coerce;
 
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.jboss.util.CoercionException;
-import org.jboss.util.NotCoercibleException;
-import org.jboss.util.NullArgumentException;
 import org.jboss.util.NotImplementedException;
+import org.jboss.util.NullArgumentException;
 
 /**
  * An abstract class to allow extending the default behavior of

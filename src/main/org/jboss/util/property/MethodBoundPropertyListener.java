@@ -9,16 +9,15 @@
 
 package org.jboss.util.property;
 
-import java.beans.Introspector;
-import java.beans.IntrospectionException;
-import java.beans.PropertyDescriptor;
 import java.beans.BeanInfo;
-
-import java.lang.reflect.Method;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
-import org.jboss.util.ThrowableHandler;
 import org.jboss.util.Objects;
+import org.jboss.util.ThrowableHandler;
 
 /**
  * Binds property values to class methods.

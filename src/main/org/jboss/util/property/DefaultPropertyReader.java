@@ -9,8 +9,8 @@
 
 package org.jboss.util.property;
 
-import org.jboss.util.Objects;
 import org.jboss.util.CoercionException;
+import org.jboss.util.Objects;
 
 /**
  * Reads properties from files specified via a system property.

@@ -9,12 +9,10 @@
 
 package org.jboss.util.propertyeditor;
 
-import java.util.Collection;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.StringTokenizer;
-
 import java.beans.PropertyEditorSupport;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A property editor for {@link java.util.Set}.

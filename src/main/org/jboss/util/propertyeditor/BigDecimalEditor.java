@@ -11,7 +11,6 @@ package org.jboss.util.propertyeditor;
 
 
 import java.math.BigDecimal;
-import org.jboss.util.NestedRuntimeException;
 
 /**
  * A property editor for {@link java.math.BigDecimal}.

@@ -9,11 +9,11 @@
 
 package org.jboss.util.property;
 
+import org.jboss.util.Classes;
+import org.jboss.util.CoercionException;
 import org.jboss.util.FieldInstance;
 import org.jboss.util.NullArgumentException;
-import org.jboss.util.Classes;
 import org.jboss.util.Objects;
-import org.jboss.util.CoercionException;
 import org.jboss.util.ThrowableHandler;
 
 /**

@@ -12,9 +12,8 @@ package org.jboss.util.propertyeditor;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.jboss.util.Strings;
-
 import org.jboss.util.NestedRuntimeException;
+import org.jboss.util.Strings;
 
 /**
  * A property editor for {@link java.net.InetAddress}.

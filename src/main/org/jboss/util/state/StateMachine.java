@@ -10,18 +10,17 @@
 package org.jboss.util.state;
 
 import java.io.Serializable;
-
-import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Collections;
 import java.util.EventListener;
 import java.util.EventObject;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
-import org.jboss.util.NullArgumentException;
 import org.jboss.util.CloneableObject;
+import org.jboss.util.NullArgumentException;
 import org.jboss.util.PrettyString;
 
 /**

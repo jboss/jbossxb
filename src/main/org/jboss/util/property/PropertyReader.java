@@ -9,9 +9,8 @@
 
 package org.jboss.util.property;
 
-import java.util.Map;
-
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * Iterface used to allow a <tt>PropertyMap</tt> to read property definitions 

@@ -9,8 +9,8 @@
 
 package org.jboss.util.propertyeditor;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A property editor for {@link java.util.HashSet}.

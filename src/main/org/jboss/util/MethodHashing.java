@@ -1,31 +1,25 @@
 /*
-* JBoss, the OpenSource J2EE webOS
-*
-* Distributable under LGPL license.
-* See terms of license at gnu.org.
-*/
+ * JBoss, the OpenSource J2EE webOS
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util;
  
-import java.io.DataOutputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.DataOutputStream;
 import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.WeakHashMap;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
- *   Create a unique hash for  
+ * Create a unique hash for  
  * 
- *   @see <related>
- *   @author  <a href="mailto:marc@jboss.org">Marc Fleury</a>
- *   @version $Revision$
- *   Revisions:
- *
+ * @author  <a href="mailto:marc@jboss.org">Marc Fleury</a>
+ * @version $Revision$
  */
 public class MethodHashing
 {

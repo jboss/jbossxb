@@ -9,15 +9,13 @@
 
 package org.jboss.util.collection;
 
-import java.util.List;
-import java.util.LinkedList;
-import java.util.AbstractList;
-import java.util.Iterator;
-
 import java.lang.ref.ReferenceQueue;
+import java.util.AbstractList;
+import java.util.LinkedList;
+import java.util.List;
 
-import org.jboss.util.SoftObject;
 import org.jboss.util.Objects;
+import org.jboss.util.SoftObject;
 
 /**
  * A wrapper around a <code>List</code> which translates added objects

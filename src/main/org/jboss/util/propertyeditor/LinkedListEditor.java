@@ -9,8 +9,8 @@
 
 package org.jboss.util.propertyeditor;
 
-import java.util.List;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * A property editor for {@link java.util.LinkedList}.

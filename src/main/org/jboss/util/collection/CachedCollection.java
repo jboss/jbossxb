@@ -9,14 +9,13 @@
 
 package org.jboss.util.collection;
 
-import java.util.Collection;
+import java.lang.ref.ReferenceQueue;
 import java.util.AbstractCollection;
+import java.util.Collection;
 import java.util.Iterator;
 
-import java.lang.ref.ReferenceQueue;
-
-import org.jboss.util.SoftObject;
 import org.jboss.util.Objects;
+import org.jboss.util.SoftObject;
 
 /**
  * A wrapper around a <code>Collection</code> which translates added objects

@@ -69,13 +69,11 @@
     <!-- Libraries -->
     <!-- ========= -->
 
-    <!-- Java API for XML Processing (JAXP) -->
-    <property name="sun.jaxp.root" value="${project.thirdparty}/sun/jaxp"/>
-    <property name="sun.jaxp.lib" value="${sun.jaxp.root}/lib"/>
-    <path id="sun.jaxp.classpath">
-      <fileset dir="${sun.jaxp.lib}">
-        <include name="*.jar"/>
-      </fileset>
+    <!-- Apache Crimson (XML/DOM) -->
+    <property name="apache.crimson.root" value="${project.thirdparty}/apache/crimson"/>
+    <property name="apache.crimson.lib" value="${apache.crimson.root}/lib"/>
+    <path id="apache.crimson.classpath">
+      <pathelement path="${apache.crimson.lib}/crimson.jar"/>
     </path>
 
     <!-- Log4j -->
@@ -94,8 +92,9 @@
 
     <!-- The combined library classpath -->
     <path id="library.classpath">
-      <path refid="sun.jaxp.classpath"/>
+      <path refid="apache.crimson.classpath"/>
       <path refid="apache.log4j.classpath"/>
+      <path refid="junit.junit.classpath"/>
     </path>
 
     <!-- ======= -->
@@ -171,9 +170,10 @@
     <!-- xdoclet -->
     <path id="xdoclet.task.classpath">
       <path refid="javac.classpath"/>
-      <pathelement location="${project.tools}/lib/xdoclet.jar"/>
-      <pathelement location="${project.tools}/lib/xjavadoc.jar"/>
-      <pathelement location="${project.tools}/lib/ant.jar"/>
+      <fileset dir="${project.thirdparty}/xdoclet/xdoclet/lib">
+        <include name="**/*.jar"/>
+      </fileset>
+      <pathelement path="${project.tools}/lib/ant.jar"/>
     </path>
     <property name="xdoclet.task.classpath" 
 	      refid="xdoclet.task.classpath"/>

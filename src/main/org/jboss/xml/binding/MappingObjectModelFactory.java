@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collection;
+import java.util.ArrayList;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -49,7 +50,7 @@ public class MappingObjectModelFactory
    {
       if(root == null)
       {
-         ElementToClassMapping mapping = (ElementToClassMapping) elementToClassMapping.get(localName);
+         ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
          try
          {
             root = mapping.cls.newInstance();
@@ -86,7 +87,7 @@ public class MappingObjectModelFactory
    {
       Object child = null;
 
-      ElementToClassMapping mapping = (ElementToClassMapping) elementToClassMapping.get(localName);
+      ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
       if(mapping != null)
       {
          try
@@ -94,7 +95,7 @@ public class MappingObjectModelFactory
             if(!(o instanceof Collection))
             {
                Method getter;
-               ElementToFieldMapping fieldMapping = (ElementToFieldMapping) elementToFieldMapping.get(localName);
+               ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(localName);
                if(fieldMapping != null)
                {
                   getter = fieldMapping.getter;
@@ -123,8 +124,123 @@ public class MappingObjectModelFactory
          catch(Exception e)
          {
             throw new IllegalStateException(
-               "newChild failed for o=" + o + ", uri=" + namespaceURI + ", local=" + localName + ", attrs=" + attrs);
+               "newChild failed for o=" + o + ", uri=" + namespaceURI + ", local=" + localName + ", attrs=" + attrs
+            );
          }
+      }
+      else
+      {
+         if(o instanceof Collection)
+         {
+            String clsName = Util.xmlNameToClassName(namespaceURI, localName, true);
+
+            Class childType = null;
+            try
+            {
+               childType = Thread.currentThread().getContextClassLoader().loadClass(clsName);
+            }
+            catch(ClassNotFoundException e)
+            {
+               log.debug("newChild: no mapping for " +
+                  localName +
+                  " and failed to load class " +
+                  clsName +
+                  " -> child must be a standard Java immutable type."
+               );
+            }
+
+            if(childType != null)
+            {
+               try
+               {
+                  child = childType.newInstance();
+               }
+               catch(Exception e)
+               {
+                  throw new IllegalStateException("newChild failed for o=" +
+                     o +
+                     ", uri=" +
+                     namespaceURI +
+                     ", local=" +
+                     localName +
+                     ", attrs=" +
+                     attrs +
+                     ": failed to create child instance of type " + childType.getName() + ": " + e.getMessage()
+                  );
+               }
+            }
+         }
+         else
+         {
+            String getterStr = Util.xmlNameToGetMethodName(localName, true);
+            Method getter;
+            try
+            {
+               getter = o.getClass().getMethod(getterStr, null);
+            }
+            catch(NoSuchMethodException e)
+            {
+               throw new IllegalStateException("newChild failed for o=" +
+                  o +
+                  ", uri=" +
+                  namespaceURI +
+                  ", local=" +
+                  localName +
+                  ", attrs=" +
+                  attrs +
+                  ": no getter"
+               );
+            }
+
+            Class childType = getter.getReturnType();
+            if(!Util.isAttributeType(childType))
+            {
+               if(Collection.class.isAssignableFrom(childType))
+               {
+                  try
+                  {
+                     child = getter.invoke(o, null);
+                  }
+                  catch(Exception e)
+                  {
+                     throw new IllegalStateException(
+                        "Failed to invoke getter " + getter.getName() + ": " + e.getMessage()
+                     );
+                  }
+
+                  if(child == null)
+                  {
+                     child = new ArrayList();
+                  }
+               }
+               else
+               {
+                  try
+                  {
+                     child = childType.newInstance();
+                  }
+                  catch(Exception e)
+                  {
+                     throw new IllegalStateException("newChild failed for o=" +
+                        o +
+                        ", uri=" +
+                        namespaceURI +
+                        ", local=" +
+                        localName +
+                        ", attrs=" +
+                        attrs +
+                        ": failed to create child instance of type " + childType.getName() + ": " + e.getMessage()
+                     );
+                  }
+               }
+            }
+         }
+      }
+
+      if(child != null)
+      {
+         // optimize this
+         setChild(child, o, localName);
       }
 
       return child;
@@ -136,52 +252,7 @@ public class MappingObjectModelFactory
                         String namespaceURI,
                         String localName)
    {
-      Object value = child;
-      if(parent instanceof Collection)
-      {
-         ((Collection) parent).add(value);
-      }
-      else
-      {
-         Method setter = null;
-         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping) elementToFieldMapping.get(localName);
-         if(fieldMapping != null)
-         {
-            setter = fieldMapping.setter;
-         }
-         else
-         {
-            try
-            {
-               final String xmlToCls = Util.xmlNameToClassName(localName, true);
-               Method getter = parent.getClass().getMethod("get" + xmlToCls, null);
-               setter = parent.getClass().getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
-            }
-            catch(NoSuchMethodException e)
-            {
-               log.warn("no setter found for " + localName);
-            }
-         }
-
-         if(setter != null)
-         {
-            try
-            {
-               setter.invoke(parent, new Object[]{value});
-            }
-            catch(Exception e)
-            {
-               throw new IllegalStateException("Failed to addChild for o=" +
-                  parent +
-                  ", local=" +
-                  localName +
-                  ", value=" +
-                  value +
-                  ": " +
-                  e.getMessage());
-            }
-         }
-      }
+      //setChild(child, parent, localName);
    }
 
    public void setValue(Object o,
@@ -205,17 +276,69 @@ public class MappingObjectModelFactory
       elementToFieldMapping.put(mapping.element, mapping);
    }
 
+   private void setChild(Object child, Object parent, String localName)
+   {
+      Object value = child;
+      if(parent instanceof Collection)
+      {
+         ((Collection)parent).add(value);
+      }
+      else
+      {
+         Method setter = null;
+         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(localName);
+         if(fieldMapping != null)
+         {
+            setter = fieldMapping.setter;
+         }
+         else
+         {
+            try
+            {
+               final String xmlToCls = Util.xmlNameToClassName(localName, true);
+               Method getter = parent.getClass().getMethod("get" + xmlToCls, null);
+               setter = parent.getClass().getMethod("set" + xmlToCls, new Class[]{getter.getReturnType()});
+            }
+            catch(NoSuchMethodException e)
+            {
+               log.warn("no setter found for " + localName + " in " + parent);
+            }
+         }
+
+         if(setter != null)
+         {
+            try
+            {
+               setter.invoke(parent, new Object[]{value});
+            }
+            catch(Exception e)
+            {
+               throw new IllegalStateException("Failed to addChild for o=" +
+                  parent +
+                  ", local=" +
+                  localName +
+                  ", value=" +
+                  value +
+                  ": " +
+                  e.getMessage()
+               );
+            }
+         }
+      }
+   }
+
    private final void setAttribute(Object o, String localName, String value)
    {
       if(o instanceof Collection)
       {
-         ((Collection) o).add(value);
+         // todo type convertion
+         ((Collection)o).add(value);
       }
       else
       {
          Method setter = null;
          Object fieldValue = null;
-         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping) elementToFieldMapping.get(localName);
+         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(localName);
          if(fieldMapping != null)
          {
             fieldValue = fieldMapping.converter.unmarshal(value);
@@ -232,7 +355,7 @@ public class MappingObjectModelFactory
             }
             catch(NoSuchMethodException e)
             {
-               log.warn("no setter found for " + localName);
+               log.warn("no setter found for " + localName + " in " + o);
             }
          }
 
@@ -251,7 +374,8 @@ public class MappingObjectModelFactory
                   ", value=" +
                   value +
                   ": " +
-                  e.getMessage());
+                  e.getMessage()
+               );
             }
          }
       }
@@ -319,12 +443,21 @@ public class MappingObjectModelFactory
 
       public boolean equals(Object o)
       {
-         if(this == o) return true;
-         if(!(o instanceof ElementToClassMapping)) return false;
+         if(this == o)
+         {
+            return true;
+         }
+         if(!(o instanceof ElementToClassMapping))
+         {
+            return false;
+         }
 
-         final ElementToClassMapping classMapping = (ElementToClassMapping) o;
+         final ElementToClassMapping classMapping = (ElementToClassMapping)o;
 
-         if(cls != null ? !cls.equals(classMapping.cls) : classMapping.cls != null) return false;
+         if(cls != null ? !cls.equals(classMapping.cls) : classMapping.cls != null)
+         {
+            return false;
+         }
 
          return true;
       }
@@ -372,14 +505,29 @@ public class MappingObjectModelFactory
 
       public boolean equals(Object o)
       {
-         if(this == o) return true;
-         if(!(o instanceof ElementToFieldMapping)) return false;
+         if(this == o)
+         {
+            return true;
+         }
+         if(!(o instanceof ElementToFieldMapping))
+         {
+            return false;
+         }
 
-         final ElementToFieldMapping elementToFieldMapping = (ElementToFieldMapping) o;
+         final ElementToFieldMapping elementToFieldMapping = (ElementToFieldMapping)o;
 
-         if(cls != null ? !cls.equals(elementToFieldMapping.cls) : elementToFieldMapping.cls != null) return false;
-         if(element != null ? !element.equals(elementToFieldMapping.element) : elementToFieldMapping.element != null) return false;
-         if(field != null ? !field.equals(elementToFieldMapping.field) : elementToFieldMapping.field != null) return false;
+         if(cls != null ? !cls.equals(elementToFieldMapping.cls) : elementToFieldMapping.cls != null)
+         {
+            return false;
+         }
+         if(element != null ? !element.equals(elementToFieldMapping.element) : elementToFieldMapping.element != null)
+         {
+            return false;
+         }
+         if(field != null ? !field.equals(elementToFieldMapping.field) : elementToFieldMapping.field != null)
+         {
+            return false;
+         }
 
          return true;
       }

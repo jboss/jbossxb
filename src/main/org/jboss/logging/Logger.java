@@ -9,15 +9,15 @@
 
 package org.jboss.logging;
 
-/** 
+import java.io.Serializable;
+
+/**
  * Logger wrapper that tries to dynamically load a log4j class to
  * determine if log4j is available in the VM. If it is the case,
  * a log4j delegate is built and used. In the contrary, a null
  * logger is used. This class cannot directly reference log4j
  * classes otherwise the JVM will try to load it and make it fail.
- * 
- * A custom Log4j Logger wrapper that adds a trace level and
- * is serializable.
+ * To set
  *
  * <p>Only exposes the relevent factory and logging methods.
  *
@@ -29,45 +29,53 @@ package org.jboss.logging;
  * @author  Scott.Stark@jboss.org
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @author  <a href="mailto:sacha.labourey@cogito-info.ch">Sacha Labourey</a>
- *
- * <p><b>Revisions:</b>
- *
- * <p><b>30 mai 2002 Sacha Labourey:</b>
- * <ul>
- * <li> No more dedicated to log4j: uses a delegate for logging
- *      and only uses log4j delegate if log4j classes are available on classpath</li>
- * </ul>
  */
 public class Logger
-   implements java.io.Serializable
+      implements Serializable
 {
-   protected static Class pluginClass = null;
-   
-   // We don't directly reference the class so that this class can be loaded
-   // without the JVM to try to load any log4j classes
-   //
+   /** The system property to look for an externalized LoggerPlugin implementation class */
+   protected static String PLUGIN_CLASS_PROP = "org.jboss.logging.Logger.pluginClass";
+   /** The default LoggerPlugin implementation is log4j */
    protected static final String LOG4J_PLUGIN_CLASS_NAME = "org.jboss.logging.Log4jLoggerPlugin";
-   protected static final String LOG4J_DETECTOR_CLASS_NAME = "org.apache.log4j.Logger";
-   
+   /** The LoggerPlugin implementation class to use */
+   protected static Class pluginClass = null;
+   /** The class name of the LoggerPlugin implementation class to use */
+   protected static String pluginClassName = null;
+
    static
    {
       init();
    }
-   
+
    /** The logger name. */
    private final String name;
-   
+
    protected transient LoggerPlugin loggerDelegate = null;
 
-   /** 
+   /** The LoggerPlugin implementation class name in use
+    * @return LoggerPlugin implementation class name
+    */
+   public static String getPluginClassName()
+   {
+      return Logger.pluginClassName;
+   }
+   /** Set the LoggerPlugin implementation class name in use
+    * @param pluginClassName the LoggerPlugin implementation class name
+    */
+   public static void setPluginClassName(String pluginClassName)
+   {
+      Logger.pluginClassName = pluginClassName;
+   }
+
+   /**
     * Creates new Logger the given logger name.
     *
-    * @param name    the logger name.
+    * @param name the logger name.
     */
    protected Logger(final String name)
    {
       this.name = name;
-      this.loggerDelegate = getDelegatePlugin (name);     
+      this.loggerDelegate = getDelegatePlugin(name);
    }
 
    /**
@@ -79,38 +87,39 @@ public class Logger
    {
       return name;
    }
-   
-   public LoggerPlugin getLoggerPlugin ()
+
+   public LoggerPlugin getLoggerPlugin()
    {
       return this.loggerDelegate;
    }
-   /** 
+
+   /**
     * Check to see if the TRACE level is enabled for this logger.
     *
     * @return true if a {@link #trace(Object)} method invocation would pass
     *         the msg to the configured appenders, false otherwise.
     */
    public boolean isTraceEnabled()
-   {      
-      return loggerDelegate.isTraceEnabled ();
+   {
+      return loggerDelegate.isTraceEnabled();
    }
 
-   /** 
+   /**
     * Issue a log msg with a level of TRACE.
     * Invokes log.log(XLevel.TRACE, message);
     */
    public void trace(Object message)
    {
-      loggerDelegate.trace (message);
+      loggerDelegate.trace(message);
    }
 
-   /** 
+   /**
     * Issue a log msg and throwable with a level of TRACE.
     * Invokes log.log(XLevel.TRACE, message, t);
     */
    public void trace(Object message, Throwable t)
    {
-      loggerDelegate.trace (message, t);
+      loggerDelegate.trace(message, t);
    }
 
    /**
@@ -121,28 +130,28 @@ public class Logger
     */
    public boolean isDebugEnabled()
    {
-      return loggerDelegate.isDebugEnabled ();
+      return loggerDelegate.isDebugEnabled();
    }
 
-   /** 
+   /**
     * Issue a log msg with a level of DEBUG.
     * Invokes log.log(Level.DEBUG, message);
     */
    public void debug(Object message)
    {
-      loggerDelegate.debug (message);
+      loggerDelegate.debug(message);
    }
 
-   /** 
+   /**
     * Issue a log msg and throwable with a level of DEBUG.
     * Invokes log.log(Level.DEBUG, message, t);
     */
    public void debug(Object message, Throwable t)
    {
-      loggerDelegate.debug (message, t);
+      loggerDelegate.debug(message, t);
    }
 
-   /** 
+   /**
     * Check to see if the INFO level is enabled for this logger.
     *
     * @return true if a {@link #info(Object)} method invocation would pass
@@ -150,16 +159,16 @@ public class Logger
     */
    public boolean isInfoEnabled()
    {
-      return loggerDelegate.isInfoEnabled ();
+      return loggerDelegate.isInfoEnabled();
    }
 
-   /** 
+   /**
     * Issue a log msg with a level of INFO.
     * Invokes log.log(Level.INFO, message);
     */
    public void info(Object message)
    {
-      loggerDelegate.info (message);
+      loggerDelegate.info(message);
    }
 
    /**
@@ -168,61 +177,61 @@ public class Logger
     */
    public void info(Object message, Throwable t)
    {
-      loggerDelegate.info (message, t);
+      loggerDelegate.info(message, t);
    }
 
-   /** 
+   /**
     * Issue a log msg with a level of WARN.
     * Invokes log.log(Level.WARN, message);
     */
    public void warn(Object message)
    {
-      loggerDelegate.warn (message);
+      loggerDelegate.warn(message);
    }
 
-   /** 
+   /**
     * Issue a log msg and throwable with a level of WARN.
     * Invokes log.log(Level.WARN, message, t);
     */
    public void warn(Object message, Throwable t)
    {
-      loggerDelegate.warn (message, t);      
+      loggerDelegate.warn(message, t);
    }
 
-   /** 
+   /**
     * Issue a log msg with a level of ERROR.
     * Invokes log.log(Level.ERROR, message);
     */
    public void error(Object message)
    {
-      loggerDelegate.error (message);
+      loggerDelegate.error(message);
    }
 
-   /** 
+   /**
     * Issue a log msg and throwable with a level of ERROR.
     * Invokes log.log(Level.ERROR, message, t);
     */
    public void error(Object message, Throwable t)
    {
-      loggerDelegate.error (message, t);      
+      loggerDelegate.error(message, t);
    }
 
-   /** 
+   /**
     * Issue a log msg with a level of FATAL.
     * Invokes log.log(Level.FATAL, message);
     */
    public void fatal(Object message)
    {
-      loggerDelegate.fatal (message);      
+      loggerDelegate.fatal(message);
    }
 
-   /** 
+   /**
     * Issue a log msg and throwable with a level of FATAL.
     * Invokes log.log(Level.FATAL, message, t);
     */
    public void fatal(Object message, Throwable t)
    {
-      loggerDelegate.fatal (message, t);      
+      loggerDelegate.fatal(message, t);
    }
 
    /////////////////////////////////////////////////////////////////////////
@@ -230,16 +239,17 @@ public class Logger
    /////////////////////////////////////////////////////////////////////////
 
    private void readObject(java.io.ObjectInputStream stream)
-      throws java.io.IOException, ClassNotFoundException
+         throws java.io.IOException, ClassNotFoundException
    {
       // restore non-transient fields (aka name)
       stream.defaultReadObject();
-      
+
       // Restore logging
-      if (pluginClass == null) {
+      if (pluginClass == null)
+      {
          init();
       }
-      this.loggerDelegate = getDelegatePlugin(name);     
+      this.loggerDelegate = getDelegatePlugin(name);
    }
 
 
@@ -247,7 +257,7 @@ public class Logger
    //                            Factory Methods                          //
    /////////////////////////////////////////////////////////////////////////
 
-   /** 
+   /**
     * Create a Logger instance given the logger name.
     *
     * @param name    the logger name
@@ -257,7 +267,7 @@ public class Logger
       return new Logger(name);
    }
 
-   /** 
+   /**
     * Create a Logger instance given the logger name with the given suffix.
     *
     * <p>This will include a logger seperator between classname and suffix
@@ -270,7 +280,7 @@ public class Logger
       return new Logger(name + "." + suffix);
    }
 
-   /** 
+   /**
     * Create a Logger instance given the logger class. This simply
     * calls create(clazz.getName()).
     *
@@ -281,7 +291,7 @@ public class Logger
       return new Logger(clazz.getName());
    }
 
-   /** 
+   /**
     * Create a Logger instance given the logger class with the given suffix.
     *
     * <p>This will include a logger seperator between classname and suffix
@@ -293,39 +303,51 @@ public class Logger
    {
       return new Logger(clazz.getName() + "." + suffix);
    }
-   
-   protected static LoggerPlugin getDelegatePlugin (String name)
+
+   protected static LoggerPlugin getDelegatePlugin(String name)
    {
       LoggerPlugin plugin = null;
       try
       {
-         plugin = (LoggerPlugin)pluginClass.newInstance ();            
+         plugin = (LoggerPlugin) pluginClass.newInstance();
       }
-      catch (Exception ie)
+      catch (Throwable e)
       {
-         ie.printStackTrace ();
-         plugin = new NullLoggerPlugin ();
+         e.printStackTrace();
+         plugin = new NullLoggerPlugin();
       }
-      plugin.init (name);
-      
+      plugin.init(name);
+
       return plugin;
    }
-   
-   protected static void init ()
+
+   /** Initialize the LoggerPlugin class to use as the delegate to the
+    * logging system. This first checks to see if a pluginClassName has
+    * been specified via the {@link #setPluginClassName(String)} method,
+    * then the PLUGIN_CLASS_PROP system property and finally the
+    * LOG4J_PLUGIN_CLASS_NAME default. If the LoggerPlugin implementation
+    * class cannot be loaded the default NullLoggerPlugin will be used.
+    */
+   protected static void init()
    {
-      pluginClass = org.jboss.logging.NullLoggerPlugin.class;
       try
       {
+         // See if there is a PLUGIN_CLASS_PROP specified
+         if( pluginClassName == null )
+         {
+            pluginClassName = System.getProperty(PLUGIN_CLASS_PROP, LOG4J_PLUGIN_CLASS_NAME);
+         }
+
+         // Try to load the plugin via the TCL
          ClassLoader cl = Thread.currentThread().getContextClassLoader();
-         
-         // try to load the class...
-         //
-         cl.loadClass(LOG4J_DETECTOR_CLASS_NAME);
-         
-         // if we arrive here, it means that we can use log4j in this VM (or CL scope)
-         //
-         pluginClass = cl.loadClass(LOG4J_PLUGIN_CLASS_NAME);
+         pluginClass = cl.loadClass(pluginClassName);
       }
-      catch (ClassNotFoundException cnfe) { /* log4j not present*/ }
+      catch (Throwable e)
+      {
+         // The plugin could not be setup, default to a null logger
+         pluginClass = org.jboss.logging.NullLoggerPlugin.class;
+         e.printStackTrace();
+      }
    }
 }
+

@@ -20,6 +20,7 @@ import java.io.FileOutputStream;
 import java.net.URLConnection;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URLDecoder;
 
 import java.security.Permission;
 import java.io.FilePermission;
@@ -36,14 +37,22 @@ import java.io.BufferedInputStream;
 public class FileURLConnection
    extends URLConnection
 {
+   static boolean decodeFilePaths = false;
+   static
+   {
+      decodeFilePaths = Boolean.getBoolean("org.jboss.net.protocol.file.decodeFilePaths");
+   }
    protected File file;
 
    public FileURLConnection(final URL url)
       throws MalformedURLException, IOException
    {
       super(url);
-      
-      file = new File(url.getPath().replace('/', File.separatorChar).replace('|', ':'));
+      String path = url.getPath();
+      if( decodeFilePaths )
+         path = URLDecoder.decode(path, "UTF-8");
+      // Convert the url '/' to the os file separator
+      file = new File(path.replace('/', File.separatorChar).replace('|', ':'));
 
       doOutput = false;
    }

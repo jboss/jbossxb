@@ -8,6 +8,8 @@ package org.jboss.xml.binding;
 
 import org.jboss.xml.binding.metadata.unmarshalling.BasicElementBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.ElementBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.XmlValueBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.XmlValueContainer;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
@@ -15,6 +17,8 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -60,7 +64,7 @@ public class MetadataDrivenObjectModelFactory
             if(col == null)
             {
                col = (Collection)newInstance(metadata);
-               setFieldValue(metadata, parent, col);
+               setFieldValue(metadata, metadata.getField(), metadata.getSetter(), parent, col);
             }
          }
 
@@ -85,13 +89,13 @@ public class MetadataDrivenObjectModelFactory
                if(col == null)
                {
                   col = new ArrayList();
-                  setFieldValue(metadata, parent, col);
+                  setFieldValue(metadata, metadata.getField(), metadata.getSetter(), parent, col);
                }
                col.add(child);
             }
             else
             {
-               setFieldValue(metadata, parent, child);
+               setFieldValue(metadata, metadata.getField(), metadata.getSetter(), parent, child);
             }
          }
       }
@@ -133,7 +137,7 @@ public class MetadataDrivenObjectModelFactory
                if(col == null)
                {
                   col = new ArrayList();
-                  setFieldValue(metadata, parent, col);
+                  setFieldValue(metadata, metadata.getField(), metadata.getSetter(), parent, col);
                }
             }
 
@@ -145,7 +149,7 @@ public class MetadataDrivenObjectModelFactory
          }
          else
          {
-            setFieldValue(metadata, parent, child);
+            setFieldValue(metadata, metadata.getField(), metadata.getSetter(), parent, child);
          }
       }
    }
@@ -161,32 +165,46 @@ public class MetadataDrivenObjectModelFactory
       }
       else
       {
-         Object unmarshalledValue = SimpleTypeBindings.unmarshal(value, metadata.getJavaType());
-
-         if(o instanceof Collection)
+         if(Util.isAttributeType(metadata.getJavaType()))
          {
-            ((Collection)o).add(unmarshalledValue);
-         }
-         else if(o instanceof ImmutableContainer)
-         {
-            ((ImmutableContainer)o).addChild(localName, unmarshalledValue);
-         }
-         else
-         {
-            if(Collection.class.isAssignableFrom(metadata.getFieldType()))
+            Object unmarshalledValue = SimpleTypeBindings.unmarshal(value, metadata.getJavaType());
+            if(o instanceof Collection)
             {
-               Collection col = (Collection)getFieldValue(metadata, o);
-               if(col == null)
-               {
-                  col = new ArrayList();
-                  setFieldValue(metadata, o, col);
-               }
-               col.add(unmarshalledValue);
+               ((Collection)o).add(unmarshalledValue);
+            }
+            else if(o instanceof ImmutableContainer)
+            {
+               ((ImmutableContainer)o).addChild(localName, unmarshalledValue);
             }
             else
             {
-               setFieldValue(metadata, o, unmarshalledValue);
+               if(Collection.class.isAssignableFrom(metadata.getFieldType()))
+               {
+                  Collection col = (Collection)getFieldValue(metadata, o);
+                  if(col == null)
+                  {
+                     col = new ArrayList();
+                     setFieldValue(metadata, metadata.getField(), metadata.getSetter(), o, col);
+                  }
+                  col.add(unmarshalledValue);
+               }
+               else
+               {
+                  setFieldValue(metadata, metadata.getField(), metadata.getSetter(), o, unmarshalledValue);
+               }
             }
+         }
+         else
+         {
+            XmlValueBinding valueBinding = metadata.getValue();
+            if(valueBinding == null)
+            {
+               throw new JBossXBRuntimeException(
+                  "Required value binding is not customized for " + metadata.getName() + ": value=" + value
+               );
+            }
+
+            unmarshalValue(valueBinding, value, o);
          }
       }
    }
@@ -218,13 +236,51 @@ public class MetadataDrivenObjectModelFactory
 
    // Private
 
-   private static final void setFieldValue(ElementBinding metadata, Object parent, Object child)
+   private static void unmarshalValue(XmlValueBinding valueBinding, String value, Object o)
    {
-      if(metadata.getSetter() != null)
+      Object unmarshalled;
+      if(valueBinding.getValue() != null)
+      {
+         unmarshalled = newInstance(valueBinding);
+         unmarshalValue(valueBinding.getValue(), value, unmarshalled);
+
+         if(unmarshalled instanceof ImmutableContainer)
+         {
+            unmarshalled = ((ImmutableContainer)unmarshalled).newInstance();
+         }
+      }
+      else
+      {
+         unmarshalled = SimpleTypeBindings.unmarshal(value, valueBinding.getJavaType());
+      }
+
+      // todo o instanceof java.util.Collection?
+      if(o instanceof ImmutableContainer)
+      {
+         ((ImmutableContainer)o).addChild(valueBinding.getName().getLocalPart(), unmarshalled);
+      }
+      else
+      {
+         setFieldValue(valueBinding,
+            valueBinding.getField(),
+            valueBinding.getSetter(),
+            o,
+            unmarshalled
+         );
+      }
+   }
+
+   private static final void setFieldValue(XmlValueContainer container,
+                                           Field field,
+                                           Method setter,
+                                           Object parent,
+                                           Object child)
+   {
+      if(setter != null)
       {
          try
          {
-            metadata.getSetter().invoke(parent, new Object[]{child});
+            setter.invoke(parent, new Object[]{child});
          }
          catch(Exception e)
          {
@@ -233,7 +289,7 @@ public class MetadataDrivenObjectModelFactory
                ":" +
                child +
                ") using setter " +
-               metadata.getSetter().getName() +
+               setter.getName() +
                " in (" +
                parent.getClass() +
                ":" +
@@ -241,11 +297,11 @@ public class MetadataDrivenObjectModelFactory
             );
          }
       }
-      else if(metadata.getField() != null)
+      else if(field != null)
       {
          try
          {
-            metadata.getField().set(parent, child);
+            field.set(parent, child);
          }
          catch(IllegalAccessException e)
          {
@@ -254,7 +310,7 @@ public class MetadataDrivenObjectModelFactory
                ":" +
                child +
                ") using field " +
-               metadata.getSetter().getName() +
+               field.getName() +
                " in (" +
                parent.getClass() +
                ":" +
@@ -265,7 +321,7 @@ public class MetadataDrivenObjectModelFactory
       else
       {
          throw new JBossXBRuntimeException("Element " +
-            metadata.getElementName() +
+            container.getName() +
             " is not bound to any field!"
          );
       }
@@ -311,7 +367,7 @@ public class MetadataDrivenObjectModelFactory
       else
       {
          throw new JBossXBRuntimeException("Element " +
-            metadata.getElementName() +
+            metadata.getName() +
             " is not bound to any field!"
          );
       }
@@ -319,7 +375,7 @@ public class MetadataDrivenObjectModelFactory
       return value;
    }
 
-   private static final Object newInstance(BasicElementBinding metadata)
+   private static final Object newInstance(XmlValueContainer metadata)
    {
       Object instance;
       Class javaType = metadata.getJavaType();
@@ -335,7 +391,7 @@ public class MetadataDrivenObjectModelFactory
       catch(Exception e)
       {
          throw new JBossXBRuntimeException(
-            "Failed to create an instance of " + metadata.getElementName() + " of type " + metadata.getJavaType()
+            "Failed to create an instance of " + metadata.getName() + " of type " + metadata.getJavaType()
          );
       }
       return instance;

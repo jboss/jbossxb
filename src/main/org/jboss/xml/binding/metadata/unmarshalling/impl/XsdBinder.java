@@ -15,6 +15,7 @@ import org.jboss.xml.binding.metadata.unmarshalling.TopElementBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.BasicElementBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.AttributeBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.XmlValueBinding;
 import org.jboss.logging.Logger;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSModel;
@@ -264,7 +265,7 @@ public class XsdBinder
 
       void addTopElement(TopElementBindingImpl top)
       {
-         tops.put(top.getElementName().getLocalPart(), top);
+         tops.put(top.getName().getLocalPart(), top);
       }
    }
 
@@ -393,9 +394,8 @@ public class XsdBinder
 
          if(javaType == null)
          {
-            throw new JBossXBRuntimeException(
-               "Failed to bind element " +
-               elementName +
+            throw new JBossXBRuntimeException("Failed to bind element " +
+               name +
                " to any non-abstract Java type. Parent is " +
                parentType +
                ", field is " +
@@ -462,9 +462,15 @@ public class XsdBinder
          return new AttributeBindingImpl(attributeName, null, getJavaType(), fieldName);
       }
 
+      protected XmlValueBinding getValueLocal()
+      {
+         // todo: implement getValueLocal
+         throw new UnsupportedOperationException("getValueLocal is not implemented.");
+      }
+
       public void addChild(BasicElementBinding child)
       {
-         children.put(child.getElementName(), child);
+         children.put(child.getName(), child);
       }
    }
 
@@ -519,7 +525,7 @@ public class XsdBinder
             catch(ClassNotFoundException e1)
             {
                throw new JBossXBRuntimeException("Failed to bind element " +
-                  elementName +
+                  name +
                   " using XSD type (" +
                   typeBasedClsName +
                   ") and element name (" +
@@ -551,9 +557,15 @@ public class XsdBinder
          return new AttributeBindingImpl(attributeName, null, getJavaType(), fieldName);
       }
 
+      protected XmlValueBinding getValueLocal()
+      {
+         // todo: implement getValueLocal
+         throw new UnsupportedOperationException("getValueLocal is not implemented.");
+      }
+
       public void addChild(BasicElementBinding child)
       {
-         children.put(child.getElementName(), child);
+         children.put(child.getName(), child);
       }
    }
 

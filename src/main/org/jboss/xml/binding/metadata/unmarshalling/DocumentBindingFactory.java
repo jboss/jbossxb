@@ -38,4 +38,8 @@ public abstract class DocumentBindingFactory
                                                   String attributeName,
                                                   String fieldName,
                                                   Class javaType);
+
+   public abstract XmlValueBinding bindValue(XmlValueContainer container,
+                                             String fieldName,
+                                             Class javaType);
 }

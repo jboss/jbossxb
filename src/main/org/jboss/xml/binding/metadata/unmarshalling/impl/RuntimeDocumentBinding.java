@@ -12,6 +12,7 @@ import org.jboss.xml.binding.metadata.unmarshalling.NamespaceBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.BasicElementBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.XmlValueBinding;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 
@@ -84,7 +85,7 @@ public class RuntimeDocumentBinding
             if(javaType == null)
             {
                throw new IllegalStateException(
-                  "Failed to bind top element " + elementName + ": class not found " + getDefaultClassName(this)
+                  "Failed to bind top element " + name + ": class not found " + getDefaultClassName(this)
                );
             }
          }
@@ -100,6 +101,12 @@ public class RuntimeDocumentBinding
       {
          String fieldName = Util.xmlNameToFieldName(attributeName.getLocalPart(), true);
          return new AttributeBindingImpl(attributeName, null, getJavaType(), fieldName);
+      }
+
+      protected XmlValueBinding getValueLocal()
+      {
+         // todo: implement getValueLocal
+         throw new UnsupportedOperationException("getValueLocal is not implemented.");
       }
    }
 
@@ -131,7 +138,7 @@ public class RuntimeDocumentBinding
          }
          else
          {
-            String baseMethodName = Util.xmlNameToClassName(elementName.getLocalPart(), true);
+            String baseMethodName = Util.xmlNameToClassName(name.getLocalPart(), true);
             try
             {
                getter = parentType.getMethod("get" + baseMethodName, null);
@@ -142,12 +149,12 @@ public class RuntimeDocumentBinding
             {
                try
                {
-                  field = parentType.getField(Util.xmlNameToFieldName(elementName.getLocalPart(), true));
+                  field = parentType.getField(Util.xmlNameToFieldName(name.getLocalPart(), true));
                   fieldType = field.getType();
                }
                catch(NoSuchFieldException e1)
                {
-                  throw new JBossXBRuntimeException("Failed to bind " + elementName + " to any field in " + parentType);
+                  throw new JBossXBRuntimeException("Failed to bind " + name + " to any field in " + parentType);
                }
             }
          }
@@ -164,7 +171,7 @@ public class RuntimeDocumentBinding
          if(javaType == null)
          {
             throw new JBossXBRuntimeException("Failed to bind " +
-               elementName +
+               name +
                " to any Java type: field=" +
                field +
                ", getter=" +
@@ -181,7 +188,7 @@ public class RuntimeDocumentBinding
          else if(javaType.isInterface() || Modifier.isAbstract(javaType.getModifiers()))
          {
             throw new JBossXBRuntimeException("Failed to bind " +
-               elementName +
+               name +
                " to a non-abstract Java type: field=" +
                field +
                ", getter=" +
@@ -247,6 +254,12 @@ public class RuntimeDocumentBinding
          String fieldName = Util.xmlNameToFieldName(attributeName.getLocalPart(), true);
          return new AttributeBindingImpl(attributeName, null, getJavaType(), fieldName);
       }
+
+      protected XmlValueBinding getValueLocal()
+      {
+         // todo: implement getValueLocal
+         throw new UnsupportedOperationException("getValueLocal is not implemented.");
+      }
    }
 
    private static Class loadDefaultClass(BasicElementBinding element)
@@ -266,7 +279,7 @@ public class RuntimeDocumentBinding
 
    private static String getDefaultClassName(BasicElementBinding element)
    {
-      QName elementName = element.getElementName();
+      QName elementName = element.getName();
       NamespaceBinding ns = element.getDocument().getNamespace(elementName.getNamespaceURI());
       return ns.getJavaPackage() + "." + Util.xmlNameToClassName(elementName.getLocalPart(), true);
    }

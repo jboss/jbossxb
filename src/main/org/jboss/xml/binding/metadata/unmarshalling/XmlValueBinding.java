@@ -6,19 +6,23 @@
  */
 package org.jboss.xml.binding.metadata.unmarshalling;
 
-import javax.xml.namespace.QName;
-
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface BasicElementBinding
+public interface XmlValueBinding
    extends XmlValueContainer
 {
-   DocumentBinding getDocument();
+   Field getField();
 
-   ElementBinding getElement(QName elementName);
+   Method getGetter();
 
-   AttributeBinding getAttribute(QName attributeName);
+   Method getSetter();
+
+   Class getFieldType();
+
+   Class getJavaType();
 }

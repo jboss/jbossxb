@@ -15,6 +15,8 @@ import org.jboss.xml.binding.metadata.unmarshalling.BasicElementBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBindingStack;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinder;
+import org.jboss.xml.binding.metadata.unmarshalling.XmlValueBinding;
+import org.jboss.xml.binding.metadata.unmarshalling.XmlValueContainer;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 
 import javax.xml.namespace.QName;
@@ -62,6 +64,18 @@ public class DocumentBindingFactoryImpl
       return basicStack.bindChild(
          new DefaultElementBinding(parent, new QName(namespaceUri, elementName), fieldName, javaType)
       );
+   }
+
+   public XmlValueBinding bindValue(BasicElementBinding element, String fieldName, Class javaType)
+   {
+      ElementBindingStack basicStack = (ElementBindingStack)element;
+      return basicStack.bindValue(new DefaultXmlValueBinding(element, fieldName, javaType));
+   }
+
+   public XmlValueBinding bindValue(XmlValueContainer container, String fieldName, Class javaType)
+   {
+      XmlValueContainerStack stack = (XmlValueContainerStack)container;
+      return stack.bindValue(new DefaultXmlValueBinding(container, fieldName, javaType));
    }
 
    public AttributeBinding bindAttribute(BasicElementBinding parent,
@@ -152,24 +166,45 @@ public class DocumentBindingFactoryImpl
       protected abstract TopElementBinding getTopElementLocal(String elementName);
    }
 
-   public static abstract class AbstractBasicElementBinding
-      implements BasicElementBinding
+   public static abstract class AbstractXmlValueContainer
+      implements XmlValueContainer
    {
-      protected final QName elementName;
+      protected final QName name;
 
-      protected AbstractBasicElementBinding(QName elementName)
+      public AbstractXmlValueContainer(QName name)
       {
-         this.elementName = elementName;
+         this.name = name;
       }
 
-      public QName getElementName()
+      public QName getName()
       {
-         return elementName;
+         return name;
+      }
+
+      public XmlValueBinding getValue()
+      {
+         return getValueStackReference().getValue();
       }
 
       public Class getJavaType()
       {
-         return getStackReference().getJavaType();
+         return getValueStackReference().getJavaType();
+      }
+
+      protected abstract XmlValueContainer getValueStackReference();
+
+      protected abstract XmlValueBinding getValueLocal();
+
+      protected abstract Class getJavaTypeLocal();
+   }
+
+   public static abstract class AbstractBasicElementBinding
+      extends AbstractXmlValueContainer
+      implements BasicElementBinding
+   {
+      protected AbstractBasicElementBinding(QName elementName)
+      {
+         super(elementName);
       }
 
       public DocumentBinding getDocument()
@@ -187,11 +222,23 @@ public class DocumentBindingFactoryImpl
          return getStackReference().getAttribute(attributeName);
       }
 
+      public XmlValueBinding getValue()
+      {
+         return getStackReference().getValue();
+      }
+
+      protected XmlValueContainer getValueStackReference()
+      {
+         return getStackReference();
+      }
+
       protected abstract Class getJavaTypeLocal();
 
       protected abstract ElementBinding getElementLocal(QName elementName);
 
       protected abstract AttributeBinding getAttributeLocal(QName attributeName);
+
+      protected abstract XmlValueBinding getValueLocal();
 
       protected abstract BasicElementBinding getStackReference();
    }
@@ -210,7 +257,7 @@ public class DocumentBindingFactoryImpl
 
       protected BasicElementBinding getStackReference()
       {
-         return ns.getTopElement(elementName.getLocalPart());
+         return ns.getTopElement(name.getLocalPart());
       }
    }
 
@@ -248,7 +295,58 @@ public class DocumentBindingFactoryImpl
 
       protected BasicElementBinding getStackReference()
       {
-         return parent.getElement(elementName);
+         return parent.getElement(name);
+      }
+
+      protected abstract Field getFieldLocal();
+
+      protected abstract Method getGetterLocal();
+
+      protected abstract Method getSetterLocal();
+
+      protected abstract Class getFieldTypeLocal();
+   }
+
+   public static abstract class AbstractXmlValueBinding
+      extends AbstractXmlValueContainer
+      implements XmlValueBinding
+   {
+      private final XmlValueContainer container;
+
+      protected AbstractXmlValueBinding(XmlValueContainer container)
+      {
+         super(container.getName());
+         this.container = container;
+      }
+
+      public Field getField()
+      {
+         return container.getValue().getField();
+      }
+
+      public Method getGetter()
+      {
+         return container.getValue().getGetter();
+      }
+
+      public Method getSetter()
+      {
+         return container.getValue().getSetter();
+      }
+
+      public Class getFieldType()
+      {
+         return container.getValue().getFieldType();
+      }
+
+      public XmlValueBinding getValue()
+      {
+         return container.getValue().getValue();
+      }
+
+      protected XmlValueContainer getValueStackReference()
+      {
+         return container.getValue();
       }
 
       protected abstract Field getFieldLocal();
@@ -309,6 +407,11 @@ public class DocumentBindingFactoryImpl
       {
          return null;
       }
+
+      protected XmlValueBinding getValueLocal()
+      {
+         return null;
+      }
    }
 
    private static class DefaultElementBinding
@@ -337,9 +440,11 @@ public class DocumentBindingFactoryImpl
             Field tmpField = null;
             Method tmpGetter = null;
             Method tmpSetter = null;
+            Class tmpFieldType;
             try
             {
                tmpField = parentType.getField(fieldName);
+               tmpFieldType = tmpField.getType();
             }
             catch(NoSuchFieldException e)
             {
@@ -347,7 +452,15 @@ public class DocumentBindingFactoryImpl
                try
                {
                   tmpGetter = parentType.getMethod("get" + baseMethodName, null);
-                  tmpSetter = parentType.getMethod("set" + baseMethodName, new Class[]{tmpGetter.getReturnType()});
+                  tmpFieldType = tmpGetter.getReturnType();
+                  try
+                  {
+                     tmpSetter = parentType.getMethod("set" + baseMethodName, new Class[]{tmpGetter.getReturnType()});
+                  }
+                  catch(NoSuchMethodException nosetter)
+                  {
+                     // this one is immutable
+                  }
                }
                catch(NoSuchMethodException e1)
                {
@@ -365,7 +478,7 @@ public class DocumentBindingFactoryImpl
             field = tmpField;
             getter = tmpGetter;
             setter = tmpSetter;
-            fieldType = field != null ? field.getType() : getter.getReturnType();
+            fieldType = tmpFieldType;
          }
 
          if(fieldType == null)
@@ -443,6 +556,151 @@ public class DocumentBindingFactoryImpl
       protected AttributeBinding getAttributeLocal(QName attributeName)
       {
          return null;
+      }
+
+      protected XmlValueBinding getValueLocal()
+      {
+         return null;
+      }
+   }
+
+   private static class DefaultXmlValueBinding
+      extends AbstractXmlValueBinding
+   {
+      private final Field field;
+      private final Method getter;
+      private final Method setter;
+      private final Class fieldType;
+      private final Class javaType;
+
+      public DefaultXmlValueBinding(XmlValueContainer container, String fieldName, Class javaType)
+      {
+         super(container);
+
+         Class parentType = container.getJavaType();
+         if(Collection.class.isAssignableFrom(parentType))
+         {
+            field = null;
+            getter = null;
+            setter = null;
+            fieldType = null;
+         }
+         else
+         {
+            Field tmpField = null;
+            Method tmpGetter = null;
+            Method tmpSetter = null;
+            Class tmpFieldType = null;
+            try
+            {
+               tmpField = parentType.getField(fieldName);
+               tmpFieldType = tmpField.getType();
+            }
+            catch(NoSuchFieldException e)
+            {
+               String baseMethodName = Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+               try
+               {
+                  tmpGetter = parentType.getMethod("get" + baseMethodName, null);
+                  tmpFieldType = tmpGetter.getReturnType();
+                  try
+                  {
+                     tmpSetter = parentType.getMethod("set" + baseMethodName, new Class[]{tmpGetter.getReturnType()});
+                  }
+                  catch(NoSuchMethodException nosetter)
+                  {
+                     // this one is immutable
+                  }
+               }
+               catch(NoSuchMethodException e1)
+               {
+                  throw new JBossXBRuntimeException("Failed to bind value of " +
+                     container.getName() +
+                     " to field " +
+                     fieldName +
+                     " in " +
+                     parentType +
+                     ": neither field nor getter/setter were found."
+                  );
+               }
+            }
+
+            field = tmpField;
+            getter = tmpGetter;
+            setter = tmpSetter;
+            fieldType = tmpFieldType;
+         }
+
+         if(fieldType == null)
+         {
+            this.javaType = javaType == null ? String.class : javaType;
+         }
+         else
+         {
+            if(javaType == null)
+            {
+               this.javaType = fieldType;
+            }
+            else if(Collection.class == fieldType ||
+               Collection.class.isAssignableFrom(fieldType) ||
+               fieldType.isAssignableFrom(javaType))
+            {
+               this.javaType = javaType;
+            }
+            else
+            {
+               throw new JBossXBRuntimeException("Failed to bind value of " +
+                  container.getName() +
+                  " to field " +
+                  fieldName +
+                  " in " +
+                  parentType +
+                  ": field type " + fieldType + " is not assignable from the specified Java type " + javaType
+               );
+            }
+
+            if(this.javaType.isInterface() || Modifier.isAbstract(this.javaType.getModifiers()))
+            {
+               throw new JBossXBRuntimeException("Failed to bind value of " +
+                  container.getName() +
+                  " to field " +
+                  fieldName +
+                  " in " +
+                  parentType +
+                  ": Java type is abstract class or interface."
+               );
+            }
+         }
+      }
+
+      protected Field getFieldLocal()
+      {
+         return field;
+      }
+
+      protected Method getGetterLocal()
+      {
+         return getter;
+      }
+
+      protected Method getSetterLocal()
+      {
+         return setter;
+      }
+
+      protected Class getFieldTypeLocal()
+      {
+         return fieldType;
+      }
+
+      protected XmlValueBinding getValueLocal()
+      {
+         return null;
+      }
+
+      protected Class getJavaTypeLocal()
+      {
+         return javaType;
       }
    }
 
@@ -576,11 +834,11 @@ public class DocumentBindingFactoryImpl
 
       TopElementBinding bindTopElement(TopElementBinding top)
       {
-         TopElementBindingStack stack = (TopElementBindingStack)getTopElement(top.getElementName().getLocalPart());
+         TopElementBindingStack stack = (TopElementBindingStack)getTopElement(top.getName().getLocalPart());
          if(stack == null)
          {
-            stack = new TopElementBindingStack(doc, top.getElementName());
-            tops.put(stack.getElementName().getLocalPart(), stack);
+            stack = new TopElementBindingStack(doc, top.getName());
+            tops.put(stack.getName().getLocalPart(), stack);
          }
          stack.push(top);
          return stack;
@@ -635,28 +893,87 @@ public class DocumentBindingFactoryImpl
       }
    }
 
+   class XmlValueContainerStack
+      implements XmlValueContainer
+   {
+      protected final QName name;
+      final List delegates = new ArrayList();
+      private XmlValueBindingStack value;
+
+      public XmlValueContainerStack(QName name)
+      {
+         this.name = name;
+      }
+
+      void push(XmlValueContainer container)
+      {
+         delegates.add(container);
+      }
+
+      XmlValueBinding bindValue(XmlValueBinding value)
+      {
+         getValue();
+         if(this.value == null)
+         {
+            this.value = new XmlValueBindingStack(this);
+         }
+         this.value.push(value);
+         return this.value;
+      }
+
+      public QName getName()
+      {
+         return name;
+      }
+
+      public XmlValueBinding getValue()
+      {
+         if(value == null)
+         {
+            for(int i = 0; i < delegates.size(); ++i)
+            {
+               AbstractXmlValueContainer basic = (AbstractXmlValueContainer)delegates.get(i);
+               XmlValueBinding localValue = basic.getValueLocal();
+               if(localValue != null)
+               {
+                  if(value == null)
+                  {
+                     value = new XmlValueBindingStack(this);
+                  }
+                  value.push(localValue);
+               }
+            }
+         }
+         return value;
+      }
+
+      public Class getJavaType()
+      {
+         return ((AbstractXmlValueContainer)delegates.get(delegates.size() - 1)).getJavaTypeLocal();
+      }
+   }
+
    class BasicElementBindingStack
+      extends XmlValueContainerStack
       implements BasicElementBinding
    {
       private final DocumentBinding doc;
-      private final QName elementName;
-      final List delegates = new ArrayList();
       private final Map children = new HashMap();
       private final Map attributes = new HashMap();
 
       public BasicElementBindingStack(DocumentBinding doc, QName elementName)
       {
+         super(elementName);
          this.doc = doc;
-         this.elementName = elementName;
       }
 
       ElementBinding bindChild(ElementBinding element)
       {
-         ElementBindingStack stack = (ElementBindingStack)getElement(element.getElementName());
+         ElementBindingStack stack = (ElementBindingStack)getElement(element.getName());
          if(stack == null)
          {
-            stack = new ElementBindingStack(doc, element.getElementName());
-            children.put(stack.getElementName(), stack);
+            stack = new ElementBindingStack(doc, element.getName());
+            children.put(stack.getName(), stack);
          }
          stack.push(element);
          return stack;
@@ -665,21 +982,6 @@ public class DocumentBindingFactoryImpl
       void bindAttribute(AttributeBinding attr)
       {
          attributes.put(attr.getAttributeName(), attr);
-      }
-
-      void push(BasicElementBinding basic)
-      {
-         delegates.add(basic);
-      }
-
-      public QName getElementName()
-      {
-         return elementName;
-      }
-
-      public Class getJavaType()
-      {
-         return ((AbstractBasicElementBinding)delegates.get(delegates.size() - 1)).getJavaTypeLocal();
       }
 
       public DocumentBinding getDocument()
@@ -778,6 +1080,41 @@ public class DocumentBindingFactoryImpl
       protected AbstractElementBinding getLatestBinding()
       {
          return (AbstractElementBinding)delegates.get(delegates.size() - 1);
+      }
+   }
+
+   class XmlValueBindingStack
+      extends XmlValueContainerStack
+      implements XmlValueBinding
+   {
+      public XmlValueBindingStack(XmlValueContainer container)
+      {
+         super(container.getName());
+      }
+
+      public Field getField()
+      {
+         return getLatestBinding().getFieldLocal();
+      }
+
+      public Method getGetter()
+      {
+         return getLatestBinding().getGetterLocal();
+      }
+
+      public Method getSetter()
+      {
+         return getLatestBinding().getSetterLocal();
+      }
+
+      public Class getFieldType()
+      {
+         return getLatestBinding().getFieldTypeLocal();
+      }
+
+      private AbstractXmlValueBinding getLatestBinding()
+      {
+         return (AbstractXmlValueBinding)delegates.get(delegates.size() - 1);
       }
    }
 }

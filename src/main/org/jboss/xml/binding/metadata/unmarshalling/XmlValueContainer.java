@@ -8,17 +8,15 @@ package org.jboss.xml.binding.metadata.unmarshalling;
 
 import javax.xml.namespace.QName;
 
-
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface BasicElementBinding
-   extends XmlValueContainer
+public interface XmlValueContainer
 {
-   DocumentBinding getDocument();
+   QName getName();
 
-   ElementBinding getElement(QName elementName);
+   XmlValueBinding getValue();
 
-   AttributeBinding getAttribute(QName attributeName);
+   Class getJavaType();
 }

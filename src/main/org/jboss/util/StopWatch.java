@@ -206,10 +206,18 @@ public class StopWatch
    private void formatElapsedTime(final StringBuffer buff, final long lapsed)
    {
       long m = lapsed / 60000;
-      long s = (lapsed - 60000 * m) / 1000;
-      long ms = (lapsed - 60000 * m - 1000 * s);
+      if (m != 0) {
+         buff.append(m).append("m:");
+      }
 
-      buff.append(m).append("m:").append(s).append("s:").append(ms).append("ms");
+      long s = (lapsed - 60000 * m) / 1000;
+      if (s != 0) {
+         buff.append(s).append("s:");
+      }
+
+      // ms is always there, even if it was 0 too
+      long ms = (lapsed - 60000 * m - 1000 * s);
+      buff.append(ms).append("ms");
    }
    
    /**

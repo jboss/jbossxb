@@ -85,6 +85,13 @@
       </fileset>
     </path>
 
+    <!-- Log4j -->
+    <property name="apache.log4j.root" value="${project.thirdparty}/apache/log4j"/>
+    <property name="apache.log4j.lib" value="${apache.log4j.root}/lib"/>
+    <path id="apache.log4j.classpath">
+      <pathelement path="${apache.log4j.lib}/log4j.jar"/>
+    </path>
+
     <!-- JUnit -->
     <property name="junit.junit.root" value="${project.thirdparty}/junit/junit"/>
     <property name="junit.junit.lib" value="${junit.junit.root}/lib"/>
@@ -96,6 +103,7 @@
     <path id="library.classpath">
       <path refid="sun.jmx.classpath"/>
       <path refid="sun.jaxp.classpath"/>
+      <path refid="apache.log4j.classpath"/>
     </path>
 
     <!-- ======= -->
@@ -112,6 +120,7 @@
 
     <!-- Where source files live -->
     <property name="source.java" value="${module.source}/main"/>
+    <property name="source.etc" value="${module.source}/etc"/>
 
     <!-- Where build generated files will go -->
     <property name="build.reports" value="${module.output}/reports"/>
@@ -198,18 +207,10 @@
 
   <!-- Compile manifests -->
   <target name="compile-etc" depends="init">
-    <mkdir dir="${build.etc}/manifest"/>
-    <!-- Copy with filtering to replace the following tokens that are
-         used to make up the jar manifest version information.
-     -->
-    <filter token="version.major" value="${version.major}"/>
-    <filter token="version.minor" value="${version.minor}"/>
-    <filter token="version.revision" value="${version.revision}"/>
-    <filter token="version.tag" value="${version.tag}"/>
-    <filter token="version.name" value="${version.name}"/>
-    <copy todir="${build.etc}/manifest" filtering="yes">
-      <fileset dir="${project.root}/build/etc">
-         <include name="version.mf"/>
+    <mkdir dir="${build.etc}"/>
+    <copy todir="${build.etc}" filtering="yes">
+      <fileset dir="${source.etc}">
+         <include name="**"/>
       </fileset>
     </copy>
   </target>
@@ -228,26 +229,40 @@
     <mkdir dir="${build.lib}"/>
     
     <!-- Build the jboss-common.jar -->
-    <jar jarfile="${build.lib}/jboss-common.jar"
-         manifest="${build.etc}/manifest/version.mf">
+    <jar jarfile="${build.lib}/jboss-common.jar" manifest="${build.etc}/default.mf">
       <fileset dir="${build.classes}">
         <include name="**"/>
       </fileset>
     </jar>
 
     <!-- Build the jboss-common-client.jar -->
-    <jar jarfile="${build.lib}/jboss-common-client.jar"
-         manifest="${build.etc}/manifest/version.mf">
+    <jar jarfile="${build.lib}/jboss-common-client.jar" manifest="${build.etc}/default.mf">
       <fileset dir="${build.classes}">
         <!-- All Exceptions, Errors and Throwable Support Classes -->
         <include name="**/*Exception*"/>
         <include name="**/*Error*"/>
         <include name="org/jboss/util/*NestedThrowable"/>
 
+        <!-- Client Logging support -->
+        <include name="org/jboss/logging/Logger*.class"/>
+        <include name="org/jboss/logging/XPriority*.class"/>
+
         <!-- Needed by EJB clients -->
         <include name="org/jboss/util/collection/SerializableEnumeration*"/>
       </fileset>
     </jar>
+
+    <!--
+       | JBoss/Testsuite Support
+     -->
+
+    <!-- testsuite-support.jar -->
+    <jar jarfile="${build.lib}/testsuite-support.jar" manifest="${build.etc}/default.mf">
+      <fileset dir="${build.classes}">
+         <include name="org/jboss/logging/**"/>
+      </fileset>
+    </jar>
+
   </target>
 
 

@@ -18,27 +18,53 @@ import java.util.StringTokenizer;
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * total code replacement...
+ * @author <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  */
 public class StringArrayEditor
    extends TextPropertyEditorSupport
 {
    /**
     * Returns a String[] by spliting up the input string where 
-    * elements are seperated by commas.
+    * elements are separated by commas.
     *
     * @return a URL object
     *
     * @throws NestedRuntimeException   An MalformedURLException occured.
     */
-   public Object getValue()
+   public void setAsText(String text)
    {
-      StringTokenizer stok = new StringTokenizer(getAsText(), ",");
-      List list = new LinkedList();
+      if (text == null || text.length() == 0) 
+      {
+	 setValue(null);
+      } // end of if ()
+      else 
+      {
+	 StringTokenizer stok = new StringTokenizer(text, ",");
+	 List list = new LinkedList();
       
-      while (stok.hasMoreTokens()) {
-         list.add(stok.nextToken());
-      }
+	 while (stok.hasMoreTokens()) 
+	 {
+	    list.add(stok.nextToken());
+	 }
 
-      return (String[])list.toArray(new String[list.size()]);
+	 setValue((String[])list.toArray(new String[list.size()]));
+      } // end of else
    }
+
+   public String getAsText()
+   {
+      String[] strings = (String[])getValue();
+      if (strings == null || strings.length == 0)
+      {
+	 return null; 
+      } // end of if ()
+      StringBuffer result = new StringBuffer(strings[0]);
+      for (int i = 1; i < strings.length; i++)
+      {
+	 result.append(",").append(strings[i]); 
+      } // end of for ()
+      return result.toString();
+   }
+
 }

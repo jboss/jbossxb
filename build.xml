@@ -74,6 +74,7 @@
       <path refid="gnu.regexp.classpath"/>
       <path refid="sun.jmx.classpath"/>
       <path refid="sun.jaxp.classpath"/>
+      <path refid="dom4j.dom4j.classpath"/>
     </path>
 
     <!-- Configure modules -->
@@ -108,7 +109,8 @@
 	  description="Compile all source files."
 	  depends="compile-mbean-sources,
                    _default:compile-classes,
-                   _default:compile-etc">
+                   _default:compile-etc,
+                   _default:compile-test-classes">
     <!-- Add module specific elements here. -->
   </target>
 
@@ -123,6 +125,13 @@
       <mbeaninterface mergedir="${project.tools}/etc/xdoclet/templates"/>
     </jmxdoclet>
   </target>
+
+  <!--+====================================================================+-->
+  <!--| test this module                                                   |-->
+  <!--|                                                                    |-->
+  <!--+====================================================================+-->
+  <target name="tests" depends="_default:tests"/>
+
 
   <!--+====================================================================+-->
   <!--| Generate Output                                                    |-->

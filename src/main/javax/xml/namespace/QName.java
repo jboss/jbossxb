@@ -10,6 +10,8 @@ package javax.xml.namespace;
 import java.io.Serializable;
 import java.util.StringTokenizer;
 
+import org.jboss.util.id.SerialVersion;
+
 /** QName represents an immutable qualified name.
  * The value of a QName contains a Namespace URI, local part and prefix.
  * 
@@ -28,6 +30,16 @@ import java.util.StringTokenizer;
  */
 public class QName implements Serializable, Comparable
 {
+   /** @since 4.0.2, compatible with jdk5 by default */
+   private static long serialVersionUID;
+   static
+   {
+      if (SerialVersion.version == SerialVersion.LEGACY)
+         serialVersionUID = 4418622981026545151L;
+      else
+         serialVersionUID = -3852060120346905000L;
+   }
+
    private String namespaceURI;
    private String localPart;
    private String prefix;

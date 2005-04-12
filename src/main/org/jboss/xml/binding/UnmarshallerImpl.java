@@ -14,7 +14,7 @@ import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBindingStack;
 import org.jboss.xml.binding.metadata.unmarshalling.impl.RuntimeDocumentBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.DocumentHandler;
-import org.jboss.xml.binding.sunday.unmarshalling.impl.SundayContentHandler;
+import org.jboss.xml.binding.sunday.unmarshalling.SundayContentHandler;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;

@@ -6,45 +6,47 @@
  */
 package org.jboss.xml.binding.sunday.unmarshalling;
 
-import org.xml.sax.Attributes;
-
-import javax.xml.namespace.QName;
 import java.util.List;
+import java.util.Collections;
+import java.util.ArrayList;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface ElementBinding
+public class ElementBinding
 {
-   ElementBinding pushElementHandler(ElementHandler handler);
+   private List elementHandlers = Collections.EMPTY_LIST;
 
-   List getElementHandlers();
+   private final TypeBinding typeBinding;
 
-   AttributeBinding addAttribute(QName name);
+   public ElementBinding(TypeBinding typeBinding)
+   {
+      this.typeBinding = typeBinding;
+   }
 
-   void addAttribute(QName name, AttributeBinding binding);
+   public List getElementHandlers()
+   {
+      return elementHandlers;
+   }
 
-   ElementHandler pushAttributeHandler(QName name, AttributeHandler handler);
+   public TypeBinding getTypeBinding()
+   {
+      return typeBinding;
+   }
 
-   void setTextContent(TextContentBinding binding);
+   public void pushHandler(ElementHandler handler)
+   {
+      switch(elementHandlers.size())
+      {
+         case 0:
+            elementHandlers = Collections.singletonList(handler);
+            break;
+         case 1:
+            elementHandlers = new ArrayList(elementHandlers);
+         default:
+            elementHandlers.add(handler);
 
-   ElementHandler pushTextContentHandler(TextContentHandler handler);
-
-   ElementBinding addElement(QName name);
-
-   void addElement(QName name, ElementBinding binding);
-
-   void start(Object parent,
-              QName name,
-              Attributes attrs,
-              ElementHandlerCallback callback,
-              int handlerIndex);
-
-   Object end(Object parent,
-              QName name,
-              ObjectModelStack stack,
-              int stackStartIndex,
-              int stackEndIndex,
-              String dataContent);
+      }
+   }
 }

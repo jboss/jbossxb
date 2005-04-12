@@ -6,9 +6,8 @@
  */
 package org.jboss.xml.binding.sunday.unmarshalling;
 
-import org.xml.sax.Attributes;
-
 import javax.xml.namespace.QName;
+import org.xml.sax.Attributes;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -16,29 +15,13 @@ import javax.xml.namespace.QName;
  */
 public interface ElementHandler
 {
-   ElementTypeBinding getElementType();
+   Object startElement(Object parent, QName qName);
 
-   AttributeBinding addAttribute(QName name);
+   void attributes(Object o, QName elementName, Attributes attrs);
 
-   void addAttribute(QName name, AttributeBinding binding);
+   void characters(Object o, QName qName, String text);
 
-   AttributeBinding getAttribute(QName name);
+   Object endElement(Object o, QName qName);
 
-   ElementHandler pushAttributeHandler(QName name, AttributeHandler handler);
-
-   void setTextContent(TextContentBinding binding);
-
-   TextContentBinding getTextContent();
-
-   ElementHandler pushTextContentHandler(TextContentHandler handler);
-
-   ElementBinding addElement(QName name);
-
-   void addElement(QName name, ElementBinding binding);
-
-   ElementBinding getElement(QName name);
-
-   void start(Object parent, QName name, Attributes attrs, ElementHandlerCallback callback);
-
-   void end(Object parent, Object child, QName name, String dataContent);
+   void add(Object o, Object child, QName qName);
 }

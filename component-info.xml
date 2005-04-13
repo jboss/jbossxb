@@ -1,0 +1,19 @@
+<project name="common-component-info">
+   <import file="../tools/etc/jbossbuild/tasks.xml"/>
+   <component id="common"
+              module="jboss-common"
+              version="5.0-SNAPSHOT"
+   >
+      <artifact id="jboss-common.jar" release="lib"/>
+      <artifact id="jboss-common-client.jar" release="client"/>
+      <artifact id="namespace.jar" release="lib"/>
+      <export>
+         <include input="jboss-common.jar"/>
+         <include input="namespace.jar"/>
+      </export>
+   </component>
+   <includes id="common-project">
+      <include input="jboss-common.jar"/>
+      <include input="namespace.jar"/>
+   </includes>
+</project>

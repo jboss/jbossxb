@@ -16,28 +16,30 @@
          basedir="."
 >
    <!-- The main build -->
-   <import file="../jbossas/build.xml"/>
+   <import file="../tools/etc/jbossbuild/tasks.xml"/>
+   <import file="component-info.xml"/>
 
    <!-- =============================================================== -->
    <!-- The component definition                                        -->
    <!-- =============================================================== -->
 
-   <componentdef component="common" description="JBoss Common">
+   <componentdef component="common" 
+                 description="JBoss Common">
 
       <!-- ============================================================ -->
       <!-- The main source                                              -->
       <!-- ============================================================ -->
 
       <source id="main">
-         <include input="commons"/>
-         <include input="concurrent"/>
-         <include input="dom4j"/>
-         <include input="jaxme"/>
-         <include input="log4j"/>
-         <include input="regexp"/>
-         <include input="slide"/>
-         <include input="wutka"/>
-         <include input="xerces"/>
+         <include component="apache-commons"/>
+         <include component="oswego-concurrent"/>
+         <include component="dom4j-dom4j"/>
+         <include component="apache-jaxme"/>
+         <include component="apache-log4j"/>
+         <include component="gnu-regexp"/>
+         <include component="apache-slide"/>
+         <include component="wutka-dtdparser"/>
+         <include component="apache-xerces"/>
       </source>
 
       <!-- ============================================================ -->

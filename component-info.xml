@@ -1,5 +1,4 @@
 <project name="common-component-info">
-   <import file="../tools/etc/jbossbuild/tasks.xml"/>
    <component id="common"
               module="jboss-common"
               version="5.0-SNAPSHOT"

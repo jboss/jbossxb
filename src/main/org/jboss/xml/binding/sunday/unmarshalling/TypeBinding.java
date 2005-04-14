@@ -9,6 +9,7 @@ package org.jboss.xml.binding.sunday.unmarshalling;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Iterator;
 import javax.xml.namespace.QName;
 import org.xml.sax.Attributes;
 
@@ -42,6 +43,17 @@ public class TypeBinding
             elements.put(name, el);
       }
       return el;
+   }
+
+   public void addGroup(Map group)
+   {
+      for(Iterator i = group.entrySet().iterator(); i.hasNext();)
+      {
+         Map.Entry entry = (Map.Entry)i.next();
+         QName name = (QName)entry.getKey();
+         TypeBinding type = (TypeBinding)entry.getValue();
+         addElement(name, type);
+      }
    }
 
    public Object startElement(Object parent, QName qName)

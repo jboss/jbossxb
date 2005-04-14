@@ -3,9 +3,9 @@
               module="jboss-common"
               version="5.0-SNAPSHOT"
    >
-      <artifact id="jboss-common.jar" release="lib"/>
-      <artifact id="jboss-common-client.jar" release="client"/>
-      <artifact id="namespace.jar" release="lib"/>
+      <artifact id="jboss-common.jar"/>
+      <artifact id="jboss-common-client.jar"/>
+      <artifact id="namespace.jar"/>
       <export>
          <include input="jboss-common.jar"/>
          <include input="namespace.jar"/>

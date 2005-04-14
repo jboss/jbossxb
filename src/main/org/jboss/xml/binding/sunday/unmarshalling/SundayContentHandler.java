@@ -140,7 +140,7 @@ public class SundayContentHandler
             ElementHandler handler = (ElementHandler)elementHandlers.get(i);
             o = handler.startElement(o, startName);
             objectStack.push(o);
-            handler.attributes(o, startName, atts);
+            handler.attributes(o, startName, binding.getTypeBinding(), atts);
          }
 
          TypeBinding typeBinding = binding.getTypeBinding();

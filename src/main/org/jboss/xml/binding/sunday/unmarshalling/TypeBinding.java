@@ -21,7 +21,9 @@ public class TypeBinding
 {
    private final QName qName;
    private Map elements = Collections.EMPTY_MAP;
+   private Map attrs = Collections.EMPTY_MAP;
    private ElementHandler handler = DefaultElementHandler.INSTANCE;
+   private SimpleTypeBinding simpleType = SimpleTypeBinding.NOOP;
 
    public TypeBinding()
    {
@@ -37,8 +39,6 @@ public class TypeBinding
    {
       return qName;
    }
-
-   // Schema navigation API
 
    public ElementBinding getElement(QName name)
    {
@@ -72,6 +72,32 @@ public class TypeBinding
       }
    }
 
+   public AttributeBinding getAttributeBinding(QName qName)
+   {
+      return (AttributeBinding)attrs.get(qName);
+   }
+
+   public AttributeBinding addAttribute(QName name, AttributeHandler handler)
+   {
+      return addAttribute(name, SimpleTypeBinding.NOOP, handler);
+   }
+
+   public AttributeBinding addAttribute(QName name, SimpleTypeBinding type, AttributeHandler handler)
+   {
+      AttributeBinding attr = new AttributeBinding(type, handler);
+      switch(attrs.size())
+      {
+         case 0:
+            attrs = Collections.singletonMap(name, attr);
+            break;
+         case 1:
+            attrs = new HashMap(attrs);
+         default:
+            attrs.put(name, attr);
+      }
+      return attr;
+   }
+
    public Object startElement(Object parent, QName qName)
    {
       return handler.startElement(parent, qName);
@@ -79,7 +105,7 @@ public class TypeBinding
 
    public void attributes(Object o, QName elementName, Attributes attrs)
    {
-      handler.attributes(o, elementName, attrs);
+      handler.attributes(o, elementName, this, attrs);
    }
 
    public void characters(Object o, QName qName, String text)

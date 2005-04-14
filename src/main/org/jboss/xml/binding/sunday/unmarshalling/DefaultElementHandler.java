@@ -18,13 +18,28 @@ public class DefaultElementHandler
 {
    public static final ElementHandler INSTANCE = new DefaultElementHandler();
 
+   private AttributesHandler attrsHandler;
+
+   public DefaultElementHandler()
+   {
+   }
+
+   public DefaultElementHandler(AttributesHandler attrsHandler)
+   {
+      this.attrsHandler = attrsHandler;
+   }
+
    public Object startElement(Object parent, QName qName)
    {
       return parent;
    }
 
-   public void attributes(Object o, QName elementName, Attributes attrs)
+   public void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs)
    {
+      if(attrsHandler != null)
+      {
+         attrsHandler.attributes(o, elementName, type, attrs);
+      }
    }
 
    public void characters(Object o, QName qName, String text)

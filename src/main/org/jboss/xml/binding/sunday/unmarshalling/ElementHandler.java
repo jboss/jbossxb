@@ -17,7 +17,7 @@ public interface ElementHandler
 {
    Object startElement(Object parent, QName qName);
 
-   void attributes(Object o, QName elementName, Attributes attrs);
+   void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs);
 
    void characters(Object o, QName qName, String text);
 

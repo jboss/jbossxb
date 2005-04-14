@@ -19,8 +19,24 @@ import org.xml.sax.Attributes;
  */
 public class TypeBinding
 {
+   private final QName qName;
    private Map elements = Collections.EMPTY_MAP;
    private ElementHandler handler = DefaultElementHandler.INSTANCE;
+
+   public TypeBinding()
+   {
+      this(null);
+   }
+
+   public TypeBinding(QName qName)
+   {
+      this.qName = qName;
+   }
+
+   public QName getQName()
+   {
+      return qName;
+   }
 
    // Schema navigation API
 

@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource webOS
+ * JBoss, the OpenSource J2EE webOS
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -13,7 +13,7 @@ import org.xml.sax.Attributes;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface ElementHandler
+public interface ElementInterceptor
 {
    Object startElement(Object parent, QName elementName, TypeBinding type);
 
@@ -23,5 +23,5 @@ public interface ElementHandler
 
    Object endElement(Object o, QName elementName, TypeBinding type);
 
-   void setParent(Object parent, Object o, QName qName);
+   void add(Object o, Object child, QName qName);
 }

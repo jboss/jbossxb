@@ -98,9 +98,19 @@ public class TypeBinding
       return attr;
    }
 
+   public SimpleTypeBinding getSimpleType()
+   {
+      return simpleType;
+   }
+
+   public void setSimpleType(SimpleTypeBinding simpleType)
+   {
+      this.simpleType = simpleType;
+   }
+
    public Object startElement(Object parent, QName qName)
    {
-      return handler.startElement(parent, qName);
+      return handler.startElement(parent, qName, this);
    }
 
    public void attributes(Object o, QName elementName, Attributes attrs)
@@ -110,12 +120,12 @@ public class TypeBinding
 
    public void characters(Object o, QName qName, String text)
    {
-      handler.characters(o, qName, text);
+      handler.characters(o, qName, this, text);
    }
 
    public Object endElement(Object parent, Object o, QName qName)
    {
-      return handler.endElement(o, qName);
+      return handler.endElement(o, qName, this);
    }
 
    public void setHandler(ElementHandler handler)
@@ -123,13 +133,13 @@ public class TypeBinding
       this.handler = handler;
    }
 
-   public void pushElementHandler(QName qName, ElementHandler handler)
+   public void pushInterceptor(QName qName, ElementInterceptor interceptor)
    {
       ElementBinding el = getElement(qName);
       if(el == null)
       {
          el = addElement(qName, new TypeBinding());
       }
-      el.pushHandler(handler);
+      el.pushInterceptor(interceptor);
    }
 }

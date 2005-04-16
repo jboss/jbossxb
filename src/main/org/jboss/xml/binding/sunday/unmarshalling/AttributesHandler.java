@@ -18,6 +18,8 @@ public class AttributesHandler
 {
    private static final Logger log = Logger.getLogger(AttributesHandler.class);
 
+   public static final AttributesHandler INSTANCE = new AttributesHandler();
+
    public void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs)
    {
       for(int i = 0; i < attrs.getLength(); ++i)

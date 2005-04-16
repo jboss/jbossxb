@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, the OpenSource webOS
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -16,12 +16,13 @@ import org.xml.sax.Attributes;
 public class DefaultElementHandler
    implements ElementHandler
 {
-   public static final ElementHandler INSTANCE = new DefaultElementHandler();
+   public static final DefaultElementHandler INSTANCE = new DefaultElementHandler();
 
    private AttributesHandler attrsHandler;
 
    public DefaultElementHandler()
    {
+      this(AttributesHandler.INSTANCE);
    }
 
    public DefaultElementHandler(AttributesHandler attrsHandler)
@@ -29,7 +30,7 @@ public class DefaultElementHandler
       this.attrsHandler = attrsHandler;
    }
 
-   public Object startElement(Object parent, QName qName)
+   public Object startElement(Object parent, QName qName, TypeBinding type)
    {
       return parent;
    }
@@ -42,16 +43,23 @@ public class DefaultElementHandler
       }
    }
 
-   public void characters(Object o, QName qName, String text)
+   public void characters(Object o, QName qName, TypeBinding type, String text)
    {
+      SimpleTypeBinding simpleType = type.getSimpleType();
+      Object value = simpleType == null ? text : simpleType.unmarshal(qName, text);
+      setData(o, qName, type, value);
    }
 
-   public Object endElement(Object o, QName qName)
+   public Object endElement(Object o, QName qName, TypeBinding type)
    {
       return o;
    }
 
-   public void add(Object parent, Object child, QName qName)
+   public void setParent(Object parent, Object o, QName qName)
+   {
+   }
+
+   protected void setData(Object o, QName elementName, TypeBinding type, Object data)
    {
    }
 }

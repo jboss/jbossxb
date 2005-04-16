@@ -16,7 +16,7 @@ import java.util.ArrayList;
  */
 public class ElementBinding
 {
-   private List elementHandlers = Collections.EMPTY_LIST;
+   private List interceptors = Collections.EMPTY_LIST;
 
    private final TypeBinding typeBinding;
 
@@ -25,9 +25,9 @@ public class ElementBinding
       this.typeBinding = typeBinding;
    }
 
-   public List getElementHandlers()
+   public List getInterceptors()
    {
-      return elementHandlers;
+      return interceptors;
    }
 
    public TypeBinding getTypeBinding()
@@ -35,17 +35,17 @@ public class ElementBinding
       return typeBinding;
    }
 
-   public void pushHandler(ElementHandler handler)
+   public void pushInterceptor(ElementInterceptor interceptor)
    {
-      switch(elementHandlers.size())
+      switch(interceptors.size())
       {
          case 0:
-            elementHandlers = Collections.singletonList(handler);
+            interceptors = Collections.singletonList(interceptor);
             break;
          case 1:
-            elementHandlers = new ArrayList(elementHandlers);
+            interceptors = new ArrayList(interceptors);
          default:
-            elementHandlers.add(handler);
+            interceptors.add(interceptor);
 
       }
    }

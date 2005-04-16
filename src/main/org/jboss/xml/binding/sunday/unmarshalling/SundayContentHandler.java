@@ -51,7 +51,7 @@ public class SundayContentHandler
          Object o = objectStack.pop();
 
          TypeBinding typeBinding = elementBinding.getTypeBinding();
-         List elementHandlers = elementBinding.getElementHandlers();
+         List elementHandlers = elementBinding.getInterceptors();
 
          //
          // characters
@@ -67,8 +67,12 @@ public class SundayContentHandler
             int i = elementHandlers.size();
             while(i-- > 0)
             {
-               ElementHandler handler = (ElementHandler)elementHandlers.get(i);
-               handler.characters(objectStack.peek(elementHandlers.size() - 1 - i), endName, dataContent);
+               ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
+               interceptor.characters(objectStack.peek(elementHandlers.size() - 1 - i),
+                  endName,
+                  typeBinding,
+                  dataContent
+               );
             }
          }
 
@@ -82,8 +86,8 @@ public class SundayContentHandler
          int i = elementHandlers.size();
          while(i-- > 0)
          {
-            ElementHandler handler = (ElementHandler)elementHandlers.get(i);
-            handler.endElement(objectStack.peek(elementHandlers.size() - 1 - i), endName);
+            ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
+            interceptor.endElement(objectStack.peek(elementHandlers.size() - 1 - i), endName, typeBinding);
          }
 
          //
@@ -93,9 +97,9 @@ public class SundayContentHandler
          i = elementHandlers.size();
          while(i-- > 0)
          {
-            ElementHandler handler = (ElementHandler)elementHandlers.get(i);
+            ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
             parent = objectStack.pop();
-            handler.add(parent, o, endName);
+            interceptor.add(parent, o, endName);
             o = parent;
          }
 
@@ -132,18 +136,18 @@ public class SundayContentHandler
 
       if(binding != null)
       {
+         TypeBinding typeBinding = binding.getTypeBinding();
          Object o = objectStack.isEmpty() ? null : objectStack.peek();
 
-         List elementHandlers = binding.getElementHandlers();
+         List elementHandlers = binding.getInterceptors();
          for(int i = 0; i < elementHandlers.size(); ++i)
          {
-            ElementHandler handler = (ElementHandler)elementHandlers.get(i);
-            o = handler.startElement(o, startName);
+            ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
+            o = interceptor.startElement(o, startName, typeBinding);
             objectStack.push(o);
-            handler.attributes(o, startName, binding.getTypeBinding(), atts);
+            interceptor.attributes(o, startName, typeBinding, atts);
          }
 
-         TypeBinding typeBinding = binding.getTypeBinding();
          o = typeBinding.startElement(o, startName);
          objectStack.push(o);
 

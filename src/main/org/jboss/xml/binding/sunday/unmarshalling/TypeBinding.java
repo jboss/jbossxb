@@ -142,4 +142,9 @@ public class TypeBinding
       }
       el.pushInterceptor(interceptor);
    }
+
+   public boolean isSimple()
+   {
+      return elements.isEmpty() && attrs.isEmpty();
+   }
 }

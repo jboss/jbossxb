@@ -45,19 +45,24 @@ public class TypeBinding
       return (ElementBinding)elements.get(name);
    }
 
-   public ElementBinding addElement(QName name, TypeBinding type)
+   public void addElement(QName qName, ElementBinding binding)
    {
-      ElementBinding el = new ElementBinding(type);
       switch(elements.size())
       {
          case 0:
-            elements = Collections.singletonMap(name, el);
+            elements = Collections.singletonMap(qName, binding);
             break;
          case 1:
             elements = new HashMap(elements);
          default:
-            elements.put(name, el);
+            elements.put(qName, binding);
       }
+   }
+
+   public ElementBinding addElement(QName name, TypeBinding type)
+   {
+      ElementBinding el = new ElementBinding(type);
+      addElement(name, el);
       return el;
    }
 

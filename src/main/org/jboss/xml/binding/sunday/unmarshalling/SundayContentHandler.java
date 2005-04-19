@@ -121,7 +121,7 @@ public class SundayContentHandler
 
       if(elementStack.isEmpty())
       {
-         binding = cursor.getTypeBinding(startName);
+         binding = cursor.getElement(startName);
       }
       else
       {

@@ -20,18 +20,34 @@ import org.jboss.xml.binding.JBossXBRuntimeException;
 public class DocumentHandler
    implements BindingCursor
 {
-   private Map tops = new HashMap();
+   private Map types = new HashMap();
+   private Map elements = new HashMap();
    private LinkedList stack = new LinkedList();
 
-   public ElementBinding getTypeBinding(QName name)
+   public TypeBinding getType(QName qName)
    {
-      return (ElementBinding)tops.get(name);
+      return (TypeBinding)types.get(qName);
+   }
+
+   public void addType(QName name, TypeBinding type)
+   {
+      types.put(name, type);
+   }
+
+   public ElementBinding getElement(QName name)
+   {
+      return (ElementBinding)elements.get(name);
+   }
+
+   public void addElement(QName qName, ElementBinding element)
+   {
+      elements.put(qName, element);
    }
 
    public ElementBinding addElement(QName name, TypeBinding type)
    {
       ElementBinding element = new ElementBinding(type);
-      tops.put(name, element);
+      addElement(name, element);
       return element;
    }
 
@@ -41,7 +57,7 @@ public class DocumentHandler
       ElementBinding element;
       if(stack.isEmpty())
       {
-         element = (ElementBinding)tops.get(qName);
+         element = (ElementBinding)elements.get(qName);
       }
       else
       {

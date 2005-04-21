@@ -29,9 +29,14 @@ public class DocumentHandler
       return (TypeBinding)types.get(qName);
    }
 
-   public void addType(QName name, TypeBinding type)
+   public void addType(TypeBinding type)
    {
-      types.put(name, type);
+      QName qName = type.getQName();
+      if(qName == null)
+      {
+         throw new JBossXBRuntimeException("Global type must have a name.");
+      }
+      types.put(qName, type);
    }
 
    public ElementBinding getElement(QName name)

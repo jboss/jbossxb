@@ -25,10 +25,10 @@ public class AttributesHandler
       for(int i = 0; i < attrs.getLength(); ++i)
       {
          QName qName = new QName(attrs.getURI(i), attrs.getLocalName(i));
-         AttributeBinding binding = type.getAttributeBinding(qName);
+         AttributeBinding binding = type.getAttribute(qName);
          if(binding != null)
          {
-            SimpleTypeBinding attrType = binding.getType();
+            TypeBinding attrType = binding.getType();
             AttributeHandler handler = binding.getHandler();
             Object value = handler.unmarshal(elementName, qName, attrType, attrs.getValue(i));
             handler.attribute(elementName, qName, o, value);

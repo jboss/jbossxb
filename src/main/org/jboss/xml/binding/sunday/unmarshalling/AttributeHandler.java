@@ -14,9 +14,16 @@ import javax.xml.namespace.QName;
  */
 public abstract class AttributeHandler
 {
-   public Object unmarshal(QName elemName, QName attrName, SimpleTypeBinding type, String value)
+   public static final AttributeHandler NOOP = new AttributeHandler()
    {
-      return type == null ? value : type.unmarshal(attrName, value);
+      public void attribute(QName elemName, QName attrName, Object owner, Object value)
+      {
+      }
+   };
+
+   public Object unmarshal(QName elemName, QName attrName, TypeBinding type, String value)
+   {
+      return type == null ? value : type.getSimpleTypeHandler().unmarshal(attrName, value);
    }
 
    public abstract void attribute(QName elemName, QName attrName, Object owner, Object value);

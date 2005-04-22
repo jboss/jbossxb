@@ -30,7 +30,7 @@ public class ElementBinding
       return interceptors;
    }
 
-   public TypeBinding getTypeBinding()
+   public TypeBinding getType()
    {
       return typeBinding;
    }

@@ -12,16 +12,16 @@ package org.jboss.xml.binding.sunday.unmarshalling;
  */
 public class AttributeBinding
 {
-   private final SimpleTypeBinding type;
-   private final AttributeHandler handler;
+   private final TypeBinding type;
+   private AttributeHandler handler;
 
-   public AttributeBinding(SimpleTypeBinding type, AttributeHandler handler)
+   public AttributeBinding(TypeBinding type, AttributeHandler handler)
    {
       this.type = type;
       this.handler = handler;
    }
 
-   public SimpleTypeBinding getType()
+   public TypeBinding getType()
    {
       return type;
    }
@@ -29,5 +29,10 @@ public class AttributeBinding
    public AttributeHandler getHandler()
    {
       return handler;
+   }
+
+   public void setHandler(AttributeHandler handler)
+   {
+      this.handler = handler;
    }
 }

@@ -77,17 +77,17 @@ public class TypeBinding
       }
    }
 
-   public AttributeBinding getAttributeBinding(QName qName)
+   public AttributeBinding getAttribute(QName qName)
    {
       return (AttributeBinding)attrs.get(qName);
    }
 
    public AttributeBinding addAttribute(QName name, AttributeHandler handler)
    {
-      return addAttribute(name, SimpleTypeBinding.NOOP, handler);
+      return addAttribute(name, new TypeBinding(), handler);
    }
 
-   public AttributeBinding addAttribute(QName name, SimpleTypeBinding type, AttributeHandler handler)
+   public AttributeBinding addAttribute(QName name, TypeBinding type, AttributeHandler handler)
    {
       AttributeBinding attr = new AttributeBinding(type, handler);
       switch(attrs.size())
@@ -103,12 +103,12 @@ public class TypeBinding
       return attr;
    }
 
-   public SimpleTypeBinding getSimpleType()
+   public SimpleTypeBinding getSimpleTypeHandler()
    {
       return simpleType;
    }
 
-   public void setSimpleType(SimpleTypeBinding simpleType)
+   public void setSimpleTypeHandler(SimpleTypeBinding simpleType)
    {
       this.simpleType = simpleType;
    }

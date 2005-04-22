@@ -13,9 +13,9 @@ import java.lang.reflect.InvocationTargetException;
 import javax.xml.namespace.QName;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.TypeBinding;
-import org.jboss.xml.binding.sunday.unmarshalling.SimpleTypeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
+import org.jboss.xml.binding.sunday.unmarshalling.SimpleTypeBinding;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.xml.sax.Attributes;
@@ -89,7 +89,7 @@ public class RtElementHandler
       for(int i = 0; i < attrs.getLength(); ++i)
       {
          QName attrName = new QName(attrs.getURI(i), attrs.getLocalName(i));
-         AttributeBinding binding = type.getAttributeBinding(attrName);
+         AttributeBinding binding = type.getAttribute(attrName);
          if(binding != null)
          {
             AttributeHandler handler = binding.getHandler();
@@ -107,14 +107,14 @@ public class RtElementHandler
          }
          else
          {
-            set(o, attrName, type.getSimpleType(), attrs.getValue(i));
+            set(o, attrName, type.getSimpleTypeHandler(), attrs.getValue(i));
          }
       }
    }
 
    public void characters(Object o, QName elementName, TypeBinding type, String text)
    {
-      set(o, elementName, type.getSimpleType(), text);
+      set(o, elementName, type.getSimpleTypeHandler(), text);
    }
 
    public Object endElement(Object o, QName elementName, TypeBinding type)

@@ -66,7 +66,7 @@ public class DocumentHandler
       }
       else
       {
-         TypeBinding parentType = ((ElementBinding)stack.getLast()).getTypeBinding();
+         TypeBinding parentType = ((ElementBinding)stack.getLast()).getType();
          element = parentType.getElement(qName);
       }
 

@@ -50,7 +50,7 @@ public class SundayContentHandler
          QName endName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
          Object o = objectStack.pop();
 
-         TypeBinding typeBinding = elementBinding.getTypeBinding();
+         TypeBinding typeBinding = elementBinding.getType();
          List elementHandlers = elementBinding.getInterceptors();
 
          //
@@ -128,7 +128,7 @@ public class SundayContentHandler
          ElementBinding parentBinding = (ElementBinding)elementStack.peek();
          if(parentBinding != null)
          {
-            binding = parentBinding.getTypeBinding().getElement(startName);
+            binding = parentBinding.getType().getElement(startName);
          }
       }
 
@@ -136,7 +136,7 @@ public class SundayContentHandler
 
       if(binding != null)
       {
-         TypeBinding typeBinding = binding.getTypeBinding();
+         TypeBinding typeBinding = binding.getType();
          Object o = objectStack.isEmpty() ? null : objectStack.peek();
 
          List elementHandlers = binding.getInterceptors();

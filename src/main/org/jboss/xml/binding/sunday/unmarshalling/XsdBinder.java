@@ -27,6 +27,8 @@ import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSModelGroup;
 import org.apache.xerces.xs.XSObjectList;
 import org.apache.xerces.xs.XSModelGroupDefinition;
+import org.apache.xerces.xs.XSAttributeDeclaration;
+import org.apache.xerces.xs.XSAttributeUse;
 import org.apache.xerces.dom3.bootstrap.DOMImplementationRegistry;
 
 /**
@@ -110,7 +112,9 @@ public class XsdBinder
       return doc;
    }
 
-   private static final TypeBinding bindType(DocumentHandler doc, XSTypeDefinition type, SharedElements sharedElements)
+   private static final TypeBinding bindType(DocumentHandler doc,
+                                             XSTypeDefinition type,
+                                             SharedElements sharedElements)
    {
       TypeBinding binding;
       switch(type.getTypeCategory())
@@ -138,13 +142,15 @@ public class XsdBinder
          {
             binding = new TypeBinding(typeName);
             doc.addType(binding);
+            if(log.isTraceEnabled())
+            {
+               log.trace("bound simple type: " + typeName);
+            }
          }
          else
          {
             binding = new TypeBinding();
          }
-
-         //todo add simple type binding
       }
       return binding;
    }
@@ -161,10 +167,21 @@ public class XsdBinder
          {
             binding = new TypeBinding(typeName);
             doc.addType(binding);
+            if(log.isTraceEnabled())
+            {
+               log.trace("bound complex type: " + typeName);
+            }
          }
          else
          {
             binding = new TypeBinding();
+         }
+
+         XSObjectList attrs = type.getAttributeUses();
+         for(int i = 0; i < attrs.getLength(); ++i)
+         {
+            XSAttributeUse attr = (XSAttributeUse)attrs.item(i);
+            bindAttributes(doc, binding, attr.getAttrDeclaration());
          }
 
          XSParticle particle = type.getParticle();
@@ -176,6 +193,27 @@ public class XsdBinder
          }
       }
       return binding;
+   }
+
+   private static void bindAttributes(DocumentHandler doc,
+                                      TypeBinding type,
+                                      XSAttributeDeclaration attr)
+   {
+      XSSimpleTypeDefinition attrType = attr.getTypeDefinition();
+      TypeBinding typeBinding = bindSimpleType(doc, attrType);
+      QName attrName = new QName(attr.getNamespace(), attr.getName());
+      type.addAttribute(attrName, typeBinding, AttributeHandler.NOOP);
+
+      if(log.isTraceEnabled())
+      {
+         log.trace("bound attribute: type=" +
+            type.getQName() +
+            ", attr=" +
+            attr.getName() +
+            ", attrType=" +
+            attrType.getName()
+         );
+      }
    }
 
    private static void bindParticle(DocumentHandler doc, XSParticle particle, SharedElements sharedElements)
@@ -244,7 +282,12 @@ public class XsdBinder
             if(log.isTraceEnabled())
             {
                log.trace(
-                  "added element " + qName + " of type " + type.getQName() + " to type " + parentType.getQName()
+                  "bound element: type=" +
+                  parentType.getQName() +
+                  ", element=" +
+                  qName +
+                  ", elementType " +
+                  type.getQName()
                );
             }
          }
@@ -311,22 +354,6 @@ public class XsdBinder
    {
       LinkedList typeStack = getTypeStack();
       return (TypeBinding)(typeStack.isEmpty() ? null : typeStack.getLast());
-   }
-
-   private static void addSharedElement(Map sharedElements, XSElementDeclaration element)
-   {
-      sharedElements.put(element, null);
-      log.debug("added shared element: " + element.getName());
-   }
-
-   private static boolean isSharedElement(Map sharedElements, XSElementDeclaration element)
-   {
-      boolean shared = sharedElements.containsKey(element);
-      if(shared)
-      {
-         log.debug(element.getName() + " is shared");
-      }
-      return shared;
    }
 
    private static final class SharedElements

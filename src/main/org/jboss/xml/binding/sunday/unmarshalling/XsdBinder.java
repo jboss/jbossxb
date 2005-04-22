@@ -58,10 +58,10 @@ public class XsdBinder
    {
    }
 
-   public static final DocumentHandler bind(String xsdUrl)
+   public static final SchemaBinding bind(String xsdUrl)
    {
       XSModel model = loadSchema(xsdUrl);
-      DocumentHandler doc = new DocumentHandler();
+      SchemaBinding doc = new SchemaBinding();
 
       SharedElements sharedElements = new SharedElements();
       XSNamedMap groups = model.getComponents(XSConstants.MODEL_GROUP_DEFINITION);
@@ -112,7 +112,7 @@ public class XsdBinder
       return doc;
    }
 
-   private static final TypeBinding bindType(DocumentHandler doc,
+   private static final TypeBinding bindType(SchemaBinding doc,
                                              XSTypeDefinition type,
                                              SharedElements sharedElements)
    {
@@ -131,7 +131,7 @@ public class XsdBinder
       return binding;
    }
 
-   private static final TypeBinding bindSimpleType(DocumentHandler doc, XSSimpleTypeDefinition type)
+   private static final TypeBinding bindSimpleType(SchemaBinding doc, XSSimpleTypeDefinition type)
    {
       // todo default simple types
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
@@ -155,7 +155,7 @@ public class XsdBinder
       return binding;
    }
 
-   private static final TypeBinding bindComplexType(DocumentHandler doc,
+   private static final TypeBinding bindComplexType(SchemaBinding doc,
                                                     XSComplexTypeDefinition type,
                                                     SharedElements sharedElements)
    {
@@ -195,7 +195,7 @@ public class XsdBinder
       return binding;
    }
 
-   private static void bindAttributes(DocumentHandler doc,
+   private static void bindAttributes(SchemaBinding doc,
                                       TypeBinding type,
                                       XSAttributeDeclaration attr)
    {
@@ -216,7 +216,7 @@ public class XsdBinder
       }
    }
 
-   private static void bindParticle(DocumentHandler doc, XSParticle particle, SharedElements sharedElements)
+   private static void bindParticle(SchemaBinding doc, XSParticle particle, SharedElements sharedElements)
    {
       XSTerm term = particle.getTerm();
       switch(term.getType())
@@ -235,7 +235,7 @@ public class XsdBinder
       }
    }
 
-   private static void bindElement(DocumentHandler doc, XSElementDeclaration element, SharedElements sharedElements)
+   private static void bindElement(SchemaBinding doc, XSElementDeclaration element, SharedElements sharedElements)
    {
       QName qName = new QName(element.getNamespace(), element.getName());
 
@@ -294,7 +294,7 @@ public class XsdBinder
       }
    }
 
-   private static void bindModelGroup(DocumentHandler doc, XSModelGroup modelGroup, SharedElements sharedElements)
+   private static void bindModelGroup(SchemaBinding doc, XSModelGroup modelGroup, SharedElements sharedElements)
    {
       XSObjectList particles = modelGroup.getParticles();
       for(int i = 0; i < particles.getLength(); ++i)

@@ -13,7 +13,7 @@ import org.jboss.xml.binding.metadata.unmarshalling.DocumentBindingFactory;
 import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBindingStack;
 import org.jboss.xml.binding.metadata.unmarshalling.impl.RuntimeDocumentBinding;
-import org.jboss.xml.binding.sunday.unmarshalling.DocumentHandler;
+import org.jboss.xml.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.SundayContentHandler;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.xml.sax.EntityResolver;
@@ -93,7 +93,7 @@ public class UnmarshallerImpl
       return builder.getRoot();
    }
 
-   public Object unmarshal(String xmlFile, DocumentHandler handler) throws JBossXBException
+   public Object unmarshal(String xmlFile, SchemaBinding handler) throws JBossXBException
    {
       SundayContentHandler cHandler = new SundayContentHandler(handler);
       parser.parse(xmlFile, cHandler);

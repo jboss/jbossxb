@@ -10,7 +10,7 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
-import org.jboss.xml.binding.sunday.unmarshalling.DocumentHandler;
+import org.jboss.xml.binding.sunday.unmarshalling.SchemaBinding;
 
 import java.io.Reader;
 import java.io.InputStream;
@@ -43,7 +43,7 @@ public interface Unmarshaller
 
    Object unmarshal(String xmlFile) throws JBossXBException;
 
-   Object unmarshal(String xmlFile, DocumentHandler handler) throws JBossXBException;
+   Object unmarshal(String xmlFile, SchemaBinding handler) throws JBossXBException;
 
    Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata) throws JBossXBException;
 

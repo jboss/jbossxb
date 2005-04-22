@@ -17,7 +17,7 @@ import org.jboss.xml.binding.JBossXBRuntimeException;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public class DocumentHandler
+public class SchemaBinding
    implements BindingCursor
 {
    private Map types = new HashMap();

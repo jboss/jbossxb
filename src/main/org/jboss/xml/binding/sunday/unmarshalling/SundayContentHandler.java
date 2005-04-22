@@ -23,13 +23,13 @@ public class SundayContentHandler
 {
    private final static Logger log = Logger.getLogger(SundayContentHandler.class);
 
-   private final DocumentHandler cursor;
+   private final SchemaBinding cursor;
    private final StackImpl elementStack = new StackImpl();
    private final StackImpl objectStack = new StackImpl();
    private StringBuffer textContent = new StringBuffer();
    private Object root;
 
-   public SundayContentHandler(DocumentHandler cursor)
+   public SundayContentHandler(SchemaBinding cursor)
    {
       this.cursor = cursor;
    }

@@ -45,7 +45,7 @@ public class DefaultElementHandler
 
    public void characters(Object o, QName qName, TypeBinding type, String text)
    {
-      SimpleTypeBinding simpleType = type.getSimpleTypeHandler();
+      SimpleTypeBinding simpleType = type.getSimpleType();
       Object value = simpleType == null ? text : simpleType.unmarshal(qName, text);
       setData(o, qName, type, value);
    }

@@ -23,7 +23,7 @@ public abstract class AttributeHandler
 
    public Object unmarshal(QName elemName, QName attrName, TypeBinding type, String value)
    {
-      return type == null ? value : type.getSimpleTypeHandler().unmarshal(attrName, value);
+      return type == null ? value : type.getSimpleType().unmarshal(attrName, value);
    }
 
    public abstract void attribute(QName elemName, QName attrName, Object owner, Object value);

@@ -12,6 +12,7 @@ import java.util.LinkedList;
 import javax.xml.namespace.QName;
 import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xml.binding.JBossXBRuntimeException;
+import org.jboss.xml.binding.Constants;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -20,7 +21,63 @@ import org.jboss.xml.binding.JBossXBRuntimeException;
 public class SchemaBinding
    implements BindingCursor
 {
-   private Map types = new HashMap();
+   private static final Map SIMPLE_TYPES = new HashMap();
+
+   // populate SIMPLE_TYPES
+   {
+      addSimpleType(new TypeBinding(Constants.QNAME_ANYSIMPLETYPE));
+      addSimpleType(new TypeBinding(Constants.QNAME_STRING));
+      addSimpleType(new TypeBinding(Constants.QNAME_BOOLEAN));
+      addSimpleType(new TypeBinding(Constants.QNAME_DECIMAL));
+      addSimpleType(new TypeBinding(Constants.QNAME_FLOAT));
+      addSimpleType(new TypeBinding(Constants.QNAME_DOUBLE));
+      addSimpleType(new TypeBinding(Constants.QNAME_DURATION));
+      addSimpleType(new TypeBinding(Constants.QNAME_DATETIME));
+      addSimpleType(new TypeBinding(Constants.QNAME_TIME));
+      addSimpleType(new TypeBinding(Constants.QNAME_DATE));
+      addSimpleType(new TypeBinding(Constants.QNAME_GYEARMONTH));
+      addSimpleType(new TypeBinding(Constants.QNAME_GYEAR));
+      addSimpleType(new TypeBinding(Constants.QNAME_GMONTHDAY));
+      addSimpleType(new TypeBinding(Constants.QNAME_GDAY));
+      addSimpleType(new TypeBinding(Constants.QNAME_GMONTH));
+      addSimpleType(new TypeBinding(Constants.QNAME_HEXBINARY));
+      addSimpleType(new TypeBinding(Constants.QNAME_BASE64BINARY));
+      addSimpleType(new TypeBinding(Constants.QNAME_ANYURI));
+      addSimpleType(new TypeBinding(Constants.QNAME_QNAME));
+      addSimpleType(new TypeBinding(Constants.QNAME_NOTATION));
+      addSimpleType(new TypeBinding(Constants.QNAME_NORMALIZEDSTRING));
+      addSimpleType(new TypeBinding(Constants.QNAME_TOKEN));
+      addSimpleType(new TypeBinding(Constants.QNAME_LANGUAGE));
+      addSimpleType(new TypeBinding(Constants.QNAME_NMTOKEN));
+      addSimpleType(new TypeBinding(Constants.QNAME_NMTOKENS));
+      addSimpleType(new TypeBinding(Constants.QNAME_NAME));
+      addSimpleType(new TypeBinding(Constants.QNAME_NCNAME));
+      addSimpleType(new TypeBinding(Constants.QNAME_ID));
+      addSimpleType(new TypeBinding(Constants.QNAME_IDREF));
+      addSimpleType(new TypeBinding(Constants.QNAME_IDREFS));
+      addSimpleType(new TypeBinding(Constants.QNAME_ENTITY));
+      addSimpleType(new TypeBinding(Constants.QNAME_ENTITIES));
+      addSimpleType(new TypeBinding(Constants.QNAME_INTEGER));
+      addSimpleType(new TypeBinding(Constants.QNAME_NONPOSITIVEINTEGER));
+      addSimpleType(new TypeBinding(Constants.QNAME_NEGATIVEINTEGER));
+      addSimpleType(new TypeBinding(Constants.QNAME_LONG));
+      addSimpleType(new TypeBinding(Constants.QNAME_INT));
+      addSimpleType(new TypeBinding(Constants.QNAME_SHORT));
+      addSimpleType(new TypeBinding(Constants.QNAME_BYTE));
+      addSimpleType(new TypeBinding(Constants.QNAME_NONNEGATIVEINTEGER));
+      addSimpleType(new TypeBinding(Constants.QNAME_UNSIGNEDLONG));
+      addSimpleType(new TypeBinding(Constants.QNAME_UNSIGNEDINT));
+      addSimpleType(new TypeBinding(Constants.QNAME_UNSIGNEDSHORT));
+      addSimpleType(new TypeBinding(Constants.QNAME_UNSIGNEDBYTE));
+      addSimpleType(new TypeBinding(Constants.QNAME_POSITIVEINTEGER));
+   }
+
+   private void addSimpleType(TypeBinding type)
+   {
+      SIMPLE_TYPES.put(type.getQName(), type);
+   }
+
+   private Map types = new HashMap(SIMPLE_TYPES);
    private Map elements = new HashMap();
    private LinkedList stack = new LinkedList();
 

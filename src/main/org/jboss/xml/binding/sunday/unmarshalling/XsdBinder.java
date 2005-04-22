@@ -13,6 +13,7 @@ import java.util.Collections;
 import javax.xml.namespace.QName;
 import org.jboss.logging.Logger;
 import org.jboss.xml.binding.JBossXBRuntimeException;
+import org.jboss.xml.binding.Constants;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSLoader;
@@ -38,8 +39,6 @@ import org.apache.xerces.dom3.bootstrap.DOMImplementationRegistry;
 public class XsdBinder
 {
    private static final Logger log = Logger.getLogger(XsdBinder.class);
-
-   private static final String XML_SCHEMA_NS = "http://www.w3.org/2001/XMLSchema";
 
    private static final ThreadLocal typeStack = new ThreadLocal()
    {
@@ -96,7 +95,7 @@ public class XsdBinder
       for(int i = 0; i < types.getLength(); ++i)
       {
          XSTypeDefinition type = (XSTypeDefinition)types.item(i);
-         if(!XML_SCHEMA_NS.equals(type.getNamespace()))
+         if(!Constants.NS_XML_SCHEMA.equals(type.getNamespace()))
          {
             bindType(doc, type, sharedElements);
          }

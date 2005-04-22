@@ -23,7 +23,7 @@ public class TypeBinding
    private Map elements = Collections.EMPTY_MAP;
    private Map attrs = Collections.EMPTY_MAP;
    private ElementHandler handler = DefaultElementHandler.INSTANCE;
-   private SimpleTypeBinding simpleType = SimpleTypeBinding.NOOP;
+   private SimpleTypeBinding simpleType;
 
    public TypeBinding()
    {
@@ -32,7 +32,13 @@ public class TypeBinding
 
    public TypeBinding(QName qName)
    {
+      this(qName, SimpleTypeBinding.NOOP);
+   }
+
+   public TypeBinding(QName qName, SimpleTypeBinding simple)
+   {
       this.qName = qName;
+      this.simpleType = simple;
    }
 
    public QName getQName()
@@ -103,12 +109,12 @@ public class TypeBinding
       return attr;
    }
 
-   public SimpleTypeBinding getSimpleTypeHandler()
+   public SimpleTypeBinding getSimpleType()
    {
       return simpleType;
    }
 
-   public void setSimpleTypeHandler(SimpleTypeBinding simpleType)
+   public void setSimpleType(SimpleTypeBinding simpleType)
    {
       this.simpleType = simpleType;
    }

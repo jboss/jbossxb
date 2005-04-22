@@ -107,14 +107,14 @@ public class RtElementHandler
          }
          else
          {
-            set(o, attrName, type.getSimpleTypeHandler(), attrs.getValue(i));
+            set(o, attrName, type.getSimpleType(), attrs.getValue(i));
          }
       }
    }
 
    public void characters(Object o, QName elementName, TypeBinding type, String text)
    {
-      set(o, elementName, type.getSimpleTypeHandler(), text);
+      set(o, elementName, type.getSimpleType(), text);
    }
 
    public Object endElement(Object o, QName elementName, TypeBinding type)

@@ -7,6 +7,7 @@
 package org.jboss.xml.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
 import org.jboss.logging.Logger;
 
@@ -20,7 +21,7 @@ public class AttributesHandler
 
    public static final AttributesHandler INSTANCE = new AttributesHandler();
 
-   public void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs)
+   public void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs, NamespaceContext nsCtx)
    {
       for(int i = 0; i < attrs.getLength(); ++i)
       {
@@ -30,7 +31,7 @@ public class AttributesHandler
          {
             TypeBinding attrType = binding.getType();
             AttributeHandler handler = binding.getHandler();
-            Object value = handler.unmarshal(elementName, qName, attrType, attrs.getValue(i));
+            Object value = handler.unmarshal(elementName, qName, attrType, attrs.getValue(i), nsCtx);
             handler.attribute(elementName, qName, o, value);
          }
          else

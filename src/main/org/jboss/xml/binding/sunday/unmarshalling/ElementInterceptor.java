@@ -7,6 +7,7 @@
 package org.jboss.xml.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
 
 /**
@@ -17,7 +18,7 @@ public interface ElementInterceptor
 {
    Object startElement(Object parent, QName elementName, TypeBinding type);
 
-   void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs);
+   void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs, NamespaceContext nsCtx);
 
    void characters(Object o, QName elementName, TypeBinding type, String text);
 

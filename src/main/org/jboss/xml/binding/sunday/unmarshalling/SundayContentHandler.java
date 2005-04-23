@@ -8,8 +8,12 @@ package org.jboss.xml.binding.sunday.unmarshalling;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Iterator;
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 import org.jboss.xml.binding.parser.JBossXBParser;
+import org.jboss.xml.binding.UnmarshallingContext;
+import org.jboss.xml.binding.NamespaceRegistry;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 import org.apache.xerces.xs.XSTypeDefinition;
@@ -28,6 +32,7 @@ public class SundayContentHandler
    private final StackImpl objectStack = new StackImpl();
    private StringBuffer textContent = new StringBuffer();
    private Object root;
+   private NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
    public SundayContentHandler(SchemaBinding cursor)
    {
@@ -62,7 +67,7 @@ public class SundayContentHandler
             String dataContent = textContent.toString();
             textContent.delete(0, textContent.length());
 
-            typeBinding.characters(o, endName, dataContent);
+            typeBinding.characters(o, endName, nsRegistry, dataContent);
 
             int i = elementHandlers.size();
             while(i-- > 0)
@@ -145,13 +150,13 @@ public class SundayContentHandler
             ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
             o = interceptor.startElement(o, startName, typeBinding);
             objectStack.push(o);
-            interceptor.attributes(o, startName, typeBinding, atts);
+            interceptor.attributes(o, startName, typeBinding, atts, nsRegistry);
          }
 
          o = typeBinding.startElement(o, startName);
          objectStack.push(o);
 
-         typeBinding.attributes(o, startName, atts);
+         typeBinding.attributes(o, startName, atts, nsRegistry);
       }
       else
       {
@@ -161,10 +166,12 @@ public class SundayContentHandler
 
    public void startPrefixMapping(String prefix, String uri)
    {
+      nsRegistry.addPrefixMapping(prefix, uri);
    }
 
    public void endPrefixMapping(String prefix)
    {
+      nsRegistry.removePrefixMapping(prefix);
    }
 
    public void processingInstruction(String target, String data)
@@ -174,6 +181,50 @@ public class SundayContentHandler
    public Object getRoot()
    {
       return root;
+   }
+
+   // UnmarshallingContext impl
+
+   public QName resolveQName(String value)
+   {
+      // todo: implement resolveQName
+      throw new UnsupportedOperationException("resolveQName is not implemented.");
+   }
+
+   public Iterator getNamespaceURIs()
+   {
+      // todo: implement getNamespaceURIs
+      throw new UnsupportedOperationException("getNamespaceURIs is not implemented.");
+   }
+
+   public NamespaceContext getNamespaceContext()
+   {
+      // todo: implement getNamespaceContext
+      throw new UnsupportedOperationException("getNamespaceContext is not implemented.");
+   }
+
+   public Object getMetadata()
+   {
+      // todo: implement getMetadata
+      throw new UnsupportedOperationException("getMetadata is not implemented.");
+   }
+
+   public Object getParentMetadata()
+   {
+      // todo: implement getParentMetadata
+      throw new UnsupportedOperationException("getParentMetadata is not implemented.");
+   }
+
+   public String getChildContent(String namespaceURI, String qName)
+   {
+      // todo: implement getChildContent
+      throw new UnsupportedOperationException("getChildContent is not implemented.");
+   }
+
+   public XSTypeDefinition getType()
+   {
+      // todo: implement getType
+      throw new UnsupportedOperationException("getType is not implemented.");
    }
 
    // Inner

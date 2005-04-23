@@ -7,6 +7,9 @@
 package org.jboss.xml.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
+import org.jboss.xml.binding.SimpleTypeBindings;
+import org.jboss.xml.binding.Constants;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -16,11 +19,28 @@ public interface SimpleTypeBinding
 {
    SimpleTypeBinding NOOP = new SimpleTypeBinding()
    {
-      public Object unmarshal(QName qName, String text)
+      public Object unmarshal(QName qName, QName typeQName, NamespaceContext nsCtx, String text)
       {
          return text;
       }
    };
 
-   Object unmarshal(QName qName, String text);
+   SimpleTypeBinding DEFAULT = new SimpleTypeBinding()
+   {
+      public Object unmarshal(QName qName, QName typeQName, NamespaceContext nsCtx, String text)
+      {
+         Object o;
+         if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))
+         {
+            o = SimpleTypeBindings.unmarshal(typeQName.getLocalPart(), text, nsCtx);
+         }
+         else
+         {
+            o = text;
+         }
+         return o;
+      }
+   };
+
+   Object unmarshal(QName qName, QName typeQName, NamespaceContext nsCtx, String text);
 }

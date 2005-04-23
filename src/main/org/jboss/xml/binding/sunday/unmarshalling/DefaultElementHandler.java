@@ -7,6 +7,7 @@
 package org.jboss.xml.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
 
 /**
@@ -35,18 +36,22 @@ public class DefaultElementHandler
       return parent;
    }
 
-   public void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs)
+   public void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs, NamespaceContext nsCtx)
    {
       if(attrsHandler != null)
       {
-         attrsHandler.attributes(o, elementName, type, attrs);
+         attrsHandler.attributes(o, elementName, type, attrs, nsCtx);
       }
    }
 
-   public void characters(Object o, QName qName, TypeBinding type, String text)
+   public void characters(Object o,
+                          QName qName,
+                          TypeBinding type,
+                          NamespaceContext nsCtx,
+                          String text)
    {
       SimpleTypeBinding simpleType = type.getSimpleType();
-      Object value = simpleType == null ? text : simpleType.unmarshal(qName, text);
+      Object value = simpleType == null ? text : simpleType.unmarshal(qName, type.getQName(), nsCtx, text);
       setData(o, qName, type, value);
    }
 

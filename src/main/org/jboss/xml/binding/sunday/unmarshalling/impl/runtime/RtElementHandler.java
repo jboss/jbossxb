@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
@@ -84,7 +85,7 @@ public class RtElementHandler
       return o;
    }
 
-   public void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs)
+   public void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs, NamespaceContext nsCtx)
    {
       for(int i = 0; i < attrs.getLength(); ++i)
       {
@@ -95,7 +96,7 @@ public class RtElementHandler
             AttributeHandler handler = binding.getHandler();
             if(handler != null)
             {
-               Object value = handler.unmarshal(elementName, attrName, binding.getType(), attrs.getValue(i));
+               Object value = handler.unmarshal(elementName, attrName, binding.getType(), attrs.getValue(i), nsCtx);
                handler.attribute(elementName, attrName, o, value);
             }
             else
@@ -107,14 +108,18 @@ public class RtElementHandler
          }
          else
          {
-            set(o, attrName, type.getSimpleType(), attrs.getValue(i));
+            set(o, attrName, type, nsCtx, attrs.getValue(i));
          }
       }
    }
 
-   public void characters(Object o, QName elementName, TypeBinding type, String text)
+   public void characters(Object o,
+                          QName elementName,
+                          TypeBinding type,
+                          NamespaceContext nsCtx,
+                          String text)
    {
-      set(o, elementName, type.getSimpleType(), text);
+      set(o, elementName, type, nsCtx, text);
    }
 
    public Object endElement(Object o, QName elementName, TypeBinding type)
@@ -129,7 +134,7 @@ public class RtElementHandler
 
    // Private
 
-   private static void set(Object o, QName elementName, SimpleTypeBinding type, String text)
+   private static void set(Object o, QName elementName, TypeBinding type, NamespaceContext nsCtx, String text)
    {
       Class cls = o.getClass();
       String methodBase = Util.xmlNameToClassName(elementName.getLocalPart(), true);
@@ -154,7 +159,8 @@ public class RtElementHandler
          }
       }
 
-      Object value = type == null ? text : type.unmarshal(elementName, text);
+      SimpleTypeBinding simpleType = type.getSimpleType();
+      Object value = simpleType == null ? text : simpleType.unmarshal(elementName, type.getQName(), nsCtx, text);
       try
       {
          set(o, value, setter, field);

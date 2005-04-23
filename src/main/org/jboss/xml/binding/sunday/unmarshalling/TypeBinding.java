@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
 
 /**
@@ -32,7 +33,7 @@ public class TypeBinding
 
    public TypeBinding(QName qName)
    {
-      this(qName, SimpleTypeBinding.NOOP);
+      this(qName, SimpleTypeBinding.DEFAULT);
    }
 
    public TypeBinding(QName qName, SimpleTypeBinding simple)
@@ -124,14 +125,14 @@ public class TypeBinding
       return handler.startElement(parent, qName, this);
    }
 
-   public void attributes(Object o, QName elementName, Attributes attrs)
+   public void attributes(Object o, QName elementName, Attributes attrs, NamespaceContext nsCtx)
    {
-      handler.attributes(o, elementName, this, attrs);
+      handler.attributes(o, elementName, this, attrs, nsCtx);
    }
 
-   public void characters(Object o, QName qName, String text)
+   public void characters(Object o, QName qName, NamespaceContext nsCtx, String text)
    {
-      handler.characters(o, qName, this, text);
+      handler.characters(o, qName, this, nsCtx, text);
    }
 
    public Object endElement(Object parent, Object o, QName qName)

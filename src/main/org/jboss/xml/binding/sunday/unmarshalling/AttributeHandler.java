@@ -7,6 +7,7 @@
 package org.jboss.xml.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -21,9 +22,9 @@ public abstract class AttributeHandler
       }
    };
 
-   public Object unmarshal(QName elemName, QName attrName, TypeBinding type, String value)
+   public Object unmarshal(QName elemName, QName attrName, TypeBinding type, String value, NamespaceContext nsCtx)
    {
-      return type == null ? value : type.getSimpleType().unmarshal(attrName, value);
+      return type == null ? value : type.getSimpleType().unmarshal(attrName, type.getQName(), nsCtx, value);
    }
 
    public abstract void attribute(QName elemName, QName attrName, Object owner, Object value);

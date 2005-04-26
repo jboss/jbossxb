@@ -20,7 +20,7 @@ public interface ElementInterceptor
 
    void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs, NamespaceContext nsCtx);
 
-   void characters(Object o, QName elementName, TypeBinding type, String text);
+   void characters(Object o, QName elementName, TypeBinding type, NamespaceContext nsCtx, String text);
 
    Object endElement(Object o, QName elementName, TypeBinding type);
 

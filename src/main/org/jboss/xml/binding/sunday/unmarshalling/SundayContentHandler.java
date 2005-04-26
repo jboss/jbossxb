@@ -74,9 +74,7 @@ public class SundayContentHandler
             {
                ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
                interceptor.characters(objectStack.peek(elementHandlers.size() - 1 - i),
-                  endName,
-                  typeBinding,
-                  dataContent
+                  endName, typeBinding, nsRegistry, dataContent
                );
             }
          }
@@ -181,50 +179,6 @@ public class SundayContentHandler
    public Object getRoot()
    {
       return root;
-   }
-
-   // UnmarshallingContext impl
-
-   public QName resolveQName(String value)
-   {
-      // todo: implement resolveQName
-      throw new UnsupportedOperationException("resolveQName is not implemented.");
-   }
-
-   public Iterator getNamespaceURIs()
-   {
-      // todo: implement getNamespaceURIs
-      throw new UnsupportedOperationException("getNamespaceURIs is not implemented.");
-   }
-
-   public NamespaceContext getNamespaceContext()
-   {
-      // todo: implement getNamespaceContext
-      throw new UnsupportedOperationException("getNamespaceContext is not implemented.");
-   }
-
-   public Object getMetadata()
-   {
-      // todo: implement getMetadata
-      throw new UnsupportedOperationException("getMetadata is not implemented.");
-   }
-
-   public Object getParentMetadata()
-   {
-      // todo: implement getParentMetadata
-      throw new UnsupportedOperationException("getParentMetadata is not implemented.");
-   }
-
-   public String getChildContent(String namespaceURI, String qName)
-   {
-      // todo: implement getChildContent
-      throw new UnsupportedOperationException("getChildContent is not implemented.");
-   }
-
-   public XSTypeDefinition getType()
-   {
-      // todo: implement getType
-      throw new UnsupportedOperationException("getType is not implemented.");
    }
 
    // Inner

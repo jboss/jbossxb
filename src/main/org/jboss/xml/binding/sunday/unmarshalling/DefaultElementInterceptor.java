@@ -28,7 +28,7 @@ public class DefaultElementInterceptor
    {
    }
 
-   public void characters(Object o, QName qName, TypeBinding type, String text)
+   public void characters(Object o, QName qName, TypeBinding type, NamespaceContext nsCtx, String text)
    {
    }
 

@@ -16,7 +16,7 @@ import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
-import org.jboss.xml.binding.sunday.unmarshalling.SimpleTypeBinding;
+import org.jboss.xml.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.xml.sax.Attributes;
@@ -113,15 +113,6 @@ public class RtElementHandler
       }
    }
 
-   public void characters(Object o,
-                          QName elementName,
-                          TypeBinding type,
-                          NamespaceContext nsCtx,
-                          String text)
-   {
-      set(o, elementName, type, nsCtx, text);
-   }
-
    public Object endElement(Object o, QName elementName, TypeBinding type)
    {
       // todo: immutables
@@ -159,7 +150,7 @@ public class RtElementHandler
          }
       }
 
-      SimpleTypeBinding simpleType = type.getSimpleType();
+      CharactersHandler simpleType = type.getSimpleType();
       Object value = simpleType == null ? text : simpleType.unmarshal(elementName, type.getQName(), nsCtx, text);
       try
       {

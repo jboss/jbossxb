@@ -8,11 +8,8 @@ package org.jboss.xml.binding.sunday.unmarshalling;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Iterator;
 import javax.xml.namespace.QName;
-import javax.xml.namespace.NamespaceContext;
 import org.jboss.xml.binding.parser.JBossXBParser;
-import org.jboss.xml.binding.UnmarshallingContext;
 import org.jboss.xml.binding.NamespaceRegistry;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
@@ -67,8 +64,23 @@ public class SundayContentHandler
             String dataContent = textContent.toString();
             textContent.delete(0, textContent.length());
 
-            typeBinding.characters(o, endName, nsRegistry, dataContent);
+            CharactersHandler simpleType = typeBinding.getSimpleType();
+            Object unmarshalled = simpleType == null ?
+               dataContent :
+               simpleType.unmarshal(endName, typeBinding.getQName(), nsRegistry, dataContent);
 
+            // if startElement returned null, we use characters as the object for this element
+            // todo subject to refactoring
+            if(o == null)
+            {
+               o = unmarshalled;
+            }
+            else if(simpleType != null)
+            {
+               simpleType.setValue(endName, o, unmarshalled);
+            }
+
+            // todo interceptors get dataContent?
             int i = elementHandlers.size();
             while(i-- > 0)
             {

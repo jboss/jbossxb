@@ -24,7 +24,7 @@ public class TypeBinding
    private Map elements = Collections.EMPTY_MAP;
    private Map attrs = Collections.EMPTY_MAP;
    private ElementHandler handler = DefaultElementHandler.INSTANCE;
-   private SimpleTypeBinding simpleType;
+   private CharactersHandler simpleType;
 
    public TypeBinding()
    {
@@ -33,10 +33,10 @@ public class TypeBinding
 
    public TypeBinding(QName qName)
    {
-      this(qName, SimpleTypeBinding.DEFAULT);
+      this(qName, CharactersHandler.DEFAULT);
    }
 
-   public TypeBinding(QName qName, SimpleTypeBinding simple)
+   public TypeBinding(QName qName, CharactersHandler simple)
    {
       this.qName = qName;
       this.simpleType = simple;
@@ -110,12 +110,12 @@ public class TypeBinding
       return attr;
    }
 
-   public SimpleTypeBinding getSimpleType()
+   public CharactersHandler getSimpleType()
    {
       return simpleType;
    }
 
-   public void setSimpleType(SimpleTypeBinding simpleType)
+   public void setSimpleType(CharactersHandler simpleType)
    {
       this.simpleType = simpleType;
    }
@@ -128,11 +128,6 @@ public class TypeBinding
    public void attributes(Object o, QName elementName, Attributes attrs, NamespaceContext nsCtx)
    {
       handler.attributes(o, elementName, this, attrs, nsCtx);
-   }
-
-   public void characters(Object o, QName qName, NamespaceContext nsCtx, String text)
-   {
-      handler.characters(o, qName, this, nsCtx, text);
    }
 
    public Object endElement(Object parent, Object o, QName qName)

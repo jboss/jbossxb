@@ -20,12 +20,6 @@ public interface ElementHandler
 
    void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs, NamespaceContext nsCtx);
 
-   void characters(Object o,
-                   QName elementName,
-                   TypeBinding type,
-                   NamespaceContext nsCtx,
-                   String text);
-
    Object endElement(Object o, QName elementName, TypeBinding type);
 
    void setParent(Object parent, Object o, QName qName);

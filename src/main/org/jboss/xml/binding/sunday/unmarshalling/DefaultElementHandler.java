@@ -44,17 +44,6 @@ public class DefaultElementHandler
       }
    }
 
-   public void characters(Object o,
-                          QName qName,
-                          TypeBinding type,
-                          NamespaceContext nsCtx,
-                          String text)
-   {
-      SimpleTypeBinding simpleType = type.getSimpleType();
-      Object value = simpleType == null ? text : simpleType.unmarshal(qName, type.getQName(), nsCtx, text);
-      setData(o, qName, type, value);
-   }
-
    public Object endElement(Object o, QName qName, TypeBinding type)
    {
       return o;

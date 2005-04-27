@@ -7,40 +7,49 @@
 package org.jboss.xml.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
-import javax.xml.namespace.NamespaceContext;
-import org.jboss.xml.binding.SimpleTypeBindings;
-import org.jboss.xml.binding.Constants;
+import org.jboss.xml.binding.JBossXBRuntimeException;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface SimpleTypeBinding
+public class SimpleTypeBinding
+   extends TypeBinding
 {
-   SimpleTypeBinding NOOP = new SimpleTypeBinding()
+   public SimpleTypeBinding()
    {
-      public Object unmarshal(QName qName, QName typeQName, NamespaceContext nsCtx, String text)
-      {
-         return text;
-      }
-   };
+      setDefaultHandler();
+   }
 
-   SimpleTypeBinding DEFAULT = new SimpleTypeBinding()
+   public SimpleTypeBinding(QName qName)
    {
-      public Object unmarshal(QName qName, QName typeQName, NamespaceContext nsCtx, String text)
-      {
-         Object o;
-         if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))
-         {
-            o = SimpleTypeBindings.unmarshal(typeQName.getLocalPart(), text, nsCtx);
-         }
-         else
-         {
-            o = text;
-         }
-         return o;
-      }
-   };
+      super(qName);
+      setDefaultHandler();
+   }
 
-   Object unmarshal(QName qName, QName typeQName, NamespaceContext nsCtx, String text);
+   public SimpleTypeBinding(QName qName, CharactersHandler simple)
+   {
+      super(qName, simple);
+      setDefaultHandler();
+   }
+
+   private void setDefaultHandler()
+   {
+      setHandler(new DefaultElementHandler(){
+         public Object startElement(Object parent, QName qName, TypeBinding type)
+         {
+            return null;
+         }
+      });
+   }
+   
+   public AttributeBinding addAttribute(QName name, TypeBinding type, AttributeHandler handler)
+   {
+      throw new JBossXBRuntimeException("Simple types can't have attributes.");
+   }
+
+   public void addElement(QName qName, ElementBinding binding)
+   {
+      throw new JBossXBRuntimeException("Simple types can't have child elements.");
+   }
 }

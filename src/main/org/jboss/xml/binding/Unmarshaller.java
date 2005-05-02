@@ -11,6 +11,7 @@ import org.xml.sax.ErrorHandler;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xml.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xml.binding.parser.JBossXBParser;
 
 import java.io.Reader;
 import java.io.InputStream;
@@ -40,6 +41,8 @@ public interface Unmarshaller
    void setErrorHandler(ErrorHandler errorHandler);
 
    void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri);
+
+   Object unmarshal(String xmlFile, JBossXBParser.ContentHandler handler) throws JBossXBException;
 
    Object unmarshal(String xmlFile) throws JBossXBException;
 

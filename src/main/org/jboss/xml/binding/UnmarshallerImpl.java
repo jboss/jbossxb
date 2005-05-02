@@ -93,6 +93,12 @@ public class UnmarshallerImpl
       return builder.getRoot();
    }
 
+   public Object unmarshal(String xmlFile, JBossXBParser.ContentHandler handler) throws JBossXBException
+   {
+      parser.parse(xmlFile, handler);
+      return handler.getRoot();
+   }
+
    public Object unmarshal(String xmlFile, SchemaBinding handler) throws JBossXBException
    {
       SundayContentHandler cHandler = new SundayContentHandler(handler);

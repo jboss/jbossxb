@@ -1,20 +1,18 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, the OpenSource J2EE webOS
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ *
+ */
 package org.jboss.util.file;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -27,13 +25,13 @@ import org.jboss.util.stream.Streams;
  * A collection of file utilities.
  *
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
- * @author  Scott.Stark@jboss.org
+ * @author  <a href="mailto:Scott.Stark@jboss.org">Scott Stark<a/>
  * @author  <a href="mailto:dimitris@jboss.org">Dimitris Andreadis</a>
- * @version <tt>$Revision$</tt>
+ * @version $Revision$
  */
 public final class Files
 {
-   /** The Logger instance */
+   /** The Logger instance */   
    private static final Logger log = Logger.getLogger(Files.class);
    
    /** for byte-to-hex conversions */
@@ -225,8 +223,40 @@ public final class Files
     * 
     * @param name the filename to encode
     * @return a filesystem-friendly filename
-    */
+    */   
    public static String encodeFileName(String name)
+   {
+      return encodeFileName(name, '@');
+   }
+   
+   /**
+    * Used to decode a file system friendly filename produced
+    * by encodeFileName() method, above.
+    * 
+    * Copied by Adrian's org.jboss.mq.pm.file.PersistenceManager
+    * and adapted to use hex instead of decimal digits
+    * 
+    * Note:
+    *   Decoding will not work if encoding produced
+    *   multi-byte encoded characters. If this is truly
+    *   needed we'll have to revise the encoding.
+    * 
+    * @param name the filename to decode
+    * @return the original name
+    */
+   public static String decodeFileName(String name)
+   {
+      return decodeFileName(name, '@');
+   }
+   
+   /**
+    * See encodeFileName(String) above.
+    * 
+    * @param name the filename to encode
+    * @param escape the escape character to use
+    * @return a filesystem-friendly filename
+    */ 
+   public static String encodeFileName(String name, char escape)
    {
       StringBuffer rc = new StringBuffer();
       for (int i = 0; i < name.length(); i++ )
@@ -252,16 +282,17 @@ public final class Files
             // Any other character needs to be encoded.
             default:
             
-               // We encode the characters as %hh where
+               // We encode the characters as <esc>hh,
+               // where <esc> is the passed escape character and
                // hh is the hex value of the UTF8 byte of the character.
-               // You might get %hh%hh since UTF8 can produce multiple
-               // bytes for a since character.
+               // You might get <esc>hh<esc>hh since UTF8 can produce multiple
+               // bytes for a single character.
                try
                {
                   byte data[] = ("" + name.charAt(i)).getBytes("UTF8");
                   for (int j = 0; j < data.length; j++)
                   {
-                     rc.append('%');
+                     rc.append(escape);
                      rc.append(hexDigits[ (data[j] >> 4) & 0xF ]); // high order digit
                      rc.append(hexDigits[ (data[j]     ) & 0xF ]); // low order digit                     
                   }
@@ -274,23 +305,15 @@ public final class Files
       }
       return rc.toString();
    }
-   
+
    /**
-    * Used to decode a file system friendly filename produced
-    * by encodeFileName() method, above.
-    * 
-    * Copied by Adrian's org.jboss.mq.pm.file.PersistenceManager
-    * and adapted to use hex instead of decimal digits
-    * 
-    * Note:
-    *   Decoding will not work if encoding produced
-    *   multi-byte encoded characters. If this is truly
-    *   needed we'll have to revise the encoding.
-    * 
+    * See decodeFileName(String) above.
+    *  
     * @param name the filename to decode
+    * @param escape the escape character to use
     * @return the original name
     */
-   public static String decodeFileName(String name)
+   public static String decodeFileName(String name, char escape)
    {
       if (name == null)
       {
@@ -301,7 +324,7 @@ public final class Files
       for (int i = 0; i < name.length(); i++)
       {
          char c = name.charAt(i);
-         if (c == '%')
+         if (c == escape)
          {
             char h1 = name.charAt(++i);
             char h2 = name.charAt(++i);
@@ -315,8 +338,8 @@ public final class Files
                   : ((h2 >= 'A') ? (10 + h2 - 'A')
                                       : (h2 - '0'));
             
-            // handling only the %hh case here, as we don't know
-            // if %hh%hh belong to the same character
+            // handling only the <esc>hh case here, as we don't know
+            // if <esc>hh<esc>hh belong to the same character
             // (and we are lazy to change the encoding) - REVISIT
             byte[] bytes = new byte[] { (byte)(d1 * 16 + d2) };
             
@@ -336,5 +359,38 @@ public final class Files
          }
       }
       return sbuf.toString();
-   }   
+   }      
+
+   /**
+    * Build a relative path to the given base path.
+    * @param base - the path used as the base
+    * @param path - the path to compute relative to the base path
+    * @return A relative path from base to path
+    * @throws IOException
+    */ 
+   public static String findRelativePath(String base, String path)
+      throws IOException
+   {
+      String a = new File(base).getCanonicalFile().toURI().getPath();
+      String b = new File(path).getCanonicalFile().toURI().getPath();
+      String[] basePaths = a.split("/");
+      String[] otherPaths = b.split("/");
+      int n = 0;
+      for(; n < basePaths.length && n < otherPaths.length; n ++)
+      {
+         if( basePaths[n].equals(otherPaths[n]) == false )
+            break;
+      }
+      System.out.println("Common length: "+n);
+      StringBuffer tmp = new StringBuffer("../");
+      for(int m = n; m < basePaths.length - 1; m ++)
+         tmp.append("../");
+      for(int m = n; m < otherPaths.length; m ++)
+      {
+         tmp.append(otherPaths[m]);
+         tmp.append("/");
+      }
+
+      return tmp.toString();
+   }
 }

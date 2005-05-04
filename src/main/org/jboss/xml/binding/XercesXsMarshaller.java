@@ -35,6 +35,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Arrays;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -59,6 +60,21 @@ public class XercesXsMarshaller
    private final Map prefixByUri = new HashMap();
 
    private Object root;
+
+   /**
+    * Whether NULL values should be ignored or marshalled as xsi:nil='1'
+    */
+   private boolean supportNil;
+
+   public boolean isSupportNil()
+   {
+      return supportNil;
+   }
+
+   public void setSupportNil(boolean supportNil)
+   {
+      this.supportNil = supportNil;
+   }
 
    /**
     * Defines a namespace. The namespace declaration will appear in the root element.
@@ -116,29 +132,29 @@ public class XercesXsMarshaller
 
       content.startDocument();
 
-      if (rootQNames.isEmpty())
+      if(rootQNames.isEmpty())
       {
          XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
-         for (int i = 0; i < components.getLength(); ++i)
+         for(int i = 0; i < components.getLength(); ++i)
          {
             XSElementDeclaration element = (XSElementDeclaration)components.item(i);
-            marshalElement(element, 1, 1);// todo fix min/max
+            marshalElement(element, 1, 1, true);// todo fix min/max
          }
       }
       else
       {
-         for (int i = 0; i < rootQNames.size(); ++i)
+         for(int i = 0; i < rootQNames.size(); ++i)
          {
             QName qName = (QName)rootQNames.get(i);
             XSElementDeclaration element = model.getElementDeclaration(qName.getLocalPart(), qName.getNamespaceURI());
-            if (element == null)
+            if(element == null)
             {
                XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
                String roots = "";
-               for (int j = 0; j < components.getLength(); ++j)
+               for(int j = 0; j < components.getLength(); ++j)
                {
                   XSObject xsObject = components.item(j);
-                  if (j > 0)
+                  if(j > 0)
                   {
                      roots += ", ";
                   }
@@ -147,7 +163,7 @@ public class XercesXsMarshaller
                throw new IllegalStateException("Root element not found: " + qName + " among " + roots);
             }
 
-            marshalElement(element, 1, 1);// todo fix min/max
+            marshalElement(element, 1, 1, true);// todo fix min/max
          }
       }
 
@@ -156,24 +172,26 @@ public class XercesXsMarshaller
       // version & encoding
       writeXmlVersion(writer);
 
-      ContentWriter contentWriter = new ContentWriter(writer, propertyIsTrueOrNotSet(Marshaller.PROP_OUTPUT_INDENTATION));
+      ContentWriter contentWriter = new ContentWriter(writer,
+         propertyIsTrueOrNotSet(Marshaller.PROP_OUTPUT_INDENTATION)
+      );
       content.handleContent(contentWriter);
    }
 
-   private boolean marshalElement(XSElementDeclaration element, int minOccurs, int maxOccurs)
+   private boolean marshalElement(XSElementDeclaration element, int minOccurs, int maxOccurs, boolean declareNs)
    {
       Object value;
-      if (stack.isEmpty())
+      if(stack.isEmpty())
       {
          value = provider.getRoot(root, null, element.getNamespace(), element.getName());
-         if (value == null)
+         if(value == null)
          {
             return false;
          }
       }
       else
       {
-         if (stack.peek() instanceof Collection)
+         if(stack.peek() instanceof Collection)
          {
             // collection is the provider
             value = (Collection)stack.peek();
@@ -181,115 +199,159 @@ public class XercesXsMarshaller
          else
          {
             value = provider.getChildren(stack.peek(), null, element.getNamespace(), element.getName());
-            if (value == null)
+            if(value == null)
             {
                value = provider.getElementValue(stack.peek(), null, element.getNamespace(), element.getName());
             }
          }
       }
 
-      if (value != null)
+      if(value != null)
       {
          stack.push(value);
 
-         if (maxOccurs != 1 && value instanceof Collection)
+         if(maxOccurs != 1)
          {
-            for (Iterator iter = ((Collection)value).iterator(); iter.hasNext();)
+            Iterator i;
+            if(value instanceof Collection)
             {
-               Object item = iter.next();
+               i = ((Collection)value).iterator();
+            }
+            else if(value.getClass().isArray())
+            {
+               i = Arrays.asList((Object[])value).iterator();
+            }
+            else if(value instanceof Iterator)
+            {
+               i = (Iterator)value;
+            }
+            else
+            {
+               throw new JBossXBRuntimeException("Unexpected type for children: " + value.getClass());
+            }
+
+            while(i.hasNext())
+            {
+               Object item = i.next();
                stack.push(item);
-               marshalElementType(element);
+               marshalElementType(element, declareNs);
                stack.pop();
             }
          }
          else
          {
-            marshalElementType(element);
+            marshalElementType(element, declareNs);
          }
 
          stack.pop();
+      }
+      else if(supportNil && element.getNillable())
+      {
+         String prefix = (String)prefixByUri.get(element.getNamespace());
+         String qName = createQName(prefix, element);
+         AttributesImpl attrs = new AttributesImpl(1);
+         String nilQName = prefixByUri.get(Constants.NS_XML_SCHEMA_INSTANCE) + ":nil";
+         attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "nil", nilQName, null, "1");
+         content.startElement(element.getNamespace(), element.getName(), qName, attrs);
+         content.endElement(element.getNamespace(), element.getName(), qName);
       }
 
       return minOccurs == 0 || value != null;
    }
 
-   private void marshalElementType(XSElementDeclaration element)
+   private void marshalElementType(XSElementDeclaration element, boolean declareNs)
    {
       XSTypeDefinition type = element.getTypeDefinition();
-      switch (type.getTypeCategory())
+      switch(type.getTypeCategory())
       {
          case XSTypeDefinition.SIMPLE_TYPE:
-            marshalSimpleType(element);
+            marshalSimpleType(element, declareNs);
             break;
          case XSTypeDefinition.COMPLEX_TYPE:
-            marshalComplexType(element);
+            marshalComplexType(element, declareNs);
             break;
          default:
             throw new IllegalStateException("Unexpected type category: " + type.getTypeCategory());
       }
    }
 
-   private void marshalSimpleType(XSElementDeclaration element)
+   private void marshalSimpleType(XSElementDeclaration element, boolean declareNs)
    {
       Object value = stack.peek();
       String valueStr = value.toString();
 
       String prefix = (String)prefixByUri.get(element.getNamespace());
-      String qName = prefix == null ? element.getName() : prefix + ':' + element.getName();
+      String qName = createQName(prefix, element);
 
-      content.startElement(element.getNamespace(), element.getName(), qName, null);
+      AttributesImpl attrs = null;
+      if(declareNs && prefixByUri.size() > 0)
+      {
+         attrs = new AttributesImpl(prefixByUri.size());
+         declareNs(attrs);
+      }
+
+      content.startElement(element.getNamespace(), element.getName(), qName, attrs);
       content.characters(valueStr.toCharArray(), 0, valueStr.length());
       content.endElement(element.getNamespace(), element.getName(), qName);
    }
 
-   private void marshalComplexType(XSElementDeclaration element)
+   private void marshalComplexType(XSElementDeclaration element, boolean declareNs)
    {
       XSComplexTypeDefinition type = (XSComplexTypeDefinition)element.getTypeDefinition();
       XSParticle particle = type.getParticle();
 
       XSObjectList attributeUses = type.getAttributeUses();
-      AttributesImpl attrs = attributeUses.getLength() > 0 ? new AttributesImpl(attributeUses.getLength()) : null;
-      for (int i = 0; i < attributeUses.getLength(); ++i)
+      int attrsTotal = declareNs ? prefixByUri.size() + attributeUses.getLength(): attributeUses.getLength();
+      AttributesImpl attrs = attrsTotal > 0 ? new AttributesImpl(attrsTotal) : null;
+
+      if(declareNs && prefixByUri.size() > 0)
+      {
+         declareNs(attrs);
+      }
+
+      for(int i = 0; i < attributeUses.getLength(); ++i)
       {
          XSAttributeUse attrUse = (XSAttributeUse)attributeUses.item(i);
          XSAttributeDeclaration attrDec = attrUse.getAttrDeclaration();
          Object attrValue = provider.getAttributeValue(stack.peek(), null, attrDec.getNamespace(), attrDec.getName());
-         if (attrValue != null)
+         if(attrValue != null)
          {
             attrs.add(attrDec.getNamespace(),
                attrDec.getName(),
                attrDec.getName(),
                attrDec.getTypeDefinition().getName(),
-               attrValue.toString());
+               attrValue.toString()
+            );
          }
       }
 
       String prefix = (String)prefixByUri.get(element.getNamespace());
-      String qName = prefix == null ? element.getName() : prefix + ':' + element.getName();
+      String qName = createQName(prefix, element);
       content.startElement(element.getNamespace(), element.getName(), qName, attrs);
 
-      if (particle != null)
+      if(particle != null)
       {
-         marshalParticle(particle);
+         marshalParticle(particle, false);
       }
 
       content.endElement(element.getNamespace(), element.getName(), qName);
    }
 
-   private boolean marshalParticle(XSParticle particle)
+   private boolean marshalParticle(XSParticle particle, boolean declareNs)
    {
       boolean marshalled;
       XSTerm term = particle.getTerm();
-      switch (term.getType())
+      switch(term.getType())
       {
          case XSConstants.MODEL_GROUP:
-            marshalled = marshalModelGroup((XSModelGroup)term);
+            marshalled = marshalModelGroup((XSModelGroup)term, declareNs);
             break;
          case XSConstants.WILDCARD:
-            marshalled = marshalWildcard((XSWildcard)term);
+            marshalled = marshalWildcard((XSWildcard)term, declareNs);
             break;
          case XSConstants.ELEMENT_DECLARATION:
-            marshalled = marshalElement((XSElementDeclaration)term, particle.getMinOccurs(), particle.getMaxOccurs());
+            marshalled =
+               marshalElement((XSElementDeclaration)term, particle.getMinOccurs(), particle.getMaxOccurs(), declareNs);
             break;
          default:
             throw new IllegalStateException("Unexpected term type: " + term.getType());
@@ -297,11 +359,11 @@ public class XercesXsMarshaller
       return marshalled;
    }
 
-   private boolean marshalWildcard(XSWildcard wildcard)
+   private boolean marshalWildcard(XSWildcard wildcard, boolean declareNs)
    {
       // todo class resolution
       ClassMapping mapping = getClassMapping(stack.peek().getClass());
-      if (mapping == null)
+      if(mapping == null)
       {
          throw new IllegalStateException("Failed to marshal wildcard. Class mapping not found for " + stack.peek());
       }
@@ -317,10 +379,10 @@ public class XercesXsMarshaller
       boolean marshalled = false;
       XSModel model = loadSchema(mapping.schemaUrl);
       XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
-      for (int i = 0; i < components.getLength(); ++i)
+      for(int i = 0; i < components.getLength(); ++i)
       {
          XSElementDeclaration element = (XSElementDeclaration)components.item(i);
-         marshalled = marshalElement(element, 1, 1);// todo fix min/max
+         marshalled = marshalElement(element, 1, 1, declareNs);// todo fix min/max
       }
 
       this.root = parentRoot;
@@ -330,19 +392,19 @@ public class XercesXsMarshaller
       return marshalled;
    }
 
-   private boolean marshalModelGroup(XSModelGroup modelGroup)
+   private boolean marshalModelGroup(XSModelGroup modelGroup, boolean declareNs)
    {
       boolean marshalled;
-      switch (modelGroup.getCompositor())
+      switch(modelGroup.getCompositor())
       {
          case XSModelGroup.COMPOSITOR_ALL:
-            marshalled = marshalModelGroupAll(modelGroup.getParticles());
+            marshalled = marshalModelGroupAll(modelGroup.getParticles(), declareNs);
             break;
          case XSModelGroup.COMPOSITOR_CHOICE:
-            marshalled = marshalModelGroupChoice(modelGroup.getParticles());
+            marshalled = marshalModelGroupChoice(modelGroup.getParticles(), declareNs);
             break;
          case XSModelGroup.COMPOSITOR_SEQUENCE:
-            marshalled = marshalModelGroupSequence(modelGroup.getParticles());
+            marshalled = marshalModelGroupSequence(modelGroup.getParticles(), declareNs);
             break;
          default:
             throw new IllegalStateException("Unexpected compsitor: " + modelGroup.getCompositor());
@@ -350,29 +412,29 @@ public class XercesXsMarshaller
       return marshalled;
    }
 
-   private boolean marshalModelGroupAll(XSObjectList particles)
+   private boolean marshalModelGroupAll(XSObjectList particles, boolean declareNs)
    {
       boolean marshalled = false;
-      for (int i = 0; i < particles.getLength(); ++i)
+      for(int i = 0; i < particles.getLength(); ++i)
       {
          XSParticle particle = (XSParticle)particles.item(i);
-         marshalled |= marshalParticle(particle);
+         marshalled |= marshalParticle(particle, declareNs);
       }
       return marshalled;
    }
 
-   private boolean marshalModelGroupChoice(XSObjectList particles)
+   private boolean marshalModelGroupChoice(XSObjectList particles, boolean declareNs)
    {
       boolean marshalled = false;
       Content mainContent = this.content;
-      for (int i = 0; i < particles.getLength() && !marshalled; ++i)
+      for(int i = 0; i < particles.getLength() && !marshalled; ++i)
       {
          XSParticle particle = (XSParticle)particles.item(i);
          this.content = new Content();
-         marshalled = marshalParticle(particle);
+         marshalled = marshalParticle(particle, declareNs);
       }
 
-      if (marshalled)
+      if(marshalled)
       {
          mainContent.append(this.content);
       }
@@ -381,15 +443,35 @@ public class XercesXsMarshaller
       return marshalled;
    }
 
-   private boolean marshalModelGroupSequence(XSObjectList particles)
+   private boolean marshalModelGroupSequence(XSObjectList particles, boolean declareNs)
    {
       boolean marshalled = true;
-      for (int i = 0; i < particles.getLength(); ++i)
+      for(int i = 0; i < particles.getLength(); ++i)
       {
          XSParticle particle = (XSParticle)particles.item(i);
-         marshalled &= marshalParticle(particle);
+         marshalled &= marshalParticle(particle, declareNs);
       }
       return marshalled;
+   }
+
+   private void declareNs(AttributesImpl attrs)
+   {
+      for(Iterator i = prefixByUri.entrySet().iterator(); i.hasNext();)
+      {
+         Map.Entry entry = (Map.Entry)i.next();
+         String localName = (String)entry.getValue();
+         attrs.add(null,
+            localName,
+            localName == null ? "xmlns" : "xmlns:" + localName,
+            null,
+            (String)entry.getKey()
+         );
+      }
+   }
+
+   private static String createQName(String prefix, XSElementDeclaration element)
+   {
+      return prefix == null ? element.getName() : prefix + ':' + element.getName();
    }
 
    private static XSModel loadSchema(String xsdURL)
@@ -397,7 +479,7 @@ public class XercesXsMarshaller
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
       XSModel model = schemaLoader.loadURI(xsdURL);
-      if (model == null)
+      if(model == null)
       {
          throw new IllegalArgumentException("Invalid URI for schema: " + xsdURL);
       }
@@ -411,7 +493,7 @@ public class XercesXsMarshaller
       XSLoader schemaLoader = impl.createXSLoader(null);
       // [TODO] load from reader
       XSModel model = schemaLoader.load(null);
-      if (model == null)
+      if(model == null)
       {
          throw new IllegalArgumentException("Cannot load schema");
       }
@@ -430,7 +512,7 @@ public class XercesXsMarshaller
          DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
          impl = (XSImplementation)registry.getDOMImplementation("XS-Loader");
       }
-      catch (Exception e)
+      catch(Exception e)
       {
          log.error("Failed to create schema loader.", e);
          throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());

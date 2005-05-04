@@ -98,17 +98,17 @@ public class ContentWriter
          }
       }
 
-      if(namespaceURI != null && namespaceURI.length() > 1)
+      /*if(namespaceURI != null && namespaceURI.length() > 1)
       {
          int colon = qName.indexOf(':');
-         /*
+         / *
          if(colon < 0)
          {
             throw new IllegalStateException(
                "Namespace URI specified (" + namespaceURI + ") but no qName found in qualified name '" + qName
             );
          }
-         */
+         * /
 
          if(colon >= 0)
          {
@@ -132,7 +132,7 @@ public class ContentWriter
             write(writer, namespaceURI);
             write(writer, "\"");
          }
-      }
+      }*/
 
       write(writer, '>');
    }

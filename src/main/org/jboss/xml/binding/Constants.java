@@ -15,6 +15,7 @@ import javax.xml.namespace.QName;
 public interface Constants
 {
    String NS_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
+   String NS_XML_SCHEMA_INSTANCE = "http://www.w3.org/2001/XMLSchema-instance";
 
    //
    // XML schema type names

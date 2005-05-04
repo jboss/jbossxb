@@ -8,7 +8,6 @@ package org.jboss.xml.binding;
 
 import org.xml.sax.SAXException;
 import org.xml.sax.InputSource;
-import org.xml.sax.Attributes;
 import org.apache.ws.jaxme.xs.XSParser;
 import org.apache.ws.jaxme.xs.XSSchema;
 import org.apache.ws.jaxme.xs.XSElement;
@@ -59,7 +58,7 @@ public class XsMarshaller
    /**
     * Declared namespaces
     */
-   private final Map uriByNsName = new HashMap();
+   private final Map prefixByUri = new HashMap();
 
    private Object root;
 
@@ -87,7 +86,7 @@ public class XsMarshaller
          {
             log.info("marshalling " + elements[i].getName().getLocalName());
             //processElement(elements[i], addedAttributes, 1);
-            processElement(elements[i], null, 1);
+            processElement(elements[i], 1, true);
          }
       }
       else
@@ -104,7 +103,7 @@ public class XsMarshaller
             }
 
             //processElement(xsRoot, addedAttributes, 1);
-            processElement(xsRoot, null, 1);
+            processElement(xsRoot, 1, true);
          }
       }
 
@@ -113,7 +112,9 @@ public class XsMarshaller
       // version & encoding
       writeXmlVersion(writer);
 
-      ContentWriter contentWriter = new ContentWriter(writer, propertyIsTrueOrNotSet(Marshaller.PROP_OUTPUT_INDENTATION));
+      ContentWriter contentWriter = new ContentWriter(writer,
+         propertyIsTrueOrNotSet(Marshaller.PROP_OUTPUT_INDENTATION)
+      );
       content.handleContent(contentWriter);
    }
 
@@ -124,14 +125,12 @@ public class XsMarshaller
     * Otherwise, the declaration will follow the format <code>xmlns:name=uri</code>.
     * <p>If the namespace with the given name was already declared, its value is overwritten.
     *
-    * @param name the name of the namespace to declare (can be null or empty string)
-    * @param uri  the URI of the namespace.
+    * @param prefix the prefix of the namespace to declare
+    * @param uri    the URI of the namespace.
     */
-   public void declareNamespace(String name, String uri)
+   public void declareNamespace(String prefix, String uri)
    {
-      boolean nonEmptyName = (name != null && name.length() > 0);
-      String localName = (nonEmptyName ? name : "xmlns");
-      uriByNsName.put(localName, uri);
+      prefixByUri.put(uri, prefix);
    }
 
    /**
@@ -146,10 +145,12 @@ public class XsMarshaller
     */
    public void addAttribute(String prefix, String localName, String type, String value)
    {
+      // todo what was that?..
+      /*
       final String uri;
       if(prefix != null && prefix.length() > 0)
       {
-         uri = (String)uriByNsName.get(prefix);
+         uri = (String)prefixByUri.get(prefix);
          if(uri == null)
          {
             throw new IllegalStateException("Namespace prefix " + prefix + " is not declared. Use declareNamespace().");
@@ -159,6 +160,7 @@ public class XsMarshaller
       {
          uri = null;
       }
+      */
    }
 
    /**
@@ -178,35 +180,28 @@ public class XsMarshaller
 
    // Private
 
-   private final void processElement(XSElement element, AttributesImpl attrs, int maxOccurs) throws SAXException
+   private final void processElement(XSElement element, int maxOccurs, boolean declareNs) throws SAXException
    {
       XSType type = element.getType();
-      processType(element, type, attrs, maxOccurs);
+      processType(element, type, maxOccurs, declareNs);
    }
 
-   private final void processType(XSElement element, XSType type, AttributesImpl attrs, int maxOccurs)
+   private final void processType(XSElement element, XSType type, int maxOccurs, boolean declareNs)
       throws SAXException
    {
       if(type.isSimple())
       {
          XSSimpleType simpleType = type.getSimpleType();
-         processSimpleType(element, simpleType, null);
+         processSimpleType(element, simpleType, null, declareNs);
       }
       else
       {
          XSComplexType complexType = type.getComplexType();
-         processComplexType(element, complexType, attrs, maxOccurs);
+         processComplexType(element, complexType, maxOccurs, declareNs);
       }
    }
 
-   /**
-    * todo this should be rewritten
-    *
-    * @param element
-    * @param type
-    * @param attrs
-    */
-   private final void processSimpleType(XSElement element, XSSimpleType type, Attributes attrs)
+   private final void processSimpleType(XSElement element, XSSimpleType type, AttributesImpl attrs, boolean declareNs)
    {
       if(type.isAtomic())
       {
@@ -248,6 +243,15 @@ public class XsMarshaller
          name.getLocalName() : prefix + ':' + name.getLocalName()
          );
 
+      if(declareNs && prefixByUri.size() > 0)
+      {
+         if(attrs == null)
+         {
+            attrs = new AttributesImpl(prefixByUri.size());
+         }
+         declareNs(attrs);
+      }
+
       Object parent;
       if(stack.isEmpty())
       {
@@ -278,11 +282,18 @@ public class XsMarshaller
 
    private final void processComplexType(XSElement element,
                                          XSComplexType type,
-                                         AttributesImpl addedAttrs,
-                                         int maxOccurs)
+                                         int maxOccurs,
+                                         boolean declareNs)
       throws SAXException
    {
       final XsQName xsName = element.getName();
+
+      AttributesImpl attrs = null;
+      if(declareNs && prefixByUri.size() > 0)
+      {
+         attrs = new AttributesImpl(prefixByUri.size());
+         declareNs(attrs);
+      }
 
       Object parent;
       boolean popRoot = false;
@@ -294,7 +305,6 @@ public class XsMarshaller
             return;
          }
 
-         AttributesImpl attrs = addedAttrs;
          if(type.getAttributes() != null)
          {
             if(attrs == null)
@@ -332,7 +342,6 @@ public class XsMarshaller
          String qName = null;
          if(maxOccurs == 1)
          {
-            AttributesImpl attrs = addedAttrs;
             if(type.getAttributes() != null)
             {
                if(attrs != null)
@@ -351,7 +360,7 @@ public class XsMarshaller
             content.startElement(xsName.getNamespaceURI(), xsName.getLocalName(), qName, attrs);
          }
 
-         handleChildren(element, type, children, addedAttrs, maxOccurs);
+         handleChildren(element, type, children, maxOccurs);
 
          if(qName != null)
          {
@@ -362,7 +371,7 @@ public class XsMarshaller
       {
          if(type.hasSimpleContent())
          {
-            processSimpleType(element, type.getSimpleContent().getType().getSimpleType(), null);
+            processSimpleType(element, type.getSimpleContent().getType().getSimpleType(), null, declareNs);
          }
          else
          {
@@ -370,7 +379,11 @@ public class XsMarshaller
             {
                final XsQName name = element.getName();
 
-               final Object value = provider.getElementValue(parent, null, name.getNamespaceURI(), name.getLocalName());
+               final Object value = provider.getElementValue(parent,
+                  null,
+                  name.getNamespaceURI(),
+                  name.getLocalName()
+               );
                if(Boolean.TRUE.equals(value))
                {
                   final String prefix = name.getPrefix();
@@ -380,16 +393,14 @@ public class XsMarshaller
                      );
 
                   AttributesImpl ownAttrs = provideAttributes(type.getAttributes(), parent);
-                  if(ownAttrs != null)
+
+                  if(declareNs && prefixByUri.size() > 0)
                   {
-                     if(addedAttrs != null)
+                     if(ownAttrs == null)
                      {
-                        ownAttrs.addAll(ownAttrs);
+                        ownAttrs = new AttributesImpl(prefixByUri.size());
                      }
-                  }
-                  else
-                  {
-                     ownAttrs = addedAttrs;
+                     declareNs(ownAttrs);
                   }
 
                   content.startElement(name.getNamespaceURI(), name.getLocalName(), qName, ownAttrs);
@@ -424,7 +435,6 @@ public class XsMarshaller
    private void handleChildren(XSElement parent,
                                XSComplexType type,
                                Object children,
-                               AttributesImpl addedAttrs,
                                int maxOccurs)
       throws SAXException
    {
@@ -432,23 +442,23 @@ public class XsMarshaller
       {
          if(children instanceof List)
          {
-            handleChildrenList(parent, type, (List)children, addedAttrs, maxOccurs);
+            handleChildrenList(parent, type, (List)children, maxOccurs);
          }
          else if(children instanceof Collection)
          {
-            handleChildrenIterator(parent, type, ((Collection)children).iterator(), addedAttrs, maxOccurs);
+            handleChildrenIterator(parent, type, ((Collection)children).iterator(), maxOccurs);
          }
          else if(children instanceof Iterator)
          {
-            handleChildrenIterator(parent, type, (Iterator)children, addedAttrs, maxOccurs);
+            handleChildrenIterator(parent, type, (Iterator)children, maxOccurs);
          }
          else if(children.getClass().isArray())
          {
-            handleChildrenArray(parent, type, (Object[])children, addedAttrs, maxOccurs);
+            handleChildrenArray(parent, type, (Object[])children, maxOccurs);
          }
          else
          {
-            handleChild(parent, type, children, addedAttrs);
+            handleChild(parent, type, children, false);
          }
       }
    }
@@ -498,7 +508,7 @@ public class XsMarshaller
       if(particle.isElement())
       {
          XSElement element = particle.getElement();
-         processElement(element, null, particle.getMaxOccurs());
+         processElement(element, particle.getMaxOccurs(), false);
       }
       else if(particle.isGroup())
       {
@@ -545,7 +555,6 @@ public class XsMarshaller
    private void handleChildrenList(XSElement parent,
                                    XSComplexType type,
                                    List children,
-                                   AttributesImpl addedAttrs,
                                    int maxOccurs)
       throws SAXException
    {
@@ -555,13 +564,12 @@ public class XsMarshaller
          handleChild(parent, type, children.get(i), addedAttrs);
       }
       */
-      handleChildrenIterator(parent, type, children.iterator(), addedAttrs, maxOccurs);
+      handleChildrenIterator(parent, type, children.iterator(), maxOccurs);
    }
 
    private void handleChildrenIterator(XSElement parent,
                                        XSComplexType type,
                                        Iterator children,
-                                       AttributesImpl addedAttrs,
                                        int maxOccurs)
       throws SAXException
    {
@@ -579,7 +587,7 @@ public class XsMarshaller
 
          if(qName != null)
          {
-            AttributesImpl attrs = addedAttrs;
+            AttributesImpl attrs = null;
             if(type.getAttributes() != null)
             {
                if(attrs != null)
@@ -595,7 +603,7 @@ public class XsMarshaller
             content.startElement(name.getNamespaceURI(), name.getLocalName(), qName, attrs);
          }
 
-         handleChild(parent, type, child, addedAttrs);
+         handleChild(parent, type, child, false);
 
          if(qName != null)
          {
@@ -607,7 +615,6 @@ public class XsMarshaller
    private void handleChildrenArray(XSElement parent,
                                     XSComplexType type,
                                     Object[] children,
-                                    AttributesImpl addedAttrs,
                                     int maxOccurs)
       throws SAXException
    {
@@ -617,31 +624,20 @@ public class XsMarshaller
          handleChild(parent, type, children[i], addedAttrs);
       }
       */
-      handleChildrenIterator(parent, type, Arrays.asList(children).iterator(), addedAttrs, maxOccurs);
+      handleChildrenIterator(parent, type, Arrays.asList(children).iterator(), maxOccurs);
    }
 
-   private void handleChild(XSElement parent, XSComplexType type, Object child, AttributesImpl addedAttrs)
+   private void handleChild(XSElement parent, XSComplexType type, Object child, boolean declareNs)
       throws SAXException
    {
       stack.push(child);
 
       final XSAttributable[] xsAttrs = type.getAttributes();
       AttributesImpl ownAttrs = (xsAttrs == null ? null : provideAttributes(xsAttrs, child));
-      if(ownAttrs != null)
-      {
-         if(addedAttrs != null)
-         {
-            ownAttrs.addAll(addedAttrs);
-         }
-      }
-      else
-      {
-         ownAttrs = addedAttrs;
-      }
 
       if(type.hasSimpleContent())
       {
-         processSimpleType(parent, type.getSimpleContent().getType().getSimpleType(), ownAttrs);
+         processSimpleType(parent, type.getSimpleContent().getType().getSimpleType(), ownAttrs, declareNs);
       }
       else
       {
@@ -684,9 +680,9 @@ public class XsMarshaller
             this.root = child;
             GenericObjectModelProvider oldProvider = this.provider;
             this.provider = mapping.provider;
-            content.startElement(rootName.getNamespaceURI(), rootName.getLocalName(), rootQName, addedAttrs);
+            content.startElement(rootName.getNamespaceURI(), rootName.getLocalName(), rootQName, null);
 
-            processElement(root, addedAttrs, 1);
+            processElement(root, 1, false);
 
             content.endElement(rootName.getNamespaceURI(), rootName.getLocalName(), rootQName);
             this.root = oldRoot;
@@ -696,6 +692,21 @@ public class XsMarshaller
       }
 
       stack.pop();
+   }
+
+   private void declareNs(AttributesImpl ownAttrs)
+   {
+      for(Iterator i = prefixByUri.entrySet().iterator(); i.hasNext();)
+      {
+         Map.Entry entry = (Map.Entry)i.next();
+         String localName = (String)entry.getValue();
+         ownAttrs.add(null,
+            localName,
+            localName == null ? "xmlns" : "xmlns:" + localName,
+            null,
+            (String)entry.getKey()
+         );
+      }
    }
 
    /*

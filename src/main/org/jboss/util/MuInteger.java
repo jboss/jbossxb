@@ -241,7 +241,7 @@ public class MuInteger
     * @throws ClassCastException    Object is not a MuInteger.
     */
    public int compareTo(Object obj) {
-      return compareTo((MuInteger)obj);
+      return compareTo(((MuInteger)obj).value);
    }
 
    /**

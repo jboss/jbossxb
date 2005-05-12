@@ -6,15 +6,14 @@
  */
 package org.jboss.xml.binding;
 
+import java.io.InputStream;
+import java.io.Reader;
+import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
+import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
+import org.jboss.xml.binding.parser.JBossXBParser;
+import org.jboss.xml.binding.sunday.unmarshalling.SchemaBinding;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
-import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
-import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
-import org.jboss.xml.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xml.binding.parser.JBossXBParser;
-
-import java.io.Reader;
-import java.io.InputStream;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -61,4 +60,6 @@ public interface Unmarshaller
 
    Object unmarshal(String systemId, BindingCursor cursor, ObjectModelFactory factory)
       throws JBossXBException;
+
+   Object unmarshal(Reader xmlFile, SchemaBinding handler) throws JBossXBException;
 }

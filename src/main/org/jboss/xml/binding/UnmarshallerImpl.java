@@ -6,21 +6,20 @@
  */
 package org.jboss.xml.binding;
 
-import org.jboss.xml.binding.parser.JBossXBParser;
-import org.jboss.xml.binding.parser.xni.XniJBossXBParser;
+import java.io.InputStream;
+import java.io.Reader;
+import org.jboss.util.xml.JBossEntityResolver;
+import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBinding;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBindingFactory;
-import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xml.binding.metadata.unmarshalling.DocumentBindingStack;
 import org.jboss.xml.binding.metadata.unmarshalling.impl.RuntimeDocumentBinding;
+import org.jboss.xml.binding.parser.JBossXBParser;
+import org.jboss.xml.binding.parser.xni.XniJBossXBParser;
 import org.jboss.xml.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.SundayContentHandler;
-import org.jboss.util.xml.JBossEntityResolver;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
-
-import java.io.Reader;
-import java.io.InputStream;
 
 /**
  * Unmarshaller implementation.
@@ -97,6 +96,13 @@ public class UnmarshallerImpl
    {
       parser.parse(xmlFile, handler);
       return handler.getRoot();
+   }
+
+   public Object unmarshal(Reader xmlFile, SchemaBinding handler) throws JBossXBException
+   {
+      SundayContentHandler cHandler = new SundayContentHandler(handler);
+      parser.parse(xmlFile, cHandler);
+      return cHandler.getRoot();
    }
 
    public Object unmarshal(String xmlFile, SchemaBinding handler) throws JBossXBException

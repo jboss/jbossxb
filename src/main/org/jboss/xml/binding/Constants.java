@@ -17,6 +17,8 @@ public interface Constants
    String NS_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
    String NS_XML_SCHEMA_INSTANCE = "http://www.w3.org/2001/XMLSchema-instance";
 
+   String NS_JAXB = "http://java.sun.com/xml/ns/jaxb";
+   
    //
    // XML schema type names
    //

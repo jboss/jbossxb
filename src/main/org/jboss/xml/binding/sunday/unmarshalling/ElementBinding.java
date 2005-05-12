@@ -9,6 +9,8 @@ package org.jboss.xml.binding.sunday.unmarshalling;
 import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
+import org.jboss.xml.binding.metadata.JaxbProperty;
+import org.jboss.xml.binding.metadata.JaxbProperty;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -19,6 +21,7 @@ public class ElementBinding
    private List interceptors = Collections.EMPTY_LIST;
 
    private final TypeBinding typeBinding;
+   private JaxbProperty jaxbProperty;
 
    public ElementBinding(TypeBinding typeBinding)
    {
@@ -48,5 +51,15 @@ public class ElementBinding
             interceptors.add(interceptor);
 
       }
+   }
+
+   public JaxbProperty getJaxbProperty()
+   {
+      return jaxbProperty;
+   }
+
+   public void setJaxbProperty(JaxbProperty jaxbProperty)
+   {
+      this.jaxbProperty = jaxbProperty;
    }
 }

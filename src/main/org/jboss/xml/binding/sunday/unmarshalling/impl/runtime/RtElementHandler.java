@@ -7,9 +7,6 @@
 package org.jboss.xml.binding.sunday.unmarshalling.impl.runtime;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
@@ -17,8 +14,11 @@ import org.jboss.xml.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.CharactersHandler;
+import org.jboss.xml.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
+import org.jboss.xml.binding.Constants;
+import org.jboss.xml.binding.metadata.JaxbPackage;
 import org.xml.sax.Attributes;
 
 /**
@@ -28,6 +28,8 @@ import org.xml.sax.Attributes;
 public class RtElementHandler
    implements ElementHandler
 {
+   public static final RtElementHandler INSTANCE = new RtElementHandler();
+
    public Object startElement(Object parent, QName elementName, TypeBinding type)
    {
       Object o = null;
@@ -36,10 +38,24 @@ public class RtElementHandler
          QName qName = type.getQName();
          if(qName == null)
          {
-            qName = type.getQName();
+            qName = elementName;
          }
 
-         String className = Util.xmlNameToClassName(qName.getNamespaceURI(), qName.getLocalPart(), true);
+         String className = type.getJaxbClass() == null ? null : type.getJaxbClass().getImplClass();
+         if(className == null)
+         {
+            SchemaBinding schemaBinding = type.getSchemaBinding();
+            JaxbPackage jaxbPackage = schemaBinding == null ? null : schemaBinding.getJaxbPackage();
+            String pkg = jaxbPackage == null ?
+               Util.xmlNamespaceToJavaPackage(qName.getNamespaceURI()) :
+               jaxbPackage.getName();
+            className = Util.xmlNameToClassName(qName.getLocalPart(), true);
+            if(pkg != null && pkg.length() > 0)
+            {
+               className = pkg + '.' + className;
+            }
+         }
+
          Class cls;
          try
          {
@@ -108,7 +124,14 @@ public class RtElementHandler
          }
          else
          {
-            set(o, attrName, type, nsCtx, attrs.getValue(i));
+            if(!Constants.NS_XML_SCHEMA_INSTANCE.equals(attrs.getURI(i)))
+            {
+               CharactersHandler simpleType = type.getSimpleType();
+               Object value = simpleType == null ?
+                  attrs.getValue(i) :
+                  simpleType.unmarshal(elementName, type.getQName(), nsCtx, attrs.getValue(i));
+               RtUtil.set(o, attrName, type, value);
+            }
          }
       }
    }
@@ -121,73 +144,9 @@ public class RtElementHandler
 
    public void setParent(Object parent, Object o, QName qName)
    {
+      System.out.println("setParent: child=" + qName + ", parent=" + parent + ", child=" + o);
    }
 
    // Private
 
-   private static void set(Object o, QName elementName, TypeBinding type, NamespaceContext nsCtx, String text)
-   {
-      Class cls = o.getClass();
-      String methodBase = Util.xmlNameToClassName(elementName.getLocalPart(), true);
-      Method setter = null;
-      Field field = null;
-      try
-      {
-         Method getter = cls.getMethod("get" + methodBase, null);
-         setter = cls.getMethod("set" + methodBase, new Class[]{getter.getReturnType()});
-      }
-      catch(NoSuchMethodException e)
-      {
-         try
-         {
-            field = cls.getField(Util.xmlNameToFieldName(elementName.getLocalPart(), true));
-         }
-         catch(NoSuchFieldException e1)
-         {
-            throw new JBossXBRuntimeException(
-               "Neither getter/setter nor field were found for " + elementName + " in " + cls
-            );
-         }
-      }
-
-      CharactersHandler simpleType = type.getSimpleType();
-      Object value = simpleType == null ? text : simpleType.unmarshal(elementName, type.getQName(), nsCtx, text);
-      try
-      {
-         set(o, value, setter, field);
-      }
-      catch(Exception e)
-      {
-         throw new JBossXBRuntimeException("Failed to set value " +
-            (value == null ? "null" : value.getClass().getName() + '@' + value.hashCode() + "[" + value + "]")
-            +
-            (field == null ?
-            (setter == null ? "" : " using setter " + setter.getName()) :
-            " using field " + field.getName()
-            ) +
-            " on " +
-            (o == null ? "null" : o.getClass().getName() + '@' + o.hashCode() + "[" + o + "]") +
-            " for element (or attribute) " + elementName + " : " +
-            e.getMessage(),
-            e
-         );
-      }
-   }
-
-   private static void set(Object o, Object value, Method setter, Field field)
-      throws IllegalAccessException, InvocationTargetException
-   {
-      if(setter != null)
-      {
-         setter.invoke(o, new Object[]{value});
-      }
-      else if(field != null)
-      {
-         field.set(o, value);
-      }
-      else
-      {
-         throw new JBossXBRuntimeException("Neither setter nor field is available!");
-      }
-   }
 }

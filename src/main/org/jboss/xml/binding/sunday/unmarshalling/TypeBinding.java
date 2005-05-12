@@ -13,6 +13,7 @@ import java.util.Iterator;
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
+import org.jboss.xml.binding.metadata.JaxbClass;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -25,6 +26,8 @@ public class TypeBinding
    private Map attrs = Collections.EMPTY_MAP;
    private ElementHandler handler = DefaultElementHandler.INSTANCE;
    private CharactersHandler simpleType;
+   private JaxbClass jaxbClass;
+   private SchemaBinding schemaBinding; // todo it's optional for now...
 
    public TypeBinding()
    {
@@ -153,5 +156,25 @@ public class TypeBinding
    public boolean isSimple()
    {
       return elements.isEmpty() && attrs.isEmpty();
+   }
+
+   public JaxbClass getJaxbClass()
+   {
+      return jaxbClass;
+   }
+
+   public void setJaxbClass(JaxbClass jaxbClass)
+   {
+      this.jaxbClass = jaxbClass;
+   }
+
+   public SchemaBinding getSchemaBinding()
+   {
+      return schemaBinding;
+   }
+
+   public void setSchemaBinding(SchemaBinding schemaBinding)
+   {
+      this.schemaBinding = schemaBinding;
    }
 }

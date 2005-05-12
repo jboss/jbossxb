@@ -14,6 +14,13 @@ import javax.xml.namespace.QName;
 import org.jboss.logging.Logger;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.Constants;
+import org.jboss.xml.binding.metadata.BindingElement;
+import org.jboss.xml.binding.metadata.XsdAnnotation;
+import org.jboss.xml.binding.metadata.JaxbClass;
+import org.jboss.xml.binding.metadata.JaxbSchemaBindings;
+import org.jboss.xml.binding.metadata.JaxbPackage;
+import org.jboss.xml.binding.metadata.XsdAppInfo;
+import org.jboss.xml.binding.metadata.JaxbProperty;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSLoader;
@@ -30,6 +37,7 @@ import org.apache.xerces.xs.XSObjectList;
 import org.apache.xerces.xs.XSModelGroupDefinition;
 import org.apache.xerces.xs.XSAttributeDeclaration;
 import org.apache.xerces.xs.XSAttributeUse;
+import org.apache.xerces.xs.XSAnnotation;
 import org.apache.xerces.dom3.bootstrap.DOMImplementationRegistry;
 
 /**
@@ -40,17 +48,17 @@ public class XsdBinder
 {
    private static final Logger log = Logger.getLogger(XsdBinder.class);
 
-   private static final ThreadLocal typeStack = new ThreadLocal()
+   private static final ThreadLocal xsdBinding = new ThreadLocal()
    {
       protected Object initialValue()
       {
-         return new LinkedList();
+         return new XsdBinding();
       }
    };
 
-   private static LinkedList getTypeStack()
+   private static XsdBinding getXsdBinding()
    {
-      return (LinkedList)typeStack.get();
+      return (XsdBinding)xsdBinding.get();
    }
 
    private XsdBinder()
@@ -60,7 +68,32 @@ public class XsdBinder
    public static final SchemaBinding bind(String xsdUrl)
    {
       XSModel model = loadSchema(xsdUrl);
-      SchemaBinding doc = new SchemaBinding();
+      SchemaBinding doc = getXsdBinding().schemaBinding;
+
+      // read annotations. for now just log the ones that are going to be used
+      XSObjectList annotations = model.getAnnotations();
+      for(int i = 0; i < annotations.getLength(); ++i)
+      {
+         XSAnnotation annotation = (XSAnnotation)annotations.item(i);
+         XsdAnnotation an = XsdAnnotation.unmarshal(annotation.getAnnotationString());
+         BindingElement appinfo = an.getAppInfo();
+         if(appinfo != null)
+         {
+            JaxbSchemaBindings schemaBindings = appinfo.getJaxbSchemaBindings();
+            if(schemaBindings != null)
+            {
+               JaxbPackage jaxbPackage = schemaBindings.getPackage();
+               if(jaxbPackage != null)
+               {
+                  if(log.isTraceEnabled())
+                  {
+                     log.trace("customized binding: default package is " + jaxbPackage.getName());
+                  }
+                  doc.setJaxbPackage(jaxbPackage);
+               }
+            }
+         }
+      }
 
       SharedElements sharedElements = new SharedElements();
       XSNamedMap groups = model.getComponents(XSConstants.MODEL_GROUP_DEFINITION);
@@ -150,6 +183,36 @@ public class XsdBinder
          {
             binding = new TypeBinding();
          }
+
+         // customize binding with annotations
+         XSObjectList annotations = type.getAnnotations();
+         if(annotations != null)
+         {
+            for(int i = 0; i < annotations.getLength(); ++i)
+            {
+               XSAnnotation an = (XSAnnotation)annotations.item(i);
+               XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
+               XsdAppInfo appInfo = xsdAn.getAppInfo();
+               if(appInfo != null)
+               {
+                  JaxbClass jaxbClass = appInfo.getJaxbClass();
+                  if(jaxbClass != null)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("type " +
+                           type.getName() +
+                           " is bound to " +
+                           jaxbClass.getImplClass()
+                        );
+                     }
+                     binding.setJaxbClass(jaxbClass);
+                  }
+               }
+            }
+         }
+
+         binding.setSchemaBinding(getXsdBinding().schemaBinding);
       }
       return binding;
    }
@@ -183,6 +246,36 @@ public class XsdBinder
             bindAttributes(doc, binding, attr.getAttrDeclaration());
          }
 
+         // customize binding with xsd annotations
+         XSObjectList annotations = type.getAnnotations();
+         if(annotations != null)
+         {
+            for(int i = 0; i < annotations.getLength(); ++i)
+            {
+               XSAnnotation an = (XSAnnotation)annotations.item(i);
+               XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
+               XsdAppInfo appInfo = xsdAn.getAppInfo();
+               if(appInfo != null)
+               {
+                  JaxbClass jaxbClass = appInfo.getJaxbClass();
+                  if(jaxbClass != null)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("customized binding: type " +
+                           type.getName() +
+                           " is bound to " +
+                           jaxbClass.getImplClass()
+                        );
+                     }
+                     binding.setJaxbClass(jaxbClass);
+                  }
+               }
+            }
+         }
+
+         binding.setSchemaBinding(getXsdBinding().schemaBinding);
+         
          XSParticle particle = type.getParticle();
          if(particle != null)
          {
@@ -273,6 +366,31 @@ public class XsdBinder
             {
                doc.addElement(qName, binding);
             }
+
+            // customize binding with annotations
+            XSAnnotation an = element.getAnnotation();
+            if(an != null)
+            {
+               XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
+               XsdAppInfo appInfo = xsdAn.getAppInfo();
+               if(appInfo != null)
+               {
+                  JaxbProperty jaxbProperty = appInfo.getJaxbProperty();
+                  if(jaxbProperty != null)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("customized binding: element " +
+                           new QName(element.getNamespace(), element.getName()) +
+                           " is bound to property " +
+                           jaxbProperty.getName() +
+                           " and type " + jaxbProperty.getCollectionType()
+                        );
+                     }
+                     binding.setJaxbProperty(jaxbProperty);
+                  }
+               }
+            }
          }
 
          if(parentType != null)
@@ -280,8 +398,7 @@ public class XsdBinder
             parentType.addElement(qName, binding);
             if(log.isTraceEnabled())
             {
-               log.trace(
-                  "bound element: type=" +
+               log.trace("bound element: type=" +
                   parentType.getQName() +
                   ", element=" +
                   qName +
@@ -341,17 +458,17 @@ public class XsdBinder
 
    private static void popType()
    {
-      getTypeStack().removeLast();
+      getXsdBinding().typeStack.removeLast();
    }
 
    private static void pushType(TypeBinding binding)
    {
-      getTypeStack().addLast(binding);
+      getXsdBinding().typeStack.addLast(binding);
    }
 
    private static TypeBinding peekType()
    {
-      LinkedList typeStack = getTypeStack();
+      LinkedList typeStack = getXsdBinding().typeStack;
       return (TypeBinding)(typeStack.isEmpty() ? null : typeStack.getLast());
    }
 
@@ -387,5 +504,13 @@ public class XsdBinder
       {
          elements.put(element, type);
       }
+   }
+
+   // Inner
+
+   private static final class XsdBinding
+   {
+      public final LinkedList typeStack = new LinkedList();
+      public final SchemaBinding schemaBinding = new SchemaBinding();
    }
 }

@@ -212,7 +212,7 @@ public class XercesXsMarshaller
 
          if(maxOccurs != 1)
          {
-            Iterator i;
+            Iterator i = null;
             if(value instanceof Collection)
             {
                i = ((Collection)value).iterator();
@@ -227,15 +227,22 @@ public class XercesXsMarshaller
             }
             else
             {
-               throw new JBossXBRuntimeException("Unexpected type for children: " + value.getClass());
+               //throw new JBossXBRuntimeException("Unexpected type for children: " + value.getClass());
             }
 
-            while(i.hasNext())
+            if(i == null)
             {
-               Object item = i.next();
-               stack.push(item);
                marshalElementType(element, declareNs);
-               stack.pop();
+            }
+            else
+            {
+               while(i.hasNext())
+               {
+                  Object item = i.next();
+                  stack.push(item);
+                  marshalElementType(element, declareNs);
+                  stack.pop();
+               }
             }
          }
          else
@@ -301,7 +308,7 @@ public class XercesXsMarshaller
       XSParticle particle = type.getParticle();
 
       XSObjectList attributeUses = type.getAttributeUses();
-      int attrsTotal = declareNs ? prefixByUri.size() + attributeUses.getLength(): attributeUses.getLength();
+      int attrsTotal = declareNs ? prefixByUri.size() + attributeUses.getLength() : attributeUses.getLength();
       AttributesImpl attrs = attrsTotal > 0 ? new AttributesImpl(attrsTotal) : null;
 
       if(declareNs && prefixByUri.size() > 0)

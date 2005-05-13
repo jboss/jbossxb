@@ -19,7 +19,11 @@ public abstract class CharactersHandler
 {
    public static final CharactersHandler NOOP = new CharactersHandler()
    {
-      public Object unmarshal(QName qName, QName typeQName, NamespaceContext nsCtx, String value)
+      public Object unmarshal(QName qName,
+                              QName typeQName,
+                              NamespaceContext nsCtx,
+                              ElementBinding element,
+                              String value)
       {
          return value;
       }
@@ -29,7 +33,7 @@ public abstract class CharactersHandler
    {
    };
 
-   public Object unmarshal(QName qName, QName typeQName, NamespaceContext nsCtx, String value)
+   public Object unmarshal(QName qName, QName typeQName, NamespaceContext nsCtx, ElementBinding element, String value)
    {
       Object o;
       if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))
@@ -43,7 +47,7 @@ public abstract class CharactersHandler
       return o;
    }
 
-   public void setValue(QName qName, Object owner, Object value)
+   public void setValue(QName qName, ElementBinding element, Object owner, Object value)
    {
    }
 }

@@ -150,6 +150,14 @@ public class XsdAnnotation
          {
             element = new JaxbPackage();
          }
+         else if("baseType".equals(localName))
+         {
+            element = new JaxbBaseType();
+         }
+         else if("javaType".equals(localName))
+         {
+            element = new JaxbJavaType();
+         }
 
          setAttributes(element, attrs);
 

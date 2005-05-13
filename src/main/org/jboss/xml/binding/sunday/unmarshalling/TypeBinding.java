@@ -14,6 +14,8 @@ import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
 import org.jboss.xml.binding.metadata.JaxbClass;
+import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
+import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -24,7 +26,7 @@ public class TypeBinding
    private final QName qName;
    private Map elements = Collections.EMPTY_MAP;
    private Map attrs = Collections.EMPTY_MAP;
-   private ElementHandler handler = DefaultElementHandler.INSTANCE;
+   private ElementHandler handler = RtElementHandler.INSTANCE;//DefaultElementHandler.INSTANCE;
    private CharactersHandler simpleType;
    private JaxbClass jaxbClass;
    private SchemaBinding schemaBinding; // todo it's optional for now...
@@ -36,7 +38,8 @@ public class TypeBinding
 
    public TypeBinding(QName qName)
    {
-      this(qName, CharactersHandler.DEFAULT);
+      //this(qName, CharactersHandler.DEFAULT);
+      this(qName, RtCharactersHandler.INSTANCE);
    }
 
    public TypeBinding(QName qName, CharactersHandler simple)
@@ -141,6 +144,11 @@ public class TypeBinding
    public void setHandler(ElementHandler handler)
    {
       this.handler = handler;
+   }
+
+   public ElementHandler getHandler()
+   {
+      return handler;
    }
 
    public void pushInterceptor(QName qName, ElementInterceptor interceptor)

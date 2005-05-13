@@ -15,10 +15,12 @@ import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.Constants;
 import org.jboss.xml.binding.metadata.JaxbPackage;
+import org.jboss.xml.binding.metadata.JaxbProperty;
 import org.xml.sax.Attributes;
 
 /**
@@ -56,13 +58,15 @@ public class RtElementHandler
             }
          }
 
-         Class cls;
+         Class cls = null;
          try
          {
             cls = Thread.currentThread().getContextClassLoader().loadClass(className);
          }
          catch(ClassNotFoundException e)
          {
+            // todo complex element may contain just data content...
+            /*
             throw new JBossXBRuntimeException("Failed to resolve class name for " +
                elementName +
                " of type " +
@@ -70,32 +74,41 @@ public class RtElementHandler
                ": " +
                e.getMessage()
             );
+            */
          }
 
-         try
+         if(cls != null)
          {
-            Constructor ctor = cls.getConstructor(null);
-
             try
             {
-               o = ctor.newInstance(null);
+               Constructor ctor = cls.getConstructor(null);
+
+               try
+               {
+                  o = ctor.newInstance(null);
+               }
+               catch(Exception e)
+               {
+                  throw new JBossXBRuntimeException("Failed to create an instance of " +
+                     cls +
+                     " using default constructor for element " +
+                     elementName +
+                     " of type " +
+                     type.getQName()
+                  );
+               }
             }
-            catch(Exception e)
+            catch(NoSuchMethodException e)
             {
-               throw new JBossXBRuntimeException("Failed to create an instance of " +
+               throw new JBossXBRuntimeException(
+                  "" +
                   cls +
-                  " using default constructor for element " +
+                  " doesn't declare no-arg constructor: element=" +
                   elementName +
-                  " of type " +
+                  ", type=" +
                   type.getQName()
                );
             }
-         }
-         catch(NoSuchMethodException e)
-         {
-            throw new JBossXBRuntimeException(
-               "" + cls + " doesn't declare no-arg constructor: element=" + elementName + ", type=" + type.getQName()
-            );
          }
       }
       return o;
@@ -129,7 +142,7 @@ public class RtElementHandler
                CharactersHandler simpleType = type.getSimpleType();
                Object value = simpleType == null ?
                   attrs.getValue(i) :
-                  simpleType.unmarshal(elementName, type.getQName(), nsCtx, attrs.getValue(i));
+                  simpleType.unmarshal(elementName, type.getQName(), nsCtx, null, attrs.getValue(i));
                RtUtil.set(o, attrName, type, value);
             }
          }
@@ -142,9 +155,21 @@ public class RtElementHandler
       return o;
    }
 
-   public void setParent(Object parent, Object o, QName qName)
+   public void setParent(Object parent, Object o, QName qName, ElementBinding element)
    {
-      System.out.println("setParent: child=" + qName + ", parent=" + parent + ", child=" + o);
+      if(parent != null)
+      {
+         JaxbProperty jaxbProperty = element.getJaxbProperty();
+
+         String propName = jaxbProperty == null ? null : jaxbProperty.getName();
+         if(propName == null)
+         {
+            propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
+         }
+
+         String colType = jaxbProperty == null ? null : jaxbProperty.getCollectionType();
+         RtUtil.set(parent, o, propName, colType, true);
+      }
    }
 
    // Private

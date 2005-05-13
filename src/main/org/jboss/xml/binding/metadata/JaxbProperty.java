@@ -33,4 +33,9 @@ public class JaxbProperty
    {
       return getAttribute(QNAME_COLLECTION_TYPE);
    }
+
+   public JaxbBaseType getBaseType()
+   {
+      return (JaxbBaseType)getChild(JaxbBaseType.QNAME);
+   }
 }

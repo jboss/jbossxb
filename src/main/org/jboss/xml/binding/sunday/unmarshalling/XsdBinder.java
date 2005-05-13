@@ -14,6 +14,7 @@ import javax.xml.namespace.QName;
 import org.jboss.logging.Logger;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.Constants;
+import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtAttributeHandler;
 import org.jboss.xml.binding.metadata.BindingElement;
 import org.jboss.xml.binding.metadata.XsdAnnotation;
 import org.jboss.xml.binding.metadata.JaxbClass;
@@ -294,7 +295,7 @@ public class XsdBinder
       XSSimpleTypeDefinition attrType = attr.getTypeDefinition();
       TypeBinding typeBinding = bindSimpleType(doc, attrType);
       QName attrName = new QName(attr.getNamespace(), attr.getName());
-      type.addAttribute(attrName, typeBinding, AttributeHandler.NOOP);
+      type.addAttribute(attrName, typeBinding, RtAttributeHandler.INSTANCE);
 
       if(log.isTraceEnabled())
       {

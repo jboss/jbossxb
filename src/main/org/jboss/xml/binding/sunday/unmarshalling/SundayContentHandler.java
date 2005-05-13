@@ -67,7 +67,7 @@ public class SundayContentHandler
             CharactersHandler simpleType = typeBinding.getSimpleType();
             Object unmarshalled = simpleType == null ?
                dataContent :
-               simpleType.unmarshal(endName, typeBinding.getQName(), nsRegistry, dataContent);
+               simpleType.unmarshal(endName, typeBinding.getQName(), nsRegistry, elementBinding, dataContent);
 
             // if startElement returned null, we use characters as the object for this element
             // todo subject to refactoring
@@ -77,7 +77,7 @@ public class SundayContentHandler
             }
             else if(simpleType != null)
             {
-               simpleType.setValue(endName, o, unmarshalled);
+               simpleType.setValue(endName, elementBinding, o, unmarshalled);
             }
 
             // todo interceptors get dataContent?
@@ -110,12 +110,20 @@ public class SundayContentHandler
          //
 
          i = elementHandlers.size();
-         while(i-- > 0)
+         // todo yack...
+         if(i == 0)
          {
-            ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-            parent = objectStack.pop();
-            interceptor.add(parent, o, endName);
-            o = parent;
+            typeBinding.getHandler().setParent(parent, o, endName, elementBinding);
+         }
+         else
+         {
+            while(i-- > 0)
+            {
+               ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
+               parent = objectStack.pop();
+               interceptor.add(parent, o, endName);
+               o = parent;
+            }
          }
 
          if(objectStack.isEmpty())
@@ -166,7 +174,10 @@ public class SundayContentHandler
          o = typeBinding.startElement(o, startName);
          objectStack.push(o);
 
-         typeBinding.attributes(o, startName, atts, nsRegistry);
+         if(o != null)
+         {
+            typeBinding.attributes(o, startName, atts, nsRegistry);
+         }
       }
       else
       {

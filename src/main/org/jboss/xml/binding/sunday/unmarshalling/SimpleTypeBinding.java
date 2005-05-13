@@ -8,6 +8,7 @@ package org.jboss.xml.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
 import org.jboss.xml.binding.JBossXBRuntimeException;
+import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -16,6 +17,14 @@ import org.jboss.xml.binding.JBossXBRuntimeException;
 public class SimpleTypeBinding
    extends TypeBinding
 {
+   private static final RtElementHandler DEFAULT_HANDLER = new RtElementHandler()
+   {
+      public Object startElement(Object parent, QName qName, TypeBinding type)
+      {
+         return null;
+      }
+   };
+
    public SimpleTypeBinding()
    {
       setDefaultHandler();
@@ -35,14 +44,9 @@ public class SimpleTypeBinding
 
    private void setDefaultHandler()
    {
-      setHandler(new DefaultElementHandler(){
-         public Object startElement(Object parent, QName qName, TypeBinding type)
-         {
-            return null;
-         }
-      });
+      setHandler(DEFAULT_HANDLER);
    }
-   
+
    public AttributeBinding addAttribute(QName name, TypeBinding type, AttributeHandler handler)
    {
       throw new JBossXBRuntimeException("Simple types can't have attributes.");

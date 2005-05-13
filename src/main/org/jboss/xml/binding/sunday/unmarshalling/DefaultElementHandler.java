@@ -49,7 +49,7 @@ public class DefaultElementHandler
       return o;
    }
 
-   public void setParent(Object parent, Object o, QName qName)
+   public void setParent(Object parent, Object o, QName qName, ElementBinding element)
    {
    }
 

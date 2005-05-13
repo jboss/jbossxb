@@ -9,11 +9,11 @@ package org.jboss.xml.binding.sunday.unmarshalling.impl.runtime;
 import java.util.Collection;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import javax.xml.namespace.QName;
 import org.jboss.xml.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
+import org.jboss.logging.Logger;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -21,8 +21,81 @@ import org.jboss.xml.binding.JBossXBRuntimeException;
  */
 public class RtUtil
 {
+   private static final Logger log = Logger.getLogger(RtUtil.class);
+
    private RtUtil()
    {
+   }
+
+   public static void set(Object o, Object value, String prop, String colType, boolean ignoreNotFoundField)
+   {
+      Class cls = o.getClass();
+      Method getter = null;
+      Method setter = null;
+      Field field = null;
+      try
+      {
+         String methodBase = Character.toUpperCase(prop.charAt(0)) + prop.substring(1);
+         getter = cls.getMethod("get" + methodBase, null);
+         Class returnType = getter.getReturnType();
+         setter = cls.getMethod("set" + methodBase, new Class[]{returnType});
+      }
+      catch(NoSuchMethodException e)
+      {
+         try
+         {
+            field = cls.getField(prop);
+         }
+         catch(NoSuchFieldException e1)
+         {
+            if(ignoreNotFoundField)
+            {
+               log.warn("Neither getter/setter nor field were found for field " + prop + " in " + cls);
+               return;
+            }
+
+            throw new JBossXBRuntimeException(
+               "Neither getter/setter nor field were found for field " + prop + " in " + cls
+            );
+         }
+      }
+
+      if(colType != null ||
+         // todo collections of collections
+         getter.getReturnType().isAssignableFrom(Collection.class) &&
+         !value.getClass().isAssignableFrom(Collection.class))
+      {
+         Collection col = (Collection)get(o, getter, field);
+         if(col == null)
+         {
+            Class colCls;
+            try
+            {
+               colCls = Thread.currentThread().getContextClassLoader().loadClass(colType);
+            }
+            catch(ClassNotFoundException e)
+            {
+               throw new JBossXBRuntimeException("Failed to load collection type: " + colType);
+            }
+
+            try
+            {
+               col = (Collection)colCls.newInstance();
+            }
+            catch(Exception e)
+            {
+               throw new JBossXBRuntimeException("Failed to create an instance of " + colCls);
+            }
+
+            set(o, col, setter, field);
+         }
+
+         col.add(value);
+      }
+      else
+      {
+         set(o, value, setter, field);
+      }
    }
 
    public static void set(Object o, QName elementName, TypeBinding type, Object value)
@@ -56,45 +129,86 @@ public class RtUtil
             }
          }
 
-         try
-         {
-            set(o, value, setter, field);
-         }
-         catch(Exception e)
-         {
-            throw new JBossXBRuntimeException("Failed to set value " +
-               (value == null ? "null" : value.getClass().getName() + '@' + value.hashCode() + "[" + value + "]")
-               +
-               (field == null ?
-               (setter == null ? "" : " using setter " + setter.getName()) :
-               " using field " + field.getName()
-               ) +
-               " on " +
-               (o == null ? "null" : o.getClass().getName() + '@' + o.hashCode() + "[" + o + "]") +
-               " for element (or attribute) " +
-               elementName +
-               " : " +
-               e.getMessage(),
-               e
-            );
-         }
+         set(o, value, setter, field);
       }
    }
 
    private static void set(Object o, Object value, Method setter, Field field)
-      throws IllegalAccessException, InvocationTargetException
    {
-      if(setter != null)
+      try
       {
-         setter.invoke(o, new Object[]{value});
+         if(setter != null)
+         {
+            setter.invoke(o, new Object[]{value});
+         }
+         else if(field != null)
+         {
+            field.set(o, value);
+         }
+         else
+         {
+            throw new JBossXBRuntimeException("Neither setter nor field is available!");
+         }
       }
-      else if(field != null)
+      catch(JBossXBRuntimeException e)
       {
-         field.set(o, value);
+         throw e;
       }
-      else
+      catch(Exception e)
       {
-         throw new JBossXBRuntimeException("Neither setter nor field is available!");
+         throw new JBossXBRuntimeException("Failed to set value " +
+            (value == null ? "null" : value.getClass().getName() + '@' + value.hashCode() + "[" + value + "]")
+            +
+            (field == null ?
+            (setter == null ? "" : " using setter " + setter.getName()) :
+            " using field " + field.getName()
+            ) +
+            " on " +
+            (o == null ? "null" : o.getClass().getName() + '@' + o.hashCode() + "[" + o + "]") +
+            " : " +
+            e.getMessage(),
+            e
+         );
       }
+   }
+
+   private static Object get(Object o, Method getter, Field field)
+   {
+      Object result;
+      try
+      {
+         if(getter != null)
+         {
+            result = getter.invoke(o, null);
+         }
+         else if(field != null)
+         {
+            result = field.get(o);
+         }
+         else
+         {
+            throw new JBossXBRuntimeException("Neither getter nor field is available!");
+         }
+      }
+      catch(JBossXBRuntimeException e)
+      {
+         throw e;
+      }
+      catch(Exception e)
+      {
+         throw new JBossXBRuntimeException("Failed to get value " +
+            (field == null ?
+            (getter == null ? "" : " using getter " + getter.getName()) :
+            " using field " + field.getName()
+            ) +
+            " on " +
+            (o == null ? "null" : o.getClass().getName() + '@' + o.hashCode() + "[" + o + "]") +
+            " : " +
+            e.getMessage(),
+            e
+         );
+      }
+
+      return result;
    }
 }

@@ -171,7 +171,16 @@ public class SundayContentHandler
             interceptor.attributes(o, startName, typeBinding, atts, nsRegistry);
          }
 
-         o = typeBinding.startElement(o, startName);
+         // todo xsi:nil handling
+         String nil = atts.getValue("xsi:nil");
+         if(nil == null || !("1".equals(nil) || "true".equals(nil)))
+         {
+            o = typeBinding.startElement(o, startName);
+         }
+         else
+         {
+            o = null;
+         }
          objectStack.push(o);
 
          if(o != null)

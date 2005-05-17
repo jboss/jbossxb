@@ -87,9 +87,10 @@ public class MappingObjectModelProvider
 
    public Object getRoot(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
-      String correspCls = Util.xmlNameToClassName(localName, true);
-      String shortName = Classes.stripPackageName(o.getClass());
-      return correspCls.equals(shortName) ? o : null;
+      //String correspCls = Util.xmlNameToClassName(localName, true);
+      //String shortName = Classes.stripPackageName(o.getClass());
+      //return correspCls.equals(shortName) ? o : null;
+      return o;
    }
 
    // Private

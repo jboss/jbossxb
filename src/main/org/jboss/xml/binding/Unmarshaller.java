@@ -62,4 +62,6 @@ public interface Unmarshaller
       throws JBossXBException;
 
    Object unmarshal(Reader xmlFile, SchemaBinding handler) throws JBossXBException;
+
+   Object unmarshal(InputStream is, SchemaBinding schemaBinding) throws JBossXBException;
 }

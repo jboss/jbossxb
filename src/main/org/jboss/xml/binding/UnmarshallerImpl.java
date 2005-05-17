@@ -105,6 +105,14 @@ public class UnmarshallerImpl
       return cHandler.getRoot();
    }
 
+   public Object unmarshal(InputStream is, SchemaBinding schemaBinding)
+      throws JBossXBException
+   {
+      SundayContentHandler cHandler = new SundayContentHandler(schemaBinding);
+      parser.parse(is, cHandler);
+      return cHandler.getRoot();
+   }
+
    public Object unmarshal(String xmlFile, SchemaBinding handler) throws JBossXBException
    {
       SundayContentHandler cHandler = new SundayContentHandler(handler);

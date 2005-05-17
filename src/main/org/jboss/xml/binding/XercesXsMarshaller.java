@@ -66,6 +66,18 @@ public class XercesXsMarshaller
     */
    private boolean supportNil;
 
+   private QName rootTypeQName;
+
+   public QName getRootTypeQName()
+   {
+      return rootTypeQName;
+   }
+
+   public void setRootTypeQName(QName rootTypeQName)
+   {
+      this.rootTypeQName = rootTypeQName;
+   }
+
    public boolean isSupportNil()
    {
       return supportNil;
@@ -132,13 +144,40 @@ public class XercesXsMarshaller
 
       content.startDocument();
 
-      if(rootQNames.isEmpty())
+      if(rootTypeQName != null)
+      {
+         if(rootQNames.isEmpty())
+         {
+            throw new JBossXBRuntimeException(
+               "If type name (" +
+               rootTypeQName +
+               ") for the root element is specified then the name for the root element is required!"
+            );
+         }
+         QName rootQName = (QName)rootQNames.get(0);
+
+         XSTypeDefinition type = model.getTypeDefinition(rootTypeQName.getLocalPart(), rootTypeQName.getNamespaceURI());
+         if(type == null)
+         {
+            throw new JBossXBRuntimeException("Global type definition is not found: " + rootTypeQName);
+         }
+
+         marshalElement(rootQName.getNamespaceURI(), rootQName.getLocalPart(), type, true, 1, 1, true);
+      }
+      else if(rootQNames.isEmpty())
       {
          XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
          for(int i = 0; i < components.getLength(); ++i)
          {
             XSElementDeclaration element = (XSElementDeclaration)components.item(i);
-            marshalElement(element, 1, 1, true);// todo fix min/max
+            marshalElement(element.getNamespace(),
+               element.getName(),
+               element.getTypeDefinition(),
+               element.getNillable(),
+               1,
+               1,
+               true
+            );// todo fix min/max
          }
       }
       else
@@ -163,7 +202,14 @@ public class XercesXsMarshaller
                throw new IllegalStateException("Root element not found: " + qName + " among " + roots);
             }
 
-            marshalElement(element, 1, 1, true);// todo fix min/max
+            marshalElement(element.getNamespace(),
+               element.getName(),
+               element.getTypeDefinition(),
+               element.getNillable(),
+               1,
+               1,
+               true
+            );// todo fix min/max
          }
       }
 
@@ -178,12 +224,16 @@ public class XercesXsMarshaller
       content.handleContent(contentWriter);
    }
 
-   private boolean marshalElement(XSElementDeclaration element, int minOccurs, int maxOccurs, boolean declareNs)
+   private boolean marshalElement(String elementNs, String elementLocal,
+                                  XSTypeDefinition type,
+                                  boolean nillable,
+                                  int minOccurs, int maxOccurs,
+                                  boolean declareNs)
    {
       Object value;
       if(stack.isEmpty())
       {
-         value = provider.getRoot(root, null, element.getNamespace(), element.getName());
+         value = provider.getRoot(root, null, elementNs, elementLocal);
          if(value == null)
          {
             return false;
@@ -198,10 +248,10 @@ public class XercesXsMarshaller
          }
          else
          {
-            value = provider.getChildren(stack.peek(), null, element.getNamespace(), element.getName());
+            value = provider.getChildren(stack.peek(), null, elementNs, elementLocal);
             if(value == null)
             {
-               value = provider.getElementValue(stack.peek(), null, element.getNamespace(), element.getName());
+               value = provider.getElementValue(stack.peek(), null, elementNs, elementLocal);
             }
          }
       }
@@ -232,7 +282,7 @@ public class XercesXsMarshaller
 
             if(i == null)
             {
-               marshalElementType(element, declareNs);
+               marshalElementType(elementNs, elementLocal, type, declareNs);
             }
             else
             {
@@ -240,55 +290,54 @@ public class XercesXsMarshaller
                {
                   Object item = i.next();
                   stack.push(item);
-                  marshalElementType(element, declareNs);
+                  marshalElementType(elementNs, elementLocal, type, declareNs);
                   stack.pop();
                }
             }
          }
          else
          {
-            marshalElementType(element, declareNs);
+            marshalElementType(elementNs, elementLocal, type, declareNs);
          }
 
          stack.pop();
       }
-      else if(supportNil && element.getNillable())
+      else if(supportNil && nillable)
       {
-         String prefix = (String)prefixByUri.get(element.getNamespace());
-         String qName = createQName(prefix, element);
+         String prefix = (String)prefixByUri.get(elementNs);
+         String qName = createQName(prefix, elementLocal);
          AttributesImpl attrs = new AttributesImpl(1);
          String nilQName = prefixByUri.get(Constants.NS_XML_SCHEMA_INSTANCE) + ":nil";
          attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "nil", nilQName, null, "1");
-         content.startElement(element.getNamespace(), element.getName(), qName, attrs);
-         content.endElement(element.getNamespace(), element.getName(), qName);
+         content.startElement(elementNs, elementLocal, qName, attrs);
+         content.endElement(elementNs, elementLocal, qName);
       }
 
       return minOccurs == 0 || value != null;
    }
 
-   private void marshalElementType(XSElementDeclaration element, boolean declareNs)
+   private void marshalElementType(String elementNs, String elementLocal, XSTypeDefinition type, boolean declareNs)
    {
-      XSTypeDefinition type = element.getTypeDefinition();
       switch(type.getTypeCategory())
       {
          case XSTypeDefinition.SIMPLE_TYPE:
-            marshalSimpleType(element, declareNs);
+            marshalSimpleType(elementNs, elementLocal, declareNs);
             break;
          case XSTypeDefinition.COMPLEX_TYPE:
-            marshalComplexType(element, declareNs);
+            marshalComplexType(elementNs, elementLocal, (XSComplexTypeDefinition)type, declareNs);
             break;
          default:
             throw new IllegalStateException("Unexpected type category: " + type.getTypeCategory());
       }
    }
 
-   private void marshalSimpleType(XSElementDeclaration element, boolean declareNs)
+   private void marshalSimpleType(String elementUri, String elementLocal, boolean declareNs)
    {
       Object value = stack.peek();
       String valueStr = value.toString();
 
-      String prefix = (String)prefixByUri.get(element.getNamespace());
-      String qName = createQName(prefix, element);
+      String prefix = (String)prefixByUri.get(elementUri);
+      String qName = createQName(prefix, elementLocal);
 
       AttributesImpl attrs = null;
       if(declareNs && prefixByUri.size() > 0)
@@ -297,14 +346,16 @@ public class XercesXsMarshaller
          declareNs(attrs);
       }
 
-      content.startElement(element.getNamespace(), element.getName(), qName, attrs);
+      content.startElement(elementUri, elementLocal, qName, attrs);
       content.characters(valueStr.toCharArray(), 0, valueStr.length());
-      content.endElement(element.getNamespace(), element.getName(), qName);
+      content.endElement(elementUri, elementLocal, qName);
    }
 
-   private void marshalComplexType(XSElementDeclaration element, boolean declareNs)
+   private void marshalComplexType(String elementNsUri,
+                                   String elementLocalName,
+                                   XSComplexTypeDefinition type,
+                                   boolean declareNs)
    {
-      XSComplexTypeDefinition type = (XSComplexTypeDefinition)element.getTypeDefinition();
       XSParticle particle = type.getParticle();
 
       XSObjectList attributeUses = type.getAttributeUses();
@@ -332,16 +383,16 @@ public class XercesXsMarshaller
          }
       }
 
-      String prefix = (String)prefixByUri.get(element.getNamespace());
-      String qName = createQName(prefix, element);
-      content.startElement(element.getNamespace(), element.getName(), qName, attrs);
+      String prefix = (String)prefixByUri.get(elementNsUri);
+      String qName = createQName(prefix, elementLocalName);
+      content.startElement(elementNsUri, elementLocalName, qName, attrs);
 
       if(particle != null)
       {
          marshalParticle(particle, false);
       }
 
-      content.endElement(element.getNamespace(), element.getName(), qName);
+      content.endElement(elementNsUri, elementLocalName, qName);
    }
 
    private boolean marshalParticle(XSParticle particle, boolean declareNs)
@@ -357,8 +408,16 @@ public class XercesXsMarshaller
             marshalled = marshalWildcard((XSWildcard)term, declareNs);
             break;
          case XSConstants.ELEMENT_DECLARATION:
+            XSElementDeclaration element = (XSElementDeclaration)term;
             marshalled =
-               marshalElement((XSElementDeclaration)term, particle.getMinOccurs(), particle.getMaxOccurs(), declareNs);
+               marshalElement(element.getNamespace(),
+                  element.getName(),
+                  element.getTypeDefinition(),
+                  element.getNillable(),
+                  particle.getMinOccurs(),
+                  particle.getMaxOccurs(),
+                  declareNs
+               );
             break;
          default:
             throw new IllegalStateException("Unexpected term type: " + term.getType());
@@ -389,7 +448,15 @@ public class XercesXsMarshaller
       for(int i = 0; i < components.getLength(); ++i)
       {
          XSElementDeclaration element = (XSElementDeclaration)components.item(i);
-         marshalled = marshalElement(element, 1, 1, declareNs);// todo fix min/max
+         marshalled =
+            marshalElement(element.getNamespace(),
+               element.getName(),
+               element.getTypeDefinition(),
+               element.getNillable(),
+               1,
+               1,
+               declareNs
+            );// todo fix min/max
       }
 
       this.root = parentRoot;
@@ -476,9 +543,9 @@ public class XercesXsMarshaller
       }
    }
 
-   private static String createQName(String prefix, XSElementDeclaration element)
+   private static String createQName(String prefix, String local)
    {
-      return prefix == null ? element.getName() : prefix + ':' + element.getName();
+      return prefix == null ? local : prefix + ':' + local;
    }
 
    private static XSModel loadSchema(String xsdURL)

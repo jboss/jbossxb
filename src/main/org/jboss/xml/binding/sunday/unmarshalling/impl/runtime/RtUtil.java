@@ -33,18 +33,20 @@ public class RtUtil
       Method getter = null;
       Method setter = null;
       Field field = null;
+      Class fieldType;
       try
       {
          String methodBase = Character.toUpperCase(prop.charAt(0)) + prop.substring(1);
          getter = cls.getMethod("get" + methodBase, null);
-         Class returnType = getter.getReturnType();
-         setter = cls.getMethod("set" + methodBase, new Class[]{returnType});
+         fieldType = getter.getReturnType();
+         setter = cls.getMethod("set" + methodBase, new Class[]{fieldType});
       }
       catch(NoSuchMethodException e)
       {
          try
          {
             field = cls.getField(prop);
+            fieldType = field.getType();
          }
          catch(NoSuchFieldException e1)
          {
@@ -62,7 +64,7 @@ public class RtUtil
 
       if(colType != null ||
          // todo collections of collections
-         getter.getReturnType().isAssignableFrom(Collection.class) &&
+         fieldType.isAssignableFrom(Collection.class) &&
          !value.getClass().isAssignableFrom(Collection.class))
       {
          Collection col = (Collection)get(o, getter, field);

@@ -22,9 +22,14 @@ public abstract class AttributeHandler
       }
    };
 
-   public Object unmarshal(QName elemName, QName attrName, TypeBinding type, String value, NamespaceContext nsCtx)
+   public Object unmarshal(QName elemName,
+                           QName attrName,
+                           AttributeBinding binding,
+                           NamespaceContext nsCtx,
+                           String value)
    {
-      return type == null ? value : type.getSimpleType().unmarshal(attrName, type.getQName(), nsCtx, null, value);
+      TypeBinding type = binding.getType();
+      return type == null ? value : type.getSimpleType().unmarshal(attrName, type, nsCtx, binding.getJaxbProperty(), value);
    }
 
    public abstract void attribute(QName elemName, QName attrName, Object owner, Object value);

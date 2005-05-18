@@ -11,6 +11,7 @@ import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.jboss.xml.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xml.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xml.binding.metadata.JaxbProperty;
 import org.jboss.xml.binding.metadata.JaxbBaseType;
 import org.jboss.xml.binding.metadata.JaxbJavaType;
@@ -26,12 +27,11 @@ public class RtCharactersHandler
 {
    public static final RtCharactersHandler INSTANCE = new RtCharactersHandler();
 
-   public Object unmarshal(QName qName, QName typeQName, NamespaceContext nsCtx, ElementBinding element, String value)
+   public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, JaxbProperty jaxbProperty, String value)
    {
       Object unmarshalled = null;
-      if(element != null)
+      if(jaxbProperty != null)
       {
-         JaxbProperty jaxbProperty = element.getJaxbProperty();
          JaxbBaseType jaxbBaseType = jaxbProperty != null ? jaxbProperty.getBaseType() : null;
          JaxbJavaType javaType = jaxbBaseType == null ? null : jaxbBaseType.getJavaType();
          if(javaType != null)
@@ -96,12 +96,12 @@ public class RtCharactersHandler
          }
          else
          {
-            unmarshalled = super.unmarshal(qName, typeQName, nsCtx, element, value);
+            unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, jaxbProperty, value);
          }
       }
       else
       {
-         unmarshalled = super.unmarshal(qName, typeQName, nsCtx, element, value);
+         unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, jaxbProperty, value);
       }
 
       return unmarshalled;

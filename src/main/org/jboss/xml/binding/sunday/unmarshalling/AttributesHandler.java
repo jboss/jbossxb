@@ -29,9 +29,8 @@ public class AttributesHandler
          AttributeBinding binding = type.getAttribute(qName);
          if(binding != null)
          {
-            TypeBinding attrType = binding.getType();
             AttributeHandler handler = binding.getHandler();
-            Object value = handler.unmarshal(elementName, qName, attrType, attrs.getValue(i), nsCtx);
+            Object value = handler.unmarshal(elementName, qName, binding, nsCtx, attrs.getValue(i));
             handler.attribute(elementName, qName, o, value);
          }
          else

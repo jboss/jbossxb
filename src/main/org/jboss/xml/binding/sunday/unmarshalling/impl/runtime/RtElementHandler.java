@@ -125,7 +125,7 @@ public class RtElementHandler
             AttributeHandler handler = binding.getHandler();
             if(handler != null)
             {
-               Object value = handler.unmarshal(elementName, attrName, binding.getType(), attrs.getValue(i), nsCtx);
+               Object value = handler.unmarshal(elementName, attrName, binding, nsCtx, attrs.getValue(i));
                handler.attribute(elementName, attrName, o, value);
             }
             else
@@ -142,7 +142,7 @@ public class RtElementHandler
                CharactersHandler simpleType = type.getSimpleType();
                Object value = simpleType == null ?
                   attrs.getValue(i) :
-                  simpleType.unmarshal(elementName, type.getQName(), nsCtx, null, attrs.getValue(i));
+                  simpleType.unmarshal(elementName, type, nsCtx, binding.getJaxbProperty(), attrs.getValue(i));
                RtUtil.set(o, attrName, type, value);
             }
          }

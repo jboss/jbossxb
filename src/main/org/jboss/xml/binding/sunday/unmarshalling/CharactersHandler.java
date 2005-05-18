@@ -10,6 +10,7 @@ import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.jboss.xml.binding.Constants;
 import org.jboss.xml.binding.SimpleTypeBindings;
+import org.jboss.xml.binding.metadata.JaxbProperty;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -20,9 +21,9 @@ public abstract class CharactersHandler
    public static final CharactersHandler NOOP = new CharactersHandler()
    {
       public Object unmarshal(QName qName,
-                              QName typeQName,
+                              TypeBinding typeBinding,
                               NamespaceContext nsCtx,
-                              ElementBinding element,
+                              JaxbProperty jaxbProperty,
                               String value)
       {
          return value;
@@ -33,9 +34,10 @@ public abstract class CharactersHandler
    {
    };
 
-   public Object unmarshal(QName qName, QName typeQName, NamespaceContext nsCtx, ElementBinding element, String value)
+   public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, JaxbProperty jaxbProperty, String value)
    {
       Object o;
+      QName typeQName = typeBinding.getQName();
       if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))
       {
          o = SimpleTypeBindings.unmarshal(typeQName.getLocalPart(), value, nsCtx);

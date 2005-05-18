@@ -67,7 +67,7 @@ public class SundayContentHandler
             CharactersHandler simpleType = typeBinding.getSimpleType();
             Object unmarshalled = simpleType == null ?
                dataContent :
-               simpleType.unmarshal(endName, typeBinding.getQName(), nsRegistry, elementBinding, dataContent);
+               simpleType.unmarshal(endName, typeBinding, nsRegistry, elementBinding.getJaxbProperty(), dataContent);
 
             // if startElement returned null, we use characters as the object for this element
             // todo subject to refactoring

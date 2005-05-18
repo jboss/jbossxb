@@ -6,6 +6,8 @@
  */
 package org.jboss.xml.binding.sunday.unmarshalling;
 
+import org.jboss.xml.binding.metadata.JaxbProperty;
+
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
@@ -14,6 +16,7 @@ public class AttributeBinding
 {
    private final TypeBinding type;
    private AttributeHandler handler;
+   private JaxbProperty jaxbProperty;
 
    public AttributeBinding(TypeBinding type, AttributeHandler handler)
    {
@@ -34,5 +37,15 @@ public class AttributeBinding
    public void setHandler(AttributeHandler handler)
    {
       this.handler = handler;
+   }
+
+   public JaxbProperty getJaxbProperty()
+   {
+      return jaxbProperty;
+   }
+
+   public void setJaxbProperty(JaxbProperty jaxbProperty)
+   {
+      this.jaxbProperty = jaxbProperty;
    }
 }

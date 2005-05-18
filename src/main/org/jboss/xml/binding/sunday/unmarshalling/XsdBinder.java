@@ -295,17 +295,44 @@ public class XsdBinder
       XSSimpleTypeDefinition attrType = attr.getTypeDefinition();
       TypeBinding typeBinding = bindSimpleType(doc, attrType);
       QName attrName = new QName(attr.getNamespace(), attr.getName());
-      type.addAttribute(attrName, typeBinding, RtAttributeHandler.INSTANCE);
+      AttributeBinding binding = type.addAttribute(attrName, typeBinding, RtAttributeHandler.INSTANCE);
+
+      XSAnnotation an = attr.getAnnotation();
+      if(an != null)
+      {
+         XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
+         XsdAppInfo appInfo = xsdAn.getAppInfo();
+         if(appInfo != null)
+         {
+            JaxbProperty jaxbProperty = appInfo.getJaxbProperty();
+            if(jaxbProperty != null)
+            {
+               binding.setJaxbProperty(jaxbProperty);
+            }
+         }
+      }
 
       if(log.isTraceEnabled())
       {
-         log.trace("bound attribute: type=" +
-            type.getQName() +
-            ", attr=" +
-            attr.getName() +
-            ", attrType=" +
-            attrType.getName()
-         );
+         if(binding.getJaxbProperty() != null)
+         {
+            log.trace("customized binding: attribute " +
+               new QName(attr.getNamespace(), attr.getName()) +
+               " is bound to property " +
+               binding.getJaxbProperty().getName() +
+               " and type " + binding.getJaxbProperty().getCollectionType()
+            );
+         }
+         else
+         {
+            log.trace("bound attribute: type=" +
+               type.getQName() +
+               ", attr=" +
+               attr.getName() +
+               ", attrType=" +
+               attrType.getName()
+            );
+         }
       }
    }
 

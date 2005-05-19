@@ -8,7 +8,10 @@ package org.jboss.xml.binding.sunday.unmarshalling.impl.runtime;
 
 import javax.xml.namespace.QName;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
+import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.Util;
+import org.jboss.xml.binding.metadata.JaxbProperty;
+import org.jboss.logging.Logger;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -19,8 +22,23 @@ public class RtAttributeHandler
 {
    public static final RtAttributeHandler INSTANCE = new RtAttributeHandler();
 
-   public void attribute(QName elemName, QName attrName, Object owner, Object value)
+   public void attribute(QName elemName, QName attrName, AttributeBinding binding, Object owner, Object value)
    {
-      RtUtil.set(owner, value, Util.xmlNameToFieldName(attrName.getLocalPart(), true), null, true);
+      String property = null;
+      if(binding != null)
+      {
+         JaxbProperty jaxbProperty = binding.getJaxbProperty();
+         if(jaxbProperty != null)
+         {
+            property = jaxbProperty.getName();
+         }
+      }
+
+      if(property == null)
+      {
+         property = Util.xmlNameToFieldName(attrName.getLocalPart(), true);
+      }
+
+      RtUtil.set(owner, value, property, null, true);
    }
 }

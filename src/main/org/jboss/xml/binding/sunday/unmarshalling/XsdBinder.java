@@ -22,6 +22,7 @@ import org.jboss.xml.binding.metadata.JaxbSchemaBindings;
 import org.jboss.xml.binding.metadata.JaxbPackage;
 import org.jboss.xml.binding.metadata.XsdAppInfo;
 import org.jboss.xml.binding.metadata.JaxbProperty;
+import org.jboss.xml.binding.metadata.JaxbJavaType;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSLoader;
@@ -201,13 +202,32 @@ public class XsdBinder
                   {
                      if(log.isTraceEnabled())
                      {
-                        log.trace("type " +
+                        log.trace("simple type " +
                            type.getName() +
                            " is bound to " +
                            jaxbClass.getImplClass()
                         );
                      }
                      binding.setJaxbClass(jaxbClass);
+                  }
+
+                  JaxbJavaType jaxbJavaType = appInfo.getJaxbJavaType();
+                  if(jaxbJavaType != null)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace(
+                           "simple type " +
+                           type.getName() +
+                           " is bound to " +
+                           jaxbJavaType.getName() +
+                           " with parseMethod=" +
+                           jaxbJavaType.getParseMethod() +
+                           " and printMethod=" +
+                           jaxbJavaType.getPrintMethod()
+                        );
+                     }
+                     binding.setJaxbJavaType(jaxbJavaType);
                   }
                }
             }
@@ -276,7 +296,7 @@ public class XsdBinder
          }
 
          binding.setSchemaBinding(getXsdBinding().schemaBinding);
-         
+
          XSParticle particle = type.getParticle();
          if(particle != null)
          {

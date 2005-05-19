@@ -31,7 +31,7 @@ public class AttributesHandler
          {
             AttributeHandler handler = binding.getHandler();
             Object value = handler.unmarshal(elementName, qName, binding, nsCtx, attrs.getValue(i));
-            handler.attribute(elementName, qName, o, value);
+            handler.attribute(elementName, qName, binding, o, value);
          }
          else
          {

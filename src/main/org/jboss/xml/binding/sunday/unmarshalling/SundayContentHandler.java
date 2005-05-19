@@ -11,6 +11,9 @@ import java.util.List;
 import javax.xml.namespace.QName;
 import org.jboss.xml.binding.parser.JBossXBParser;
 import org.jboss.xml.binding.NamespaceRegistry;
+import org.jboss.xml.binding.metadata.JaxbProperty;
+import org.jboss.xml.binding.metadata.JaxbBaseType;
+import org.jboss.xml.binding.metadata.JaxbJavaType;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 import org.apache.xerces.xs.XSTypeDefinition;
@@ -65,10 +68,24 @@ public class SundayContentHandler
             textContent.delete(0, textContent.length());
 
             CharactersHandler simpleType = typeBinding.getSimpleType();
-            Object unmarshalled = simpleType == null ?
-               dataContent :
-               simpleType.unmarshal(endName, typeBinding, nsRegistry, elementBinding.getJaxbProperty(), dataContent);
+            Object unmarshalled;
 
+            if(simpleType == null)
+            {
+               unmarshalled = dataContent;
+            }
+            else
+            {
+               JaxbJavaType jaxbJavaType = null;
+               JaxbProperty jaxbProperty = elementBinding.getJaxbProperty();
+               if(jaxbProperty != null)
+               {
+                  JaxbBaseType baseType = jaxbProperty.getBaseType();
+                  jaxbJavaType = baseType == null ? null : baseType.getJavaType();
+               }
+               unmarshalled = simpleType.unmarshal(endName, typeBinding, nsRegistry, jaxbJavaType, dataContent);
+            }
+            
             // if startElement returned null, we use characters as the object for this element
             // todo subject to refactoring
             if(o == null)

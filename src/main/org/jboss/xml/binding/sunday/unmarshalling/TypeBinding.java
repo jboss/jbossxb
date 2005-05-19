@@ -14,6 +14,7 @@ import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
 import org.jboss.xml.binding.metadata.JaxbClass;
+import org.jboss.xml.binding.metadata.JaxbJavaType;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 
@@ -29,6 +30,7 @@ public class TypeBinding
    private ElementHandler handler = RtElementHandler.INSTANCE;//DefaultElementHandler.INSTANCE;
    private CharactersHandler simpleType;
    private JaxbClass jaxbClass;
+   private JaxbJavaType jaxbJavaType;
    private SchemaBinding schemaBinding; // todo it's optional for now...
 
    public TypeBinding()
@@ -184,5 +186,15 @@ public class TypeBinding
    public void setSchemaBinding(SchemaBinding schemaBinding)
    {
       this.schemaBinding = schemaBinding;
+   }
+
+   public void setJaxbJavaType(JaxbJavaType jaxbJavaType)
+   {
+      this.jaxbJavaType = jaxbJavaType;
+   }
+
+   public JaxbJavaType getJaxbJavaType()
+   {
+      return jaxbJavaType;
    }
 }

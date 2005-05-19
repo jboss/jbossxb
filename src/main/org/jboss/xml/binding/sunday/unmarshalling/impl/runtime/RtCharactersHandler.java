@@ -13,7 +13,6 @@ import org.jboss.xml.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xml.binding.metadata.JaxbProperty;
-import org.jboss.xml.binding.metadata.JaxbBaseType;
 import org.jboss.xml.binding.metadata.JaxbJavaType;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
@@ -27,16 +26,14 @@ public class RtCharactersHandler
 {
    public static final RtCharactersHandler INSTANCE = new RtCharactersHandler();
 
-   public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, JaxbProperty jaxbProperty, String value)
+   public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, JaxbJavaType jaxbJavaType, String value)
    {
       Object unmarshalled = null;
-      if(jaxbProperty != null)
+      if(jaxbJavaType != null)
       {
-         JaxbBaseType jaxbBaseType = jaxbProperty != null ? jaxbProperty.getBaseType() : null;
-         JaxbJavaType javaType = jaxbBaseType == null ? null : jaxbBaseType.getJavaType();
-         if(javaType != null)
+         if(jaxbJavaType != null)
          {
-            String parseMethod = javaType.getParseMethod();
+            String parseMethod = jaxbJavaType.getParseMethod();
             if(parseMethod == null)
             {
                throw new JBossXBRuntimeException(
@@ -96,12 +93,12 @@ public class RtCharactersHandler
          }
          else
          {
-            unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, jaxbProperty, value);
+            unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, jaxbJavaType, value);
          }
       }
       else
       {
-         unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, jaxbProperty, value);
+         unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, jaxbJavaType, value);
       }
 
       return unmarshalled;

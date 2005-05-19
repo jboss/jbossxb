@@ -32,4 +32,9 @@ public class XsdAppInfo
    {
       return (JaxbProperty)getChild(JaxbProperty.QNAME);
    }
+
+   public JaxbJavaType getJaxbJavaType()
+   {
+      return (JaxbJavaType)getChild(JaxbJavaType.QNAME);
+   }
 }

@@ -7,6 +7,7 @@
 package org.jboss.xml.binding.sunday.unmarshalling.impl.runtime;
 
 import java.util.Collection;
+import java.util.ArrayList;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
 import javax.xml.namespace.QName;
@@ -64,29 +65,36 @@ public class RtUtil
 
       if(colType != null ||
          // todo collections of collections
-         fieldType.isAssignableFrom(Collection.class) &&
-         !value.getClass().isAssignableFrom(Collection.class))
+         Collection.class.isAssignableFrom(fieldType) &&
+         !Collection.class.isAssignableFrom(value.getClass()))
       {
          Collection col = (Collection)get(o, getter, field);
          if(col == null)
          {
-            Class colCls;
-            try
+            if(colType == null)
             {
-               colCls = Thread.currentThread().getContextClassLoader().loadClass(colType);
+               col = new ArrayList();
             }
-            catch(ClassNotFoundException e)
+            else
             {
-               throw new JBossXBRuntimeException("Failed to load collection type: " + colType);
-            }
+               Class colCls;
+               try
+               {
+                  colCls = Thread.currentThread().getContextClassLoader().loadClass(colType);
+               }
+               catch(ClassNotFoundException e)
+               {
+                  throw new JBossXBRuntimeException("Failed to load collection type: " + colType);
+               }
 
-            try
-            {
-               col = (Collection)colCls.newInstance();
-            }
-            catch(Exception e)
-            {
-               throw new JBossXBRuntimeException("Failed to create an instance of " + colCls);
+               try
+               {
+                  col = (Collection)colCls.newInstance();
+               }
+               catch(Exception e)
+               {
+                  throw new JBossXBRuntimeException("Failed to create an instance of " + colCls);
+               }
             }
 
             set(o, col, setter, field);

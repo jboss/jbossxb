@@ -183,6 +183,10 @@ public class XsdAnnotation
          {
             element = new JaxbClass();
          }
+         else if("javaType".equals(localName))
+         {
+            element = new JaxbJavaType();
+         }
 
          setAttributes(element, attrs);
 

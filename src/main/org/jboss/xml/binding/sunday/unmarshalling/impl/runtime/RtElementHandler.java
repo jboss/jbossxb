@@ -21,6 +21,9 @@ import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.Constants;
 import org.jboss.xml.binding.metadata.JaxbPackage;
 import org.jboss.xml.binding.metadata.JaxbProperty;
+import org.jboss.xml.binding.metadata.JaxbClass;
+import org.jboss.xml.binding.metadata.JaxbJavaType;
+import org.jboss.xml.binding.metadata.JaxbBaseType;
 import org.xml.sax.Attributes;
 
 /**
@@ -43,7 +46,8 @@ public class RtElementHandler
             qName = elementName;
          }
 
-         String className = type.getJaxbClass() == null ? null : type.getJaxbClass().getImplClass();
+         JaxbClass jaxbClass = type.getJaxbClass();
+         String className = jaxbClass == null ? null : jaxbClass.getImplClass();
          if(className == null)
          {
             SchemaBinding schemaBinding = type.getSchemaBinding();
@@ -65,16 +69,17 @@ public class RtElementHandler
          }
          catch(ClassNotFoundException e)
          {
+            if(jaxbClass != null && jaxbClass.getImplClass() != null)
+            {
+               throw new JBossXBRuntimeException("Failed to resolve class name for " +
+                  elementName +
+                  " of type " +
+                  type.getQName() +
+                  ": " +
+                  e.getMessage()
+               );
+            }
             // todo complex element may contain just data content...
-            /*
-            throw new JBossXBRuntimeException("Failed to resolve class name for " +
-               elementName +
-               " of type " +
-               type.getQName() +
-               ": " +
-               e.getMessage()
-            );
-            */
          }
 
          if(cls != null)
@@ -126,7 +131,7 @@ public class RtElementHandler
             if(handler != null)
             {
                Object value = handler.unmarshal(elementName, attrName, binding, nsCtx, attrs.getValue(i));
-               handler.attribute(elementName, attrName, o, value);
+               handler.attribute(elementName, attrName, binding, o, value);
             }
             else
             {
@@ -140,9 +145,28 @@ public class RtElementHandler
             if(!Constants.NS_XML_SCHEMA_INSTANCE.equals(attrs.getURI(i)))
             {
                CharactersHandler simpleType = type.getSimpleType();
-               Object value = simpleType == null ?
-                  attrs.getValue(i) :
-                  simpleType.unmarshal(elementName, type, nsCtx, binding.getJaxbProperty(), attrs.getValue(i));
+               Object value;
+               if(simpleType == null)
+               {
+                  value = attrs.getValue(i);
+               }
+               else
+               {
+                  TypeBinding attrType = binding.getType();
+                  JaxbJavaType jaxbJavaType = null;
+                  JaxbProperty jaxbProperty = binding.getJaxbProperty();
+                  if(jaxbProperty != null)
+                  {
+                     JaxbBaseType baseType = jaxbProperty.getBaseType();
+                     jaxbJavaType = baseType == null ? null : baseType.getJavaType();
+                  }
+                  else if(attrType != null)
+                  {
+                     jaxbJavaType = attrType.getJaxbJavaType();
+                  }
+                  value = simpleType.unmarshal(attrName, attrType, nsCtx, jaxbJavaType, attrs.getValue(i));
+               }
+
                RtUtil.set(o, attrName, type, value);
             }
          }

@@ -149,7 +149,7 @@ public class RtElementHandler
                   value = simpleType.unmarshal(attrName, attrType, nsCtx, jaxbJavaType, attrs.getValue(i));
                }
 
-               RtUtil.set(o, attrName, type, value);
+               RtUtil.set(o, attrName, value);
             }
          }
       }

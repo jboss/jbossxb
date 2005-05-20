@@ -8,13 +8,9 @@ package org.jboss.xml.binding.sunday.unmarshalling.impl.runtime;
 
 import java.util.Collection;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
-import java.lang.reflect.Array;
 import javax.xml.namespace.QName;
-import org.jboss.xml.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.logging.Logger;
@@ -29,17 +25,6 @@ public class RtUtil
 
    private RtUtil()
    {
-   }
-
-   public static ArrayContainer createArrayContainer(Class itemType)
-   {
-      return new ArrayContainer(itemType);
-   }
-
-   public static Object createArray(ArrayContainer container)
-   {
-      Object[] o = (Object[])Array.newInstance(container.itemType, container.items.size());
-      return container.items.toArray(o);
    }
 
    public static void set(Object o, Object value, String prop, String colType, boolean ignoreNotFoundField)
@@ -122,7 +107,7 @@ public class RtUtil
       }
    }
 
-   public static void set(Object o, QName elementName, TypeBinding type, Object value)
+   public static void set(Object o, QName elementName, Object value)
    {
       if(o instanceof Collection)
       {
@@ -238,14 +223,4 @@ public class RtUtil
 
    // Inner
 
-   public static class ArrayContainer
-   {
-      public final Class itemType;
-      public final List items = new ArrayList();
-
-      public ArrayContainer(Class itemType)
-      {
-         this.itemType = itemType;
-      }
-   }
 }

@@ -140,7 +140,7 @@ public class XsdBinder
       for(int i = 0; i < elements.getLength(); ++i)
       {
          XSElementDeclaration element = (XSElementDeclaration)elements.item(i);
-         bindElement(doc, element, sharedElements);
+         bindElement(doc, element, sharedElements, false);
       }
 
       return doc;
@@ -216,8 +216,7 @@ public class XsdBinder
                   {
                      if(log.isTraceEnabled())
                      {
-                        log.trace(
-                           "simple type " +
+                        log.trace("simple type " +
                            type.getName() +
                            " is bound to " +
                            jaxbJavaType.getName() +
@@ -378,14 +377,21 @@ public class XsdBinder
             // todo bindWildcard((XSWildcard)term);
             break;
          case XSConstants.ELEMENT_DECLARATION:
-            bindElement(doc, (XSElementDeclaration)term, sharedElements);
+            bindElement(doc,
+               (XSElementDeclaration)term,
+               sharedElements,
+               particle.getMaxOccursUnbounded() || particle.getMaxOccurs() > 1
+            );
             break;
          default:
             throw new IllegalStateException("Unexpected term type: " + term.getType());
       }
    }
 
-   private static void bindElement(SchemaBinding doc, XSElementDeclaration element, SharedElements sharedElements)
+   private static void bindElement(SchemaBinding doc,
+                                   XSElementDeclaration element,
+                                   SharedElements sharedElements,
+                                   boolean multiOccurs)
    {
       QName qName = new QName(element.getNamespace(), element.getName());
 
@@ -420,6 +426,7 @@ public class XsdBinder
          if(binding == null)
          {
             binding = new ElementBinding(type);
+            binding.setMultiOccurs(multiOccurs);
             if(global)
             {
                doc.addElement(qName, binding);
@@ -456,12 +463,13 @@ public class XsdBinder
             parentType.addElement(qName, binding);
             if(log.isTraceEnabled())
             {
-               log.trace("bound element: type=" +
+               log.trace("bound element: complex type=" +
                   parentType.getQName() +
                   ", element=" +
                   qName +
-                  ", elementType " +
-                  type.getQName()
+                  ", type=" +
+                  type.getQName() +
+                  ", multiOccurs=" + binding.isMultiOccurs()
                );
             }
          }

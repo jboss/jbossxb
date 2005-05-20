@@ -19,6 +19,8 @@ import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.Constants;
+import org.jboss.xml.binding.SimpleTypeBindings;
+import org.jboss.xml.binding.GenericValueContainer;
 import org.jboss.xml.binding.metadata.JaxbPackage;
 import org.jboss.xml.binding.metadata.JaxbProperty;
 import org.jboss.xml.binding.metadata.JaxbClass;
@@ -40,79 +42,59 @@ public class RtElementHandler
       Object o = null;
       if(!type.isSimple())
       {
-         QName qName = type.getQName();
-         if(qName == null)
-         {
-            qName = elementName;
-         }
-
          JaxbClass jaxbClass = type.getJaxbClass();
-         String className = jaxbClass == null ? null : jaxbClass.getImplClass();
-         if(className == null)
+         if(jaxbClass == null && type.isArrayWrapper())
          {
-            SchemaBinding schemaBinding = type.getSchemaBinding();
-            JaxbPackage jaxbPackage = schemaBinding == null ? null : schemaBinding.getJaxbPackage();
-            String pkg = jaxbPackage == null ?
-               Util.xmlNamespaceToJavaPackage(qName.getNamespaceURI()) :
-               jaxbPackage.getName();
-            className = Util.xmlNameToClassName(qName.getLocalPart(), true);
-            if(pkg != null && pkg.length() > 0)
+            ElementBinding item = type.getArrayItem();
+            TypeBinding itemType = item.getType();
+
+            Class itemCls;
+            if(Constants.NS_XML_SCHEMA.equals(itemType.getQName().getNamespaceURI()))
             {
-               className = pkg + '.' + className;
+               itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart());
             }
-         }
-
-         Class cls = null;
-         try
-         {
-            cls = Thread.currentThread().getContextClassLoader().loadClass(className);
-         }
-         catch(ClassNotFoundException e)
-         {
-            if(jaxbClass != null && jaxbClass.getImplClass() != null)
+            else
             {
-               throw new JBossXBRuntimeException("Failed to resolve class name for " +
-                  elementName +
-                  " of type " +
-                  type.getQName() +
-                  ": " +
-                  e.getMessage()
-               );
+               itemCls = getClass(itemType, type.getArrayItemQName());
             }
-            // todo complex element may contain just data content...
+
+            o = GenericValueContainer.FACTORY.array(itemCls);
          }
-
-         if(cls != null)
+         else
          {
-            try
-            {
-               Constructor ctor = cls.getConstructor(null);
+            Class cls = getClass(type, elementName);
 
+            if(cls != null)
+            {
                try
                {
-                  o = ctor.newInstance(null);
+                  Constructor ctor = cls.getConstructor(null);
+
+                  try
+                  {
+                     o = ctor.newInstance(null);
+                  }
+                  catch(Exception e)
+                  {
+                     throw new JBossXBRuntimeException("Failed to create an instance of " +
+                        cls +
+                        " using default constructor for element " +
+                        elementName +
+                        " of type " +
+                        type.getQName()
+                     );
+                  }
                }
-               catch(Exception e)
+               catch(NoSuchMethodException e)
                {
-                  throw new JBossXBRuntimeException("Failed to create an instance of " +
+                  throw new JBossXBRuntimeException("" +
                      cls +
-                     " using default constructor for element " +
+                     " doesn't declare no-arg constructor: element=" +
                      elementName +
-                     " of type " +
+                     ", type=" +
                      type.getQName()
                   );
                }
-            }
-            catch(NoSuchMethodException e)
-            {
-               throw new JBossXBRuntimeException(
-                  "" +
-                  cls +
-                  " doesn't declare no-arg constructor: element=" +
-                  elementName +
-                  ", type=" +
-                  type.getQName()
-               );
             }
          }
       }
@@ -175,7 +157,10 @@ public class RtElementHandler
 
    public Object endElement(Object o, QName elementName, TypeBinding type)
    {
-      // todo: immutables
+      if(o instanceof GenericValueContainer)
+      {
+         o = ((GenericValueContainer)o).instantiate();
+      }
       return o;
    }
 
@@ -183,19 +168,71 @@ public class RtElementHandler
    {
       if(parent != null)
       {
-         JaxbProperty jaxbProperty = element.getJaxbProperty();
-
-         String propName = jaxbProperty == null ? null : jaxbProperty.getName();
-         if(propName == null)
+         if(parent instanceof GenericValueContainer)
          {
-            propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
+            ((GenericValueContainer)parent).addChild(qName, o);
          }
+         else
+         {
+            JaxbProperty jaxbProperty = element.getJaxbProperty();
 
-         String colType = jaxbProperty == null ? null : jaxbProperty.getCollectionType();
-         RtUtil.set(parent, o, propName, colType, true);
+            String propName = jaxbProperty == null ? null : jaxbProperty.getName();
+            if(propName == null)
+            {
+               propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
+            }
+
+            String colType = jaxbProperty == null ? null : jaxbProperty.getCollectionType();
+            RtUtil.set(parent, o, propName, colType, true);
+         }
       }
    }
 
    // Private
 
+   private Class getClass(TypeBinding type, QName elementName)
+   {
+      JaxbClass jaxbClass = type.getJaxbClass();
+      String className = jaxbClass == null ? null : jaxbClass.getImplClass();
+      if(className == null)
+      {
+         QName typeBaseQName = type.getQName();
+         if(typeBaseQName == null)
+         {
+            typeBaseQName = elementName;
+         }
+
+         SchemaBinding schemaBinding = type.getSchemaBinding();
+         JaxbPackage jaxbPackage = schemaBinding == null ? null : schemaBinding.getJaxbPackage();
+         String pkg = jaxbPackage == null ?
+            Util.xmlNamespaceToJavaPackage(typeBaseQName.getNamespaceURI()) :
+            jaxbPackage.getName();
+         className = Util.xmlNameToClassName(typeBaseQName.getLocalPart(), true);
+         if(pkg != null && pkg.length() > 0)
+         {
+            className = pkg + '.' + className;
+         }
+      }
+
+      Class cls = null;
+      try
+      {
+         cls = Thread.currentThread().getContextClassLoader().loadClass(className);
+      }
+      catch(ClassNotFoundException e)
+      {
+         if(jaxbClass != null && jaxbClass.getImplClass() != null)
+         {
+            throw new JBossXBRuntimeException("Failed to resolve class name for " +
+               elementName +
+               " of type " +
+               type.getQName() +
+               ": " +
+               e.getMessage()
+            );
+         }
+         // todo complex element may contain just data content...
+      }
+      return cls;
+   }
 }

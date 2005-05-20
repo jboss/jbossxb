@@ -22,6 +22,7 @@ public class ElementBinding
 
    private final TypeBinding typeBinding;
    private JaxbProperty jaxbProperty;
+   private boolean multiOccurs;
 
    public ElementBinding(TypeBinding typeBinding)
    {
@@ -61,5 +62,15 @@ public class ElementBinding
    public void setJaxbProperty(JaxbProperty jaxbProperty)
    {
       this.jaxbProperty = jaxbProperty;
+   }
+
+   public boolean isMultiOccurs()
+   {
+      return multiOccurs;
+   }
+
+   public void setMultiOccurs(boolean multiOccurs)
+   {
+      this.multiOccurs = multiOccurs;
    }
 }

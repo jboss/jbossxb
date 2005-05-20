@@ -27,6 +27,8 @@ public class TypeBinding
 {
    private final QName qName;
    private Map elements = Collections.EMPTY_MAP;
+   private QName arrayItemQName;
+   private ElementBinding arrayItem;
    private Map attrs = Collections.EMPTY_MAP;
    private ElementHandler handler = RtElementHandler.INSTANCE;//DefaultElementHandler.INSTANCE;
    private CharactersHandler simpleType;
@@ -68,9 +70,16 @@ public class TypeBinding
       {
          case 0:
             elements = Collections.singletonMap(qName, binding);
+            if(binding.isMultiOccurs())
+            {
+               arrayItem = binding;
+               arrayItemQName = qName;
+            }
             break;
          case 1:
             elements = new HashMap(elements);
+            arrayItem = null;
+            arrayItemQName = null;
          default:
             elements.put(qName, binding);
       }
@@ -173,6 +182,21 @@ public class TypeBinding
    public boolean hasSimpleContent()
    {
       return elements.isEmpty();
+   }
+
+   public boolean isArrayWrapper()
+   {
+      return arrayItem != null;
+   }
+
+   public ElementBinding getArrayItem()
+   {
+      return arrayItem;
+   }
+
+   public QName getArrayItemQName()
+   {
+      return arrayItemQName;
    }
 
    public JaxbClass getJaxbClass()

@@ -26,74 +26,70 @@ public class RtCharactersHandler
 {
    public static final RtCharactersHandler INSTANCE = new RtCharactersHandler();
 
-   public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, JaxbJavaType jaxbJavaType, String value)
+   public Object unmarshal(QName qName,
+                           TypeBinding typeBinding,
+                           NamespaceContext nsCtx,
+                           JaxbJavaType jaxbJavaType,
+                           String value)
    {
       Object unmarshalled = null;
       if(jaxbJavaType != null)
       {
-         if(jaxbJavaType != null)
+         String parseMethod = jaxbJavaType.getParseMethod();
+         if(parseMethod == null)
          {
-            String parseMethod = jaxbJavaType.getParseMethod();
-            if(parseMethod == null)
-            {
-               throw new JBossXBRuntimeException(
-                  "javaType annotation is specified for " + qName + " but does not contain parseMethod attribute"
-               );
-            }
-
-            int lastDot = parseMethod.lastIndexOf('.');
-            String clsName = parseMethod.substring(0, lastDot);
-            Class cls;
-            try
-            {
-               cls = Thread.currentThread().getContextClassLoader().loadClass(clsName);
-            }
-            catch(ClassNotFoundException e)
-            {
-               throw new JBossXBRuntimeException("Failed to load class " + clsName + " for parseMethod " + parseMethod);
-            }
-
-            String methodName = parseMethod.substring(lastDot + 1);
-            Method method;
-            try
-            {
-               method = cls.getMethod(methodName, new Class[]{String.class, NamespaceContext.class});
-            }
-            catch(NoSuchMethodException e)
-            {
-               throw new JBossXBRuntimeException("Failed to find method " +
-                  methodName +
-                  "(" +
-                  String.class.getName() +
-                  " p1, " +
-                  NamespaceContext.class.getName() +
-                  " p2) in " +
-                  cls
-               );
-            }
-
-            try
-            {
-               unmarshalled = method.invoke(null, new Object[]{value, nsCtx});
-            }
-            catch(Exception e)
-            {
-               throw new JBossXBRuntimeException(
-                  "Failed to invoke parseMethod " +
-                  parseMethod +
-                  " for element " +
-                  qName +
-                  " and value " +
-                  value +
-                  ": " +
-                  e.getMessage(),
-                  e
-               );
-            }
+            throw new JBossXBRuntimeException(
+               "javaType annotation is specified for " + qName + " but does not contain parseMethod attribute"
+            );
          }
-         else
+
+         int lastDot = parseMethod.lastIndexOf('.');
+         String clsName = parseMethod.substring(0, lastDot);
+         Class cls;
+         try
          {
-            unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, jaxbJavaType, value);
+            cls = Thread.currentThread().getContextClassLoader().loadClass(clsName);
+         }
+         catch(ClassNotFoundException e)
+         {
+            throw new JBossXBRuntimeException("Failed to load class " + clsName + " for parseMethod " + parseMethod);
+         }
+
+         String methodName = parseMethod.substring(lastDot + 1);
+         Method method;
+         try
+         {
+            method = cls.getMethod(methodName, new Class[]{String.class, NamespaceContext.class});
+         }
+         catch(NoSuchMethodException e)
+         {
+            throw new JBossXBRuntimeException("Failed to find method " +
+               methodName +
+               "(" +
+               String.class.getName() +
+               " p1, " +
+               NamespaceContext.class.getName() +
+               " p2) in " +
+               cls
+            );
+         }
+
+         try
+         {
+            unmarshalled = method.invoke(null, new Object[]{value, nsCtx});
+         }
+         catch(Exception e)
+         {
+            throw new JBossXBRuntimeException("Failed to invoke parseMethod " +
+               parseMethod +
+               " for element " +
+               qName +
+               " and value " +
+               value +
+               ": " +
+               e.getMessage(),
+               e
+            );
          }
       }
       else
@@ -108,15 +104,40 @@ public class RtCharactersHandler
    {
       if(owner != null)
       {
-         JaxbProperty jaxbProperty = element.getJaxbProperty();
-         if(jaxbProperty != null)
+         String propName = null;
+         String colType = null;
+         TypeBinding type = element.getType();
+         if(type != null && !type.isSimple() && type.hasSimpleContent())
          {
-            RtUtil.set(owner, value, jaxbProperty.getName(), jaxbProperty.getCollectionType(), true);
+            // todo for complex types with simple content i'm not sure it's a valid use of jaxb:property
+            JaxbProperty jaxbProperty = type.getJaxbProperty();
+            if(jaxbProperty != null)
+            {
+               propName = jaxbProperty.getName();
+               colType = jaxbProperty.getCollectionType();
+            }
+
+            if(propName == null)
+            {
+               propName = "value";
+            }
          }
          else
          {
-            RtUtil.set(owner, value, Util.xmlNameToFieldName(qName.getLocalPart(), true), null, true);
+            JaxbProperty jaxbProperty = element.getJaxbProperty();
+            if(jaxbProperty != null)
+            {
+               propName = jaxbProperty.getName();
+               colType = jaxbProperty.getCollectionType();
+            }
+
+            if(propName == null)
+            {
+               propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
+            }
          }
+
+         RtUtil.set(owner, value, propName, colType, true);
       }
    }
 }

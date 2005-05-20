@@ -15,6 +15,7 @@ import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
 import org.jboss.xml.binding.metadata.JaxbClass;
 import org.jboss.xml.binding.metadata.JaxbJavaType;
+import org.jboss.xml.binding.metadata.JaxbProperty;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 
@@ -31,6 +32,7 @@ public class TypeBinding
    private CharactersHandler simpleType;
    private JaxbClass jaxbClass;
    private JaxbJavaType jaxbJavaType;
+   private JaxbProperty jaxbProperty;
    private SchemaBinding schemaBinding; // todo it's optional for now...
 
    public TypeBinding()
@@ -168,6 +170,11 @@ public class TypeBinding
       return elements.isEmpty() && attrs.isEmpty();
    }
 
+   public boolean hasSimpleContent()
+   {
+      return elements.isEmpty();
+   }
+
    public JaxbClass getJaxbClass()
    {
       return jaxbClass;
@@ -196,5 +203,15 @@ public class TypeBinding
    public JaxbJavaType getJaxbJavaType()
    {
       return jaxbJavaType;
+   }
+
+   public JaxbProperty getJaxbProperty()
+   {
+      return jaxbProperty;
+   }
+
+   public void setJaxbProperty(JaxbProperty jaxbProperty)
+   {
+      this.jaxbProperty = jaxbProperty;
    }
 }

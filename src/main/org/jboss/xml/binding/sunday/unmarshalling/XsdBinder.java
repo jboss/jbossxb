@@ -291,6 +291,16 @@ public class XsdBinder
                      }
                      binding.setJaxbClass(jaxbClass);
                   }
+
+                  JaxbProperty jaxbProperty = appInfo.getJaxbProperty();
+                  if(jaxbProperty != null)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("bound simple content to property " + jaxbProperty.getName());
+                     }
+                     binding.setJaxbProperty(jaxbProperty);
+                  }
                }
             }
          }

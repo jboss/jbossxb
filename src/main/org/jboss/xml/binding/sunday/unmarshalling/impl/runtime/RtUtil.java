@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
+import java.lang.reflect.Array;
 import javax.xml.namespace.QName;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
@@ -100,6 +101,22 @@ public class RtUtil
          }
 
          col.add(value);
+      }
+      else if(fieldType.isArray() && !value.getClass().isArray())
+      {
+         Object[] arr = (Object[])get(o, getter, field);
+         if(arr == null)
+         {
+            arr = (Object[])Array.newInstance(fieldType.getComponentType(), 1);
+         }
+         else
+         {
+            Object[] tmp = arr;
+            arr = (Object[])Array.newInstance(fieldType.getComponentType(), tmp.length + 1);
+            System.arraycopy(tmp, 0, arr, 0, tmp.length);
+         }
+         arr[arr.length - 1] = value;
+         set(o, arr, setter, field);
       }
       else
       {

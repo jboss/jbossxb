@@ -205,9 +205,14 @@ public class SundayContentHandler
             typeBinding.attributes(o, startName, atts, nsRegistry);
          }
       }
-      else
+      else if(log.isTraceEnabled())
       {
-         log.warn("Element " + startName + " is ignored.");
+         log.trace(
+            "Element " +
+            startName +
+            " is not bound as a " +
+            (elementStack.isEmpty() ? "global element." : "child element.")
+         );
       }
    }
 

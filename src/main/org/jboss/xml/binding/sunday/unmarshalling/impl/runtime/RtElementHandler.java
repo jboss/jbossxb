@@ -7,6 +7,10 @@
 package org.jboss.xml.binding.sunday.unmarshalling.impl.runtime;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.ArrayList;
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
@@ -24,8 +28,7 @@ import org.jboss.xml.binding.GenericValueContainer;
 import org.jboss.xml.binding.metadata.JaxbPackage;
 import org.jboss.xml.binding.metadata.JaxbProperty;
 import org.jboss.xml.binding.metadata.JaxbClass;
-import org.jboss.xml.binding.metadata.JaxbJavaType;
-import org.jboss.xml.binding.metadata.JaxbBaseType;
+import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
 /**
@@ -35,6 +38,8 @@ import org.xml.sax.Attributes;
 public class RtElementHandler
    implements ElementHandler
 {
+   private static final Logger log = Logger.getLogger(RtElementHandler.class);
+
    public static final RtElementHandler INSTANCE = new RtElementHandler();
 
    public Object startElement(Object parent, QName elementName, TypeBinding type)
@@ -45,20 +50,67 @@ public class RtElementHandler
          JaxbClass jaxbClass = type.getJaxbClass();
          if(jaxbClass == null && type.isArrayWrapper())
          {
-            ElementBinding item = type.getArrayItem();
-            TypeBinding itemType = item.getType();
-
-            Class itemCls;
-            if(Constants.NS_XML_SCHEMA.equals(itemType.getQName().getNamespaceURI()))
+            if(parent == null)
             {
-               itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart());
+               ElementBinding item = type.getArrayItem();
+               TypeBinding itemType = item.getType();
+
+               Class itemCls;
+               if(Constants.NS_XML_SCHEMA.equals(itemType.getQName().getNamespaceURI()))
+               {
+                  itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart());
+               }
+               else
+               {
+                  itemCls = getClass(itemType, type.getArrayItemQName());
+               }
+
+               o = GenericValueContainer.FACTORY.array(itemCls);
             }
             else
             {
-               itemCls = getClass(itemType, type.getArrayItemQName());
-            }
+               // todo check for field type using jaxb:property
+               String getterName = Util.xmlNameToGetMethodName(elementName.getLocalPart(), true);
+               Class parentClass = parent.getClass();
+               Class fieldType;
+               try
+               {
+                  Method getter = parentClass.getMethod(getterName, null);
+                  fieldType = getter.getReturnType();
+               }
+               catch(NoSuchMethodException e)
+               {
+                  String fieldName = null;
+                  try
+                  {
+                     fieldName = Util.xmlNameToFieldName(elementName.getLocalPart(), true);
+                     Field field = parentClass.getField(fieldName);
+                     fieldType = field.getType();
+                  }
+                  catch(NoSuchFieldException e1)
+                  {
+                     throw new JBossXBRuntimeException(
+                        "Failed to find field " +
+                        fieldName +
+                        " and getter " +
+                        getterName +
+                        " for element " +
+                        elementName +
+                        " in " +
+                        parentClass
+                     );
+                  }
+               }
 
-            o = GenericValueContainer.FACTORY.array(itemCls);
+               if(fieldType.isArray())
+               {
+                  o = GenericValueContainer.FACTORY.array(fieldType.getComponentType());
+               }
+               else if(Collection.class.isAssignableFrom(fieldType))
+               {
+                  o = new ArrayList();
+               }
+            }
          }
          else
          {
@@ -81,7 +133,7 @@ public class RtElementHandler
                         " using default constructor for element " +
                         elementName +
                         " of type " +
-                        type.getQName()
+                        type.getQName() + ": " + e.getMessage(), e
                      );
                   }
                }
@@ -131,25 +183,8 @@ public class RtElementHandler
                if(simpleType == null)
                {
                   value = attrs.getValue(i);
+                  RtUtil.set(o, attrName, value);
                }
-               else
-               {
-                  TypeBinding attrType = binding.getType();
-                  JaxbJavaType jaxbJavaType = null;
-                  JaxbProperty jaxbProperty = binding.getJaxbProperty();
-                  if(jaxbProperty != null)
-                  {
-                     JaxbBaseType baseType = jaxbProperty.getBaseType();
-                     jaxbJavaType = baseType == null ? null : baseType.getJavaType();
-                  }
-                  else if(attrType != null)
-                  {
-                     jaxbJavaType = attrType.getJaxbJavaType();
-                  }
-                  value = simpleType.unmarshal(attrName, attrType, nsCtx, jaxbJavaType, attrs.getValue(i));
-               }
-
-               RtUtil.set(o, attrName, value);
             }
          }
       }
@@ -171,6 +206,10 @@ public class RtElementHandler
          if(parent instanceof GenericValueContainer)
          {
             ((GenericValueContainer)parent).addChild(qName, o);
+         }
+         else if(parent instanceof Collection)
+         {
+            ((Collection)parent).add(o);
          }
          else
          {
@@ -232,6 +271,12 @@ public class RtElementHandler
             );
          }
          // todo complex element may contain just data content...
+         else if(log.isTraceEnabled())
+         {
+            log.trace(
+               "Failed to resolve class for element " + elementName + " of type " + type.getQName() + ": " + className
+            );
+         }
       }
       return cls;
    }

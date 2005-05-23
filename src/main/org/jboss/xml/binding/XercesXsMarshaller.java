@@ -162,7 +162,16 @@ public class XercesXsMarshaller
             throw new JBossXBRuntimeException("Global type definition is not found: " + rootTypeQName);
          }
 
-         marshalElement(rootQName.getNamespaceURI(), rootQName.getLocalPart(), type, true, 1, 1, true);
+         if(isArrayWrapper(type))
+         {
+            stack.push(root);
+            marshalComplexType(rootQName.getNamespaceURI(), rootQName.getLocalPart(), (XSComplexTypeDefinition)type, true);
+            stack.pop();
+         }
+         else
+         {
+            marshalElement(rootQName.getNamespaceURI(), rootQName.getLocalPart(), type, true, 1, 1, true);
+         }
       }
       else if(rootQNames.isEmpty())
       {
@@ -241,17 +250,18 @@ public class XercesXsMarshaller
       }
       else
       {
-         if(stack.peek() instanceof Collection)
+         Object peeked = stack.peek();
+         if(peeked instanceof Collection || peeked.getClass().isArray())
          {
             // collection is the provider
-            value = (Collection)stack.peek();
+            value = peeked;
          }
          else
          {
-            value = provider.getChildren(stack.peek(), null, elementNs, elementLocal);
+            value = provider.getChildren(peeked, null, elementNs, elementLocal);
             if(value == null)
             {
-               value = provider.getElementValue(stack.peek(), null, elementNs, elementLocal);
+               value = provider.getElementValue(peeked, null, elementNs, elementLocal);
             }
          }
       }
@@ -592,5 +602,20 @@ public class XercesXsMarshaller
          throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());
       }
       return impl;
+   }
+
+   private static boolean isArrayWrapper(XSTypeDefinition type)
+   {
+      boolean is = false;
+      if(XSTypeDefinition.COMPLEX_TYPE == type.getTypeCategory())
+      {
+         XSComplexTypeDefinition cType = (XSComplexTypeDefinition)type;
+         XSParticle particle = cType.getParticle();
+         if(particle != null)
+         {
+            is = particle.getMaxOccursUnbounded() || particle.getMaxOccurs() > 1;
+         }
+      }
+      return true;
    }
 }

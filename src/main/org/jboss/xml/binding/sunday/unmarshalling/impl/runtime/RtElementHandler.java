@@ -70,8 +70,12 @@ public class RtElementHandler
             }
             else
             {
-               // todo check for field type using jaxb:property
-               String getterName = Util.xmlNameToGetMethodName(elementName.getLocalPart(), true);
+               JaxbProperty jaxbProperty = element.getJaxbProperty();
+               String jaxbPropName = jaxbProperty == null ? null : jaxbProperty.getName();
+
+               String getterName = jaxbPropName == null ?
+                  Util.xmlNameToGetMethodName(elementName.getLocalPart(), true) :
+                  "get" + jaxbPropName.charAt(0) + jaxbPropName.substring(1);
                Class parentClass = parent.getClass();
                Class fieldType;
                try
@@ -84,14 +88,15 @@ public class RtElementHandler
                   String fieldName = null;
                   try
                   {
-                     fieldName = Util.xmlNameToFieldName(elementName.getLocalPart(), true);
+                     fieldName = jaxbPropName == null ?
+                        Util.xmlNameToFieldName(elementName.getLocalPart(), true) :
+                        jaxbPropName;
                      Field field = parentClass.getField(fieldName);
                      fieldType = field.getType();
                   }
                   catch(NoSuchFieldException e1)
                   {
-                     throw new JBossXBRuntimeException(
-                        "Failed to find field " +
+                     throw new JBossXBRuntimeException("Failed to find field " +
                         fieldName +
                         " and getter " +
                         getterName +
@@ -154,7 +159,11 @@ public class RtElementHandler
       return o;
    }
 
-   public void attributes(Object o, QName elementName, ElementBinding element, Attributes attrs, NamespaceContext nsCtx)
+   public void attributes(Object o,
+                          QName elementName,
+                          ElementBinding element,
+                          Attributes attrs,
+                          NamespaceContext nsCtx)
    {
       TypeBinding type = element.getType();
       for(int i = 0; i < attrs.getLength(); ++i)

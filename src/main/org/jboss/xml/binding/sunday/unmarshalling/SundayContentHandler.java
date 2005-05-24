@@ -113,7 +113,7 @@ public class SundayContentHandler
          //
 
          Object parent = objectStack.isEmpty() ? null : objectStack.peek();
-         o = typeBinding.endElement(parent, o, endName);
+         o = typeBinding.endElement(parent, o, elementBinding, endName);
 
          int i = elementHandlers.size();
          while(i-- > 0)
@@ -192,7 +192,7 @@ public class SundayContentHandler
          String nil = atts.getValue("xsi:nil");
          if(nil == null || !("1".equals(nil) || "true".equals(nil)))
          {
-            o = typeBinding.startElement(o, startName);
+            o = typeBinding.startElement(o, startName, binding);
          }
          else
          {
@@ -202,7 +202,7 @@ public class SundayContentHandler
 
          if(o != null)
          {
-            typeBinding.attributes(o, startName, atts, nsRegistry);
+            typeBinding.attributes(o, startName, binding, atts, nsRegistry);
          }
       }
       else if(log.isTraceEnabled())

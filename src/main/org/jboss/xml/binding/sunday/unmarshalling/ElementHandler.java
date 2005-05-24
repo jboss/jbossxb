@@ -16,11 +16,11 @@ import org.xml.sax.Attributes;
  */
 public interface ElementHandler
 {
-   Object startElement(Object parent, QName elementName, TypeBinding type);
+   Object startElement(Object parent, QName elementName, ElementBinding element);
 
-   void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs, NamespaceContext nsCtx);
+   void attributes(Object o, QName elementName, ElementBinding element, Attributes attrs, NamespaceContext nsCtx);
 
-   Object endElement(Object o, QName elementName, TypeBinding type);
+   Object endElement(Object o, QName elementName, ElementBinding element);
 
    /**
     * WARN: currently, this method is called only if there are no interceptors in the element binding.

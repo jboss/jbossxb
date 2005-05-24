@@ -42,9 +42,10 @@ public class RtElementHandler
 
    public static final RtElementHandler INSTANCE = new RtElementHandler();
 
-   public Object startElement(Object parent, QName elementName, TypeBinding type)
+   public Object startElement(Object parent, QName elementName, ElementBinding element)
    {
       Object o = null;
+      TypeBinding type = element.getType();
       if(!type.isSimple())
       {
          JaxbClass jaxbClass = type.getJaxbClass();
@@ -153,8 +154,9 @@ public class RtElementHandler
       return o;
    }
 
-   public void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs, NamespaceContext nsCtx)
+   public void attributes(Object o, QName elementName, ElementBinding element, Attributes attrs, NamespaceContext nsCtx)
    {
+      TypeBinding type = element.getType();
       for(int i = 0; i < attrs.getLength(); ++i)
       {
          QName attrName = new QName(attrs.getURI(i), attrs.getLocalName(i));
@@ -190,7 +192,7 @@ public class RtElementHandler
       }
    }
 
-   public Object endElement(Object o, QName elementName, TypeBinding type)
+   public Object endElement(Object o, QName elementName, ElementBinding element)
    {
       if(o instanceof GenericValueContainer)
       {

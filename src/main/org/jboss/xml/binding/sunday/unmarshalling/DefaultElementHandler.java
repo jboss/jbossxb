@@ -31,20 +31,20 @@ public class DefaultElementHandler
       this.attrsHandler = attrsHandler;
    }
 
-   public Object startElement(Object parent, QName qName, TypeBinding type)
+   public Object startElement(Object parent, QName qName, ElementBinding element)
    {
       return parent;
    }
 
-   public void attributes(Object o, QName elementName, TypeBinding type, Attributes attrs, NamespaceContext nsCtx)
+   public void attributes(Object o, QName elementName, ElementBinding element, Attributes attrs, NamespaceContext nsCtx)
    {
       if(attrsHandler != null)
       {
-         attrsHandler.attributes(o, elementName, type, attrs, nsCtx);
+         attrsHandler.attributes(o, elementName, element.getType(), attrs, nsCtx);
       }
    }
 
-   public Object endElement(Object o, QName qName, TypeBinding type)
+   public Object endElement(Object o, QName qName, ElementBinding element)
    {
       return o;
    }

@@ -139,19 +139,19 @@ public class TypeBinding
       this.simpleType = simpleType;
    }
 
-   public Object startElement(Object parent, QName qName)
+   public Object startElement(Object parent, QName qName, ElementBinding element)
    {
-      return handler.startElement(parent, qName, this);
+      return handler.startElement(parent, qName, element);
    }
 
-   public void attributes(Object o, QName elementName, Attributes attrs, NamespaceContext nsCtx)
+   public void attributes(Object o, QName elementName, ElementBinding element, Attributes attrs, NamespaceContext nsCtx)
    {
-      handler.attributes(o, elementName, this, attrs, nsCtx);
+      handler.attributes(o, elementName, element, attrs, nsCtx);
    }
 
-   public Object endElement(Object parent, Object o, QName qName)
+   public Object endElement(Object parent, Object o, ElementBinding element, QName qName)
    {
-      return handler.endElement(o, qName, this);
+      return handler.endElement(o, qName, element);
    }
 
    public void setHandler(ElementHandler handler)

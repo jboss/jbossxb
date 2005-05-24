@@ -19,7 +19,7 @@ public class SimpleTypeBinding
 {
    private static final RtElementHandler DEFAULT_HANDLER = new RtElementHandler()
    {
-      public Object startElement(Object parent, QName qName, TypeBinding type)
+      public Object startElement(Object parent, QName qName, ElementBinding element)
       {
          return null;
       }

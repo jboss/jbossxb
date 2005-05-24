@@ -100,6 +100,10 @@ public class XercesXsMarshaller
     */
    public void declareNamespace(String name, String uri)
    {
+      if(name !=null && name.length() == 0)
+      {
+         name = null;
+      }
       prefixByUri.put(uri, name);
    }
 

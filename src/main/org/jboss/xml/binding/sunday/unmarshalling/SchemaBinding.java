@@ -20,7 +20,7 @@ import org.jboss.xml.binding.Constants;
  * @version <tt>$Revision$</tt>
  */
 public class SchemaBinding
-   implements BindingCursor
+   implements BindingCursor, SchemaBindingResolver
 {
    private static final Map SIMPLE_TYPES = new HashMap();
 
@@ -82,6 +82,7 @@ public class SchemaBinding
    private Map elements = new HashMap();
    private LinkedList stack = new LinkedList();
    private JaxbPackage jaxbPackage;
+   private SchemaBindingResolver schemaResolver;
 
    public TypeBinding getType(QName qName)
    {
@@ -114,6 +115,28 @@ public class SchemaBinding
       addElement(name, element);
       return element;
    }
+
+   public JaxbPackage getJaxbPackage()
+   {
+      return jaxbPackage;
+   }
+
+   public void setJaxbPackage(JaxbPackage jaxbPackage)
+   {
+      this.jaxbPackage = jaxbPackage;
+   }
+
+   public SchemaBindingResolver getSchemaResolver()
+   {
+      return schemaResolver;
+   }
+
+   public void setSchemaResolver(SchemaBindingResolver schemaResolver)
+   {
+      this.schemaResolver = schemaResolver;
+   }
+
+   // BindingCursor implementation
 
    public void startElement(String namespaceURI, String localName)
    {
@@ -152,13 +175,15 @@ public class SchemaBinding
       return stack.size() > 1 ? stack.get(stack.size() - 2) : null;
    }
 
-   public JaxbPackage getJaxbPackage()
-   {
-      return jaxbPackage;
-   }
+   // SchemaBindingResolver implementation
 
-   public void setJaxbPackage(JaxbPackage jaxbPackage)
+   public SchemaBinding resolve(String nsUri, String localName)
    {
-      this.jaxbPackage = jaxbPackage;
+      SchemaBinding schema = null;
+      if(schemaResolver != null)
+      {
+         schema = schemaResolver.resolve(nsUri, localName);
+      }
+      return schema;
    }
 }

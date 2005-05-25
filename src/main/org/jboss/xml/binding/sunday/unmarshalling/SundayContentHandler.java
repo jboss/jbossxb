@@ -130,7 +130,27 @@ public class SundayContentHandler
          // todo yack...
          if(i == 0)
          {
-            typeBinding.getHandler().setParent(parent, o, endName, elementBinding);
+            if(parent != null)
+            {
+               typeBinding.getHandler().setParent(parent, o, endName, elementBinding);
+            }
+            else if(!elementStack.isEmpty())
+            {
+               ElementBinding parentElement = (ElementBinding)elementStack.peek();
+               if(parentElement.getType().getSchemaResolver() != null)
+               {
+                  // the parent has anyType, so it gets the value of its child
+                  if(!objectStack.isEmpty())
+                  {
+                     objectStack.pop();
+                     objectStack.push(o);
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
+                     }
+                  }
+               }
+            }
          }
          else
          {
@@ -207,8 +227,7 @@ public class SundayContentHandler
       }
       else if(log.isTraceEnabled())
       {
-         log.trace(
-            "Element " +
+         log.trace("Element " +
             startName +
             " is not bound as a " +
             (elementStack.isEmpty() ? "global element." : "child element.")

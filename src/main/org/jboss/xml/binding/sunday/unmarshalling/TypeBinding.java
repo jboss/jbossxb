@@ -36,6 +36,7 @@ public class TypeBinding
    private JaxbJavaType jaxbJavaType;
    private JaxbProperty jaxbProperty;
    private SchemaBinding schemaBinding; // todo it's optional for now...
+   private SchemaBindingResolver schemaResolver;
 
    public TypeBinding()
    {
@@ -61,7 +62,17 @@ public class TypeBinding
 
    public ElementBinding getElement(QName name)
    {
-      return (ElementBinding)elements.get(name);
+      ElementBinding element = (ElementBinding)elements.get(name);
+      if(element == null && schemaResolver != null)
+      {
+         // this is wildcard handling
+         SchemaBinding schema = schemaResolver.resolve(name.getNamespaceURI(), name.getLocalPart());
+         if(schema != null)
+         {
+            element = schema.getElement(name);
+         }
+      }
+      return element;
    }
 
    public void addElement(QName qName, ElementBinding binding)
@@ -144,7 +155,11 @@ public class TypeBinding
       return handler.startElement(parent, qName, element);
    }
 
-   public void attributes(Object o, QName elementName, ElementBinding element, Attributes attrs, NamespaceContext nsCtx)
+   public void attributes(Object o,
+                          QName elementName,
+                          ElementBinding element,
+                          Attributes attrs,
+                          NamespaceContext nsCtx)
    {
       handler.attributes(o, elementName, element, attrs, nsCtx);
    }
@@ -237,5 +252,15 @@ public class TypeBinding
    public void setJaxbProperty(JaxbProperty jaxbProperty)
    {
       this.jaxbProperty = jaxbProperty;
+   }
+
+   public SchemaBindingResolver getSchemaResolver()
+   {
+      return schemaResolver;
+   }
+
+   public void setSchemaResolver(SchemaBindingResolver schemaResolver)
+   {
+      this.schemaResolver = schemaResolver;
    }
 }

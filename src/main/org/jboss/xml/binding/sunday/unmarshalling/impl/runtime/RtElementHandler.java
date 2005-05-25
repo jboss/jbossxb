@@ -212,29 +212,26 @@ public class RtElementHandler
 
    public void setParent(Object parent, Object o, QName qName, ElementBinding element)
    {
-      if(parent != null)
+      if(parent instanceof GenericValueContainer)
       {
-         if(parent instanceof GenericValueContainer)
-         {
-            ((GenericValueContainer)parent).addChild(qName, o);
-         }
-         else if(parent instanceof Collection)
-         {
-            ((Collection)parent).add(o);
-         }
-         else
-         {
-            JaxbProperty jaxbProperty = element.getJaxbProperty();
+         ((GenericValueContainer)parent).addChild(qName, o);
+      }
+      else if(parent instanceof Collection)
+      {
+         ((Collection)parent).add(o);
+      }
+      else
+      {
+         JaxbProperty jaxbProperty = element.getJaxbProperty();
 
-            String propName = jaxbProperty == null ? null : jaxbProperty.getName();
-            if(propName == null)
-            {
-               propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
-            }
-
-            String colType = jaxbProperty == null ? null : jaxbProperty.getCollectionType();
-            RtUtil.set(parent, o, propName, colType, true);
+         String propName = jaxbProperty == null ? null : jaxbProperty.getName();
+         if(propName == null)
+         {
+            propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
          }
+
+         String colType = jaxbProperty == null ? null : jaxbProperty.getCollectionType();
+         RtUtil.set(parent, o, propName, colType, true);
       }
    }
 

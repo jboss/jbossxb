@@ -119,7 +119,7 @@ public class XsdBinder
                case XSConstants.MODEL_GROUP:
                default:
                   throw new JBossXBRuntimeException(
-                     "For now we don't support anything but elements and wildcards in global model groups"
+                     "For now we don't support anything but elements in global model groups"
                   );
             }
 
@@ -365,19 +365,20 @@ public class XsdBinder
       }
    }
 
-   private static void bindParticle(SchemaBinding doc, XSParticle particle, SharedElements sharedElements)
+   private static void bindParticle(SchemaBinding schema, XSParticle particle, SharedElements sharedElements)
    {
       XSTerm term = particle.getTerm();
       switch(term.getType())
       {
          case XSConstants.MODEL_GROUP:
-            bindModelGroup(doc, (XSModelGroup)term, sharedElements);
+            bindModelGroup(schema, (XSModelGroup)term, sharedElements);
             break;
          case XSConstants.WILDCARD:
-            // todo bindWildcard((XSWildcard)term);
+            TypeBinding typeBinding = peekType();
+            typeBinding.setSchemaResolver(schema);
             break;
          case XSConstants.ELEMENT_DECLARATION:
-            bindElement(doc,
+            bindElement(schema,
                (XSElementDeclaration)term,
                sharedElements,
                particle.getMaxOccursUnbounded() || particle.getMaxOccurs() > 1

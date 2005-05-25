@@ -31,4 +31,9 @@ public class BindingElement
    {
       return getAttribute(QNAME_NAME);
    }
+
+   public void setNameAttribute(String name)
+   {
+      addAttribute(QNAME_NAME, name);
+   }
 }

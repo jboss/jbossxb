@@ -33,4 +33,9 @@ public class JaxbClass
    {
       return getAttribute(QNAME_IMPL_CLASS);
    }
+
+   public void setImplClass(String javaType)
+   {
+      addAttribute(QNAME_IMPL_CLASS, javaType);
+   }
 }

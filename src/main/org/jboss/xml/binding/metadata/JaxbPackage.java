@@ -27,4 +27,9 @@ public class JaxbPackage
    {
       return getNameAttribute();
    }
+
+   public void setName(String name)
+   {
+      setNameAttribute(name);
+   }
 }

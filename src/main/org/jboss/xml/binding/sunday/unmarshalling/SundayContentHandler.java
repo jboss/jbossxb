@@ -11,6 +11,7 @@ import java.util.List;
 import javax.xml.namespace.QName;
 import org.jboss.xml.binding.parser.JBossXBParser;
 import org.jboss.xml.binding.NamespaceRegistry;
+import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.metadata.JaxbProperty;
 import org.jboss.xml.binding.metadata.JaxbBaseType;
 import org.jboss.xml.binding.metadata.JaxbJavaType;
@@ -27,7 +28,7 @@ public class SundayContentHandler
 {
    private final static Logger log = Logger.getLogger(SundayContentHandler.class);
 
-   private final SchemaBinding cursor;
+   private final SchemaBinding schema;
    private final StackImpl elementStack = new StackImpl();
    private final StackImpl objectStack = new StackImpl();
    private StringBuffer textContent = new StringBuffer();
@@ -36,7 +37,7 @@ public class SundayContentHandler
 
    public SundayContentHandler(SchemaBinding cursor)
    {
-      this.cursor = cursor;
+      this.schema = cursor;
    }
 
    public void characters(char[] ch, int start, int length)
@@ -72,6 +73,15 @@ public class SundayContentHandler
 
             if(simpleType == null)
             {
+               if(schema.isStrictSchema())
+               {
+                  throw new JBossXBRuntimeException("Element " +
+                     endName +
+                     " type binding " +
+                     typeBinding.getQName() +
+                     " does not include text content binding ('" + dataContent
+                  );
+               }
                unmarshalled = dataContent;
             }
             else
@@ -181,7 +191,7 @@ public class SundayContentHandler
 
       if(elementStack.isEmpty())
       {
-         binding = cursor.getElement(startName);
+         binding = schema.getElement(startName);
       }
       else
       {
@@ -224,6 +234,14 @@ public class SundayContentHandler
          {
             typeBinding.attributes(o, startName, binding, atts, nsRegistry);
          }
+      }
+      else if(schema.isStrictSchema())
+      {
+         throw new JBossXBRuntimeException("Element " +
+            startName +
+            " is not bound as a " +
+            (elementStack.isEmpty() ? "global element." : "child element.")
+         );
       }
       else if(log.isTraceEnabled())
       {

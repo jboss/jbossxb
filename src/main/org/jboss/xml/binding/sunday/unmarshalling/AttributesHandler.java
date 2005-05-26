@@ -10,6 +10,8 @@ import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
 import org.jboss.logging.Logger;
+import org.jboss.xml.binding.JBossXBRuntimeException;
+import org.jboss.xml.binding.Constants;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -33,9 +35,19 @@ public class AttributesHandler
             Object value = handler.unmarshal(elementName, qName, binding, nsCtx, attrs.getValue(i));
             handler.attribute(elementName, qName, binding, o, value);
          }
-         else
+         else if(!Constants.NS_XML_SCHEMA_INSTANCE.equals(qName.getNamespaceURI()))
          {
-            log.warn("Attribute is not bound: element owner " + elementName + ", attribute " + qName);
+            SchemaBinding schemaBinding = type.getSchemaBinding();
+            if(schemaBinding != null && schemaBinding.isStrictSchema())
+            {
+               throw new JBossXBRuntimeException(
+                  "Attribute is not bound: element owner " + elementName + ", attribute " + qName
+               );
+            }
+            else if(log.isTraceEnabled())
+            {
+               log.trace("Attribute is not bound: element owner " + elementName + ", attribute " + qName);
+            }
          }
       }
    }

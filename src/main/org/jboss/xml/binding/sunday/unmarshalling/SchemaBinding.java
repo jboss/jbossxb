@@ -83,6 +83,7 @@ public class SchemaBinding
    private LinkedList stack = new LinkedList();
    private JaxbPackage jaxbPackage;
    private SchemaBindingResolver schemaResolver;
+   private boolean strictSchema = true;
 
    public TypeBinding getType(QName qName)
    {
@@ -134,6 +135,21 @@ public class SchemaBinding
    public void setSchemaResolver(SchemaBindingResolver schemaResolver)
    {
       this.schemaResolver = schemaResolver;
+   }
+
+   public boolean isStrictSchema()
+   {
+      return strictSchema;
+   }
+
+   /**
+    * If strict-schema is true then all the elements and attributes in XML content being parsed must be bound
+    * in this instance of SchemaBinding (except attributes from xmlns and xsi namespaces),
+    * otherwise a runtime exception is thrown. The default value for this property is true.
+    */
+   public void setStrictSchema(boolean strictSchema)
+   {
+      this.strictSchema = strictSchema;
    }
 
    // BindingCursor implementation

@@ -89,8 +89,8 @@ public class NamespaceRegistry implements NamespaceContext
     */
    public void addPrefixMapping(String prefix, String nsURI)
    {
-      if (nsURI == null || nsURI.length() == 0)
-         throw new IllegalArgumentException("Cannot add mapping for empty namespace URI");
+      if (nsURI == null)
+         throw new IllegalArgumentException("Cannot add mapping for null namespace URI");
 
       Object obj = uriByPrefix.get(prefix);
       if (nsURI.equals(obj) == false)

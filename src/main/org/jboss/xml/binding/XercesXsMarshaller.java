@@ -180,6 +180,11 @@ public class XercesXsMarshaller
       else if(rootQNames.isEmpty())
       {
          XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
+         if(components.getLength() == 0)
+         {
+            throw new JBossXBRuntimeException("The schema doesn't contain global element declarations.");
+         }
+
          for(int i = 0; i < components.getLength(); ++i)
          {
             XSElementDeclaration element = (XSElementDeclaration)components.item(i);

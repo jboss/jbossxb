@@ -12,9 +12,7 @@ import javax.xml.namespace.QName;
 import org.jboss.xml.binding.parser.JBossXBParser;
 import org.jboss.xml.binding.NamespaceRegistry;
 import org.jboss.xml.binding.JBossXBRuntimeException;
-import org.jboss.xml.binding.metadata.JaxbProperty;
-import org.jboss.xml.binding.metadata.JaxbBaseType;
-import org.jboss.xml.binding.metadata.JaxbJavaType;
+import org.jboss.xml.binding.metadata.ValueMetaData;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 import org.apache.xerces.xs.XSTypeDefinition;
@@ -86,14 +84,12 @@ public class SundayContentHandler
             }
             else
             {
-               JaxbJavaType jaxbJavaType = null;
-               JaxbProperty jaxbProperty = elementBinding.getJaxbProperty();
-               if(jaxbProperty != null)
+               ValueMetaData valueMetaData = elementBinding.getValueMetaData();
+               if(valueMetaData == null)
                {
-                  JaxbBaseType baseType = jaxbProperty.getBaseType();
-                  jaxbJavaType = baseType == null ? null : baseType.getJavaType();
+                  valueMetaData = typeBinding.getValueMetaData();
                }
-               unmarshalled = simpleType.unmarshal(endName, typeBinding, nsRegistry, jaxbJavaType, dataContent);
+               unmarshalled = simpleType.unmarshal(endName, typeBinding, nsRegistry, valueMetaData, dataContent);
             }
             
             // if startElement returned null, we use characters as the object for this element

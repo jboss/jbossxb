@@ -14,7 +14,7 @@ import org.jboss.xml.binding.Constants;
  * @version <tt>$Revision$</tt>
  */
 public class JaxbJavaType
-   extends BindingElement
+   extends XsdElement
 {
    public static final QName QNAME = new QName(Constants.NS_JAXB, "javaType");
    private static final QName QNAME_XML_TYPE = new QName("xmlType");

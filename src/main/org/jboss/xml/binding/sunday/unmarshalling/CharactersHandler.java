@@ -10,8 +10,7 @@ import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.jboss.xml.binding.Constants;
 import org.jboss.xml.binding.SimpleTypeBindings;
-import org.jboss.xml.binding.metadata.JaxbProperty;
-import org.jboss.xml.binding.metadata.JaxbJavaType;
+import org.jboss.xml.binding.metadata.ValueMetaData;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -24,7 +23,7 @@ public abstract class CharactersHandler
       public Object unmarshal(QName qName,
                               TypeBinding typeBinding,
                               NamespaceContext nsCtx,
-                              JaxbJavaType jaxbJavaType,
+                              ValueMetaData valueMetaData,
                               String value)
       {
          return value;
@@ -35,7 +34,7 @@ public abstract class CharactersHandler
    {
    };
 
-   public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, JaxbJavaType jaxbJavaType, String value)
+   public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, ValueMetaData valueMetaData, String value)
    {
       Object o;
       QName typeQName = typeBinding.getQName();

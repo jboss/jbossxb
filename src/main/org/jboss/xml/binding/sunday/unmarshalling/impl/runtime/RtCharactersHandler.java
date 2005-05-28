@@ -12,8 +12,8 @@ import javax.xml.namespace.NamespaceContext;
 import org.jboss.xml.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.TypeBinding;
-import org.jboss.xml.binding.metadata.JaxbProperty;
-import org.jboss.xml.binding.metadata.JaxbJavaType;
+import org.jboss.xml.binding.metadata.ValueMetaData;
+import org.jboss.xml.binding.metadata.PropertyMetaData;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 
@@ -29,13 +29,13 @@ public class RtCharactersHandler
    public Object unmarshal(QName qName,
                            TypeBinding typeBinding,
                            NamespaceContext nsCtx,
-                           JaxbJavaType jaxbJavaType,
+                           ValueMetaData valueMetaData,
                            String value)
    {
       Object unmarshalled = null;
-      if(jaxbJavaType != null)
+      if(valueMetaData != null)
       {
-         String parseMethod = jaxbJavaType.getParseMethod();
+         String parseMethod = valueMetaData.getUnmarshalMethod();
          if(parseMethod == null)
          {
             throw new JBossXBRuntimeException(
@@ -94,7 +94,7 @@ public class RtCharactersHandler
       }
       else
       {
-         unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, jaxbJavaType, value);
+         unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, valueMetaData, value);
       }
 
       return unmarshalled;
@@ -109,12 +109,11 @@ public class RtCharactersHandler
          TypeBinding type = element.getType();
          if(type != null && !type.isSimple() && type.hasSimpleContent())
          {
-            // todo for complex types with simple content i'm not sure it's a valid use of jaxb:property
-            JaxbProperty jaxbProperty = type.getJaxbProperty();
-            if(jaxbProperty != null)
+            PropertyMetaData propertyMetaData = type.getPropertyMetaData();
+            if(propertyMetaData != null)
             {
-               propName = jaxbProperty.getName();
-               colType = jaxbProperty.getCollectionType();
+               propName = propertyMetaData.getName();
+               colType = propertyMetaData.getCollectionType();
             }
 
             if(propName == null)
@@ -124,11 +123,11 @@ public class RtCharactersHandler
          }
          else
          {
-            JaxbProperty jaxbProperty = element.getJaxbProperty();
-            if(jaxbProperty != null)
+            PropertyMetaData PropertyMetaData = element.getPropertyMetaData();
+            if(PropertyMetaData != null)
             {
-               propName = jaxbProperty.getName();
-               colType = jaxbProperty.getCollectionType();
+               propName = PropertyMetaData.getName();
+               colType = PropertyMetaData.getCollectionType();
             }
 
             if(propName == null)

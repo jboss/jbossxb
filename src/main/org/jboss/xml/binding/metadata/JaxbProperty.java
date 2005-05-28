@@ -14,7 +14,7 @@ import org.jboss.xml.binding.Constants;
  * @version <tt>$Revision$</tt>
  */
 public class JaxbProperty
-   extends BindingElement
+   extends XsdElement
 {
    static final QName QNAME = new QName(Constants.NS_JAXB, "property");
    static final QName QNAME_COLLECTION_TYPE = new QName("collectionType");

@@ -6,7 +6,8 @@
  */
 package org.jboss.xml.binding.sunday.unmarshalling;
 
-import org.jboss.xml.binding.metadata.JaxbProperty;
+import org.jboss.xml.binding.metadata.PropertyMetaData;
+import org.jboss.xml.binding.metadata.ValueMetaData;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -16,7 +17,8 @@ public class AttributeBinding
 {
    private final TypeBinding type;
    private AttributeHandler handler;
-   private JaxbProperty jaxbProperty;
+   private PropertyMetaData propertyMetaData;
+   private ValueMetaData valueMetaData;
 
    public AttributeBinding(TypeBinding type, AttributeHandler handler)
    {
@@ -39,13 +41,23 @@ public class AttributeBinding
       this.handler = handler;
    }
 
-   public JaxbProperty getJaxbProperty()
+   public PropertyMetaData getPropertyMetaData()
    {
-      return jaxbProperty;
+      return propertyMetaData;
    }
 
-   public void setJaxbProperty(JaxbProperty jaxbProperty)
+   public void setPropertyMetaData(PropertyMetaData propertyMetaData)
    {
-      this.jaxbProperty = jaxbProperty;
+      this.propertyMetaData = propertyMetaData;
+   }
+
+   public ValueMetaData getValueMetaData()
+   {
+      return valueMetaData;
+   }
+
+   public void setValueMetaData(ValueMetaData valueMetaData)
+   {
+      this.valueMetaData = valueMetaData;
    }
 }

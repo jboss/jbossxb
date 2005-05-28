@@ -8,9 +8,7 @@ package org.jboss.xml.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
-import org.jboss.xml.binding.metadata.JaxbJavaType;
-import org.jboss.xml.binding.metadata.JaxbBaseType;
-import org.jboss.xml.binding.metadata.JaxbProperty;
+import org.jboss.xml.binding.metadata.ValueMetaData;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -32,18 +30,13 @@ public abstract class AttributeHandler
                            String value)
    {
       TypeBinding type = binding.getType();
-      JaxbJavaType jaxbJavaType = null;
-      JaxbProperty jaxbProperty = binding.getJaxbProperty();
-      if(jaxbProperty != null)
+      ValueMetaData valueMetaData = binding.getValueMetaData();
+      if(valueMetaData == null)
       {
-         JaxbBaseType baseType = jaxbProperty.getBaseType();
-         jaxbJavaType = baseType == null ? null : baseType.getJavaType();
+         valueMetaData = type.getValueMetaData();
       }
-      else if(type != null)
-      {
-         jaxbJavaType = type.getJaxbJavaType();
-      }
-      return type == null ? value : type.getSimpleType().unmarshal(attrName, type, nsCtx, jaxbJavaType, value);
+
+      return type == null ? value : type.getSimpleType().unmarshal(attrName, type, nsCtx, valueMetaData, value);
    }
 
    public abstract void attribute(QName elemName,

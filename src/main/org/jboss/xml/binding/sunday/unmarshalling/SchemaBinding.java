@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import javax.xml.namespace.QName;
 import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
-import org.jboss.xml.binding.metadata.JaxbPackage;
+import org.jboss.xml.binding.metadata.PackageMetaData;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.Constants;
 
@@ -81,7 +81,7 @@ public class SchemaBinding
    private Map types = new HashMap(SIMPLE_TYPES);
    private Map elements = new HashMap();
    private LinkedList stack = new LinkedList();
-   private JaxbPackage jaxbPackage;
+   private PackageMetaData packageMetaData;
    private SchemaBindingResolver schemaResolver;
    private boolean strictSchema = true;
 
@@ -117,14 +117,14 @@ public class SchemaBinding
       return element;
    }
 
-   public JaxbPackage getJaxbPackage()
+   public PackageMetaData getPackageMetaData()
    {
-      return jaxbPackage;
+      return packageMetaData;
    }
 
-   public void setJaxbPackage(JaxbPackage jaxbPackage)
+   public void setPackageMetaData(PackageMetaData packageMetaData)
    {
-      this.jaxbPackage = jaxbPackage;
+      this.packageMetaData = packageMetaData;
    }
 
    public SchemaBindingResolver getSchemaResolver()

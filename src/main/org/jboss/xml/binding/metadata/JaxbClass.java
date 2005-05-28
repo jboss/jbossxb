@@ -14,7 +14,7 @@ import org.jboss.xml.binding.Constants;
  * @version <tt>$Revision$</tt>
  */
 public class JaxbClass
-   extends BindingElement
+   extends XsdElement
 {
    static final QName QNAME = new QName(Constants.NS_JAXB, "class");
    private static final QName QNAME_IMPL_CLASS = new QName("implClass");

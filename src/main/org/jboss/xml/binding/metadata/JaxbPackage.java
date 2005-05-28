@@ -14,7 +14,7 @@ import org.jboss.xml.binding.Constants;
  * @version <tt>$Revision$</tt>
  */
 public class JaxbPackage
-   extends BindingElement
+   extends XsdElement
 {
    static final QName QNAME = new QName(Constants.NS_JAXB, "package");
 

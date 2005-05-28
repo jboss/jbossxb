@@ -9,7 +9,8 @@ package org.jboss.xml.binding.sunday.unmarshalling;
 import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
-import org.jboss.xml.binding.metadata.JaxbProperty;
+import org.jboss.xml.binding.metadata.PropertyMetaData;
+import org.jboss.xml.binding.metadata.ValueMetaData;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -20,7 +21,8 @@ public class ElementBinding
    private List interceptors = Collections.EMPTY_LIST;
 
    private final TypeBinding typeBinding;
-   private JaxbProperty jaxbProperty;
+   private PropertyMetaData propertyMetaData;
+   private ValueMetaData valueMetaData;
    private boolean multiOccurs;
 
    public ElementBinding(TypeBinding typeBinding)
@@ -53,14 +55,24 @@ public class ElementBinding
       }
    }
 
-   public JaxbProperty getJaxbProperty()
+   public PropertyMetaData getPropertyMetaData()
    {
-      return jaxbProperty;
+      return propertyMetaData;
    }
 
-   public void setJaxbProperty(JaxbProperty jaxbProperty)
+   public void setPropertyMetaData(PropertyMetaData propertyMetaData)
    {
-      this.jaxbProperty = jaxbProperty;
+      this.propertyMetaData = propertyMetaData;
+   }
+
+   public ValueMetaData getValueMetaData()
+   {
+      return valueMetaData;
+   }
+
+   public void setValueMetaData(ValueMetaData valueMetaData)
+   {
+      this.valueMetaData = valueMetaData;
    }
 
    public boolean isMultiOccurs()

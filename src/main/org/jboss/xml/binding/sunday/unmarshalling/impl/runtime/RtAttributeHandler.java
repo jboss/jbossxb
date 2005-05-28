@@ -10,8 +10,7 @@ import javax.xml.namespace.QName;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.Util;
-import org.jboss.xml.binding.metadata.JaxbProperty;
-import org.jboss.logging.Logger;
+import org.jboss.xml.binding.metadata.PropertyMetaData;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -27,10 +26,10 @@ public class RtAttributeHandler
       String property = null;
       if(binding != null)
       {
-         JaxbProperty jaxbProperty = binding.getJaxbProperty();
-         if(jaxbProperty != null)
+         PropertyMetaData propertyMetaData = binding.getPropertyMetaData();
+         if(propertyMetaData != null)
          {
-            property = jaxbProperty.getName();
+            property = propertyMetaData.getName();
          }
       }
 

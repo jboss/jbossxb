@@ -25,9 +25,9 @@ import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.Constants;
 import org.jboss.xml.binding.SimpleTypeBindings;
 import org.jboss.xml.binding.GenericValueContainer;
-import org.jboss.xml.binding.metadata.JaxbPackage;
-import org.jboss.xml.binding.metadata.JaxbProperty;
-import org.jboss.xml.binding.metadata.JaxbClass;
+import org.jboss.xml.binding.metadata.PackageMetaData;
+import org.jboss.xml.binding.metadata.ClassMetaData;
+import org.jboss.xml.binding.metadata.PropertyMetaData;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
@@ -48,8 +48,8 @@ public class RtElementHandler
       TypeBinding type = element.getType();
       if(!type.isSimple())
       {
-         JaxbClass jaxbClass = type.getJaxbClass();
-         if(jaxbClass == null && type.isArrayWrapper())
+         ClassMetaData classMetaData = type.getClassMetaData();
+         if(classMetaData == null && type.isArrayWrapper())
          {
             if(parent == null)
             {
@@ -70,8 +70,8 @@ public class RtElementHandler
             }
             else
             {
-               JaxbProperty jaxbProperty = element.getJaxbProperty();
-               String jaxbPropName = jaxbProperty == null ? null : jaxbProperty.getName();
+               PropertyMetaData propertyMetaData = element.getPropertyMetaData();
+               String jaxbPropName = propertyMetaData == null ? null : propertyMetaData.getName();
 
                String getterName = jaxbPropName == null ?
                   Util.xmlNameToGetMethodName(elementName.getLocalPart(), true) :
@@ -222,15 +222,15 @@ public class RtElementHandler
       }
       else
       {
-         JaxbProperty jaxbProperty = element.getJaxbProperty();
+         PropertyMetaData propertyMetaData = element.getPropertyMetaData();
 
-         String propName = jaxbProperty == null ? null : jaxbProperty.getName();
+         String propName = propertyMetaData == null ? null : propertyMetaData.getName();
          if(propName == null)
          {
             propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
          }
 
-         String colType = jaxbProperty == null ? null : jaxbProperty.getCollectionType();
+         String colType = propertyMetaData == null ? null : propertyMetaData.getCollectionType();
          RtUtil.set(parent, o, propName, colType, true);
       }
    }
@@ -239,8 +239,8 @@ public class RtElementHandler
 
    private Class getClass(TypeBinding type, QName elementName)
    {
-      JaxbClass jaxbClass = type.getJaxbClass();
-      String className = jaxbClass == null ? null : jaxbClass.getImplClass();
+      ClassMetaData classMetaData = type.getClassMetaData();
+      String className = classMetaData == null ? null : classMetaData.getImpl();
       if(className == null)
       {
          QName typeBaseQName = type.getQName();
@@ -250,7 +250,7 @@ public class RtElementHandler
          }
 
          SchemaBinding schemaBinding = type.getSchemaBinding();
-         JaxbPackage jaxbPackage = schemaBinding == null ? null : schemaBinding.getJaxbPackage();
+         PackageMetaData jaxbPackage = schemaBinding == null ? null : schemaBinding.getPackageMetaData();
          String pkg = jaxbPackage == null ?
             Util.xmlNamespaceToJavaPackage(typeBaseQName.getNamespaceURI()) :
             jaxbPackage.getName();
@@ -268,7 +268,7 @@ public class RtElementHandler
       }
       catch(ClassNotFoundException e)
       {
-         if(jaxbClass != null && jaxbClass.getImplClass() != null)
+         if(classMetaData != null && classMetaData.getImpl() != null)
          {
             throw new JBossXBRuntimeException("Failed to resolve class name for " +
                elementName +

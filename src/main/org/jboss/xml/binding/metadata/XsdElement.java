@@ -17,6 +17,8 @@ import javax.xml.namespace.QName;
  */
 public class XsdElement
 {
+   public static final QName QNAME_NAME = new QName("name");
+
    private final QName qName;
    private Map attributes = Collections.EMPTY_MAP;
    private Map children = Collections.EMPTY_MAP;
@@ -80,6 +82,16 @@ public class XsdElement
       return qName;
    }
 
+   public String getNameAttribute()
+   {
+      return getAttribute(QNAME_NAME);
+   }
+
+   public void setNameAttribute(String name)
+   {
+      addAttribute(QNAME_NAME, name);
+   }
+   
    public boolean equals(Object o)
    {
       if(this == o)

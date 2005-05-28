@@ -13,9 +13,9 @@ import java.util.Iterator;
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
-import org.jboss.xml.binding.metadata.JaxbClass;
-import org.jboss.xml.binding.metadata.JaxbJavaType;
-import org.jboss.xml.binding.metadata.JaxbProperty;
+import org.jboss.xml.binding.metadata.ClassMetaData;
+import org.jboss.xml.binding.metadata.ValueMetaData;
+import org.jboss.xml.binding.metadata.PropertyMetaData;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 
@@ -32,9 +32,9 @@ public class TypeBinding
    private Map attrs = Collections.EMPTY_MAP;
    private ElementHandler handler = RtElementHandler.INSTANCE;//DefaultElementHandler.INSTANCE;
    private CharactersHandler simpleType;
-   private JaxbClass jaxbClass;
-   private JaxbJavaType jaxbJavaType;
-   private JaxbProperty jaxbProperty;
+   private ClassMetaData classMetaData;
+   private ValueMetaData valueMetaData;
+   private PropertyMetaData propertyMetaData;
    private SchemaBinding schemaBinding; // todo it's optional for now...
    private SchemaBindingResolver schemaResolver;
 
@@ -214,14 +214,14 @@ public class TypeBinding
       return arrayItemQName;
    }
 
-   public JaxbClass getJaxbClass()
+   public ClassMetaData getClassMetaData()
    {
-      return jaxbClass;
+      return classMetaData;
    }
 
-   public void setJaxbClass(JaxbClass jaxbClass)
+   public void setClassMetaData(ClassMetaData classMetaData)
    {
-      this.jaxbClass = jaxbClass;
+      this.classMetaData = classMetaData;
    }
 
    public SchemaBinding getSchemaBinding()
@@ -234,24 +234,24 @@ public class TypeBinding
       this.schemaBinding = schemaBinding;
    }
 
-   public void setJaxbJavaType(JaxbJavaType jaxbJavaType)
+   public void setValueMetaData(ValueMetaData valueMetaData)
    {
-      this.jaxbJavaType = jaxbJavaType;
+      this.valueMetaData = valueMetaData;
    }
 
-   public JaxbJavaType getJaxbJavaType()
+   public ValueMetaData getValueMetaData()
    {
-      return jaxbJavaType;
+      return valueMetaData;
    }
 
-   public JaxbProperty getJaxbProperty()
+   public PropertyMetaData getPropertyMetaData()
    {
-      return jaxbProperty;
+      return propertyMetaData;
    }
 
-   public void setJaxbProperty(JaxbProperty jaxbProperty)
+   public void setPropertyMetaData(PropertyMetaData propertyMetaData)
    {
-      this.jaxbProperty = jaxbProperty;
+      this.propertyMetaData = propertyMetaData;
    }
 
    public SchemaBindingResolver getSchemaResolver()

@@ -22,7 +22,7 @@ import org.xml.sax.Attributes;
  * @version <tt>$Revision$</tt>
  */
 public class XsdAnnotation
-   extends BindingElement
+   extends XsdElement
 {
    public XsdAnnotation(QName qName)
    {
@@ -90,7 +90,7 @@ public class XsdAnnotation
          return root;
       }
 
-      protected void setAttributes(BindingElement element, Attributes attrs)
+      protected void setAttributes(XsdElement element, Attributes attrs)
       {
          if(element != null)
          {
@@ -113,7 +113,7 @@ public class XsdAnnotation
                              String localName,
                              Attributes attrs)
       {
-         BindingElement element = null;
+         XsdElement element = null;
          if("appinfo".equals(localName))
          {
             element = new XsdAppInfo();
@@ -122,6 +122,38 @@ public class XsdAnnotation
          setAttributes(element, attrs);
 
          return element;
+      }
+
+      public void addChild(Object parent,
+                           Object child,
+                           UnmarshallingContext ctx,
+                           String namespaceURI,
+                           String localName)
+      {
+         if(parent instanceof XsdAppInfo)
+         {
+            XsdAppInfo appInfo = (XsdAppInfo)parent;
+            if(child instanceof ClassMetaData)
+            {
+               appInfo.setClassMetaData((ClassMetaData)child);
+            }
+            else if(child instanceof PropertyMetaData)
+            {
+               appInfo.setPropertyMetaData((PropertyMetaData)child);
+            }
+            else if(child instanceof SchemaMetaData)
+            {
+               appInfo.setSchemaMetaData((SchemaMetaData)child);
+            }
+            else if(child instanceof ValueMetaData)
+            {
+               appInfo.setValueMetaData((ValueMetaData)child);
+            }
+         }
+         else
+         {
+            super.addChild(parent, child, ctx, namespaceURI, localName);
+         }
       }
 
       public Object newRoot(Object root,
@@ -135,7 +167,7 @@ public class XsdAnnotation
    }
 
    private static final class JaxbObjectModelFactory
-      extends AbstractGOMF
+      implements GenericObjectModelFactory
    {
       public static final GenericObjectModelFactory INSTANCE = new JaxbObjectModelFactory();
 
@@ -145,23 +177,83 @@ public class XsdAnnotation
                              String localName,
                              Attributes attrs)
       {
-         BindingElement element = null;
+         Object element = null;
          if("package".equals(localName))
          {
-            element = new JaxbPackage();
-         }
-         else if("baseType".equals(localName))
-         {
-            element = new JaxbBaseType();
+            element = new PackageMetaData();
+            setAttributes(element, attrs, new AttributeSetter()
+            {
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("name".equals(localName))
+                  {
+                     ((PackageMetaData)o).setName(value);
+                  }
+               }
+            }
+            );
          }
          else if("javaType".equals(localName))
          {
-            element = new JaxbJavaType();
+            ValueMetaData valueMetaData = new ValueMetaData();
+            setAttributes(valueMetaData, attrs, new AttributeSetter()
+            {
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("parseMethod".equals(localName))
+                  {
+                     ((ValueMetaData)o).setUnmarshalMethod(value);
+                  }
+                  else if("printMethod".equals(localName))
+                  {
+                     ((ValueMetaData)o).setMarshalMethod(value);
+                  }
+               }
+            }
+            );
+
+            // todo review this...
+            XsdAppInfo appInfo = (XsdAppInfo)parent;
+            appInfo.setValueMetaData(valueMetaData);
          }
 
-         setAttributes(element, attrs);
-
          return element;
+      }
+
+      public void addChild(Object parent,
+                           Object child,
+                           UnmarshallingContext ctx,
+                           String namespaceURI,
+                           String localName)
+      {
+         if(parent instanceof CharactersMetaData)
+         {
+            CharactersMetaData charMetaData = (CharactersMetaData)parent;
+            if(child instanceof PropertyMetaData)
+            {
+               charMetaData.setProperty((PropertyMetaData)child);
+            }
+            else
+            {
+               charMetaData.setValue((ValueMetaData)child);
+            }
+         }
+         else if(parent instanceof SchemaMetaData)
+         {
+            SchemaMetaData schemaMetaData = (SchemaMetaData)parent;
+            if(child instanceof PackageMetaData)
+            {
+               schemaMetaData.setPackage((PackageMetaData)child);
+            }
+            else
+            {
+               schemaMetaData.addValue((ValueMetaData)child);
+            }
+         }
+      }
+
+      public void setValue(Object o, UnmarshallingContext ctx, String namespaceURI, String localName, String value)
+      {
       }
 
       public Object newRoot(Object root,
@@ -170,27 +262,88 @@ public class XsdAnnotation
                             String localName,
                             Attributes attrs)
       {
-         BindingElement element = null;
+         Object element = null;
          if("schemaBindings".equals(localName))
          {
-            element = new JaxbSchemaBindings();
+            element = new SchemaMetaData();
          }
          else if("property".equals(localName))
          {
-            element = new JaxbProperty();
+            PropertyMetaData property = new PropertyMetaData();
+            setAttributes(property, attrs, new AttributeSetter()
+            {
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("name".equals(localName))
+                  {
+                     ((PropertyMetaData)o).setName(value);
+                  }
+                  else if("collectionType".equals(localName))
+                  {
+                     ((PropertyMetaData)o).setCollectionType(value);
+                  }
+               }
+            }
+            );
+            //element = property;
+            XsdAppInfo appInfo = (XsdAppInfo)root;
+            appInfo.setPropertyMetaData(property);
+            // return null;
          }
          else if("class".equals(localName))
          {
-            element = new JaxbClass();
+            element = new ClassMetaData();
+            setAttributes(element, attrs, new AttributeSetter()
+            {
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("implClass".equals(localName))
+                  {
+                     ((ClassMetaData)o).setImpl(value);
+                  }
+               }
+            }
+            );
          }
          else if("javaType".equals(localName))
          {
-            element = new JaxbJavaType();
+            element = new ValueMetaData();
+            setAttributes(element, attrs, new AttributeSetter(){
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("printMethod".equals(localName))
+                  {
+                     ((ValueMetaData)o).setMarshalMethod(value);
+                  }
+                  else if("parseMethod".equals(localName))
+                  {
+                     ((ValueMetaData)o).setUnmarshalMethod(value);
+                  }
+               }
+            });
          }
 
-         setAttributes(element, attrs);
-
          return element;
+      }
+
+      public Object completeRoot(Object root, UnmarshallingContext ctx, String namespaceURI, String localName)
+      {
+         return root;
+      }
+
+      private void setAttributes(Object o, Attributes attrs, AttributeSetter attrSetter)
+      {
+         for(int i = 0; i < attrs.getLength(); ++i)
+         {
+            attrSetter.setAttribute(o, attrs.getURI(i), attrs.getLocalName(i), attrs.getValue(i));
+         }
+      }
+
+      // Inner
+
+      interface AttributeSetter
+      {
+         void setAttribute(Object o, String nsUri, String localName, String value);
       }
    }
 }

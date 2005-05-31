@@ -6,6 +6,7 @@
  */
 package org.jboss.util;
 
+import java.lang.ref.SoftReference;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -42,19 +43,14 @@ import org.jboss.logging.Logger;
  */
 public class JBossObject implements JBossInterface
 {
-   // Constants -----------------------------------------------------
-
-   // Attributes ----------------------------------------------------
-   
+   /** The log */
    protected Logger log;
    
    /** Cached toString */
-   protected transient String toString;
+   protected transient SoftReference toString;
    
    /** Cached hashCode */
    protected transient int hashCode = Integer.MIN_VALUE;
-   
-   // Static --------------------------------------------------------
 
    /**
     * Safe equality check
@@ -109,8 +105,6 @@ public class JBossObject implements JBossInterface
       }
       buffer.append(']');
    }
-   
-   // Constructors --------------------------------------------------
 
    /**
     * Create a new object
@@ -130,8 +124,6 @@ public class JBossObject implements JBossInterface
       this.log = (log != null) ? log : Logger.getLogger(getClass());
    }
    
-   // Object overrides ----------------------------------------------
-   
    /**
     * Override toString to cache the value
     * 
@@ -139,9 +131,19 @@ public class JBossObject implements JBossInterface
     */
    public String toString()
    {
-      if (toString == null || cacheToString() == false)
-         toString = toStringImplementation();
-      return toString;
+      if (cacheToString() == false)
+         return toStringImplementation();
+
+      String result = null;
+      if (toString != null)
+         result = (String) toString.get();
+
+      if (result == null)
+      {
+         result = toStringImplementation();
+         toString = new SoftReference(result);
+      }
+      return result;
    }
    
    /**
@@ -155,8 +157,6 @@ public class JBossObject implements JBossInterface
          hashCode = getHashCode();
       return hashCode;
    }
-   
-   // JBossCloneable implementation ---------------------------------
    
    public Object clone()
    {
@@ -186,8 +186,6 @@ public class JBossObject implements JBossInterface
    {
    }
    
-   // Public --------------------------------------------------------
-   
    /**
     * Get the class short name
     * 
@@ -201,10 +199,6 @@ public class JBossObject implements JBossInterface
          return longName.substring(dot + 1);
       return longName;
    }
-   
-   // Package protected ---------------------------------------------
-
-   // Protected -----------------------------------------------------
 
    /**
     * Implementation of String
@@ -230,8 +224,6 @@ public class JBossObject implements JBossInterface
       toString = null;
       hashCode = Integer.MIN_VALUE;
    }
-   
-   // Possible Overrides --------------------------------------------
    
    /**
     * Append the class properties to the buffer
@@ -271,8 +263,4 @@ public class JBossObject implements JBossInterface
    {
       return true;
    }
-   
-   // Private -------------------------------------------------------
-   
-   // Inner classes -------------------------------------------------
 }

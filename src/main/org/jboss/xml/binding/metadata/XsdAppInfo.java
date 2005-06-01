@@ -21,6 +21,7 @@ public class XsdAppInfo
    private SchemaMetaData schemaMetaData;
    private ClassMetaData classMetaData;
    private PropertyMetaData propertyMetaData;
+   private MapEntryMetaData mapEntryMetaData;
    private ValueMetaData valueMetaData;
 
    public XsdAppInfo()
@@ -56,6 +57,16 @@ public class XsdAppInfo
    public void setPropertyMetaData(PropertyMetaData propertyMetaData)
    {
       this.propertyMetaData = propertyMetaData;
+   }
+
+   public MapEntryMetaData getMapEntryMetaData()
+   {
+      return mapEntryMetaData;
+   }
+
+   public void setMapEntryMetaData(MapEntryMetaData mapEntryMetaData)
+   {
+      this.mapEntryMetaData = mapEntryMetaData;
    }
 
    public ValueMetaData getValueMetaData()

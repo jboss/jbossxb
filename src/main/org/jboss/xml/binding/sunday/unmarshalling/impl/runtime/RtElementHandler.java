@@ -28,6 +28,7 @@ import org.jboss.xml.binding.GenericValueContainer;
 import org.jboss.xml.binding.metadata.PackageMetaData;
 import org.jboss.xml.binding.metadata.ClassMetaData;
 import org.jboss.xml.binding.metadata.PropertyMetaData;
+import org.jboss.xml.binding.metadata.MapEntryMetaData;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
@@ -48,7 +49,12 @@ public class RtElementHandler
       TypeBinding type = element.getType();
       if(!type.isSimple())
       {
-         ClassMetaData classMetaData = type.getClassMetaData();
+         ClassMetaData classMetaData = element.getClassMetaData();
+         if(classMetaData == null)
+         {
+            classMetaData = type.getClassMetaData();
+         }
+
          if(classMetaData == null && type.isArrayWrapper())
          {
             if(parent == null)
@@ -63,7 +69,7 @@ public class RtElementHandler
                }
                else
                {
-                  itemCls = getClass(itemType, type.getArrayItemQName());
+                  itemCls = getClass(itemType.getClassMetaData(), itemType, type.getArrayItemQName());
                }
 
                o = GenericValueContainer.FACTORY.array(itemCls);
@@ -120,7 +126,7 @@ public class RtElementHandler
          }
          else
          {
-            Class cls = getClass(type, elementName);
+            Class cls = getClass(classMetaData, type, elementName);
 
             if(cls != null)
             {
@@ -222,24 +228,113 @@ public class RtElementHandler
       }
       else
       {
-         PropertyMetaData propertyMetaData = element.getPropertyMetaData();
-
-         String propName = propertyMetaData == null ? null : propertyMetaData.getName();
-         if(propName == null)
+         MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
+         if(mapEntryMetaData != null)
          {
-            propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
-         }
+            Class oClass = o.getClass();
+            Method keyMethod;
+            try
+            {
+               keyMethod = oClass.getMethod(mapEntryMetaData.getKeyMethod(), null);
+            }
+            catch(NoSuchMethodException e)
+            {
+               throw new JBossXBRuntimeException(
+                  "setParent failed for " + qName + "=" + o + ": keyMethod=" + mapEntryMetaData.getKeyMethod() +
+                  " not found in " + oClass
+               );
+            }
 
-         String colType = propertyMetaData == null ? null : propertyMetaData.getCollectionType();
-         RtUtil.set(parent, o, propName, colType, true);
+            Object key;
+            try
+            {
+               key = keyMethod.invoke(o, null);
+            }
+            catch(Exception e)
+            {
+               throw new JBossXBRuntimeException(
+                  "setParent failed for " + qName + "=" + o + ": keyMethod=" + mapEntryMetaData.getKeyMethod() +
+                  " threw an exception: " + e.getMessage(), e
+               );
+            }
+
+            Class keyType = Object.class;
+            if(mapEntryMetaData.getKeyType() != null)
+            {
+               try
+               {
+                  keyType = Thread.currentThread().getContextClassLoader().loadClass(mapEntryMetaData.getKeyType());
+               }
+               catch(ClassNotFoundException e)
+               {
+                  throw new JBossXBRuntimeException("setParent failed for " + qName + ": " + e.getMessage(), e);
+               }
+            }
+
+            Class valueType = Object.class;
+            if(mapEntryMetaData.getValueType() != null)
+            {
+               try
+               {
+                  valueType = Thread.currentThread().getContextClassLoader().loadClass(mapEntryMetaData.getValueType());
+               }
+               catch(ClassNotFoundException e)
+               {
+                  throw new JBossXBRuntimeException("setParent failed for " + qName + ": " + e.getMessage(), e);
+               }
+            }
+
+            Class parentClass = parent.getClass();
+            String putMethodName = mapEntryMetaData.getPutMethod();
+            if(putMethodName == null)
+            {
+               putMethodName = "put";
+            }
+
+            Method putMethod;
+            try
+            {
+               putMethod = parentClass.getMethod(putMethodName, new Class[]{keyType, valueType});
+            }
+            catch(NoSuchMethodException e)
+            {
+               throw new JBossXBRuntimeException(
+                  "setParent failed for " + qName + "=" + o + ": putMethod=" + putMethodName +
+                  "(" + keyType.getName() + " key, " + valueType.getName() + " value) not found in " + parentClass
+               );
+            }
+
+            try
+            {
+               putMethod.invoke(parent, new Object[]{key, o});
+            }
+            catch(Exception e)
+            {
+               throw new JBossXBRuntimeException(
+                  "setParent failed for " + qName + "=" + o + ": putMethod=" + mapEntryMetaData.getPutMethod() +
+                  " threw an exception: " + e.getMessage(), e
+               );
+            }
+         }
+         else
+         {
+            PropertyMetaData propertyMetaData = element.getPropertyMetaData();
+            String propName = propertyMetaData == null ? null : propertyMetaData.getName();
+            if(propName == null)
+            {
+               propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
+            }
+
+            String colType = propertyMetaData == null ? null : propertyMetaData.getCollectionType();
+            RtUtil.set(parent, o, propName, colType, true);
+         }
       }
    }
 
    // Private
 
-   private Class getClass(TypeBinding type, QName elementName)
+   private Class getClass(ClassMetaData classMetaData, TypeBinding type, QName elementName)
    {
-      ClassMetaData classMetaData = type.getClassMetaData();
       String className = classMetaData == null ? null : classMetaData.getImpl();
       if(className == null)
       {

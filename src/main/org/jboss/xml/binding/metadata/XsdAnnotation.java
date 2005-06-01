@@ -15,6 +15,7 @@ import org.jboss.xml.binding.UnmarshallingContext;
 import org.jboss.xml.binding.JBossXBException;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.Constants;
+import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
 /**
@@ -24,6 +25,8 @@ import org.xml.sax.Attributes;
 public class XsdAnnotation
    extends XsdElement
 {
+   private static final Logger log = Logger.getLogger(XsdAnnotation.class);
+
    public XsdAnnotation(QName qName)
    {
       super(qName);
@@ -33,6 +36,7 @@ public class XsdAnnotation
    {
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
       unmarshaller.mapFactoryToNamespace(JaxbObjectModelFactory.INSTANCE, Constants.NS_JAXB);
+      unmarshaller.mapFactoryToNamespace(JbxbObjectModelFactory.INSTANCE, Constants.NS_JBXB);
 
       try
       {
@@ -338,12 +342,221 @@ public class XsdAnnotation
             attrSetter.setAttribute(o, attrs.getURI(i), attrs.getLocalName(i), attrs.getValue(i));
          }
       }
+   }
 
-      // Inner
+   private static final class JbxbObjectModelFactory
+      implements GenericObjectModelFactory
+   {
+      public static final JbxbObjectModelFactory INSTANCE = new JbxbObjectModelFactory();
 
-      interface AttributeSetter
+      public Object newChild(Object parent,
+                             UnmarshallingContext ctx,
+                             String namespaceURI,
+                             String localName,
+                             Attributes attrs)
       {
-         void setAttribute(Object o, String nsUri, String localName, String value);
+         Object child = null;
+         if("package".equals(localName))
+         {
+            child = new PackageMetaData();
+            setAttributes(child, attrs, new AttributeSetter(){
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("name".equals(localName))
+                  {
+                     ((PackageMetaData)o).setName(value);
+                  }
+               }
+            });
+         }
+         else if("value".equals(localName))
+         {
+            child = new ValueMetaData();
+            setAttributes(child, attrs, new AttributeSetter(){
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("marshalMethod".equals(localName))
+                  {
+                     ((ValueMetaData)o).setMarshalMethod(value);
+                  }
+                  else if("unmarshalMethod".equals(localName))
+                  {
+                     ((ValueMetaData)o).setUnmarshalMethod(value);
+                  }
+               }
+            });
+         }
+         else if("property".equals(localName))
+         {
+            PropertyMetaData property = new PropertyMetaData();
+            setAttributes(property, attrs, new AttributeSetter()
+            {
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("name".equals(localName))
+                  {
+                     ((PropertyMetaData)o).setName(value);
+                  }
+                  else if("collectionType".equals(localName))
+                  {
+                     ((PropertyMetaData)o).setCollectionType(value);
+                  }
+               }
+            }
+            );
+            XsdAppInfo appInfo = (XsdAppInfo)parent;
+            appInfo.setPropertyMetaData(property);
+         }
+         else
+         {
+            log.warn("newChild: " + localName);
+         }
+         return child;
       }
+
+      public void addChild(Object parent, Object child, UnmarshallingContext ctx, String namespaceURI, String localName)
+      {
+         if(child instanceof PackageMetaData)
+         {
+            SchemaMetaData schema = (SchemaMetaData)parent;
+            schema.setPackage((PackageMetaData)child);
+         }
+         else if(child instanceof ValueMetaData)
+         {
+            XsdAppInfo appInfo = (XsdAppInfo)parent;
+            ValueMetaData valueMetaData = (ValueMetaData)child;
+            appInfo.setValueMetaData(valueMetaData);
+         }
+         else
+         {
+            log.warn("addChild: " + localName + "=" + child);
+         }
+      }
+
+      public void setValue(Object o, UnmarshallingContext ctx, String namespaceURI, String localName, String value)
+      {
+         log.warn("setValue: " + localName + "=" + value);
+      }
+
+      public Object newRoot(Object root,
+                            UnmarshallingContext ctx,
+                            String namespaceURI,
+                            String localName,
+                            Attributes attrs)
+      {
+         Object element = null;
+         if("schema".equals(localName))
+         {
+            element = new SchemaMetaData();
+         }
+         else if("value".equals(localName))
+         {
+            element = new ValueMetaData();
+            setAttributes(element, attrs, new AttributeSetter(){
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("marshalMethod".equals(localName))
+                  {
+                     ((ValueMetaData)o).setMarshalMethod(value);
+                  }
+                  else if("unmarshalMethod".equals(localName))
+                  {
+                     ((ValueMetaData)o).setUnmarshalMethod(value);
+                  }
+               }
+            });
+         }
+         else if("class".equals(localName))
+         {
+            element = new ClassMetaData();
+            setAttributes(element, attrs, new AttributeSetter()
+            {
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("impl".equals(localName))
+                  {
+                     ((ClassMetaData)o).setImpl(value);
+                  }
+               }
+            }
+            );
+         }
+         else if("property".equals(localName))
+         {
+            PropertyMetaData property = new PropertyMetaData();
+            setAttributes(property, attrs, new AttributeSetter()
+            {
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("name".equals(localName))
+                  {
+                     ((PropertyMetaData)o).setName(value);
+                  }
+                  else if("collectionType".equals(localName))
+                  {
+                     ((PropertyMetaData)o).setCollectionType(value);
+                  }
+               }
+            }
+            );
+            XsdAppInfo appInfo = (XsdAppInfo)root;
+            appInfo.setPropertyMetaData(property);
+         }
+         else if("mapEntry".equals(localName))
+         {
+            MapEntryMetaData mapEntry = new MapEntryMetaData();
+            setAttributes(mapEntry, attrs, new AttributeSetter(){
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("putMethod".equals(localName))
+                  {
+                     ((MapEntryMetaData)o).setPutMethod(value);
+                  }
+                  else if("keyMethod".equals(localName))
+                  {
+                     ((MapEntryMetaData)o).setKeyMethod(value);
+                  }
+                  else if("keyType".equals(localName))
+                  {
+                     ((MapEntryMetaData)o).setKeyType(value);
+                  }
+                  else if("valueType".equals(localName))
+                  {
+                     ((MapEntryMetaData)o).setValueType(value);
+                  }
+               }
+            });
+            XsdAppInfo appInfo = (XsdAppInfo)root;
+            appInfo.setMapEntryMetaData(mapEntry);
+         }
+         else if("characters".equals(localName))
+         {
+         }
+         else
+         {
+            log.warn("Unexpected jbxb annotation: ns=" + namespaceURI + ", localName=" + localName);
+         }
+         return element;
+      }
+
+      public Object completeRoot(Object root, UnmarshallingContext ctx, String namespaceURI, String localName)
+      {
+         return root;
+      }
+
+      // Private
+
+      private void setAttributes(Object o, Attributes attrs, AttributeSetter attrSetter)
+      {
+         for(int i = 0; i < attrs.getLength(); ++i)
+         {
+            attrSetter.setAttribute(o, attrs.getURI(i), attrs.getLocalName(i), attrs.getValue(i));
+         }
+      }
+   }
+
+   interface AttributeSetter
+   {
+      void setAttribute(Object o, String nsUri, String localName, String value);
    }
 }

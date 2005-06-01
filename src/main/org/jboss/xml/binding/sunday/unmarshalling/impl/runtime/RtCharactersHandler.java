@@ -107,7 +107,7 @@ public class RtCharactersHandler
          String propName = null;
          String colType = null;
          TypeBinding type = element.getType();
-         if(type != null && !type.isSimple() && type.hasSimpleContent())
+         if(type != null && !type.isSimple()/* && type.hasSimpleContent()*/)
          {
             PropertyMetaData propertyMetaData = type.getPropertyMetaData();
             if(propertyMetaData != null)

@@ -22,6 +22,7 @@ import org.jboss.xml.binding.metadata.PackageMetaData;
 import org.jboss.xml.binding.metadata.ClassMetaData;
 import org.jboss.xml.binding.metadata.ValueMetaData;
 import org.jboss.xml.binding.metadata.PropertyMetaData;
+import org.jboss.xml.binding.metadata.MapEntryMetaData;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSLoader;
@@ -88,7 +89,7 @@ public class XsdBinder
                {
                   if(log.isTraceEnabled())
                   {
-                     log.trace("customized binding: default package is " + packageMetaData.getName());
+                     log.trace("schema default package: " + packageMetaData.getName());
                   }
                   schema.setPackageMetaData(packageMetaData);
                }
@@ -177,7 +178,7 @@ public class XsdBinder
             doc.addType(binding);
             if(log.isTraceEnabled())
             {
-               log.trace("bound simple type: " + typeName);
+               log.trace("simple type: " + typeName);
             }
          }
          else
@@ -203,7 +204,7 @@ public class XsdBinder
                      {
                         log.trace("simple type " +
                            type.getName() +
-                           " is bound to " +
+                           ": impl=" +
                            classMetaData.getImpl()
                         );
                      }
@@ -217,10 +218,9 @@ public class XsdBinder
                      {
                         log.trace("simple type " +
                            type.getName() +
-                           " is bound to values [un]marshaled with " +
-                           " with unmarshalMethod=" +
+                           ": unmarshalMethod=" +
                            valueMetaData.getUnmarshalMethod() +
-                           " and marshalMethod=" +
+                           ", marshalMethod=" +
                            valueMetaData.getMarshalMethod()
                         );
                      }
@@ -249,7 +249,7 @@ public class XsdBinder
             doc.addType(binding);
             if(log.isTraceEnabled())
             {
-               log.trace("bound complex type: " + typeName);
+               log.trace("complex type: " + typeName);
             }
          }
          else
@@ -280,9 +280,9 @@ public class XsdBinder
                   {
                      if(log.isTraceEnabled())
                      {
-                        log.trace("customized binding: type " +
+                        log.trace("complex type " +
                            type.getName() +
-                           " is bound to " +
+                           ": impl=" +
                            classMetaData.getImpl()
                         );
                      }
@@ -294,9 +294,27 @@ public class XsdBinder
                   {
                      if(log.isTraceEnabled())
                      {
-                        log.trace("bound simple content to property " + propertyMetaData.getName());
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": characters bound to " + propertyMetaData.getName()
+                        );
                      }
                      binding.setPropertyMetaData(propertyMetaData);
+                  }
+
+                  ValueMetaData valueMetaData = appInfo.getValueMetaData();
+                  if(valueMetaData != null)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": characters unmarshalMethod=" +
+                           valueMetaData.getUnmarshalMethod() +
+                           ", marshalMethod=" + valueMetaData.getMarshalMethod()
+                        );
+                     }
+                     binding.setValueMetaData(valueMetaData);
                   }
                }
             }
@@ -343,21 +361,18 @@ public class XsdBinder
       {
          if(binding.getPropertyMetaData() != null)
          {
-            log.trace("customized binding: attribute " +
+            log.trace("attribute: name=" +
                new QName(attr.getNamespace(), attr.getName()) +
-               " is bound to property " +
+               ", property=" +
                binding.getPropertyMetaData().getName() +
-               " and type " + binding.getPropertyMetaData().getCollectionType()
+               ", collectionType=" + binding.getPropertyMetaData().getCollectionType()
             );
          }
          else
          {
-            log.trace("bound attribute: type=" +
-               type.getQName() +
-               ", attr=" +
-               attr.getName() +
-               ", attrType=" +
-               attrType.getName()
+            log.trace("attribute: name=" +
+               new QName(attr.getNamespace(), attr.getName()) +
+               ", type=" + attrType.getName() + ", owner type=" + type.getQName()
             );
          }
       }
@@ -439,19 +454,55 @@ public class XsdBinder
                XsdAppInfo appInfo = xsdAn.getAppInfo();
                if(appInfo != null)
                {
+                  ClassMetaData classMetaData = appInfo.getClassMetaData();
+                  if(classMetaData != null)
+                  {
+                     log.trace("element: name=" +
+                        new QName(element.getNamespace(), element.getName()) +
+                        ", class=" +
+                        classMetaData.getImpl()
+                     );
+                     binding.setClassMetaData(classMetaData);
+                  }
+
                   PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
                   if(propertyMetaData != null)
                   {
                      if(log.isTraceEnabled())
                      {
-                        log.trace("customized binding: element " +
+                        log.trace("element: name=" +
                            new QName(element.getNamespace(), element.getName()) +
-                           " is bound to property " +
+                           ", property=" +
                            propertyMetaData.getName() +
-                           " and type " + propertyMetaData.getCollectionType()
+                           ", collectionType=" + propertyMetaData.getCollectionType()
                         );
                      }
                      binding.setPropertyMetaData(propertyMetaData);
+                  }
+
+                  MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
+                  if(mapEntryMetaData != null)
+                  {
+                     if(propertyMetaData != null)
+                     {
+                        throw new JBossXBRuntimeException("An element can be bound either as a property or as a map" +
+                           " entry but not both: " +
+                           new QName(element.getNamespace(), element.getName())
+                        );
+                     }
+
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("element: name=" +
+                           new QName(element.getNamespace(), element.getName()) +
+                           ", putMethod=" +
+                           mapEntryMetaData.getPutMethod() +
+                           ", keyType=" + mapEntryMetaData.getKeyType() +
+                           ", valueType=" + mapEntryMetaData.getValueType() +
+                           ", keyMethod=" + mapEntryMetaData.getKeyMethod()
+                        );
+                     }
+                     binding.setMapEntryMetaData(mapEntryMetaData);
                   }
 
                   ValueMetaData valueMetaData = appInfo.getValueMetaData();
@@ -459,9 +510,9 @@ public class XsdBinder
                   {
                      if(log.isTraceEnabled())
                      {
-                        log.trace("customized binding: values for element " +
+                        log.trace("element " +
                            new QName(element.getNamespace(), element.getName()) +
-                           " will be unmarshalled with " + valueMetaData.getUnmarshalMethod()
+                           ": unmarshalMethod=" + valueMetaData.getUnmarshalMethod()
                         );
                      }
                      binding.setValueMetaData(valueMetaData);
@@ -475,13 +526,14 @@ public class XsdBinder
             parentType.addElement(qName, binding);
             if(log.isTraceEnabled())
             {
-               log.trace("bound element: complex type=" +
-                  parentType.getQName() +
-                  ", element=" +
+               log.trace("element: name=" +
                   qName +
                   ", type=" +
                   type.getQName() +
-                  ", multiOccurs=" + binding.isMultiOccurs()
+                  ", multiOccurs=" +
+                  binding.isMultiOccurs() +
+                  ", owner type=" +
+                  parentType.getQName()
                );
             }
          }

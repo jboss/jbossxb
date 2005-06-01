@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.ArrayList;
 import org.jboss.xml.binding.metadata.PropertyMetaData;
 import org.jboss.xml.binding.metadata.ValueMetaData;
+import org.jboss.xml.binding.metadata.ClassMetaData;
+import org.jboss.xml.binding.metadata.MapEntryMetaData;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -21,7 +23,9 @@ public class ElementBinding
    private List interceptors = Collections.EMPTY_LIST;
 
    private final TypeBinding typeBinding;
+   private ClassMetaData classMetaData;
    private PropertyMetaData propertyMetaData;
+   private MapEntryMetaData mapEntryMetaData;
    private ValueMetaData valueMetaData;
    private boolean multiOccurs;
 
@@ -55,6 +59,16 @@ public class ElementBinding
       }
    }
 
+   public ClassMetaData getClassMetaData()
+   {
+      return classMetaData;
+   }
+
+   public void setClassMetaData(ClassMetaData classMetaData)
+   {
+      this.classMetaData = classMetaData;
+   }
+
    public PropertyMetaData getPropertyMetaData()
    {
       return propertyMetaData;
@@ -63,6 +77,16 @@ public class ElementBinding
    public void setPropertyMetaData(PropertyMetaData propertyMetaData)
    {
       this.propertyMetaData = propertyMetaData;
+   }
+
+   public MapEntryMetaData getMapEntryMetaData()
+   {
+      return mapEntryMetaData;
+   }
+
+   public void setMapEntryMetaData(MapEntryMetaData mapEntryMetaData)
+   {
+      this.mapEntryMetaData = mapEntryMetaData;
    }
 
    public ValueMetaData getValueMetaData()

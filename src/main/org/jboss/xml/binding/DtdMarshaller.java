@@ -30,6 +30,8 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.HashMap;
 
 
 /**
@@ -52,6 +54,13 @@ public class DtdMarshaller
    private Content content = new Content();
 
    private final LinkedList elementStack = new LinkedList();
+
+   private final Map simpleTypeBindings = new HashMap();
+
+   public void addBinding(String elementName, TypeBinding binding)
+   {
+      simpleTypeBindings.put(elementName, binding);
+   }
 
    public void mapPublicIdToSystemId(String publicId, String systemId)
    {
@@ -178,7 +187,18 @@ public class DtdMarshaller
             {
                writeSkippedElements();
 
-               char[] ch = value.toString().toCharArray();
+               String marshalled;
+               TypeBinding binding = (TypeBinding)simpleTypeBindings.get(elementName);
+               if(binding != null)
+               {
+                  marshalled = binding.marshal(value);
+               }
+               else
+               {
+                  marshalled = value.toString();
+               }
+
+               char[] ch = marshalled.toCharArray();
                content.startElement("", elementName, elementName, attrs);
                content.characters(ch, 0, ch.length);
                content.endElement("", elementName, elementName);

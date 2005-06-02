@@ -185,13 +185,14 @@ public class SundayContentHandler
       QName startName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
       ElementBinding binding = null;
 
+      ElementBinding parentBinding = null;
       if(elementStack.isEmpty())
       {
          binding = schema.getElement(startName);
       }
       else
       {
-         ElementBinding parentBinding = (ElementBinding)elementStack.peek();
+         parentBinding = (ElementBinding)elementStack.peek();
          if(parentBinding != null)
          {
             binding = parentBinding.getType().getElement(startName);
@@ -235,8 +236,8 @@ public class SundayContentHandler
       {
          throw new JBossXBRuntimeException("Element " +
             startName +
-            " is not bound as a " +
-            (elementStack.isEmpty() ? "global element." : "child element.")
+            " is not bound " +
+            (parentBinding == null ? "as a global element." : "in type " + parentBinding.getType().getQName())
          );
       }
       else if(log.isTraceEnabled())

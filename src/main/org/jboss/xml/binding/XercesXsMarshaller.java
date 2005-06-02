@@ -23,6 +23,7 @@ import org.apache.xerces.xs.XSParticle;
 import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
+import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
 
@@ -100,7 +101,7 @@ public class XercesXsMarshaller
     */
    public void declareNamespace(String name, String uri)
    {
-      if(name !=null && name.length() == 0)
+      if(name != null && name.length() == 0)
       {
          name = null;
       }
@@ -152,15 +153,16 @@ public class XercesXsMarshaller
       {
          if(rootQNames.isEmpty())
          {
-            throw new JBossXBRuntimeException(
-               "If type name (" +
+            throw new JBossXBRuntimeException("If type name (" +
                rootTypeQName +
                ") for the root element is specified then the name for the root element is required!"
             );
          }
          QName rootQName = (QName)rootQNames.get(0);
 
-         XSTypeDefinition type = model.getTypeDefinition(rootTypeQName.getLocalPart(), rootTypeQName.getNamespaceURI());
+         XSTypeDefinition type = model.getTypeDefinition(rootTypeQName.getLocalPart(),
+            rootTypeQName.getNamespaceURI()
+         );
          if(type == null)
          {
             throw new JBossXBRuntimeException("Global type definition is not found: " + rootTypeQName);
@@ -169,7 +171,11 @@ public class XercesXsMarshaller
          if(isArrayWrapper(type))
          {
             stack.push(root);
-            marshalComplexType(rootQName.getNamespaceURI(), rootQName.getLocalPart(), (XSComplexTypeDefinition)type, true);
+            marshalComplexType(rootQName.getNamespaceURI(),
+               rootQName.getLocalPart(),
+               (XSComplexTypeDefinition)type,
+               true
+            );
             stack.pop();
          }
          else
@@ -340,7 +346,7 @@ public class XercesXsMarshaller
       switch(type.getTypeCategory())
       {
          case XSTypeDefinition.SIMPLE_TYPE:
-            marshalSimpleType(elementNs, elementLocal, declareNs);
+            marshalSimpleType(elementNs, elementLocal, (XSSimpleTypeDefinition)type, declareNs);
             break;
          case XSTypeDefinition.COMPLEX_TYPE:
             marshalComplexType(elementNs, elementLocal, (XSComplexTypeDefinition)type, declareNs);
@@ -350,23 +356,53 @@ public class XercesXsMarshaller
       }
    }
 
-   private void marshalSimpleType(String elementUri, String elementLocal, boolean declareNs)
+   private void marshalSimpleType(String elementUri,
+                                  String elementLocal,
+                                  XSSimpleTypeDefinition type,
+                                  boolean declareNs)
    {
+      AttributesImpl attrs = null;
+
       Object value = stack.peek();
-      String valueStr = value.toString();
+      String marshalled;
+      if(Constants.NS_XML_SCHEMA.equals(type.getNamespace()))
+      {
+         // todo: pass non-null namespace context
+         String typeName = type.getName();
+         marshalled = SimpleTypeBindings.marshal(typeName, value, null);
+
+         if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) || SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
+         {
+            QName qName = (QName)value;
+            String prefix = qName.getPrefix();
+            attrs = new AttributesImpl(1);
+            attrs.add(null,
+               prefix,
+               prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix,
+               null,
+               qName.getNamespaceURI()
+               );
+         }
+      }
+      else
+      {
+         marshalled = value.toString();
+      }
 
       String prefix = (String)prefixByUri.get(elementUri);
       String qName = createQName(prefix, elementLocal);
 
-      AttributesImpl attrs = null;
       if(declareNs && prefixByUri.size() > 0)
       {
-         attrs = new AttributesImpl(prefixByUri.size());
+         if(attrs == null)
+         {
+            attrs = new AttributesImpl(prefixByUri.size());
+         }
          declareNs(attrs);
       }
 
       content.startElement(elementUri, elementLocal, qName, attrs);
-      content.characters(valueStr.toCharArray(), 0, valueStr.length());
+      content.characters(marshalled.toCharArray(), 0, marshalled.length());
       content.endElement(elementUri, elementLocal, qName);
    }
 

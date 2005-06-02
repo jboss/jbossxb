@@ -191,8 +191,7 @@ public class XsMarshaller
    {
       if(type.isSimple())
       {
-         XSSimpleType simpleType = type.getSimpleType();
-         processSimpleType(element, simpleType, null, declareNs);
+         processSimpleType(element, type, null, declareNs);
       }
       else
       {
@@ -201,8 +200,10 @@ public class XsMarshaller
       }
    }
 
-   private final void processSimpleType(XSElement element, XSSimpleType type, AttributesImpl attrs, boolean declareNs)
+   private final void processSimpleType(XSElement element, XSType xsType, AttributesImpl attrs, boolean declareNs)
+      throws SAXException
    {
+      XSSimpleType type = xsType.getSimpleType();
       if(type.isAtomic())
       {
          if(log.isTraceEnabled())
@@ -272,7 +273,18 @@ public class XsMarshaller
 
          if(value != null)
          {
-            char[] ch = value.toString().toCharArray();
+            XsQName typeName = xsType.getName();
+            String marshalled;
+            if(Constants.NS_XML_SCHEMA.equals(typeName.getNamespaceURI()))
+            {
+               marshalled = SimpleTypeBindings.marshal(typeName.getLocalName(), value, null);
+            }
+            else
+            {
+               marshalled = value.toString();
+            }
+
+            char[] ch = marshalled.toCharArray();
             content.startElement(name.getNamespaceURI(), name.getLocalName(), qName, attrs);
             content.characters(ch, 0, ch.length);
             content.endElement(name.getNamespaceURI(), name.getLocalName(), qName);
@@ -371,7 +383,7 @@ public class XsMarshaller
       {
          if(type.hasSimpleContent())
          {
-            processSimpleType(element, type.getSimpleContent().getType().getSimpleType(), null, declareNs);
+            processSimpleType(element, type.getSimpleContent().getType(), null, declareNs);
          }
          else
          {
@@ -637,7 +649,7 @@ public class XsMarshaller
 
       if(type.hasSimpleContent())
       {
-         processSimpleType(parent, type.getSimpleContent().getType().getSimpleType(), ownAttrs, declareNs);
+         processSimpleType(parent, type.getSimpleContent().getType(), ownAttrs, declareNs);
       }
       else
       {

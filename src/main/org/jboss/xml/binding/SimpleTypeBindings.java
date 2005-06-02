@@ -1874,6 +1874,7 @@ public final class SimpleTypeBindings
    public static String marshalQName(QName value, NamespaceContext nsRegistry)
    {
       String nsURI = value.getNamespaceURI();
+      // actually, prefix cannot be null according to javadoc 
       if(value.getPrefix() != null)
       {
          return value.getPrefix().length() > 0 ? value.getPrefix() + ":" + value.getLocalPart() : value.getLocalPart();

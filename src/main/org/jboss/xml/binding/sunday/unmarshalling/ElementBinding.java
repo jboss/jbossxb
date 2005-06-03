@@ -13,6 +13,7 @@ import org.jboss.xml.binding.metadata.PropertyMetaData;
 import org.jboss.xml.binding.metadata.ValueMetaData;
 import org.jboss.xml.binding.metadata.ClassMetaData;
 import org.jboss.xml.binding.metadata.MapEntryMetaData;
+import org.jboss.xml.binding.metadata.PutMethodMetaData;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -26,7 +27,10 @@ public class ElementBinding
    private ClassMetaData classMetaData;
    private PropertyMetaData propertyMetaData;
    private MapEntryMetaData mapEntryMetaData;
+   private PutMethodMetaData putMethodMetaData;
    private ValueMetaData valueMetaData;
+   private boolean mapEntryKey;
+   private boolean mapEntryValue;
    private boolean multiOccurs;
 
    public ElementBinding(TypeBinding typeBinding)
@@ -107,5 +111,35 @@ public class ElementBinding
    public void setMultiOccurs(boolean multiOccurs)
    {
       this.multiOccurs = multiOccurs;
+   }
+
+   public void setMapEntryKey(boolean mapEntryKey)
+   {
+      this.mapEntryKey = mapEntryKey;
+   }
+
+   public boolean isMapEntryKey()
+   {
+      return mapEntryKey;
+   }
+
+   public boolean isMapEntryValue()
+   {
+      return mapEntryValue;
+   }
+
+   public void setMapEntryValue(boolean mapEntryValue)
+   {
+      this.mapEntryValue = mapEntryValue;
+   }
+
+   public PutMethodMetaData getPutMethodMetaData()
+   {
+      return putMethodMetaData;
+   }
+
+   public void setPutMethodMetaData(PutMethodMetaData putMethodMetaData)
+   {
+      this.putMethodMetaData = putMethodMetaData;
    }
 }

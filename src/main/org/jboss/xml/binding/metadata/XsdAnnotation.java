@@ -230,19 +230,7 @@ public class XsdAnnotation
                            String namespaceURI,
                            String localName)
       {
-         if(parent instanceof CharactersMetaData)
-         {
-            CharactersMetaData charMetaData = (CharactersMetaData)parent;
-            if(child instanceof PropertyMetaData)
-            {
-               charMetaData.setProperty((PropertyMetaData)child);
-            }
-            else
-            {
-               charMetaData.setValue((ValueMetaData)child);
-            }
-         }
-         else if(parent instanceof SchemaMetaData)
+         if(parent instanceof SchemaMetaData)
          {
             SchemaMetaData schemaMetaData = (SchemaMetaData)parent;
             if(child instanceof PackageMetaData)
@@ -407,6 +395,16 @@ public class XsdAnnotation
             XsdAppInfo appInfo = (XsdAppInfo)parent;
             appInfo.setPropertyMetaData(property);
          }
+         else if("mapEntryKey".equals(localName))
+         {
+            XsdAppInfo appInfo = (XsdAppInfo)parent;
+            appInfo.setMapEntryKey(true);
+         }
+         else if("mapEntryValue".equals(localName))
+         {
+            XsdAppInfo appInfo = (XsdAppInfo)parent;
+            appInfo.setMapEntryValue(true);
+         }
          else
          {
             log.warn("newChild: " + localName);
@@ -502,32 +500,65 @@ public class XsdAnnotation
             XsdAppInfo appInfo = (XsdAppInfo)root;
             appInfo.setPropertyMetaData(property);
          }
+         else if("putMethod".equals(localName))
+         {
+            PutMethodMetaData putMethod = new PutMethodMetaData();
+            setAttributes(putMethod, attrs, new AttributeSetter(){
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("name".equals(localName))
+                  {
+                     ((PutMethodMetaData)o).setName(value);
+                  }
+                  else if("keyType".equals(localName))
+                  {
+                     ((PutMethodMetaData)o).setKeyType(value);
+                  }
+                  else if("valueType".equals(localName))
+                  {
+                     ((PutMethodMetaData)o).setValueType(value);
+                  }
+               }
+            });
+            XsdAppInfo appInfo = (XsdAppInfo)root;
+            appInfo.setPutMethodMetaData(putMethod);
+         }
          else if("mapEntry".equals(localName))
          {
             MapEntryMetaData mapEntry = new MapEntryMetaData();
             setAttributes(mapEntry, attrs, new AttributeSetter(){
                public void setAttribute(Object o, String nsUri, String localName, String value)
                {
-                  if("putMethod".equals(localName))
+                  if("getKeyMethod".equals(localName))
                   {
-                     ((MapEntryMetaData)o).setPutMethod(value);
+                     ((MapEntryMetaData)o).setGetKeyMethod(value);
                   }
-                  else if("keyMethod".equals(localName))
+                  else if("setKeyMethod".equals(localName))
                   {
-                     ((MapEntryMetaData)o).setKeyMethod(value);
+                     ((MapEntryMetaData)o).setSetKeyMethod(value);
                   }
-                  else if("keyType".equals(localName))
+                  else if("getValueMethod".equals(localName))
                   {
-                     ((MapEntryMetaData)o).setKeyType(value);
+                     ((MapEntryMetaData)o).setGetValueMethod(value);
                   }
-                  else if("valueType".equals(localName))
+                  else if("setValueMethod".equals(localName))
                   {
-                     ((MapEntryMetaData)o).setValueType(value);
+                     ((MapEntryMetaData)o).setSetValueMethod(value);
                   }
                }
             });
             XsdAppInfo appInfo = (XsdAppInfo)root;
             appInfo.setMapEntryMetaData(mapEntry);
+         }
+         else if("mapEntryKey".equals(localName))
+         {
+            XsdAppInfo appInfo = (XsdAppInfo)root;
+            appInfo.setMapEntryKey(true);
+         }
+         else if("mapEntryValue".equals(localName))
+         {
+            XsdAppInfo appInfo = (XsdAppInfo)root;
+            appInfo.setMapEntryValue(true);
          }
          else if("characters".equals(localName))
          {

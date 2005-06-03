@@ -29,6 +29,7 @@ import org.jboss.xml.binding.metadata.PackageMetaData;
 import org.jboss.xml.binding.metadata.ClassMetaData;
 import org.jboss.xml.binding.metadata.PropertyMetaData;
 import org.jboss.xml.binding.metadata.MapEntryMetaData;
+import org.jboss.xml.binding.metadata.PutMethodMetaData;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
@@ -123,6 +124,10 @@ public class RtElementHandler
                   o = new ArrayList();
                }
             }
+         }
+         else if(classMetaData == null && type.getMapEntryMetaData() != null)
+         {
+            o = new MapEntry();
          }
          else
          {
@@ -226,21 +231,63 @@ public class RtElementHandler
       {
          ((Collection)parent).add(o);
       }
+      else if(parent instanceof MapEntry)
+      {
+         if(element.isMapEntryKey())
+         {
+            ((MapEntry)parent).setKey(o);
+         }
+         else if(element.isMapEntryValue())
+         {
+            ((MapEntry)parent).setValue(o);
+         }
+         else
+         {
+            throw new JBossXBRuntimeException(
+               "Parent object is a map entry but element " + qName + " bound as neither key nor value in a map entry"
+            );
+         }
+      }
       else
       {
-         MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
-         if(mapEntryMetaData != null)
+         PutMethodMetaData putMethodMetaData = element.getPutMethodMetaData();
+         if(putMethodMetaData != null)
          {
+            MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
+            if(mapEntryMetaData == null)
+            {
+               mapEntryMetaData = element.getType().getMapEntryMetaData();
+               if(mapEntryMetaData == null)
+               {
+                  throw new JBossXBRuntimeException(
+                     "putMethod is specified for element " +
+                     qName +
+                     " but mapEntry is specified for niether the element nor it's type " +
+                     element.getType().getQName()
+                  );
+               }
+            }
+
             Class oClass = o.getClass();
+            String getKeyMethodName = mapEntryMetaData.getGetKeyMethod();
+            if(getKeyMethodName == null)
+            {
+               getKeyMethodName = "getKey";
+            }
+
             Method keyMethod;
             try
             {
-               keyMethod = oClass.getMethod(mapEntryMetaData.getKeyMethod(), null);
+               keyMethod = oClass.getMethod(getKeyMethodName, null);
             }
             catch(NoSuchMethodException e)
             {
-               throw new JBossXBRuntimeException(
-                  "setParent failed for " + qName + "=" + o + ": keyMethod=" + mapEntryMetaData.getKeyMethod() +
+               throw new JBossXBRuntimeException("setParent failed for " +
+                  qName +
+                  "=" +
+                  o +
+                  ": getKeyMethod=" +
+                  getKeyMethodName +
                   " not found in " + oClass
                );
             }
@@ -252,18 +299,22 @@ public class RtElementHandler
             }
             catch(Exception e)
             {
-               throw new JBossXBRuntimeException(
-                  "setParent failed for " + qName + "=" + o + ": keyMethod=" + mapEntryMetaData.getKeyMethod() +
+               throw new JBossXBRuntimeException("setParent failed for " +
+                  qName +
+                  "=" +
+                  o +
+                  ": getKeyMethod=" +
+                  getKeyMethodName +
                   " threw an exception: " + e.getMessage(), e
                );
             }
 
             Class keyType = Object.class;
-            if(mapEntryMetaData.getKeyType() != null)
+            if(putMethodMetaData.getKeyType() != null)
             {
                try
                {
-                  keyType = Thread.currentThread().getContextClassLoader().loadClass(mapEntryMetaData.getKeyType());
+                  keyType = Thread.currentThread().getContextClassLoader().loadClass(putMethodMetaData.getKeyType());
                }
                catch(ClassNotFoundException e)
                {
@@ -272,11 +323,12 @@ public class RtElementHandler
             }
 
             Class valueType = Object.class;
-            if(mapEntryMetaData.getValueType() != null)
+            if(putMethodMetaData.getValueType() != null)
             {
                try
                {
-                  valueType = Thread.currentThread().getContextClassLoader().loadClass(mapEntryMetaData.getValueType());
+                  valueType =
+                     Thread.currentThread().getContextClassLoader().loadClass(putMethodMetaData.getValueType());
                }
                catch(ClassNotFoundException e)
                {
@@ -285,7 +337,7 @@ public class RtElementHandler
             }
 
             Class parentClass = parent.getClass();
-            String putMethodName = mapEntryMetaData.getPutMethod();
+            String putMethodName = putMethodMetaData.getName();
             if(putMethodName == null)
             {
                putMethodName = "put";
@@ -298,20 +350,70 @@ public class RtElementHandler
             }
             catch(NoSuchMethodException e)
             {
-               throw new JBossXBRuntimeException(
-                  "setParent failed for " + qName + "=" + o + ": putMethod=" + putMethodName +
+               throw new JBossXBRuntimeException("setParent failed for " +
+                  qName +
+                  "=" +
+                  o +
+                  ": putMethod=" +
+                  putMethodName +
                   "(" + keyType.getName() + " key, " + valueType.getName() + " value) not found in " + parentClass
                );
             }
 
+            Object value = o;
+            String valueMethodName = mapEntryMetaData.getGetValueMethod();
+            if(valueMethodName != null)
+            {
+               Method valueMethod;
+               try
+               {
+                  valueMethod = oClass.getMethod(valueMethodName, null);
+               }
+               catch(NoSuchMethodException e)
+               {
+                  throw new JBossXBRuntimeException("setParent failed for " +
+                     qName +
+                     "=" +
+                     o +
+                     ": getValueMethod=" +
+                     mapEntryMetaData.getGetValueMethod() +
+                     " not found in " + oClass
+                  );
+               }
+
+               try
+               {
+                  value = valueMethod.invoke(o, null);
+               }
+               catch(Exception e)
+               {
+                  throw new JBossXBRuntimeException("setParent failed for " +
+                     qName +
+                     "=" +
+                     o +
+                     ": getValueMethod=" +
+                     mapEntryMetaData.getGetValueMethod() +
+                     " threw an exception: " + e.getMessage(), e
+                  );
+               }
+            }
+            else if(o instanceof MapEntry)
+            {
+               value = ((MapEntry)o).getValue();
+            }
+
             try
             {
-               putMethod.invoke(parent, new Object[]{key, o});
+               putMethod.invoke(parent, new Object[]{key, value});
             }
             catch(Exception e)
             {
-               throw new JBossXBRuntimeException(
-                  "setParent failed for " + qName + "=" + o + ": putMethod=" + mapEntryMetaData.getPutMethod() +
+               throw new JBossXBRuntimeException("setParent failed for " +
+                  qName +
+                  "=" +
+                  o +
+                  ": putMethod=" +
+                  putMethodMetaData.getName() +
                   " threw an exception: " + e.getMessage(), e
                );
             }

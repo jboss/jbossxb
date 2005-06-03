@@ -19,6 +19,8 @@ public class AttributeBinding
    private AttributeHandler handler;
    private PropertyMetaData propertyMetaData;
    private ValueMetaData valueMetaData;
+   private boolean mapEntryKey;
+   private boolean mapEntryValue;
 
    public AttributeBinding(TypeBinding type, AttributeHandler handler)
    {
@@ -59,5 +61,25 @@ public class AttributeBinding
    public void setValueMetaData(ValueMetaData valueMetaData)
    {
       this.valueMetaData = valueMetaData;
+   }
+
+   public void setMapEntryKey(boolean mapEntryKey)
+   {
+      this.mapEntryKey = mapEntryKey;
+   }
+
+   public boolean isMapEntryKey()
+   {
+      return mapEntryKey;
+   }
+
+   public boolean isMapEntryValue()
+   {
+      return mapEntryValue;
+   }
+
+   public void setMapEntryValue(boolean mapEntryValue)
+   {
+      this.mapEntryValue = mapEntryValue;
    }
 }

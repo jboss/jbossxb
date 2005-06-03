@@ -12,48 +12,48 @@ package org.jboss.xml.binding.metadata;
  */
 public class MapEntryMetaData
 {
-   private String putMethod;
-   private String keyType;
-   private String valueType;
-   private String keyMethod;
+   private String getKeyMethod;
+   private String setKeyMethod;
+   private String getValueMethod;
+   private String setValueMethod;
 
-   public String getPutMethod()
+   public String getGetKeyMethod()
    {
-      return putMethod;
+      return getKeyMethod;
    }
 
-   public void setPutMethod(String putMethod)
+   public void setGetKeyMethod(String getKeyMethod)
    {
-      this.putMethod = putMethod;
+      this.getKeyMethod = getKeyMethod;
    }
 
-   public String getKeyMethod()
+   public String getSetKeyMethod()
    {
-      return keyMethod;
+      return setKeyMethod;
    }
 
-   public void setKeyMethod(String keyMethod)
+   public void setSetKeyMethod(String setKeyMethod)
    {
-      this.keyMethod = keyMethod;
+      this.setKeyMethod = setKeyMethod;
    }
 
-   public String getKeyType()
+   public String getGetValueMethod()
    {
-      return keyType;
+      return getValueMethod;
    }
 
-   public void setKeyType(String keyType)
+   public void setGetValueMethod(String getValueMethod)
    {
-      this.keyType = keyType;
+      this.getValueMethod = getValueMethod;
    }
 
-   public String getValueType()
+   public String getSetValueMethod()
    {
-      return valueType;
+      return setValueMethod;
    }
 
-   public void setValueType(String valueType)
+   public void setSetValueMethod(String setValueMethod)
    {
-      this.valueType = valueType;
+      this.setValueMethod = setValueMethod;
    }
 }

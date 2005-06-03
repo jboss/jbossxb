@@ -102,41 +102,67 @@ public class RtCharactersHandler
 
    public void setValue(QName qName, ElementBinding element, Object owner, Object value)
    {
-      if(owner != null)
-      {
-         String propName = null;
-         String colType = null;
-         TypeBinding type = element.getType();
-         if(type != null && !type.isSimple()/* && type.hasSimpleContent()*/)
-         {
-            PropertyMetaData propertyMetaData = type.getPropertyMetaData();
-            if(propertyMetaData != null)
-            {
-               propName = propertyMetaData.getName();
-               colType = propertyMetaData.getCollectionType();
-            }
+      //todo: assert if type is not null it must simple...
 
-            if(propName == null)
+      if(owner != null) // todo: owner should never be null
+      {
+         if(owner instanceof MapEntry)
+         {
+            TypeBinding type = element.getType();
+            if(type.isMapEntryKey())
             {
-               propName = "value";
+               ((MapEntry)owner).setKey(value);
+            }
+            else if(type.isMapEntryValue())
+            {
+               ((MapEntry)owner).setValue(value);
+            }
+            else
+            {
+               throw new JBossXBRuntimeException("Parent object is a map entry but characters of element " +
+                  qName +
+                  " of type " +
+                  type.getQName() +
+                  " were bound to niether key nor value in a map entry."
+               );
             }
          }
          else
          {
-            PropertyMetaData PropertyMetaData = element.getPropertyMetaData();
-            if(PropertyMetaData != null)
+            String propName = null;
+            String colType = null;
+            TypeBinding type = element.getType();
+            if(type != null && !type.isSimple()/* && type.hasSimpleContent()*/)
             {
-               propName = PropertyMetaData.getName();
-               colType = PropertyMetaData.getCollectionType();
+               PropertyMetaData propertyMetaData = type.getPropertyMetaData();
+               if(propertyMetaData != null)
+               {
+                  propName = propertyMetaData.getName();
+                  colType = propertyMetaData.getCollectionType();
+               }
+
+               if(propName == null)
+               {
+                  propName = "value";
+               }
+            }
+            else
+            {
+               PropertyMetaData PropertyMetaData = element.getPropertyMetaData();
+               if(PropertyMetaData != null)
+               {
+                  propName = PropertyMetaData.getName();
+                  colType = PropertyMetaData.getCollectionType();
+               }
+
+               if(propName == null)
+               {
+                  propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
+               }
             }
 
-            if(propName == null)
-            {
-               propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
-            }
+            RtUtil.set(owner, value, propName, colType, true);
          }
-
-         RtUtil.set(owner, value, propName, colType, true);
       }
    }
 }

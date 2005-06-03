@@ -23,6 +23,7 @@ import org.jboss.xml.binding.metadata.ClassMetaData;
 import org.jboss.xml.binding.metadata.ValueMetaData;
 import org.jboss.xml.binding.metadata.PropertyMetaData;
 import org.jboss.xml.binding.metadata.MapEntryMetaData;
+import org.jboss.xml.binding.metadata.PutMethodMetaData;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSLoader;
@@ -316,6 +317,45 @@ public class XsdBinder
                      }
                      binding.setValueMetaData(valueMetaData);
                   }
+
+                  boolean mapEntryKey = appInfo.isMapEntryKey();
+                  if(mapEntryKey)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": characters are bound as a key in a map entry");
+                     }
+                     binding.setMapEntryKey(mapEntryKey);
+                  }
+
+                  boolean mapEntryValue = appInfo.isMapEntryValue();
+                  if(mapEntryValue)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": characters are bound as a value in a map entry");
+                     }
+                     binding.setMapEntryValue(mapEntryValue);
+                  }
+
+                  MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
+                  if(mapEntryMetaData != null)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("complex type " + type.getName() +
+                           ", mapEntry.getKeyMethod=" + mapEntryMetaData.getGetKeyMethod() +
+                           ", mapEntry.setKeyMethod=" + mapEntryMetaData.getSetKeyMethod() +
+                           ", mapEntry.getValueMethod=" + mapEntryMetaData.getGetValueMethod() +
+                           ", mapEntry.setValueMethod=" + mapEntryMetaData.getSetValueMethod()
+                        );
+                     }
+                     binding.setMapEntryMetaData(mapEntryMetaData);
+                  }
                }
             }
          }
@@ -354,27 +394,47 @@ public class XsdBinder
             {
                binding.setPropertyMetaData(propertyMetaData);
             }
+
+            boolean mapEntryKey = appInfo.isMapEntryKey();
+            if(mapEntryKey)
+            {
+               binding.setMapEntryKey(mapEntryKey);
+            }
+
+            boolean mapEntryValue = appInfo.isMapEntryValue();
+            if(mapEntryValue)
+            {
+               binding.setMapEntryValue(mapEntryValue);
+            }
          }
       }
 
       if(log.isTraceEnabled())
       {
+         String msg = "attribute " +
+            new QName(attr.getNamespace(), attr.getName()) +
+            ": ";
+
          if(binding.getPropertyMetaData() != null)
          {
-            log.trace("attribute: name=" +
-               new QName(attr.getNamespace(), attr.getName()) +
-               ", property=" +
+            msg += " property=" +
                binding.getPropertyMetaData().getName() +
-               ", collectionType=" + binding.getPropertyMetaData().getCollectionType()
-            );
+               ", collectionType=" + binding.getPropertyMetaData().getCollectionType();
+         }
+         else if(binding.isMapEntryKey())
+         {
+            msg += "bound as a key in a map entry";
+         }
+         else if(binding.isMapEntryValue())
+         {
+            msg += "bound as a value in a map entry";
          }
          else
          {
-            log.trace("attribute: name=" +
-               new QName(attr.getNamespace(), attr.getName()) +
-               ", type=" + attrType.getName() + ", owner type=" + type.getQName()
-            );
+            msg += " type=" + attrType.getName() + ", owner type=" + type.getQName();
          }
+
+         log.trace(msg);
       }
    }
 
@@ -495,14 +555,29 @@ public class XsdBinder
                      {
                         log.trace("element: name=" +
                            new QName(element.getNamespace(), element.getName()) +
-                           ", putMethod=" +
-                           mapEntryMetaData.getPutMethod() +
-                           ", keyType=" + mapEntryMetaData.getKeyType() +
-                           ", valueType=" + mapEntryMetaData.getValueType() +
-                           ", keyMethod=" + mapEntryMetaData.getKeyMethod()
+                           ", mapEntry.getKeyMethod=" + mapEntryMetaData.getGetKeyMethod() +
+                           ", mapEntry.setKeyMethod=" + mapEntryMetaData.getSetKeyMethod() +
+                           ", mapEntry.getValueMethod=" + mapEntryMetaData.getGetValueMethod() +
+                           ", mapEntry.setValueMethod=" + mapEntryMetaData.getSetValueMethod()
                         );
                      }
                      binding.setMapEntryMetaData(mapEntryMetaData);
+                  }
+
+                  PutMethodMetaData putMethodMetaData = appInfo.getPutMethodMetaData();
+                  if(putMethodMetaData != null)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("element: name=" +
+                           new QName(element.getNamespace(), element.getName()) +
+                           ", putMethod=" +
+                           putMethodMetaData.getName() +
+                           ", keyType=" + putMethodMetaData.getKeyType() +
+                           ", valueType=" + putMethodMetaData.getValueType()
+                        );
+                     }
+                     binding.setPutMethodMetaData(putMethodMetaData);
                   }
 
                   ValueMetaData valueMetaData = appInfo.getValueMetaData();
@@ -516,6 +591,32 @@ public class XsdBinder
                         );
                      }
                      binding.setValueMetaData(valueMetaData);
+                  }
+
+                  boolean mapEntryKey = appInfo.isMapEntryKey();
+                  if(mapEntryKey)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("element name=" +
+                           new QName(element.getNamespace(), element.getName()) +
+                           ": is bound to a key in a map entry"
+                        );
+                     }
+                     binding.setMapEntryKey(mapEntryKey);
+                  }
+
+                  boolean mapEntryValue = appInfo.isMapEntryValue();
+                  if(mapEntryValue)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("element name=" +
+                           new QName(element.getNamespace(), element.getName()) +
+                           ": is bound to a value in a map entry"
+                        );
+                     }
+                     binding.setMapEntryValue(mapEntryValue);
                   }
                }
             }

@@ -22,7 +22,10 @@ public class XsdAppInfo
    private ClassMetaData classMetaData;
    private PropertyMetaData propertyMetaData;
    private MapEntryMetaData mapEntryMetaData;
+   private PutMethodMetaData putMethodMetaData;
    private ValueMetaData valueMetaData;
+   private boolean mapEntryKey;
+   private boolean mapEntryValue;
 
    public XsdAppInfo()
    {
@@ -77,5 +80,35 @@ public class XsdAppInfo
    public void setValueMetaData(ValueMetaData valueMetaData)
    {
       this.valueMetaData = valueMetaData;
+   }
+
+   public boolean isMapEntryKey()
+   {
+      return mapEntryKey;
+   }
+
+   public void setMapEntryKey(boolean mapEntryKey)
+   {
+      this.mapEntryKey = mapEntryKey;
+   }
+
+   public boolean isMapEntryValue()
+   {
+      return mapEntryValue;
+   }
+
+   public void setMapEntryValue(boolean mapEntryValue)
+   {
+      this.mapEntryValue = mapEntryValue;
+   }
+
+   public PutMethodMetaData getPutMethodMetaData()
+   {
+      return putMethodMetaData;
+   }
+
+   public void setPutMethodMetaData(PutMethodMetaData putMethodMetaData)
+   {
+      this.putMethodMetaData = putMethodMetaData;
    }
 }

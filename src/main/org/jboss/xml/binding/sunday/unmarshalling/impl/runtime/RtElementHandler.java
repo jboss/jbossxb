@@ -231,22 +231,15 @@ public class RtElementHandler
       {
          ((Collection)parent).add(o);
       }
-      else if(parent instanceof MapEntry)
+      else if(element.isMapEntryKey())
       {
-         if(element.isMapEntryKey())
-         {
-            ((MapEntry)parent).setKey(o);
-         }
-         else if(element.isMapEntryValue())
-         {
-            ((MapEntry)parent).setValue(o);
-         }
-         else
-         {
-            throw new JBossXBRuntimeException(
-               "Parent object is a map entry but element " + qName + " bound as neither key nor value in a map entry"
-            );
-         }
+         MapEntry mapEntry = (MapEntry)parent;
+         mapEntry.setKey(o);
+      }
+      else if(element.isMapEntryValue())
+      {
+         MapEntry mapEntry = (MapEntry)parent;
+         mapEntry.setValue(o);
       }
       else
       {
@@ -259,8 +252,7 @@ public class RtElementHandler
                mapEntryMetaData = element.getType().getMapEntryMetaData();
                if(mapEntryMetaData == null)
                {
-                  throw new JBossXBRuntimeException(
-                     "putMethod is specified for element " +
+                  throw new JBossXBRuntimeException("putMethod is specified for element " +
                      qName +
                      " but mapEntry is specified for niether the element nor it's type " +
                      element.getType().getQName()
@@ -408,13 +400,22 @@ public class RtElementHandler
             }
             catch(Exception e)
             {
-               throw new JBossXBRuntimeException("setParent failed for " +
+               throw new JBossXBRuntimeException(
+                  "setParent failed for " +
                   qName +
                   "=" +
                   o +
                   ": putMethod=" +
-                  putMethodMetaData.getName() +
-                  " threw an exception: " + e.getMessage(), e
+                  putMethodName +
+                  " threw an exception for parent=" +
+                  parent +
+                  ", key=" +
+                  key +
+                  ", value=" +
+                  value +
+                  ": " +
+                  e.getMessage(),
+                  e
                );
             }
          }

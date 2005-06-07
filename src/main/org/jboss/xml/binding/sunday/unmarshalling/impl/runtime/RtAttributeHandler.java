@@ -56,7 +56,8 @@ public class RtAttributeHandler
 
          if(property == null)
          {
-            property = Util.xmlNameToFieldName(attrName.getLocalPart(), true);
+            boolean ignoreLowLine = binding.getType().isIgnoreLowLine();
+            property = Util.xmlNameToFieldName(attrName.getLocalPart(), ignoreLowLine);
          }
 
          RtUtil.set(owner, value, property, null, true);

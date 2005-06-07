@@ -124,7 +124,7 @@ public class RtUtil
       }
    }
 
-   public static void set(Object o, QName elementName, Object value)
+   public static void set(Object o, QName elementName, Object value, boolean ignoreLowLine)
    {
       if(o instanceof Collection)
       {
@@ -133,7 +133,7 @@ public class RtUtil
       else
       {
          Class cls = o.getClass();
-         String methodBase = Util.xmlNameToClassName(elementName.getLocalPart(), true);
+         String methodBase = Util.xmlNameToClassName(elementName.getLocalPart(), ignoreLowLine);
          Method setter = null;
          Field field = null;
          try
@@ -145,7 +145,7 @@ public class RtUtil
          {
             try
             {
-               field = cls.getField(Util.xmlNameToFieldName(elementName.getLocalPart(), true));
+               field = cls.getField(Util.xmlNameToFieldName(elementName.getLocalPart(), ignoreLowLine));
             }
             catch(NoSuchFieldException e1)
             {

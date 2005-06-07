@@ -157,7 +157,8 @@ public class RtCharactersHandler
 
                if(propName == null)
                {
-                  propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
+                  boolean ignoreLowLine = type.isIgnoreLowLine();
+                  propName = Util.xmlNameToFieldName(qName.getLocalPart(), ignoreLowLine);
                }
             }
 

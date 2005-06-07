@@ -297,4 +297,9 @@ public class TypeBinding
    {
       this.mapEntryMetaData = mapEntryMetaData;
    }
+
+   public boolean isIgnoreLowLine()
+   {
+      return schemaBinding == null ? true : schemaBinding.isIgnoreLowLine();
+   }
 }

@@ -81,7 +81,7 @@ public class RtElementHandler
                String jaxbPropName = propertyMetaData == null ? null : propertyMetaData.getName();
 
                String getterName = jaxbPropName == null ?
-                  Util.xmlNameToGetMethodName(elementName.getLocalPart(), true) :
+                  Util.xmlNameToGetMethodName(elementName.getLocalPart(), type.isIgnoreLowLine()) :
                   "get" + jaxbPropName.charAt(0) + jaxbPropName.substring(1);
                Class parentClass = parent.getClass();
                Class fieldType;
@@ -96,7 +96,7 @@ public class RtElementHandler
                   try
                   {
                      fieldName = jaxbPropName == null ?
-                        Util.xmlNameToFieldName(elementName.getLocalPart(), true) :
+                        Util.xmlNameToFieldName(elementName.getLocalPart(), type.isIgnoreLowLine()) :
                         jaxbPropName;
                      Field field = parentClass.getField(fieldName);
                      fieldType = field.getType();
@@ -205,7 +205,7 @@ public class RtElementHandler
                if(simpleType == null)
                {
                   value = attrs.getValue(i);
-                  RtUtil.set(o, attrName, value);
+                  RtUtil.set(o, attrName, value, type.isIgnoreLowLine());
                }
             }
          }
@@ -238,8 +238,18 @@ public class RtElementHandler
       }
       else if(element.isMapEntryValue())
       {
+         try
+         {
          MapEntry mapEntry = (MapEntry)parent;
          mapEntry.setValue(o);
+         }
+         catch(ClassCastException cce)
+         {
+            throw new JBossXBRuntimeException(
+               "expected parent for " + qName + " was MapEntry but got: "
+               + parent.getClass().getName() + ": " + parent
+            );
+         }
       }
       else
       {
@@ -425,7 +435,7 @@ public class RtElementHandler
             String propName = propertyMetaData == null ? null : propertyMetaData.getName();
             if(propName == null)
             {
-               propName = Util.xmlNameToFieldName(qName.getLocalPart(), true);
+               propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getType().isIgnoreLowLine());
             }
 
             String colType = propertyMetaData == null ? null : propertyMetaData.getCollectionType();
@@ -452,7 +462,7 @@ public class RtElementHandler
          String pkg = jaxbPackage == null ?
             Util.xmlNamespaceToJavaPackage(typeBaseQName.getNamespaceURI()) :
             jaxbPackage.getName();
-         className = Util.xmlNameToClassName(typeBaseQName.getLocalPart(), true);
+         className = Util.xmlNameToClassName(typeBaseQName.getLocalPart(), type.isIgnoreLowLine());
          if(pkg != null && pkg.length() > 0)
          {
             className = pkg + '.' + className;

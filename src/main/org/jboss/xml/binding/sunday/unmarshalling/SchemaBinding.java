@@ -84,6 +84,7 @@ public class SchemaBinding
    private PackageMetaData packageMetaData;
    private SchemaBindingResolver schemaResolver;
    private boolean strictSchema = true;
+   private boolean ignoreLowLine = true;
 
    public TypeBinding getType(QName qName)
    {
@@ -150,6 +151,20 @@ public class SchemaBinding
    public void setStrictSchema(boolean strictSchema)
    {
       this.strictSchema = strictSchema;
+   }
+
+   public boolean isIgnoreLowLine()
+   {
+      return ignoreLowLine;
+   }
+
+   /**
+    * Where '_' should be considered as a word separator or a part of the Java identifier
+    * when mapping XML names to Java identifiers.
+    */
+   public void setIgnoreLowLine(boolean ignoreLowLine)
+   {
+      this.ignoreLowLine = ignoreLowLine;
    }
 
    // BindingCursor implementation

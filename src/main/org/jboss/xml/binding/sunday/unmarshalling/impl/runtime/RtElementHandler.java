@@ -70,7 +70,7 @@ public class RtElementHandler
                }
                else
                {
-                  itemCls = getClass(itemType.getClassMetaData(), itemType, type.getArrayItemQName());
+                  itemCls = getClass(itemType.getClassMetaData(), item, type.getArrayItemQName());
                }
 
                o = GenericValueContainer.FACTORY.array(itemCls);
@@ -81,7 +81,7 @@ public class RtElementHandler
                String jaxbPropName = propertyMetaData == null ? null : propertyMetaData.getName();
 
                String getterName = jaxbPropName == null ?
-                  Util.xmlNameToGetMethodName(elementName.getLocalPart(), type.isIgnoreLowLine()) :
+                  Util.xmlNameToGetMethodName(elementName.getLocalPart(), element.getSchema().isIgnoreLowLine()) :
                   "get" + jaxbPropName.charAt(0) + jaxbPropName.substring(1);
                Class parentClass = parent.getClass();
                Class fieldType;
@@ -96,7 +96,7 @@ public class RtElementHandler
                   try
                   {
                      fieldName = jaxbPropName == null ?
-                        Util.xmlNameToFieldName(elementName.getLocalPart(), type.isIgnoreLowLine()) :
+                        Util.xmlNameToFieldName(elementName.getLocalPart(), element.getSchema().isIgnoreLowLine()) :
                         jaxbPropName;
                      Field field = parentClass.getField(fieldName);
                      fieldType = field.getType();
@@ -131,7 +131,7 @@ public class RtElementHandler
          }
          else
          {
-            Class cls = getClass(classMetaData, type, elementName);
+            Class cls = getClass(classMetaData, element, elementName);
 
             if(cls != null)
             {
@@ -205,7 +205,7 @@ public class RtElementHandler
                if(simpleType == null)
                {
                   value = attrs.getValue(i);
-                  RtUtil.set(o, attrName, value, type.isIgnoreLowLine());
+                  RtUtil.set(o, attrName, value, element.getSchema().isIgnoreLowLine());
                }
             }
          }
@@ -435,7 +435,7 @@ public class RtElementHandler
             String propName = propertyMetaData == null ? null : propertyMetaData.getName();
             if(propName == null)
             {
-               propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getType().isIgnoreLowLine());
+               propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getSchema().isIgnoreLowLine());
             }
 
             String colType = propertyMetaData == null ? null : propertyMetaData.getCollectionType();
@@ -446,8 +446,9 @@ public class RtElementHandler
 
    // Private
 
-   private Class getClass(ClassMetaData classMetaData, TypeBinding type, QName elementName)
+   private Class getClass(ClassMetaData classMetaData, ElementBinding element, QName elementName)
    {
+      TypeBinding type = element.getType();
       String className = classMetaData == null ? null : classMetaData.getImpl();
       if(className == null)
       {
@@ -462,7 +463,7 @@ public class RtElementHandler
          String pkg = jaxbPackage == null ?
             Util.xmlNamespaceToJavaPackage(typeBaseQName.getNamespaceURI()) :
             jaxbPackage.getName();
-         className = Util.xmlNameToClassName(typeBaseQName.getLocalPart(), type.isIgnoreLowLine());
+         className = Util.xmlNameToClassName(typeBaseQName.getLocalPart(), element.getSchema().isIgnoreLowLine());
          if(pkg != null && pkg.length() > 0)
          {
             className = pkg + '.' + className;

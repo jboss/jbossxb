@@ -15,6 +15,7 @@ import org.jboss.xml.binding.metadata.ValueMetaData;
  */
 public class AttributeBinding
 {
+   private final SchemaBinding schema;
    private final TypeBinding type;
    private AttributeHandler handler;
    private PropertyMetaData propertyMetaData;
@@ -22,8 +23,9 @@ public class AttributeBinding
    private boolean mapEntryKey;
    private boolean mapEntryValue;
 
-   public AttributeBinding(TypeBinding type, AttributeHandler handler)
+   public AttributeBinding(SchemaBinding schema, TypeBinding type, AttributeHandler handler)
    {
+      this.schema = schema;
       this.type = type;
       this.handler = handler;
    }
@@ -81,5 +83,10 @@ public class AttributeBinding
    public void setMapEntryValue(boolean mapEntryValue)
    {
       this.mapEntryValue = mapEntryValue;
+   }
+
+   public SchemaBinding getSchema()
+   {
+      return schema;
    }
 }

@@ -102,7 +102,7 @@ public class TypeBinding
 
    public ElementBinding addElement(QName name, TypeBinding type)
    {
-      ElementBinding el = new ElementBinding(type);
+      ElementBinding el = new ElementBinding(schemaBinding, type);
       addElement(name, el);
       return el;
    }
@@ -130,7 +130,7 @@ public class TypeBinding
 
    public AttributeBinding addAttribute(QName name, TypeBinding type, AttributeHandler handler)
    {
-      AttributeBinding attr = new AttributeBinding(type, handler);
+      AttributeBinding attr = new AttributeBinding(schemaBinding, type, handler);
       switch(attrs.size())
       {
          case 0:
@@ -296,10 +296,5 @@ public class TypeBinding
    public void setMapEntryMetaData(MapEntryMetaData mapEntryMetaData)
    {
       this.mapEntryMetaData = mapEntryMetaData;
-   }
-
-   public boolean isIgnoreLowLine()
-   {
-      return schemaBinding == null ? true : schemaBinding.isIgnoreLowLine();
    }
 }

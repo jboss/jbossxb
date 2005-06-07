@@ -23,6 +23,7 @@ public class ElementBinding
 {
    private List interceptors = Collections.EMPTY_LIST;
 
+   private final SchemaBinding schema;
    private final TypeBinding typeBinding;
    private ClassMetaData classMetaData;
    private PropertyMetaData propertyMetaData;
@@ -33,8 +34,9 @@ public class ElementBinding
    private boolean mapEntryValue;
    private boolean multiOccurs;
 
-   public ElementBinding(TypeBinding typeBinding)
+   public ElementBinding(SchemaBinding schema, TypeBinding typeBinding)
    {
+      this.schema = schema;
       this.typeBinding = typeBinding;
    }
 
@@ -141,5 +143,10 @@ public class ElementBinding
    public void setPutMethodMetaData(PutMethodMetaData putMethodMetaData)
    {
       this.putMethodMetaData = putMethodMetaData;
+   }
+
+   public SchemaBinding getSchema()
+   {
+      return schema;
    }
 }

@@ -499,7 +499,7 @@ public class XsdBinder
 
          if(binding == null)
          {
-            binding = new ElementBinding(type);
+            binding = new ElementBinding(doc, type);
             binding.setMultiOccurs(multiOccurs);
             if(global)
             {

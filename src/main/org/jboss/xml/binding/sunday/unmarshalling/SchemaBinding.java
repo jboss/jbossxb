@@ -113,7 +113,7 @@ public class SchemaBinding
 
    public ElementBinding addElement(QName name, TypeBinding type)
    {
-      ElementBinding element = new ElementBinding(type);
+      ElementBinding element = new ElementBinding(this, type);
       addElement(name, element);
       return element;
    }

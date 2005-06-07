@@ -25,6 +25,7 @@ public class MappingObjectModelProvider
    
    private final Map classMappings = new HashMap();
    private final Map fieldMappings = new HashMap();
+   private boolean ignoreLowLine = true;
 
    public void mapClassToElement(Class cls, String namespaceURI, String localName, ObjectModelProvider provider)
    {
@@ -43,6 +44,16 @@ public class MappingObjectModelProvider
    {
       FieldToElementMapping mapping = new FieldToElementMapping(cls, field, namespaceURI, localName, converter);
       fieldMappings.put(mapping.localName, mapping);
+   }
+
+   public boolean isIgnoreLowLine()
+   {
+      return ignoreLowLine;
+   }
+
+   public void setIgnoreLowLine(boolean ignoreLowLine)
+   {
+      this.ignoreLowLine = ignoreLowLine;
    }
 
    // GenericObjectModelProvider implementation
@@ -107,14 +118,14 @@ public class MappingObjectModelProvider
       }
       else
       {
-         String getterStr = Util.xmlNameToGetMethodName(localName, true);
+         String getterStr = Util.xmlNameToGetMethodName(localName, ignoreLowLine);
          try
          {
             getter = o.getClass().getMethod(getterStr, null);
          }
          catch(NoSuchMethodException e)
          {
-            String attr = Util.xmlNameToClassName(localName, true);
+            String attr = Util.xmlNameToClassName(localName, ignoreLowLine);
             attr = Character.toLowerCase(attr.charAt(0)) + attr.substring(1);
             try
             {

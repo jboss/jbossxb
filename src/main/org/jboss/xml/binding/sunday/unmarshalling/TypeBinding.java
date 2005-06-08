@@ -123,11 +123,6 @@ public class TypeBinding
       return (AttributeBinding)attrs.get(qName);
    }
 
-   public AttributeBinding addAttribute(QName name, AttributeHandler handler)
-   {
-      return addAttribute(name, new TypeBinding(), handler);
-   }
-
    public AttributeBinding addAttribute(QName name, TypeBinding type, AttributeHandler handler)
    {
       AttributeBinding attr = new AttributeBinding(schemaBinding, type, handler);

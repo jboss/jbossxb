@@ -26,12 +26,14 @@ import org.apache.xerces.xs.XSWildcard;
 import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
+import org.w3c.dom.ls.LSInput;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.namespace.QName;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -381,7 +383,7 @@ public class XercesXsMarshaller
                prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix,
                null,
                qName.getNamespaceURI()
-               );
+            );
          }
       }
       else
@@ -603,7 +605,7 @@ public class XercesXsMarshaller
       return prefix == null ? local : prefix + ':' + local;
    }
 
-   private static XSModel loadSchema(String xsdURL)
+   public static XSModel loadSchema(String xsdURL)
    {
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
@@ -616,12 +618,95 @@ public class XercesXsMarshaller
       return model;
    }
 
-   private static XSModel loadSchema(Reader xsdReader)
+   public static XSModel loadSchema(final Reader xsdReader)
    {
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
-      // [TODO] load from reader
-      XSModel model = schemaLoader.load(null);
+
+      XSModel model = schemaLoader.load(new LSInput()
+      {
+         public Reader getCharacterStream()
+         {
+            return xsdReader;
+         }
+
+         public void setCharacterStream(Reader characterStream)
+         {
+            throw new UnsupportedOperationException("setCharacterStream is not implemented.");
+         }
+
+         public InputStream getByteStream()
+         {
+            return null;
+         }
+
+         public void setByteStream(InputStream byteStream)
+         {
+            throw new UnsupportedOperationException("setByteStream is not implemented.");
+         }
+
+         public String getStringData()
+         {
+            return null;
+         }
+
+         public void setStringData(String stringData)
+         {
+            throw new UnsupportedOperationException("setStringData is not implemented.");
+         }
+
+         public String getSystemId()
+         {
+            return null;
+         }
+
+         public void setSystemId(String systemId)
+         {
+            throw new UnsupportedOperationException("setSystemId is not implemented.");
+         }
+
+         public String getPublicId()
+         {
+            return null;
+         }
+
+         public void setPublicId(String publicId)
+         {
+            throw new UnsupportedOperationException("setPublicId is not implemented.");
+         }
+
+         public String getBaseURI()
+         {
+            return null;
+         }
+
+         public void setBaseURI(String baseURI)
+         {
+            throw new UnsupportedOperationException("setBaseURI is not implemented.");
+         }
+
+         public String getEncoding()
+         {
+            return null;
+         }
+
+         public void setEncoding(String encoding)
+         {
+            throw new UnsupportedOperationException("setEncoding is not implemented.");
+         }
+
+         public boolean getCertifiedText()
+         {
+            return false;
+         }
+
+         public void setCertifiedText(boolean certifiedText)
+         {
+            throw new UnsupportedOperationException("setCertifiedText is not implemented.");
+         }
+      }
+      );
+
       if(model == null)
       {
          throw new IllegalArgumentException("Cannot load schema");

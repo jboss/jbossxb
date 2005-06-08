@@ -81,11 +81,6 @@ public class ObjectModelBuilder
     */
    private final NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
-   /**
-    * Buffer for simple element with text content
-    */
-   private StringBuffer value = new StringBuffer();
-
    private XSTypeDefinition currentType;
 
    private BindingCursor metadataCursor;
@@ -108,7 +103,6 @@ public class ObjectModelBuilder
 
       all.clear();
       accepted.clear();
-      value.delete(0, value.length());
       this.root = root;
    }
 
@@ -289,8 +283,8 @@ public class ObjectModelBuilder
    {
       if(!all.isEmpty())
       {
-         all.pop();
-         accepted.pop();
+         popAll();
+         popAccepted();
       }
       return root;
    }
@@ -301,7 +295,7 @@ public class ObjectModelBuilder
                             Attributes atts,
                             XSTypeDefinition type)
    {
-      Object parent = accepted.isEmpty() ? root : accepted.peek();
+      Object parent = accepted.isEmpty() ? root : peekAccepted();
       metadataCursor.startElement(namespaceURI, localName);
 
       // todo currentType assignment
@@ -331,7 +325,7 @@ public class ObjectModelBuilder
 
       if(element == null)
       {
-         all.push(IGNORED);
+         pushAll(IGNORED);
 
          if(log.isTraceEnabled())
          {
@@ -340,8 +334,8 @@ public class ObjectModelBuilder
       }
       else
       {
-         all.push(element);
-         accepted.push(element);
+         pushAll(element);
+         pushAccepted(element);
 
          if(log.isTraceEnabled())
          {
@@ -352,14 +346,20 @@ public class ObjectModelBuilder
 
    public void endElement(String namespaceURI, String localName, String qName)
    {
-      if(value.length() > 0)
+      AllElement element = popAll();
+
+      if(!accepted.isEmpty())
       {
-         if(!accepted.isEmpty())
+         Object acceptedElement = peekAccepted();
+         String characters = element.characters;
+         if(characters != null)
          {
-            Object element = accepted.peek();
-            curFactory.setValue(element, this, namespaceURI, localName, value.toString().trim());
+            characters = characters.trim();
+            if(characters.length() > 0)
+            {
+               curFactory.setValue(acceptedElement, this, namespaceURI, localName, characters);
+            }
          }
-         value.delete(0, value.length());
       }
 
       if(localName.equals(curNameSwitchingFactory) && namespaceURI.equals(curNsSwitchingFactory))
@@ -367,19 +367,18 @@ public class ObjectModelBuilder
          popFactory();
       }
 
-      Object element = all.pop();
-      if(element != IGNORED)
+      if(element.element != IGNORED)
       {
-         element = accepted.pop();
-         Object parent = (accepted.isEmpty() ? null : accepted.peek());
+         popAccepted();
+         Object parent = (accepted.isEmpty() ? null : peekAccepted());
 
          if(parent != null)
          {
-            curFactory.addChild(parent, element, this, namespaceURI, localName);
+            curFactory.addChild(parent, element.element, this, namespaceURI, localName);
          }
          else
          {
-            root = curFactory.completeRoot(element, this, namespaceURI, localName);
+            root = curFactory.completeRoot(element.element, this, namespaceURI, localName);
          }
       }
 
@@ -388,7 +387,19 @@ public class ObjectModelBuilder
 
    public void characters(char[] ch, int start, int length)
    {
-      value.append(ch, start, length);
+      if(!accepted.isEmpty())
+      {
+         String str = String.valueOf(ch, start, length);
+         AllElement allElement = peekAll();
+         if(allElement.characters == null)
+         {
+            allElement.characters = str;
+         }
+         else
+         {
+            allElement.characters += str;
+         }
+      }
    }
 
    // Private
@@ -461,6 +472,47 @@ public class ObjectModelBuilder
       return factory instanceof GenericObjectModelFactory ?
          (GenericObjectModelFactory)factory :
          new DelegatingObjectModelFactory(factory);
+   }
+
+   private void pushAccepted(Object o)
+   {
+      accepted.push(o);
+   }
+
+   private Object popAccepted()
+   {
+      return accepted.pop();
+   }
+
+   private Object peekAccepted()
+   {
+      return accepted.peek();
+   }
+
+   private void pushAll(Object o)
+   {
+      all.push(new AllElement(o));
+   }
+
+   private AllElement popAll()
+   {
+      return (AllElement)all.pop();
+   }
+
+   private AllElement peekAll()
+   {
+      return (AllElement)all.peek();
+   }
+
+   private static final class AllElement
+   {
+      public final Object element;
+      public String characters;
+
+      public AllElement(Object element)
+      {
+         this.element = element;
+      }
    }
 
    private static interface Stack

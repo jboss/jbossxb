@@ -258,6 +258,8 @@ public class XsdBinder
             binding = new TypeBinding();
          }
 
+         binding.setSchemaBinding(doc);
+
          XSObjectList attrs = type.getAttributeUses();
          for(int i = 0; i < attrs.getLength(); ++i)
          {
@@ -359,8 +361,6 @@ public class XsdBinder
                }
             }
          }
-
-         binding.setSchemaBinding(getXsdBinding().schemaBinding);
 
          XSParticle particle = type.getParticle();
          if(particle != null)

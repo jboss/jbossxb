@@ -12,10 +12,23 @@ package org.jboss.xml.binding.metadata;
  */
 public class MapEntryMetaData
 {
+   private String impl;
    private String getKeyMethod;
    private String setKeyMethod;
    private String getValueMethod;
    private String setValueMethod;
+   private String valueType;
+   private boolean nonNullValue;
+
+   public String getImpl()
+   {
+      return impl;
+   }
+
+   public void setImpl(String impl)
+   {
+      this.impl = impl;
+   }
 
    public String getGetKeyMethod()
    {
@@ -55,5 +68,25 @@ public class MapEntryMetaData
    public void setSetValueMethod(String setValueMethod)
    {
       this.setValueMethod = setValueMethod;
+   }
+
+   public String getValueType()
+   {
+      return valueType;
+   }
+
+   public void setValueType(String valueType)
+   {
+      this.valueType = valueType;
+   }
+
+   public boolean isNonNullValue()
+   {
+      return nonNullValue;
+   }
+
+   public void setNonNullValue(boolean nonNullValue)
+   {
+      this.nonNullValue = nonNullValue;
    }
 }

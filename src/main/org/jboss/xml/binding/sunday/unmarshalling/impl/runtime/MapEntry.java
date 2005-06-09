@@ -6,10 +6,6 @@
  */
 package org.jboss.xml.binding.sunday.unmarshalling.impl.runtime;
 
-import java.util.AbstractMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashMap;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 
 /**
@@ -17,7 +13,6 @@ import org.jboss.xml.binding.JBossXBRuntimeException;
  * @version <tt>$Revision$</tt>
  */
 public class MapEntry
-   extends AbstractMap
 {
    private Object key;
    private Object value;
@@ -52,50 +47,6 @@ public class MapEntry
          );
       }
       this.value = value;
-   }
-
-   public Object put(Object key, Object value)
-   {
-      Map map;
-      if(this.value == null)
-      {
-         map = new HashMap();
-         this.value = map;
-      }
-      else if(this.value instanceof Map)
-      {
-         map = (Map)this.value;
-      }
-      else
-      {
-         throw new JBossXBRuntimeException("Map entry value is not an instance of java.util.Map as expected: entry=" +
-            toString() /*(value == null ? "null" : "class=" + value.getClass().getName() + ", value=" + value)*/
-         );
-      }
-
-      return map.put(key, value);
-   }
-
-   public Set entrySet()
-   {
-      Map map;
-      if(value == null)
-      {
-         map = new HashMap();
-         value = map;
-      }
-      else if(value instanceof Map)
-      {
-         map = (Map)value;
-      }
-      else
-      {
-         throw new JBossXBRuntimeException("Map entry value is not an instance of java.util.Map as expected: " +
-            toString() /*(value == null ? "null" : "class=" + value.getClass().getName() + ", value=" + value)*/
-         );
-      }
-
-      return map.entrySet();
    }
 
    public boolean equals(Object o)

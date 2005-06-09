@@ -529,7 +529,11 @@ public class XsdAnnotation
             setAttributes(mapEntry, attrs, new AttributeSetter(){
                public void setAttribute(Object o, String nsUri, String localName, String value)
                {
-                  if("getKeyMethod".equals(localName))
+                  if("impl".equals(localName))
+                  {
+                     ((MapEntryMetaData)o).setImpl(value);
+                  }
+                  else if("getKeyMethod".equals(localName))
                   {
                      ((MapEntryMetaData)o).setGetKeyMethod(value);
                   }
@@ -544,6 +548,15 @@ public class XsdAnnotation
                   else if("setValueMethod".equals(localName))
                   {
                      ((MapEntryMetaData)o).setSetValueMethod(value);
+                  }
+                  else if("valueType".equals(localName))
+                  {
+                     ((MapEntryMetaData)o).setValueType(value);
+                  }
+                  else if("nonNullValue".equals(localName))
+                  {
+                     boolean b = Boolean.valueOf(value).booleanValue();
+                     ((MapEntryMetaData)o).setNonNullValue(b);
                   }
                }
             });

@@ -244,8 +244,8 @@ public class SundayContentHandler
       {
          log.trace("Element " +
             startName +
-            " is not bound as a " +
-            (elementStack.isEmpty() ? "global element." : "child element.")
+            " is not bound " +
+            (parentBinding == null ? "as a global element." : "in type " + parentBinding.getType().getQName())
          );
       }
    }

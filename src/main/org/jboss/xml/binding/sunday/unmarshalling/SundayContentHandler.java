@@ -136,13 +136,13 @@ public class SundayContentHandler
          // todo yack...
          if(i == 0)
          {
+            ElementBinding parentElement = elementStack.isEmpty() ? null : (ElementBinding)elementStack.peek();
             if(parent != null)
             {
-               typeBinding.getHandler().setParent(parent, o, endName, elementBinding);
+               typeBinding.getHandler().setParent(parent, o, endName, elementBinding, parentElement);
             }
-            else if(!elementStack.isEmpty())
+            else if(parentElement != null)
             {
-               ElementBinding parentElement = (ElementBinding)elementStack.peek();
                if(parentElement.getType().getSchemaResolver() != null)
                {
                   // the parent has anyType, so it gets the value of its child

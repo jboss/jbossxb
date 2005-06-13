@@ -84,6 +84,7 @@ public class SchemaBinding
    private PackageMetaData packageMetaData;
    private SchemaBindingResolver schemaResolver;
    private boolean strictSchema = true;
+   private boolean ignoreNotFoundField = true;
    private boolean ignoreLowLine = true;
 
    public TypeBinding getType(QName qName)
@@ -151,6 +152,21 @@ public class SchemaBinding
    public void setStrictSchema(boolean strictSchema)
    {
       this.strictSchema = strictSchema;
+   }
+
+   public boolean isIgnoreNotFoundField()
+   {
+      return ignoreNotFoundField;
+   }
+
+   /**
+    * If a field is not found in the parent class to set child value on,
+    * an exception will be thrown if this property is false. Otherwise,
+    * the process will just go on (the default for now).
+    */
+   public void setIgnoreNotFoundField(boolean ignoreNotFoundField)
+   {
+      this.ignoreNotFoundField = ignoreNotFoundField;
    }
 
    public boolean isIgnoreLowLine()

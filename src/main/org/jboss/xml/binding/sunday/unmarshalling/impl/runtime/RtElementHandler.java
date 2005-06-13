@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Map;
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.jboss.xml.binding.sunday.unmarshalling.ElementHandler;
@@ -150,7 +151,7 @@ public class RtElementHandler
                   o = new MapEntry();
                }
 
-               if(/*todo: mapEntryMetaData.isNonNullValue() && */mapEntryMetaData.getValueType() != null)
+               if(mapEntryMetaData.isNonNullValue() && mapEntryMetaData.getValueType() != null)
                {
                   Class mapValueType;
                   try
@@ -236,8 +237,10 @@ public class RtElementHandler
                      }
                      catch(Exception e)
                      {
-                        throw new JBossXBRuntimeException(
-                           "setValueMethod=" + setValueMethodName + " failed: owner=" + o +
+                        throw new JBossXBRuntimeException("setValueMethod=" +
+                           setValueMethodName +
+                           " failed: owner=" +
+                           o +
                            ", value=" + value + ", msg=" + e.getMessage(), e
                         );
                      }
@@ -309,18 +312,64 @@ public class RtElementHandler
       return o;
    }
 
-   public void setParent(Object parent, Object o, QName qName, ElementBinding element)
+   public void setParent(Object parent, Object o, QName qName, ElementBinding element, ElementBinding parentElement)
    {
-      // todo: here i need metadata for the parent element to check its map entry binding data like setKey/setValue
       if(element.isMapEntryKey())
       {
-         MapEntry mapEntry = (MapEntry)parent;
-         mapEntry.setKey(o);
+         if(parent instanceof MapEntry)
+         {
+            MapEntry mapEntry = (MapEntry)parent;
+            mapEntry.setKey(o);
+         }
+         else if(parentElement != null)
+         {
+            MapEntryMetaData mapEntryMetaData = getMapEntryMetaData(parentElement, qName);
+
+            String getKeyMethodName = mapEntryMetaData.getGetKeyMethod();
+            if(getKeyMethodName == null)
+            {
+               getKeyMethodName = "getKey";
+            }
+
+            String setKeyMethodName = mapEntryMetaData.getSetKeyMethod();
+            if(setKeyMethodName == null)
+            {
+               setKeyMethodName = "setKey";
+            }
+
+            Class parentCls = parent.getClass();
+            Method setKeyMethod = getSetMethod(parentCls, getKeyMethodName, setKeyMethodName);
+            invokeSetter(setKeyMethod, parent, o, setKeyMethodName);
+         }
+         else
+         {
+            throw new JBossXBRuntimeException(
+               "Element " +
+               qName +
+               " bound as map entry key but parent element is not recognized as map entry and its metadata is not available."
+            );
+         }
       }
       else if(element.isMapEntryValue())
       {
-         MapEntry mapEntry = (MapEntry)parent;
-         mapEntry.setValue(o);
+         if(parent instanceof MapEntry)
+         {
+            MapEntry mapEntry = (MapEntry)parent;
+            mapEntry.setValue(o);
+         }
+         else if(parentElement != null)
+         {
+            MapEntryMetaData mapEntryMetaData = getMapEntryMetaData(parentElement, qName);
+            setMapEntryValue(mapEntryMetaData, parent, o);
+         }
+         else
+         {
+            throw new JBossXBRuntimeException(
+               "Element " +
+               qName +
+               " bound as map entry key but parent element is not recognized as map entry and its metadata is not available."
+            );
+         }
       }
       else
       {
@@ -331,12 +380,51 @@ public class RtElementHandler
             owner = mapEntry.getValue();
             if(owner == null)
             {
-               // todo: for lazy value creation I need parent's map entry metadata to get valueType
-               throw new JBossXBRuntimeException("setParent failed for " +
-                  qName +
-                  ": parent object is a map entry with null entry value " +
-                  "(lazy value instantiation is not yet supported)."
-               );
+               if(parentElement == null)
+               {
+                  throw new JBossXBRuntimeException("Binding metadata needed for lazy map entry value instantiation is not available " +
+                     "for parent element of element " +
+                     qName
+                  );
+               }
+
+               MapEntryMetaData mapEntryMetaData = getMapEntryMetaData(parentElement, qName);
+               String valueType = mapEntryMetaData.getValueType();
+               if(valueType == null)
+               {
+                  throw new JBossXBRuntimeException("Element " +
+                     qName +
+                     " of type " +
+                     element.getType() +
+                     " is supposed to be bound as map entry value with lazy value instantiation " +
+                     "but value type is not specified in its map entry metadata."
+                  );
+               }
+
+               Class valueCls;
+               try
+               {
+                  valueCls = Thread.currentThread().getContextClassLoader().loadClass(valueType);
+               }
+               catch(ClassNotFoundException e)
+               {
+                  throw new JBossXBRuntimeException(
+                     "Failed to load value type specified in the map entry metadata: " + valueType
+                  );
+               }
+
+               try
+               {
+                  owner = valueCls.newInstance();
+               }
+               catch(Exception e)
+               {
+                  throw new JBossXBRuntimeException(
+                     "Failed to create an instance of value type " + valueType + ": " + e.getMessage()
+                  );
+               }
+
+               setMapEntryValue(mapEntryMetaData, parent, owner);
             }
          }
 
@@ -351,7 +439,7 @@ public class RtElementHandler
          else
          {
             PutMethodMetaData putMethodMetaData = element.getPutMethodMetaData();
-            if(putMethodMetaData != null)
+            if(owner instanceof Map || putMethodMetaData != null)
             {
                MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
                if(mapEntryMetaData == null)
@@ -359,9 +447,13 @@ public class RtElementHandler
                   mapEntryMetaData = element.getType().getMapEntryMetaData();
                   if(mapEntryMetaData == null)
                   {
-                     throw new JBossXBRuntimeException("putMethod is specified for element " +
+                     throw new JBossXBRuntimeException((owner instanceof Map ?
+                        "Parent object is an instance of java.util.Map" :
+                        "putMethod is specified for element " + qName
+                        ) +
+                        " but mapEntry is specified for niether element " +
                         qName +
-                        " but mapEntry is specified for niether the element nor it's type " +
+                        " nor it's type " +
                         element.getType().getQName()
                      );
                   }
@@ -409,38 +501,43 @@ public class RtElementHandler
                }
 
                Class keyType = Object.class;
-               if(putMethodMetaData.getKeyType() != null)
-               {
-                  try
-                  {
-                     keyType =
-                        Thread.currentThread().getContextClassLoader().loadClass(putMethodMetaData.getKeyType());
-                  }
-                  catch(ClassNotFoundException e)
-                  {
-                     throw new JBossXBRuntimeException("setParent failed for " + qName + ": " + e.getMessage(), e);
-                  }
-               }
-
                Class valueType = Object.class;
-               if(putMethodMetaData.getValueType() != null)
-               {
-                  try
-                  {
-                     valueType =
-                        Thread.currentThread().getContextClassLoader().loadClass(putMethodMetaData.getValueType());
-                  }
-                  catch(ClassNotFoundException e)
-                  {
-                     throw new JBossXBRuntimeException("setParent failed for " + qName + ": " + e.getMessage(), e);
-                  }
-               }
-
+               String putMethodName = "put";
                Class ownerClass = owner.getClass();
-               String putMethodName = putMethodMetaData.getName();
-               if(putMethodName == null)
+
+               if(putMethodMetaData != null)
                {
-                  putMethodName = "put";
+                  if(putMethodMetaData.getKeyType() != null)
+                  {
+                     try
+                     {
+                        keyType =
+                           Thread.currentThread().getContextClassLoader().loadClass(putMethodMetaData.getKeyType());
+                     }
+                     catch(ClassNotFoundException e)
+                     {
+                        throw new JBossXBRuntimeException("setParent failed for " + qName + ": " + e.getMessage(), e);
+                     }
+                  }
+
+                  if(putMethodMetaData.getValueType() != null)
+                  {
+                     try
+                     {
+                        valueType =
+                           Thread.currentThread().getContextClassLoader().loadClass(putMethodMetaData.getValueType());
+                     }
+                     catch(ClassNotFoundException e)
+                     {
+                        throw new JBossXBRuntimeException("setParent failed for " + qName + ": " + e.getMessage(), e);
+                     }
+                  }
+
+                  String name = putMethodMetaData.getName();
+                  if(name != null)
+                  {
+                     putMethodName = name;
+                  }
                }
 
                Method putMethod;
@@ -536,13 +633,104 @@ public class RtElementHandler
                }
 
                String colType = propertyMetaData == null ? null : propertyMetaData.getCollectionType();
-               RtUtil.set(owner, o, propName, colType, true);
+               RtUtil.set(owner, o, propName, colType, element.getSchema().isIgnoreNotFoundField());
             }
          }
       }
    }
 
    // Private
+
+   private void setMapEntryValue(MapEntryMetaData mapEntryMetaData, Object parent, Object o)
+   {
+      String getValueMethodName = mapEntryMetaData.getGetValueMethod();
+      if(getValueMethodName == null)
+      {
+         getValueMethodName = "getValue";
+      }
+
+      String setValueMethodName = mapEntryMetaData.getSetValueMethod();
+      if(setValueMethodName == null)
+      {
+         setValueMethodName = "setValue";
+      }
+
+      Class parentCls = parent.getClass();
+      Method setValueMethod = getSetMethod(parentCls, getValueMethodName, setValueMethodName);
+      invokeSetter(setValueMethod, parent, o, setValueMethodName);
+   }
+
+   private void invokeSetter(Method setValueMethod, Object parent, Object o, String setValueMethodName)
+   {
+      try
+      {
+         setValueMethod.invoke(parent, new Object[]{o});
+      }
+      catch(Exception e)
+      {
+         throw new JBossXBRuntimeException("Failed to invoke " +
+            setValueMethodName +
+            " on " +
+            parent +
+            " with parameter " +
+            o +
+            ": " +
+            e.getMessage()
+         );
+      }
+   }
+
+   private Method getSetMethod(Class cls, String getMethodName, String setMethodName)
+   {
+      Method getKeyMethod;
+      try
+      {
+         getKeyMethod = cls.getMethod(getMethodName, null);
+      }
+      catch(NoSuchMethodException e)
+      {
+         throw new JBossXBRuntimeException("Method " + getMethodName + " not found in " + cls);
+      }
+
+      Method setKeyMethod;
+      try
+      {
+         setKeyMethod = cls.getMethod(setMethodName, new Class[]{getKeyMethod.getReturnType()});
+      }
+      catch(NoSuchMethodException e)
+      {
+         throw new JBossXBRuntimeException("Method " +
+            setMethodName +
+            "(" +
+            getKeyMethod.getReturnType().getName() +
+            " p) not found in " +
+            cls
+         );
+      }
+      return setKeyMethod;
+   }
+
+   private MapEntryMetaData getMapEntryMetaData(ElementBinding element, QName qName)
+   {
+      MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
+      if(mapEntryMetaData == null)
+      {
+         mapEntryMetaData = element.getType().getMapEntryMetaData();
+         if(mapEntryMetaData == null)
+         {
+            throw new JBossXBRuntimeException("Element " +
+               qName +
+               " bound as map entry key or value but map entry metadata is not available for its parent element nor its " +
+               (element.getType().getQName() == null ?
+               "annonymous" :
+               element.getType().getQName().toString()
+               ) +
+               " type."
+            );
+         }
+      }
+      return mapEntryMetaData;
+   }
 
    private Object newInstance(Class cls, QName elementName, TypeBinding type)
    {

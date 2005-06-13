@@ -25,5 +25,5 @@ public interface ElementHandler
    /**
     * WARN: currently, this method is called only if there are no interceptors in the element binding.
     */
-   void setParent(Object parent, Object o, QName qName, ElementBinding element);
+   void setParent(Object parent, Object o, QName qName, ElementBinding element, ElementBinding parentElement);
 }

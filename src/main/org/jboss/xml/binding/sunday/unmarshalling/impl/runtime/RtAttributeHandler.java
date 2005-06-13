@@ -59,7 +59,7 @@ public class RtAttributeHandler
             property = Util.xmlNameToFieldName(attrName.getLocalPart(), binding.getSchema().isIgnoreLowLine());
          }
 
-         RtUtil.set(owner, value, property, null, true);
+         RtUtil.set(owner, value, property, null, binding.getSchema().isIgnoreNotFoundField());
       }
    }
 }

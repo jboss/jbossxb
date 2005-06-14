@@ -161,7 +161,7 @@ public class RtCharactersHandler
                }
             }
 
-            RtUtil.set(owner, value, propName, colType, element.getSchema().isIgnoreNotFoundField());
+            RtUtil.set(owner, value, propName, colType, element.getSchema().isIgnoreUnresolvedFieldOrClass());
          }
       }
    }

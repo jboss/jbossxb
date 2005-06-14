@@ -84,7 +84,7 @@ public class SchemaBinding
    private PackageMetaData packageMetaData;
    private SchemaBindingResolver schemaResolver;
    private boolean strictSchema = true;
-   private boolean ignoreNotFoundField = true;
+   private boolean ignoreUnresolvedFieldOrClass = true;
    private boolean ignoreLowLine = true;
 
    public TypeBinding getType(QName qName)
@@ -154,19 +154,20 @@ public class SchemaBinding
       this.strictSchema = strictSchema;
    }
 
-   public boolean isIgnoreNotFoundField()
+   public boolean isIgnoreUnresolvedFieldOrClass()
    {
-      return ignoreNotFoundField;
+      return ignoreUnresolvedFieldOrClass;
    }
 
    /**
-    * If a field is not found in the parent class to set child value on,
+    * If a field is not found in the parent class to set child value on or
+    * a class an element is bound to
     * an exception will be thrown if this property is false. Otherwise,
     * the process will just go on (the default for now).
     */
-   public void setIgnoreNotFoundField(boolean ignoreNotFoundField)
+   public void setIgnoreUnresolvedFieldOrClass(boolean ignoreUnresolvedFieldOrClass)
    {
-      this.ignoreNotFoundField = ignoreNotFoundField;
+      this.ignoreUnresolvedFieldOrClass = ignoreUnresolvedFieldOrClass;
    }
 
    public boolean isIgnoreLowLine()

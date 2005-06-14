@@ -74,7 +74,8 @@ public class RtElementHandler
                TypeBinding itemType = item.getType();
 
                Class itemCls;
-               if(Constants.NS_XML_SCHEMA.equals(itemType.getQName().getNamespaceURI()))
+               QName itemTypeQName = itemType.getQName();
+               if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
                {
                   itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart());
                }
@@ -85,7 +86,10 @@ public class RtElementHandler
                   itemCls = getClass(itemClsName, item, type.getArrayItemQName());
                }
 
-               o = GenericValueContainer.FACTORY.array(itemCls);
+               if(itemCls != null)
+               {
+                  o = GenericValueContainer.FACTORY.array(itemCls);
+               }
             }
             else
             {
@@ -633,7 +637,7 @@ public class RtElementHandler
                }
 
                String colType = propertyMetaData == null ? null : propertyMetaData.getCollectionType();
-               RtUtil.set(owner, o, propName, colType, element.getSchema().isIgnoreNotFoundField());
+               RtUtil.set(owner, o, propName, colType, element.getSchema().isIgnoreUnresolvedFieldOrClass());
             }
          }
       }
@@ -797,7 +801,20 @@ public class RtElementHandler
       }
       catch(ClassNotFoundException e)
       {
-         if(className != null)
+         if(element.getSchema().isIgnoreUnresolvedFieldOrClass())
+         {
+            if(log.isTraceEnabled())
+            {
+               log.trace("Failed to resolve class for element " +
+                  elementName +
+                  " of type " +
+                  type.getQName() +
+                  ": " +
+                  localClassName
+               );
+            }
+         }
+         else
          {
             throw new JBossXBRuntimeException("Failed to resolve class name for " +
                elementName +
@@ -805,13 +822,6 @@ public class RtElementHandler
                type.getQName() +
                ": " +
                e.getMessage()
-            );
-         }
-         // todo complex element may contain just data content...
-         else if(log.isTraceEnabled())
-         {
-            log.trace(
-               "Failed to resolve class for element " + elementName + " of type " + type.getQName() + ": " + className
             );
          }
       }

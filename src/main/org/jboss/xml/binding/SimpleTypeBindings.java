@@ -64,8 +64,8 @@ public final class SimpleTypeBindings
    public static final String XS_NORMALIZEDSTRING_NAME = "normalizedString";
    public static final String XS_TOKEN_NAME = "token";
    public static final String XS_LANGUAGE_NAME = "language";
-   public static final String XS_NMTOKEN_NAME = "NMToken";
-   public static final String XS_NMTOKENS_NAME = "NMTokens";
+   public static final String XS_NMTOKEN_NAME = "NMTOKEN";
+   public static final String XS_NMTOKENS_NAME = "NMTOKENS";
    public static final String XS_NAME_NAME = "Name";
    public static final String XS_NCNAME_NAME = "NCName";
    public static final String XS_ID_NAME = "ID";

@@ -44,7 +44,8 @@ public abstract class CharactersHandler
       }
       else
       {
-         o = value;
+         TypeBinding baseType = typeBinding.getBaseType();
+         o = (baseType == null ? value : unmarshal(qName, baseType, nsCtx, valueMetaData, value));
       }
       return o;
    }

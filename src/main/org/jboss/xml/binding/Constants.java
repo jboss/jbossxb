@@ -25,6 +25,7 @@ public interface Constants
    //
 
    QName QNAME_ANYSIMPLETYPE = new QName(NS_XML_SCHEMA, "anySimpleType");
+   QName QNAME_ANYTYPE = new QName(NS_XML_SCHEMA, "anyType");
 
    // primitive datatypes
    QName QNAME_STRING = new QName(NS_XML_SCHEMA, "string");
@@ -51,8 +52,8 @@ public interface Constants
    QName QNAME_NORMALIZEDSTRING = new QName(NS_XML_SCHEMA, "normalizedString");
    QName QNAME_TOKEN = new QName(NS_XML_SCHEMA, "token");
    QName QNAME_LANGUAGE = new QName(NS_XML_SCHEMA, "language");
-   QName QNAME_NMTOKEN = new QName(NS_XML_SCHEMA, "NMToken");
-   QName QNAME_NMTOKENS = new QName(NS_XML_SCHEMA, "NMTokens");
+   QName QNAME_NMTOKEN = new QName(NS_XML_SCHEMA, "NMTOKEN");
+   QName QNAME_NMTOKENS = new QName(NS_XML_SCHEMA, "NMTOKENS");
    QName QNAME_NAME = new QName(NS_XML_SCHEMA, "Name");
    QName QNAME_NCNAME = new QName(NS_XML_SCHEMA, "NCName");
    QName QNAME_ID = new QName(NS_XML_SCHEMA, "ID");

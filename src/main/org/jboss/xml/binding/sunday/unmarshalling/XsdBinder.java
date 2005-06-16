@@ -98,7 +98,18 @@ public class XsdBinder
          }
       }
 
+      XSTypeDefinition anyType = model.getTypeDefinition(Constants.QNAME_ANYTYPE.getLocalPart(),
+         Constants.QNAME_ANYTYPE.getNamespaceURI()
+      );
+      if(anyType == null)
+      {
+         throw new JBossXBRuntimeException("Unable to get a refence to " + Constants.QNAME_ANYTYPE);
+      }
+
       SharedElements sharedElements = new SharedElements();
+      // this is just caching of the reference to easier compare types at runtime
+      sharedElements.anyType = anyType;
+
       XSNamedMap groups = model.getComponents(XSConstants.MODEL_GROUP_DEFINITION);
       for(int i = 0; i < groups.getLength(); ++i)
       {
@@ -168,23 +179,28 @@ public class XsdBinder
 
    private static final TypeBinding bindSimpleType(SchemaBinding doc, XSSimpleTypeDefinition type)
    {
-      // todo default simple types
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
       TypeBinding binding = typeName == null ? null : doc.getType(typeName);
       if(binding == null)
       {
+         XSTypeDefinition baseTypeDef = type.getBaseType();
+         TypeBinding baseType = baseTypeDef == null ? null : bindType(doc, baseTypeDef, null);
+
+         binding = baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType);
+
          if(typeName != null)
          {
-            binding = new TypeBinding(typeName);
             doc.addType(binding);
-            if(log.isTraceEnabled())
-            {
-               log.trace("simple type: " + typeName);
-            }
          }
-         else
+
+         if(log.isTraceEnabled())
          {
-            binding = new TypeBinding();
+            String msg = typeName == null ? "simple anonymous type" : "simple type " + typeName;
+            if(baseType != null)
+            {
+               msg += " inherited binding metadata from " + baseType.getQName();
+            }
+            log.trace(msg);
          }
 
          // customize binding with annotations
@@ -231,7 +247,7 @@ public class XsdBinder
             }
          }
 
-         binding.setSchemaBinding(getXsdBinding().schemaBinding);
+         binding.setSchemaBinding(doc);
       }
       return binding;
    }
@@ -244,18 +260,26 @@ public class XsdBinder
       TypeBinding binding = typeName == null ? null : doc.getType(typeName);
       if(binding == null)
       {
-         if(type.getName() != null)
+         XSTypeDefinition baseTypeDef = type.getBaseType();
+         // anyType is the parent of all the types, even the parent of itself according to xerces :)
+         TypeBinding baseType = (baseTypeDef == sharedElements.anyType ?
+            null :
+            bindType(doc, baseTypeDef, sharedElements));
+         binding = (baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType));
+
+         if(typeName != null)
          {
-            binding = new TypeBinding(typeName);
             doc.addType(binding);
-            if(log.isTraceEnabled())
-            {
-               log.trace("complex type: " + typeName);
-            }
          }
-         else
+
+         if(log.isTraceEnabled())
          {
-            binding = new TypeBinding();
+            String msg = typeName == null ? "complex anonymous type" : "complex type " + typeName;
+            if(baseType != null)
+            {
+               msg += " inherited binding metadata from " + baseType.getQName();
+            }
+            log.trace(msg);
          }
 
          binding.setSchemaBinding(doc);
@@ -592,8 +616,7 @@ public class XsdBinder
 
                      if(classMetaData != null)
                      {
-                        throw new JBossXBRuntimeException(
-                           "Invalid binding: both jbxb:class and jbxb:mapEntry are specified for element " +
+                        throw new JBossXBRuntimeException("Invalid binding: both jbxb:class and jbxb:mapEntry are specified for element " +
                            new QName(element.getNamespace(), element.getName())
                         );
                      }
@@ -743,6 +766,7 @@ public class XsdBinder
    private static final class SharedElements
    {
       private Map elements = Collections.EMPTY_MAP;
+      private XSTypeDefinition anyType;
 
       public void add(XSElementDeclaration element)
       {

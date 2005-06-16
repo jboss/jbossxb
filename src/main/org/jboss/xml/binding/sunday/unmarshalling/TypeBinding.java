@@ -31,7 +31,7 @@ public class TypeBinding
    private QName arrayItemQName;
    private ElementBinding arrayItem;
    private Map attrs = Collections.EMPTY_MAP;
-   private ElementHandler handler = RtElementHandler.INSTANCE;//DefaultElementHandler.INSTANCE;
+   private ElementHandler handler = RtElementHandler.INSTANCE;
    private CharactersHandler simpleType;
    private ClassMetaData classMetaData;
    private ValueMetaData valueMetaData;
@@ -41,6 +41,7 @@ public class TypeBinding
    private boolean mapEntryValue;
    private SchemaBinding schemaBinding; // todo it's optional for now...
    private SchemaBindingResolver schemaResolver;
+   private TypeBinding baseType;
 
    public TypeBinding()
    {
@@ -49,7 +50,6 @@ public class TypeBinding
 
    public TypeBinding(QName qName)
    {
-      //this(qName, CharactersHandler.DEFAULT);
       this(qName, RtCharactersHandler.INSTANCE);
    }
 
@@ -57,6 +57,29 @@ public class TypeBinding
    {
       this.qName = qName;
       this.simpleType = simple;
+   }
+
+   public TypeBinding(QName qName, TypeBinding baseType)
+   {
+      this(qName, baseType.simpleType);
+      this.elements = new HashMap(baseType.elements);
+      this.arrayItemQName = baseType.arrayItemQName;
+      this.arrayItem = baseType.arrayItem;
+      this.attrs = new HashMap(baseType.attrs);
+      this.classMetaData = baseType.classMetaData;
+      this.valueMetaData = baseType.valueMetaData;
+      this.propertyMetaData = baseType.propertyMetaData;
+      this.mapEntryMetaData = baseType.mapEntryMetaData;
+      this.mapEntryKey = baseType.mapEntryKey;
+      this.mapEntryValue = baseType.mapEntryValue;
+      this.schemaBinding = baseType.schemaBinding;
+      this.schemaResolver = baseType.schemaResolver;
+      this.baseType = baseType;
+
+      if(!baseType.isSimple())
+      {
+         this.handler = baseType.handler;
+      }
    }
 
    public QName getQName()
@@ -186,6 +209,11 @@ public class TypeBinding
          el = addElement(qName, new TypeBinding());
       }
       el.pushInterceptor(interceptor);
+   }
+
+   public TypeBinding getBaseType()
+   {
+      return baseType;
    }
 
    public boolean isSimple()

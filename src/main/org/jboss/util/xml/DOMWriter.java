@@ -6,6 +6,8 @@
  */
 package org.jboss.util.xml;
 
+// $Id$
+
 import java.io.PrintWriter;
 import java.io.Writer;
 
@@ -18,7 +20,8 @@ import org.w3c.dom.NodeList;
  * A sample DOM writer. This sample program illustrates how to
  * traverse a DOM tree in order to print a document that is parsed.
  *
- * @version $Revision$
+ * @author Andy Clark, IBM
+ * @author Thomas.Diesler@jboss.org
  */
 public class DOMWriter
 {
@@ -56,7 +59,7 @@ public class DOMWriter
       printInternal(node, false);
    }
 
-   private void printInternal(Node node, boolean hasChildren)
+   private void printInternal(Node node, boolean indentEndMarker)
    {
 
       // is there anything to do?
@@ -66,6 +69,8 @@ public class DOMWriter
       }
 
       int type = node.getNodeType();
+      boolean hasChildNodes = node.getChildNodes().getLength() > 0;
+
       switch (type)
       {
          // print document
@@ -73,7 +78,7 @@ public class DOMWriter
          {
             if (!canonical)
             {
-               out.println("<?xml version=\"1.0\"?>");
+               out.println("<?xml version='1.0'?>");
             }
 
             NodeList children = node.getChildNodes();
@@ -88,12 +93,13 @@ public class DOMWriter
          // print element with attributes
          case Node.ELEMENT_NODE:
          {
-
             if (prettyprint)
             {
-               out.print('\n');
                for (int i = 0; i < prettyIndent; i++)
+               {
                   out.print(' ');
+               }
+               prettyIndent++;
             }
 
             out.print('<');
@@ -104,26 +110,29 @@ public class DOMWriter
                Attr attr = attrs[i];
                out.print(' ');
                out.print(attr.getNodeName());
-               out.print("=\"");
+               out.print("='");
                out.print(normalize(attr.getNodeValue()));
-               out.print('"');
+               out.print("'");
             }
 
-            if (prettyprint)
-               prettyIndent++;
-
-            NodeList children = node.getChildNodes();
-
-            int len = children.getLength();
-            if (len > 0)
+            if (hasChildNodes)
             {
-               hasChildren = true;
                out.print('>');
             }
 
+            // Find out if the end marker is indented
+            indentEndMarker = isEndMarkerIndented(node);
+
+            if (indentEndMarker)
+            {
+               out.print('\n');
+            }
+
+            NodeList childNodes = node.getChildNodes();
+            int len = childNodes.getLength();
             for (int i = 0; i < len; i++)
             {
-               Node childNode = children.item(i);
+               Node childNode = childNodes.item(i);
                printInternal(childNode, false);
             }
             break;
@@ -194,11 +203,9 @@ public class DOMWriter
          // print comment
          case Node.COMMENT_NODE:
          {
-            if (prettyprint)
+            for (int i = 0; i < prettyIndent; i++)
             {
-               out.print('\n');
-               for (int i = 0; i < prettyIndent; i++)
-                  out.print(' ');
+               out.print(' ');
             }
 
             out.print("<!--");
@@ -208,6 +215,12 @@ public class DOMWriter
                out.print(data);
             }
             out.print("-->");
+
+            if (prettyprint)
+            {
+               out.print('\n');
+            }
+            
             break;
          }
       }
@@ -216,31 +229,55 @@ public class DOMWriter
       {
          if (prettyprint)
             prettyIndent--;
-         
-         if (hasChildren == false)
+
+         if (hasChildNodes == false)
          {
             out.print("/>");
          }
          else
          {
-            if (prettyprint)
+            if (indentEndMarker)
             {
-               out.print('\n');
                for (int i = 0; i < prettyIndent; i++)
+               {
                   out.print(' ');
+               }
             }
 
             out.print("</");
             out.print(node.getNodeName());
             out.print('>');
          }
+
+         if (prettyIndent > 0)
+         {
+            out.print('\n');
+         }
       }
 
       out.flush();
-   } 
+   }
+
+   private boolean isEndMarkerIndented(Node node)
+   {
+      if (prettyprint)
+      {
+         NodeList childNodes = node.getChildNodes();
+         int len = childNodes.getLength();
+         for (int i = 0; i < len; i++)
+         {
+            Node children = childNodes.item(i);
+            if (children.getNodeType() == Node.ELEMENT_NODE)
+            {
+               return true;
+            }
+         }
+      }
+      return false;
+   }
 
    /** Returns a sorted list of attributes. */
-   protected Attr[] sortAttributes(NamedNodeMap attrs)
+   private Attr[] sortAttributes(NamedNodeMap attrs)
    {
 
       int len = (attrs != null) ? attrs.getLength() : 0;
@@ -271,11 +308,10 @@ public class DOMWriter
       }
 
       return (array);
-
-   } // sortAttributes(NamedNodeMap):Attr[]
+   }
 
    /** Normalizes the given string. */
-   protected String normalize(String s)
+   private String normalize(String s)
    {
       StringBuffer str = new StringBuffer();
 
@@ -325,6 +361,5 @@ public class DOMWriter
       }
 
       return (str.toString());
-
-   } // normalize(String):String
+   }
 }

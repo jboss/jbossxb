@@ -262,9 +262,10 @@ public class XsdBinder
       {
          XSTypeDefinition baseTypeDef = type.getBaseType();
          // anyType is the parent of all the types, even the parent of itself according to xerces :)
-         TypeBinding baseType = (baseTypeDef == sharedElements.anyType ?
+         TypeBinding baseType = null; /* todo: review binding inheritance for complex types
+         (baseTypeDef == sharedElements.anyType ?
             null :
-            bindType(doc, baseTypeDef, sharedElements));
+            bindType(doc, baseTypeDef, sharedElements));*/
          binding = (baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType));
 
          if(typeName != null)

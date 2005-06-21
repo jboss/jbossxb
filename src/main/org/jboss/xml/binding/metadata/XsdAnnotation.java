@@ -300,7 +300,8 @@ public class XsdAnnotation
          else if("javaType".equals(localName))
          {
             element = new ValueMetaData();
-            setAttributes(element, attrs, new AttributeSetter(){
+            setAttributes(element, attrs, new AttributeSetter()
+            {
                public void setAttribute(Object o, String nsUri, String localName, String value)
                {
                   if("printMethod".equals(localName))
@@ -312,7 +313,8 @@ public class XsdAnnotation
                      ((ValueMetaData)o).setUnmarshalMethod(value);
                   }
                }
-            });
+            }
+            );
          }
 
          return element;
@@ -347,7 +349,8 @@ public class XsdAnnotation
          if("package".equals(localName))
          {
             child = new PackageMetaData();
-            setAttributes(child, attrs, new AttributeSetter(){
+            setAttributes(child, attrs, new AttributeSetter()
+            {
                public void setAttribute(Object o, String nsUri, String localName, String value)
                {
                   if("name".equals(localName))
@@ -355,12 +358,14 @@ public class XsdAnnotation
                      ((PackageMetaData)o).setName(value);
                   }
                }
-            });
+            }
+            );
          }
          else if("value".equals(localName))
          {
             child = new ValueMetaData();
-            setAttributes(child, attrs, new AttributeSetter(){
+            setAttributes(child, attrs, new AttributeSetter()
+            {
                public void setAttribute(Object o, String nsUri, String localName, String value)
                {
                   if("marshalMethod".equals(localName))
@@ -372,7 +377,8 @@ public class XsdAnnotation
                      ((ValueMetaData)o).setUnmarshalMethod(value);
                   }
                }
-            });
+            }
+            );
          }
          else if("property".equals(localName))
          {
@@ -412,7 +418,11 @@ public class XsdAnnotation
          return child;
       }
 
-      public void addChild(Object parent, Object child, UnmarshallingContext ctx, String namespaceURI, String localName)
+      public void addChild(Object parent,
+                           Object child,
+                           UnmarshallingContext ctx,
+                           String namespaceURI,
+                           String localName)
       {
          if(child instanceof PackageMetaData)
          {
@@ -450,7 +460,8 @@ public class XsdAnnotation
          else if("value".equals(localName))
          {
             element = new ValueMetaData();
-            setAttributes(element, attrs, new AttributeSetter(){
+            setAttributes(element, attrs, new AttributeSetter()
+            {
                public void setAttribute(Object o, String nsUri, String localName, String value)
                {
                   if("marshalMethod".equals(localName))
@@ -462,7 +473,8 @@ public class XsdAnnotation
                      ((ValueMetaData)o).setUnmarshalMethod(value);
                   }
                }
-            });
+            }
+            );
          }
          else if("class".equals(localName))
          {
@@ -503,7 +515,8 @@ public class XsdAnnotation
          else if("putMethod".equals(localName))
          {
             PutMethodMetaData putMethod = new PutMethodMetaData();
-            setAttributes(putMethod, attrs, new AttributeSetter(){
+            setAttributes(putMethod, attrs, new AttributeSetter()
+            {
                public void setAttribute(Object o, String nsUri, String localName, String value)
                {
                   if("name".equals(localName))
@@ -519,14 +532,16 @@ public class XsdAnnotation
                      ((PutMethodMetaData)o).setValueType(value);
                   }
                }
-            });
+            }
+            );
             XsdAppInfo appInfo = (XsdAppInfo)root;
             appInfo.setPutMethodMetaData(putMethod);
          }
          else if("addMethod".equals(localName))
          {
             AddMethodMetaData addMethod = new AddMethodMetaData();
-            setAttributes(addMethod, attrs, new AttributeSetter(){
+            setAttributes(addMethod, attrs, new AttributeSetter()
+            {
                public void setAttribute(Object o, String nsUri, String localName, String value)
                {
                   if("name".equals(localName))
@@ -535,17 +550,26 @@ public class XsdAnnotation
                   }
                   else if("valueType".equals(localName))
                   {
-                     ((AddMethodMetaData)o).setValueType(value);
+                     if("child".equals(value))
+                     {
+                        ((AddMethodMetaData)o).setChildType(true);
+                     }
+                     else
+                     {
+                        ((AddMethodMetaData)o).setValueType(value);
+                     }
                   }
                }
-            });
+            }
+            );
             XsdAppInfo appInfo = (XsdAppInfo)root;
             appInfo.setAddMethodMetaData(addMethod);
          }
          else if("mapEntry".equals(localName))
          {
             MapEntryMetaData mapEntry = new MapEntryMetaData();
-            setAttributes(mapEntry, attrs, new AttributeSetter(){
+            setAttributes(mapEntry, attrs, new AttributeSetter()
+            {
                public void setAttribute(Object o, String nsUri, String localName, String value)
                {
                   if("impl".equals(localName))
@@ -578,7 +602,8 @@ public class XsdAnnotation
                      ((MapEntryMetaData)o).setNonNullValue(b);
                   }
                }
-            });
+            }
+            );
             XsdAppInfo appInfo = (XsdAppInfo)root;
             appInfo.setMapEntryMetaData(mapEntry);
          }

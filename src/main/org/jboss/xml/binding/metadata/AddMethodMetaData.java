@@ -14,6 +14,7 @@ public class AddMethodMetaData
 {
    private String methodName;
    private String valueType;
+   private boolean childType;
 
    public String getMethodName()
    {
@@ -33,5 +34,15 @@ public class AddMethodMetaData
    public void setValueType(String valueType)
    {
       this.valueType = valueType;
+   }
+
+   public boolean isChildType()
+   {
+      return childType;
+   }
+
+   public void setChildType(boolean childType)
+   {
+      this.childType = childType;
    }
 }

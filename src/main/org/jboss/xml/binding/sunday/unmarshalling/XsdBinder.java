@@ -651,7 +651,8 @@ public class XsdBinder
                            new QName(element.getNamespace(), element.getName()) +
                            ", addMethod=" +
                            addMethodMetaData.getMethodName() +
-                           ", valueType=" + addMethodMetaData.getValueType()
+                           ", valueType=" + addMethodMetaData.getValueType() +
+                           ", isChildType=" + addMethodMetaData.isChildType()
                         );
                      }
                      binding.setAddMethodMetaData(addMethodMetaData);

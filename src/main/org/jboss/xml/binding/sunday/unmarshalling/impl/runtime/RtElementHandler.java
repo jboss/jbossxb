@@ -661,6 +661,10 @@ public class RtElementHandler
                         );
                      }
                   }
+                  else if(addMethodMetaData.isChildType())
+                  {
+                     valueType = o.getClass();
+                  }
 
                   Class ownerClass = owner.getClass();
                   Method addMethod;

@@ -523,6 +523,25 @@ public class XsdAnnotation
             XsdAppInfo appInfo = (XsdAppInfo)root;
             appInfo.setPutMethodMetaData(putMethod);
          }
+         else if("addMethod".equals(localName))
+         {
+            AddMethodMetaData addMethod = new AddMethodMetaData();
+            setAttributes(addMethod, attrs, new AttributeSetter(){
+               public void setAttribute(Object o, String nsUri, String localName, String value)
+               {
+                  if("name".equals(localName))
+                  {
+                     ((AddMethodMetaData)o).setMethodName(value);
+                  }
+                  else if("valueType".equals(localName))
+                  {
+                     ((AddMethodMetaData)o).setValueType(value);
+                  }
+               }
+            });
+            XsdAppInfo appInfo = (XsdAppInfo)root;
+            appInfo.setAddMethodMetaData(addMethod);
+         }
          else if("mapEntry".equals(localName))
          {
             MapEntryMetaData mapEntry = new MapEntryMetaData();

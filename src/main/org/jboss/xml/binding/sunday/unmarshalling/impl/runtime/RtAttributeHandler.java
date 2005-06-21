@@ -11,6 +11,7 @@ import org.jboss.xml.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
+import org.jboss.xml.binding.GenericValueContainer;
 import org.jboss.xml.binding.metadata.PropertyMetaData;
 
 /**
@@ -44,6 +45,10 @@ public class RtAttributeHandler
                " bound to neither key nor value in a map entry."
             );
          }
+      }
+      else if(owner instanceof GenericValueContainer)
+      {
+         ((GenericValueContainer)owner).addChild(attrName, value);         
       }
       else
       {

@@ -31,6 +31,7 @@ import org.jboss.xml.binding.metadata.ClassMetaData;
 import org.jboss.xml.binding.metadata.PropertyMetaData;
 import org.jboss.xml.binding.metadata.MapEntryMetaData;
 import org.jboss.xml.binding.metadata.PutMethodMetaData;
+import org.jboss.xml.binding.metadata.AddMethodMetaData;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
@@ -66,7 +67,9 @@ public class RtElementHandler
             }
          }
 
-         if(classMetaData == null && type.isArrayWrapper())
+         // todo: if addMethod is specified, it's probably some collection field
+         // but should not be set as a property. Instead, items are added to it using the addMethod
+         if(classMetaData == null && type.isArrayWrapper() && element.getAddMethodMetaData() == null)
          {
             if(parent == null)
             {
@@ -311,7 +314,15 @@ public class RtElementHandler
    {
       if(o instanceof GenericValueContainer)
       {
-         o = ((GenericValueContainer)o).instantiate();
+         try
+         {
+            o = ((GenericValueContainer)o).instantiate();
+         }
+         catch(RuntimeException e)
+         {
+            throw new JBossXBRuntimeException("Container failed to create an instance for " + elementName +
+               ": " + e.getMessage(), e);
+         }
       }
       return o;
    }
@@ -629,15 +640,81 @@ public class RtElementHandler
             }
             else
             {
-               PropertyMetaData propertyMetaData = element.getPropertyMetaData();
-               String propName = propertyMetaData == null ? null : propertyMetaData.getName();
-               if(propName == null)
+               AddMethodMetaData addMethodMetaData = element.getAddMethodMetaData();
+               if(addMethodMetaData != null)
                {
-                  propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getSchema().isIgnoreLowLine());
-               }
+                  Class valueType = Object.class;
+                  if(addMethodMetaData.getValueType() != null)
+                  {
+                     try
+                     {
+                        valueType = Thread.currentThread().getContextClassLoader().
+                           loadClass(addMethodMetaData.getValueType());
+                     }
+                     catch(ClassNotFoundException e)
+                     {
+                        throw new JBossXBRuntimeException("Failed to load value type for addMethod.name=" +
+                           addMethodMetaData.getMethodName() +
+                           ", valueType=" +
+                           addMethodMetaData.getValueType() +
+                           ": " + e.getMessage(), e
+                        );
+                     }
+                  }
 
-               String colType = propertyMetaData == null ? null : propertyMetaData.getCollectionType();
-               RtUtil.set(owner, o, propName, colType, element.getSchema().isIgnoreUnresolvedFieldOrClass());
+                  Class ownerClass = owner.getClass();
+                  Method addMethod;
+                  try
+                  {
+                     addMethod = ownerClass.getMethod(addMethodMetaData.getMethodName(), new Class[]{valueType});
+                  }
+                  catch(NoSuchMethodException e)
+                  {
+                     throw new JBossXBRuntimeException("Failed to find addMethod.name=" +
+                        addMethodMetaData.getMethodName() +
+                        ", addMethod.valueType=" +
+                        valueType.getName() +
+                        " in class " +
+                        ownerClass.getName() +
+                        ": " +
+                        e.getMessage(), e
+                     );
+                  }
+
+                  try
+                  {
+                     addMethod.invoke(owner, new Object[]{o});
+                  }
+                  catch(Exception e)
+                  {
+                     throw new JBossXBRuntimeException("setParent failed for " +
+                        qName +
+                        "=" +
+                        o +
+                        ": addMethod=" +
+                        addMethodMetaData.getMethodName() +
+                        " threw an exception for owner=" +
+                        owner +
+                        ", value=" +
+                        o +
+                        ": " +
+                        e.getMessage(),
+                        e
+                     );
+                  }
+               }
+               else
+               {
+                  PropertyMetaData propertyMetaData = element.getPropertyMetaData();
+                  String propName = propertyMetaData == null ? null : propertyMetaData.getName();
+                  if(propName == null)
+                  {
+                     propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getSchema().isIgnoreLowLine());
+                  }
+
+                  String colType = propertyMetaData == null ? null : propertyMetaData.getCollectionType();
+                  RtUtil.set(owner, o, propName, colType, element.getSchema().isIgnoreUnresolvedFieldOrClass());
+               }
             }
          }
       }

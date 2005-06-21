@@ -14,6 +14,7 @@ import org.jboss.xml.binding.metadata.ValueMetaData;
 import org.jboss.xml.binding.metadata.ClassMetaData;
 import org.jboss.xml.binding.metadata.MapEntryMetaData;
 import org.jboss.xml.binding.metadata.PutMethodMetaData;
+import org.jboss.xml.binding.metadata.AddMethodMetaData;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -29,6 +30,7 @@ public class ElementBinding
    private PropertyMetaData propertyMetaData;
    private MapEntryMetaData mapEntryMetaData;
    private PutMethodMetaData putMethodMetaData;
+   private AddMethodMetaData addMethodMetaData;
    private ValueMetaData valueMetaData;
    private boolean mapEntryKey;
    private boolean mapEntryValue;
@@ -143,6 +145,16 @@ public class ElementBinding
    public void setPutMethodMetaData(PutMethodMetaData putMethodMetaData)
    {
       this.putMethodMetaData = putMethodMetaData;
+   }
+
+   public AddMethodMetaData getAddMethodMetaData()
+   {
+      return addMethodMetaData;
+   }
+
+   public void setAddMethodMetaData(AddMethodMetaData addMethodMetaData)
+   {
+      this.addMethodMetaData = addMethodMetaData;
    }
 
    public SchemaBinding getSchema()

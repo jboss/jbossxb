@@ -24,6 +24,7 @@ import org.jboss.xml.binding.metadata.ValueMetaData;
 import org.jboss.xml.binding.metadata.PropertyMetaData;
 import org.jboss.xml.binding.metadata.MapEntryMetaData;
 import org.jboss.xml.binding.metadata.PutMethodMetaData;
+import org.jboss.xml.binding.metadata.AddMethodMetaData;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSLoader;
@@ -260,7 +261,7 @@ public class XsdBinder
       TypeBinding binding = typeName == null ? null : doc.getType(typeName);
       if(binding == null)
       {
-         XSTypeDefinition baseTypeDef = type.getBaseType();
+         //XSTypeDefinition baseTypeDef = type.getBaseType();
          // anyType is the parent of all the types, even the parent of itself according to xerces :)
          TypeBinding baseType = null; /* todo: review binding inheritance for complex types
          (baseTypeDef == sharedElements.anyType ?
@@ -639,6 +640,21 @@ public class XsdBinder
                         );
                      }
                      binding.setPutMethodMetaData(putMethodMetaData);
+                  }
+
+                  AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
+                  if(addMethodMetaData != null)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("element: name=" +
+                           new QName(element.getNamespace(), element.getName()) +
+                           ", addMethod=" +
+                           addMethodMetaData.getMethodName() +
+                           ", valueType=" + addMethodMetaData.getValueType()
+                        );
+                     }
+                     binding.setAddMethodMetaData(addMethodMetaData);
                   }
 
                   ValueMetaData valueMetaData = appInfo.getValueMetaData();

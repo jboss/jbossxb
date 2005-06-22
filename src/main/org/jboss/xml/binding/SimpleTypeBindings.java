@@ -486,7 +486,7 @@ public final class SimpleTypeBindings
       }
       else if(typeCode == XS_UNSIGNEDLONG)
       {
-         result = Double.class;
+         result = BigInteger.class;
       }
       else if(typeCode == XS_UNSIGNEDINT)
       {
@@ -734,12 +734,12 @@ public final class SimpleTypeBindings
       }
       else if(typeCode == XS_UNSIGNEDLONG)
       {
-         double d = Double.parseDouble(value);
-         if(d < 0 || d > 18446744073709551615D)
+         BigInteger d = new BigInteger(value);
+         if(d.doubleValue() < 0 || d.doubleValue() > 18446744073709551615D)
          {
             throw new JBossXBValueFormatException("Invalid unsignedLong value: " + value);
          }
-         result = new Double(d);
+         result = d;
       }
       else if(typeCode == XS_UNSIGNEDINT)
       {
@@ -1102,8 +1102,8 @@ public final class SimpleTypeBindings
       }
       else if(typeCode == XS_UNSIGNEDLONG)
       {
-         Double d = (Double)value;
-         if(d.doubleValue() < 0 || d.doubleValue() > 18446744073709551615D)
+         BigInteger d = (BigInteger)value;
+         if (d.doubleValue() < 0 || d.doubleValue() > 18446744073709551615D)
          {
             throw new JBossXBValueFormatException("Invalid unsignedLong value: " + value);
          }

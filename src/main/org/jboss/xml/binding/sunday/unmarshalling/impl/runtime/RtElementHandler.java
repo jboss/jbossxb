@@ -710,6 +710,11 @@ public class RtElementHandler
                else
                {
                   PropertyMetaData propertyMetaData = element.getPropertyMetaData();
+                  if(propertyMetaData == null)
+                  {
+                     propertyMetaData = element.getType().getPropertyMetaData();
+                  }
+                  
                   String propName = propertyMetaData == null ? null : propertyMetaData.getName();
                   if(propName == null)
                   {

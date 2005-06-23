@@ -17,6 +17,7 @@ import org.jboss.xml.binding.metadata.ClassMetaData;
 import org.jboss.xml.binding.metadata.ValueMetaData;
 import org.jboss.xml.binding.metadata.PropertyMetaData;
 import org.jboss.xml.binding.metadata.MapEntryMetaData;
+import org.jboss.xml.binding.metadata.CharactersMetaData;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 
@@ -42,6 +43,8 @@ public class TypeBinding
    private SchemaBinding schemaBinding; // todo it's optional for now...
    private SchemaBindingResolver schemaResolver;
    private TypeBinding baseType;
+   private boolean skip;
+   private CharactersMetaData charMetaData;
 
    public TypeBinding()
    {
@@ -319,5 +322,25 @@ public class TypeBinding
    public void setMapEntryMetaData(MapEntryMetaData mapEntryMetaData)
    {
       this.mapEntryMetaData = mapEntryMetaData;
+   }
+
+   public void setSkip(boolean skip)
+   {
+      this.skip = skip;
+   }
+
+   public boolean isSkip()
+   {
+      return skip;
+   }
+
+   public CharactersMetaData getCharactersMetaData()
+   {
+      return charMetaData;
+   }
+
+   public void setCharactersMetaData(CharactersMetaData charMetaData)
+   {
+      this.charMetaData = charMetaData;
    }
 }

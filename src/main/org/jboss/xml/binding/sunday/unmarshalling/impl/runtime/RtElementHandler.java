@@ -48,6 +48,11 @@ public class RtElementHandler
 
    public Object startElement(Object parent, QName elementName, ElementBinding element)
    {
+      if(element.isSkip() || element.getType().isSkip())
+      {
+         return parent;
+      }
+
       Object o = null;
       TypeBinding type = element.getType();
       if(!type.isSimple())
@@ -312,6 +317,11 @@ public class RtElementHandler
 
    public Object endElement(Object o, QName elementName, ElementBinding element)
    {
+      if(element.isSkip() || element.getType().isSkip())
+      {
+         return o;
+      }
+
       if(o instanceof GenericValueContainer)
       {
          try
@@ -329,6 +339,11 @@ public class RtElementHandler
 
    public void setParent(Object parent, Object o, QName qName, ElementBinding element, ElementBinding parentElement)
    {
+      if(element.isSkip() || element.getType().isSkip())
+      {
+         return;
+      }
+
       if(element.isMapEntryKey())
       {
          if(parent instanceof MapEntry)
@@ -710,11 +725,13 @@ public class RtElementHandler
                else
                {
                   PropertyMetaData propertyMetaData = element.getPropertyMetaData();
+                  /*
                   if(propertyMetaData == null)
                   {
                      propertyMetaData = element.getType().getPropertyMetaData();
                   }
-                  
+                  */
+
                   String propName = propertyMetaData == null ? null : propertyMetaData.getName();
                   if(propName == null)
                   {

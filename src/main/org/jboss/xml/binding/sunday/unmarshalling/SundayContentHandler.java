@@ -13,6 +13,7 @@ import org.jboss.xml.binding.parser.JBossXBParser;
 import org.jboss.xml.binding.NamespaceRegistry;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.metadata.ValueMetaData;
+import org.jboss.xml.binding.metadata.CharactersMetaData;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 import org.apache.xerces.xs.XSTypeDefinition;
@@ -88,7 +89,16 @@ public class SundayContentHandler
                if(valueMetaData == null)
                {
                   valueMetaData = typeBinding.getValueMetaData();
+                  if(valueMetaData == null)
+                  {
+                     CharactersMetaData charactersMetaData = typeBinding.getCharactersMetaData();
+                     if(charactersMetaData != null)
+                     {
+                        valueMetaData = charactersMetaData.getValue();
+                     }
+                  }
                }
+               // todo valueMetaData is available from typeBinding
                unmarshalled = simpleType.unmarshal(endName, typeBinding, nsRegistry, valueMetaData, dataContent);
             }
             

@@ -153,6 +153,10 @@ public class XsdAnnotation
             {
                appInfo.setValueMetaData((ValueMetaData)child);
             }
+            else if(child instanceof CharactersMetaData)
+            {
+               appInfo.setCharactersMetaData((CharactersMetaData)child);
+            }
          }
          else
          {
@@ -398,18 +402,42 @@ public class XsdAnnotation
                }
             }
             );
-            XsdAppInfo appInfo = (XsdAppInfo)parent;
-            appInfo.setPropertyMetaData(property);
+
+            if(parent instanceof XsdAppInfo)
+            {
+               ((XsdAppInfo)parent).setPropertyMetaData(property);
+            }
+            else
+            {
+               ((CharactersMetaData)parent).setProperty(property);
+            }
          }
          else if("mapEntryKey".equals(localName))
          {
-            XsdAppInfo appInfo = (XsdAppInfo)parent;
-            appInfo.setMapEntryKey(true);
+            if(parent instanceof XsdAppInfo)
+            {
+               ((XsdAppInfo)parent).setMapEntryKey(true);
+            }
+            else
+            {
+               ((CharactersMetaData)parent).setMapEntryKey(true);
+            }
          }
          else if("mapEntryValue".equals(localName))
          {
+            if(parent instanceof XsdAppInfo)
+            {
+               ((XsdAppInfo)parent).setMapEntryValue(true);
+            }
+            else
+            {
+               ((CharactersMetaData)parent).setMapEntryValue(true);
+            }
+         }
+         else if("skip".equals(localName))
+         {
             XsdAppInfo appInfo = (XsdAppInfo)parent;
-            appInfo.setMapEntryValue(true);
+            appInfo.setSkip(true);
          }
          else
          {
@@ -431,9 +459,20 @@ public class XsdAnnotation
          }
          else if(child instanceof ValueMetaData)
          {
-            XsdAppInfo appInfo = (XsdAppInfo)parent;
             ValueMetaData valueMetaData = (ValueMetaData)child;
-            appInfo.setValueMetaData(valueMetaData);
+            if(parent instanceof XsdAppInfo)
+            {
+               ((XsdAppInfo)parent).setValueMetaData(valueMetaData);
+            }
+            else
+            {
+               ((CharactersMetaData)parent).setValue(valueMetaData);
+            }
+         }
+         else if(child instanceof CharactersMetaData)
+         {
+            CharactersMetaData charMD = (CharactersMetaData)child;
+            ((XsdAppInfo)parent).setCharactersMetaData(charMD);
          }
          else
          {
@@ -619,6 +658,12 @@ public class XsdAnnotation
          }
          else if("characters".equals(localName))
          {
+            element = new CharactersMetaData();
+         }
+         else if("skip".equals(localName))
+         {
+            XsdAppInfo appInfo = (XsdAppInfo)root;
+            appInfo.setSkip(true);
          }
          else
          {

@@ -25,8 +25,10 @@ public class XsdAppInfo
    private PutMethodMetaData putMethodMetaData;
    private AddMethodMetaData addMethodMetaData;
    private ValueMetaData valueMetaData;
+   private CharactersMetaData charactersMetaData;
    private boolean mapEntryKey;
    private boolean mapEntryValue;
+   private boolean skip;
 
    public XsdAppInfo()
    {
@@ -121,5 +123,25 @@ public class XsdAppInfo
    public AddMethodMetaData getAddMethodMetaData()
    {
       return addMethodMetaData;
+   }
+
+   public boolean isSkip()
+   {
+      return skip;
+   }
+
+   public void setSkip(boolean skip)
+   {
+      this.skip = skip;
+   }
+
+   public CharactersMetaData getCharactersMetaData()
+   {
+      return charactersMetaData;
+   }
+
+   public void setCharactersMetaData(CharactersMetaData charactersMetaData)
+   {
+      this.charactersMetaData = charactersMetaData;
    }
 }

@@ -14,6 +14,7 @@ import org.jboss.xml.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xml.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xml.binding.metadata.ValueMetaData;
 import org.jboss.xml.binding.metadata.PropertyMetaData;
+import org.jboss.xml.binding.metadata.CharactersMetaData;
 import org.jboss.xml.binding.Util;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 
@@ -109,13 +110,26 @@ public class RtCharactersHandler
          if(owner instanceof MapEntry)
          {
             TypeBinding type = element.getType();
-            if(type.isMapEntryKey())
+            CharactersMetaData characters = type.getCharactersMetaData();
+            if(characters != null)
             {
-               ((MapEntry)owner).setKey(value);
-            }
-            else if(type.isMapEntryValue())
-            {
-               ((MapEntry)owner).setValue(value);
+               if(characters.isMapEntryKey())
+               {
+                  ((MapEntry)owner).setKey(value);
+               }
+               else if(characters.isMapEntryValue())
+               {
+                  ((MapEntry)owner).setValue(value);
+               }
+               else
+               {
+                  throw new JBossXBRuntimeException("Parent object is a map entry but characters of element " +
+                     qName +
+                     " of type " +
+                     type.getQName() +
+                     " were bound to niether key nor value in a map entry."
+                  );
+               }
             }
             else
             {
@@ -135,6 +149,12 @@ public class RtCharactersHandler
             if(type != null && !type.isSimple()/* && type.hasSimpleContent()*/)
             {
                PropertyMetaData propertyMetaData = type.getPropertyMetaData();
+               if(propertyMetaData == null)
+               {
+                  CharactersMetaData charactersMetaData = type.getCharactersMetaData();
+                  propertyMetaData = charactersMetaData == null ? null : charactersMetaData.getProperty();
+               }
+               
                if(propertyMetaData != null)
                {
                   propName = propertyMetaData.getName();

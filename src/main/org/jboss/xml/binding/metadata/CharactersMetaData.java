@@ -15,6 +15,8 @@ public class CharactersMetaData
 {
    private PropertyMetaData property;
    private ValueMetaData value;
+   private boolean mapEntryValue;
+   private boolean mapEntryKey;
 
    public PropertyMetaData getProperty()
    {
@@ -36,36 +38,23 @@ public class CharactersMetaData
       this.value = value;
    }
 
-   public boolean equals(Object o)
+   public boolean isMapEntryValue()
    {
-      if(this == o)
-      {
-         return true;
-      }
-      if(!(o instanceof CharactersMetaData))
-      {
-         return false;
-      }
-
-      final CharactersMetaData charactersMetaData = (CharactersMetaData)o;
-
-      if(property != null ? !property.equals(charactersMetaData.property) : charactersMetaData.property != null)
-      {
-         return false;
-      }
-      if(value != null ? !value.equals(charactersMetaData.value) : charactersMetaData.value != null)
-      {
-         return false;
-      }
-
-      return true;
+      return mapEntryValue;
    }
 
-   public int hashCode()
+   public void setMapEntryValue(boolean mapEntryValue)
    {
-      int result;
-      result = (property != null ? property.hashCode() : 0);
-      result = 29 * result + (value != null ? value.hashCode() : 0);
-      return result;
+      this.mapEntryValue = mapEntryValue;
+   }
+
+   public boolean isMapEntryKey()
+   {
+      return mapEntryKey;
+   }
+
+   public void setMapEntryKey(boolean mapEntryKey)
+   {
+      this.mapEntryKey = mapEntryKey;
    }
 }

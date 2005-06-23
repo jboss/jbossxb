@@ -35,6 +35,7 @@ public class ElementBinding
    private boolean mapEntryKey;
    private boolean mapEntryValue;
    private boolean multiOccurs;
+   private boolean skip;
 
    public ElementBinding(SchemaBinding schema, TypeBinding typeBinding)
    {
@@ -160,5 +161,15 @@ public class ElementBinding
    public SchemaBinding getSchema()
    {
       return schema;
+   }
+
+   public void setSkip(boolean skip)
+   {
+      this.skip = skip;
+   }
+
+   public boolean isSkip()
+   {
+      return skip;
    }
 }

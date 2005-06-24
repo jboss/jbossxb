@@ -104,7 +104,7 @@ public final class DOMUtils
    public static Element createElement(String localPart)
    {
       Document doc = getOwnerDocument();
-      log.debug("createElement {}" + localPart);
+      log.trace("createElement {}" + localPart);
       return doc.createElement(localPart);
    }
 
@@ -113,7 +113,7 @@ public final class DOMUtils
    public static Element createElement(String localPart, String prefix)
    {
       Document doc = getOwnerDocument();
-      log.debug("createElement {}" + prefix + ":" + localPart);
+      log.trace("createElement {}" + prefix + ":" + localPart);
       return doc.createElement(prefix + ":" + localPart);
    }
 
@@ -124,12 +124,12 @@ public final class DOMUtils
       Document doc = getOwnerDocument();
       if (prefix == null || prefix.length() == 0)
       {
-         log.debug("createElement {" + uri + "}" + localPart);
+         log.trace("createElement {" + uri + "}" + localPart);
          return doc.createElementNS(uri, localPart);
       }
       else
       {
-         log.debug("createElement {" + uri + "}" + prefix + ":" + localPart);
+         log.trace("createElement {" + uri + "}" + prefix + ":" + localPart);
          return doc.createElementNS(uri, prefix + ":" + localPart);
       }
    }

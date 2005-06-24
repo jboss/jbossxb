@@ -153,18 +153,34 @@ public final class DOMUtils
     *
     * @return null if the attribute value is empty or the attribute is not present
     */
+   public static String getAttributeValue(Element el, String attrName)
+   {
+      return getAttributeValue(el, new QName(attrName));
+   }
+
+   /** Get the value from the given attribute
+    *
+    * @return null if the attribute value is empty or the attribute is not present
+    */
    public static String getAttributeValue(Element el, QName attrName)
    {
       String attr = null;
       if ("".equals(attrName.getNamespaceURI()))
          attr = el.getAttribute(attrName.getLocalPart());
-      else
-         attr = el.getAttributeNS(attrName.getNamespaceURI(), attrName.getLocalPart());
+      else attr = el.getAttributeNS(attrName.getNamespaceURI(), attrName.getLocalPart());
 
       if ("".equals(attr))
          attr = null;
 
       return attr;
+   }
+
+   /** Get the qname value from the given attribute
+    */
+   public static QName getAttributeValueAsQName(Element el, String attrName)
+   {
+      return getAttributeValueAsQName(el, new QName(attrName));
+
    }
 
    /** Get the qname value from the given attribute
@@ -206,11 +222,33 @@ public final class DOMUtils
 
    /** Get the boolean value from the given attribute
     */
+   public static boolean getAttributeValueAsBoolean(Element el, String attrName)
+   {
+      return getAttributeValueAsBoolean(el, new QName(attrName));
+   }
+
+   /** Get the boolean value from the given attribute
+    */
    public static boolean getAttributeValueAsBoolean(Element el, QName attrName)
    {
       String attrVal = getAttributeValue(el, attrName);
       boolean ret = "true".equalsIgnoreCase(attrVal) || "1".equalsIgnoreCase(attrVal);
       return ret;
+   }
+
+   /** Get the integer value from the given attribute
+    */
+   public static Integer getAttributeValueAsInteger(Element el, String attrName)
+   {
+      return getAttributeValueAsInteger(el, new QName(attrName));
+   }
+
+   /** Get the integer value from the given attribute
+    */
+   public static Integer getAttributeValueAsInteger(Element el, QName attrName)
+   {
+      String attrVal = getAttributeValue(el, attrName);
+      return (attrVal != null ? new Integer(attrVal) : null);
    }
 
    /** Copy attributes between elements
@@ -277,12 +315,24 @@ public final class DOMUtils
     */
    public static Element getFirstChildElement(Node node)
    {
-      return getFirstChildElement(node, null);
+      return getFirstChildElementIntern(node, null);
    }
 
    /** Gets the first child element for a given name
     */
+   public static Element getFirstChildElement(Node node, String nodeName)
+   {
+      return getFirstChildElementIntern(node, new QName(nodeName));
+   }
+   
+   /** Gets the first child element for a given name
+    */
    public static Element getFirstChildElement(Node node, QName nodeName)
+   {
+      return getFirstChildElementIntern(node, nodeName);
+   }
+   
+   private static Element getFirstChildElementIntern(Node node, QName nodeName)
    {
       Element childElement = null;
       Iterator it = getChildElements(node).iterator();

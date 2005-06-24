@@ -112,7 +112,7 @@ public abstract class WeakClassCache
          Map result = (Map) cache.get(cl);
          if (result == null)
          {
-            result = CollectionsFactory.createMap();
+            result = CollectionsFactory.createConcurrentReaderMap();
             cache.put(cl, result);
          }
          return result;

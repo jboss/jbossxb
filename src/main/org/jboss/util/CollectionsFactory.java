@@ -24,26 +24,12 @@ import EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArraySet;
  */
 public class CollectionsFactory
 {
-   // Constants -----------------------------------------------------
-
-   // Attributes ----------------------------------------------------
-   
-   // Static --------------------------------------------------------
-
    /**
     * Defines the map implementation
     */
-   public static final Map createMap()
+   public static final Map createConcurrentReaderMap()
    {
       return new ConcurrentReaderHashMap();
-   }
-
-   /**
-    * Defines the list implementation
-    */
-   public static final List createList()
-   {
-      return new CopyOnWriteArrayList();
    }
 
    /**
@@ -57,20 +43,8 @@ public class CollectionsFactory
    /**
     * Defines the set implementation
     */
-   public static final Set createSet()
+   public static final Set createCopyOnWriteSet()
    {
       return new CopyOnWriteArraySet();
    }
-   
-   // Constructors --------------------------------------------------
-   
-   // Public --------------------------------------------------------
-   
-   // Package protected ---------------------------------------------
-
-   // Protected -----------------------------------------------------
-   
-   // Private -------------------------------------------------------
-   
-   // Inner classes -------------------------------------------------
 }

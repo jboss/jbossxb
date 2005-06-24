@@ -84,7 +84,7 @@ public class JBossObject implements JBossInterface
     * @param buffer the buffer
     * @param objects the collection of objects
     */
-   public static void list(StringBuffer buffer, Collection objects)
+   public static void list(JBossStringBuilder buffer, Collection objects)
    {
       if (objects == null)
          return;
@@ -172,7 +172,7 @@ public class JBossObject implements JBossInterface
 
    public String toShortString()
    {
-      StringBuffer buffer = new StringBuffer();
+      JBossStringBuilder buffer = new JBossStringBuilder();
       toShortString(buffer);
       return buffer.toString();
    }
@@ -182,7 +182,7 @@ public class JBossObject implements JBossInterface
     * 
     * @param buffer the buffer
     */
-   public void toShortString(StringBuffer buffer)
+   public void toShortString(JBossStringBuilder buffer)
    {
    }
    
@@ -207,7 +207,7 @@ public class JBossObject implements JBossInterface
     */
    protected String toStringImplementation()
    {
-      StringBuffer buffer = new StringBuffer();
+      JBossStringBuilder buffer = new JBossStringBuilder();
       buffer.append(getClassShortName()).append('@');
       buffer.append(Integer.toHexString(System.identityHashCode(this)));
       buffer.append('{');
@@ -230,7 +230,7 @@ public class JBossObject implements JBossInterface
     * 
     * @param buffer the buffer
     */
-   protected void toString(StringBuffer buffer)
+   protected void toString(JBossStringBuilder buffer)
    {
    }
    

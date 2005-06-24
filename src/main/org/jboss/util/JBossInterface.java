@@ -37,7 +37,7 @@ public interface JBossInterface extends Cloneable
     * 
     * @param buffer the buffer
     */
-   void toShortString(StringBuffer buffer);
+   void toShortString(JBossStringBuilder buffer);
  
    // Inner classes -------------------------------------------------
 }

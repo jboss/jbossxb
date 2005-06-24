@@ -724,7 +724,17 @@ public class RtElementHandler
                }
                else
                {
-                  PropertyMetaData propertyMetaData = element.getPropertyMetaData();
+                  PropertyMetaData propertyMetaData = null;
+                  if(parentElement != null && parentElement.getType().isWildcardElement(qName))
+                  {
+                     propertyMetaData = parentElement.getType().getWildcardPropertyMetaData();
+                  }
+
+                  if(propertyMetaData == null)
+                  {
+                     propertyMetaData = element.getPropertyMetaData();
+                  }
+
                   /*
                   if(propertyMetaData == null)
                   {

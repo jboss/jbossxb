@@ -43,6 +43,7 @@ import org.apache.xerces.xs.XSModelGroupDefinition;
 import org.apache.xerces.xs.XSAttributeDeclaration;
 import org.apache.xerces.xs.XSAttributeUse;
 import org.apache.xerces.xs.XSAnnotation;
+import org.apache.xerces.xs.XSWildcard;
 import org.apache.xerces.dom3.bootstrap.DOMImplementationRegistry;
 
 /**
@@ -512,8 +513,7 @@ public class XsdBinder
             bindModelGroup(schema, (XSModelGroup)term, sharedElements);
             break;
          case XSConstants.WILDCARD:
-            TypeBinding typeBinding = peekType();
-            typeBinding.setSchemaResolver(schema);
+            bindWildcard(schema, (XSWildcard)term);
             break;
          case XSConstants.ELEMENT_DECLARATION:
             bindElement(schema,
@@ -524,6 +524,32 @@ public class XsdBinder
             break;
          default:
             throw new IllegalStateException("Unexpected term type: " + term.getType());
+      }
+   }
+
+   private static void bindWildcard(SchemaBinding schema, XSWildcard wildcard)
+   {
+      TypeBinding typeBinding = peekType();
+      typeBinding.setSchemaResolver(schema);
+
+      XSAnnotation annotation = wildcard.getAnnotation();
+      if(annotation != null)
+      {
+         XsdAnnotation xsdAn = XsdAnnotation.unmarshal(annotation.getAnnotationString());
+         XsdAppInfo appInfo = xsdAn.getAppInfo();
+         if(appInfo != null)
+         {
+            PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
+            if(propertyMetaData != null)
+            {
+               if(log.isTraceEnabled())
+               {
+                  log.trace("wildcard is bound to property: " + propertyMetaData.getName() +
+                     ", collectionType=" + propertyMetaData.getCollectionType());
+               }
+            }
+            typeBinding.setWildcardPropertyMetaData(propertyMetaData);
+         }
       }
    }
 

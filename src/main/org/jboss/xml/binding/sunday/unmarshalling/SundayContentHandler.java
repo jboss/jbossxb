@@ -19,6 +19,10 @@ import org.xml.sax.Attributes;
 import org.apache.xerces.xs.XSTypeDefinition;
 
 /**
+ * todo: to improve performance, consider gathering all the necessary binding metadata in startElement and
+ * pushing it instead of ElementBinding into elementStack to free the endElement implementation from
+ * re-gathering this same metadata again.
+ *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
@@ -155,7 +159,7 @@ public class SundayContentHandler
             {
                if(parentElement.getType().getSchemaResolver() != null)
                {
-                  // the parent has anyType, so it gets the value of its child
+                  // todo: review this> the parent has anyType, so it gets the value of its child
                   if(!objectStack.isEmpty())
                   {
                      objectStack.pop();

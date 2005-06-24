@@ -45,6 +45,7 @@ public class TypeBinding
    private TypeBinding baseType;
    private boolean skip;
    private CharactersMetaData charMetaData;
+   private PropertyMetaData wildcardPropertyMetaData;
 
    public TypeBinding()
    {
@@ -342,5 +343,20 @@ public class TypeBinding
    public void setCharactersMetaData(CharactersMetaData charMetaData)
    {
       this.charMetaData = charMetaData;
+   }
+
+   public boolean isWildcardElement(QName qName)
+   {
+      return !elements.containsKey(qName);
+   }
+
+   public PropertyMetaData getWildcardPropertyMetaData()
+   {
+      return wildcardPropertyMetaData;
+   }
+
+   public void setWildcardPropertyMetaData(PropertyMetaData wildcardPropertyMetaData)
+   {
+      this.wildcardPropertyMetaData = wildcardPropertyMetaData;
    }
 }

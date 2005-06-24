@@ -8,9 +8,7 @@ package org.jboss.xml.binding.sunday.unmarshalling;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.util.LinkedList;
 import javax.xml.namespace.QName;
-import org.jboss.xml.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xml.binding.metadata.PackageMetaData;
 import org.jboss.xml.binding.JBossXBRuntimeException;
 import org.jboss.xml.binding.Constants;
@@ -20,7 +18,7 @@ import org.jboss.xml.binding.Constants;
  * @version <tt>$Revision$</tt>
  */
 public class SchemaBinding
-   implements BindingCursor, SchemaBindingResolver
+   implements SchemaBindingResolver
 {
    private static final Map SIMPLE_TYPES = new HashMap();
 
@@ -80,7 +78,6 @@ public class SchemaBinding
 
    private Map types = new HashMap(SIMPLE_TYPES);
    private Map elements = new HashMap();
-   private LinkedList stack = new LinkedList();
    private PackageMetaData packageMetaData;
    private SchemaBindingResolver schemaResolver;
    private boolean strictSchema = true;
@@ -182,45 +179,6 @@ public class SchemaBinding
    public void setIgnoreLowLine(boolean ignoreLowLine)
    {
       this.ignoreLowLine = ignoreLowLine;
-   }
-
-   // BindingCursor implementation
-
-   public void startElement(String namespaceURI, String localName)
-   {
-      QName qName = new QName(namespaceURI, localName);
-      ElementBinding element;
-      if(stack.isEmpty())
-      {
-         element = (ElementBinding)elements.get(qName);
-      }
-      else
-      {
-         TypeBinding parentType = ((ElementBinding)stack.getLast()).getType();
-         element = parentType.getElement(qName);
-      }
-
-      if(element == null)
-      {
-         throw new JBossXBRuntimeException("Element is not bound: " + qName);
-      }
-
-      stack.addLast(element);
-   }
-
-   public void endElement(String namespaceURI, String localName)
-   {
-      stack.removeLast();
-   }
-
-   public Object getElementBinding()
-   {
-      return stack.getLast();
-   }
-
-   public Object getParentElementBinding()
-   {
-      return stack.size() > 1 ? stack.get(stack.size() - 2) : null;
    }
 
    // SchemaBindingResolver implementation

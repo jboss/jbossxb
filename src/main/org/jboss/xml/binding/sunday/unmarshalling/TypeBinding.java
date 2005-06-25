@@ -18,6 +18,7 @@ import org.jboss.xml.binding.metadata.ValueMetaData;
 import org.jboss.xml.binding.metadata.PropertyMetaData;
 import org.jboss.xml.binding.metadata.MapEntryMetaData;
 import org.jboss.xml.binding.metadata.CharactersMetaData;
+import org.jboss.xml.binding.metadata.AddMethodMetaData;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
 import org.jboss.xml.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 
@@ -46,6 +47,7 @@ public class TypeBinding
    private boolean skip;
    private CharactersMetaData charMetaData;
    private PropertyMetaData wildcardPropertyMetaData;
+   private AddMethodMetaData addMethodMetaData;
 
    public TypeBinding()
    {
@@ -358,5 +360,15 @@ public class TypeBinding
    public void setWildcardPropertyMetaData(PropertyMetaData wildcardPropertyMetaData)
    {
       this.wildcardPropertyMetaData = wildcardPropertyMetaData;
+   }
+
+   public void setAddMethodMetaData(AddMethodMetaData addMethodMetaData)
+   {
+      this.addMethodMetaData = addMethodMetaData;
+   }
+
+   public AddMethodMetaData getAddMethodMetaData()
+   {
+      return addMethodMetaData;
    }
 }

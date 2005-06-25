@@ -330,8 +330,10 @@ public class RtElementHandler
          }
          catch(RuntimeException e)
          {
-            throw new JBossXBRuntimeException("Container failed to create an instance for " + elementName +
-               ": " + e.getMessage(), e);
+            throw new JBossXBRuntimeException("Container failed to create an instance for " +
+               elementName +
+               ": " + e.getMessage(), e
+            );
          }
       }
       return o;
@@ -656,6 +658,32 @@ public class RtElementHandler
             else
             {
                AddMethodMetaData addMethodMetaData = element.getAddMethodMetaData();
+               PropertyMetaData propertyMetaData = null;
+               if(addMethodMetaData == null)
+               {
+                  if(parentElement != null && parentElement.getType().isWildcardElement(qName))
+                  {
+                     propertyMetaData = parentElement.getType().getWildcardPropertyMetaData();
+                  }
+
+                  if(propertyMetaData == null)
+                  {
+                     propertyMetaData = element.getPropertyMetaData();
+                  }
+
+                  /*
+                  if(propertyMetaData == null)
+                  {
+                     propertyMetaData = element.getType().getPropertyMetaData();
+                  }
+                  */
+
+                  if(propertyMetaData == null)
+                  {
+                     addMethodMetaData = element.getType().getAddMethodMetaData();
+                  }
+               }
+
                if(addMethodMetaData != null)
                {
                   Class valueType = Object.class;
@@ -678,6 +706,16 @@ public class RtElementHandler
                   }
                   else if(addMethodMetaData.isChildType())
                   {
+                     if(o == null)
+                     {
+                        throw new JBossXBRuntimeException(
+                           "addMethod=" +
+                           addMethodMetaData.getMethodName() +
+                           " for element " + qName +
+                           " is configured with valueType='child'. The valueType cannot be determined because" +
+                           " the child is null"
+                        );
+                     }
                      valueType = o.getClass();
                   }
 
@@ -724,24 +762,6 @@ public class RtElementHandler
                }
                else
                {
-                  PropertyMetaData propertyMetaData = null;
-                  if(parentElement != null && parentElement.getType().isWildcardElement(qName))
-                  {
-                     propertyMetaData = parentElement.getType().getWildcardPropertyMetaData();
-                  }
-
-                  if(propertyMetaData == null)
-                  {
-                     propertyMetaData = element.getPropertyMetaData();
-                  }
-
-                  /*
-                  if(propertyMetaData == null)
-                  {
-                     propertyMetaData = element.getType().getPropertyMetaData();
-                  }
-                  */
-
                   String propName = propertyMetaData == null ? null : propertyMetaData.getName();
                   if(propName == null)
                   {

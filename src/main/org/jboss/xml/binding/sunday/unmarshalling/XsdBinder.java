@@ -424,6 +424,18 @@ public class XsdBinder
                      }
                      binding.setPropertyMetaData(propertyMetaData);
                   }
+
+                  AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
+                  if(addMethodMetaData != null)
+                  {
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("complex type " + type.getName() +
+                           ": elements of this type will be added to parent objects with addMethod=" +
+                           addMethodMetaData.getMethodName() + ", valueType=" + addMethodMetaData.getValueType());
+                     }
+                     binding.setAddMethodMetaData(addMethodMetaData);
+                  }
                }
             }
          }

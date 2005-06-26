@@ -32,6 +32,8 @@ import java.util.TimeZone;
 public final class SimpleTypeBindings
    implements Serializable
 {
+   static final long serialVersionUID = 4372272109355825813L;
+   
    public static final String XS_ANYSIMPLETYPE_NAME = "anySimpleType";
 
    //

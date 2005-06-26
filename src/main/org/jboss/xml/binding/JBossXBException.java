@@ -12,7 +12,9 @@ package org.jboss.xml.binding;
  */
 public class JBossXBException
    extends Exception
-{
+{  
+   static final long serialVersionUID = 8229078720076583113L;
+
    public JBossXBException()
    {
    }

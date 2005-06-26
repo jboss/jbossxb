@@ -6,8 +6,6 @@
  */
 package org.jboss.xml.binding;
 
-import java.text.ParseException;
-
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>

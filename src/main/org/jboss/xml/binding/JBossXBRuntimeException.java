@@ -12,7 +12,9 @@ package org.jboss.xml.binding;
  */
 public class JBossXBRuntimeException
    extends RuntimeException
-{
+{  
+   static final long serialVersionUID = -33504134223704483L;
+
    public JBossXBRuntimeException()
    {
    }

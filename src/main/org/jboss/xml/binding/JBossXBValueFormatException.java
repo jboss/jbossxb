@@ -13,6 +13,8 @@ package org.jboss.xml.binding;
 public class JBossXBValueFormatException
    extends JBossXBRuntimeException
 {
+   static final long serialVersionUID = -3196504305414545949L;
+
    public JBossXBValueFormatException()
    {
    }

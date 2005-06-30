@@ -90,6 +90,7 @@ public class JBossEntityResolver implements EntityResolver
       registerEntity("-//JBoss//DTD JBOSS JCA Config 1.0//EN", "jboss-ds_1_0.dtd");
       registerEntity("-//JBoss//DTD JBOSS JCA Config 1.5//EN", "jboss-ds_1_5.dtd");
       registerEntity("http://www.jboss.org/j2ee/schema/security-config_4_0.xsd", "security-config_4_0.xsd");
+      registerEntity("http://www.jboss.com/ws-security/schema/jboss-ws-security_1_0.xsd", "jboss-ws-security_1_0.xsd");
       // xml
       registerEntity("-//W3C//DTD/XMLSCHEMA 200102//EN", "XMLSchema.dtd");
       registerEntity("datatypes", "datatypes.dtd"); // This dtd doesn't have a publicId - see XMLSchema.dtd

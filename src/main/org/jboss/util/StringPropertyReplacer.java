@@ -1,12 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util;
 
 import java.util.Properties;
@@ -14,11 +11,12 @@ import java.util.Properties;
 /**
  * A utility class for replacing properties in strings. 
  *
- * @version <tt>$Revision$</tt>
- * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @author <a href="Scott.Stark@jboss.org">Scott Stark</a>
  * @author <a href="claudio.vesco@previnet.it">Claudio Vesco</a>
- * @author  <a href="mailto:adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="mailto:adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="mailto:dimitris@jboss.org">Dimitris Andreadis</a>
+ * @version <tt>$Revision$</tt> 
  */
 public final class StringPropertyReplacer
 {
@@ -44,14 +42,19 @@ public final class StringPropertyReplacer
 
    /**
     * Go through the input string and replace any occurance of ${p} with
-    * the System.getProperty(p) value. If there is no such property p defined, then
-    * the ${p} reference will remain unchanged. If the property reference is
-    * of the form ${p:v} and there is no such property p, then the default
-    * value v will be returned.
+    * the System.getProperty(p) value. If there is no such property p defined,
+    * then the ${p} reference will remain unchanged.
+    * 
+    * If the property reference is of the form ${p:v} and there is no such property p,
+    * then the default value v will be returned.
+    * 
+    * If the property reference is of the form ${p1,p2} or ${p1,p2:v} then
+    * the primary and the secondary properties will be tried in turn, before
+    * returning either the unchanged input, or the default value.
+    * 
     * The property ${/} is replaced with System.getProperty("file.separator")
-    * value and the property ${:} is replaced with
-    * system.getProperty("path.separator").
-    *
+    * value and the property ${:} is replaced with System.getProperty("path.separator").
+    * 
     * @param string - the string with possible ${} references
     * @return the input string with all property references replaced if any.
     *    If there are no valid references the input string will be returned.
@@ -63,10 +66,18 @@ public final class StringPropertyReplacer
 
    /**
     * Go through the input string and replace any occurance of ${p} with
-    * the System.getProperty(p) value. If there is no such property p defined, then
-    * the ${p} reference will remain unchanged. The property ${/} is replaced with
-    * System.getProperty("file.separator") value and the property ${:} is replaced with
-    * system.getProperty("path.separator").
+    * the props.getProperty(p) value. If there is no such property p defined,
+    * then the ${p} reference will remain unchanged.
+    * 
+    * If the property reference is of the form ${p:v} and there is no such property p,
+    * then the default value v will be returned.
+    * 
+    * If the property reference is of the form ${p1,p2} or ${p1,p2:v} then
+    * the primary and the secondary properties will be tried in turn, before
+    * returning either the unchanged input, or the default value.
+    * 
+    * The property ${/} is replaced with System.getProperty("file.separator")
+    * value and the property ${:} is replaced with System.getProperty("path.separator").
     *
     * @param string - the string with possible ${} references
     * @param props - the source for ${x} property ref values
@@ -125,18 +136,32 @@ public final class StringPropertyReplacer
                }
                else
                {
-                  // check from System properties
+                  // check from the properties
                   value = props.getProperty(key);
-                  if( value == null )
+                  
+                  if (value == null)
                   {
                      // Check for a default value ${key:default}
                      int colon = key.indexOf(':');
-                     if( colon > 0 )
+                     if (colon > 0)
                      {
                         String realKey = key.substring(0, colon);
-                        value = System.getProperty(realKey);
-                        if( value == null )
-                           value = key.substring(colon+1);
+                        value = props.getProperty(realKey);
+                        
+                        if (value == null)
+                        {
+                           // Check for a composite key, "key1,key2"                           
+                           value = resolveCompositeKey(realKey, props);
+                        
+                           // Not a composite key either, use the specified default
+                           if (value == null)
+                              value = key.substring(colon+1);
+                        }
+                     }
+                     else
+                     {
+                        // No default, check for a composite key, "key1,key2"
+                        value = resolveCompositeKey(key, props);
                      }
                   }
                }
@@ -162,5 +187,42 @@ public final class StringPropertyReplacer
 
       // Done
       return buffer.toString();
+   }
+   
+   /**
+    * Try to resolve a "key" from the provided properties by
+    * checking if it is actually a "key1,key2", in which case
+    * try first "key1", then "key2". If all fails, return null.
+    * 
+    * It also accepts "key1," and ",key2".
+    * 
+    * @param key the key to resolve
+    * @param props the properties to use
+    * @return the resolved key or null
+    */
+   private static String resolveCompositeKey(String key, Properties props)
+   {
+      String value = null;
+      
+      // Look for the comma
+      int comma = key.indexOf(',');
+      if (comma > -1)
+      {
+         // If we have a first part, try resolve it
+         if (comma > 0)
+         {  
+            // Check the first part
+            String key1 = key.substring(0, comma);
+            value = props.getProperty(key1);            
+         }
+         // Check the second part, if there is one and first lookup failed
+         if (value == null && comma < key.length() - 1)
+         {
+            String key2 = key.substring(comma + 1);
+            value = props.getProperty(key2);
+         }         
+      }
+      // Return whatever we've found or null
+      return value;
    }
 }

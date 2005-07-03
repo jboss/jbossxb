@@ -746,6 +746,6 @@ public class XercesXsMarshaller
             is = particle.getMaxOccursUnbounded() || particle.getMaxOccurs() > 1;
          }
       }
-      return true;
+      return is;
    }
 }

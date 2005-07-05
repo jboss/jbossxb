@@ -241,7 +241,7 @@ public class MuLong
     * @throws ClassCastException    Object is not a MuLong.
     */
    public int compareTo(Object obj) {
-      return compareTo((MuLong)obj);
+      return compareTo(((MuLong)obj).value);
    }
 
    /**

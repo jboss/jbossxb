@@ -262,7 +262,7 @@ public class MuByte
     * @throws ClassCastException    Object is not a MuByte.
     */
    public int compareTo(Object obj) throws ClassCastException {
-      return compareTo((MuByte)obj);
+      return compareTo(((MuByte)obj).value);
    }
 
    /**

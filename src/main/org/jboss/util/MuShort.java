@@ -262,7 +262,7 @@ public class MuShort
     * @throws ClassCastException    Object is not a MuShort.
     */
    public int compareTo(Object obj) {
-      return compareTo((MuShort)obj);
+      return compareTo(((MuShort)obj).value);
    }
 
    /**

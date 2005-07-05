@@ -168,7 +168,7 @@ public class MuDouble
     * @throws ClassCastException    Object is not a MuDouble.
     */
    public int compareTo(Object obj) {
-      return compareTo((MuDouble)obj);
+      return compareTo(((MuDouble)obj).value);
    }
 
    /**

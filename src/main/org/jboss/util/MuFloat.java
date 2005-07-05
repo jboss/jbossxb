@@ -168,7 +168,7 @@ public class MuFloat
     * @throws ClassCastException    Object is not a MuFloat.
     */
    public int compareTo(Object obj) {
-      return compareTo((MuFloat)obj);
+      return compareTo(((MuFloat)obj).value);
    }
 
    /**

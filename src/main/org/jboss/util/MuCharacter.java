@@ -99,7 +99,7 @@ public class MuCharacter
     * @throws ClassCastException    Object is not a MuCharacter.
     */
    public int compareTo(Object obj) {
-      return compareTo((MuCharacter)obj);
+      return compareTo(((MuCharacter)obj).value);
    }
 
    /**

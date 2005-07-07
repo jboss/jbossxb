@@ -143,6 +143,14 @@
       </fileset>
     </jar>
 
+     <!-- Build browsing.jar -->
+     <jar jarfile="${build.lib}/jboss-archive-browsing.jar"
+       manifest="${build.etc}/default.mf">
+       <fileset dir="${build.classes}">
+         <include name="org/jboss/util/file/*"/>
+       </fileset>
+     </jar>
+
     <!--
        | JBoss/Testsuite Support
      -->

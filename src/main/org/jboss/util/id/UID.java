@@ -9,7 +9,7 @@
 
 package org.jboss.util.id;
 
-import org.jboss.util.MuLong;
+import EDU.oswego.cs.dl.util.concurrent.SynchronizedLong;
 
 /**
  * A unique identifier (uniqueness only guarantied inside of the virtual
@@ -39,7 +39,7 @@ public class UID
    implements ID
 {
    /** A counter for generating identity values */
-   protected static final MuLong COUNTER = new MuLong(0);
+   protected static final SynchronizedLong COUNTER = new SynchronizedLong(0);
 
    /** The time portion of the UID */
    protected final long time;
@@ -52,9 +52,7 @@ public class UID
     */
    public UID() {
       time = System.currentTimeMillis();
-      synchronized (COUNTER) {
-         id = COUNTER.increment();
-      }
+      id = COUNTER.increment();
    }
 
    /**

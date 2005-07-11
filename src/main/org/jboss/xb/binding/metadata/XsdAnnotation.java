@@ -493,7 +493,12 @@ public class XsdAnnotation
                             Attributes attrs)
       {
          Object element = null;
-         if("schema".equals(localName))
+         if("schemaBindings".equals(localName))
+         {
+            element = new SchemaMetaData();
+         }
+         // Legacy schema element name change to schemaBindings for jaxb consistency
+         else if("schema".equals(localName))
          {
             element = new SchemaMetaData();
          }

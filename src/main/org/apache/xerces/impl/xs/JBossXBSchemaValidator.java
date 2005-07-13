@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -12,7 +12,8 @@ import org.apache.xerces.xni.XMLAttributes;
 import org.apache.xerces.xs.XSElementDeclaration;
 
 /**
- * This class extends the XMLSchemaValidator from Xerces-2 distribution to give access to package protected instance variables.
+ * This class extends the XMLSchemaValidator from Xerces-2 distribution to give
+ * access to package protected instance variables.
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
@@ -32,6 +33,7 @@ public class JBossXBSchemaValidator
 
    public XSElementDeclaration getCurrentElementDelcaration()
    {
-      return this.fCurrentElemDecl;
+      // this.fCurrentElemDecl is not longer accessible in xerces 2.7.0
+      return null;
    }
 }

@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -178,9 +178,7 @@ public class XniJBossXBParser
       }
       catch(Exception e)
       {
-         String msg = "Failed to parse document " + systemId;
-         log.error(msg, e);
-         throw new JBossXBException(msg, e);
+         throw new JBossXBException("Failed to parse document " + systemId, e);
       }
    }
 
@@ -193,15 +191,9 @@ public class XniJBossXBParser
       {
          parser.parse(xmlSource);
       }
-      catch(RuntimeException re)
-      {
-        throw re;
-      }
       catch(Exception e)
       {
-         String msg = "Failed to parse document";
-         log.error(msg, e);
-         throw new JBossXBException(msg, e);
+         throw new JBossXBException("Failed to parse document", e);
       }
    }
 
@@ -216,9 +208,7 @@ public class XniJBossXBParser
       }
       catch(Exception e)
       {
-         String msg = "Failed to parse document";
-         log.error(msg, e);
-         throw new JBossXBException(msg, e);
+         throw new JBossXBException("Failed to parse document", e);
       }
    }
 

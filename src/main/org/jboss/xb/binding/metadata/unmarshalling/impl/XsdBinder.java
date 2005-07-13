@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -30,7 +30,7 @@ import org.apache.xerces.xs.XSParticle;
 import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSModelGroup;
 import org.apache.xerces.xs.XSObjectList;
-import org.apache.xerces.dom3.bootstrap.DOMImplementationRegistry;
+import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 
 import javax.xml.namespace.QName;
 import java.util.Collection;
@@ -202,7 +202,20 @@ public class XsdBinder
    private static XSImplementation getXSImplementation()
    {
       // Get DOM Implementation using DOM Registry
-      System.setProperty(DOMImplementationRegistry.PROPERTY, "org.apache.xerces.dom.DOMXSImplementationSourceImpl");
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      try
+      {
+         // Try the 2.6.2 version
+         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
+         Class c = loader.loadClass(name);
+         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
+      }
+      catch(ClassNotFoundException e)
+      {
+         // Try the 2.7.0 version
+         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
+         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
+      }
 
       XSImplementation impl;
       try

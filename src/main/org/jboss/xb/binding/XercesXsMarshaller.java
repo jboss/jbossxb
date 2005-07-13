@@ -1,12 +1,11 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
  */
 package org.jboss.xb.binding;
 
-import org.apache.xerces.dom3.bootstrap.DOMImplementationRegistry;
 import org.apache.xerces.xs.XSAttributeDeclaration;
 import org.apache.xerces.xs.XSAttributeUse;
 import org.apache.xerces.xs.XSComplexTypeDefinition;
@@ -27,6 +26,7 @@ import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.jboss.logging.Logger;
 import org.xml.sax.SAXException;
 import org.w3c.dom.ls.LSInput;
+import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.namespace.QName;
@@ -718,7 +718,20 @@ public class XercesXsMarshaller
    private static XSImplementation getXSImplementation()
    {
       // Get DOM Implementation using DOM Registry
-      System.setProperty(DOMImplementationRegistry.PROPERTY, "org.apache.xerces.dom.DOMXSImplementationSourceImpl");
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      try
+      {
+         // Try the 2.6.2 version
+         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
+         Class c = loader.loadClass(name);
+         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
+      }
+      catch(ClassNotFoundException e)
+      {
+         // Try the 2.7.0 version
+         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
+         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
+      }
 
       XSImplementation impl;
       try

@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -15,6 +15,7 @@ import org.jboss.xb.binding.metadata.unmarshalling.DocumentBindingFactory;
 import org.jboss.xb.binding.metadata.unmarshalling.DocumentBindingStack;
 import org.jboss.xb.binding.metadata.unmarshalling.impl.RuntimeDocumentBinding;
 import org.jboss.xb.binding.parser.JBossXBParser;
+import org.jboss.xb.binding.parser.sax.SaxJBossXBParser;
 import org.jboss.xb.binding.parser.xni.XniJBossXBParser;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler;
@@ -42,8 +43,8 @@ public class UnmarshallerImpl
    public UnmarshallerImpl()
       throws JBossXBException
    {
-      //parser = new SaxJBossXBParser();
-      parser = new XniJBossXBParser();
+      parser = new SaxJBossXBParser();
+      //parser = new XniJBossXBParser();
 
       parser.setFeature(VALIDATION, true);
       parser.setFeature(SCHEMA_VALIDATION, true);

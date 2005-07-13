@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -11,6 +11,9 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 import javax.xml.namespace.QName;
+
+import org.w3c.dom.bootstrap.DOMImplementationRegistry;
+
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -44,7 +47,6 @@ import org.apache.xerces.xs.XSAttributeDeclaration;
 import org.apache.xerces.xs.XSAttributeUse;
 import org.apache.xerces.xs.XSAnnotation;
 import org.apache.xerces.xs.XSWildcard;
-import org.apache.xerces.dom3.bootstrap.DOMImplementationRegistry;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -822,7 +824,20 @@ public class XsdBinder
    private static XSImplementation getXSImplementation()
    {
       // Get DOM Implementation using DOM Registry
-      System.setProperty(DOMImplementationRegistry.PROPERTY, "org.apache.xerces.dom.DOMXSImplementationSourceImpl");
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      try
+      {
+         // Try the 2.6.2 version
+         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
+         Class c = loader.loadClass(name);
+         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
+      }
+      catch(ClassNotFoundException e)
+      {
+         // Try the 2.7.0 version
+         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
+         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
+      }
 
       XSImplementation impl;
       try

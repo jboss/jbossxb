@@ -9,6 +9,7 @@ package org.jboss.util.xml;
 // $Id$
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 
 import org.w3c.dom.Attr;
@@ -48,6 +49,22 @@ public class DOMWriter
       this.canonical = canonical;
    }
 
+   public static String printNode(Node node)
+   {
+      StringWriter strw = new StringWriter();
+      DOMWriter writer = new DOMWriter(strw);
+      writer.print(node);
+      return strw.toString();
+   }
+
+   public static String printNode(Node node, boolean prettyprint)
+   {
+      StringWriter strw = new StringWriter();
+      DOMWriter writer = new DOMWriter(strw);
+      writer.print(node, prettyprint);
+      return strw.toString();
+   }
+   
    public void print(Node node)
    {
       printInternal(node, false);

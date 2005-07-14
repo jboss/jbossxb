@@ -41,10 +41,7 @@ public class DocumentEditor
     */
    public String getAsText()
    {
-      StringWriter sw = new StringWriter();
-      DOMWriter dw = new DOMWriter(sw);
-      dw.print((Node)getValue());
-      return sw.toString();
+      return DOMWriter.printNode((Node)getValue());
    }
 
    /**

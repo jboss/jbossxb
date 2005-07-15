@@ -87,8 +87,8 @@ public class XsdBinder
    }
    /**
     * Create a SchemaBinding from and xsd stream.
-    * @param xsdStream
-    * @param encoding
+    * @param xsdStream - the xsd InputStream
+    * @param encoding - optional stream encoding
     * @return SchemaBinding mapping
     */ 
    public static final SchemaBinding bind(InputStream xsdStream, String encoding)
@@ -98,8 +98,8 @@ public class XsdBinder
    }
    /**
     * Create a SchemaBinding from and xsd reader.
-    * @param xsdReader
-    * @param encoding
+    * @param xsdReader - xsd reader
+    * @param encoding - optional reader encoding
     * @return SchemaBinding mapping
     */ 
    public static final SchemaBinding bind(Reader xsdReader, String encoding)
@@ -107,6 +107,18 @@ public class XsdBinder
       XSModel model = loadSchema(xsdReader, encoding);
       return bind(model);
    }
+   /**
+    * Create a SchemaBinding from and xsd string.
+    * @param xsd - xsd string
+    * @param encoding - optional string encoding
+    * @return SchemaBinding mapping
+    */ 
+   public static final SchemaBinding bind(String xsd, String encoding)
+   {
+      XSModel model = loadSchema(xsd, encoding);
+      return bind(model);
+   }
+
    public static final SchemaBinding bind(XSModel model)
    {      
       SchemaBinding schema = getXsdBinding().schemaBinding;
@@ -866,8 +878,18 @@ public class XsdBinder
    }
    private static XSModel loadSchema(Reader reader, String encoding)
    {
-      log.debug("loading xsd from InputStream");
+      log.debug("loading xsd from Reader");
       LSInputAdaptor input = new LSInputAdaptor(reader, encoding);
+
+      XSImplementation impl = getXSImplementation();
+      XSLoader schemaLoader = impl.createXSLoader(null);
+      XSModel model = schemaLoader.load(input);
+      return model;
+   }
+   private static XSModel loadSchema(String data, String encoding)
+   {
+      log.debug("loading xsd from string");
+      LSInputAdaptor input = new LSInputAdaptor(data, encoding);
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);

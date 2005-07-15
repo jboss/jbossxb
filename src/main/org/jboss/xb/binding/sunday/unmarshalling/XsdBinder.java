@@ -10,6 +10,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
+import java.io.Reader;
+import java.io.InputStream;
 import javax.xml.namespace.QName;
 
 import org.w3c.dom.bootstrap.DOMImplementationRegistry;
@@ -73,9 +75,40 @@ public class XsdBinder
    {
    }
 
+   /**
+    * Create a SchemaBinding from and xsd url/uri.
+    * @param xsdUrl
+    * @return SchemaBinding mapping
+    */ 
    public static final SchemaBinding bind(String xsdUrl)
    {
       XSModel model = loadSchema(xsdUrl);
+      return bind(model);
+   }
+   /**
+    * Create a SchemaBinding from and xsd stream.
+    * @param xsdStream
+    * @param encoding
+    * @return SchemaBinding mapping
+    */ 
+   public static final SchemaBinding bind(InputStream xsdStream, String encoding)
+   {
+      XSModel model = loadSchema(xsdStream, encoding);
+      return bind(model);
+   }
+   /**
+    * Create a SchemaBinding from and xsd reader.
+    * @param xsdReader
+    * @param encoding
+    * @return SchemaBinding mapping
+    */ 
+   public static final SchemaBinding bind(Reader xsdReader, String encoding)
+   {
+      XSModel model = loadSchema(xsdReader, encoding);
+      return bind(model);
+   }
+   public static final SchemaBinding bind(XSModel model)
+   {      
       SchemaBinding schema = getXsdBinding().schemaBinding;
 
       // read annotations. for now just log the ones that are going to be used
@@ -806,6 +839,7 @@ public class XsdBinder
 
    // Private
 
+   
    private static XSModel loadSchema(String xsdURL)
    {
       log.debug("loading xsd: " + xsdURL);
@@ -818,6 +852,26 @@ public class XsdBinder
          throw new IllegalArgumentException("Invalid URI for schema: " + xsdURL);
       }
 
+      return model;
+   }
+   private static XSModel loadSchema(InputStream is, String encoding)
+   {
+      log.debug("loading xsd from InputStream");
+      LSInputAdaptor input = new LSInputAdaptor(is, encoding);
+
+      XSImplementation impl = getXSImplementation();
+      XSLoader schemaLoader = impl.createXSLoader(null);
+      XSModel model = schemaLoader.load(input);
+      return model;
+   }
+   private static XSModel loadSchema(Reader reader, String encoding)
+   {
+      log.debug("loading xsd from InputStream");
+      LSInputAdaptor input = new LSInputAdaptor(reader, encoding);
+
+      XSImplementation impl = getXSImplementation();
+      XSLoader schemaLoader = impl.createXSLoader(null);
+      XSModel model = schemaLoader.load(input);
       return model;
    }
 

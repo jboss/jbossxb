@@ -280,7 +280,7 @@ public final class DOMUtils
 
    /** Gets child elements
     */
-   public static List getChildElements(Node node)
+   public static Iterator getChildElements(Node node)
    {
       ArrayList list = new ArrayList();
       NodeList nlist = node.getChildNodes();
@@ -290,7 +290,7 @@ public final class DOMUtils
          if (child.getNodeType() == Node.ELEMENT_NODE)
             list.add(child);
       }
-      return list;
+      return list.iterator();
    }
 
    /** Get the concatenated text content, or null.
@@ -319,32 +319,62 @@ public final class DOMUtils
       return getFirstChildElementIntern(node, null);
    }
 
-   /** Gets the first child element for a given name
+   /** Gets the first child element for a given local name without namespace
     */
    public static Element getFirstChildElement(Node node, String nodeName)
    {
       return getFirstChildElementIntern(node, new QName(nodeName));
    }
-   
-   /** Gets the first child element for a given name
+
+   /** Gets the first child element for a given qname
     */
    public static Element getFirstChildElement(Node node, QName nodeName)
    {
       return getFirstChildElementIntern(node, nodeName);
    }
-   
+
    private static Element getFirstChildElementIntern(Node node, QName nodeName)
    {
       Element childElement = null;
-      Iterator it = getChildElements(node).iterator();
-      while (childElement == null && it.hasNext())
+      Iterator it = getChildElementsIntern(node, nodeName);
+      if (it.hasNext())
       {
-         Element el = (Element)it.next();
-         QName elementName = new QName(el.getNamespaceURI(), el.getLocalName());
-         if (nodeName == null || nodeName.equals(elementName))
-            childElement = (Element)el;
+         childElement = (Element)it.next();
       }
       return childElement;
+   }
+
+   /** Gets the child elements for a given local name without namespace
+    */
+   public static Iterator getChildElements(Node node, String nodeName)
+   {
+      return getChildElementsIntern(node, new QName(nodeName));
+   }
+
+   /** Gets the child element for a given qname
+    */
+   public static Iterator getChildElements(Node node, QName nodeName)
+   {
+      return getChildElementsIntern(node, nodeName);
+   }
+
+   private static Iterator getChildElementsIntern(Node node, QName nodeName)
+   {
+      ArrayList list = new ArrayList();
+      NodeList nlist = node.getChildNodes();
+      for (int i = 0; i < nlist.getLength(); i++)
+      {
+         Node child = nlist.item(i);
+         if (child.getNodeType() == Node.ELEMENT_NODE)
+         {
+            QName qname = new QName(child.getNamespaceURI(), child.getLocalName());
+            if (nodeName == null || qname.equals(nodeName))
+            {
+               list.add(child);
+            }
+         }
+      }
+      return list.iterator();
    }
 
    /** Gets parent element or null if there is none

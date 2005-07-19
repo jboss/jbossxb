@@ -35,6 +35,17 @@ public abstract class CharactersHandler
    {
    };
 
+   public Object unmarshalEmpty(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, ValueMetaData valueMetaData)
+   {
+      Object result = null;
+      QName typeQName = typeBinding.getQName();
+      if(Constants.QNAME_STRING.equals(typeQName))
+      {
+         result = "";
+      }
+      return result;
+   }
+
    public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, ValueMetaData valueMetaData, String value)
    {
       Object o;

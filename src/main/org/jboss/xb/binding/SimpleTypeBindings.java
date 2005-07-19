@@ -1089,7 +1089,17 @@ public final class SimpleTypeBindings
       }
       else if(typeCode == XS_DATETIME)
       {
-         Calendar c = (Calendar)value;
+         Calendar c;
+         if(value.getClass() == java.util.Date.class)
+         {
+            c = Calendar.getInstance();
+            c.clear();
+            c.setTime((java.util.Date)value);
+         }
+         else
+         {
+            c = (Calendar)value;
+         }
          result = marshalDateTime(c);
       }
       else if(typeCode == XS_QNAME)

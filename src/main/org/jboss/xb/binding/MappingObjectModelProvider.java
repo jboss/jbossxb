@@ -26,6 +26,17 @@ public class MappingObjectModelProvider
    private final Map classMappings = new HashMap();
    private final Map fieldMappings = new HashMap();
    private boolean ignoreLowLine = true;
+   private boolean ignoreNotFoundField = true;
+
+   public boolean isIgnoreNotFoundField()
+   {
+      return ignoreNotFoundField;
+   }
+
+   public void setIgnoreNotFoundField(boolean ignoreNotFoundField)
+   {
+      this.ignoreNotFoundField = ignoreNotFoundField;
+   }
 
    public void mapClassToElement(Class cls, String namespaceURI, String localName, ObjectModelProvider provider)
    {
@@ -133,9 +144,18 @@ public class MappingObjectModelProvider
             }
             catch(NoSuchFieldException e1)
             {
-               if(log.isDebugEnabled())
+               if(ignoreNotFoundField)
                {
-                  log.debug("getChildren: found neither getter nor field for " + localName + " in " + o.getClass());
+                  if(log.isTraceEnabled())
+                  {
+                     log.trace("getChildren: found neither getter nor field for " + localName + " in " + o.getClass());
+                  }
+               }
+               else
+               {
+                  throw new JBossXBRuntimeException(
+                     "getChildren: found neither getter nor field for " + localName + " in " + o.getClass()
+                  );
                }
             }
          }

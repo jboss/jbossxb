@@ -105,18 +105,20 @@ public class RtUtil
       }
       else if(fieldType.isArray() && !value.getClass().isArray())
       {
-         Object[] arr = (Object[])get(o, getter, field);
+         Object arr = get(o, getter, field);
+         int length = 0;
          if(arr == null)
          {
-            arr = (Object[])Array.newInstance(fieldType.getComponentType(), 1);
+            arr = Array.newInstance(fieldType.getComponentType(), 1);
          }
          else
          {
-            Object[] tmp = arr;
-            arr = (Object[])Array.newInstance(fieldType.getComponentType(), tmp.length + 1);
-            System.arraycopy(tmp, 0, arr, 0, tmp.length);
+            Object tmp = arr;
+            length = Array.getLength(arr);
+            arr = Array.newInstance(fieldType.getComponentType(), length + 1);
+            System.arraycopy(tmp, 0, arr, 0, length);
          }
-         arr[arr.length - 1] = value;
+         Array.set(arr, length, value);
          set(o, arr, setter, field);
       }
       else

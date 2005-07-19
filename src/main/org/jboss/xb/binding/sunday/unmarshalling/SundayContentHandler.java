@@ -32,6 +32,8 @@ public class SundayContentHandler
 {
    private final static Logger log = Logger.getLogger(SundayContentHandler.class);
 
+   private final static Object NIL = new Object();
+
    private final SchemaBinding schema;
    private final StackImpl elementStack = new StackImpl();
    private final StackImpl objectStack = new StackImpl();
@@ -63,70 +65,91 @@ public class SundayContentHandler
          TypeBinding typeBinding = elementBinding.getType();
          List elementHandlers = elementBinding.getInterceptors();
 
-         //
-         // characters
-         //
-
-         if(textContent.length() > 0)
+         if(o != NIL)
          {
-            String dataContent = textContent.toString();
-            textContent.delete(0, textContent.length());
+            //
+            // characters
+            //
 
             CharactersHandler simpleType = typeBinding.getSimpleType();
-            Object unmarshalled;
-
-            if(simpleType == null)
+            if(textContent.length() > 0 || simpleType != null)
             {
-               if(schema.isStrictSchema())
+               String dataContent;
+               if(textContent.length() == 0)
                {
-                  throw new JBossXBRuntimeException("Element " +
-                     endName +
-                     " type binding " +
-                     typeBinding.getQName() +
-                     " does not include text content binding ('" + dataContent
-                  );
+                  dataContent = null;
                }
-               unmarshalled = dataContent;
-            }
-            else
-            {
-               ValueMetaData valueMetaData = elementBinding.getValueMetaData();
-               if(valueMetaData == null)
+               else
                {
-                  valueMetaData = typeBinding.getValueMetaData();
+                  dataContent = textContent.toString();
+                  textContent.delete(0, textContent.length());
+               }
+
+               Object unmarshalled;
+
+               if(simpleType == null)
+               {
+                  if(schema.isStrictSchema())
+                  {
+                     throw new JBossXBRuntimeException("Element " +
+                        endName +
+                        " type binding " +
+                        typeBinding.getQName() +
+                        " does not include text content binding ('" + dataContent
+                     );
+                  }
+                  unmarshalled = dataContent;
+               }
+               else
+               {
+                  ValueMetaData valueMetaData = elementBinding.getValueMetaData();
                   if(valueMetaData == null)
                   {
-                     CharactersMetaData charactersMetaData = typeBinding.getCharactersMetaData();
-                     if(charactersMetaData != null)
+                     valueMetaData = typeBinding.getValueMetaData();
+                     if(valueMetaData == null)
                      {
-                        valueMetaData = charactersMetaData.getValue();
+                        CharactersMetaData charactersMetaData = typeBinding.getCharactersMetaData();
+                        if(charactersMetaData != null)
+                        {
+                           valueMetaData = charactersMetaData.getValue();
+                        }
                      }
                   }
-               }
-               // todo valueMetaData is available from typeBinding
-               unmarshalled = simpleType.unmarshal(endName, typeBinding, nsRegistry, valueMetaData, dataContent);
-            }
-            
-            // if startElement returned null, we use characters as the object for this element
-            // todo subject to refactoring
-            if(o == null)
-            {
-               o = unmarshalled;
-            }
-            else if(simpleType != null)
-            {
-               simpleType.setValue(endName, elementBinding, o, unmarshalled);
-            }
 
-            // todo interceptors get dataContent?
-            int i = elementHandlers.size();
-            while(i-- > 0)
-            {
-               ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-               interceptor.characters(objectStack.peek(elementHandlers.size() - 1 - i),
-                  endName, typeBinding, nsRegistry, dataContent
-               );
+                  // todo valueMetaData is available from typeBinding
+                  unmarshalled = dataContent == null ?
+                     simpleType.unmarshalEmpty(endName, typeBinding, nsRegistry, valueMetaData) :
+                     simpleType.unmarshal(endName, typeBinding, nsRegistry, valueMetaData, dataContent);
+               }
+
+               if(unmarshalled != null)
+               {
+                  // if startElement returned null, we use characters as the object for this element
+                  // todo subject to refactoring
+                  if(o == null)
+                  {
+                     o = unmarshalled;
+                  }
+                  else if(simpleType != null)
+                  {
+                     simpleType.setValue(endName, elementBinding, o, unmarshalled);
+                  }
+               }
+               
+               // todo interceptors get dataContent?
+               int i = elementHandlers.size();
+               while(i-- > 0)
+               {
+                  ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
+                  interceptor.characters(objectStack.peek(elementHandlers.size() - 1 - i),
+                     endName, typeBinding, nsRegistry, dataContent
+                  );
+               }
             }
+         }
+         else
+         {
+            o = null;
          }
 
          //
@@ -238,11 +261,11 @@ public class SundayContentHandler
          }
          else
          {
-            o = null;
+            o = NIL;
          }
          objectStack.push(o);
 
-         if(o != null)
+         if(o != null && o != NIL)
          {
             typeBinding.attributes(o, startName, binding, atts, nsRegistry);
          }

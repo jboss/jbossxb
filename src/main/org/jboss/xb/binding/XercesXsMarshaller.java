@@ -38,7 +38,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Arrays;
+import java.lang.reflect.Array;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -296,7 +296,27 @@ public class XercesXsMarshaller
             }
             else if(value.getClass().isArray())
             {
-               i = Arrays.asList((Object[])value).iterator();
+               final Object arr = value;
+               i = new Iterator()
+               {
+                  private int curInd = 0;
+                  private int length = Array.getLength(arr);
+
+                  public boolean hasNext()
+                  {
+                     return curInd < length;
+                  }
+
+                  public Object next()
+                  {
+                     return Array.get(arr, curInd++);
+                  }
+
+                  public void remove()
+                  {
+                     throw new UnsupportedOperationException("remove is not implemented.");
+                  }
+               };
             }
             else if(value instanceof Iterator)
             {
@@ -363,6 +383,8 @@ public class XercesXsMarshaller
                                   XSSimpleTypeDefinition type,
                                   boolean declareNs)
    {
+      String prefix = (String)prefixByUri.get(elementUri);
+      String qName = createQName(prefix, elementLocal);
       AttributesImpl attrs = null;
 
       Object value = stack.peek();
@@ -375,14 +397,20 @@ public class XercesXsMarshaller
 
          if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) || SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
          {
-            QName qName = (QName)value;
-            String prefix = qName.getPrefix();
+            QName qNameValue = (QName)value;
+            String prefixValue = qNameValue.getPrefix();
+            if(prefixValue.equals(prefix))
+            {
+               // how to best resolve this conflict?
+               prefixValue += 'x';
+            }
+
             attrs = new AttributesImpl(1);
             attrs.add(null,
-               prefix,
-               prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix,
+               prefixValue,
+               prefixValue.length() == 0 ? "xmlns" : "xmlns:" + prefixValue,
                null,
-               qName.getNamespaceURI()
+               qNameValue.getNamespaceURI()
             );
          }
       }
@@ -390,9 +418,6 @@ public class XercesXsMarshaller
       {
          marshalled = value.toString();
       }
-
-      String prefix = (String)prefixByUri.get(elementUri);
-      String qName = createQName(prefix, elementLocal);
 
       if(declareNs && prefixByUri.size() > 0)
       {
@@ -723,7 +748,7 @@ public class XercesXsMarshaller
       {
          // Try the 2.6.2 version
          String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
-         Class c = loader.loadClass(name);
+         loader.loadClass(name);
          System.setProperty(DOMImplementationRegistry.PROPERTY, name);
       }
       catch(ClassNotFoundException e)

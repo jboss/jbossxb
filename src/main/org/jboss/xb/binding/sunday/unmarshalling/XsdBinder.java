@@ -85,6 +85,7 @@ public class XsdBinder
       XSModel model = loadSchema(xsdUrl);
       return bind(model);
    }
+
    /**
     * Create a SchemaBinding from and xsd stream.
     * @param xsdStream - the xsd InputStream
@@ -96,6 +97,7 @@ public class XsdBinder
       XSModel model = loadSchema(xsdStream, encoding);
       return bind(model);
    }
+
    /**
     * Create a SchemaBinding from and xsd reader.
     * @param xsdReader - xsd reader
@@ -107,6 +109,7 @@ public class XsdBinder
       XSModel model = loadSchema(xsdReader, encoding);
       return bind(model);
    }
+
    /**
     * Create a SchemaBinding from and xsd string.
     * @param xsd - xsd string
@@ -148,6 +151,7 @@ public class XsdBinder
          }
       }
 
+      /*
       XSTypeDefinition anyType = model.getTypeDefinition(Constants.QNAME_ANYTYPE.getLocalPart(),
          Constants.QNAME_ANYTYPE.getNamespaceURI()
       );
@@ -155,10 +159,11 @@ public class XsdBinder
       {
          throw new JBossXBRuntimeException("Unable to get a refence to " + Constants.QNAME_ANYTYPE);
       }
+      */
 
       SharedElements sharedElements = new SharedElements();
       // this is just caching of the reference to easier compare types at runtime
-      sharedElements.anyType = anyType;
+      //sharedElements.anyType = anyType;
 
       XSNamedMap groups = model.getComponents(XSConstants.MODEL_GROUP_DEFINITION);
       for(int i = 0; i < groups.getLength(); ++i)
@@ -851,7 +856,6 @@ public class XsdBinder
 
    // Private
 
-   
    private static XSModel loadSchema(String xsdURL)
    {
       log.debug("loading xsd: " + xsdURL);
@@ -866,6 +870,7 @@ public class XsdBinder
 
       return model;
    }
+
    private static XSModel loadSchema(InputStream is, String encoding)
    {
       log.debug("loading xsd from InputStream");
@@ -876,6 +881,7 @@ public class XsdBinder
       XSModel model = schemaLoader.load(input);
       return model;
    }
+
    private static XSModel loadSchema(Reader reader, String encoding)
    {
       log.debug("loading xsd from Reader");
@@ -886,6 +892,7 @@ public class XsdBinder
       XSModel model = schemaLoader.load(input);
       return model;
    }
+
    private static XSModel loadSchema(String data, String encoding)
    {
       log.debug("loading xsd from string");
@@ -905,7 +912,7 @@ public class XsdBinder
       {
          // Try the 2.6.2 version
          String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
-         Class c = loader.loadClass(name);
+         loader.loadClass(name);
          System.setProperty(DOMImplementationRegistry.PROPERTY, name);
       }
       catch(ClassNotFoundException e)
@@ -948,7 +955,7 @@ public class XsdBinder
    private static final class SharedElements
    {
       private Map elements = Collections.EMPTY_MAP;
-      private XSTypeDefinition anyType;
+      //private XSTypeDefinition anyType;
 
       public void add(XSElementDeclaration element)
       {

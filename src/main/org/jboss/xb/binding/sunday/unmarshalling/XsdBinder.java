@@ -344,7 +344,7 @@ public class XsdBinder
          for(int i = 0; i < attrs.getLength(); ++i)
          {
             XSAttributeUse attr = (XSAttributeUse)attrs.item(i);
-            bindAttributes(doc, binding, attr.getAttrDeclaration());
+            bindAttributes(doc, binding, attr);
          }
 
          // customize binding with xsd annotations
@@ -505,12 +505,18 @@ public class XsdBinder
 
    private static void bindAttributes(SchemaBinding doc,
                                       TypeBinding type,
-                                      XSAttributeDeclaration attr)
+                                      XSAttributeUse attrUse)
    {
+      XSAttributeDeclaration attr = attrUse.getAttrDeclaration();
       XSSimpleTypeDefinition attrType = attr.getTypeDefinition();
       TypeBinding typeBinding = bindSimpleType(doc, attrType);
       QName attrName = new QName(attr.getNamespace(), attr.getName());
       AttributeBinding binding = type.addAttribute(attrName, typeBinding, RtAttributeHandler.INSTANCE);
+      if( attrUse.getConstraintType() == XSConstants.VC_DEFAULT )
+      {
+         // Associate the default value with the binding
+         binding.setDefaultConstraint(attrUse.getConstraintValue());
+      }
 
       XSAnnotation an = attr.getAnnotation();
       if(an != null)

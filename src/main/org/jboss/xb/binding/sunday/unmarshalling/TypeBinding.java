@@ -13,6 +13,7 @@ import java.util.Iterator;
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
+import org.xml.sax.helpers.AttributesImpl;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ClassMetaData;
@@ -32,6 +33,7 @@ public class TypeBinding
    private Map elements = Collections.EMPTY_MAP;
    private QName arrayItemQName;
    private ElementBinding arrayItem;
+   /** Map<QName, AttributeBinding>  */
    private Map attrs = Collections.EMPTY_MAP;
    private ElementHandler handler = RtElementHandler.INSTANCE;
    private CharactersHandler simpleType;
@@ -150,6 +152,51 @@ public class TypeBinding
    public AttributeBinding getAttribute(QName qName)
    {
       return (AttributeBinding)attrs.get(qName);
+   }
+
+   /**
+    * Go through the type attributes to see if there are any with defaults
+    * that do not appears in the attrs list.
+    * 
+    * @param attrs - the attributes seen in the document
+    * @return a possibly augmented list that includes unspecified attributes
+    *    with default values.
+    */ 
+   public Attributes expandWithDefaultAttributes(Attributes attrs)
+   {
+      if( this.attrs.size() == 0 )
+         return attrs;
+
+      // Map<QName, AttributeBinding>
+      HashMap attrsNotSeen = new HashMap(this.attrs);
+      for(int n = 0; n < attrs.getLength(); n ++)
+      {
+         QName name = new QName(attrs.getQName(n));
+         attrsNotSeen.remove(name);
+      }
+
+      Attributes expandedAttrs = attrs;
+      if( attrsNotSeen.size() > 0 )
+      {
+         AttributesImpl tmp = new AttributesImpl(attrs);         
+         Iterator iter = attrsNotSeen.entrySet().iterator();
+         while( iter.hasNext() )
+         {
+            Map.Entry entry = (Map.Entry) iter.next();
+            QName name = (QName) entry.getKey();
+            AttributeBinding binding = (AttributeBinding) entry.getValue();
+            String constraint = binding.getDefaultConstraint();
+            if( constraint != null )
+            {
+               QName typeName = binding.getType().getQName();
+               tmp.addAttribute(name.getNamespaceURI(), name.getLocalPart(),
+                  name.toString(), typeName.toString(), constraint);
+            }
+         }
+         expandedAttrs = tmp;
+      }
+
+      return expandedAttrs;
    }
 
    public AttributeBinding addAttribute(QName name, TypeBinding type, AttributeHandler handler)

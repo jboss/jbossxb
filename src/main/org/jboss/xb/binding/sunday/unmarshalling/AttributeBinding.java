@@ -20,6 +20,8 @@ public class AttributeBinding
    private AttributeHandler handler;
    private PropertyMetaData propertyMetaData;
    private ValueMetaData valueMetaData;
+   /** The default="value" constraint for the attribute */
+   private String defaultConstraint;
    private boolean mapEntryKey;
    private boolean mapEntryValue;
 
@@ -83,6 +85,15 @@ public class AttributeBinding
    public void setMapEntryValue(boolean mapEntryValue)
    {
       this.mapEntryValue = mapEntryValue;
+   }
+
+   public String getDefaultConstraint()
+   {
+      return defaultConstraint;
+   }
+   public void setDefaultConstraint(String value)
+   {
+      defaultConstraint = value;
    }
 
    public SchemaBinding getSchema()

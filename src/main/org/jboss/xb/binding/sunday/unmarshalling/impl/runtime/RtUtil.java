@@ -39,7 +39,15 @@ public class RtUtil
       try
       {
          String methodBase = Character.toUpperCase(prop.charAt(0)) + prop.substring(1);
-         getter = cls.getMethod("get" + methodBase, null);
+         try
+         {
+            getter = cls.getMethod("get" + methodBase, null);
+         }
+         catch(NoSuchMethodException e)
+         {
+            getter = cls.getMethod("is" + methodBase, null);
+         }
+
          fieldType = getter.getReturnType();
          setter = cls.getMethod("set" + methodBase, new Class[]{fieldType});
       }

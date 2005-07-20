@@ -171,7 +171,7 @@ public class TypeBinding
       HashMap attrsNotSeen = new HashMap(this.attrs);
       for(int n = 0; n < attrs.getLength(); n ++)
       {
-         QName name = new QName(attrs.getQName(n));
+         QName name = new QName(attrs.getURI(n), attrs.getLocalName(n));
          attrsNotSeen.remove(name);
       }
 

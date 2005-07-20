@@ -91,6 +91,7 @@ public class AttributeBinding
    {
       return defaultConstraint;
    }
+
    public void setDefaultConstraint(String value)
    {
       defaultConstraint = value;

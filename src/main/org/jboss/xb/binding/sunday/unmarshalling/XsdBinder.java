@@ -570,6 +570,11 @@ public class XsdBinder
             msg += " type=" + attrType.getName() + ", owner type=" + type.getQName();
          }
 
+         if(binding.getDefaultConstraint() != null)
+         {
+            msg += ", default=" + binding.getDefaultConstraint();
+         }
+
          log.trace(msg);
       }
    }

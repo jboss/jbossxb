@@ -592,7 +592,18 @@ public final class Classes
     */
    public final static Method getAttributeGetter(Class cls, String attr) throws NoSuchMethodException
    {
-      String getterName = "get" + Character.toUpperCase(attr.charAt(0)) + attr.substring(1);
+      try
+      {
+         String getterName = "get" + Character.toUpperCase(attr.charAt(0)) + attr.substring(1);
+         return cls.getMethod(getterName, null);
+      }
+      catch (NoSuchMethodException e)
+      {
+         // ignore
+      }
+      
+      // Try a possible boolean isFoo() getter
+      String getterName = "is" + Character.toUpperCase(attr.charAt(0)) + attr.substring(1);
       return cls.getMethod(getterName, null);
    }
 

@@ -624,6 +624,11 @@ public final class SimpleTypeBindings
 
    public static Object unmarshal(String xsdType, String value, NamespaceContext nsCtx)
    {
+      if (xsdType == null)
+         throw new IllegalArgumentException("Schema type cannot be null");
+      if (value == null)
+         throw new IllegalArgumentException("Value string cannot be null");
+      
       int typeCode = xsdType.hashCode();
       Object result;
       if(typeCode == XS_INT)

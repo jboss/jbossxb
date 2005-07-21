@@ -178,7 +178,7 @@ public class MappingObjectModelProvider
          log.error("Failed to provide value for " + localName + " from " + o, e);
       }
 
-      if(value != null && mapping != null)
+      if(value != null && mapping != null && mapping.converter != null)
       {
          value = mapping.converter.marshal(value);
       }

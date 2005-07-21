@@ -175,14 +175,24 @@ public class MappingObjectModelProvider
          {
             value = getter.invoke(o, null);
          }
-         else if(field != null && (!forComplexType || forComplexType && !writeAsValue(field.getType())))
+      }
+      catch(Exception e)
+      {
+         log.error("Cannot invoke getter '" + getter + "' on object: " + o);
+         throw new IllegalStateException("Failed to provide value for " + localName + " from " + o, e);
+      }
+      
+      try
+      {
+         if(field != null && (!forComplexType || forComplexType && !writeAsValue(field.getType())))
          {
             value = field.get(o);
          }
       }
       catch(Exception e)
       {
-         log.error("Failed to provide value for " + localName + " from " + o, e);
+         log.error("Cannot invoke field '" + field + "' on object: " + o);
+         throw new IllegalStateException("Failed to provide value for " + localName + " from " + o, e);
       }
 
       if(value != null && mapping != null && mapping.converter != null)

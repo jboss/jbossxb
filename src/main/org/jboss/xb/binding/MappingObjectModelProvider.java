@@ -125,7 +125,14 @@ public class MappingObjectModelProvider
       final FieldToElementMapping mapping = (FieldToElementMapping)fieldMappings.get(localName);
       if(mapping != null)
       {
-         getter = mapping.getter;
+         if(mapping.getter != null)
+         {
+            getter = mapping.getter;
+         }
+         else
+         {
+            field = mapping.field;
+         }
       }
       else
       {
@@ -259,12 +266,13 @@ public class MappingObjectModelProvider
    private class FieldToElementMapping
    {
       public final Class cls;
-      public final String field;
+      public final String fieldName;
       public final String namespaceURI;
       public final String localName;
       public final TypeBinding converter;
       public final Method getter;
       public final Method setter;
+      public final Field field;
 
       public FieldToElementMapping(Class cls,
                                    String field,
@@ -273,28 +281,37 @@ public class MappingObjectModelProvider
                                    TypeBinding converter)
       {
          this.cls = cls;
-         this.field = field;
+         this.fieldName = field;
          this.namespaceURI = namespaceURI;
          this.localName = localName;
          this.converter = converter;
 
-         try
-         {
-            getter = Classes.getAttributeGetter(cls, field);
-         }
-         catch(NoSuchMethodException e)
-         {
-            throw new IllegalStateException("Getter not found for " + field + " in class " + cls.getName());
-         }
+         Method localGetter = null;
+         Method localSetter = null;
+         Field localField = null;
 
          try
          {
-            setter = Classes.getAttributeSetter(cls, field, getter.getReturnType());
+            localGetter = Classes.getAttributeGetter(cls, field);
+            localSetter = Classes.getAttributeSetter(cls, field, localGetter.getReturnType());
          }
          catch(NoSuchMethodException e)
          {
-            throw new IllegalStateException("Setter not found for " + field + " in class " + cls.getName());
+            try
+            {
+               localField = cls.getField(field);
+            }
+            catch(NoSuchFieldException e1)
+            {
+               throw new JBossXBRuntimeException(
+                  "Neither getter/setter pair nor field where found for " + field + " in " + cls
+               );
+            }
          }
+
+         this.getter = localGetter;
+         this.setter = localSetter;
+         this.field = localField;
       }
 
       public boolean equals(Object o)
@@ -314,7 +331,7 @@ public class MappingObjectModelProvider
          {
             return false;
          }
-         if(field != null ? !field.equals(fieldToElementMapping.field) : fieldToElementMapping.field != null)
+         if(fieldName != null ? !fieldName.equals(fieldToElementMapping.fieldName) : fieldToElementMapping.fieldName != null)
          {
             return false;
          }
@@ -338,7 +355,7 @@ public class MappingObjectModelProvider
       {
          int result;
          result = (cls != null ? cls.hashCode() : 0);
-         result = 29 * result + (field != null ? field.hashCode() : 0);
+         result = 29 * result + (fieldName != null ? fieldName.hashCode() : 0);
          result = 29 * result + (namespaceURI != null ? namespaceURI.hashCode() : 0);
          result = 29 * result + (localName != null ? localName.hashCode() : 0);
          return result;

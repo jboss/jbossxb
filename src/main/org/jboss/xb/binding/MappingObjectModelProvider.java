@@ -14,6 +14,8 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.HashMap;
 
+import javax.xml.namespace.QName;
+
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
@@ -54,7 +56,8 @@ public class MappingObjectModelProvider
                                  TypeBinding converter)
    {
       FieldToElementMapping mapping = new FieldToElementMapping(cls, field, namespaceURI, localName, converter);
-      fieldMappings.put(mapping.localName, mapping);
+      String mappingKey = cls.getName() + ":" + localName;
+      fieldMappings.put(mappingKey, mapping);
    }
 
    public boolean isIgnoreLowLine()
@@ -122,7 +125,8 @@ public class MappingObjectModelProvider
       Method getter = null;
       Field field = null;
 
-      final FieldToElementMapping mapping = (FieldToElementMapping)fieldMappings.get(localName);
+      String mappingKey = o.getClass().getName() + ":" + localName;
+      final FieldToElementMapping mapping = (FieldToElementMapping)fieldMappings.get(mappingKey);
       if(mapping != null)
       {
          if(mapping.getter != null)
@@ -228,6 +232,11 @@ public class MappingObjectModelProvider
          this.namespaceURI = namespaceURI;
          this.localName = localName;
          this.provider = provider;
+         
+         if (log.isTraceEnabled())
+         {
+            log.trace("new ClassToElementMapping: [cls=" + cls.getName() + ",qname=" + new QName(namespaceURI, localName) + "]");
+         }
       }
 
       public boolean equals(Object o)
@@ -296,6 +305,11 @@ public class MappingObjectModelProvider
          this.localName = localName;
          this.converter = converter;
 
+         if (log.isTraceEnabled())
+         {
+            log.trace("new FieldToElementMapping: [cls=" + cls.getName() + ",field=" + field + ",qname=" + new QName(namespaceURI, localName) + "]");
+         }
+         
          Method localGetter = null;
          Method localSetter = null;
          Field localField = null;

@@ -111,7 +111,7 @@ public class RtUtil
 
          col.add(value);
       }
-      else if(fieldType.isArray() && !value.getClass().isArray())
+      else if(fieldType.isArray() && value != null && !value.getClass().isArray())
       {
          Object arr = get(o, getter, field);
          int length = 0;

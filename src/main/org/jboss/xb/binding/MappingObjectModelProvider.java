@@ -6,6 +6,8 @@
  */
 package org.jboss.xb.binding;
 
+// $Id$
+
 import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 
@@ -147,26 +149,45 @@ public class MappingObjectModelProvider
          }
          catch(NoSuchMethodException e)
          {
+            // ignore
+         }
+
+         // Try boolean getter
+         if (getter == null)
+         {
+            String booleanGetterStr = "is" + getterStr.substring(3);
+            try
+            {
+               getter = o.getClass().getMethod(booleanGetterStr, null);
+            }
+            catch (NoSuchMethodException e)
+            {
+               // ignore
+            }
+         }
+         
+         // Try field access
+         if (getter == null)
+         {
             String attr = Util.xmlNameToClassName(localName, ignoreLowLine);
             attr = Character.toLowerCase(attr.charAt(0)) + attr.substring(1);
             try
             {
                field = o.getClass().getField(attr);
             }
-            catch(NoSuchFieldException e1)
+            catch (NoSuchFieldException e1)
             {
-               if(ignoreNotFoundField)
+               if (ignoreNotFoundField)
                {
-                  if(log.isTraceEnabled())
+                  if (log.isTraceEnabled())
                   {
                      log.trace("getChildren: found neither getter nor field for " + localName + " in " + o.getClass());
                   }
                }
                else
                {
-                  throw new JBossXBRuntimeException(
-                     "getChildren: found neither getter nor field for " + localName + " in " + o.getClass()
-                  );
+                  throw new JBossXBRuntimeException("getChildren: found neither getter nor field for " + localName + " in "
+                        + o.getClass());
                }
             }
          }
@@ -183,9 +204,7 @@ public class MappingObjectModelProvider
       catch(Exception e)
       {
          log.error("Cannot invoke getter '" + getter + "' on object: " + o);
-         IllegalStateException ise = new IllegalStateException("Failed to provide value for " + localName + " from " + o);
-         ise.initCause(e);
-         throw ise;
+         throw new JBossXBRuntimeException("Failed to provide value for " + localName + " from " + o, e);
       }
       
       try
@@ -198,9 +217,7 @@ public class MappingObjectModelProvider
       catch(Exception e)
       {
          log.error("Cannot invoke field '" + field + "' on object: " + o);
-         IllegalStateException ise = new IllegalStateException("Failed to provide value for " + localName + " from " + o);
-         ise.initCause(e);
-         throw ise;
+         throw new JBossXBRuntimeException("Failed to provide value for " + localName + " from " + o, e);
       }
 
       if(value != null && mapping != null && mapping.converter != null)

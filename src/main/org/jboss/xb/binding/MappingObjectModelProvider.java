@@ -198,7 +198,9 @@ public class MappingObjectModelProvider
       catch(Exception e)
       {
          log.error("Cannot invoke field '" + field + "' on object: " + o);
-         throw new IllegalStateException("Failed to provide value for " + localName + " from " + o, e);
+         IllegalStateException ise = new IllegalStateException("Failed to provide value for " + localName + " from " + o);
+         ise.initCause(e);
+         throw ise;
       }
 
       if(value != null && mapping != null && mapping.converter != null)

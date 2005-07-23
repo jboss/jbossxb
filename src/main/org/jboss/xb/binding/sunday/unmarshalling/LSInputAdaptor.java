@@ -36,15 +36,17 @@ public class LSInputAdaptor
       this.systemId = systemId;
       this.baseURI = baseURI;
    }
-   public LSInputAdaptor(InputStream is, String encoding)
+   public LSInputAdaptor(InputStream is, String encoding, String baseURI)
    {
       setByteStream(is);
       setEncoding(encoding);
+      setBaseURI(baseURI);
    }
-   public LSInputAdaptor(Reader charStream, String encoding)
+   public LSInputAdaptor(Reader charStream, String encoding, String baseURI)
    {
       this.setCharacterStream(charStream);
       setEncoding(encoding);
+      setBaseURI(baseURI);
    }
    public LSInputAdaptor(String data, String encoding)
    {

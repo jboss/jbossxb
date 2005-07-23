@@ -233,7 +233,7 @@ public class SundayContentHandler
          parentBinding = (ElementBinding)elementStack.peek();
          if(parentBinding != null)
          {
-            binding = parentBinding.getType().getElement(startName);
+            binding = parentBinding.getType().getElement(startName, atts);
          }
       }
 

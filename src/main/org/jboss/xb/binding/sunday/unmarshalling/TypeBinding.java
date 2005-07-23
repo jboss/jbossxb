@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Iterator;
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
+import javax.xml.XMLConstants;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.AttributesImpl;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
@@ -97,11 +99,24 @@ public class TypeBinding
 
    public ElementBinding getElement(QName name)
    {
+      return getElement(name, null);
+   }
+   public ElementBinding getElement(QName name, Attributes atts)
+   {
       ElementBinding element = (ElementBinding)elements.get(name);
       if(element == null && schemaResolver != null)
       {
          // this is wildcard handling
-         SchemaBinding schema = schemaResolver.resolve(name.getNamespaceURI(), name.getLocalPart());
+         SchemaBinding schema = null;
+         if( schemaResolver != null )
+         {
+            String schemaLocation = atts.getValue(
+               XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI,
+               "schemaLocation");
+            schema = schemaResolver.resolve(name.getNamespaceURI(),
+               name.getLocalPart(), schemaBinding.getBaseURI(), schemaLocation);
+         }
+
          if(schema != null)
          {
             element = schema.getElement(name);

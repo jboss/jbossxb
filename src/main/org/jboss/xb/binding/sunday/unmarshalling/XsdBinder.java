@@ -31,6 +31,7 @@ import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.metadata.XsdAnnotation;
 import org.jboss.xb.binding.metadata.XsdAppInfo;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtAttributeHandler;
+import org.jboss.util.xml.JBossEntityResolver;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSLoader;
@@ -83,7 +84,7 @@ public class XsdBinder
    public static final SchemaBinding bind(String xsdUrl)
    {
       XSModel model = loadSchema(xsdUrl);
-      return bind(model);
+      return bind(model, xsdUrl);
    }
 
    /**
@@ -92,10 +93,11 @@ public class XsdBinder
     * @param encoding - optional stream encoding
     * @return SchemaBinding mapping
     */ 
-   public static final SchemaBinding bind(InputStream xsdStream, String encoding)
+   public static final SchemaBinding bind(InputStream xsdStream, String encoding,
+      String baseURI)
    {
-      XSModel model = loadSchema(xsdStream, encoding);
-      return bind(model);
+      XSModel model = loadSchema(xsdStream, encoding, baseURI);
+      return bind(model, baseURI);
    }
 
    /**
@@ -104,10 +106,11 @@ public class XsdBinder
     * @param encoding - optional reader encoding
     * @return SchemaBinding mapping
     */ 
-   public static final SchemaBinding bind(Reader xsdReader, String encoding)
+   public static final SchemaBinding bind(Reader xsdReader, String encoding,
+      String baseURI)
    {
-      XSModel model = loadSchema(xsdReader, encoding);
-      return bind(model);
+      XSModel model = loadSchema(xsdReader, encoding, baseURI);
+      return bind(model, baseURI);
    }
 
    /**
@@ -123,8 +126,15 @@ public class XsdBinder
    }
 
    public static final SchemaBinding bind(XSModel model)
-   {      
+   {
+      return bind(model, null);
+   }
+   public static final SchemaBinding bind(XSModel model, String baseURI)
+   {
       SchemaBinding schema = getXsdBinding().schemaBinding;
+      DefaultSchemaResolver resolver = new DefaultSchemaResolver(new JBossEntityResolver());
+      schema.setSchemaResolver(resolver);
+      schema.setBaseURI(baseURI);
 
       // read annotations. for now just log the ones that are going to be used
       XSObjectList annotations = model.getAnnotations();
@@ -882,10 +892,10 @@ public class XsdBinder
       return model;
    }
 
-   private static XSModel loadSchema(InputStream is, String encoding)
+   private static XSModel loadSchema(InputStream is, String encoding, String baseURI)
    {
       log.debug("loading xsd from InputStream");
-      LSInputAdaptor input = new LSInputAdaptor(is, encoding);
+      LSInputAdaptor input = new LSInputAdaptor(is, encoding, baseURI);
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
@@ -893,10 +903,10 @@ public class XsdBinder
       return model;
    }
 
-   private static XSModel loadSchema(Reader reader, String encoding)
+   private static XSModel loadSchema(Reader reader, String encoding, String baseURI)
    {
       log.debug("loading xsd from Reader");
-      LSInputAdaptor input = new LSInputAdaptor(reader, encoding);
+      LSInputAdaptor input = new LSInputAdaptor(reader, encoding, baseURI);
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);

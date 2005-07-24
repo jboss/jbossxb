@@ -9,6 +9,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 import java.util.LinkedList;
 import java.util.List;
 import javax.xml.namespace.QName;
+import javax.xml.XMLConstants;
 
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.NamespaceRegistry;
@@ -231,6 +232,20 @@ public class SundayContentHandler
       if(elementStack.isEmpty())
       {
          binding = schema.getElement(startName);
+         if( binding == null )
+         {
+            /* This can happen when an empty SchemaBinding was used to kick
+            start the unmarshalling. The actual document schema needs to be
+            obtained based on the first element's namespace.
+            */
+            String schemaLocation = atts.getValue(
+               XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI,
+               "schemaLocation");
+            SchemaBinding nextSchema = schema.resolve(namespaceURI, localName,
+               schema.getBaseURI(), schemaLocation);
+            if( nextSchema != null )
+               binding = nextSchema.getElement(startName);
+         }
       }
       else
       {

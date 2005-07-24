@@ -9,14 +9,19 @@ package org.jboss.util.xml;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.stream.StreamResult;
 
 import org.jboss.logging.Logger;
 import org.w3c.dom.Attr;
@@ -32,6 +37,7 @@ import org.xml.sax.SAXException;
  * DOM2 utilites
  *
  * @author Thomas.Diesler@jboss.org
+ * @version $Revision$
  */
 public final class DOMUtils
 {
@@ -401,5 +407,44 @@ public final class DOMUtils
    public static void setOwnerDocument(Document doc)
    {
       documentThreadLocal.set(doc);
+   }
+
+   /**
+    * A utility method that transforms the contents of the argument element into
+    * a StringBuffer representation that can be reparsed.
+    * 
+    * @param element - the parent dom element whose contents are to be extracted
+    *    as an xml document string. 
+    * @return the xml document string.
+    * 
+    * @throws IOException
+    * @throws TransformerException
+    */ 
+   public static StringBuffer getElementContent(Element element)
+      throws IOException, TransformerException
+   {
+      NodeList children = element.getChildNodes();
+      Element content = null;
+      for(int n = 0; n < children.getLength(); n ++)
+      {
+         Node node = children.item(n);
+         if( node.getNodeType() == Node.ELEMENT_NODE )
+         {
+            content = (Element) node;
+            break;
+         }
+      }
+      if( content == null )
+         return null;
+
+      // Get a parsable representation of this elements content
+      DOMSource source = new DOMSource(content);
+      TransformerFactory tFactory = TransformerFactory.newInstance();
+      Transformer transformer = tFactory.newTransformer();
+      StringWriter sw = new StringWriter();
+      StreamResult result = new StreamResult(sw);
+      transformer.transform(source, result);
+      sw.close();
+      return sw.getBuffer();
    }
 }

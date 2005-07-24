@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.HashMap;
 
 /**
+ * Metadata for the SchemaBinding instance.
+ * 
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
@@ -18,7 +20,16 @@ public class SchemaMetaData
 {
    private PackageMetaData packageMetaData;
    private Map values = Collections.EMPTY_MAP;
+   private boolean ignoreUnresolvedFieldOrClass = true;
 
+   public boolean isIgnoreUnresolvedFieldOrClass()
+   {
+      return ignoreUnresolvedFieldOrClass;
+   }
+   public void setIgnoreUnresolvedFieldOrClass(boolean flag)
+   {
+      this.ignoreUnresolvedFieldOrClass = flag;
+   }
 
    public PackageMetaData getPackage()
    {

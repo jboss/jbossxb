@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -351,7 +351,14 @@ public class XsdAnnotation
                              Attributes attrs)
       {
          Object child = null;
-         if("package".equals(localName))
+         // schemaBindings/ignoreUnresolvedFieldOrClass
+         if( "ignoreUnresolvedFieldOrClass".equals(localName) )
+         {
+            // Just return the parent
+            child = null;
+         }
+         // schemaBindings/package
+         else if("package".equals(localName))
          {
             child = new PackageMetaData();
             setAttributes(child, attrs, new AttributeSetter()
@@ -483,7 +490,17 @@ public class XsdAnnotation
 
       public void setValue(Object o, UnmarshallingContext ctx, String namespaceURI, String localName, String value)
       {
-         log.warn("setValue: " + localName + "=" + value);
+         // schemaBindings/ignoreUnresolvedFieldOrClass
+         if( "ignoreUnresolvedFieldOrClass".equals(localName) )
+         {
+            SchemaMetaData schema = (SchemaMetaData) o;
+            Boolean flag = Boolean.valueOf(value);
+            schema.setIgnoreUnresolvedFieldOrClass(flag.booleanValue());
+         }
+         else
+         {
+            log.warn("setValue: " + localName + "=" + value);
+         }
       }
 
       public Object newRoot(Object root,

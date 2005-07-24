@@ -21,6 +21,7 @@ public class SchemaMetaData
    private PackageMetaData packageMetaData;
    private Map values = Collections.EMPTY_MAP;
    private boolean ignoreUnresolvedFieldOrClass = true;
+   private boolean replacePropertyRefs = true;
 
    public boolean isIgnoreUnresolvedFieldOrClass()
    {
@@ -29,6 +30,15 @@ public class SchemaMetaData
    public void setIgnoreUnresolvedFieldOrClass(boolean flag)
    {
       this.ignoreUnresolvedFieldOrClass = flag;
+   }
+
+   public boolean isReplacePropertyRefs()
+   {
+      return replacePropertyRefs;
+   }
+   public void setReplacePropertyRefs(boolean flag)
+   {
+      this.replacePropertyRefs = flag;
    }
 
    public PackageMetaData getPackage()

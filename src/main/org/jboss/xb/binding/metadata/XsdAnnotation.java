@@ -497,6 +497,13 @@ public class XsdAnnotation
             Boolean flag = Boolean.valueOf(value);
             schema.setIgnoreUnresolvedFieldOrClass(flag.booleanValue());
          }
+         // schemaBindings/replacePropertyRefs
+         else if( "replacePropertyRefs".equals(localName) )
+         {
+            SchemaMetaData schema = (SchemaMetaData) o;
+            Boolean flag = Boolean.valueOf(value);
+            schema.setReplacePropertyRefs(flag.booleanValue());
+         }
          else
          {
             log.warn("setValue: " + localName + "=" + value);

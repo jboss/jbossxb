@@ -16,6 +16,7 @@ import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.logging.Logger;
+import org.jboss.util.StringPropertyReplacer;
 import org.xml.sax.Attributes;
 import org.apache.xerces.xs.XSTypeDefinition;
 
@@ -81,7 +82,10 @@ public class SundayContentHandler
                }
                else
                {
+                  
                   dataContent = textContent.toString();
+                  if( schema.isReplacePropertyRefs() )
+                     dataContent = StringPropertyReplacer.replaceProperties(dataContent);
                   textContent.delete(0, textContent.length());
                }
 

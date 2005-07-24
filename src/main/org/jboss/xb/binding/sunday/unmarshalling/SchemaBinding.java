@@ -85,6 +85,7 @@ public class SchemaBinding
    private boolean strictSchema = true;
    private boolean ignoreUnresolvedFieldOrClass = true;
    private boolean ignoreLowLine = true;
+   private boolean replacePropertyRefs = true;
    private String baseURI;
 
    public TypeBinding getType(QName qName)
@@ -168,6 +169,19 @@ public class SchemaBinding
    public void setIgnoreUnresolvedFieldOrClass(boolean ignoreUnresolvedFieldOrClass)
    {
       this.ignoreUnresolvedFieldOrClass = ignoreUnresolvedFieldOrClass;
+   }
+
+   public boolean isReplacePropertyRefs()
+   {
+      return replacePropertyRefs;
+   }
+   /**
+    * 
+    * @param flag
+    */ 
+   public void setReplacePropertyRefs(boolean flag)
+   {
+      this.replacePropertyRefs = flag;
    }
 
    public boolean isIgnoreLowLine()

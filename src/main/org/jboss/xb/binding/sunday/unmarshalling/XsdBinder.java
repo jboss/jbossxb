@@ -150,6 +150,8 @@ public class XsdBinder
             {
                // Get the ignoreUnresolvedFieldOrClass
                schema.setIgnoreUnresolvedFieldOrClass(schemaBindings.isIgnoreUnresolvedFieldOrClass());
+               // Get the ignoreUnresolvedFieldOrClass
+               schema.setReplacePropertyRefs(schemaBindings.isReplacePropertyRefs());
                // Get the default package
                PackageMetaData packageMetaData = schemaBindings.getPackage();
                if(packageMetaData != null)

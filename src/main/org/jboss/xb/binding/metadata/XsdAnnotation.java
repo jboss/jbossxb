@@ -351,14 +351,8 @@ public class XsdAnnotation
                              Attributes attrs)
       {
          Object child = null;
-         // schemaBindings/ignoreUnresolvedFieldOrClass
-         if( "ignoreUnresolvedFieldOrClass".equals(localName) )
-         {
-            // Just return the parent
-            child = null;
-         }
          // schemaBindings/package
-         else if("package".equals(localName))
+         if("package".equals(localName))
          {
             child = new PackageMetaData();
             setAttributes(child, attrs, new AttributeSetter()
@@ -449,7 +443,12 @@ public class XsdAnnotation
          }
          else
          {
-            log.warn("newChild: " + localName);
+            // Log a warning for any unexpected elements
+            if( "ignoreUnresolvedFieldOrClass".equals(localName) == false
+               && "replacePropertyRefs".equals(localName) == false )
+            {
+               log.warn("newChild: " + localName);
+            }
          }
          return child;
       }

@@ -1,12 +1,10 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
  */
 package org.jboss.xb.binding;
-
-// $Id$
 
 import org.jboss.logging.Logger;
 import org.jboss.util.Classes;

@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -8,8 +8,8 @@ package org.jboss.xb.binding;
 
 import org.xml.sax.Attributes;
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xb.binding.parser.JBossXBParser;
+import org.jboss.xb.binding.metadata.unmarshalling.BindingCursor;
 import org.apache.xerces.xs.XSTypeDefinition;
 
 import javax.xml.namespace.QName;
@@ -24,7 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * An instance of this class translates SAX events into org.jboss.xb.binding.GenericObjectModelFactory calls
+ * An instance of this class translates SAX events into org.jboss.xml.binding.GenericObjectModelFactory calls
  * such as newChild, addChild and setValue.
  * WARN: this implementation is not thread-safe!
  *

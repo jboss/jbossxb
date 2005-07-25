@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -21,7 +21,7 @@ import org.xml.sax.Attributes;
  * Each <code>newChild</code> method must have five arguments:
  * <ol>
  * <li>parent object of a concrete Java type (not <code>java.lang.Object</code>) for this new child</li>
- * <li>instance of <code>org.jboss.xb.binding.UnmarshallingContext</code></li>
+ * <li>instance of <code>org.jboss.xml.binding.UnmarshallingContext</code></li>
  * <li>namespace URI of the child XML element as <code>java.lang.String</code></li>
  * <li>local name of the child XML element as <code>java.lang.String</code></li>
  * <li>attributes of the child XML element as <code>org.xml.sax.Attributes</code></li>
@@ -39,7 +39,7 @@ import org.xml.sax.Attributes;
  * <li>parent object of a conrete Java type (not <code>java.lang.Object</code>) of the child</li>
  * <li>child object of a concrete Java type (returned earlier by the <code>newChild</code>
  * method that was called when parsing of this child XML element started)</li>
- * <li>instance of <code>org.jboss.xb.binding.UnmarshallingContext</code></li>
+ * <li>instance of <code>org.jboss.xml.binding.UnmarshallingContext</code></li>
  * <li>namespace URI for the child XML element <code>as java.lang.String</code></li>
  * <li>local name for the child XML element as <code>java.lang.String</code></li>
  * </ol>
@@ -55,7 +55,7 @@ import org.xml.sax.Attributes;
  * <li>an object of a concrete Java type (not <code>java.lang.Object</code>) which was returned earlier
  * by the <code>newChild</code> method (that was called when parsing of the parent XML element started)
  * for which the value of an XML element was read</li>
- * <li>instance of <code>org.jboss.xb.binding.UnmarshallingContext</code></li>
+ * <li>instance of <code>org.jboss.xml.binding.UnmarshallingContext</code></li>
  * <li>namespace URI of the child XML element as <code>java.lang.String</code></li>
  * <li>local name of the child XML element as <code>java.lang.String</code></li>
  * <li>the value of the child XML element as <code>java.lang.String</code></li>
@@ -78,7 +78,7 @@ public interface ObjectModelFactory
     * in <code>completeRoot</code> if the real root object can't be created while its children are not available,
     * e.g. no no-arg constructor or other reasons.
     * <p/>If <code>root</code> argument is not null (i.e. a user provided the root object through the
-    * <code>org.jboss.xb.binding.Unmarshaller</code>) then the factory could just return it as is or
+    * <code>org.jboss.xml.binding.Unmarshaller</code>) then the factory could just return it as is or
     * extract the real root from the <code>root</code> argument based on the namespace URI and local name
     * if <code>root</code> argument wraps/contains the real root.
     *

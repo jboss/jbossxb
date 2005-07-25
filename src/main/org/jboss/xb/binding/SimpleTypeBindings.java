@@ -1,12 +1,10 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
  */
 package org.jboss.xb.binding;
-
-// $Id$
 
 import org.jboss.logging.Logger;
 import org.jboss.util.Base64;
@@ -478,9 +476,9 @@ public final class SimpleTypeBindings
       {
          // anyUri is by default bound to java.net.URI for now. The following is the warning from JAXB2.0:
          //
-         // Design Note – xs:anyURI is not bound to java.net.URI by default since not all
+         // Design Note ï¿½ xs:anyURI is not bound to java.net.URI by default since not all
          // possible values of xs:anyURI can be passed to the java.net.URI constructor. Using
-         // a global JAXB customization described in Section 7.9, “<javaType>
+         // a global JAXB customization described in Section 7.9, ï¿½<javaType>
          // Declaration", a JAXB user can override the default mapping to map xs:anyURI to
          // java.net.URI.
          //
@@ -724,9 +722,9 @@ public final class SimpleTypeBindings
       {
          // anyUri is by default bound to java.net.URI for now. The following is the warning from JAXB2.0:
          //
-         // Design Note – xs:anyURI is not bound to java.net.URI by default since not all
+         // Design Note ï¿½ xs:anyURI is not bound to java.net.URI by default since not all
          // possible values of xs:anyURI can be passed to the java.net.URI constructor. Using
-         // a global JAXB customization described in Section 7.9, “<javaType>
+         // a global JAXB customization described in Section 7.9, ï¿½<javaType>
          // Declaration", a JAXB user can override the default mapping to map xs:anyURI to
          // java.net.URI.
          //

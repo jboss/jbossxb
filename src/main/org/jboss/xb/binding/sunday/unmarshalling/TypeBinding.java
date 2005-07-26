@@ -110,9 +110,13 @@ public class TypeBinding
          SchemaBinding schema = null;
          if( schemaResolver != null )
          {
-            String schemaLocation = atts.getValue(
-               XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI,
-               "schemaLocation");
+            String schemaLocation = null;
+            if( atts != null )
+            {
+               schemaLocation = atts.getValue(
+                  XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI,
+                  "schemaLocation");
+            }
             schema = schemaResolver.resolve(name.getNamespaceURI(),
                name.getLocalPart(), schemaBinding.getBaseURI(), schemaLocation);
          }

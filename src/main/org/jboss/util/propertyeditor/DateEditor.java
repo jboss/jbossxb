@@ -1,12 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.propertyeditor;
 
 import java.text.DateFormat;
@@ -23,8 +20,7 @@ import org.jboss.util.NestedRuntimeException;
  * @author  <a href="mailto:d_jencks@users.sourceforge.net">David Jencks</a>
  * @author Scott.Stark@jboss.org
  */
-public class DateEditor
-   extends TextPropertyEditorSupport
+public class DateEditor extends TextPropertyEditorSupport
 {
    static DateFormat[] formats;
 

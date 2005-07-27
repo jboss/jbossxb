@@ -1,24 +1,20 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.propertyeditor;
 
-import java.util.StringTokenizer;
 import java.beans.PropertyEditorSupport;
+import java.util.StringTokenizer;
 
 /**
  * A property editor for int[].
  *
  * @version <tt>$Revision$</tt>
  */
-public class IntArrayEditor
-   extends PropertyEditorSupport
+public class IntArrayEditor extends PropertyEditorSupport
 {
    /** Build a int[] from comma or eol seperated elements
     *

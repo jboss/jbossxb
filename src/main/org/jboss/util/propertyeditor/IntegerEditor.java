@@ -1,12 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.propertyeditor;
 
 import java.beans.PropertyEditorSupport;
@@ -18,12 +15,11 @@ import java.beans.PropertyEditorSupport;
  */
 public class IntegerEditor extends PropertyEditorSupport
 {
-   /** Map the argument text into an Integer using Integer.decode.
+   /** Map the argument text into and Integer using Integer.decode.
     */
    public void setAsText(final String text)
    {
       Object newValue = Integer.decode(text);
       setValue(newValue);
    }
-
 }

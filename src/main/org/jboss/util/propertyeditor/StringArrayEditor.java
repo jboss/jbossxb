@@ -1,19 +1,14 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.propertyeditor;
 
-import java.util.ArrayList;
-import java.util.StringTokenizer;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 import java.beans.PropertyEditorSupport;
+import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 /**
  * A property editor for String[]. The text format of a string array is a

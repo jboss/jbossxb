@@ -1,12 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.propertyeditor;
 
 import java.beans.PropertyEditorSupport;
@@ -17,8 +14,7 @@ import java.beans.PropertyEditorSupport;
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
-public class TextPropertyEditorSupport
-   extends PropertyEditorSupport
+public class TextPropertyEditorSupport extends PropertyEditorSupport
 {
    protected TextPropertyEditorSupport(final Object source)
    {

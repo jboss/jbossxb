@@ -1,12 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.propertyeditor;
 
 import org.jboss.util.NestedRuntimeException;
@@ -17,8 +14,7 @@ import org.jboss.util.NestedRuntimeException;
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
-public class ClassEditor
-   extends TextPropertyEditorSupport
+public class ClassEditor extends TextPropertyEditorSupport
 {
    /**
     * Returns a Class for the input object converted to a string.

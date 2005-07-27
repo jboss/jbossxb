@@ -1,12 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.propertyeditor;
 
 import java.net.InetAddress;
@@ -21,8 +18,7 @@ import org.jboss.util.StringPropertyReplacer;
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:Adrian.Brock@HappeningTimes.com">Adrian Brock</a>
  */
-public class InetAddressEditor
-   extends TextPropertyEditorSupport
+public class InetAddressEditor extends TextPropertyEditorSupport
 {
    /**
     * Returns a InetAddress for the input object converted to a string.

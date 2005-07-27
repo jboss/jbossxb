@@ -1,16 +1,11 @@
 /*
- * JBoss, the OpenSource WebOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
  */
 package org.jboss.util.propertyeditor;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import org.jboss.util.NestedRuntimeException;
-import org.jboss.util.StringPropertyReplacer;
 import org.jboss.util.threadpool.BlockingMode;
 
 /**
@@ -19,8 +14,7 @@ import org.jboss.util.threadpool.BlockingMode;
  * @author Scott.Stark@jboss.org
  * @version $Revision$
  */
-public class BlockingModeEditor
-   extends TextPropertyEditorSupport
+public class BlockingModeEditor extends TextPropertyEditorSupport
 {
    /**
     * Returns a BlockingMode for the input object converted to a string.

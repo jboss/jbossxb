@@ -1,5 +1,5 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
@@ -15,8 +15,7 @@ import java.beans.PropertyEditorSupport;
  * @version $Revision$
  * @author Scott.Stark@jboss.org
  */
-public class ClassArrayEditor
-   extends PropertyEditorSupport
+public class ClassArrayEditor extends PropertyEditorSupport
 {
    /** Build a Class[] from a comma/whitespace seperated list of classes
     * @param text - the class name list

@@ -1,19 +1,15 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.propertyeditor;
 
 import java.net.MalformedURLException;
 
-import org.jboss.util.Strings;
-
 import org.jboss.util.NestedRuntimeException;
+import org.jboss.util.Strings;
 
 /**
  * A property editor for {@link java.net.URL}.
@@ -21,8 +17,7 @@ import org.jboss.util.NestedRuntimeException;
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  */
-public class URLEditor
-   extends TextPropertyEditorSupport
+public class URLEditor extends TextPropertyEditorSupport
 {
    /**
     * Returns a URL for the input object converted to a string.
@@ -33,10 +28,12 @@ public class URLEditor
     */
    public Object getValue()
    {
-      try {
+      try
+      {
          return Strings.toURL(getAsText());
       }
-      catch (MalformedURLException e) {
+      catch (MalformedURLException e)
+      {
          throw new NestedRuntimeException(e);
       }
    }

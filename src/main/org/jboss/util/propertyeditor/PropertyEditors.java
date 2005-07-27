@@ -1,27 +1,24 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.propertyeditor;
 
-import java.beans.IntrospectionException;
-import java.beans.PropertyEditor;
-import java.beans.PropertyEditorManager;
 import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.util.Properties;
-import java.util.Iterator;
-import java.util.HashMap;
+import java.beans.PropertyEditor;
+import java.beans.PropertyEditorManager;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Properties;
 
-import org.jboss.util.Classes;
 import org.jboss.logging.Logger;
+import org.jboss.util.Classes;
 
 /**
  * A collection of PropertyEditor utilities.  Provides the same interface
@@ -276,14 +273,14 @@ public class PropertyEditors
             {
                if(isStrict)
                {
-                  String msg = "No property found for: "+name+" on JavaBean: "+bean;
-                  throw new IntrospectionException(msg);
-               }
+               String msg = "No property found for: "+name+" on JavaBean: "+bean;
+               throw new IntrospectionException(msg);
+            }
                else
                {
                   // since is not strict, ignore that this property was not found
                   continue;
-               }
+         }
             }
          }
          Method setter = pd.getWriteMethod();

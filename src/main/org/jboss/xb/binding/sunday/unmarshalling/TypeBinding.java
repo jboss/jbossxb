@@ -101,25 +101,23 @@ public class TypeBinding
    {
       return getElement(name, null);
    }
+
    public ElementBinding getElement(QName name, Attributes atts)
    {
       ElementBinding element = (ElementBinding)elements.get(name);
       if(element == null && schemaResolver != null)
       {
          // this is wildcard handling
-         SchemaBinding schema = null;
-         if( schemaResolver != null )
+         String schemaLocation = null;
+         if( atts != null )
          {
-            String schemaLocation = null;
-            if( atts != null )
-            {
-               schemaLocation = atts.getValue(
-                  XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI,
-                  "schemaLocation");
-            }
-            schema = schemaResolver.resolve(name.getNamespaceURI(),
-               name.getLocalPart(), schemaBinding.getBaseURI(), schemaLocation);
+            schemaLocation = atts.getValue(
+               XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI,
+               "schemaLocation");
          }
+
+         SchemaBinding schema = schemaResolver.resolve(name.getNamespaceURI(),
+            name.getLocalPart(), schemaBinding.getBaseURI(), schemaLocation);
 
          if(schema != null)
          {

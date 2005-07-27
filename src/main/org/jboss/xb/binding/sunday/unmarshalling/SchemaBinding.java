@@ -202,6 +202,7 @@ public class SchemaBinding
    {
       return baseURI;
    }
+
    public void setBaseURI(String baseURI)
    {
       this.baseURI = baseURI;
@@ -209,8 +210,7 @@ public class SchemaBinding
 
    // SchemaBindingResolver implementation
 
-   public SchemaBinding resolve(String nsUri, String localName,
-      String baseURI, String schemaLocation)
+   public SchemaBinding resolve(String nsUri, String localName, String baseURI, String schemaLocation)
    {
       SchemaBinding schema = null;
       if(schemaResolver != null)

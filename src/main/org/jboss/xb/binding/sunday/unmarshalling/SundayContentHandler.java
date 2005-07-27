@@ -238,13 +238,12 @@ public class SundayContentHandler
             start the unmarshalling. The actual document schema needs to be
             obtained based on the first element's namespace.
             */
-            String schemaLocation = atts.getValue(
-               XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI,
-               "schemaLocation");
-            SchemaBinding nextSchema = schema.resolve(namespaceURI, localName,
-               schema.getBaseURI(), schemaLocation);
+            String schemaLocation = atts.getValue(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation");
+            SchemaBinding nextSchema = schema.resolve(namespaceURI, localName, schema.getBaseURI(), schemaLocation);
             if( nextSchema != null )
+            {
                binding = nextSchema.getElement(startName);
+            }
          }
       }
       else

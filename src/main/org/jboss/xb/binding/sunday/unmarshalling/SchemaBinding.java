@@ -217,7 +217,9 @@ public class SchemaBinding
       {
          String location = null;
          if( schemaLocation != null )
+         {
             location = parseSchemaLocation(nsUri, schemaLocation);
+         }
          schema = schemaResolver.resolve(nsUri, localName, baseURI, location);
       }
       return schema;
@@ -240,7 +242,9 @@ public class SchemaBinding
       {
          location = tokenizer.nextToken();
          if( ns.equals(nsURI) )
+         {
             break;
+         }
          ns = tokenizer.nextToken();
       }
       return location;

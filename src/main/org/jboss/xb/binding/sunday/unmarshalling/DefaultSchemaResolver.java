@@ -78,6 +78,7 @@ public class DefaultSchemaResolver
             if( trace )
                log.trace("Failed to schemaLocation as systemID", e);
          }
+
          if( is == null )
          {
             URL schemaURL = null;
@@ -93,6 +94,7 @@ public class DefaultSchemaResolver
                {
                   schemaURL = new URL(schemaLocation);
                }
+
                if( schemaURL != null )
                {
                   InputStream is2 = schemaURL.openStream();

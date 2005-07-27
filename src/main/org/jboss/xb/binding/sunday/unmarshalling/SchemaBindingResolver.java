@@ -24,6 +24,5 @@ public interface SchemaBindingResolver
     * or null if the namespace URI is not recognized (though, in this case it
     * could also throw an exception)
     */
-   SchemaBinding resolve(String nsUri, String localName,
-      String baseURI, String schemaLocation);
+   SchemaBinding resolve(String nsUri, String localName, String baseURI, String schemaLocation);
 }

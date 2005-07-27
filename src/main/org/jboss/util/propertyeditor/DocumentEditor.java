@@ -1,28 +1,25 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.propertyeditor;
 
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.IOException;
 import java.beans.PropertyEditorSupport;
+import java.io.IOException;
+import java.io.StringReader;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
+import org.jboss.util.NestedRuntimeException;
+import org.jboss.util.xml.DOMWriter;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-import org.jboss.util.xml.DOMWriter;
-import org.jboss.util.NestedRuntimeException;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * A property editor for {@link org.w3c.dom.Document}.
@@ -30,10 +27,8 @@ import org.jboss.util.NestedRuntimeException;
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:eross@noderunner.net">Elias Ross</a>
  */
-public class DocumentEditor
-   extends PropertyEditorSupport
+public class DocumentEditor extends PropertyEditorSupport
 {
-
    /**
     * Returns the property as a String.
     *
@@ -79,4 +74,3 @@ public class DocumentEditor
       }
    }
 }
-

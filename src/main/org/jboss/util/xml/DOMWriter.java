@@ -1,12 +1,10 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
  */
 package org.jboss.util.xml;
-
-// $Id$
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -23,6 +21,7 @@ import org.w3c.dom.NodeList;
  *
  * @author Andy Clark, IBM
  * @author Thomas.Diesler@jboss.org
+ * @version $Revision$
  */
 public class DOMWriter
 {

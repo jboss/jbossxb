@@ -122,7 +122,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         throw new JBossXBException("Failed to parse source.", e);
+         throw new JBossXBException("Failed to parse source: " + e.getMessage(), e);
       }
    }
 
@@ -135,7 +135,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         throw new JBossXBException("Failed to parse source.", e);
+         throw new JBossXBException("Failed to parse source: " + e.getMessage(), e);
       }
    }
 
@@ -148,7 +148,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         throw new JBossXBException("Failed to parse source.", e);
+         throw new JBossXBException("Failed to parse source: " + e.getMessage(), e);
       }
    }
 

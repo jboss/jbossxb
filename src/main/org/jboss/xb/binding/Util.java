@@ -6,7 +6,10 @@
  */
 package org.jboss.xb.binding;
 
+import java.util.StringTokenizer;
+import javax.xml.XMLConstants;
 import org.jboss.util.Classes;
+import org.xml.sax.Attributes;
 
 /**
  * Various utilities for XML binding.
@@ -213,6 +216,33 @@ public final class Util
       return Classes.isPrimitive(type) ||
          type == String.class ||
          type == java.util.Date.class;
+   }
+
+   /**
+    * Parse the namespace location pairs in the schemaLocation and return the
+    * location that matches the nsURI argument.
+    *
+    * @return the location uri if found, null otherwise
+    */
+   public static String getSchemaLocation(Attributes attrs, String nsUri)
+   {
+      String location = null;
+      String schemaLocation = attrs.getValue(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation");
+      if(schemaLocation != null)
+      {
+         StringTokenizer tokenizer = new StringTokenizer(schemaLocation, " \t\n\r");
+         String ns = tokenizer.nextToken();
+         while(ns != null)
+         {
+            location = tokenizer.nextToken();
+            if(ns.equals(nsUri))
+            {
+               break;
+            }
+            ns = tokenizer.nextToken();
+         }
+      }
+      return location;
    }
 
    // Private

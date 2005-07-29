@@ -31,7 +31,6 @@ import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.metadata.XsdAnnotation;
 import org.jboss.xb.binding.metadata.XsdAppInfo;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtAttributeHandler;
-import org.jboss.util.xml.JBossEntityResolver;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSLoader;
@@ -129,12 +128,13 @@ public class XsdBinder
    {
       return bind(model, null);
    }
+
    public static final SchemaBinding bind(XSModel model, String baseURI)
    {
+      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      resolver.setBaseURI(baseURI);
       SchemaBinding schema = getXsdBinding().schemaBinding;
-      DefaultSchemaResolver resolver = new DefaultSchemaResolver(new JBossEntityResolver());
       schema.setSchemaResolver(resolver);
-      schema.setBaseURI(baseURI);
 
       // read annotations. for now just log the ones that are going to be used
       XSObjectList annotations = model.getAnnotations();
@@ -620,7 +620,6 @@ public class XsdBinder
    private static void bindWildcard(SchemaBinding schema, XSWildcard wildcard)
    {
       TypeBinding typeBinding = peekType();
-      typeBinding.setSchemaResolver(schema);
 
       XSAnnotation annotation = wildcard.getAnnotation();
       if(annotation != null)
@@ -651,7 +650,7 @@ public class XsdBinder
       QName qName = new QName(element.getNamespace(), element.getName());
 
       TypeBinding parentType = peekType();
-      ElementBinding binding = parentType == null ? null : parentType.getElement(qName);
+      ElementBinding binding = parentType == null ? null : parentType.getLocalElement(qName);
 
       if(binding == null)
       {

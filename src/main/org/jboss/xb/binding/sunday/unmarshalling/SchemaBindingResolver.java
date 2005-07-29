@@ -12,6 +12,10 @@ package org.jboss.xb.binding.sunday.unmarshalling;
  */
 public interface SchemaBindingResolver
 {
+   String getBaseURI();
+
+   void setBaseURI(String baseURI);
+
    /**
     * Returns an instance of SchemaBinding corresponding to the namespace URI.
     *

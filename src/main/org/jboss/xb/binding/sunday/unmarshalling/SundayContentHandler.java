@@ -9,10 +9,10 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 import java.util.LinkedList;
 import java.util.List;
 import javax.xml.namespace.QName;
-import javax.xml.XMLConstants;
 
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.NamespaceRegistry;
+import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.parser.JBossXBParser;
@@ -37,15 +37,23 @@ public class SundayContentHandler
    private final static Object NIL = new Object();
 
    private final SchemaBinding schema;
+   private final SchemaBindingResolver schemaResolver;
    private final StackImpl elementStack = new StackImpl();
    private final StackImpl objectStack = new StackImpl();
    private StringBuffer textContent = new StringBuffer();
    private Object root;
    private NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
-   public SundayContentHandler(SchemaBinding cursor)
+   public SundayContentHandler(SchemaBinding schema)
    {
-      this.schema = cursor;
+      this.schema = schema;
+      this.schemaResolver = null;
+   }
+
+   public SundayContentHandler(SchemaBindingResolver schemaResolver)
+   {
+      this.schemaResolver = schemaResolver;
+      this.schema = null;
    }
 
    public void characters(char[] ch, int start, int length)
@@ -77,6 +85,7 @@ public class SundayContentHandler
             if(textContent.length() > 0 || simpleType != null)
             {
                String dataContent;
+               SchemaBinding schema = elementBinding.getSchema();
                if(textContent.length() == 0)
                {
                   dataContent = null;
@@ -85,8 +94,10 @@ public class SundayContentHandler
                {
                   
                   dataContent = textContent.toString();
-                  if( schema.isReplacePropertyRefs() )
+                  if(schema != null && schema.isReplacePropertyRefs())
+                  {
                      dataContent = StringPropertyReplacer.replaceProperties(dataContent);
+                  }
                   textContent.delete(0, textContent.length());
                }
 
@@ -94,7 +105,7 @@ public class SundayContentHandler
 
                if(simpleType == null)
                {
-                  if(schema.isStrictSchema())
+                  if(schema != null && schema.isStrictSchema())
                   {
                      throw new JBossXBRuntimeException("Element " +
                         endName +
@@ -186,17 +197,14 @@ public class SundayContentHandler
             }
             else if(parentElement != null)
             {
-               if(parentElement.getType().getSchemaResolver() != null)
+               // todo: review this> the parent has anyType, so it gets the value of its child
+               if(!objectStack.isEmpty())
                {
-                  // todo: review this> the parent has anyType, so it gets the value of its child
-                  if(!objectStack.isEmpty())
+                  objectStack.pop();
+                  objectStack.push(o);
+                  if(log.isTraceEnabled())
                   {
-                     objectStack.pop();
-                     objectStack.push(o);
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
-                     }
+                     log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
                   }
                }
             }
@@ -229,21 +237,25 @@ public class SundayContentHandler
       ElementBinding binding = null;
 
       ElementBinding parentBinding = null;
+      SchemaBinding schemaBinding = schema;
       if(elementStack.isEmpty())
       {
-         binding = schema.getElement(startName);
-         if( binding == null )
+         if(schemaBinding != null)
          {
-            /* This can happen when an empty SchemaBinding was used to kick
-            start the unmarshalling. The actual document schema needs to be
-            obtained based on the first element's namespace.
-            */
-            String schemaLocation = atts.getValue(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation");
-            SchemaBinding nextSchema = schema.resolve(namespaceURI, localName, schema.getBaseURI(), schemaLocation);
-            if( nextSchema != null )
+            binding = schemaBinding.getElement(startName);
+         }
+         else if(schemaResolver != null)
+         {
+            String schemaLocation = atts == null ? null : Util.getSchemaLocation(atts, namespaceURI);
+            schemaBinding = schemaResolver.resolve(namespaceURI, localName, null, schemaLocation);
+            if(schemaBinding != null)
             {
-               binding = nextSchema.getElement(startName);
+               binding = schemaBinding.getElement(startName);
             }
+         }
+         else
+         {
+            throw new JBossXBRuntimeException("Neither schema binding nor schema binding resolver is not available!");
          }
       }
       else
@@ -252,6 +264,7 @@ public class SundayContentHandler
          if(parentBinding != null)
          {
             binding = parentBinding.getType().getElement(startName, atts);
+            schemaBinding = parentBinding.getSchema();
          }
       }
 
@@ -290,7 +303,7 @@ public class SundayContentHandler
             typeBinding.attributes(o, startName, binding, atts, nsRegistry);
          }
       }
-      else if(schema.isStrictSchema())
+      else if(schemaBinding != null && schemaBinding.isStrictSchema())
       {
          throw new JBossXBRuntimeException("Element " +
             startName +

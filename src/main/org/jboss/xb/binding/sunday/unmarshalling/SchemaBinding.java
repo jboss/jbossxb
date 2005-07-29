@@ -8,7 +8,6 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.util.StringTokenizer;
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.Constants;
@@ -20,7 +19,6 @@ import org.jboss.xb.binding.metadata.PackageMetaData;
  * @version <tt>$Revision$</tt>
  */
 public class SchemaBinding
-   implements SchemaBindingResolver
 {
    private static final Map SIMPLE_TYPES = new HashMap();
 
@@ -86,7 +84,6 @@ public class SchemaBinding
    private boolean ignoreUnresolvedFieldOrClass = true;
    private boolean ignoreLowLine = true;
    private boolean replacePropertyRefs = true;
-   private String baseURI;
 
    public TypeBinding getType(QName qName)
    {
@@ -196,57 +193,5 @@ public class SchemaBinding
    public void setIgnoreLowLine(boolean ignoreLowLine)
    {
       this.ignoreLowLine = ignoreLowLine;
-   }
-
-   public String getBaseURI()
-   {
-      return baseURI;
-   }
-
-   public void setBaseURI(String baseURI)
-   {
-      this.baseURI = baseURI;
-   }
-
-   // SchemaBindingResolver implementation
-
-   public SchemaBinding resolve(String nsUri, String localName, String baseURI, String schemaLocation)
-   {
-      SchemaBinding schema = null;
-      if(schemaResolver != null)
-      {
-         String location = null;
-         if( schemaLocation != null )
-         {
-            location = parseSchemaLocation(nsUri, schemaLocation);
-         }
-         schema = schemaResolver.resolve(nsUri, localName, baseURI, location);
-      }
-      return schema;
-   }
-
-   /**
-    * Parse the namespace location pairs in the schemaLocation and return the
-    * location that matches the nsURI argument.
-    * 
-    * @param nsURI
-    * @param schemaLocation
-    * @return the location uri if found, null otherwise
-    */ 
-   public String parseSchemaLocation(String nsURI, String schemaLocation)
-   {
-      StringTokenizer tokenizer = new StringTokenizer(schemaLocation, " \t\n\r");
-      String location = null;
-      String ns = tokenizer.nextToken();
-      while( ns != null )
-      {
-         location = tokenizer.nextToken();
-         if( ns.equals(nsURI) )
-         {
-            break;
-         }
-         ns = tokenizer.nextToken();
-      }
-      return location;
    }
 }

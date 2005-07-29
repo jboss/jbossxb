@@ -26,11 +26,27 @@ public class DefaultSchemaResolver
 {
    private static Logger log = Logger.getLogger(DefaultSchemaResolver.class);
 
+   private String baseURI;
    private JBossEntityResolver resolver;
+
+   public DefaultSchemaResolver()
+   {
+      this(new JBossEntityResolver());
+   }
 
    public DefaultSchemaResolver(JBossEntityResolver resolver)
    {
       this.resolver =  resolver;
+   }
+
+   public String getBaseURI()
+   {
+      return baseURI;
+   }
+
+   public void setBaseURI(String baseURI)
+   {
+      this.baseURI = baseURI;
    }
 
    /**
@@ -49,8 +65,7 @@ public class DefaultSchemaResolver
     * @param schemaLocation
     * @return
     */ 
-   public SchemaBinding resolve(String nsUri, String localName,
-      String baseURI, String schemaLocation)
+   public SchemaBinding resolve(String nsUri, String localName, String baseURI, String schemaLocation)
    {
       boolean trace = log.isTraceEnabled();
       InputSource is = null;
@@ -85,6 +100,11 @@ public class DefaultSchemaResolver
             // Just try resolving the schemaLocation against the baseURI
             try
             {
+               if(baseURI == null)
+               {
+                  baseURI = this.baseURI;
+               }
+
                if( baseURI != null )
                {
                   URL baseURL = new URL(baseURI);

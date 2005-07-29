@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Iterator;
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
-import javax.xml.XMLConstants;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.AttributesImpl;
@@ -24,6 +23,7 @@ import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
+import org.jboss.xb.binding.Util;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -97,6 +97,11 @@ public class TypeBinding
       return qName;
    }
 
+   public ElementBinding getLocalElement(QName name)
+   {
+      return (ElementBinding)elements.get(name);
+   }
+
    public ElementBinding getElement(QName name)
    {
       return getElement(name, null);
@@ -105,23 +110,23 @@ public class TypeBinding
    public ElementBinding getElement(QName name, Attributes atts)
    {
       ElementBinding element = (ElementBinding)elements.get(name);
-      if(element == null && schemaResolver != null)
+      if(element == null)
       {
-         // this is wildcard handling
-         String schemaLocation = null;
-         if( atts != null )
+         SchemaBindingResolver resolver = schemaResolver;
+         if(resolver == null && schemaBinding != null)
          {
-            schemaLocation = atts.getValue(
-               XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI,
-               "schemaLocation");
+            resolver = schemaBinding.getSchemaResolver();
          }
 
-         SchemaBinding schema = schemaResolver.resolve(name.getNamespaceURI(),
-            name.getLocalPart(), schemaBinding.getBaseURI(), schemaLocation);
-
-         if(schema != null)
+         if(resolver != null)
          {
-            element = schema.getElement(name);
+            // this is wildcard handling
+            String schemaLocation = atts == null ? null : Util.getSchemaLocation(atts, name.getNamespaceURI());
+            SchemaBinding schema = resolver.resolve(name.getNamespaceURI(), name.getLocalPart(), null, schemaLocation);
+            if(schema != null)
+            {
+               element = schema.getElement(name);
+            }
          }
       }
       return element;

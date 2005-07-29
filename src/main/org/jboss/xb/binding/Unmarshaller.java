@@ -13,6 +13,7 @@ import org.jboss.xb.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xb.binding.metadata.unmarshalling.DocumentBinding;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 
@@ -46,7 +47,17 @@ public interface Unmarshaller
 
    Object unmarshal(String xmlFile) throws JBossXBException;
 
-   Object unmarshal(String xmlFile, SchemaBinding handler) throws JBossXBException;
+   Object unmarshal(String xml, SchemaBinding schemaBinding) throws JBossXBException;
+
+   Object unmarshal(Reader xmlReader, SchemaBinding schemaBinding) throws JBossXBException;
+
+   Object unmarshal(InputStream xmlStream, SchemaBinding schemaBinding) throws JBossXBException;
+
+   Object unmarshal(String xml, SchemaBindingResolver schemaResolver) throws JBossXBException;
+
+   Object unmarshal(Reader xmlReader, SchemaBindingResolver schemaResolver) throws JBossXBException;
+
+   Object unmarshal(InputStream xmlStream, SchemaBindingResolver schemaResolver) throws JBossXBException;
 
    Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata) throws JBossXBException;
 
@@ -61,8 +72,4 @@ public interface Unmarshaller
 
    Object unmarshal(String systemId, BindingCursor cursor, ObjectModelFactory factory)
       throws JBossXBException;
-
-   Object unmarshal(Reader xmlFile, SchemaBinding handler) throws JBossXBException;
-
-   Object unmarshal(InputStream is, SchemaBinding schemaBinding) throws JBossXBException;
 }

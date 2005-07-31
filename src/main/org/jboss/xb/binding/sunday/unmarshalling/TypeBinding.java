@@ -43,8 +43,6 @@ public class TypeBinding
    private ValueMetaData valueMetaData;
    private PropertyMetaData propertyMetaData;
    private MapEntryMetaData mapEntryMetaData;
-   private boolean mapEntryKey;
-   private boolean mapEntryValue;
    private SchemaBinding schemaBinding; // todo it's optional for now...
    private SchemaBindingResolver schemaResolver;
    private TypeBinding baseType;
@@ -80,8 +78,6 @@ public class TypeBinding
       this.valueMetaData = baseType.valueMetaData;
       this.propertyMetaData = baseType.propertyMetaData;
       this.mapEntryMetaData = baseType.mapEntryMetaData;
-      this.mapEntryKey = baseType.mapEntryKey;
-      this.mapEntryValue = baseType.mapEntryValue;
       this.schemaBinding = baseType.schemaBinding;
       this.schemaResolver = baseType.schemaResolver;
       this.baseType = baseType;
@@ -364,26 +360,6 @@ public class TypeBinding
    public void setSchemaResolver(SchemaBindingResolver schemaResolver)
    {
       this.schemaResolver = schemaResolver;
-   }
-
-   public boolean isMapEntryKey()
-   {
-      return mapEntryKey;
-   }
-
-   public void setMapEntryKey(boolean mapEntryKey)
-   {
-      this.mapEntryKey = mapEntryKey;
-   }
-
-   public boolean isMapEntryValue()
-   {
-      return mapEntryValue;
-   }
-
-   public void setMapEntryValue(boolean mapEntryValue)
-   {
-      this.mapEntryValue = mapEntryValue;
    }
 
    public MapEntryMetaData getMapEntryMetaData()

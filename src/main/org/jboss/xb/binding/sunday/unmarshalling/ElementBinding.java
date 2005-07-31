@@ -86,6 +86,8 @@ public class ElementBinding
 
    public PropertyMetaData getPropertyMetaData()
    {
+      // todo: this method doesn't check property metadata on its type because the rules to use property
+      // metadata on a type should be clarified.
       return propertyMetaData;
    }
 
@@ -151,6 +153,7 @@ public class ElementBinding
 
    public PutMethodMetaData getPutMethodMetaData()
    {
+      // todo should types be allowed to have putMethod metadata
       return putMethodMetaData;
    }
 
@@ -161,7 +164,12 @@ public class ElementBinding
 
    public AddMethodMetaData getAddMethodMetaData()
    {
-      return addMethodMetaData;
+      AddMethodMetaData result =  addMethodMetaData;
+      if(result == null && putMethodMetaData == null && propertyMetaData == null)
+      {
+         result = typeBinding.getAddMethodMetaData();
+      }
+      return result;
    }
 
    public void setAddMethodMetaData(AddMethodMetaData addMethodMetaData)

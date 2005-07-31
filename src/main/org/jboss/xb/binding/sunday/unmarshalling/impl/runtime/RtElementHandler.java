@@ -662,11 +662,6 @@ public class RtElementHandler
                      propertyMetaData = element.getType().getPropertyMetaData();
                   }
                   */
-
-                  if(propertyMetaData == null)
-                  {
-                     addMethodMetaData = element.getType().getAddMethodMetaData();
-                  }
                }
 
                if(addMethodMetaData != null)

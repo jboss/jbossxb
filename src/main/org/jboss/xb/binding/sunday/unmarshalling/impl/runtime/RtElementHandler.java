@@ -484,7 +484,7 @@ public class RtElementHandler
                         "Parent object is an instance of java.util.Map" :
                         "putMethod is specified for element " + qName
                         ) +
-                        " but mapEntry is specified for niether element " +
+                        " but mapEntry is specified for neither element " +
                         qName +
                         " nor it's type " +
                         element.getType().getQName()

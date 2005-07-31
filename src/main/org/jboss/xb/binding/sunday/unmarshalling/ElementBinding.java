@@ -36,7 +36,7 @@ public class ElementBinding
    private boolean mapEntryKey;
    private boolean mapEntryValue;
    private boolean multiOccurs;
-   private boolean skip;
+   private Boolean skip;
 
    public ElementBinding(SchemaBinding schema, TypeBinding typeBinding)
    {
@@ -71,7 +71,12 @@ public class ElementBinding
 
    public ClassMetaData getClassMetaData()
    {
-      return classMetaData;
+      ClassMetaData result = classMetaData;
+      if(result == null && mapEntryMetaData == null)
+      {
+            result = typeBinding.getClassMetaData();
+      }
+      return result;
    }
 
    public void setClassMetaData(ClassMetaData classMetaData)
@@ -91,7 +96,12 @@ public class ElementBinding
 
    public MapEntryMetaData getMapEntryMetaData()
    {
-      return mapEntryMetaData;
+      MapEntryMetaData result = mapEntryMetaData;
+      if(result == null && classMetaData == null)
+      {
+         result = typeBinding.getMapEntryMetaData();
+      }
+      return result;
    }
 
    public void setMapEntryMetaData(MapEntryMetaData mapEntryMetaData)
@@ -101,7 +111,7 @@ public class ElementBinding
 
    public ValueMetaData getValueMetaData()
    {
-      return valueMetaData;
+      return valueMetaData != null ? valueMetaData : typeBinding.getValueMetaData();
    }
 
    public void setValueMetaData(ValueMetaData valueMetaData)
@@ -166,11 +176,11 @@ public class ElementBinding
 
    public void setSkip(boolean skip)
    {
-      this.skip = skip;
+      this.skip = skip ? Boolean.TRUE : Boolean.FALSE;
    }
 
    public boolean isSkip()
    {
-      return skip;
+      return skip == null ? typeBinding.isSkip() : skip.booleanValue();
    }
 }

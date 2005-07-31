@@ -59,7 +59,7 @@ public class AttributeBinding
 
    public ValueMetaData getValueMetaData()
    {
-      return valueMetaData;
+      return valueMetaData != null ? valueMetaData : type.getValueMetaData();
    }
 
    public void setValueMetaData(ValueMetaData valueMetaData)

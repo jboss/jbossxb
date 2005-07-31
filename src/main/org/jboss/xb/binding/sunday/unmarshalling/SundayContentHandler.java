@@ -121,14 +121,10 @@ public class SundayContentHandler
                   ValueMetaData valueMetaData = elementBinding.getValueMetaData();
                   if(valueMetaData == null)
                   {
-                     valueMetaData = typeBinding.getValueMetaData();
-                     if(valueMetaData == null)
+                     CharactersMetaData charactersMetaData = typeBinding.getCharactersMetaData();
+                     if(charactersMetaData != null)
                      {
-                        CharactersMetaData charactersMetaData = typeBinding.getCharactersMetaData();
-                        if(charactersMetaData != null)
-                        {
-                           valueMetaData = charactersMetaData.getValue();
-                        }
+                        valueMetaData = charactersMetaData.getValue();
                      }
                   }
 

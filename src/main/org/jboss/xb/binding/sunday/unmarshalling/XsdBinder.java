@@ -92,8 +92,7 @@ public class XsdBinder
     * @param encoding - optional stream encoding
     * @return SchemaBinding mapping
     */ 
-   public static final SchemaBinding bind(InputStream xsdStream, String encoding,
-      String baseURI)
+   public static final SchemaBinding bind(InputStream xsdStream, String encoding, String baseURI)
    {
       XSModel model = loadSchema(xsdStream, encoding, baseURI);
       return bind(model, baseURI);
@@ -105,8 +104,7 @@ public class XsdBinder
     * @param encoding - optional reader encoding
     * @return SchemaBinding mapping
     */ 
-   public static final SchemaBinding bind(Reader xsdReader, String encoding,
-      String baseURI)
+   public static final SchemaBinding bind(Reader xsdReader, String encoding, String baseURI)
    {
       XSModel model = loadSchema(xsdReader, encoding, baseURI);
       return bind(model, baseURI);

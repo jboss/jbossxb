@@ -78,7 +78,7 @@ public class DefaultSchemaResolver
       catch (Exception e)
       {
          if( trace )
-            log.trace("Failed to nsUri as systemID", e);
+            log.trace("Failed to use nsUri as systemID", e);
       }
 
       if( is == null && schemaLocation != null )
@@ -91,7 +91,7 @@ public class DefaultSchemaResolver
          catch (Exception e)
          {
             if( trace )
-               log.trace("Failed to schemaLocation as systemID", e);
+               log.trace("Failed to use schemaLocation as systemID", e);
          }
 
          if( is == null )

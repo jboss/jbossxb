@@ -32,11 +32,6 @@ public abstract class AttributeHandler
    {
       TypeBinding type = binding.getType();
       ValueMetaData valueMetaData = binding.getValueMetaData();
-      if(valueMetaData == null)
-      {
-         valueMetaData = type.getValueMetaData();
-      }
-
       return type == null ? value : type.getSimpleType().unmarshal(attrName, type, nsCtx, valueMetaData, value);
    }
 

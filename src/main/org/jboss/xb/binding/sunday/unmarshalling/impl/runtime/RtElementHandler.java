@@ -49,7 +49,7 @@ public class RtElementHandler
 
    public Object startElement(Object parent, QName elementName, ElementBinding element)
    {
-      if(element.isSkip() || element.getType().isSkip())
+      if(element.isSkip())
       {
          return parent;
       }
@@ -59,19 +59,7 @@ public class RtElementHandler
       if(!type.isSimple())
       {
          ClassMetaData classMetaData = element.getClassMetaData();
-         MapEntryMetaData mapEntryMetaData = null;
-         if(classMetaData == null)
-         {
-            mapEntryMetaData = element.getMapEntryMetaData();
-            if(mapEntryMetaData == null)
-            {
-               classMetaData = type.getClassMetaData();
-               if(classMetaData == null)
-               {
-                  mapEntryMetaData = type.getMapEntryMetaData();
-               }
-            }
-         }
+         MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
 
          // todo: if addMethod is specified, it's probably some collection field
          // but should not be set as a property. Instead, items are added to it using the addMethod
@@ -318,7 +306,7 @@ public class RtElementHandler
 
    public Object endElement(Object o, QName elementName, ElementBinding element)
    {
-      if(element.isSkip() || element.getType().isSkip())
+      if(element.isSkip())
       {
          return o;
       }
@@ -342,7 +330,7 @@ public class RtElementHandler
 
    public void setParent(Object parent, Object o, QName qName, ElementBinding element, ElementBinding parentElement)
    {
-      if(element.isSkip() || element.getType().isSkip())
+      if(element.isSkip())
       {
          return;
       }
@@ -477,19 +465,15 @@ public class RtElementHandler
                MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
                if(mapEntryMetaData == null)
                {
-                  mapEntryMetaData = element.getType().getMapEntryMetaData();
-                  if(mapEntryMetaData == null)
-                  {
-                     throw new JBossXBRuntimeException((owner instanceof Map ?
-                        "Parent object is an instance of java.util.Map" :
-                        "putMethod is specified for element " + qName
-                        ) +
-                        " but mapEntry is specified for neither element " +
-                        qName +
-                        " nor it's type " +
-                        element.getType().getQName()
-                     );
-                  }
+                  throw new JBossXBRuntimeException((owner instanceof Map ?
+                     "Parent object is an instance of java.util.Map" :
+                     "putMethod is specified for element " + qName
+                     ) +
+                     " but mapEntry is specified for neither element " +
+                     qName +
+                     " nor it's type " +
+                     element.getType().getQName()
+                  );
                }
 
                Class oClass = o.getClass();
@@ -779,7 +763,7 @@ public class RtElementHandler
 
    // Private
 
-   private void setMapEntryValue(MapEntryMetaData mapEntryMetaData, Object parent, Object o)
+   private static void setMapEntryValue(MapEntryMetaData mapEntryMetaData, Object parent, Object o)
    {
       String getValueMethodName = mapEntryMetaData.getGetValueMethod();
       if(getValueMethodName == null)
@@ -798,7 +782,7 @@ public class RtElementHandler
       invokeSetter(setValueMethod, parent, o, setValueMethodName);
    }
 
-   private void invokeSetter(Method setValueMethod, Object parent, Object o, String setValueMethodName)
+   private static void invokeSetter(Method setValueMethod, Object parent, Object o, String setValueMethodName)
    {
       try
       {
@@ -818,7 +802,7 @@ public class RtElementHandler
       }
    }
 
-   private Method getSetMethod(Class cls, String getMethodName, String setMethodName)
+   private static Method getSetMethod(Class cls, String getMethodName, String setMethodName)
    {
       Method getKeyMethod;
       try
@@ -848,29 +832,25 @@ public class RtElementHandler
       return setKeyMethod;
    }
 
-   private MapEntryMetaData getMapEntryMetaData(ElementBinding element, QName qName)
+   private static MapEntryMetaData getMapEntryMetaData(ElementBinding element, QName qName)
    {
       MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
       if(mapEntryMetaData == null)
       {
-         mapEntryMetaData = element.getType().getMapEntryMetaData();
-         if(mapEntryMetaData == null)
-         {
-            throw new JBossXBRuntimeException("Element " +
-               qName +
-               " bound as map entry key or value but map entry metadata is not available for its parent element nor its " +
-               (element.getType().getQName() == null ?
-               "annonymous" :
-               element.getType().getQName().toString()
-               ) +
-               " type."
-            );
-         }
+         throw new JBossXBRuntimeException("Element " +
+            qName +
+            " bound as map entry key or value but map entry metadata is not available for its parent element nor its " +
+            (element.getType().getQName() == null ?
+            "annonymous" :
+            element.getType().getQName().toString()
+            ) +
+            " type."
+         );
       }
       return mapEntryMetaData;
    }
 
-   private Object newInstance(Class cls, QName elementName, TypeBinding type)
+   private static Object newInstance(Class cls, QName elementName, TypeBinding type)
    {
       Object o;
       try
@@ -904,7 +884,7 @@ public class RtElementHandler
       return o;
    }
 
-   private Class getClass(String className, ElementBinding element, QName elementName)
+   private static Class getClass(String className, ElementBinding element, QName elementName)
    {
       TypeBinding type = element.getType();
       String localClassName = className;

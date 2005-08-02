@@ -7,24 +7,31 @@
 package org.jboss.net.protocol.file;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.jboss.logging.Logger;
 import org.jboss.net.protocol.URLListerBase;
 
 /**
  * FileURLLister
  *
  * @author jboynes@users.sf.net
+ * @author <a href="mailto:dimitris@jboss.org">Dimitris Andreadis</a>
  * @version $Revision$
  */
 public class FileURLLister extends URLListerBase
 {
+   /** The Logger */
+   private static final Logger log = Logger.getLogger(FileURLLister.class);
+   
+   // Public --------------------------------------------------------
+   
    public Collection listMembers(URL baseUrl, URLFilter filter) throws IOException   
    {
       return listMembers(baseUrl, filter, false);
@@ -32,79 +39,106 @@ public class FileURLLister extends URLListerBase
 
    public Collection listMembers(URL baseUrl, URLFilter filter, boolean scanNonDottedSubDirs) throws IOException
    {
-      File directory = new File(baseUrl.getPath());
-      
-      if (directory.exists () == false)
+      // Make sure this is a directory URL
+      String baseUrlString = baseUrl.toString();
+      if (!baseUrlString.endsWith("/"))
       {
-         throw new FileNotFoundException(directory.toString());
+         throw new IOException("Does not end with '/', not a directory url: " + baseUrlString);
       }
-      return listFiles(baseUrl, filter, scanNonDottedSubDirs);
+      
+      // Verify the directory actually exists
+      File dir = new File(baseUrl.getPath());
+      if (!dir.isDirectory())
+      {
+         throw new FileNotFoundException("Not pointing to a directory, url: " + baseUrlString);
+      }
+      
+      // The list of URLs to return
+      ArrayList resultList = new ArrayList();
+
+      // Do the actual job
+      listFiles(baseUrl, filter, scanNonDottedSubDirs, resultList);
+      
+      // Done
+      return resultList;
    }
    
-   protected Collection listFiles(URL baseUrl, final URLFilter filter, boolean scanNonDottedSubDirs)
+   // Private -------------------------------------------------------
+   
+   /**
+    * Starting from baseUrl, that should point to a directory, populate the
+    * resultList with the contents that pass the filter (in the form of URLs)
+    * and possibly recurse into subdris not containing a '.' in their name.
+    */
+   private void listFiles(final URL baseUrl, final URLFilter filter, boolean scanNonDottedSubDirs, ArrayList resultList)
    {      
-      // List files at the current dir level
-      final File directory = new File(baseUrl.getPath());      
-
-      File[] files = directory.listFiles (new FileFilter ()
+      // List the files at the current dir level, using the provided filter
+      final File baseDir = new File(baseUrl.getPath());      
+      String[] filenames = baseDir.list(new FilenameFilter()
       {
-         public boolean accept(File file)
+         public boolean accept(File dir, String name)
          {
             try
             {
-               return filter.accept(directory.toURL(), file.getName());
+               return filter.accept(baseUrl, name);
             }
-            catch (Exception forgetIt)
+            catch (Exception e)
             {
-               forgetIt.printStackTrace();
+               log.debug("Unexpected exception filtering entry '" + name + "' in directory '" + baseDir + "'", e);
                return true;
             }
          }
-      });            
+      });
       
-      // Do we have to scan sub-dirs as well?
-      if (scanNonDottedSubDirs)
+      if (filenames == null)
       {
-         ArrayList result = new ArrayList();
-         
-         for (int i = 0; i < files.length; i++)
-         {
-            File file = files[i];
-            
-            if (doesDirTriggersRecursiveSearch(file))
-            {  
-               result.addAll(listFiles(prependDirToUrl(baseUrl, file.getName(), true), filter, scanNonDottedSubDirs));
-            }
-            else
-            {               
-               result.add(fileToURL(baseUrl, file));
-            }
-         }         
-         return result;
-      }
+         // This happens only when baseDir not a directory, or some unknown
+         // IOException happens internally (e.g. run out of file descriptors?)
+         // Unfortunately the File API doesn't provide a way to know.
+         log.warn("Could not list directory '" + baseDir + "', reason unknown");
+      }      
       else
       {
-         // We don't scan sub-dirs ==> we simply add the URL to the result (after transformation)
-         return filesToURLs(baseUrl, files);
-      }
+         String baseUrlString = baseUrl.toString();
+         
+         for (int i = 0; i < filenames.length; i++)
+         {
+            String filename = filenames[i];
             
-   }
+            // Find out if this is a directory
+            File file = new File(baseDir, filename);
+            boolean isDir = file.isDirectory();
+            
+            // The subUrl
+            URL subUrl = createURL(baseUrlString, filename, isDir);
+            
+            // If scanning subdirs and we have a directory, not containing a '.' in
+            // the name, recurse into it. This is to allow recursing into grouping
+            // dirs like ./deploy/jms, ./deploy/management, etc., avoiding
+            // at the same time exploded packages, like .sar, .war, etc.
+            if (scanNonDottedSubDirs && isDir && (filename.indexOf('.') == -1))
+            {
+               // recurse into it
+               listFiles(subUrl, filter, scanNonDottedSubDirs, resultList);
+            }
+            else
+            {
+               // just add to the list
+               resultList.add(subUrl);                
+            }
+         }
+      }
+   }  
    
-   protected boolean doesDirTriggersRecursiveSearch(File file)
-   {
-      // File is a directory and contains NO "." (which would means it 
-      // could be an exploded package that needs to be deployed i.e. .war, etc.)
-
-      return file.isDirectory() && (file.getName().indexOf(".") == -1);
-   }
-   
-   protected URL prependDirToUrl(URL baseUrl, String addenda, boolean isDirectory)
+   /**
+    * Create a URL by concatenating the baseUrlString that should end at '/',
+    * the filename, and a trailing slash, if it points to a directory
+    */
+   private URL createURL(String baseUrlString, String filename, boolean isDirectory)
    {
       try
       {
-         String base = baseUrl.toString();
-         
-         return new URL(base + (base.endsWith("/") ? "" : "/" ) + addenda + (isDirectory ? "/" : ""));
+         return new URL(baseUrlString + filename + (isDirectory ? "/" : ""));
       } 
       catch (MalformedURLException e)
       {
@@ -113,19 +147,4 @@ public class FileURLLister extends URLListerBase
       }
    }
    
-   protected Collection filesToURLs(URL baseUrl, File[] files)
-   {
-      ArrayList result = new ArrayList (files.length);
-      
-      for (int i = 0; i < files.length; i++)
-      {
-         result.add (fileToURL (baseUrl, files[i]));
-      }
-      return result;
-   }
-      
-   protected URL fileToURL(final URL baseUrl, File file)
-   {
-      return prependDirToUrl(baseUrl, file.getName(), file.isDirectory ());         
-   }
 }

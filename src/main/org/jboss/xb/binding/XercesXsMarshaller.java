@@ -393,16 +393,16 @@ public class XercesXsMarshaller
       {
          // todo: pass non-null namespace context
          String typeName = type.getName();
-         marshalled = SimpleTypeBindings.marshal(typeName, value, null);
 
          if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) || SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
          {
             QName qNameValue = (QName)value;
             String prefixValue = qNameValue.getPrefix();
-            if(prefixValue.equals(prefix))
+            if(prefixValue.equals(prefix) || prefixValue.length() == 0 && prefix == null)
             {
                // how to best resolve this conflict?
                prefixValue += 'x';
+               value = new QName(qNameValue.getNamespaceURI(), qNameValue.getLocalPart(), prefixValue);
             }
 
             attrs = new AttributesImpl(1);
@@ -413,6 +413,8 @@ public class XercesXsMarshaller
                qNameValue.getNamespaceURI()
             );
          }
+
+         marshalled = SimpleTypeBindings.marshal(typeName, value, null);
       }
       else
       {

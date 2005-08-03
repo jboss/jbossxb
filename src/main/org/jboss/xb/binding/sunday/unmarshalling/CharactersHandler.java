@@ -43,6 +43,10 @@ public abstract class CharactersHandler
       {
          result = "";
       }
+      else if(Constants.QNAME_BASE64BINARY.equals(typeQName))
+      {
+         result = new byte[0];
+      }
       return result;
    }
 

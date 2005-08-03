@@ -420,7 +420,7 @@ public final class SimpleTypeBindings
       }
    }
 
-   public static final Class classForType(String xsdType)
+   public static Class classForType(String xsdType)
    {
       Class result;
       int typeCode = xsdType.hashCode();
@@ -1232,28 +1232,23 @@ public final class SimpleTypeBindings
       }
       else if(typeCode == XS_LANGUAGE)
       {
-         String s = (String)value;
-         result = s;
+         result = (String)value;
       }
       else if(typeCode == XS_NAME)
       {
-         String s = (String)value;
-         result = s;
+         result = (String)value;
       }
       else if(typeCode == XS_NCNAME)
       {
-         String s = (String)value;
-         result = s;
+         result = (String)value;
       }
       else if(typeCode == XS_ID)
       {
-         String s = (String)value;
-         result = s;
+         result = (String)value;
       }
       else if(typeCode == XS_NMTOKEN)
       {
-         String s = (String)value;
-         result = s;
+         result = (String)value;
       }
       else if(typeCode == XS_NMTOKENS)
       {
@@ -1385,7 +1380,7 @@ public final class SimpleTypeBindings
     * --MM-DD[timezone]
     *
     * @param value
-    * @return
+    * @return unmarshalled Calendar
     */
    public static Calendar unmarshalGMonthDay(String value)
    {
@@ -1822,8 +1817,8 @@ public final class SimpleTypeBindings
       StringBuffer result = new StringBuffer(2 * value.length);
       for(int i = 0; i < value.length; ++i)
       {
-         result.append(convertDigit((int)(value[i] >> 4)));
-         result.append(convertDigit((int)(value[i] & 0x0f)));
+         result.append(convertDigit((value[i] >> 4)));
+         result.append(convertDigit((value[i] & 0x0f)));
       }
       return result.toString();
    }
@@ -2024,7 +2019,7 @@ public final class SimpleTypeBindings
     */
    private static TimeZone parseTimeZone(String value, int start)
    {
-      TimeZone tz = null;
+      TimeZone tz;
       if(value.charAt(start) == '+' || (value.charAt(start) == '-'))
       {
          if(value.length() - start == 6 &&
@@ -2073,7 +2068,7 @@ public final class SimpleTypeBindings
       DecimalFormat hourFormat = new DecimalFormat("'+'00;-00");
       DecimalFormat minuteFormat = new DecimalFormat("00");
 
-      int minutes = (int)offset / (1000 * 60);
+      int minutes = offset / (1000 * 60);
       int hours = minutes / 60;
 
       minutes -= (hours * 60);

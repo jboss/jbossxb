@@ -309,7 +309,7 @@ public class XsdBinder
          String typeBasedClsName = null;
          if("http://www.w3.org/2001/XMLSchema".equals(typeDef.getNamespace()))
          {
-            javaType = SimpleTypeBindings.classForType(typeDef.getName());
+            javaType = SimpleTypeBindings.classForType(typeDef.getName(), elementDecl.getNillable());
          }
          else if(typeDef.getName() != null)
          {
@@ -510,7 +510,7 @@ public class XsdBinder
          String typeBasedClsName = null;
          if("http://www.w3.org/2001/XMLSchema".equals(typeDef.getNamespace()))
          {
-            javaType = SimpleTypeBindings.classForType(typeDef.getName());
+            javaType = SimpleTypeBindings.classForType(typeDef.getName(), elementDecl.getNillable());
          }
          else if(typeDef.getName() != null)
          {

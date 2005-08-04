@@ -33,8 +33,12 @@ public interface GenericValueContainer
 
             public Object instantiate()
             {
-               Object[] arr = (Object[])Array.newInstance(itemType, items.size());
-               return items.toArray(arr);
+               Object arr = Array.newInstance(itemType, items.size());
+               for(int i = 0; i < items.size(); ++i)
+               {
+                  Array.set(arr, i, items.get(i));
+               }
+               return arr;
             }
          };
       }

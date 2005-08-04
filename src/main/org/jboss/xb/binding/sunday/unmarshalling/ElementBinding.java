@@ -27,6 +27,7 @@ public class ElementBinding
 
    private final SchemaBinding schema;
    private final TypeBinding typeBinding;
+   private boolean nillable;
    private ClassMetaData classMetaData;
    private PropertyMetaData propertyMetaData;
    private MapEntryMetaData mapEntryMetaData;
@@ -41,8 +42,14 @@ public class ElementBinding
 
    public ElementBinding(SchemaBinding schema, TypeBinding typeBinding)
    {
+      this(schema, typeBinding, false);
+   }
+
+   public ElementBinding(SchemaBinding schema, TypeBinding typeBinding, boolean nillable)
+   {
       this.schema = schema;
       this.typeBinding = typeBinding;
+      this.nillable = nillable;
    }
 
    public List getInterceptors()
@@ -201,5 +208,15 @@ public class ElementBinding
    public void setValueAdapter(ValueAdapter valueAdapter)
    {
       this.valueAdapter = valueAdapter;
+   }
+
+   public boolean isNillable()
+   {
+      return nillable;
+   }
+
+   public void setNillable(boolean nillable)
+   {
+      this.nillable = nillable;
    }
 }

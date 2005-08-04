@@ -677,7 +677,7 @@ public class XsdBinder
 
          if(binding == null)
          {
-            binding = new ElementBinding(doc, type);
+            binding = new ElementBinding(doc, type, element.getNillable());
             binding.setMultiOccurs(multiOccurs);
             if(global)
             {
@@ -860,7 +860,8 @@ public class XsdBinder
                   ", multiOccurs=" +
                   binding.isMultiOccurs() +
                   ", owner type=" +
-                  parentType.getQName()
+                  parentType.getQName() +
+                  ", nillable=" + binding.isNillable()
                );
             }
          }

@@ -420,37 +420,37 @@ public final class SimpleTypeBindings
       }
    }
 
-   public static Class classForType(String xsdType)
+   public static Class classForType(String xsdType, boolean nillable)
    {
       Class result;
       int typeCode = xsdType.hashCode();
       if(typeCode == XS_INT)
       {
-         result = Integer.class;
+         result = nillable ? Integer.class : int.class;
       }
       else if(typeCode == XS_LONG)
       {
-         result = Long.class;
+         result = nillable ? Long.class : long.class;
       }
       else if(typeCode == XS_SHORT)
       {
-         result = Short.class;
+         result = nillable ? Short.class : short.class;
       }
       else if(typeCode == XS_BYTE)
       {
-         result = Byte.class;
+         result = nillable ? Byte.class : byte.class;
       }
       else if(typeCode == XS_FLOAT)
       {
-         result = Float.class;
+         result = nillable ? Float.class : float.class;
       }
       else if(typeCode == XS_DOUBLE)
       {
-         result = Double.class;
+         result = nillable ? Double.class : double.class;
       }
       else if(typeCode == XS_BOOLEAN)
       {
-         result = Boolean.class;
+         result = nillable ? Boolean.class : boolean.class;
       }
       else if(typeCode == XS_STRING)
       {
@@ -490,15 +490,15 @@ public final class SimpleTypeBindings
       }
       else if(typeCode == XS_UNSIGNEDINT)
       {
-         result = Long.class;
+         result = nillable ? Long.class : long.class;
       }
       else if(typeCode == XS_UNSIGNEDSHORT)
       {
-         result = Integer.class;
+         result = nillable ? Integer.class : int.class;
       }
       else if(typeCode == XS_UNSIGNEDBYTE)
       {
-         result = Short.class;
+         result = nillable ? Short.class : short.class;
       }
       else if(typeCode == XS_DATE)
       {

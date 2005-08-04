@@ -24,6 +24,7 @@ public class AttributeBinding
    private String defaultConstraint;
    private boolean mapEntryKey;
    private boolean mapEntryValue;
+   private ValueAdapter valueAdapter;
 
    public AttributeBinding(SchemaBinding schema, TypeBinding type, AttributeHandler handler)
    {
@@ -100,5 +101,15 @@ public class AttributeBinding
    public SchemaBinding getSchema()
    {
       return schema;
+   }
+
+   public ValueAdapter getValueAdapter()
+   {
+      return valueAdapter == null ? type.getValueAdapter() : valueAdapter;
+   }
+
+   public void setValueAdapter(ValueAdapter valueAdapter)
+   {
+      this.valueAdapter = valueAdapter;
    }
 }

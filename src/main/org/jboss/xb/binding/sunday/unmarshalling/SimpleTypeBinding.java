@@ -37,6 +37,13 @@ public class SimpleTypeBinding
       setDefaultHandler();
    }
 
+   public SimpleTypeBinding(QName qName, ValueAdapter valueAdapter)
+   {
+      super(qName);
+      setDefaultHandler();
+      setValueAdapter(valueAdapter);
+   }
+
    public SimpleTypeBinding(QName qName, CharactersHandler simple)
    {
       super(qName, simple);

@@ -24,6 +24,18 @@ public class SchemaBinding
 
    // populate SIMPLE_TYPES
    {
+      ValueAdapter dateAdapter = new ValueAdapter()
+      {
+         public Object cast(Object o, Class c)
+         {
+            if(o != null && java.util.Date.class.isAssignableFrom(c))
+            {
+               o = ((java.util.Calendar)o).getTime();
+            }
+            return o;
+         }
+      };
+
       addSimpleType(new SimpleTypeBinding(Constants.QNAME_ANYSIMPLETYPE));
       addSimpleType(new SimpleTypeBinding(Constants.QNAME_STRING));
       addSimpleType(new SimpleTypeBinding(Constants.QNAME_BOOLEAN));
@@ -31,9 +43,9 @@ public class SchemaBinding
       addSimpleType(new SimpleTypeBinding(Constants.QNAME_FLOAT));
       addSimpleType(new SimpleTypeBinding(Constants.QNAME_DOUBLE));
       addSimpleType(new SimpleTypeBinding(Constants.QNAME_DURATION));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_DATETIME));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_TIME));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_DATE));
+      addSimpleType(new SimpleTypeBinding(Constants.QNAME_DATETIME, dateAdapter));
+      addSimpleType(new SimpleTypeBinding(Constants.QNAME_TIME, dateAdapter));
+      addSimpleType(new SimpleTypeBinding(Constants.QNAME_DATE, dateAdapter));
       addSimpleType(new SimpleTypeBinding(Constants.QNAME_GYEARMONTH));
       addSimpleType(new SimpleTypeBinding(Constants.QNAME_GYEAR));
       addSimpleType(new SimpleTypeBinding(Constants.QNAME_GMONTHDAY));

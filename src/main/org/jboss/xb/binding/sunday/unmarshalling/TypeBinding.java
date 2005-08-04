@@ -50,6 +50,7 @@ public class TypeBinding
    private CharactersMetaData charMetaData;
    private PropertyMetaData wildcardPropertyMetaData;
    private AddMethodMetaData addMethodMetaData;
+   private ValueAdapter valueAdapter = ValueAdapter.NOOP;
 
    public TypeBinding()
    {
@@ -415,5 +416,15 @@ public class TypeBinding
    public AddMethodMetaData getAddMethodMetaData()
    {
       return addMethodMetaData;
+   }
+
+   public ValueAdapter getValueAdapter()
+   {
+      return valueAdapter;
+   }
+
+   public void setValueAdapter(ValueAdapter valueAdapter)
+   {
+      this.valueAdapter = valueAdapter;
    }
 }

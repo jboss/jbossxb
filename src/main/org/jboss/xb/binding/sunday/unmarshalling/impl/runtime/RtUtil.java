@@ -15,6 +15,7 @@ import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 import org.jboss.logging.Logger;
 
 /**
@@ -29,7 +30,12 @@ public class RtUtil
    {
    }
 
-   public static void set(Object o, Object value, String prop, String colType, boolean ignoreNotFoundField)
+   public static void set(Object o,
+                          Object value,
+                          String prop,
+                          String colType,
+                          boolean ignoreNotFoundField,
+                          ValueAdapter valueAdapter)
    {
       Class cls = o.getClass();
       Method getter = null;
@@ -71,6 +77,8 @@ public class RtUtil
             );
          }
       }
+
+      value = valueAdapter.cast(value, fieldType);
 
       if(colType != null ||
          // todo collections of collections

@@ -37,6 +37,7 @@ public class ElementBinding
    private boolean mapEntryValue;
    private boolean multiOccurs;
    private Boolean skip;
+   private ValueAdapter valueAdapter;
 
    public ElementBinding(SchemaBinding schema, TypeBinding typeBinding)
    {
@@ -190,5 +191,15 @@ public class ElementBinding
    public boolean isSkip()
    {
       return skip == null ? typeBinding.isSkip() : skip.booleanValue();
+   }
+
+   public ValueAdapter getValueAdapter()
+   {
+      return valueAdapter == null ? typeBinding.getValueAdapter() : valueAdapter;
+   }
+
+   public void setValueAdapter(ValueAdapter valueAdapter)
+   {
+      this.valueAdapter = valueAdapter;
    }
 }

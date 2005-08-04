@@ -749,7 +749,9 @@ public class RtElementHandler
                   }
 
                   String colType = propertyMetaData == null ? null : propertyMetaData.getCollectionType();
-                  RtUtil.set(owner, o, propName, colType, element.getSchema().isIgnoreUnresolvedFieldOrClass());
+                  RtUtil.set(owner, o, propName, colType,
+                     element.getSchema().isIgnoreUnresolvedFieldOrClass(),
+                     element.getValueAdapter());
                }
             }
          }

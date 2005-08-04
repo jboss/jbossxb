@@ -1095,7 +1095,7 @@ public final class SimpleTypeBindings
          Calendar c;
          if(value.getClass() == java.util.Date.class)
          {
-            c = Calendar.getInstance();
+            c = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
             c.clear();
             c.setTime((java.util.Date)value);
          }

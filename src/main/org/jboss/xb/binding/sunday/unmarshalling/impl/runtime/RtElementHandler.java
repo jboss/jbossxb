@@ -74,7 +74,7 @@ public class RtElementHandler
                QName itemTypeQName = itemType.getQName();
                if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
                {
-                  itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart(), element.isNillable());
+                  itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart(), item.isNillable());
                }
                else
                {

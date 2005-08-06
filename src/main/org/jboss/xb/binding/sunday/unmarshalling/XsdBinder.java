@@ -335,6 +335,7 @@ public class XsdBinder
             null :
             bindType(doc, baseTypeDef, sharedElements));*/
          binding = (baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType));
+         binding.setStartElementCreatesObject(true);
 
          if(typeName != null)
          {

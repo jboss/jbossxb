@@ -51,6 +51,7 @@ public class TypeBinding
    private PropertyMetaData wildcardPropertyMetaData;
    private AddMethodMetaData addMethodMetaData;
    private ValueAdapter valueAdapter = ValueAdapter.NOOP;
+   private Boolean startElementCreatesObject;
 
    public TypeBinding()
    {
@@ -83,7 +84,7 @@ public class TypeBinding
       this.schemaResolver = baseType.schemaResolver;
       this.baseType = baseType;
 
-      if(!baseType.isSimple())
+      if(!baseType.isStartElementCreatesObject())
       {
          this.handler = baseType.handler;
       }
@@ -183,8 +184,10 @@ public class TypeBinding
     */ 
    public Attributes expandWithDefaultAttributes(Attributes attrs)
    {
-      if( this.attrs.size() == 0 )
+      if(this.attrs.size() == 0)
+      {
          return attrs;
+      }
 
       // Map<QName, AttributeBinding>
       HashMap attrsNotSeen = new HashMap(this.attrs);
@@ -291,11 +294,6 @@ public class TypeBinding
    public boolean isSimple()
    {
       return elements.isEmpty() && attrs.isEmpty();
-   }
-
-   public boolean hasSimpleContent()
-   {
-      return elements.isEmpty();
    }
 
    public boolean isArrayWrapper()
@@ -426,5 +424,16 @@ public class TypeBinding
    public void setValueAdapter(ValueAdapter valueAdapter)
    {
       this.valueAdapter = valueAdapter;
+   }
+
+   public boolean isStartElementCreatesObject()
+   {
+      return startElementCreatesObject == null ?
+         !elements.isEmpty() || !attrs.isEmpty() : startElementCreatesObject.booleanValue();
+   }
+
+   public void setStartElementCreatesObject(boolean startElementCreatesObject)
+   {
+      this.startElementCreatesObject = startElementCreatesObject ? Boolean.TRUE : Boolean.FALSE;
    }
 }

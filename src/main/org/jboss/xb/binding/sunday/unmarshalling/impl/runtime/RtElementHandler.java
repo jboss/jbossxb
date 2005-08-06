@@ -56,7 +56,7 @@ public class RtElementHandler
 
       Object o = null;
       TypeBinding type = element.getType();
-      if(!type.isSimple())
+      if(type.isStartElementCreatesObject())
       {
          ClassMetaData classMetaData = element.getClassMetaData();
          MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();

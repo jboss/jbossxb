@@ -34,6 +34,12 @@ public class PropertyEditors
 {
    private static Logger log = Logger.getLogger(PropertyEditors.class);
 
+   /** The null string */
+   private static final String NULL = "null";
+   
+   /** Whether we handle nulls */
+   private static boolean disableIsNull = false;
+
    /** Augment the PropertyEditorManager search path to incorporate the JBoss
     specific editors by appending the org.jboss.util.propertyeditor package
     to the PropertyEditorManager editor search path.
@@ -60,6 +66,53 @@ public class PropertyEditors
       PropertyEditorManager.registerEditor(clsArrayType, ClassArrayEditor.class);
       Class intArrayType = int[].class;
       PropertyEditorManager.registerEditor(intArrayType, IntArrayEditor.class);
+      
+      try
+      {
+         if (System.getProperty("org.jboss.util.property.disablenull") != null)
+            disableIsNull = true;
+      }
+      catch (Throwable ignored)
+      {
+         log.trace("Error retrieving system property org.jboss.util.property.diablenull", ignored);
+      }
+   }
+
+   /**
+    * Whether a string is interrupted as the null value,
+    * including the empty string.
+    * 
+    * @param value the value
+    * @return true when the string has the value null
+    */
+   public static final boolean isNull(final String value)
+   {
+      return isNull(value, true, true);
+   }
+
+   /**
+    * Whether a string is interrupted as the null value
+    * 
+    * @param value the value
+    * @param trim whether to trim the string
+    * @param empty whether to include the empty string as null
+    * @return true when the string has the value null
+    */
+   public static final boolean isNull(final String value, final boolean trim, final boolean empty)
+   {
+      // For backwards compatibility
+      if (disableIsNull)
+         return false;
+      // No value?
+      if (value == null)
+         return true;
+      // Trim the text when requested
+      String trimmed = trim ? value.trim() : value;
+      // Is the empty string null?
+      if (empty && trimmed.length() == 0)
+         return true;
+      // Just check it.
+      return NULL.equalsIgnoreCase(trimmed);
    }
 
    /**

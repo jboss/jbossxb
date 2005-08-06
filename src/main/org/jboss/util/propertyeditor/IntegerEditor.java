@@ -19,6 +19,11 @@ public class IntegerEditor extends PropertyEditorSupport
     */
    public void setAsText(final String text)
    {
+      if (PropertyEditors.isNull(text))
+      {
+         setValue(null);
+         return;
+      }
       Object newValue = Integer.decode(text);
       setValue(newValue);
    }

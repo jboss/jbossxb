@@ -21,6 +21,11 @@ public class LongEditor extends PropertyEditorSupport
     */
    public void setAsText(final String text)
    {
+      if (PropertyEditors.isNull(text))
+      {
+         setValue(null);
+         return;
+      }
       Object newValue = Long.valueOf(text);
       setValue(newValue);
    }

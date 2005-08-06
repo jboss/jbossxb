@@ -21,6 +21,11 @@ public class BooleanEditor extends PropertyEditorSupport
     */
    public void setAsText(final String text)
    {
+      if (PropertyEditors.isNull(text))
+      {
+         setValue(null);
+         return;
+      }
       Object newValue = Boolean.valueOf(text);
       setValue(newValue);
    }

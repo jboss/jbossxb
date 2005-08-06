@@ -19,6 +19,11 @@ public class ShortEditor extends PropertyEditorSupport
     */
    public void setAsText(final String text)
    {
+      if (PropertyEditors.isNull(text))
+      {
+         setValue(null);
+         return;
+      }
       Object newValue = Short.decode(text);
       setValue(newValue);
    }

@@ -6,16 +6,31 @@
  */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.HashMap;
-import java.util.Collections;
-import java.io.Reader;
-import java.io.InputStream;
 import javax.xml.namespace.QName;
-
-import org.w3c.dom.bootstrap.DOMImplementationRegistry;
-
+import org.apache.xerces.xs.XSAnnotation;
+import org.apache.xerces.xs.XSAttributeDeclaration;
+import org.apache.xerces.xs.XSAttributeUse;
+import org.apache.xerces.xs.XSComplexTypeDefinition;
+import org.apache.xerces.xs.XSConstants;
+import org.apache.xerces.xs.XSElementDeclaration;
+import org.apache.xerces.xs.XSImplementation;
+import org.apache.xerces.xs.XSLoader;
+import org.apache.xerces.xs.XSModel;
+import org.apache.xerces.xs.XSModelGroup;
+import org.apache.xerces.xs.XSModelGroupDefinition;
+import org.apache.xerces.xs.XSNamedMap;
+import org.apache.xerces.xs.XSObjectList;
+import org.apache.xerces.xs.XSParticle;
+import org.apache.xerces.xs.XSSimpleTypeDefinition;
+import org.apache.xerces.xs.XSTerm;
+import org.apache.xerces.xs.XSTypeDefinition;
+import org.apache.xerces.xs.XSWildcard;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -31,24 +46,10 @@ import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.metadata.XsdAnnotation;
 import org.jboss.xb.binding.metadata.XsdAppInfo;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtAttributeHandler;
-import org.apache.xerces.xs.XSModel;
-import org.apache.xerces.xs.XSImplementation;
-import org.apache.xerces.xs.XSLoader;
-import org.apache.xerces.xs.XSNamedMap;
-import org.apache.xerces.xs.XSConstants;
-import org.apache.xerces.xs.XSElementDeclaration;
-import org.apache.xerces.xs.XSTypeDefinition;
-import org.apache.xerces.xs.XSSimpleTypeDefinition;
-import org.apache.xerces.xs.XSComplexTypeDefinition;
-import org.apache.xerces.xs.XSParticle;
-import org.apache.xerces.xs.XSTerm;
-import org.apache.xerces.xs.XSModelGroup;
-import org.apache.xerces.xs.XSObjectList;
-import org.apache.xerces.xs.XSModelGroupDefinition;
-import org.apache.xerces.xs.XSAttributeDeclaration;
-import org.apache.xerces.xs.XSAttributeUse;
-import org.apache.xerces.xs.XSAnnotation;
-import org.apache.xerces.xs.XSWildcard;
+import org.w3c.dom.DOMConfiguration;
+import org.w3c.dom.bootstrap.DOMImplementationRegistry;
+import org.w3c.dom.ls.LSInput;
+import org.w3c.dom.ls.LSResourceResolver;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -77,60 +78,128 @@ public class XsdBinder
 
    /**
     * Create a SchemaBinding from and xsd url/uri.
+    *
     * @param xsdUrl
     * @return SchemaBinding mapping
-    */ 
+    */
    public static SchemaBinding bind(String xsdUrl)
    {
-      XSModel model = loadSchema(xsdUrl);
-      return bind(model, xsdUrl);
+      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      resolver.setBaseURI(xsdUrl);
+      return bind(xsdUrl, resolver);
+   }
+
+   /**
+    * Create a SchemaBinding from and xsd url/uri.
+    *
+    * @param xsdUrl
+    * @param resolver the resolver will be used to resolve imported schemas in the schema being loaded
+    *                 and also will be set on the returned instance of SchemaBinding
+    * @return SchemaBinding mapping
+    */
+   public static SchemaBinding bind(String xsdUrl, SchemaBindingResolver resolver)
+   {
+      XSModel model = loadSchema(xsdUrl, resolver);
+      return bind(model, resolver);
+   }
+
+   public static SchemaBinding bind(InputStream xsdStream, String encoding)
+   {
+      return bind(xsdStream, encoding, new DefaultSchemaResolver());
    }
 
    /**
     * Create a SchemaBinding from and xsd stream.
+    *
     * @param xsdStream - the xsd InputStream
-    * @param encoding - optional stream encoding
+    * @param encoding  - optional stream encoding
     * @return SchemaBinding mapping
-    */ 
+    */
    public static SchemaBinding bind(InputStream xsdStream, String encoding, String baseURI)
    {
-      XSModel model = loadSchema(xsdStream, encoding, baseURI);
-      return bind(model, baseURI);
+      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      resolver.setBaseURI(baseURI);
+      return bind(xsdStream, encoding, resolver);
+   }
+
+   /**
+    * Create a SchemaBinding from and xsd stream.
+    *
+    * @param xsdStream - the xsd InputStream
+    * @param encoding  - optional stream encoding
+    * @param resolver  the resolver will be used to resolve imported schemas in the schema being loaded
+    *                  and also will be set on the returned instance of SchemaBinding
+    * @return SchemaBinding mapping
+    */
+   public static SchemaBinding bind(InputStream xsdStream, String encoding, SchemaBindingResolver resolver)
+   {
+      XSModel model = loadSchema(xsdStream, encoding, resolver);
+      return bind(model, resolver);
+   }
+
+   public static SchemaBinding bind(Reader xsdReader, String encoding)
+   {
+      return bind(xsdReader, encoding, new DefaultSchemaResolver());
    }
 
    /**
     * Create a SchemaBinding from and xsd reader.
+    *
     * @param xsdReader - xsd reader
-    * @param encoding - optional reader encoding
+    * @param encoding  - optional reader encoding
     * @return SchemaBinding mapping
-    */ 
+    */
    public static SchemaBinding bind(Reader xsdReader, String encoding, String baseURI)
    {
-      XSModel model = loadSchema(xsdReader, encoding, baseURI);
-      return bind(model, baseURI);
+      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      resolver.setBaseURI(baseURI);
+      return bind(xsdReader, encoding, resolver);
+   }
+
+   /**
+    * Create a SchemaBinding from and xsd reader.
+    *
+    * @param xsdReader - xsd reader
+    * @param encoding  - optional reader encoding
+    * @param resolver  the resolver will be used to resolve imported schemas in the schema being loaded
+    *                  and also will be set on the returned instance of SchemaBinding
+    * @return SchemaBinding mapping
+    */
+   public static SchemaBinding bind(Reader xsdReader, String encoding, SchemaBindingResolver resolver)
+   {
+      XSModel model = loadSchema(xsdReader, encoding, resolver);
+      return bind(model, resolver);
    }
 
    /**
     * Create a SchemaBinding from and xsd string.
-    * @param xsd - xsd string
+    *
+    * @param xsd      - xsd string
     * @param encoding - optional string encoding
     * @return SchemaBinding mapping
-    */ 
+    */
    public static SchemaBinding bind(String xsd, String encoding)
    {
+      return bind(xsd, encoding, new DefaultSchemaResolver());
+   }
+
+   /**
+    * Create a SchemaBinding from and xsd string.
+    *
+    * @param xsd      - xsd string
+    * @param encoding - optional string encoding
+    * @param resolver the resolver will be used to resolve imported schemas in the schema being loaded
+    *                 and also will be set on the returned instance of SchemaBinding
+    * @return SchemaBinding mapping
+    */
+   public static SchemaBinding bind(String xsd, String encoding, SchemaBindingResolver resolver)
+   {
       XSModel model = loadSchema(xsd, encoding);
-      return bind(model);
+      return bind(model, resolver);
    }
 
-   public static SchemaBinding bind(XSModel model)
+   public static SchemaBinding bind(XSModel model, SchemaBindingResolver resolver)
    {
-      return bind(model, null);
-   }
-
-   public static SchemaBinding bind(XSModel model, String baseURI)
-   {
-      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
-      resolver.setBaseURI(baseURI);
       SchemaBinding schema = getXsdBinding().schemaBinding;
       schema.setSchemaResolver(resolver);
 
@@ -455,8 +524,9 @@ public class XsdBinder
 
                      if(classMetaData != null)
                      {
-                        throw new JBossXBRuntimeException("Illegal binding: both jbxb:class and jbxb:mapEntry are specified for complex type " +
-                           type.getName()
+                        throw new JBossXBRuntimeException(
+                           "Illegal binding: both jbxb:class and jbxb:mapEntry are specified for complex type " +
+                              type.getName()
                         );
                      }
                      binding.setMapEntryMetaData(mapEntryMetaData);
@@ -496,7 +566,8 @@ public class XsdBinder
                      {
                         log.trace("complex type " + type.getName() +
                            ": elements of this type will be added to parent objects with addMethod=" +
-                           addMethodMetaData.getMethodName() + ", valueType=" + addMethodMetaData.getValueType());
+                           addMethodMetaData.getMethodName() + ", valueType=" + addMethodMetaData.getValueType()
+                        );
                      }
                      binding.setAddMethodMetaData(addMethodMetaData);
                   }
@@ -524,7 +595,7 @@ public class XsdBinder
       TypeBinding typeBinding = bindSimpleType(doc, attrType);
       QName attrName = new QName(attr.getNamespace(), attr.getName());
       AttributeBinding binding = type.addAttribute(attrName, typeBinding, RtAttributeHandler.INSTANCE);
-      if( attrUse.getConstraintType() == XSConstants.VC_DEFAULT )
+      if(attrUse.getConstraintType() == XSConstants.VC_DEFAULT)
       {
          // Associate the default value with the binding
          binding.setDefaultConstraint(attrUse.getConstraintValue());
@@ -631,7 +702,8 @@ public class XsdBinder
                if(log.isTraceEnabled())
                {
                   log.trace("wildcard is bound to property: " + propertyMetaData.getName() +
-                     ", collectionType=" + propertyMetaData.getCollectionType());
+                     ", collectionType=" + propertyMetaData.getCollectionType()
+                  );
                }
             }
             typeBinding.setWildcardPropertyMetaData(propertyMetaData);
@@ -750,8 +822,9 @@ public class XsdBinder
 
                      if(classMetaData != null)
                      {
-                        throw new JBossXBRuntimeException("Invalid binding: both jbxb:class and jbxb:mapEntry are specified for element " +
-                           new QName(element.getNamespace(), element.getName())
+                        throw new JBossXBRuntimeException(
+                           "Invalid binding: both jbxb:class and jbxb:mapEntry are specified for element " +
+                              new QName(element.getNamespace(), element.getName())
                         );
                      }
                      binding.setMapEntryMetaData(mapEntryMetaData);
@@ -837,8 +910,8 @@ public class XsdBinder
                      {
                         log.trace(
                            "element name=" +
-                           new QName(element.getNamespace(), element.getName()) +
-                           ": will be skipped, it's attributes, character content and children will be set on the parent"
+                              new QName(element.getNamespace(), element.getName()) +
+                              ": will be skipped, it's attributes, character content and children will be set on the parent"
                         );
                      }
                      binding.setSkip(skip);
@@ -879,34 +952,19 @@ public class XsdBinder
 
    // Private
 
-   private static XSModel loadSchema(String xsdURL)
+   private static XSModel loadSchema(String xsdURL, SchemaBindingResolver schemaResolver)
    {
-      log.debug("loading xsd: " + xsdURL);
+      if(log.isTraceEnabled())
+      {
+         log.trace("loading xsd: " + xsdURL);
+      }
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
-
-      /* todo this is the way to handle schema imports
-      DOMConfiguration config = schemaLoader.getConfig();
-      config.setParameter("resource-resolver", new LSResourceResolver()
+      if(schemaResolver != null)
       {
-         public LSInput resolveResource(String type, String namespaceURI, String publicId, String systemId, String baseURI)
-         {
-            System.out.println("resolve resource: type=" + type +
-               ", ns=" + namespaceURI +
-               ", publicId=" + publicId +
-               ", systemId=" + systemId +
-               ", baseURI=" + baseURI
-            );
-
-            if(Constants.NS_XML_SCHEMA.equals(type))
-            {
-               // todo resolve imported schemas here
-            }
-            return null;
-         }
-      });
-      */
+         setResourceResolver(schemaLoader, schemaResolver);
+      }
 
       XSModel model = schemaLoader.loadURI(xsdURL);
       if(model == null)
@@ -917,29 +975,74 @@ public class XsdBinder
       return model;
    }
 
-   private static XSModel loadSchema(InputStream is, String encoding, String baseURI)
+   private static XSModel loadSchema(InputStream is,
+                                     String encoding,
+                                     SchemaBindingResolver schemaResolver)
    {
-      log.debug("loading xsd from InputStream");
-      LSInputAdaptor input = new LSInputAdaptor(is, encoding, baseURI);
+      if(log.isTraceEnabled())
+      {
+         log.trace("loading xsd from InputStream");
+      }
+
+      LSInputAdaptor input = new LSInputAdaptor(is, encoding);
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
+      if(schemaResolver != null)
+      {
+         setResourceResolver(schemaLoader, schemaResolver);
+      }
+
       return schemaLoader.load(input);
    }
 
-   private static XSModel loadSchema(Reader reader, String encoding, String baseURI)
+   private static XSModel loadSchema(Reader reader, String encoding, SchemaBindingResolver schemaResolver)
    {
-      log.debug("loading xsd from Reader");
-      LSInputAdaptor input = new LSInputAdaptor(reader, encoding, baseURI);
+      if(log.isTraceEnabled())
+      {
+         log.trace("loading xsd from Reader");
+      }
+
+      LSInputAdaptor input = new LSInputAdaptor(reader, encoding);
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
+      if(schemaResolver != null)
+      {
+         setResourceResolver(schemaLoader, schemaResolver);
+      }
+
       return schemaLoader.load(input);
+   }
+
+   private static void setResourceResolver(XSLoader schemaLoader, final SchemaBindingResolver schemaResolver)
+   {
+      DOMConfiguration config = schemaLoader.getConfig();
+      config.setParameter("resource-resolver", new LSResourceResolver()
+      {
+         public LSInput resolveResource(String type,
+                                        String namespaceURI,
+                                        String publicId,
+                                        String systemId,
+                                        String baseURI)
+         {
+            if(Constants.NS_XML_SCHEMA.equals(type))
+            {
+               return schemaResolver.resolveAsLSInput(namespaceURI, null, null);
+            }
+            return null;
+         }
+      }
+      );
    }
 
    private static XSModel loadSchema(String data, String encoding)
    {
-      log.debug("loading xsd from string");
+      if(log.isTraceEnabled())
+      {
+         log.trace("loading xsd from string");
+      }
+
       LSInputAdaptor input = new LSInputAdaptor(data, encoding);
 
       XSImplementation impl = getXSImplementation();

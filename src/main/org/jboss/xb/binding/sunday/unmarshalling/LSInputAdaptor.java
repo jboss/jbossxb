@@ -36,18 +36,19 @@ public class LSInputAdaptor
       this.systemId = systemId;
       this.baseURI = baseURI;
    }
-   public LSInputAdaptor(InputStream is, String encoding, String baseURI)
+
+   public LSInputAdaptor(InputStream is, String encoding)
    {
       setByteStream(is);
       setEncoding(encoding);
-      setBaseURI(baseURI);
    }
-   public LSInputAdaptor(Reader charStream, String encoding, String baseURI)
+
+   public LSInputAdaptor(Reader charStream, String encoding)
    {
       this.setCharacterStream(charStream);
       setEncoding(encoding);
-      setBaseURI(baseURI);
    }
+
    public LSInputAdaptor(String data, String encoding)
    {
       this.setStringData(data);
@@ -118,6 +119,7 @@ public class LSInputAdaptor
    {
       return encoding;
    }
+
    public void setEncoding(String encoding)
    {
       this.encoding = encoding;
@@ -127,6 +129,7 @@ public class LSInputAdaptor
    {
       return certifiedText;
    }
+
    public void setCertifiedText(boolean flag)
    {
       this.certifiedText = flag;

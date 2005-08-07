@@ -6,6 +6,8 @@
  */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
+import org.w3c.dom.ls.LSInput;
+
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
@@ -28,4 +30,13 @@ public interface SchemaBindingResolver
     * could also throw an exception)
     */
    SchemaBinding resolve(String nsUri, String baseURI, String schemaLocation);
+
+   /**
+    * This one is used to resolve imported schemas with <xsd:import>
+    * @param nsUri
+    * @param baseUri
+    * @param schemaLocation
+    * @return
+    */
+   LSInput resolveAsLSInput(String nsUri, String baseUri, String schemaLocation);
 }

@@ -13,6 +13,7 @@ import java.net.URL;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.logging.Logger;
 import org.xml.sax.InputSource;
+import org.w3c.dom.ls.LSInput;
 
 /**
  * A default SchemaBindingResolver that uses a JBossEntityResolver to locate
@@ -63,7 +64,7 @@ public class DefaultSchemaResolver
     * @param baseURI
     * @param schemaLocation
     * @return
-    */ 
+    */
    public SchemaBinding resolve(String nsUri, String baseURI, String schemaLocation)
    {
       boolean trace = log.isTraceEnabled();
@@ -136,5 +137,10 @@ public class DefaultSchemaResolver
       }
 
       return schema;
+   }
+
+   public LSInput resolveAsLSInput(String nsUri, String baseUri, String schemaLocation)
+   {
+      throw new UnsupportedOperationException("resolveResource is not implemented.");
    }
 }

@@ -120,7 +120,7 @@ public class TypeBinding
          {
             // this is wildcard handling
             String schemaLocation = atts == null ? null : Util.getSchemaLocation(atts, name.getNamespaceURI());
-            SchemaBinding schema = resolver.resolve(name.getNamespaceURI(), name.getLocalPart(), null, schemaLocation);
+            SchemaBinding schema = resolver.resolve(name.getNamespaceURI(), null, schemaLocation);
             if(schema != null)
             {
                element = schema.getElement(name);

@@ -60,12 +60,11 @@ public class DefaultSchemaResolver
     * 4. If the baseURI is null, the xsd is located using URL(schemaLocation)
     * 
     * @param nsUri
-    * @param localName
     * @param baseURI
     * @param schemaLocation
     * @return
     */ 
-   public SchemaBinding resolve(String nsUri, String localName, String baseURI, String schemaLocation)
+   public SchemaBinding resolve(String nsUri, String baseURI, String schemaLocation)
    {
       boolean trace = log.isTraceEnabled();
       InputSource is = null;
@@ -96,7 +95,6 @@ public class DefaultSchemaResolver
 
          if( is == null )
          {
-            URL schemaURL = null;
             // Just try resolving the schemaLocation against the baseURI
             try
             {
@@ -105,6 +103,7 @@ public class DefaultSchemaResolver
                   baseURI = this.baseURI;
                }
 
+               URL schemaURL = null;
                if( baseURI != null )
                {
                   URL baseURL = new URL(baseURI);

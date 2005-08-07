@@ -243,7 +243,7 @@ public class SundayContentHandler
          else if(schemaResolver != null)
          {
             String schemaLocation = atts == null ? null : Util.getSchemaLocation(atts, namespaceURI);
-            schemaBinding = schemaResolver.resolve(namespaceURI, localName, null, schemaLocation);
+            schemaBinding = schemaResolver.resolve(namespaceURI, null, schemaLocation);
             if(schemaBinding != null)
             {
                binding = schemaBinding.getElement(startName);

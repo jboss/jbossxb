@@ -80,7 +80,7 @@ public class XsdBinder
     * @param xsdUrl
     * @return SchemaBinding mapping
     */ 
-   public static final SchemaBinding bind(String xsdUrl)
+   public static SchemaBinding bind(String xsdUrl)
    {
       XSModel model = loadSchema(xsdUrl);
       return bind(model, xsdUrl);
@@ -92,7 +92,7 @@ public class XsdBinder
     * @param encoding - optional stream encoding
     * @return SchemaBinding mapping
     */ 
-   public static final SchemaBinding bind(InputStream xsdStream, String encoding, String baseURI)
+   public static SchemaBinding bind(InputStream xsdStream, String encoding, String baseURI)
    {
       XSModel model = loadSchema(xsdStream, encoding, baseURI);
       return bind(model, baseURI);
@@ -104,7 +104,7 @@ public class XsdBinder
     * @param encoding - optional reader encoding
     * @return SchemaBinding mapping
     */ 
-   public static final SchemaBinding bind(Reader xsdReader, String encoding, String baseURI)
+   public static SchemaBinding bind(Reader xsdReader, String encoding, String baseURI)
    {
       XSModel model = loadSchema(xsdReader, encoding, baseURI);
       return bind(model, baseURI);
@@ -116,18 +116,18 @@ public class XsdBinder
     * @param encoding - optional string encoding
     * @return SchemaBinding mapping
     */ 
-   public static final SchemaBinding bind(String xsd, String encoding)
+   public static SchemaBinding bind(String xsd, String encoding)
    {
       XSModel model = loadSchema(xsd, encoding);
       return bind(model);
    }
 
-   public static final SchemaBinding bind(XSModel model)
+   public static SchemaBinding bind(XSModel model)
    {
       return bind(model, null);
    }
 
-   public static final SchemaBinding bind(XSModel model, String baseURI)
+   public static SchemaBinding bind(XSModel model, String baseURI)
    {
       DefaultSchemaResolver resolver = new DefaultSchemaResolver();
       resolver.setBaseURI(baseURI);
@@ -226,9 +226,7 @@ public class XsdBinder
       return schema;
    }
 
-   private static final TypeBinding bindType(SchemaBinding doc,
-                                             XSTypeDefinition type,
-                                             SharedElements sharedElements)
+   private static TypeBinding bindType(SchemaBinding doc, XSTypeDefinition type, SharedElements sharedElements)
    {
       TypeBinding binding;
       switch(type.getTypeCategory())
@@ -245,7 +243,7 @@ public class XsdBinder
       return binding;
    }
 
-   private static final TypeBinding bindSimpleType(SchemaBinding doc, XSSimpleTypeDefinition type)
+   private static TypeBinding bindSimpleType(SchemaBinding doc, XSSimpleTypeDefinition type)
    {
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
       TypeBinding binding = typeName == null ? null : doc.getType(typeName);
@@ -320,9 +318,9 @@ public class XsdBinder
       return binding;
    }
 
-   private static final TypeBinding bindComplexType(SchemaBinding doc,
-                                                    XSComplexTypeDefinition type,
-                                                    SharedElements sharedElements)
+   private static TypeBinding bindComplexType(SchemaBinding doc,
+                                              XSComplexTypeDefinition type,
+                                              SharedElements sharedElements)
    {
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
       TypeBinding binding = typeName == null ? null : doc.getType(typeName);
@@ -602,7 +600,7 @@ public class XsdBinder
             bindModelGroup(schema, (XSModelGroup)term, sharedElements);
             break;
          case XSConstants.WILDCARD:
-            bindWildcard(schema, (XSWildcard)term);
+            bindWildcard((XSWildcard)term);
             break;
          case XSConstants.ELEMENT_DECLARATION:
             bindElement(schema,
@@ -616,7 +614,7 @@ public class XsdBinder
       }
    }
 
-   private static void bindWildcard(SchemaBinding schema, XSWildcard wildcard)
+   private static void bindWildcard(XSWildcard wildcard)
    {
       TypeBinding typeBinding = peekType();
 
@@ -926,8 +924,7 @@ public class XsdBinder
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
-      XSModel model = schemaLoader.load(input);
-      return model;
+      return schemaLoader.load(input);
    }
 
    private static XSModel loadSchema(Reader reader, String encoding, String baseURI)
@@ -937,8 +934,7 @@ public class XsdBinder
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
-      XSModel model = schemaLoader.load(input);
-      return model;
+      return schemaLoader.load(input);
    }
 
    private static XSModel loadSchema(String data, String encoding)
@@ -948,8 +944,7 @@ public class XsdBinder
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
-      XSModel model = schemaLoader.load(input);
-      return model;
+      return schemaLoader.load(input);
    }
 
    private static XSImplementation getXSImplementation()

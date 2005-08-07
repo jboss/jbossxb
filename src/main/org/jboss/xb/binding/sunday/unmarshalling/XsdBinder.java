@@ -887,6 +887,29 @@ public class XsdBinder
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
+
+      /* todo this is the way to handle schema imports
+      DOMConfiguration config = schemaLoader.getConfig();
+      config.setParameter("resource-resolver", new LSResourceResolver()
+      {
+         public LSInput resolveResource(String type, String namespaceURI, String publicId, String systemId, String baseURI)
+         {
+            System.out.println("resolve resource: type=" + type +
+               ", ns=" + namespaceURI +
+               ", publicId=" + publicId +
+               ", systemId=" + systemId +
+               ", baseURI=" + baseURI
+            );
+
+            if(Constants.NS_XML_SCHEMA.equals(type))
+            {
+               // todo resolve imported schemas here
+            }
+            return null;
+         }
+      });
+      */
+
       XSModel model = schemaLoader.loadURI(xsdURL);
       if(model == null)
       {

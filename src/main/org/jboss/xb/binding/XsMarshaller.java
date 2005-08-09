@@ -84,7 +84,6 @@ public class XsMarshaller
          XSElement[] elements = xsSchema.getElements();
          for(int i = 0; i < elements.length; ++i)
          {
-            log.info("marshalling " + elements[i].getName().getLocalName());
             //processElement(elements[i], addedAttributes, 1);
             processElement(elements[i], 1, true);
          }
@@ -506,16 +505,12 @@ public class XsMarshaller
                   attrValue.toString()
                );
             }
-            else
-            {
-               log.info("no val for attr " + attrQName.getLocalName() + ", container=" + container);
-            }
          }
       }
       return attrs;
    }
 
-   private final void processParticle(XSParticle particle) throws SAXException
+   private void processParticle(XSParticle particle) throws SAXException
    {
       if(particle.isElement())
       {
@@ -540,7 +535,7 @@ public class XsMarshaller
       }
    }
 
-   private final void processGroup(XSGroup group) throws SAXException
+   private void processGroup(XSGroup group) throws SAXException
    {
       if(group.isSequence())
       {

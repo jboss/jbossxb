@@ -251,7 +251,7 @@ public class SundayContentHandler
          }
          else
          {
-            throw new JBossXBRuntimeException("Neither schema binding nor schema binding resolver is not available!");
+            throw new JBossXBRuntimeException("Neither schema binding nor schema binding resolver is available!");
          }
       }
       else

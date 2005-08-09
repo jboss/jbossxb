@@ -711,7 +711,7 @@ public class XsdBinder
       }
    }
 
-   private static void bindElement(SchemaBinding doc,
+   private static void bindElement(SchemaBinding schema,
                                    XSElementDeclaration element,
                                    SharedElements sharedElements,
                                    boolean multiOccurs)
@@ -719,222 +719,224 @@ public class XsdBinder
       QName qName = new QName(element.getNamespace(), element.getName());
 
       TypeBinding parentType = peekType();
-      ElementBinding binding = parentType == null ? null : parentType.getLocalElement(qName);
-
-      if(binding == null)
+      if(parentType != null && parentType.getLocalElement(qName) != null)
       {
-         TypeBinding type = null;
+         return;
+      }
 
-         boolean shared = sharedElements.isShared(element);
-         if(shared)
-         {
-            type = sharedElements.getTypeBinding(element);
-         }
-
-         if(type == null)
-         {
-            type = bindType(doc, element.getTypeDefinition(), sharedElements);
-            if(shared)
-            {
-               sharedElements.setTypeBinding(element, type);
-            }
-         }
-
-         boolean global = element.getScope() == XSConstants.SCOPE_GLOBAL;
-         if(global)
-         {
-            binding = doc.getElement(qName);
-         }
-
-         if(binding == null)
-         {
-            binding = new ElementBinding(doc, type, element.getNillable());
-            binding.setMultiOccurs(multiOccurs);
-            if(global)
-            {
-               doc.addElement(qName, binding);
-            }
-
-            // customize binding with annotations
-            XSAnnotation an = element.getAnnotation();
-            if(an != null)
-            {
-               XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
-               XsdAppInfo appInfo = xsdAn.getAppInfo();
-               if(appInfo != null)
-               {
-                  ClassMetaData classMetaData = appInfo.getClassMetaData();
-                  if(classMetaData != null)
-                  {
-                     log.trace("element: name=" +
-                        new QName(element.getNamespace(), element.getName()) +
-                        ", class=" +
-                        classMetaData.getImpl()
-                     );
-                     binding.setClassMetaData(classMetaData);
-                  }
-
-                  PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
-                  if(propertyMetaData != null)
-                  {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("element: name=" +
-                           new QName(element.getNamespace(), element.getName()) +
-                           ", property=" +
-                           propertyMetaData.getName() +
-                           ", collectionType=" + propertyMetaData.getCollectionType()
-                        );
-                     }
-                     binding.setPropertyMetaData(propertyMetaData);
-                  }
-
-                  MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
-                  if(mapEntryMetaData != null)
-                  {
-                     if(propertyMetaData != null)
-                     {
-                        throw new JBossXBRuntimeException("An element can be bound either as a property or as a map" +
-                           " entry but not both: " +
-                           new QName(element.getNamespace(), element.getName())
-                        );
-                     }
-
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("element name=" +
-                           new QName(element.getNamespace(), element.getName()) +
-                           " is bound to a map entry: impl=" +
-                           mapEntryMetaData.getImpl() +
-                           ", getKeyMethod=" +
-                           mapEntryMetaData.getGetKeyMethod() +
-                           ", setKeyMethod=" +
-                           mapEntryMetaData.getSetKeyMethod() +
-                           ", getValueMethod=" +
-                           mapEntryMetaData.getGetValueMethod() +
-                           ", setValueMethod=" +
-                           mapEntryMetaData.getSetValueMethod() +
-                           ", valueType=" +
-                           mapEntryMetaData.getValueType() +
-                           ", nonNullValue=" + mapEntryMetaData.isNonNullValue()
-                        );
-                     }
-
-                     if(classMetaData != null)
-                     {
-                        throw new JBossXBRuntimeException(
-                           "Invalid binding: both jbxb:class and jbxb:mapEntry are specified for element " +
-                              new QName(element.getNamespace(), element.getName())
-                        );
-                     }
-                     binding.setMapEntryMetaData(mapEntryMetaData);
-                  }
-
-                  PutMethodMetaData putMethodMetaData = appInfo.getPutMethodMetaData();
-                  if(putMethodMetaData != null)
-                  {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("element: name=" +
-                           new QName(element.getNamespace(), element.getName()) +
-                           ", putMethod=" +
-                           putMethodMetaData.getName() +
-                           ", keyType=" +
-                           putMethodMetaData.getKeyType() +
-                           ", valueType=" + putMethodMetaData.getValueType()
-                        );
-                     }
-                     binding.setPutMethodMetaData(putMethodMetaData);
-                  }
-
-                  AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
-                  if(addMethodMetaData != null)
-                  {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("element: name=" +
-                           new QName(element.getNamespace(), element.getName()) +
-                           ", addMethod=" +
-                           addMethodMetaData.getMethodName() +
-                           ", valueType=" +
-                           addMethodMetaData.getValueType() +
-                           ", isChildType=" + addMethodMetaData.isChildType()
-                        );
-                     }
-                     binding.setAddMethodMetaData(addMethodMetaData);
-                  }
-
-                  ValueMetaData valueMetaData = appInfo.getValueMetaData();
-                  if(valueMetaData != null)
-                  {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("element " +
-                           new QName(element.getNamespace(), element.getName()) +
-                           ": unmarshalMethod=" + valueMetaData.getUnmarshalMethod()
-                        );
-                     }
-                     binding.setValueMetaData(valueMetaData);
-                  }
-
-                  boolean mapEntryKey = appInfo.isMapEntryKey();
-                  if(mapEntryKey)
-                  {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("element name=" +
-                           new QName(element.getNamespace(), element.getName()) +
-                           ": is bound to a key in a map entry"
-                        );
-                     }
-                     binding.setMapEntryKey(mapEntryKey);
-                  }
-
-                  boolean mapEntryValue = appInfo.isMapEntryValue();
-                  if(mapEntryValue)
-                  {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("element name=" +
-                           new QName(element.getNamespace(), element.getName()) +
-                           ": is bound to a value in a map entry"
-                        );
-                     }
-                     binding.setMapEntryValue(mapEntryValue);
-                  }
-
-                  boolean skip = appInfo.isSkip();
-                  if(skip)
-                  {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace(
-                           "element name=" +
-                              new QName(element.getNamespace(), element.getName()) +
-                              ": will be skipped, it's attributes, character content and children will be set on the parent"
-                        );
-                     }
-                     binding.setSkip(skip);
-                  }
-               }
-            }
-         }
-
+      boolean global = element.getScope() == XSConstants.SCOPE_GLOBAL;
+      ElementBinding binding = schema.getElement(qName);
+      if(global && binding != null)
+      {
          if(parentType != null)
          {
             parentType.addElement(qName, binding);
-            if(log.isTraceEnabled())
+         }
+         return;
+      }
+
+      TypeBinding type = null;
+
+      boolean shared = sharedElements.isShared(element);
+      if(shared)
+      {
+         type = sharedElements.getTypeBinding(element);
+      }
+
+      if(type == null)
+      {
+         type = bindType(schema, element.getTypeDefinition(), sharedElements);
+         if(shared)
+         {
+            sharedElements.setTypeBinding(element, type);
+         }
+      }
+
+      binding = new ElementBinding(schema, type, element.getNillable());
+      binding.setMultiOccurs(multiOccurs);
+      if(global)
+      {
+         schema.addElement(qName, binding);
+      }
+
+      if(parentType != null)
+      {
+         parentType.addElement(qName, binding);
+      }
+
+      if(log.isTraceEnabled())
+      {
+         log.trace("element: name=" +
+            qName +
+            ", type=" +
+            type.getQName() +
+            ", multiOccurs=" +
+            binding.isMultiOccurs() +
+            ", nillable=" + binding.isNillable() +
+            ", " + (global ? "global scope" : " owner type=" + parentType.getQName())
+         );
+      }
+
+      // customize binding with annotations
+      XSAnnotation an = element.getAnnotation();
+      if(an != null)
+      {
+         XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
+         XsdAppInfo appInfo = xsdAn.getAppInfo();
+         if(appInfo != null)
+         {
+            ClassMetaData classMetaData = appInfo.getClassMetaData();
+            if(classMetaData != null)
             {
                log.trace("element: name=" +
-                  qName +
-                  ", type=" +
-                  type.getQName() +
-                  ", multiOccurs=" +
-                  binding.isMultiOccurs() +
-                  ", owner type=" +
-                  parentType.getQName() +
-                  ", nillable=" + binding.isNillable()
+                  new QName(element.getNamespace(), element.getName()) +
+                  ", class=" +
+                  classMetaData.getImpl()
                );
+               binding.setClassMetaData(classMetaData);
+            }
+
+            PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
+            if(propertyMetaData != null)
+            {
+               if(log.isTraceEnabled())
+               {
+                  log.trace("element: name=" +
+                     new QName(element.getNamespace(), element.getName()) +
+                     ", property=" +
+                     propertyMetaData.getName() +
+                     ", collectionType=" + propertyMetaData.getCollectionType()
+                  );
+               }
+               binding.setPropertyMetaData(propertyMetaData);
+            }
+
+            MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
+            if(mapEntryMetaData != null)
+            {
+               if(propertyMetaData != null)
+               {
+                  throw new JBossXBRuntimeException("An element can be bound either as a property or as a map" +
+                     " entry but not both: " +
+                     new QName(element.getNamespace(), element.getName())
+                  );
+               }
+
+               if(log.isTraceEnabled())
+               {
+                  log.trace("element name=" +
+                     new QName(element.getNamespace(), element.getName()) +
+                     " is bound to a map entry: impl=" +
+                     mapEntryMetaData.getImpl() +
+                     ", getKeyMethod=" +
+                     mapEntryMetaData.getGetKeyMethod() +
+                     ", setKeyMethod=" +
+                     mapEntryMetaData.getSetKeyMethod() +
+                     ", getValueMethod=" +
+                     mapEntryMetaData.getGetValueMethod() +
+                     ", setValueMethod=" +
+                     mapEntryMetaData.getSetValueMethod() +
+                     ", valueType=" +
+                     mapEntryMetaData.getValueType() +
+                     ", nonNullValue=" + mapEntryMetaData.isNonNullValue()
+                  );
+               }
+
+               if(classMetaData != null)
+               {
+                  throw new JBossXBRuntimeException(
+                     "Invalid binding: both jbxb:class and jbxb:mapEntry are specified for element " +
+                        new QName(element.getNamespace(), element.getName())
+                  );
+               }
+               binding.setMapEntryMetaData(mapEntryMetaData);
+            }
+
+            PutMethodMetaData putMethodMetaData = appInfo.getPutMethodMetaData();
+            if(putMethodMetaData != null)
+            {
+               if(log.isTraceEnabled())
+               {
+                  log.trace("element: name=" +
+                     new QName(element.getNamespace(), element.getName()) +
+                     ", putMethod=" +
+                     putMethodMetaData.getName() +
+                     ", keyType=" +
+                     putMethodMetaData.getKeyType() +
+                     ", valueType=" + putMethodMetaData.getValueType()
+                  );
+               }
+               binding.setPutMethodMetaData(putMethodMetaData);
+            }
+
+            AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
+            if(addMethodMetaData != null)
+            {
+               if(log.isTraceEnabled())
+               {
+                  log.trace("element: name=" +
+                     new QName(element.getNamespace(), element.getName()) +
+                     ", addMethod=" +
+                     addMethodMetaData.getMethodName() +
+                     ", valueType=" +
+                     addMethodMetaData.getValueType() +
+                     ", isChildType=" + addMethodMetaData.isChildType()
+                  );
+               }
+               binding.setAddMethodMetaData(addMethodMetaData);
+            }
+
+            ValueMetaData valueMetaData = appInfo.getValueMetaData();
+            if(valueMetaData != null)
+            {
+               if(log.isTraceEnabled())
+               {
+                  log.trace("element " +
+                     new QName(element.getNamespace(), element.getName()) +
+                     ": unmarshalMethod=" + valueMetaData.getUnmarshalMethod()
+                  );
+               }
+               binding.setValueMetaData(valueMetaData);
+            }
+
+            boolean mapEntryKey = appInfo.isMapEntryKey();
+            if(mapEntryKey)
+            {
+               if(log.isTraceEnabled())
+               {
+                  log.trace("element name=" +
+                     new QName(element.getNamespace(), element.getName()) +
+                     ": is bound to a key in a map entry"
+                  );
+               }
+               binding.setMapEntryKey(mapEntryKey);
+            }
+
+            boolean mapEntryValue = appInfo.isMapEntryValue();
+            if(mapEntryValue)
+            {
+               if(log.isTraceEnabled())
+               {
+                  log.trace("element name=" +
+                     new QName(element.getNamespace(), element.getName()) +
+                     ": is bound to a value in a map entry"
+                  );
+               }
+               binding.setMapEntryValue(mapEntryValue);
+            }
+
+            boolean skip = appInfo.isSkip();
+            if(skip)
+            {
+               if(log.isTraceEnabled())
+               {
+                  log.trace(
+                     "element name=" +
+                        new QName(element.getNamespace(), element.getName()) +
+                        ": will be skipped, it's attributes, character content and children will be set on the parent"
+                  );
+               }
+               binding.setSkip(skip);
             }
          }
       }

@@ -179,13 +179,13 @@ public class XsMarshaller
 
    // Private
 
-   private final void processElement(XSElement element, int maxOccurs, boolean declareNs) throws SAXException
+   private void processElement(XSElement element, int maxOccurs, boolean declareNs) throws SAXException
    {
       XSType type = element.getType();
       processType(element, type, maxOccurs, declareNs);
    }
 
-   private final void processType(XSElement element, XSType type, int maxOccurs, boolean declareNs)
+   private void processType(XSElement element, XSType type, int maxOccurs, boolean declareNs)
       throws SAXException
    {
       if(type.isSimple())
@@ -199,7 +199,7 @@ public class XsMarshaller
       }
    }
 
-   private final void processSimpleType(XSElement element, XSType xsType, AttributesImpl attrs, boolean declareNs)
+   private void processSimpleType(XSElement element, XSType xsType, AttributesImpl attrs, boolean declareNs)
       throws SAXException
    {
       XSSimpleType type = xsType.getSimpleType();
@@ -291,7 +291,7 @@ public class XsMarshaller
       }
    }
 
-   private final void processComplexType(XSElement element,
+   private void processComplexType(XSElement element,
                                          XSComplexType type,
                                          int maxOccurs,
                                          boolean declareNs)
@@ -597,14 +597,7 @@ public class XsMarshaller
             AttributesImpl attrs = null;
             if(type.getAttributes() != null)
             {
-               if(attrs != null)
-               {
-                  attrs.addAll(provideAttributes(type.getAttributes(), child));
-               }
-               else
-               {
-                  attrs = provideAttributes(type.getAttributes(), child);
-               }
+               attrs = provideAttributes(type.getAttributes(), child);
             }
 
             content.startElement(name.getNamespaceURI(), name.getLocalName(), qName, attrs);
@@ -671,7 +664,7 @@ public class XsMarshaller
                throw new IllegalStateException(e.getMessage());
             }
 
-            XsQName rootName = new XsQName(mapping.namespaceUri, mapping.root);
+            XsQName rootName = new XsQName(mapping.elementName.getNamespaceURI(), mapping.elementName.getLocalPart());
             XSElement root = xsSchema.getElement(rootName);
             // name with the prefix
             rootName = root.getName();

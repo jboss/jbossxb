@@ -512,22 +512,57 @@ public class XercesXsMarshaller
    private boolean marshalWildcard(XSWildcard wildcard, boolean declareNs)
    {
       // todo class resolution
-      ClassMapping mapping = getClassMapping(stack.peek().getClass());
+      Object o = stack.peek();
+      ClassMapping mapping = getClassMapping(o.getClass());
       if(mapping == null)
       {
-         throw new IllegalStateException("Failed to marshal wildcard. Class mapping not found for " + stack.peek());
+         throw new IllegalStateException(
+            "Failed to marshal wildcard. Class mapping not found for " + o.getClass() + "@" + o.hashCode() +
+            ": " + o
+         );
       }
 
       GenericObjectModelProvider parentProvider = this.provider;
       Object parentRoot = this.root;
       Stack parentStack = this.stack;
 
-      this.root = stack.peek();
+      this.root = o;
       this.provider = mapping.provider;
       this.stack = new StackImpl();
 
       boolean marshalled = false;
       XSModel model = loadSchema(mapping.schemaUrl);
+      if(mapping.elementName != null)
+      {
+         XSElementDeclaration elDec = model.getElementDeclaration(mapping.elementName.getLocalPart(),
+            mapping.elementName.getNamespaceURI()
+         );
+         marshalled =
+            marshalElement(elDec.getNamespace(),
+               elDec.getName(),
+               elDec.getTypeDefinition(),
+               elDec.getNillable(),
+               1,
+               1,
+               declareNs
+            );// todo fix min/max
+      }
+      else if(mapping.typeName != null)
+      {
+         XSTypeDefinition typeDef = model.getTypeDefinition(mapping.typeName.getLocalPart(),
+            mapping.typeName.getNamespaceURI());
+         marshalElement(wildcard.getNamespace(), wildcard.getName(), typeDef, false, 1, 1, declareNs);
+         //marshalElementType(wildcard.getNamespace(), wildcard.getName(), typeDef, declareNs);
+         //todo
+         marshalled = true;
+      }
+      else
+      {
+         throw new JBossXBRuntimeException("Class mapping for " + mapping.cls +
+            " is associated with neither global element name nor global type name.");
+      }
+
+      /*
       XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
       for(int i = 0; i < components.getLength(); ++i)
       {
@@ -542,6 +577,7 @@ public class XercesXsMarshaller
                declareNs
             );// todo fix min/max
       }
+      */
 
       this.root = parentRoot;
       this.provider = parentProvider;

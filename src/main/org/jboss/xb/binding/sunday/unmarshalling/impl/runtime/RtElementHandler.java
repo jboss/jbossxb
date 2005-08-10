@@ -7,14 +7,14 @@
 package org.jboss.xb.binding.sunday.unmarshalling.impl.runtime;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.lang.reflect.Field;
-import java.util.Collection;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
-import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
-
+import javax.xml.namespace.QName;
+import org.jboss.logging.Logger;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.GenericValueContainer;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -33,7 +33,6 @@ import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
-import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
 /**
@@ -366,8 +365,8 @@ public class RtElementHandler
          {
             throw new JBossXBRuntimeException(
                "Element " +
-               qName +
-               " bound as map entry key but parent element is not recognized as map entry and its metadata is not available."
+                  qName +
+                  " bound as map entry key but parent element is not recognized as map entry and its metadata is not available."
             );
          }
       }
@@ -387,8 +386,8 @@ public class RtElementHandler
          {
             throw new JBossXBRuntimeException(
                "Element " +
-               qName +
-               " bound as map entry key but parent element is not recognized as map entry and its metadata is not available."
+                  qName +
+                  " bound as map entry key but parent element is not recognized as map entry and its metadata is not available."
             );
          }
       }
@@ -403,9 +402,10 @@ public class RtElementHandler
             {
                if(parentElement == null)
                {
-                  throw new JBossXBRuntimeException("Binding metadata needed for lazy map entry value instantiation is not available " +
-                     "for parent element of element " +
-                     qName
+                  throw new JBossXBRuntimeException(
+                     "Binding metadata needed for lazy map entry value instantiation is not available " +
+                        "for parent element of element " +
+                        qName
                   );
                }
 
@@ -468,7 +468,7 @@ public class RtElementHandler
                   throw new JBossXBRuntimeException((owner instanceof Map ?
                      "Parent object is an instance of java.util.Map" :
                      "putMethod is specified for element " + qName
-                     ) +
+                  ) +
                      " but mapEntry is specified for neither element " +
                      qName +
                      " nor it's type " +
@@ -690,10 +690,10 @@ public class RtElementHandler
                      {
                         throw new JBossXBRuntimeException(
                            "addMethod=" +
-                           addMethodMetaData.getMethodName() +
-                           " for element " + qName +
-                           " is configured with valueType='child'. The valueType cannot be determined because" +
-                           " the child is null"
+                              addMethodMetaData.getMethodName() +
+                              " for element " + qName +
+                              " is configured with valueType='child'. The valueType cannot be determined because" +
+                              " the child is null"
                         );
                      }
                      valueType = o.getClass();
@@ -751,7 +751,8 @@ public class RtElementHandler
                   String colType = propertyMetaData == null ? null : propertyMetaData.getCollectionType();
                   RtUtil.set(owner, o, propName, colType,
                      element.getSchema().isIgnoreUnresolvedFieldOrClass(),
-                     element.getValueAdapter());
+                     element.getValueAdapter()
+                  );
                }
             }
          }
@@ -838,8 +839,8 @@ public class RtElementHandler
             qName +
             " bound as map entry key or value but map entry metadata is not available for its parent element nor its " +
             (element.getType().getQName() == null ?
-            "annonymous" :
-            element.getType().getQName().toString()
+               "annonymous" :
+               element.getType().getQName().toString()
             ) +
             " type."
          );
@@ -852,20 +853,27 @@ public class RtElementHandler
       Object o;
       try
       {
-         Constructor ctor = cls.getConstructor(null);
-         try
+         if(cls.isArray())
          {
-            o = ctor.newInstance(null);
+            o = GenericValueContainer.FACTORY.array(cls.getComponentType());
          }
-         catch(Exception e)
+         else
          {
-            throw new JBossXBRuntimeException("Failed to create an instance of " +
-               cls +
-               " using default constructor for element " +
-               elementName +
-               " of type " +
-               type.getQName() + ": " + e.getMessage(), e
-            );
+            Constructor ctor = cls.getConstructor(null);
+            try
+            {
+               o = ctor.newInstance(null);
+            }
+            catch(Exception e)
+            {
+               throw new JBossXBRuntimeException("Failed to create an instance of " +
+                  cls +
+                  " using default constructor for element " +
+                  elementName +
+                  " of type " +
+                  type.getQName() + ": " + e.getMessage(), e
+               );
+            }
          }
       }
       catch(NoSuchMethodException e)

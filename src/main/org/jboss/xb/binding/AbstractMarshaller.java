@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Properties;
-import java.io.Reader;
 import java.io.Writer;
 import java.io.InputStreamReader;
 import java.io.InputStream;
@@ -50,7 +49,7 @@ public abstract class AbstractMarshaller
       ParserConfigurationException,
       SAXException
    {
-      URL url = null;
+      URL url;
       try
       {
          url = new URL(schemaUri);
@@ -81,52 +80,44 @@ public abstract class AbstractMarshaller
       }
    }
 
-   public void mapClassToNamespace(Class cls,
-                                   String root,
-                                   String namespaceUri,
-                                   Reader schemaReader,
-                                   ObjectModelProvider provider)
+   public void mapClassToGlobalElement(Class cls,
+                                       String localName,
+                                       String namespaceUri,
+                                       String schemaUrl,
+                                       ObjectModelProvider provider)
    {
-      if(classMappings == Collections.EMPTY_MAP)
-      {
-         classMappings = new HashMap();
-      }
-
       ClassMapping mapping = new ClassMapping(
          cls,
-         root,
-         namespaceUri,
-         schemaReader,
+         localName,
          null,
-         provider instanceof GenericObjectModelProvider ?
-         (GenericObjectModelProvider)provider :
-         new DelegatingObjectModelProvider(provider)
-      );
-      classMappings.put(mapping.cls, mapping);
-   }
-
-   public void mapClassToNamespace(Class cls,
-                                   String root,
-                                   String namespaceUri,
-                                   String schemaUrl,
-                                   ObjectModelProvider provider)
-   {
-      if(classMappings == Collections.EMPTY_MAP)
-      {
-         classMappings = new HashMap();
-      }
-
-      ClassMapping mapping = new ClassMapping(
-         cls,
-         root,
          namespaceUri,
-         null,
          schemaUrl,
          provider instanceof GenericObjectModelProvider ?
          (GenericObjectModelProvider)provider :
          new DelegatingObjectModelProvider(provider)
       );
-      classMappings.put(mapping.cls, mapping);
+
+      addClassMapping(mapping);
+   }
+
+   public void mapClassToGlobalType(Class cls,
+                                    String localName,
+                                    String nsUri,
+                                    String schemaUrl,
+                                    ObjectModelProvider provider)
+   {
+      ClassMapping mapping = new ClassMapping(
+         cls,
+         null,
+         localName,
+         nsUri,
+         schemaUrl,
+         provider instanceof GenericObjectModelProvider ?
+         (GenericObjectModelProvider)provider :
+         new DelegatingObjectModelProvider(provider)
+      );
+
+      addClassMapping(mapping);
    }
 
    public void setVersion(String version)
@@ -188,12 +179,22 @@ public abstract class AbstractMarshaller
          writer.write("\"?>\n");
       }
    }
+
    protected ClassMapping getClassMapping(Class cls)
    {
       return (ClassMapping)classMappings.get(cls);
    }
 
-   static final Object provideChildren(ObjectModelProvider provider,
+   private void addClassMapping(ClassMapping mapping)
+   {
+      if(classMappings == Collections.EMPTY_MAP)
+      {
+         classMappings = new HashMap();
+      }
+      classMappings.put(mapping.cls, mapping);
+   }
+
+   static Object provideChildren(ObjectModelProvider provider,
                                        Object parent,
                                        String namespaceUri,
                                        String name)
@@ -226,7 +227,7 @@ public abstract class AbstractMarshaller
       return container;
    }
 
-   static final Object provideValue(ObjectModelProvider provider,
+   static Object provideValue(ObjectModelProvider provider,
                                     Object parent,
                                     String namespaceUri,
                                     String name)
@@ -258,7 +259,7 @@ public abstract class AbstractMarshaller
       return value;
    }
 
-   static final Object provideAttributeValue(ObjectModelProvider provider,
+   static Object provideAttributeValue(ObjectModelProvider provider,
                                              Object object,
                                              String namespaceUri,
                                              String name)
@@ -290,7 +291,7 @@ public abstract class AbstractMarshaller
       return value;
    }
 
-   private static final Method getProviderMethod(Class providerClass, String methodName, Class[] args)
+   private static Method getProviderMethod(Class providerClass, String methodName, Class[] args)
    {
       Method method = null;
       try
@@ -309,23 +310,34 @@ public abstract class AbstractMarshaller
    protected class ClassMapping
    {
       public final Class cls;
-      public final String root;
-      public final String namespaceUri;
-      public final Reader schemaReader;
+      public final QName elementName;
+      public final QName typeName;
       public final String schemaUrl;
       public final GenericObjectModelProvider provider;
 
       public ClassMapping(Class cls,
-                          String root,
-                          String namespaceUri,
-                          Reader schemaReader,
+                          String elementName,
+                          String typeName,
+                          String nsUri,
                           String schemaUrl,
                           GenericObjectModelProvider provider)
       {
          this.cls = cls;
-         this.root = root;
-         this.namespaceUri = namespaceUri;
-         this.schemaReader = schemaReader;
+         if(elementName != null)
+         {
+            this.elementName = nsUri == null ? new QName(elementName) : new QName(nsUri, elementName);
+            this.typeName = null;
+         }
+         else if(typeName != null)
+         {
+            this.elementName = null;
+            this.typeName = nsUri == null ? new QName(typeName) : new QName(nsUri, typeName);
+         }
+         else
+         {
+            throw new JBossXBRuntimeException("Element or type name must not null for " + cls);
+         }
+
          this.schemaUrl = schemaUrl;
          this.provider = provider;
       }
@@ -336,18 +348,30 @@ public abstract class AbstractMarshaller
          {
             return true;
          }
-         if(!(o instanceof ClassMapping))
+         if(o == null || getClass() != o.getClass())
          {
             return false;
          }
 
-         final ClassMapping classMapping = (ClassMapping)o;
+         final ClassMapping that = (ClassMapping)o;
 
-         if(cls != null ? !cls.equals(classMapping.cls) : classMapping.cls != null)
+         if(cls != null ? !cls.equals(that.cls) : that.cls != null)
          {
             return false;
          }
-         if(namespaceUri != null ? !namespaceUri.equals(classMapping.namespaceUri) : classMapping.namespaceUri != null)
+         if(elementName != null ? !elementName.equals(that.elementName) : that.elementName != null)
+         {
+            return false;
+         }
+         if(provider != null ? !provider.equals(that.provider) : that.provider != null)
+         {
+            return false;
+         }
+         if(schemaUrl != null ? !schemaUrl.equals(that.schemaUrl) : that.schemaUrl != null)
+         {
+            return false;
+         }
+         if(typeName != null ? !typeName.equals(that.typeName) : that.typeName != null)
          {
             return false;
          }
@@ -359,7 +383,10 @@ public abstract class AbstractMarshaller
       {
          int result;
          result = (cls != null ? cls.hashCode() : 0);
-         result = 29 * result + (namespaceUri != null ? namespaceUri.hashCode() : 0);
+         result = 29 * result + (elementName != null ? elementName.hashCode() : 0);
+         result = 29 * result + (typeName != null ? typeName.hashCode() : 0);
+         result = 29 * result + (schemaUrl != null ? schemaUrl.hashCode() : 0);
+         result = 29 * result + (provider != null ? provider.hashCode() : 0);
          return result;
       }
    }

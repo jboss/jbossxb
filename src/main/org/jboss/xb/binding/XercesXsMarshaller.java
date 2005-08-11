@@ -141,6 +141,12 @@ public class XercesXsMarshaller
       marshallInternal(provider, root, model, writer);
    }
 
+   public void marshal(XSModel model, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
+      SAXException
+   {
+      marshallInternal(provider, root, model, writer);
+   }
+
    private void marshallInternal(ObjectModelProvider provider, Object root, XSModel model, Writer writer)
       throws IOException, SAXException
    {

@@ -115,6 +115,11 @@ public class PropertyEditors
       return NULL.equalsIgnoreCase(trimmed);
    }
 
+   public static boolean isNullHandlingEnabled()
+   {
+      return !disableIsNull;
+   }
+
    /**
     * Locate a value editor for a given target type.
     *

@@ -115,6 +115,12 @@ public class PropertyEditors
       return NULL.equalsIgnoreCase(trimmed);
    }
 
+   /**
+    * Will the standard editors return null from their
+    * {@link PropertyEditor#setAsText(String)} method for non-primitive targets?
+    *
+    * @return True if nulls can be returned; false otherwise.
+    */
    public static boolean isNullHandlingEnabled()
    {
       return !disableIsNull;

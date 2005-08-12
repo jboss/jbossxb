@@ -343,18 +343,18 @@ public class PropertyEditors
                }
             }
 
-            if( pd == null )
+            if (pd == null)
             {
-               if(isStrict)
+               if (isStrict)
                {
-               String msg = "No property found for: "+name+" on JavaBean: "+bean;
-               throw new IntrospectionException(msg);
-            }
+                  String msg = "No property found for: "+name+" on JavaBean: "+bean;
+                  throw new IntrospectionException(msg);
+               }
                else
                {
                   // since is not strict, ignore that this property was not found
                   continue;
-         }
+               }
             }
          }
          Method setter = pd.getWriteMethod();

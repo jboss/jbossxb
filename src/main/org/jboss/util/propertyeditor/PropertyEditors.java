@@ -318,7 +318,7 @@ public class PropertyEditors
       while( keys.hasNext() )
       {
          String name = (String) keys.next();
-         String text = (String) beanProps.getProperty(name);
+         String text = beanProps.getProperty(name);
          PropertyDescriptor pd = (PropertyDescriptor) propertyMap.get(name);
          if (pd == null)
          {

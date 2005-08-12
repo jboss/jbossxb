@@ -66,6 +66,9 @@ public class PropertyEditors
       PropertyEditorManager.registerEditor(clsArrayType, ClassArrayEditor.class);
       Class intArrayType = int[].class;
       PropertyEditorManager.registerEditor(intArrayType, IntArrayEditor.class);
+
+      // There is no default char editor.
+      PropertyEditorManager.registerEditor(Character.TYPE, CharacterEditor.class);
       
       try
       {

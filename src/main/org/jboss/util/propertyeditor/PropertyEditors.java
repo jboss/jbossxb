@@ -329,11 +329,18 @@ public class PropertyEditors
             DLQMaxResent property whose Introspector.decapitalize() method
             would also return "DLQMaxResent".
             */
-            if( name.length() > 1 )
+            if (name.length() > 1)
             {
                char first = name.charAt(0);
                String exName = Character.toUpperCase(first) + name.substring(1);
                pd = (PropertyDescriptor) propertyMap.get(exName);
+               
+               // Be lenient and check the other way around, e.g. ServerName -> serverName
+               if (pd == null)
+               {
+                  exName = Character.toLowerCase(first) + name.substring(1);
+                  pd = (PropertyDescriptor) propertyMap.get(exName);
+               }
             }
 
             if( pd == null )

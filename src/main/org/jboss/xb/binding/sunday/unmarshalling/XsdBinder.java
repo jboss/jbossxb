@@ -19,8 +19,6 @@ import org.apache.xerces.xs.XSAttributeUse;
 import org.apache.xerces.xs.XSComplexTypeDefinition;
 import org.apache.xerces.xs.XSConstants;
 import org.apache.xerces.xs.XSElementDeclaration;
-import org.apache.xerces.xs.XSImplementation;
-import org.apache.xerces.xs.XSLoader;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.XSModelGroup;
 import org.apache.xerces.xs.XSModelGroupDefinition;
@@ -34,6 +32,7 @@ import org.apache.xerces.xs.XSWildcard;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ClassMetaData;
@@ -46,10 +45,6 @@ import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.metadata.XsdAnnotation;
 import org.jboss.xb.binding.metadata.XsdAppInfo;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtAttributeHandler;
-import org.w3c.dom.DOMConfiguration;
-import org.w3c.dom.bootstrap.DOMImplementationRegistry;
-import org.w3c.dom.ls.LSInput;
-import org.w3c.dom.ls.LSResourceResolver;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -99,7 +94,7 @@ public class XsdBinder
     */
    public static SchemaBinding bind(String xsdUrl, SchemaBindingResolver resolver)
    {
-      XSModel model = loadSchema(xsdUrl, resolver);
+      XSModel model = Util.loadSchema(xsdUrl, resolver);
       return bind(model, resolver);
    }
 
@@ -133,7 +128,7 @@ public class XsdBinder
     */
    public static SchemaBinding bind(InputStream xsdStream, String encoding, SchemaBindingResolver resolver)
    {
-      XSModel model = loadSchema(xsdStream, encoding, resolver);
+      XSModel model = Util.loadSchema(xsdStream, encoding, resolver);
       return bind(model, resolver);
    }
 
@@ -167,7 +162,7 @@ public class XsdBinder
     */
    public static SchemaBinding bind(Reader xsdReader, String encoding, SchemaBindingResolver resolver)
    {
-      XSModel model = loadSchema(xsdReader, encoding, resolver);
+      XSModel model = Util.loadSchema(xsdReader, encoding, resolver);
       return bind(model, resolver);
    }
 
@@ -194,7 +189,7 @@ public class XsdBinder
     */
    public static SchemaBinding bind(String xsd, String encoding, SchemaBindingResolver resolver)
    {
-      XSModel model = loadSchema(xsd, encoding);
+      XSModel model = Util.loadSchema(xsd, encoding);
       return bind(model, resolver);
    }
 
@@ -953,136 +948,6 @@ public class XsdBinder
    }
 
    // Private
-
-   private static XSModel loadSchema(String xsdURL, SchemaBindingResolver schemaResolver)
-   {
-      if(log.isTraceEnabled())
-      {
-         log.trace("loading xsd: " + xsdURL);
-      }
-
-      XSImplementation impl = getXSImplementation();
-      XSLoader schemaLoader = impl.createXSLoader(null);
-      if(schemaResolver != null)
-      {
-         setResourceResolver(schemaLoader, schemaResolver);
-      }
-
-      XSModel model = schemaLoader.loadURI(xsdURL);
-      if(model == null)
-      {
-         throw new IllegalArgumentException("Invalid URI for schema: " + xsdURL);
-      }
-
-      return model;
-   }
-
-   private static XSModel loadSchema(InputStream is,
-                                     String encoding,
-                                     SchemaBindingResolver schemaResolver)
-   {
-      if(log.isTraceEnabled())
-      {
-         log.trace("loading xsd from InputStream");
-      }
-
-      LSInputAdaptor input = new LSInputAdaptor(is, encoding);
-
-      XSImplementation impl = getXSImplementation();
-      XSLoader schemaLoader = impl.createXSLoader(null);
-      if(schemaResolver != null)
-      {
-         setResourceResolver(schemaLoader, schemaResolver);
-      }
-
-      return schemaLoader.load(input);
-   }
-
-   private static XSModel loadSchema(Reader reader, String encoding, SchemaBindingResolver schemaResolver)
-   {
-      if(log.isTraceEnabled())
-      {
-         log.trace("loading xsd from Reader");
-      }
-
-      LSInputAdaptor input = new LSInputAdaptor(reader, encoding);
-
-      XSImplementation impl = getXSImplementation();
-      XSLoader schemaLoader = impl.createXSLoader(null);
-      if(schemaResolver != null)
-      {
-         setResourceResolver(schemaLoader, schemaResolver);
-      }
-
-      return schemaLoader.load(input);
-   }
-
-   private static void setResourceResolver(XSLoader schemaLoader, final SchemaBindingResolver schemaResolver)
-   {
-      DOMConfiguration config = schemaLoader.getConfig();
-      config.setParameter("resource-resolver", new LSResourceResolver()
-      {
-         public LSInput resolveResource(String type,
-                                        String namespaceURI,
-                                        String publicId,
-                                        String systemId,
-                                        String baseURI)
-         {
-            if(Constants.NS_XML_SCHEMA.equals(type))
-            {
-               return schemaResolver.resolveAsLSInput(namespaceURI, null, null);
-            }
-            return null;
-         }
-      }
-      );
-   }
-
-   private static XSModel loadSchema(String data, String encoding)
-   {
-      if(log.isTraceEnabled())
-      {
-         log.trace("loading xsd from string");
-      }
-
-      LSInputAdaptor input = new LSInputAdaptor(data, encoding);
-
-      XSImplementation impl = getXSImplementation();
-      XSLoader schemaLoader = impl.createXSLoader(null);
-      return schemaLoader.load(input);
-   }
-
-   private static XSImplementation getXSImplementation()
-   {
-      // Get DOM Implementation using DOM Registry
-      ClassLoader loader = Thread.currentThread().getContextClassLoader();
-      try
-      {
-         // Try the 2.6.2 version
-         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
-         loader.loadClass(name);
-         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
-      }
-      catch(ClassNotFoundException e)
-      {
-         // Try the 2.7.0 version
-         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
-         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
-      }
-
-      XSImplementation impl;
-      try
-      {
-         DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
-         impl = (XSImplementation)registry.getDOMImplementation("XS-Loader");
-      }
-      catch(Exception e)
-      {
-         log.error("Failed to create schema loader.", e);
-         throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());
-      }
-      return impl;
-   }
 
    private static void popType()
    {

@@ -11,8 +11,6 @@ import org.apache.xerces.xs.XSAttributeUse;
 import org.apache.xerces.xs.XSComplexTypeDefinition;
 import org.apache.xerces.xs.XSConstants;
 import org.apache.xerces.xs.XSElementDeclaration;
-import org.apache.xerces.xs.XSImplementation;
-import org.apache.xerces.xs.XSLoader;
 import org.apache.xerces.xs.XSModel;
 import org.apache.xerces.xs.XSModelGroup;
 import org.apache.xerces.xs.XSNamedMap;
@@ -24,16 +22,14 @@ import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
 import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.jboss.logging.Logger;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.xml.sax.SAXException;
-import org.w3c.dom.ls.LSInput;
-import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.namespace.QName;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -55,6 +51,7 @@ public class XercesXsMarshaller
     * ObjectModelProvider for this marshaller
     */
    private GenericObjectModelProvider provider;
+
    /**
     * Content the result is written to
     */
@@ -70,6 +67,18 @@ public class XercesXsMarshaller
    private boolean supportNil;
 
    private QName rootTypeQName;
+
+   private SchemaBindingResolver schemaResolver;
+
+   public SchemaBindingResolver getSchemaResolver()
+   {
+      return schemaResolver;
+   }
+
+   public void setSchemaResolver(SchemaBindingResolver schemaResolver)
+   {
+      this.schemaResolver = schemaResolver;
+   }
 
    public QName getRootTypeQName()
    {
@@ -130,14 +139,14 @@ public class XercesXsMarshaller
    public void marshal(Reader xsdReader, ObjectModelProvider provider, Object root, Writer writer)
       throws IOException, SAXException, ParserConfigurationException
    {
-      XSModel model = loadSchema(xsdReader);
+      XSModel model = Util.loadSchema(xsdReader, null, schemaResolver);
       marshallInternal(provider, root, model, writer);
    }
 
    public void marshal(String xsdURL, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
       SAXException
    {
-      XSModel model = loadSchema(xsdURL);
+      XSModel model = Util.loadSchema(xsdURL, schemaResolver);
       marshallInternal(provider, root, model, writer);
    }
 
@@ -150,6 +159,11 @@ public class XercesXsMarshaller
    private void marshallInternal(ObjectModelProvider provider, Object root, XSModel model, Writer writer)
       throws IOException, SAXException
    {
+      if(model == null)
+      {
+         throw new JBossXBRuntimeException("XSModel is not available!");
+      }
+
       this.provider = provider instanceof GenericObjectModelProvider ?
          (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider);
 
@@ -168,9 +182,7 @@ public class XercesXsMarshaller
          }
          QName rootQName = (QName)rootQNames.get(0);
 
-         XSTypeDefinition type = model.getTypeDefinition(rootTypeQName.getLocalPart(),
-            rootTypeQName.getNamespaceURI()
-         );
+         XSTypeDefinition type = model.getTypeDefinition(rootTypeQName.getLocalPart(), rootTypeQName.getNamespaceURI());
          if(type == null)
          {
             throw new JBossXBRuntimeException("Global type definition is not found: " + rootTypeQName);
@@ -536,8 +548,8 @@ public class XercesXsMarshaller
       this.provider = mapping.provider;
       this.stack = new StackImpl();
 
-      boolean marshalled = false;
-      XSModel model = loadSchema(mapping.schemaUrl);
+      boolean marshalled;
+      XSModel model = Util.loadSchema(mapping.schemaUrl, schemaResolver);
       if(mapping.elementName != null)
       {
          XSElementDeclaration elDec = model.getElementDeclaration(mapping.elementName.getLocalPart(),
@@ -672,148 +684,6 @@ public class XercesXsMarshaller
    private static String createQName(String prefix, String local)
    {
       return prefix == null ? local : prefix + ':' + local;
-   }
-
-   public static XSModel loadSchema(String xsdURL)
-   {
-      XSImplementation impl = getXSImplementation();
-      XSLoader schemaLoader = impl.createXSLoader(null);
-      XSModel model = schemaLoader.loadURI(xsdURL);
-      if(model == null)
-      {
-         throw new IllegalArgumentException("Invalid URI for schema: " + xsdURL);
-      }
-
-      return model;
-   }
-
-   public static XSModel loadSchema(final Reader xsdReader)
-   {
-      XSImplementation impl = getXSImplementation();
-      XSLoader schemaLoader = impl.createXSLoader(null);
-
-      XSModel model = schemaLoader.load(new LSInput()
-      {
-         public Reader getCharacterStream()
-         {
-            return xsdReader;
-         }
-
-         public void setCharacterStream(Reader characterStream)
-         {
-            throw new UnsupportedOperationException("setCharacterStream is not implemented.");
-         }
-
-         public InputStream getByteStream()
-         {
-            return null;
-         }
-
-         public void setByteStream(InputStream byteStream)
-         {
-            throw new UnsupportedOperationException("setByteStream is not implemented.");
-         }
-
-         public String getStringData()
-         {
-            return null;
-         }
-
-         public void setStringData(String stringData)
-         {
-            throw new UnsupportedOperationException("setStringData is not implemented.");
-         }
-
-         public String getSystemId()
-         {
-            return null;
-         }
-
-         public void setSystemId(String systemId)
-         {
-            throw new UnsupportedOperationException("setSystemId is not implemented.");
-         }
-
-         public String getPublicId()
-         {
-            return null;
-         }
-
-         public void setPublicId(String publicId)
-         {
-            throw new UnsupportedOperationException("setPublicId is not implemented.");
-         }
-
-         public String getBaseURI()
-         {
-            return null;
-         }
-
-         public void setBaseURI(String baseURI)
-         {
-            throw new UnsupportedOperationException("setBaseURI is not implemented.");
-         }
-
-         public String getEncoding()
-         {
-            return null;
-         }
-
-         public void setEncoding(String encoding)
-         {
-            throw new UnsupportedOperationException("setEncoding is not implemented.");
-         }
-
-         public boolean getCertifiedText()
-         {
-            return false;
-         }
-
-         public void setCertifiedText(boolean certifiedText)
-         {
-            throw new UnsupportedOperationException("setCertifiedText is not implemented.");
-         }
-      }
-      );
-
-      if(model == null)
-      {
-         throw new IllegalArgumentException("Cannot load schema");
-      }
-
-      return model;
-   }
-
-   private static XSImplementation getXSImplementation()
-   {
-      // Get DOM Implementation using DOM Registry
-      ClassLoader loader = Thread.currentThread().getContextClassLoader();
-      try
-      {
-         // Try the 2.6.2 version
-         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
-         loader.loadClass(name);
-         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
-      }
-      catch(ClassNotFoundException e)
-      {
-         // Try the 2.7.0 version
-         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
-         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
-      }
-
-      XSImplementation impl;
-      try
-      {
-         DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
-         impl = (XSImplementation)registry.getDOMImplementation("XS-Loader");
-      }
-      catch(Exception e)
-      {
-         log.error("Failed to create schema loader.", e);
-         throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());
-      }
-      return impl;
    }
 
    private static boolean isArrayWrapper(XSTypeDefinition type)

@@ -7,9 +7,21 @@
 package org.jboss.xb.binding;
 
 import java.util.StringTokenizer;
+import java.io.InputStream;
+import java.io.Reader;
 import javax.xml.XMLConstants;
 import org.jboss.util.Classes;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.LSInputAdaptor;
+import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
+import org.apache.xerces.xs.XSModel;
+import org.apache.xerces.xs.XSImplementation;
+import org.apache.xerces.xs.XSLoader;
+import org.w3c.dom.DOMConfiguration;
+import org.w3c.dom.bootstrap.DOMImplementationRegistry;
+import org.w3c.dom.ls.LSResourceResolver;
+import org.w3c.dom.ls.LSInput;
 
 /**
  * Various utilities for XML binding.
@@ -31,6 +43,8 @@ public final class Util
    public static final char GREEK_ANO_TELEIA = '\u0387';
    public static final char ARABIC_END_OF_AYAH = '\u06DD';
    public static final char ARABIC_START_OF_RUB_EL_HIZB = '\u06DE';
+
+   private static final Logger log = Logger.getLogger(Util.class);
 
    /**
     * Converts XML name to Java class name according to
@@ -245,6 +259,81 @@ public final class Util
       return location;
    }
 
+   public static XSModel loadSchema(String xsdURL, SchemaBindingResolver schemaResolver)
+   {
+      if(log.isTraceEnabled())
+      {
+         log.trace("loading xsd: " + xsdURL);
+      }
+
+      XSImplementation impl = getXSImplementation();
+      XSLoader schemaLoader = impl.createXSLoader(null);
+      if(schemaResolver != null)
+      {
+         setResourceResolver(schemaLoader, schemaResolver);
+      }
+
+      XSModel model = schemaLoader.loadURI(xsdURL);
+      if(model == null)
+      {
+         throw new IllegalArgumentException("Invalid URI for schema: " + xsdURL);
+      }
+
+      return model;
+   }
+
+   public static XSModel loadSchema(InputStream is, String encoding, SchemaBindingResolver schemaResolver)
+   {
+      if(log.isTraceEnabled())
+      {
+         log.trace("loading xsd from InputStream");
+      }
+
+      LSInputAdaptor input = new LSInputAdaptor(is, encoding);
+
+      XSImplementation impl = getXSImplementation();
+      XSLoader schemaLoader = impl.createXSLoader(null);
+      if(schemaResolver != null)
+      {
+         setResourceResolver(schemaLoader, schemaResolver);
+      }
+
+      return schemaLoader.load(input);
+   }
+
+   public static XSModel loadSchema(Reader reader, String encoding, SchemaBindingResolver schemaResolver)
+   {
+      if(log.isTraceEnabled())
+      {
+         log.trace("loading xsd from Reader");
+      }
+
+      LSInputAdaptor input = new LSInputAdaptor(reader, encoding);
+
+      XSImplementation impl = getXSImplementation();
+      XSLoader schemaLoader = impl.createXSLoader(null);
+      if(schemaResolver != null)
+      {
+         setResourceResolver(schemaLoader, schemaResolver);
+      }
+
+      return schemaLoader.load(input);
+   }
+
+   public static XSModel loadSchema(String data, String encoding)
+   {
+      if(log.isTraceEnabled())
+      {
+         log.trace("loading xsd from string");
+      }
+
+      LSInputAdaptor input = new LSInputAdaptor(data, encoding);
+
+      XSImplementation impl = getXSImplementation();
+      XSLoader schemaLoader = impl.createXSLoader(null);
+      return schemaLoader.load(input);
+   }
+
    // Private
 
    /**
@@ -268,6 +357,59 @@ public final class Util
       }
       buf[index] = ch;
       return buf;
+   }
+
+   private static void setResourceResolver(XSLoader schemaLoader, final SchemaBindingResolver schemaResolver)
+   {
+      DOMConfiguration config = schemaLoader.getConfig();
+      config.setParameter("resource-resolver", new LSResourceResolver()
+      {
+         public LSInput resolveResource(String type,
+                                                       String namespaceURI,
+                                                       String publicId,
+                                                       String systemId,
+                                                       String baseURI)
+         {
+            if(Constants.NS_XML_SCHEMA.equals(type))
+            {
+               return schemaResolver.resolveAsLSInput(namespaceURI, null, null);
+            }
+            return null;
+         }
+      }
+      );
+   }
+
+   private static XSImplementation getXSImplementation()
+   {
+      // Get DOM Implementation using DOM Registry
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      try
+      {
+         // Try the 2.6.2 version
+         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
+         loader.loadClass(name);
+         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
+      }
+      catch(ClassNotFoundException e)
+      {
+         // Try the 2.7.0 version
+         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
+         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
+      }
+
+      XSImplementation impl;
+      try
+      {
+         DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
+         impl = (XSImplementation)registry.getDOMImplementation("XS-Loader");
+      }
+      catch(Exception e)
+      {
+         log.error("Failed to create schema loader.", e);
+         throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());
+      }
+      return impl;
    }
 
    // Inner

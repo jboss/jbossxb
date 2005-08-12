@@ -1,11 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 
 package org.jboss.util.id;
 
@@ -38,6 +36,8 @@ import EDU.oswego.cs.dl.util.concurrent.SynchronizedLong;
 public class UID
    implements ID
 {
+   private static final long serialVersionUID = -8093336932569424512L;
+
    /** A counter for generating identity values */
    protected static final SynchronizedLong COUNTER = new SynchronizedLong(0);
 

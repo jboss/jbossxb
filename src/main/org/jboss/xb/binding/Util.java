@@ -13,6 +13,7 @@ import javax.xml.XMLConstants;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.LSInputAdaptor;
+import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 import org.apache.xerces.xs.XSModel;
@@ -140,7 +141,6 @@ public final class Util
       // skip protocol part, i.e. http://, urn://
       while(src[srcInd++] != ':')
       {
-         ;
       }
 
       while(src[srcInd] == '/')
@@ -274,6 +274,7 @@ public final class Util
       }
 
       XSModel model = schemaLoader.loadURI(xsdURL);
+      setDOMErrorHandler(schemaLoader);
       if(model == null)
       {
          throw new IllegalArgumentException("Invalid URI for schema: " + xsdURL);
@@ -293,6 +294,7 @@ public final class Util
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
+      setDOMErrorHandler(schemaLoader);
       if(schemaResolver != null)
       {
          setResourceResolver(schemaLoader, schemaResolver);
@@ -312,6 +314,7 @@ public final class Util
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
+      setDOMErrorHandler(schemaLoader);
       if(schemaResolver != null)
       {
          setResourceResolver(schemaLoader, schemaResolver);
@@ -331,6 +334,7 @@ public final class Util
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
+      setDOMErrorHandler(schemaLoader);
       return schemaLoader.load(input);
    }
 
@@ -378,6 +382,12 @@ public final class Util
          }
       }
       );
+   }
+
+   private static void setDOMErrorHandler(XSLoader schemaLoader)
+   {
+      DOMConfiguration config = schemaLoader.getConfig();
+      config.setParameter("error-handler", XsdBinder.XsdBinderErrorHandler.INSTANCE);
    }
 
    private static XSImplementation getXSImplementation()

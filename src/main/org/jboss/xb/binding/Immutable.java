@@ -62,21 +62,6 @@ public class Immutable
          (names.get(names.size() - 1).equals(localName) ? values.get(values.size() - 1) : null);
    }
 
-   public Object[] getValues()
-   {
-      return values.toArray();
-   }
-
-   public Class[] getValueTypes()
-   {
-      Class[] types = new Class[values.size()];
-      for(int i = 0; i < values.size(); ++i)
-      {
-         types[i] = values.get(i).getClass();
-      }
-      return types;
-   }
-
    public Object newInstance()
    {
       Constructor ctor = null;

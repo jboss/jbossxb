@@ -11,6 +11,7 @@ import javax.xml.namespace.QName;
 import org.jboss.xb.binding.GenericValueContainer;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.group.ValueList;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeHandler;
@@ -50,6 +51,11 @@ public class RtAttributeHandler
       else if(owner instanceof GenericValueContainer)
       {
          ((GenericValueContainer)owner).addChild(attrName, value);         
+      }
+      else if(owner instanceof ValueList)
+      {
+         ValueList valueList = (ValueList)owner;
+         valueList.getInitializer().addAttributeValue(attrName, binding, valueList, value);
       }
       else
       {

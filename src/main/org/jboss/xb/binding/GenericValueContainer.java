@@ -40,6 +40,11 @@ public interface GenericValueContainer
                }
                return arr;
             }
+
+            public Class getTargetClass()
+            {
+               throw new JBossXBRuntimeException("This should not be used for arrays!");
+            }
          };
       }
    }
@@ -47,4 +52,6 @@ public interface GenericValueContainer
    void addChild(QName name, Object value);
 
    Object instantiate();
+
+   Class getTargetClass();
 }

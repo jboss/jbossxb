@@ -21,15 +21,22 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
  */
 public class ValueList
 {
+   private final ValueListInitializer initializer;
+   private final ValueListHandler handler;
+   private final Class targetClass;
    private final int requiredTotal;
+
    private final Object[] requiredValues;
    private int state;
    private Map nonRequiredValues = Collections.EMPTY_MAP;
    private List nonRequiredBindings;
 
-   ValueList(int requiredTotal)
+   ValueList(ValueListInitializer initializer, ValueListHandler handler, Class targetClass)
    {
-      this.requiredTotal = requiredTotal;
+      this.initializer = initializer;
+      this.handler = handler;
+      this.targetClass = targetClass;
+      this.requiredTotal = initializer.getRequiredBindings().size();
       requiredValues = new Object[requiredTotal];
    }
 
@@ -83,6 +90,11 @@ public class ValueList
       return nonRequiredValues.get(qName);
    }
 
+   public ValueListInitializer getInitializer()
+   {
+      return initializer;
+   }
+
    public List getRequiredValues()
    {
       return Arrays.asList(requiredValues);
@@ -96,5 +108,15 @@ public class ValueList
    public List getNonRequiredBindings()
    {
       return nonRequiredBindings;
+   }
+
+   public ValueListHandler getHandler()
+   {
+      return handler;
+   }
+
+   public Class getTargetClass()
+   {
+      return targetClass;
    }
 }

@@ -61,9 +61,9 @@ public class ValueListInitializer
       initializedState += Math.abs(qName.hashCode());
    }
 
-   public ValueList newValueList()
+   public ValueList newValueList(ValueListHandler handler, Class targetClass)
    {
-      return new ValueList(requiredBindings.size());
+      return new ValueList(this, handler, targetClass);
    }
 
    public void addAttributeValue(QName qName, AttributeBinding binding, ValueList valueList, Object value)

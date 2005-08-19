@@ -84,7 +84,7 @@ public class MappingObjectModelProvider
 
    public Object getElementValue(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
-      Object value = null;
+      Object value;
       if(writeAsValue(o.getClass()))
       {
          value = o;
@@ -98,7 +98,7 @@ public class MappingObjectModelProvider
 
    public Object getAttributeValue(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
-      Object value = null;
+      Object value;
       if(writeAsValue(o.getClass()))
       {
          value = o;
@@ -309,7 +309,6 @@ public class MappingObjectModelProvider
       public final String localName;
       public final TypeBinding converter;
       public final Method getter;
-      public final Method setter;
       public final Field field;
 
       public FieldToElementMapping(Class cls,
@@ -330,13 +329,11 @@ public class MappingObjectModelProvider
          }
          
          Method localGetter = null;
-         Method localSetter = null;
          Field localField = null;
 
          try
          {
             localGetter = Classes.getAttributeGetter(cls, field);
-            localSetter = Classes.getAttributeSetter(cls, field, localGetter.getReturnType());
          }
          catch(NoSuchMethodException e)
          {
@@ -347,13 +344,12 @@ public class MappingObjectModelProvider
             catch(NoSuchFieldException e1)
             {
                throw new JBossXBRuntimeException(
-                  "Neither getter/setter pair nor field where found for " + field + " in " + cls
+                  "Neither getter nor field where found for " + field + " in " + cls
                );
             }
          }
 
          this.getter = localGetter;
-         this.setter = localSetter;
          this.field = localField;
       }
 

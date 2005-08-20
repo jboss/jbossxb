@@ -266,6 +266,16 @@ public class XercesXsMarshaller
          propertyIsTrueOrNotSet(Marshaller.PROP_OUTPUT_INDENTATION)
       );
       content.handleContent(contentWriter);
+
+      if(log.isTraceEnabled())
+      {
+         java.io.StringWriter traceWriter = new java.io.StringWriter();
+         contentWriter = new ContentWriter(writer,
+            propertyIsTrueOrNotSet(Marshaller.PROP_OUTPUT_INDENTATION)
+         );
+         content.handleContent(contentWriter);
+         log.trace("marshalled:\n" + traceWriter.getBuffer().toString());
+      }
    }
 
    private boolean marshalElement(String elementNs, String elementLocal,

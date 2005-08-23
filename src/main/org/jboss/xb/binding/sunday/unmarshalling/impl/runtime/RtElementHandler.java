@@ -9,9 +9,13 @@ package org.jboss.xb.binding.sunday.unmarshalling.impl.runtime;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import org.jboss.logging.Logger;
@@ -36,6 +40,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.util.Classes;
 import org.xml.sax.Attributes;
 
 /**
@@ -501,7 +506,98 @@ public class RtElementHandler
             }
             */
 
-            if(propertyMetaData != null)
+            if(owner instanceof GenericValueContainer)
+            {
+               ((GenericValueContainer)owner).addChild(qName, o);
+            }
+            else if(owner instanceof ValueList)
+            {
+               ValueList valueList = (ValueList)owner;
+               ValueListInitializer initializer = valueList.getInitializer();
+               if(element.isMultiOccurs())
+               {
+                  String propName = propertyMetaData.getName();
+                  if(propName == null)
+                  {
+                     propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getSchema().isIgnoreLowLine());
+                  }
+
+                  Class fieldType;
+                  try
+                  {
+                     fieldType = Classes.getAttributeGetter(valueList.getTargetClass(), propName).getReturnType();
+                  }
+                  catch(NoSuchMethodException e)
+                  {
+                     String msg = "Neither getter/setter nor field were found for field " +
+                        propName + " in " + valueList.getTargetClass();
+                     if(element.getSchema().isIgnoreUnresolvedFieldOrClass())
+                     {
+                        log.warn(msg);
+                        return;
+                     }
+                     throw new JBossXBRuntimeException(msg);
+                  }
+
+                  if(Collection.class.isAssignableFrom(fieldType))
+                  {
+                     Collection col = (Collection)initializer.getElementValue(qName, valueList);
+                     if(col == null)
+                     {
+                        if((fieldType.getModifiers() & (Modifier.INTERFACE | Modifier.ABSTRACT)) == 0)
+                        {
+                           try
+                           {
+                              col = (Collection)fieldType.newInstance();
+                           }
+                           catch(Exception e)
+                           {
+                              throw new JBossXBRuntimeException("Failed to create an instance of " + fieldType +
+                                 " for element " + qName);
+                           }
+                        }
+                        else if(Set.class.isAssignableFrom(fieldType))
+                        {
+                           col = new HashSet();
+                        }
+                        else
+                        {
+                           col = new ArrayList();
+                        }
+                        initializer.addElementValue(qName, element, valueList, col);
+                     }
+                     col.add(o);
+                  }
+                  else if(fieldType.isArray())
+                  {
+                     Object arr = initializer.getElementValue(qName, valueList);
+                     int index = 0;
+                     if(arr == null)
+                     {
+                        arr = Array.newInstance(fieldType.getComponentType(), 1);
+                     }
+                     else
+                     {
+                        Object tmp = arr;
+                        index = Array.getLength(arr);
+                        arr = Array.newInstance(fieldType.getComponentType(), index + 1);
+                        System.arraycopy(tmp, 0, arr, 0, index);
+                     }
+                     Array.set(arr, index, o);
+                     initializer.addElementValue(qName, element, valueList, arr);
+                  }
+                  else
+                  {
+                     throw new JBossXBRuntimeException("Failed to recognize collection type of " + fieldType +
+                        " for element " + qName);
+                  }
+               }
+               else
+               {
+                  initializer.addElementValue(qName, element, valueList, o);
+               }
+            }
+            else if(propertyMetaData != null)
             {
                String propName = propertyMetaData.getName();
                if(propName == null)
@@ -513,29 +609,6 @@ public class RtElementHandler
                   element.getSchema().isIgnoreUnresolvedFieldOrClass(),
                   element.getValueAdapter()
                );
-            }
-            else if(owner instanceof GenericValueContainer)
-            {
-               ((GenericValueContainer)owner).addChild(qName, o);
-            }
-            else if(owner instanceof ValueList)
-            {
-               ValueList valueList = (ValueList)owner;
-               ValueListInitializer initializer = valueList.getInitializer();
-               if(element.isMultiOccurs())
-               {
-                  Collection col = (Collection)initializer.getElementValue(qName, valueList);
-                  if(col == null)
-                  {
-                     col = new ArrayList();
-                     initializer.addElementValue(qName, element, valueList, col);
-                  }
-                  col.add(o);
-               }
-               else
-               {
-                  initializer.addElementValue(qName, element, valueList, o);
-               }
             }
             else if(owner instanceof Collection)
             {

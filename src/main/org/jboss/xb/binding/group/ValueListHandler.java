@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.lang.reflect.Constructor;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.util.Classes;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -56,7 +57,13 @@ public interface ValueListHandler
                Iterator iter = values.iterator();
                while(iter.hasNext())
                {
-                  if(!types[typeInd++].isAssignableFrom(iter.next().getClass()))
+                  Class type = types[typeInd++];
+                  if(type.isPrimitive())
+                  {
+                     type = Classes.getPrimitiveWrapper(type);
+                  }
+
+                  if(!type.isAssignableFrom(iter.next().getClass()))
                   {
                      ctor = null;
                      break;

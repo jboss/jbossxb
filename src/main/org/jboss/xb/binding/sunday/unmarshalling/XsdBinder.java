@@ -57,17 +57,17 @@ public class XsdBinder
 {
    private static final Logger log = Logger.getLogger(XsdBinder.class);
 
-   private static final ThreadLocal xsdBinding = new ThreadLocal()
-   {
-      protected Object initialValue()
-      {
-         return new XsdBinding();
-      }
-   };
+   private static final ThreadLocal xsdBinding = new ThreadLocal();
 
    private static XsdBinding getXsdBinding()
    {
-      return (XsdBinding)xsdBinding.get();
+      XsdBinding local = (XsdBinding)xsdBinding.get();
+      if(local == null)
+      {
+         local = new XsdBinding();
+         xsdBinding.set(local);
+      }
+      return local;
    }
 
    private XsdBinder()
@@ -290,6 +290,7 @@ public class XsdBinder
          bindElement(schema, element, sharedElements, false);
       }
 
+      xsdBinding.set(null);
       return schema;
    }
 

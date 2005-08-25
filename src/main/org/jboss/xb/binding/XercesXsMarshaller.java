@@ -270,7 +270,7 @@ public class XercesXsMarshaller
       if(log.isTraceEnabled())
       {
          java.io.StringWriter traceWriter = new java.io.StringWriter();
-         contentWriter = new ContentWriter(writer,
+         contentWriter = new ContentWriter(traceWriter,
             propertyIsTrueOrNotSet(Marshaller.PROP_OUTPUT_INDENTATION)
          );
          content.handleContent(contentWriter);

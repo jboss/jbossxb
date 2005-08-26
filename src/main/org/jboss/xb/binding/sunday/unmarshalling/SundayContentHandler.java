@@ -9,17 +9,16 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 import java.util.LinkedList;
 import java.util.List;
 import javax.xml.namespace.QName;
-
+import org.apache.xerces.xs.XSTypeDefinition;
+import org.jboss.logging.Logger;
+import org.jboss.util.StringPropertyReplacer;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.NamespaceRegistry;
 import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.parser.JBossXBParser;
-import org.jboss.logging.Logger;
-import org.jboss.util.StringPropertyReplacer;
 import org.xml.sax.Attributes;
-import org.apache.xerces.xs.XSTypeDefinition;
 
 /**
  * todo: to improve performance, consider gathering all the necessary binding metadata in startElement and
@@ -67,159 +66,158 @@ public class SundayContentHandler
    public void endElement(String namespaceURI, String localName, String qName)
    {
       ElementBinding elementBinding = (ElementBinding)elementStack.pop();
-      if(elementBinding != null)
+      if(elementBinding == null)
       {
-         QName endName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
-         Object o = objectStack.pop();
+         return;
+      }
 
-         TypeBinding typeBinding = elementBinding.getType();
-         List elementHandlers = elementBinding.getInterceptors();
+      QName endName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
+      Object o = objectStack.pop();
 
-         if(o != NIL)
+      TypeBinding typeBinding = elementBinding.getType();
+      List elementHandlers = elementBinding.getInterceptors();
+
+      if(o != NIL)
+      {
+         //
+         // characters
+         //
+
+         CharactersHandler simpleType = typeBinding.getSimpleType();
+         if(textContent.length() > 0 || simpleType != null)
          {
-            //
-            // characters
-            //
-
-            CharactersHandler simpleType = typeBinding.getSimpleType();
-            if(textContent.length() > 0 || simpleType != null)
+            String dataContent;
+            SchemaBinding schema = elementBinding.getSchema();
+            if(textContent.length() == 0)
             {
-               String dataContent;
-               SchemaBinding schema = elementBinding.getSchema();
-               if(textContent.length() == 0)
-               {
-                  dataContent = null;
-               }
-               else
-               {
-                  
-                  dataContent = textContent.toString();
-                  if(schema != null && schema.isReplacePropertyRefs())
-                  {
-                     dataContent = StringPropertyReplacer.replaceProperties(dataContent);
-                  }
-                  textContent.delete(0, textContent.length());
-               }
+               dataContent = null;
+            }
+            else
+            {
 
-               Object unmarshalled;
-
-               if(simpleType == null)
+               dataContent = textContent.toString();
+               if(schema != null && schema.isReplacePropertyRefs())
                {
-                  if(schema != null && schema.isStrictSchema())
-                  {
-                     throw new JBossXBRuntimeException("Element " +
-                        endName +
-                        " type binding " +
-                        typeBinding.getQName() +
-                        " does not include text content binding ('" + dataContent
-                     );
-                  }
-                  unmarshalled = dataContent;
+                  dataContent = StringPropertyReplacer.replaceProperties(dataContent);
                }
-               else
-               {
-                  ValueMetaData valueMetaData = elementBinding.getValueMetaData();
-                  if(valueMetaData == null)
-                  {
-                     CharactersMetaData charactersMetaData = typeBinding.getCharactersMetaData();
-                     if(charactersMetaData != null)
-                     {
-                        valueMetaData = charactersMetaData.getValue();
-                     }
-                  }
+               textContent.delete(0, textContent.length());
+            }
 
-                  // todo valueMetaData is available from typeBinding
-                  unmarshalled = dataContent == null ?
-                     simpleType.unmarshalEmpty(endName, typeBinding, nsRegistry, valueMetaData) :
-                     simpleType.unmarshal(endName, typeBinding, nsRegistry, valueMetaData, dataContent);
-               }
+            Object unmarshalled;
 
-               if(unmarshalled != null)
+            if(simpleType == null)
+            {
+               if(schema != null && schema.isStrictSchema())
                {
-                  // if startElement returned null, we use characters as the object for this element
-                  // todo subject to refactoring
-                  if(o == null)
-                  {
-                     o = unmarshalled;
-                  }
-                  else if(simpleType != null)
-                  {
-                     simpleType.setValue(endName, elementBinding, o, unmarshalled);
-                  }
-               }
-               
-               // todo interceptors get dataContent?
-               int i = elementHandlers.size();
-               while(i-- > 0)
-               {
-                  ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-                  interceptor.characters(objectStack.peek(elementHandlers.size() - 1 - i),
-                     endName, typeBinding, nsRegistry, dataContent
+                  throw new JBossXBRuntimeException("Element " +
+                     endName +
+                     " type binding " +
+                     typeBinding.getQName() +
+                     " does not include text content binding ('" + dataContent
                   );
                }
+               unmarshalled = dataContent;
             }
-         }
-         else
-         {
-            o = null;
-         }
-
-         //
-         // endElement
-         //
-
-         Object parent = objectStack.isEmpty() ? null : objectStack.peek();
-         o = typeBinding.endElement(parent, o, elementBinding, endName);
-
-         int i = elementHandlers.size();
-         while(i-- > 0)
-         {
-            ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-            interceptor.endElement(objectStack.peek(elementHandlers.size() - 1 - i), endName, typeBinding);
-         }
-
-         //
-         // setParent
-         //
-
-         i = elementHandlers.size();
-         // todo yack...
-         if(i == 0)
-         {
-            ElementBinding parentElement = elementStack.isEmpty() ? null : (ElementBinding)elementStack.peek();
-            if(parent != null)
+            else
             {
-               typeBinding.getHandler().setParent(parent, o, endName, elementBinding, parentElement);
-            }
-            else if(parentElement != null)
-            {
-               // todo: review this> the parent has anyType, so it gets the value of its child
-               if(!objectStack.isEmpty())
+               ValueMetaData valueMetaData = elementBinding.getValueMetaData();
+               if(valueMetaData == null)
                {
-                  objectStack.pop();
-                  objectStack.push(o);
-                  if(log.isTraceEnabled())
+                  CharactersMetaData charactersMetaData = typeBinding.getCharactersMetaData();
+                  if(charactersMetaData != null)
                   {
-                     log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
+                     valueMetaData = charactersMetaData.getValue();
                   }
                }
+
+               // todo valueMetaData is available from typeBinding
+               unmarshalled = dataContent == null ?
+                  simpleType.unmarshalEmpty(endName, typeBinding, nsRegistry, valueMetaData) :
+                  simpleType.unmarshal(endName, typeBinding, nsRegistry, valueMetaData, dataContent);
             }
-         }
-         else
-         {
+
+            if(unmarshalled != null)
+            {
+               // if startElement returned null, we use characters as the object for this element
+               // todo subject to refactoring
+               if(o == null)
+               {
+                  o = unmarshalled;
+               }
+               else if(simpleType != null)
+               {
+                  simpleType.setValue(endName, elementBinding, o, unmarshalled);
+               }
+            }
+
+            // todo interceptors get dataContent?
+            int i = elementHandlers.size();
             while(i-- > 0)
             {
                ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-               parent = objectStack.pop();
-               interceptor.add(parent, o, endName);
-               o = parent;
+               interceptor.characters(objectStack.peek(elementHandlers.size() - 1 - i),
+                  endName, typeBinding, nsRegistry, dataContent
+               );
             }
          }
+      }
+      else
+      {
+         o = null;
+      }
 
-         if(objectStack.isEmpty())
+      //
+      // endElement
+      //
+
+      Object parent = objectStack.isEmpty() ? null : objectStack.peek();
+      o = typeBinding.endElement(parent, o, elementBinding, endName);
+
+      int i = elementHandlers.size();
+      while(i-- > 0)
+      {
+         ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
+         interceptor.endElement(objectStack.peek(elementHandlers.size() - 1 - i), endName, typeBinding);
+      }
+
+      //
+      // setParent
+      //
+
+      i = elementHandlers.size();
+      // todo yack...
+      if(i == 0)
+      {
+         ElementBinding parentElement = elementStack.isEmpty() ? null : (ElementBinding)elementStack.peek();
+         if(parent != null)
          {
-            root = o;
+            typeBinding.getHandler().setParent(parent, o, endName, elementBinding, parentElement);
          }
+         else if(parentElement != null && parentElement.getType().isWildcard() && !objectStack.isEmpty())
+         {
+            // todo: review this> the parent has anyType, so it gets the value of its child
+            objectStack.pop();
+            objectStack.push(o);
+            if(log.isTraceEnabled())
+            {
+               log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
+            }
+         }
+      }
+      else
+      {
+         while(i-- > 0)
+         {
+            ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
+            parent = objectStack.pop();
+            interceptor.add(parent, o, endName);
+            o = parent;
+         }
+      }
+
+      if(objectStack.isEmpty())
+      {
+         root = o;
       }
    }
 

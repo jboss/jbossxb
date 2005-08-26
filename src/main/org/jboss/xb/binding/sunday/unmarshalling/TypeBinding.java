@@ -52,6 +52,7 @@ public class TypeBinding
    private AddMethodMetaData addMethodMetaData;
    private ValueAdapter valueAdapter = ValueAdapter.NOOP;
    private Boolean startElementCreatesObject;
+   private boolean wildcard;
 
    public TypeBinding()
    {
@@ -435,5 +436,15 @@ public class TypeBinding
    public void setStartElementCreatesObject(boolean startElementCreatesObject)
    {
       this.startElementCreatesObject = startElementCreatesObject ? Boolean.TRUE : Boolean.FALSE;
+   }
+
+   public void setWildcard()
+   {
+      this.wildcard = true;
+   }
+
+   public boolean isWildcard()
+   {
+      return wildcard;
    }
 }

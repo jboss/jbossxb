@@ -516,7 +516,7 @@ public class RtElementHandler
                ValueListInitializer initializer = valueList.getInitializer();
                if(element.isMultiOccurs())
                {
-                  String propName = propertyMetaData.getName();
+                  String propName = propertyMetaData == null ? null : propertyMetaData.getName();
                   if(propName == null)
                   {
                      propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getSchema().isIgnoreLowLine());

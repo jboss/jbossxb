@@ -687,6 +687,7 @@ public class XsdBinder
    private static void bindWildcard(XSWildcard wildcard)
    {
       TypeBinding typeBinding = peekType();
+      typeBinding.setWildcard();
 
       XSAnnotation annotation = wildcard.getAnnotation();
       if(annotation != null)

@@ -1,12 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ *
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util;
 
 import java.io.File;
@@ -14,22 +11,27 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * A collection of String utilities.
  *
- * @version <tt>$Revision$</tt>
  * @author <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @author <a href="Scott.Stark@jboss.org">Scott Stark</a>
  * @author <a href="claudio.vesco@previnet.it">Claudio Vesco</a>
  * @author <a href="mailto:dimitris@jboss.org">Dimitris Andreadis</a>
+ * @version <tt>$Revision$</tt>
  */
 public final class Strings
 {
    /** An empty string constant */
    public static final String EMPTY = "";
 
+   /** Millisecond conversion constants */
+   private static final long MSEC = 1;
+   private static final long SECS = 1000;
+   private static final long MINS = 60 * 1000;
+   private static final long HOUR = 60 * 60 * 1000;
+   
    /**
     * List of valid Java keywords, see The Java Language Specification
     * Second Edition Section 3.9, 3.10.3 and 3.10.7
@@ -924,7 +926,6 @@ public final class Strings
     * Returns a new string with all the whitespace removed
     * 
     * @param s the source string
-    * 
     * @return the string without whitespace or null
     */
    public static String removeWhiteSpace(String s)
@@ -960,5 +961,81 @@ public final class Strings
          return "null";
       else
          return object.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(object));
+   }
+   
+   /**
+    * Parses a time period into a long.
+    *
+    * Translates possible [msec|sec|min|h] suffixes
+    *
+    * For example:
+    *   "1"      ->  1 (msec)
+    *   "1msec   ->  1 (msec)
+    *   "1sec"   ->  1000 (msecs)
+    *   "1min"   ->  60000 (msecs)
+    *   "1h"     ->  3600000 (msecs)
+    * 
+    * Accepts negative periods, e.g. "-1"
+    * 
+    * @param period the stringfied time period
+    * @return the parsed time period as long
+    * @throws NumberFormatException
+    */
+   public static long parseTimePeriod(String period)
+   {
+      try
+      {
+         String s = period.toLowerCase();
+         long factor;
+         
+         // look for suffix
+         if (s.endsWith("msec"))
+         {
+            s = s.substring(0, s.lastIndexOf("msec"));
+            factor = MSEC;
+         }
+         else if (s.endsWith("sec"))
+         {
+            s = s.substring(0, s.lastIndexOf("sec"));
+            factor = SECS;
+         }
+         else if (s.endsWith("min"))
+         {
+            s = s.substring(0, s.lastIndexOf("min"));
+            factor = MINS;
+         }
+         else if (s.endsWith("h"))
+         {
+            s = s.substring(0, s.lastIndexOf("h"));
+            factor = HOUR;
+         }
+         else
+         {
+            factor = 1;
+         }  
+         return Long.parseLong(s) * factor;
+      }
+      catch (RuntimeException e)
+      {
+         // thrown in addition when period is 'null'
+         throw new NumberFormatException("For input time period: '" + period + "'");
+      }
+   }
+   
+   /**
+    * Same like parseTimePeriod(), but guards for negative entries.
+    * 
+    * @param period the stringfied time period
+    * @return the parsed time period as long
+    * @throws NumberFormatException
+    */
+   public static long parsePositiveTimePeriod(String period)
+   {
+      long retval = parseTimePeriod(period);
+      if (retval < 0)
+      {
+         throw new NumberFormatException("Negative input time period: '" + period + "'");
+      }
+      return retval;
    }
 }

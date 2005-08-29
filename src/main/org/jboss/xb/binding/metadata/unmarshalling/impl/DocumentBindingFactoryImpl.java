@@ -116,7 +116,7 @@ public class DocumentBindingFactoryImpl
          {
             // todo
             doc = DocumentBindingFactory.newInstance().newDocumentBindingStack();
-            ((DocumentBindingStackImpl)doc).push(this);
+            ((DocumentBindingFactoryImpl.DocumentBindingStackImpl)doc).push(this);
          }
          this.doc = doc;
       }

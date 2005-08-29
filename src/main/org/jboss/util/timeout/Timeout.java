@@ -27,6 +27,6 @@ public interface Timeout {
     *  cancelled timeouts, and at return the instance may already be
     *  in use for another timeout.
     */
-   public void cancel();
+   public boolean cancel();
 }
 

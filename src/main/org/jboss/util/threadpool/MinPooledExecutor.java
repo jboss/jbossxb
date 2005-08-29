@@ -42,7 +42,7 @@ public class MinPooledExecutor extends PooledExecutor
    /**
     * Construct a new executor
     * 
-    * @param poolSize the minimum pool size
+    * @param poolSize the maximum pool size
     */
    public MinPooledExecutor(int poolSize)
    {
@@ -53,7 +53,7 @@ public class MinPooledExecutor extends PooledExecutor
     * Construct a new executor
     * 
     * @param channel the queue for any requests
-    * @param poolSize the minimum pool size
+    * @param poolSize the maximum pool size
     */
    public MinPooledExecutor(Channel channel, int poolSize)
    {

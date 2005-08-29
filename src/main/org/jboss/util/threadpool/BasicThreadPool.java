@@ -59,7 +59,7 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    private BoundedLinkedQueue queue;
 
    /** The thread group */
-   private ThreadGroup threadGroup = JBOSS_THREAD_GROUP;
+   private ThreadGroup threadGroup;
 
    /** The last thread number */
    private SynchronizedInt lastThreadNumber = new SynchronizedInt(0);
@@ -86,12 +86,24 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    }
 
    /**
-    * Create a new thread pool with a default queue size of 1024, min/max pool
-    * sizes of 100 and a keep alive of 60 seconds.
+    * Create a new thread pool with a default queue size of 1024, max pool
+    * size of 100, min pool size of 4, and a keep alive of 60 seconds.
     *
     * @param name the pool name
     */
    public BasicThreadPool(String name)
+   {
+      this(name, JBOSS_THREAD_GROUP);
+   }
+
+   /**
+    * Create a new thread pool with a default queue size of 1024, max pool
+    * size of 100, min pool size of 4, and a keep alive of 60 seconds.
+    *
+    * @param name the pool name
+    * @param threadGroup threadGroup
+    */
+   public BasicThreadPool(String name, ThreadGroup threadGroup)
    {
       trace = log.isTraceEnabled();
       ThreadFactory factory = new ThreadPoolThreadFactory();
@@ -99,13 +111,14 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
       queue = new BoundedLinkedQueue(1024);
 
       executor = new MinPooledExecutor(queue, 100);
-      executor.setMinimumPoolSize(100);
+      executor.setMinimumPoolSize(4);
       executor.setKeepAliveTime(60 * 1000);
       executor.setThreadFactory(factory);
       executor.abortWhenBlocked();
 
       poolNumber = lastPoolNumber.increment();
       setName(name);
+      this.threadGroup = threadGroup;
    }
 
    // Public --------------------------------------------------------
@@ -178,10 +191,16 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
    {
       run(runnable, 0, 0);
    }
+
    public void run(Runnable runnable, long startTimeout, long completeTimeout)
    {
       RunnableTaskWrapper wrapper = new RunnableTaskWrapper(runnable, startTimeout, completeTimeout);
       runTaskWrapper(wrapper);      
+   }
+
+   public ThreadGroup getThreadGroup()
+   {
+      return threadGroup;
    }
 
    // ThreadPoolMBean implementation --------------------------------

@@ -170,20 +170,17 @@ public class ObjectModelBuilder
    {
       StringTokenizer st = new StringTokenizer(value, ":");
       if(st.countTokens() == 1)
-      {
          return new QName(value);
-      }
 
       if(st.countTokens() != 2)
-      {
          throw new IllegalArgumentException("Illegal QName: " + value);
-      }
 
       String prefix = st.nextToken();
       String local = st.nextToken();
       String nsURI = nsRegistry.getNamespaceURI(prefix);
+      if (nsURI == null)
+         throw new IllegalStateException("Cannot obtain namespace URI for prefix: " + prefix);
 
-      //return new QName(nsURI, local);
       return new QName(nsURI, local, prefix);
    }
 

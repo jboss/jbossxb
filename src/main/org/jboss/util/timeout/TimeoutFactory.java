@@ -146,14 +146,14 @@ public class TimeoutFactory
    {
 
       public TimeoutImpl(final TimeoutTarget target) {
-        super();
-        this.run = new Runnable()
-          {
-             public void run()
-             {
-                target.timedOut(TimeoutImpl.this);
-             }
-          };
+         super();
+         this.run = new Runnable()
+            {
+               public void run()
+               {
+                  target.timedOut(TimeoutImpl.this);
+               }
+            };
       }
 
    }

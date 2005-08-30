@@ -9,13 +9,14 @@ package org.jboss.util.timeout;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
-import org.jboss.util.ThrowableHandler;
+import org.jboss.logging.Logger;
 import org.jboss.util.threadpool.BasicThreadPool;
 import org.jboss.util.threadpool.ThreadPool;
+import org.jboss.util.threadpool.BlockingMode;
 
 /**
  * The timeout factory.
- * Upon timeout, calls a thread pool.
+ * Upon timeout, calls tasks that run on a specific thread pool.
  * Implemented as a wrapper around java.util.Timer.
  *
  * @version $Revision$
@@ -23,26 +24,33 @@ import org.jboss.util.threadpool.ThreadPool;
 public class TimeoutFactory
 {
 
-   private static ThreadPool DEFAULT_TP = new BasicThreadPool("Timeouts");
+   private static Logger log = Logger.getLogger(TimeoutFactory.class);
+
+   private static BasicThreadPool DEFAULT_TP = new BasicThreadPool("Timeouts");
+   {
+     DEFAULT_TP.setBlockingMode(BlockingMode.RUN);
+   }
    private Timer timer;
    private ThreadPool threadPool;
 
    static TimeoutFactory singleton;
    static int count = 0;
 
-   /** Construct a new factory with a specific thread pool. */
+   /** Constructs a new factory with a specific thread pool. */
    public TimeoutFactory(ThreadPool threadPool)
    {
       this.threadPool = threadPool;
       this.timer = new Timer(true);
-      timer.schedule(new TimerTask() {
-         public void run() {
-            Thread.currentThread().setName("TimeoutFactory-" + count++);
-         }
-      }, 0L);
+      timer.schedule(new TimerTask()
+         {
+            public void run()
+            {
+               Thread.currentThread().setName("TimeoutFactory-" + count++);
+            }
+         }, 0L);
    }
 
-   /** Construct a new factory with a default thread pool. */
+   /** Constructs a new factory with a default thread pool. */
    public TimeoutFactory()
    {
       this(DEFAULT_TP);
@@ -50,18 +58,22 @@ public class TimeoutFactory
 
    /**
     * Schedules a new timeout.
+    * @param time absolute time
+    * @param run runnable to run
     */
-   public TimerTask schedule(long time, Runnable run)
+   public Timeout schedule(long time, Runnable run)
    {
-      TimerTask t = new PooledRunner(run);
-      timer.schedule(t, new Date(time));
-      return t;
+      PooledRunner pr = new PooledRunner(run);
+      timer.schedule(pr, new Date(time));
+      return pr;
    }
 
    /**
     * Schedule a new timeout.
+    * @param time absolute time
+    * @param target target to fire
     */
-   public Timeout schedule(long time, TimeoutTarget target)
+   public Timeout schedule(long time, final TimeoutTarget target)
    {
       TimeoutImpl t = new TimeoutImpl(target);
       timer.schedule(t, new Date(time));
@@ -83,42 +95,22 @@ public class TimeoutFactory
       return getSingleton().schedule(time, target);
    }
 
+   /**
+    * Cancels all submitted timeout tasks.
+    */
    public void cancel()
    {
       timer.cancel();
    }
 
-   /**
-    *  Our private Timeout implementation.
-    */
-   private class TimeoutImpl extends TimerTask implements Timeout
-   {
-      private TimeoutTarget target; // target to fire at
-
-      public TimeoutImpl(TimeoutTarget target)
-      {
-         if (target == null)
-            throw new IllegalArgumentException("Null target");
-         this.target = target;
-      }
-
-      public void run()
-      {
-         Runnable r = new Runnable() {
-            public void run()
-            {
-               target.timedOut(TimeoutImpl.this);
-            }
-         };
-         threadPool.run(r);
-      }
-
-   }
-
-   private class PooledRunner extends TimerTask
+   private class PooledRunner extends TimerTask implements Timeout
    {
 
       Runnable run;
+
+      PooledRunner()
+      {
+      }
 
       public PooledRunner(Runnable run)
       {
@@ -127,7 +119,41 @@ public class TimeoutFactory
 
       public void run()
       {
-         threadPool.run(this.run);
+         try
+         {
+            threadPool.run(this.run);
+         }
+         catch (Throwable t)
+         {
+            log.warn("Unable to pool timeout: " + run, t);
+            try
+            {
+               this.run.run();
+            }
+            catch (Throwable t2)
+            {
+               log.error("Timeout failed to run unpooled: " + run, t2);
+            }
+         }
+      }
+
+   }
+
+   /**
+    *  Our private Timeout implementation.
+    */
+   private class TimeoutImpl extends PooledRunner
+   {
+
+      public TimeoutImpl(final TimeoutTarget target) {
+        super();
+        this.run = new Runnable()
+          {
+             public void run()
+             {
+                target.timedOut(TimeoutImpl.this);
+             }
+          };
       }
 
    }

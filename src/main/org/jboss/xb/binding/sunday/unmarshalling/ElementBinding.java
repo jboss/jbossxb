@@ -22,6 +22,7 @@ import org.jboss.xb.binding.metadata.ValueMetaData;
  * @version <tt>$Revision$</tt>
  */
 public class ElementBinding
+   implements ParticleBinding
 {
    private List interceptors = Collections.EMPTY_LIST;
 
@@ -36,7 +37,11 @@ public class ElementBinding
    private ValueMetaData valueMetaData;
    private boolean mapEntryKey;
    private boolean mapEntryValue;
-   private boolean multiOccurs;
+
+   private int minOccurs;
+   private int maxOccurs;
+   private boolean maxOccursUnbounded;
+
    private Boolean skip;
    private ValueAdapter valueAdapter;
 
@@ -129,14 +134,39 @@ public class ElementBinding
       this.valueMetaData = valueMetaData;
    }
 
-   public boolean isMultiOccurs()
+   public int getMinOccurs()
    {
-      return multiOccurs;
+      return minOccurs;
    }
 
-   public void setMultiOccurs(boolean multiOccurs)
+   public void setMinOccurs(int minOccurs)
    {
-      this.multiOccurs = multiOccurs;
+      this.minOccurs = minOccurs;
+   }
+
+   public int getMaxOccurs()
+   {
+      return maxOccurs;
+   }
+
+   public void setMaxOccurs(int maxOccurs)
+   {
+      this.maxOccurs = maxOccurs;
+   }
+
+   public boolean getMaxOccursUnbounded()
+   {
+      return maxOccursUnbounded;
+   }
+
+   public void setMaxOccursUnbounded(boolean maxOccursUnbounded)
+   {
+      this.maxOccursUnbounded = maxOccursUnbounded;
+   }
+
+   public boolean isMultiOccurs()
+   {
+      return maxOccursUnbounded || maxOccurs > 1 || minOccurs > 1;
    }
 
    public void setMapEntryKey(boolean mapEntryKey)

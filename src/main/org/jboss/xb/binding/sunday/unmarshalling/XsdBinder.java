@@ -287,7 +287,7 @@ public class XsdBinder
       for(int i = 0; i < elements.getLength(); ++i)
       {
          XSElementDeclaration element = (XSElementDeclaration)elements.item(i);
-         bindElement(schema, element, sharedElements, false);
+         bindElement(schema, element, sharedElements, 1, 0, false);
       }
 
       xsdBinding.set(null);
@@ -676,7 +676,9 @@ public class XsdBinder
             bindElement(schema,
                (XSElementDeclaration)term,
                sharedElements,
-               particle.getMaxOccursUnbounded() || particle.getMaxOccurs() > 1
+               particle.getMinOccurs(),
+               particle.getMaxOccurs(),
+               particle.getMaxOccursUnbounded()
             );
             break;
          default:
@@ -714,7 +716,9 @@ public class XsdBinder
    private static void bindElement(SchemaBinding schema,
                                    XSElementDeclaration element,
                                    SharedElements sharedElements,
-                                   boolean multiOccurs)
+                                   int minOccurs,
+                                   int maxOccurs,
+                                   boolean maxOccursUnbounded)
    {
       QName qName = new QName(element.getNamespace(), element.getName());
 
@@ -753,7 +757,9 @@ public class XsdBinder
       }
 
       binding = new ElementBinding(schema, type, element.getNillable());
-      binding.setMultiOccurs(multiOccurs);
+      binding.setMinOccurs(minOccurs);
+      binding.setMaxOccurs(maxOccurs);
+      binding.setMaxOccursUnbounded(maxOccursUnbounded);
       if(global)
       {
          schema.addElement(qName, binding);

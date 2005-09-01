@@ -6,8 +6,10 @@
  */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
+import javax.xml.namespace.QName;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -16,6 +18,7 @@ import org.jboss.xb.binding.metadata.ValueMetaData;
 public class AttributeBinding
 {
    private final SchemaBinding schema;
+   private final QName qName;
    private final TypeBinding type;
    private AttributeHandler handler;
    private PropertyMetaData propertyMetaData;
@@ -26,11 +29,17 @@ public class AttributeBinding
    private boolean mapEntryValue;
    private ValueAdapter valueAdapter;
 
-   public AttributeBinding(SchemaBinding schema, TypeBinding type, AttributeHandler handler)
+   public AttributeBinding(SchemaBinding schema, QName qName, TypeBinding type, AttributeHandler handler)
    {
       this.schema = schema;
+      this.qName = qName;
       this.type = type;
       this.handler = handler;
+
+      if(qName == null)
+      {
+         throw new JBossXBRuntimeException("Each attribute should have a non-null QName!");
+      }
    }
 
    public TypeBinding getType()

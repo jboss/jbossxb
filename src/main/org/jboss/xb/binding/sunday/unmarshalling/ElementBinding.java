@@ -10,12 +10,14 @@ import java.util.List;
 import java.util.Collections;
 import java.util.ArrayList;
 
+import javax.xml.namespace.QName;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.ClassMetaData;
 import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -27,6 +29,7 @@ public class ElementBinding
    private List interceptors = Collections.EMPTY_LIST;
 
    private final SchemaBinding schema;
+   private final QName qName;
    private final TypeBinding typeBinding;
    private boolean nillable;
    private ClassMetaData classMetaData;
@@ -45,16 +48,21 @@ public class ElementBinding
    private Boolean skip;
    private ValueAdapter valueAdapter;
 
-   public ElementBinding(SchemaBinding schema, TypeBinding typeBinding)
-   {
-      this(schema, typeBinding, false);
-   }
-
-   public ElementBinding(SchemaBinding schema, TypeBinding typeBinding, boolean nillable)
+   public ElementBinding(SchemaBinding schema, QName qName, TypeBinding typeBinding)
    {
       this.schema = schema;
+      this.qName = qName;
       this.typeBinding = typeBinding;
-      this.nillable = nillable;
+
+      if(qName == null)
+      {
+         throw new JBossXBRuntimeException("Each element must have a non-null QName!");
+      }
+   }
+
+   public QName getQName()
+   {
+      return qName;
    }
 
    public List getInterceptors()

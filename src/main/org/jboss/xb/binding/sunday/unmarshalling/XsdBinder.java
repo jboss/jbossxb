@@ -734,7 +734,7 @@ public class XsdBinder
       {
          if(parentType != null)
          {
-            parentType.addElement(qName, binding);
+            parentType.addElement(binding);
          }
          return;
       }
@@ -756,18 +756,19 @@ public class XsdBinder
          }
       }
 
-      binding = new ElementBinding(schema, type, element.getNillable());
+      binding = new ElementBinding(schema, qName, type);
+      binding.setNillable(element.getNillable());
       binding.setMinOccurs(minOccurs);
       binding.setMaxOccurs(maxOccurs);
       binding.setMaxOccursUnbounded(maxOccursUnbounded);
       if(global)
       {
-         schema.addElement(qName, binding);
+         schema.addElement(binding);
       }
 
       if(parentType != null)
       {
-         parentType.addElement(qName, binding);
+         parentType.addElement(binding);
       }
 
       if(log.isTraceEnabled())

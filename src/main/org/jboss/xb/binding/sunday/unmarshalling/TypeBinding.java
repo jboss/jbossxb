@@ -131,16 +131,16 @@ public class TypeBinding
       return element;
    }
 
-   public void addElement(QName qName, ElementBinding binding)
+   public void addElement(ElementBinding binding)
    {
       switch(elements.size())
       {
          case 0:
-            elements = Collections.singletonMap(qName, binding);
+            elements = Collections.singletonMap(binding.getQName(), binding);
             if(binding.isMultiOccurs())
             {
                arrayItem = binding;
-               arrayItemQName = qName;
+               arrayItemQName = binding.getQName();
             }
             break;
          case 1:
@@ -148,14 +148,14 @@ public class TypeBinding
             arrayItem = null;
             arrayItemQName = null;
          default:
-            elements.put(qName, binding);
+            elements.put(binding.getQName(), binding);
       }
    }
 
    public ElementBinding addElement(QName name, TypeBinding type)
    {
-      ElementBinding el = new ElementBinding(schemaBinding, type);
-      addElement(name, el);
+      ElementBinding el = new ElementBinding(schemaBinding, name, type);
+      addElement(el);
       return el;
    }
 
@@ -224,7 +224,7 @@ public class TypeBinding
 
    public AttributeBinding addAttribute(QName name, TypeBinding type, AttributeHandler handler)
    {
-      AttributeBinding attr = new AttributeBinding(schemaBinding, type, handler);
+      AttributeBinding attr = new AttributeBinding(schemaBinding, name, type, handler);
       switch(attrs.size())
       {
          case 0:

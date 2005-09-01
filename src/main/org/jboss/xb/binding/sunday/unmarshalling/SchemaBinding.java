@@ -117,15 +117,15 @@ public class SchemaBinding
       return (ElementBinding)elements.get(name);
    }
 
-   public void addElement(QName qName, ElementBinding element)
+   public void addElement(ElementBinding element)
    {
-      elements.put(qName, element);
+      elements.put(element.getQName(), element);
    }
 
    public ElementBinding addElement(QName name, TypeBinding type)
    {
-      ElementBinding element = new ElementBinding(this, type);
-      addElement(name, element);
+      ElementBinding element = new ElementBinding(this, name, type);
+      addElement(element);
       return element;
    }
 

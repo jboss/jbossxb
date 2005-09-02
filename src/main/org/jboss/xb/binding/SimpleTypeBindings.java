@@ -1173,8 +1173,7 @@ public final class SimpleTypeBindings
       }
       else if(typeCode == XS_ANYSIMPLETYPE)
       {
-         // todo XS_ANYSIMPLETYPE
-         throw new IllegalStateException("Recognized but not supported xsdType: " + xsdType);
+         return (String)value;
       }
       else if(typeCode == XS_DURATION)
       {

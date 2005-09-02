@@ -6,8 +6,12 @@
  */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
-import java.util.Map;
+// $Id$
+
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.Constants;
@@ -16,6 +20,7 @@ import org.jboss.xb.binding.metadata.PackageMetaData;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @author Thomas.Diesler@jboss.org
  * @version <tt>$Revision$</tt>
  */
 public class SchemaBinding
@@ -88,8 +93,8 @@ public class SchemaBinding
       SIMPLE_TYPES.put(type.getQName(), type);
    }
 
-   private Map types = new HashMap(SIMPLE_TYPES);
-   private Map elements = new HashMap();
+   private Map types = new LinkedHashMap(SIMPLE_TYPES);
+   private Map elements = new LinkedHashMap();
    private PackageMetaData packageMetaData;
    private SchemaBindingResolver schemaResolver;
    private boolean strictSchema = true;
@@ -102,6 +107,13 @@ public class SchemaBinding
       return (TypeBinding)types.get(qName);
    }
 
+   public QName[] getTypeQNames()
+   {
+      QName[] qnArr = new QName[types.size()];
+      types.keySet().toArray(qnArr);
+      return qnArr;
+   }
+   
    public void addType(TypeBinding type)
    {
       QName qName = type.getQName();
@@ -115,6 +127,13 @@ public class SchemaBinding
    public ElementBinding getElement(QName name)
    {
       return (ElementBinding)elements.get(name);
+   }
+
+   public QName[] getElementQNames()
+   {
+      QName[] qnArr = new QName[elements.size()];
+      elements.keySet().toArray(qnArr);
+      return qnArr;
    }
 
    public void addElement(ElementBinding element)
@@ -205,5 +224,26 @@ public class SchemaBinding
    public void setIgnoreLowLine(boolean ignoreLowLine)
    {
       this.ignoreLowLine = ignoreLowLine;
+   }
+   
+   public String toString()
+   {
+      StringBuffer buffer = new StringBuffer("SchemaBindig:");
+
+      QName[] typeQNames = getTypeQNames();
+      for (int i = 0; i < typeQNames.length; i++)
+      {
+         TypeBinding type = getType(typeQNames[i]);
+         buffer.append("\n " + type);
+      }
+
+      QName[] elQNames = getElementQNames();
+      for (int i = 0; i < elQNames.length; i++)
+      {
+         ElementBinding element = getElement(elQNames[i]);
+         buffer.append("\n " + element);
+      }
+
+      return buffer.toString();
    }
 }

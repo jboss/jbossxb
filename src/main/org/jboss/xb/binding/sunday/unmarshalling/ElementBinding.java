@@ -257,4 +257,10 @@ public class ElementBinding
    {
       this.nillable = nillable;
    }
+   
+   public String toString()
+   {
+      StringBuffer buffer = new StringBuffer("ElementBindig: " + getQName());
+      return buffer.toString();
+   }
 }

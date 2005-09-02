@@ -8,13 +8,14 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Iterator;
-import javax.xml.namespace.QName;
-import javax.xml.namespace.NamespaceContext;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.helpers.AttributesImpl;
+import javax.xml.namespace.NamespaceContext;
+import javax.xml.namespace.QName;
+
+import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ClassMetaData;
@@ -23,7 +24,8 @@ import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
-import org.jboss.xb.binding.Util;
+import org.xml.sax.Attributes;
+import org.xml.sax.helpers.AttributesImpl;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -73,10 +75,10 @@ public class TypeBinding
    public TypeBinding(QName qName, TypeBinding baseType)
    {
       this(qName, baseType.simpleType);
-      this.elements = new HashMap(baseType.elements);
+      this.elements = new LinkedHashMap(baseType.elements);
       this.arrayItemQName = baseType.arrayItemQName;
       this.arrayItem = baseType.arrayItem;
-      this.attrs = new HashMap(baseType.attrs);
+      this.attrs = new LinkedHashMap(baseType.attrs);
       this.classMetaData = baseType.classMetaData;
       this.valueMetaData = baseType.valueMetaData;
       this.propertyMetaData = baseType.propertyMetaData;
@@ -131,6 +133,13 @@ public class TypeBinding
       return element;
    }
 
+   public QName[] getElementQNames()
+   {
+      QName[] qnArr = new QName[elements.size()];
+      elements.keySet().toArray(qnArr);
+      return qnArr;
+   }
+   
    public void addElement(ElementBinding binding)
    {
       switch(elements.size())
@@ -170,6 +179,13 @@ public class TypeBinding
       }
    }
 
+   public QName[] getAttributeQNames()
+   {
+      QName[] qnArr = new QName[attrs.size()];
+      attrs.keySet().toArray(qnArr);
+      return qnArr;
+   }
+   
    public AttributeBinding getAttribute(QName qName)
    {
       return (AttributeBinding)attrs.get(qName);
@@ -446,5 +462,21 @@ public class TypeBinding
    public boolean isWildcard()
    {
       return wildcard;
+   }
+   
+   public String toString()
+   {
+      StringBuffer buffer = new StringBuffer("TypeBindig: " + getQName());
+      QName[] attrQNames = getAttributeQNames();
+      for (int j = 0; j < attrQNames.length; j++)
+      {
+         buffer.append("\n  attr: " + attrQNames[j]);
+      }
+      QName[] elQNames = getElementQNames();
+      for (int j = 0; j < elQNames.length; j++)
+      {
+         buffer.append("\n  elmt: " + elQNames[j]);
+      }
+      return buffer.toString();
    }
 }

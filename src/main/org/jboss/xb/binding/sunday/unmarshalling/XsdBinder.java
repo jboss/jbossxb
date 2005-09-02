@@ -45,8 +45,8 @@ import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.metadata.XsdAnnotation;
 import org.jboss.xb.binding.metadata.XsdAppInfo;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtAttributeHandler;
-import org.w3c.dom.DOMErrorHandler;
 import org.w3c.dom.DOMError;
+import org.w3c.dom.DOMErrorHandler;
 import org.w3c.dom.DOMLocator;
 
 /**
@@ -392,196 +392,199 @@ public class XsdBinder
    {
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
       TypeBinding binding = typeName == null ? null : doc.getType(typeName);
-      if(binding == null)
+      if(binding != null)
       {
-         //XSTypeDefinition baseTypeDef = type.getBaseType();
-         // anyType is the parent of all the types, even the parent of itself according to xerces :)
-         TypeBinding baseType = null; /* todo: review binding inheritance for complex types
+         return binding;
+      }
+
+      //XSTypeDefinition baseTypeDef = type.getBaseType();
+      // anyType is the parent of all the types, even the parent of itself according to xerces :)
+      TypeBinding baseType = null; /* todo: review binding inheritance for complex types
          (baseTypeDef == sharedElements.anyType ?
             null :
             bindType(doc, baseTypeDef, sharedElements));*/
-         binding = (baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType));
-         binding.setStartElementCreatesObject(true);
+      binding = (baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType));
+      binding.setStartElementCreatesObject(true);
 
-         if(typeName != null)
+      if(typeName != null)
+      {
+         doc.addType(binding);
+      }
+
+      if(log.isTraceEnabled())
+      {
+         String msg = typeName == null ? "complex anonymous type" : "complex type " + typeName;
+         if(baseType != null)
          {
-            doc.addType(binding);
+            msg += " inherited binding metadata from " + baseType.getQName();
          }
+         log.trace(msg);
+      }
 
-         if(log.isTraceEnabled())
+      binding.setSchemaBinding(doc);
+
+      XSObjectList attrs = type.getAttributeUses();
+      for(int i = 0; i < attrs.getLength(); ++i)
+      {
+         XSAttributeUse attr = (XSAttributeUse)attrs.item(i);
+         bindAttributes(doc, binding, attr);
+      }
+
+      // customize binding with xsd annotations
+      XSObjectList annotations = type.getAnnotations();
+      if(annotations != null)
+      {
+         for(int i = 0; i < annotations.getLength(); ++i)
          {
-            String msg = typeName == null ? "complex anonymous type" : "complex type " + typeName;
-            if(baseType != null)
+            XSAnnotation an = (XSAnnotation)annotations.item(i);
+            XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
+            XsdAppInfo appInfo = xsdAn.getAppInfo();
+            if(appInfo != null)
             {
-               msg += " inherited binding metadata from " + baseType.getQName();
-            }
-            log.trace(msg);
-         }
-
-         binding.setSchemaBinding(doc);
-
-         XSObjectList attrs = type.getAttributeUses();
-         for(int i = 0; i < attrs.getLength(); ++i)
-         {
-            XSAttributeUse attr = (XSAttributeUse)attrs.item(i);
-            bindAttributes(doc, binding, attr);
-         }
-
-         // customize binding with xsd annotations
-         XSObjectList annotations = type.getAnnotations();
-         if(annotations != null)
-         {
-            for(int i = 0; i < annotations.getLength(); ++i)
-            {
-               XSAnnotation an = (XSAnnotation)annotations.item(i);
-               XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
-               XsdAppInfo appInfo = xsdAn.getAppInfo();
-               if(appInfo != null)
+               ClassMetaData classMetaData = appInfo.getClassMetaData();
+               if(classMetaData != null)
                {
-                  ClassMetaData classMetaData = appInfo.getClassMetaData();
+                  if(log.isTraceEnabled())
+                  {
+                     log.trace("complex type " +
+                        type.getName() +
+                        ": impl=" +
+                        classMetaData.getImpl()
+                     );
+                  }
+                  binding.setClassMetaData(classMetaData);
+               }
+
+               CharactersMetaData charactersMetaData = appInfo.getCharactersMetaData();
+               if(charactersMetaData != null)
+               {
+                  if(log.isTraceEnabled())
+                  {
+                     PropertyMetaData propertyMetaData = charactersMetaData.getProperty();
+                     if(propertyMetaData != null)
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": characters bound to " + propertyMetaData.getName()
+                        );
+                     }
+
+                     ValueMetaData valueMetaData = charactersMetaData.getValue();
+                     if(valueMetaData != null)
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": characters unmarshalMethod=" +
+                           valueMetaData.getUnmarshalMethod() +
+                           ", marshalMethod=" + valueMetaData.getMarshalMethod()
+                        );
+                     }
+
+                     boolean mapEntryKey = appInfo.isMapEntryKey();
+                     if(mapEntryKey)
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": characters are bound as a key in a map entry"
+                        );
+                     }
+
+                     boolean mapEntryValue = appInfo.isMapEntryValue();
+                     if(mapEntryValue)
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": characters are bound as a value in a map entry"
+                        );
+                     }
+                  }
+                  binding.setCharactersMetaData(charactersMetaData);
+               }
+
+               MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
+               if(mapEntryMetaData != null)
+               {
+                  if(log.isTraceEnabled())
+                  {
+                     log.trace("complex type " +
+                        type.getName() +
+                        " is bound to a map entry: impl=" +
+                        mapEntryMetaData.getImpl() +
+                        ", getKeyMethod=" +
+                        mapEntryMetaData.getGetKeyMethod() +
+                        ", setKeyMethod=" +
+                        mapEntryMetaData.getSetKeyMethod() +
+                        ", getValueMethod=" +
+                        mapEntryMetaData.getGetValueMethod() +
+                        ", setValueMethod=" +
+                        mapEntryMetaData.getSetValueMethod() +
+                        ", valueType=" +
+                        mapEntryMetaData.getValueType() +
+                        ", nonNullValue=" + mapEntryMetaData.isNonNullValue()
+                     );
+                  }
+
                   if(classMetaData != null)
                   {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("complex type " +
-                           type.getName() +
-                           ": impl=" +
-                           classMetaData.getImpl()
-                        );
-                     }
-                     binding.setClassMetaData(classMetaData);
+                     throw new JBossXBRuntimeException(
+                        "Illegal binding: both jbxb:class and jbxb:mapEntry are specified for complex type " +
+                           type.getName()
+                     );
                   }
+                  binding.setMapEntryMetaData(mapEntryMetaData);
+               }
 
-                  CharactersMetaData charactersMetaData = appInfo.getCharactersMetaData();
-                  if(charactersMetaData != null)
+               boolean skip = appInfo.isSkip();
+               if(skip)
+               {
+                  if(log.isTraceEnabled())
                   {
-                     if(log.isTraceEnabled())
-                     {
-                        PropertyMetaData propertyMetaData = charactersMetaData.getProperty();
-                        if(propertyMetaData != null)
-                        {
-                           log.trace("complex type " +
-                              type.getName() +
-                              ": characters bound to " + propertyMetaData.getName()
-                           );
-                        }
-
-                        ValueMetaData valueMetaData = charactersMetaData.getValue();
-                        if(valueMetaData != null)
-                        {
-                           log.trace("complex type " +
-                              type.getName() +
-                              ": characters unmarshalMethod=" +
-                              valueMetaData.getUnmarshalMethod() +
-                              ", marshalMethod=" + valueMetaData.getMarshalMethod()
-                           );
-                        }
-
-                        boolean mapEntryKey = appInfo.isMapEntryKey();
-                        if(mapEntryKey)
-                        {
-                           log.trace("complex type " +
-                              type.getName() +
-                              ": characters are bound as a key in a map entry"
-                           );
-                        }
-
-                        boolean mapEntryValue = appInfo.isMapEntryValue();
-                        if(mapEntryValue)
-                        {
-                           log.trace("complex type " +
-                              type.getName() +
-                              ": characters are bound as a value in a map entry"
-                           );
-                        }
-                     }
-                     binding.setCharactersMetaData(charactersMetaData);
+                     log.trace("complex type " +
+                        type.getName() +
+                        ": elements of this type will be skipped; their attrs, character content " +
+                        "and elements will be set the parent."
+                     );
                   }
+                  binding.setSkip(skip);
+               }
 
-                  MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
-                  if(mapEntryMetaData != null)
+               PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
+               if(propertyMetaData != null)
+               {
+                  if(log.isTraceEnabled())
                   {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("complex type " +
-                           type.getName() +
-                           " is bound to a map entry: impl=" +
-                           mapEntryMetaData.getImpl() +
-                           ", getKeyMethod=" +
-                           mapEntryMetaData.getGetKeyMethod() +
-                           ", setKeyMethod=" +
-                           mapEntryMetaData.getSetKeyMethod() +
-                           ", getValueMethod=" +
-                           mapEntryMetaData.getGetValueMethod() +
-                           ", setValueMethod=" +
-                           mapEntryMetaData.getSetValueMethod() +
-                           ", valueType=" +
-                           mapEntryMetaData.getValueType() +
-                           ", nonNullValue=" + mapEntryMetaData.isNonNullValue()
-                        );
-                     }
-
-                     if(classMetaData != null)
-                     {
-                        throw new JBossXBRuntimeException(
-                           "Illegal binding: both jbxb:class and jbxb:mapEntry are specified for complex type " +
-                              type.getName()
-                        );
-                     }
-                     binding.setMapEntryMetaData(mapEntryMetaData);
+                     log.trace("complex type " +
+                        type.getName() +
+                        ": the content of elements of this type is bound to property " + propertyMetaData.getName()
+                     );
                   }
+                  binding.setPropertyMetaData(propertyMetaData);
+               }
 
-                  boolean skip = appInfo.isSkip();
-                  if(skip)
+               AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
+               if(addMethodMetaData != null)
+               {
+                  if(log.isTraceEnabled())
                   {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("complex type " +
-                           type.getName() +
-                           ": elements of this type will be skipped; their attrs, character content " +
-                           "and elements will be set the parent."
-                        );
-                     }
-                     binding.setSkip(skip);
+                     log.trace("complex type " + type.getName() +
+                        ": elements of this type will be added to parent objects with addMethod=" +
+                        addMethodMetaData.getMethodName() + ", valueType=" + addMethodMetaData.getValueType()
+                     );
                   }
-
-                  PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
-                  if(propertyMetaData != null)
-                  {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("complex type " +
-                           type.getName() +
-                           ": the content of elements of this type is bound to property " + propertyMetaData.getName()
-                        );
-                     }
-                     binding.setPropertyMetaData(propertyMetaData);
-                  }
-
-                  AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
-                  if(addMethodMetaData != null)
-                  {
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("complex type " + type.getName() +
-                           ": elements of this type will be added to parent objects with addMethod=" +
-                           addMethodMetaData.getMethodName() + ", valueType=" + addMethodMetaData.getValueType()
-                        );
-                     }
-                     binding.setAddMethodMetaData(addMethodMetaData);
-                  }
+                  binding.setAddMethodMetaData(addMethodMetaData);
                }
             }
          }
-
-         XSParticle particle = type.getParticle();
-         if(particle != null)
-         {
-            pushType(binding);
-            bindParticle(doc, particle, sharedElements);
-            popType();
-         }
       }
+
+      XSParticle particle = type.getParticle();
+      if(particle != null)
+      {
+         pushType(binding);
+         bindParticle(doc, particle, sharedElements);
+         popType();
+      }
+
       return binding;
    }
 

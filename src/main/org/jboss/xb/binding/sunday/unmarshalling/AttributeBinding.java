@@ -42,7 +42,7 @@ public class AttributeBinding
       }
    }
 
-   public QName getqName()
+   public QName getQName()
    {
       return qName;
    }

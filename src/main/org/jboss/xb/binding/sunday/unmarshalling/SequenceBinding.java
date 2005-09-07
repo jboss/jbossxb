@@ -245,6 +245,11 @@ public class SequenceBinding
 
             return groupStack;
          }
+
+         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups)
+         {
+            return getElement(sequence, qName, atts, passedGroups);
+         }
       };
    }
 

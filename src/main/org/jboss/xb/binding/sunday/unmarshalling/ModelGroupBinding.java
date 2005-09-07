@@ -6,11 +6,13 @@
  */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
-import java.util.Collections;
-import java.util.Set;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import javax.xml.namespace.QName;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.xml.sax.Attributes;
 
 
@@ -50,8 +52,9 @@ public abstract class ModelGroupBinding
 
    /**
     * This method is not actually used during parsing. It's here only for internal tests.
-    * @param qName  an element name
-    * @return  true if the model group may start with the specified element
+    *
+    * @param qName an element name
+    * @return true if the model group may start with the specified element
     */
    public boolean mayStartWith(QName qName)
    {
@@ -104,11 +107,87 @@ public abstract class ModelGroupBinding
          return startElement(qName, attrs, Collections.EMPTY_SET, Collections.EMPTY_LIST, true);
       }
 
+      public ElementBinding getElement(QName qName, Attributes attrs)
+      {
+         return getElement(qName, attrs, Collections.EMPTY_SET);
+      }
+
       public abstract void endElement(QName qName);
 
       // Protected
 
-      protected abstract List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required);
+      protected abstract List startElement(QName qName,
+                                           Attributes atts,
+                                           Set passedGroups,
+                                           List groupStack,
+                                           boolean required);
+
+      protected abstract ElementBinding getElement(QName qName, Attributes atts, Set passedGroups);
+
+      protected ElementBinding getElement(List group, QName qName, Attributes atts, Set passedGroups)
+      {
+         ElementBinding element = null;
+         for(int i = 0; i < group.size(); ++i)
+         {
+            Object item = group.get(i);
+            if(item instanceof ElementBinding)
+            {
+               ElementBinding choice = (ElementBinding)item;
+               if(qName.equals(choice.getQName()))
+               {
+                  element = choice;
+                  break;
+               }
+            }
+            else if(item instanceof ModelGroupBinding)
+            {
+               ModelGroupBinding modelGroup = (ModelGroupBinding)item;
+               if(!passedGroups.contains(modelGroup))
+               {
+                  switch(passedGroups.size())
+                  {
+                     case 0:
+                        passedGroups = Collections.singleton(this);
+                        break;
+                     case 1:
+                        passedGroups = new HashSet(passedGroups);
+                     default:
+                        passedGroups.add(this);
+                  }
+
+                  ElementBinding e = modelGroup.newCursor().getElement(qName, atts, passedGroups);
+                  if(e != null)
+                  {
+                     element = e;
+                     if(!qName.equals(e.getQName()))
+                     {
+                        throw new JBossXBRuntimeException(
+                           "There is a bug in ModelGroupBinding.Cursor.getElement(QName,Attributes) impl"
+                        );
+                     }
+                     break;
+                  }
+               }
+            }
+            else if(item instanceof WildcardBinding)
+            {
+               WildcardBinding wildcard = (WildcardBinding)item;
+               ElementBinding e = wildcard.getElement(qName, atts);
+               if(e != null)
+               {
+                  element = e;
+                  if(!qName.equals(e.getQName()))
+                  {
+                     throw new JBossXBRuntimeException(
+                        "There is a bug in ModelGroupBinding.Cursor.getElement(QName,Attributes) impl"
+                     );
+                  }
+                  break;
+               }
+            }
+         }
+         return element;
+      }
 
       protected List addItem(List list, Object o)
       {

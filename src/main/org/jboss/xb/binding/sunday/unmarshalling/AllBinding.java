@@ -103,6 +103,11 @@ public class AllBinding
             }
             return groupStack;
          }
+
+         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups)
+         {
+            return (ElementBinding)elements.get(qName);
+         }
       };
    }
 

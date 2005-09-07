@@ -116,12 +116,7 @@ public class TypeBinding
       ElementBinding element = null;
       if(modelGroup != null)
       {
-         List cursors = modelGroup.newCursor().startElement(name, atts);
-         if(!cursors.isEmpty())
-         {
-            ModelGroupBinding.Cursor cursor = (ModelGroupBinding.Cursor)cursors.get(0);
-            element = (ElementBinding)cursor.getCurrentParticle();
-         }
+         element = modelGroup.newCursor().getElement(name, atts);
       }
 
       if(element == null && wildcard != null)

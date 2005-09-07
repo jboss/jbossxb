@@ -200,6 +200,11 @@ public class ChoiceBinding
 
             return groupStack;
          }
+
+         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups)
+         {
+            return getElement(choices, qName, atts, passedGroups);
+         }
       };
    }
 

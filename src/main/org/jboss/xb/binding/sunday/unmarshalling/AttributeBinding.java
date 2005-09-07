@@ -42,6 +42,11 @@ public class AttributeBinding
       }
    }
 
+   public QName getqName()
+   {
+      return qName;
+   }
+
    public TypeBinding getType()
    {
       return type;

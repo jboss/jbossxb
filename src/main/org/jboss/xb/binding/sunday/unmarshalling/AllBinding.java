@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.logging.Logger;
+import org.xml.sax.Attributes;
 
 
 /**
@@ -22,7 +24,14 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
 public class AllBinding
    extends ModelGroupBinding
 {
+   private static final Logger log = Logger.getLogger(AllBinding.class);
+
    private Map elements = Collections.EMPTY_MAP;
+
+   public ElementBinding getArrayItem()
+   {
+      return null;
+   }
 
    public void addElement(ElementBinding element)
    {
@@ -43,6 +52,11 @@ public class AllBinding
       throw new JBossXBRuntimeException("Model group all may contain only elements!");
    }
 
+   public void setWildcard(WildcardBinding binding)
+   {
+      throw new JBossXBRuntimeException("Model group all may contain only elements!");
+   }
+
    public Cursor newCursor()
    {
       return new Cursor(this)
@@ -58,23 +72,34 @@ public class AllBinding
             return curElement;
          }
 
-         public void endElement(QName qName)
+         public ElementBinding getElement()
          {
-            if(!curElement.getQName().equals(qName))
-            {
-               throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
-                  " since the current element is " + curElement.getQName()
-               );
-            }
+            return (ElementBinding)getCurrentParticle();
          }
 
-         protected List startElement(QName qName, Set passedGroups, List groupStack, boolean required)
+         public void endElement(QName qName)
+         {
+            if(curElement == null || !curElement.getQName().equals(qName))
+            {
+               throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
+                  " since the current element is " + (curElement == null ? null : curElement.getQName())
+               );
+            }
+            elementStatus = ELEMENT_STATUS_FINISHED;
+         }
+
+         protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
          {
             ElementBinding element = (ElementBinding)elements.get(qName);
             if(element != null)
             {
                curElement = element;
                groupStack = addItem(groupStack, this);
+               elementStatus = ELEMENT_STATUS_STARTED;
+            }
+            else
+            {
+               log.warn("Element " + qName + " not found in " + elements.keySet());
             }
             return groupStack;
          }

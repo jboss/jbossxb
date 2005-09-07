@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.xml.sax.Attributes;
 
 
 /**
@@ -23,6 +24,12 @@ public class SequenceBinding
    extends ModelGroupBinding
 {
    private List sequence = Collections.EMPTY_LIST;
+   private ElementBinding arrayItem;
+
+   public ElementBinding getArrayItem()
+   {
+      return arrayItem;
+   }
 
    public void addElement(ElementBinding element)
    {
@@ -34,11 +41,18 @@ public class SequenceBinding
       addItem(modelGroup);
    }
 
+   public void setWildcard(WildcardBinding binding)
+   {
+      addItem(binding);
+   }
+
    public Cursor newCursor()
    {
       return new Cursor(this)
       {
          private int pos = -1;
+         private ElementBinding element;
+         private int occurs;
 
          public ParticleBinding getCurrentParticle()
          {
@@ -51,22 +65,44 @@ public class SequenceBinding
             return (ParticleBinding)sequence.get(pos);
          }
 
-         public void endElement(QName qName)
+         public ElementBinding getElement()
          {
-            ElementBinding element = (ElementBinding)getCurrentParticle();
-            if(!element.getQName().equals(qName))
+            if(pos < 0)
             {
-               throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
-                  " since the current element is " + element.getQName()
+               throw new JBossXBRuntimeException(
+                  "The cursor has not been positioned yet! startElement should be called."
                );
             }
+            return element;
          }
 
-         protected List startElement(QName qName, Set passedGroups, List groupStack, boolean required)
+         public void endElement(QName qName)
          {
+            if(element == null || !element.getQName().equals(qName))
+            {
+               throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
+                  " since the current element is " + (element == null ? "null" : element.getQName().toString())
+               );
+            }
+            elementStatus = ELEMENT_STATUS_FINISHED;
+         }
+
+         protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
+         {
+            int i = pos;
+            if(pos >= 0)
+            {
+               ParticleBinding particle = getCurrentParticle();
+               if(particle.getMaxOccursUnbounded() ||
+                  occurs < particle.getMinOccurs() ||
+                  occurs < particle.getMaxOccurs())
+               {
+                  --i;
+               }
+            }
+
             // i update pos only if the element has been found, though it seems to be irrelevant
             // since the cursor is going to be thrown away in case the element has not been found
-            int i = pos;
             while(i < sequence.size() - 1)
             {
                Object item = sequence.get(++i);
@@ -75,12 +111,22 @@ public class SequenceBinding
                   ElementBinding element = (ElementBinding)item;
                   if(qName.equals(element.getQName()))
                   {
-                     pos = i;
+                     if(pos == i)
+                     {
+                        ++occurs;
+                     }
+                     else
+                     {
+                        pos = i;
+                        occurs = 1;
+                     }
                      groupStack = addItem(groupStack, this);
+                     this.element = element;
+                     elementStatus = ELEMENT_STATUS_STARTED;
                      break;
                   }
 
-                  if(element.getMinOccurs() > 0)
+                  if(i != pos && element.getMinOccurs() > 0)
                   {
                      if(required)
                      {
@@ -112,17 +158,26 @@ public class SequenceBinding
                      }
 
                      groupStack = modelGroup.newCursor().startElement(
-                        qName, passedGroups, groupStack, modelGroup.getMinOccurs() > 0
+                        qName, atts, passedGroups, groupStack, modelGroup.getMinOccurs() > 0
                      );
 
                      if(!groupStack.isEmpty())
                      {
-                        pos = i;
+                        if(pos != i)
+                        {
+                           pos = i;
+                           occurs = 1;
+                        }
+                        else
+                        {
+                           ++occurs;
+                        }
                         groupStack = addItem(groupStack, this);
+                        element = null;
                         break;
                      }
 
-                     if(modelGroup.getMinOccurs() > 0)
+                     if(i != pos && modelGroup.getMinOccurs() > 0)
                      {
                         if(required)
                         {
@@ -137,13 +192,47 @@ public class SequenceBinding
                         }
                      }
                   }
-                  else if(modelGroup.getMinOccurs() > 0)
+                  else if(i != pos && modelGroup.getMinOccurs() > 0)
                   {
                      if(required)
                      {
                         throw new JBossXBRuntimeException("Requested element " + qName +
                            " is not allowed in this position in the sequence. A model group with minOccurs=" +
                            modelGroup.getMinOccurs() + " that doesn't contain this element must follow."
+                        );
+                     }
+                     else
+                     {
+                        break;
+                     }
+                  }
+               }
+               else if(item instanceof WildcardBinding)
+               {
+                  WildcardBinding wildcard = (WildcardBinding)item;
+                  element = wildcard.getElement(qName, atts);
+                  if(element != null)
+                  {
+                     if(pos != i)
+                     {
+                        pos = i;
+                        occurs = 1;
+                     }
+                     else
+                     {
+                        ++occurs;
+                     }
+                     groupStack = addItem(groupStack, this);
+                     elementStatus = ELEMENT_STATUS_STARTED;
+                     break;
+                  }
+
+                  if(i != pos && wildcard.getMinOccurs() > 0)
+                  {
+                     if(required)
+                     {
+                        throw new JBossXBRuntimeException("Requested element " + qName +
+                           " is not allowed in this position in the sequence."
                         );
                      }
                      else
@@ -213,15 +302,24 @@ public class SequenceBinding
 
    // Private
 
-   private void addItem(Object o)
+   private void addItem(ParticleBinding o)
    {
       switch(sequence.size())
       {
          case 0:
             sequence = Collections.singletonList(o);
+            if(o instanceof ElementBinding)
+            {
+               ElementBinding element = (ElementBinding)o;
+               if(element.isMultiOccurs())
+               {
+                  arrayItem = element;
+               }
+            }
             break;
          case 1:
             sequence = new ArrayList(sequence);
+            arrayItem = null;
          default:
             sequence.add(o);
       }

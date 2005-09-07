@@ -8,14 +8,14 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javax.xml.namespace.NamespaceContext;
+import java.util.Iterator;
+import java.util.List;
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 
-import org.jboss.xb.binding.Util;
+import org.xml.sax.Attributes;
+import org.xml.sax.helpers.AttributesImpl;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ClassMetaData;
@@ -24,8 +24,7 @@ import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
-import org.xml.sax.Attributes;
-import org.xml.sax.helpers.AttributesImpl;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -34,8 +33,6 @@ import org.xml.sax.helpers.AttributesImpl;
 public class TypeBinding
 {
    private final QName qName;
-   private Map elements = Collections.EMPTY_MAP;
-   private QName arrayItemQName;
    private ElementBinding arrayItem;
    /** Map<QName, AttributeBinding>  */
    private Map attrs = Collections.EMPTY_MAP;
@@ -46,7 +43,6 @@ public class TypeBinding
    private PropertyMetaData propertyMetaData;
    private MapEntryMetaData mapEntryMetaData;
    private SchemaBinding schemaBinding; // todo it's optional for now...
-   private SchemaBindingResolver schemaResolver;
    private TypeBinding baseType;
    private boolean skip;
    private CharactersMetaData charMetaData;
@@ -54,7 +50,9 @@ public class TypeBinding
    private AddMethodMetaData addMethodMetaData;
    private ValueAdapter valueAdapter = ValueAdapter.NOOP;
    private Boolean startElementCreatesObject;
-   private boolean wildcard;
+
+   private WildcardBinding wildcard;
+   private ModelGroupBinding modelGroup;
 
    public TypeBinding()
    {
@@ -75,16 +73,26 @@ public class TypeBinding
    public TypeBinding(QName qName, TypeBinding baseType)
    {
       this(qName, baseType.simpleType);
-      this.elements = new LinkedHashMap(baseType.elements);
-      this.arrayItemQName = baseType.arrayItemQName;
+
+      if(baseType.modelGroup != null)
+      {
+         try
+         {
+            this.modelGroup = (ModelGroupBinding)baseType.modelGroup.clone();
+         }
+         catch(CloneNotSupportedException e)
+         {
+            throw new JBossXBRuntimeException(e.getMessage());
+         }
+      }
+
       this.arrayItem = baseType.arrayItem;
-      this.attrs = new LinkedHashMap(baseType.attrs);
+      this.attrs = new HashMap(baseType.attrs);
       this.classMetaData = baseType.classMetaData;
       this.valueMetaData = baseType.valueMetaData;
       this.propertyMetaData = baseType.propertyMetaData;
       this.mapEntryMetaData = baseType.mapEntryMetaData;
       this.schemaBinding = baseType.schemaBinding;
-      this.schemaResolver = baseType.schemaResolver;
       this.baseType = baseType;
 
       if(!baseType.isStartElementCreatesObject())
@@ -98,11 +106,6 @@ public class TypeBinding
       return qName;
    }
 
-   public ElementBinding getLocalElement(QName name)
-   {
-      return (ElementBinding)elements.get(name);
-   }
-
    public ElementBinding getElement(QName name)
    {
       return getElement(name, null);
@@ -110,55 +113,39 @@ public class TypeBinding
 
    public ElementBinding getElement(QName name, Attributes atts)
    {
-      ElementBinding element = (ElementBinding)elements.get(name);
-      if(element == null)
+      ElementBinding element = null;
+      if(modelGroup != null)
       {
-         SchemaBindingResolver resolver = schemaResolver;
-         if(resolver == null && schemaBinding != null)
+         List cursors = modelGroup.newCursor().startElement(name, atts);
+         if(!cursors.isEmpty())
          {
-            resolver = schemaBinding.getSchemaResolver();
+            ModelGroupBinding.Cursor cursor = (ModelGroupBinding.Cursor)cursors.get(0);
+            element = (ElementBinding)cursor.getCurrentParticle();
          }
+      }
 
-         if(resolver != null)
-         {
-            // this is wildcard handling
-            String schemaLocation = atts == null ? null : Util.getSchemaLocation(atts, name.getNamespaceURI());
-            SchemaBinding schema = resolver.resolve(name.getNamespaceURI(), null, schemaLocation);
-            if(schema != null)
-            {
-               element = schema.getElement(name);
-            }
-         }
+      if(element == null && wildcard != null)
+      {
+         element = wildcard.getElement(name, atts);
       }
       return element;
    }
 
-   public QName[] getElementQNames()
-   {
-      QName[] qnArr = new QName[elements.size()];
-      elements.keySet().toArray(qnArr);
-      return qnArr;
-   }
-   
    public void addElement(ElementBinding binding)
    {
-      switch(elements.size())
+      if(modelGroup == null)
       {
-         case 0:
-            elements = Collections.singletonMap(binding.getQName(), binding);
-            if(binding.isMultiOccurs())
-            {
-               arrayItem = binding;
-               arrayItemQName = binding.getQName();
-            }
-            break;
-         case 1:
-            elements = new HashMap(elements);
-            arrayItem = null;
-            arrayItemQName = null;
-         default:
-            elements.put(binding.getQName(), binding);
+         modelGroup = new AllBinding();
+         if(binding.isMultiOccurs())
+         {
+            arrayItem = binding;
+         }
       }
+      else
+      {
+         arrayItem = null;
+      }
+      modelGroup.addElement(binding);
    }
 
    public ElementBinding addElement(QName name, TypeBinding type)
@@ -179,13 +166,6 @@ public class TypeBinding
       }
    }
 
-   public QName[] getAttributeQNames()
-   {
-      QName[] qnArr = new QName[attrs.size()];
-      attrs.keySet().toArray(qnArr);
-      return qnArr;
-   }
-   
    public AttributeBinding getAttribute(QName qName)
    {
       return (AttributeBinding)attrs.get(qName);
@@ -194,11 +174,11 @@ public class TypeBinding
    /**
     * Go through the type attributes to see if there are any with defaults
     * that do not appears in the attrs list.
-    * 
+    *
     * @param attrs - the attributes seen in the document
     * @return a possibly augmented list that includes unspecified attributes
     *    with default values.
-    */ 
+    */
    public Attributes expandWithDefaultAttributes(Attributes attrs)
    {
       if(this.attrs.size() == 0)
@@ -217,7 +197,7 @@ public class TypeBinding
       Attributes expandedAttrs = attrs;
       if( attrsNotSeen.size() > 0 )
       {
-         AttributesImpl tmp = new AttributesImpl(attrs);         
+         AttributesImpl tmp = new AttributesImpl(attrs);
          Iterator iter = attrsNotSeen.entrySet().iterator();
          while( iter.hasNext() )
          {
@@ -264,11 +244,6 @@ public class TypeBinding
       this.simpleType = simpleType;
    }
 
-   public Object startElement(Object parent, QName qName, ElementBinding element)
-   {
-      return handler.startElement(parent, qName, element);
-   }
-
    public void attributes(Object o,
                           QName elementName,
                           ElementBinding element,
@@ -276,11 +251,6 @@ public class TypeBinding
                           NamespaceContext nsCtx)
    {
       handler.attributes(o, elementName, element, attrs, nsCtx);
-   }
-
-   public Object endElement(Object parent, Object o, ElementBinding element, QName qName)
-   {
-      return handler.endElement(o, qName, element);
    }
 
    public void setHandler(ElementHandler handler)
@@ -310,22 +280,17 @@ public class TypeBinding
 
    public boolean isSimple()
    {
-      return elements.isEmpty() && attrs.isEmpty();
+      return modelGroup == null && attrs.isEmpty();
    }
 
    public boolean isArrayWrapper()
    {
-      return arrayItem != null;
+      return arrayItem != null || modelGroup != null && modelGroup.getArrayItem() != null;
    }
 
    public ElementBinding getArrayItem()
    {
-      return arrayItem;
-   }
-
-   public QName getArrayItemQName()
-   {
-      return arrayItemQName;
+      return arrayItem == null ? (modelGroup == null ? null : modelGroup.getArrayItem()) : arrayItem;
    }
 
    public ClassMetaData getClassMetaData()
@@ -368,16 +333,6 @@ public class TypeBinding
       this.propertyMetaData = propertyMetaData;
    }
 
-   public SchemaBindingResolver getSchemaResolver()
-   {
-      return schemaResolver;
-   }
-
-   public void setSchemaResolver(SchemaBindingResolver schemaResolver)
-   {
-      this.schemaResolver = schemaResolver;
-   }
-
    public MapEntryMetaData getMapEntryMetaData()
    {
       return mapEntryMetaData;
@@ -406,11 +361,6 @@ public class TypeBinding
    public void setCharactersMetaData(CharactersMetaData charMetaData)
    {
       this.charMetaData = charMetaData;
-   }
-
-   public boolean isWildcardElement(QName qName)
-   {
-      return !elements.containsKey(qName);
    }
 
    public PropertyMetaData getWildcardPropertyMetaData()
@@ -446,7 +396,7 @@ public class TypeBinding
    public boolean isStartElementCreatesObject()
    {
       return startElementCreatesObject == null ?
-         !elements.isEmpty() || !attrs.isEmpty() : startElementCreatesObject.booleanValue();
+               modelGroup != null || !attrs.isEmpty() : startElementCreatesObject.booleanValue();
    }
 
    public void setStartElementCreatesObject(boolean startElementCreatesObject)
@@ -454,29 +404,23 @@ public class TypeBinding
       this.startElementCreatesObject = startElementCreatesObject ? Boolean.TRUE : Boolean.FALSE;
    }
 
-   public void setWildcard()
+   public void setWildcard(WildcardBinding wildcard)
    {
-      this.wildcard = true;
+      this.wildcard = wildcard;
    }
 
-   public boolean isWildcard()
+   public boolean hasWildcard()
    {
-      return wildcard;
+      return wildcard != null;
    }
-   
-   public String toString()
+
+   public ModelGroupBinding getModelGroup()
    {
-      StringBuffer buffer = new StringBuffer("TypeBindig: " + getQName());
-      QName[] attrQNames = getAttributeQNames();
-      for (int j = 0; j < attrQNames.length; j++)
-      {
-         buffer.append("\n  attr: " + attrQNames[j]);
-      }
-      QName[] elQNames = getElementQNames();
-      for (int j = 0; j < elQNames.length; j++)
-      {
-         buffer.append("\n  elmt: " + elQNames[j]);
-      }
-      return buffer.toString();
+      return modelGroup;
+   }
+
+   public void setModelGroup(ModelGroupBinding modelGroup)
+   {
+      this.modelGroup = modelGroup;
    }
 }

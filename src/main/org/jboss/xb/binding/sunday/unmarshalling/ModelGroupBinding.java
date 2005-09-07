@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
 import javax.xml.namespace.QName;
+import org.xml.sax.Attributes;
 
 
 /**
@@ -18,15 +19,19 @@ import javax.xml.namespace.QName;
  * @version <tt>$Revision$</tt>
  */
 public abstract class ModelGroupBinding
-   implements ParticleBinding
+   implements ParticleBinding, Cloneable
 {
    protected int minOccurs;
    protected int maxOccurs;
    protected boolean maxOccursUnbounded;
 
+   public abstract ElementBinding getArrayItem();
+
    public abstract void addElement(ElementBinding element);
 
    public abstract void addModelGroup(ModelGroupBinding modelGroup);
+
+   public abstract void setWildcard(WildcardBinding binding);
 
    public int getMinOccurs()
    {
@@ -55,6 +60,11 @@ public abstract class ModelGroupBinding
 
    public abstract Cursor newCursor();
 
+   public Object clone() throws CloneNotSupportedException
+   {
+      return super.clone();
+   }
+
    // Protected
 
    protected abstract boolean mayStartWith(QName qName, Set set);
@@ -63,7 +73,12 @@ public abstract class ModelGroupBinding
 
    public static abstract class Cursor
    {
+      protected static final byte ELEMENT_STATUS_STARTED = 1;
+      protected static final byte ELEMENT_STATUS_FINISHED = 2;
+      protected static final byte ELEMENT_STATUS_UNINITIALIZED = 4;
+
       protected final ModelGroupBinding group;
+      protected byte elementStatus = ELEMENT_STATUS_UNINITIALIZED;
 
       protected Cursor(ModelGroupBinding theGroup)
       {
@@ -75,18 +90,25 @@ public abstract class ModelGroupBinding
          return group;
       }
 
+      public boolean isElementFinished()
+      {
+         return (elementStatus & ELEMENT_STATUS_FINISHED) > 0;
+      }
+
       public abstract ParticleBinding getCurrentParticle();
 
-      public List startElement(QName qName)
+      public abstract ElementBinding getElement();
+
+      public List startElement(QName qName, Attributes attrs)
       {
-         return startElement(qName, Collections.EMPTY_SET, Collections.EMPTY_LIST, true);
+         return startElement(qName, attrs, Collections.EMPTY_SET, Collections.EMPTY_LIST, true);
       }
 
       public abstract void endElement(QName qName);
 
       // Protected
 
-      protected abstract List startElement(QName qName, Set passedGroups, List groupStack, boolean required);
+      protected abstract List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required);
 
       protected List addItem(List list, Object o)
       {

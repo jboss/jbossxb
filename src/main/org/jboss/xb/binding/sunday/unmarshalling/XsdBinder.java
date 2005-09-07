@@ -55,6 +55,9 @@ import org.w3c.dom.DOMLocator;
  */
 public class XsdBinder
 {
+   // this constant is a temporary one to test model group bindings
+   public static boolean MODELGROUPS = true;
+
    private static final Logger log = Logger.getLogger(XsdBinder.class);
 
    private static final ThreadLocal xsdBinding = new ThreadLocal();
@@ -231,19 +234,7 @@ public class XsdBinder
          }
       }
 
-      /*
-      XSTypeDefinition anyType = model.getTypeDefinition(Constants.QNAME_ANYTYPE.getLocalPart(),
-         Constants.QNAME_ANYTYPE.getNamespaceURI()
-      );
-      if(anyType == null)
-      {
-         throw new JBossXBRuntimeException("Unable to get a refence to " + Constants.QNAME_ANYTYPE);
-      }
-      */
-
       SharedElements sharedElements = new SharedElements();
-      // this is just caching of the reference to easier compare types at runtime
-      //sharedElements.anyType = anyType;
 
       XSNamedMap groups = model.getComponents(XSConstants.MODEL_GROUP_DEFINITION);
       for(int i = 0; i < groups.getLength(); ++i)
@@ -670,10 +661,64 @@ public class XsdBinder
       switch(term.getType())
       {
          case XSConstants.MODEL_GROUP:
-            bindModelGroup(schema, (XSModelGroup)term, sharedElements);
+            XSModelGroup modelGroup = (XSModelGroup)term;
+
+            if(MODELGROUPS)
+            {
+               ModelGroupBinding binding;
+               switch(modelGroup.getCompositor())
+               {
+                  case XSModelGroup.COMPOSITOR_ALL:
+                     binding = new AllBinding();
+                     break;
+                  case XSModelGroup.COMPOSITOR_CHOICE:
+                     binding = new ChoiceBinding();
+                     break;
+                  case XSModelGroup.COMPOSITOR_SEQUENCE:
+                     binding = new SequenceBinding();
+                     break;
+                  default:
+                     throw new JBossXBRuntimeException("Unexpected model group: " + modelGroup.getCompositor());
+               }
+
+               if(log.isTraceEnabled())
+               {
+                  log.trace("created model group " + binding);
+               }
+
+               Object o = peekTypeOrGroup();
+               if(o instanceof ModelGroupBinding)
+               {
+                  ModelGroupBinding parentGroup = (ModelGroupBinding)o;
+                  parentGroup.addModelGroup(binding);
+                  if(log.isTraceEnabled())
+                  {
+                     log.trace("added " + binding + " to type group " + parentGroup);
+                  }
+               }
+               else if(o instanceof TypeBinding)
+               {
+                  TypeBinding typeBinding = (TypeBinding)o;
+                  typeBinding.setModelGroup(binding);
+                  if(log.isTraceEnabled())
+                  {
+                     log.trace("added " + binding + " to type " + typeBinding.getQName());
+                  }
+               }
+
+               pushModelGroup(binding);
+            }
+
+            bindModelGroup(schema, modelGroup, sharedElements);
+
+            if(MODELGROUPS)
+            {
+               popModelGroup();
+            }
+
             break;
          case XSConstants.WILDCARD:
-            bindWildcard((XSWildcard)term);
+            bindWildcard(schema, (XSWildcard)term);
             break;
          case XSConstants.ELEMENT_DECLARATION:
             bindElement(schema,
@@ -689,10 +734,36 @@ public class XsdBinder
       }
    }
 
-   private static void bindWildcard(XSWildcard wildcard)
+   private static void bindWildcard(SchemaBinding schema, XSWildcard wildcard)
    {
-      TypeBinding typeBinding = peekType();
-      typeBinding.setWildcard();
+      WildcardBinding binding = new WildcardBinding();
+      binding.setSchema(schema);
+
+      Object o = peekTypeOrGroup();
+      TypeBinding type = null;
+      ModelGroupBinding group = null;
+      if(o instanceof ModelGroupBinding)
+      {
+         group = (ModelGroupBinding)o;
+         group.setWildcard(binding);
+
+         if(log.isTraceEnabled())
+         {
+            log.trace("added wildcard to " + group);
+         }
+
+         type = peekType();
+      }
+      else
+      {
+         type = (TypeBinding)o;
+      }
+      type.setWildcard(binding);
+
+      if(log.isTraceEnabled())
+      {
+         log.trace("added wildcard to type " + type.getQName().toString());
+      }
 
       XSAnnotation annotation = wildcard.getAnnotation();
       if(annotation != null)
@@ -711,7 +782,7 @@ public class XsdBinder
                   );
                }
             }
-            typeBinding.setWildcardPropertyMetaData(propertyMetaData);
+            type.setWildcardPropertyMetaData(propertyMetaData);
          }
       }
    }
@@ -725,10 +796,16 @@ public class XsdBinder
    {
       QName qName = new QName(element.getNamespace(), element.getName());
 
-      TypeBinding parentType = peekType();
-      if(parentType != null && parentType.getLocalElement(qName) != null)
+      Object o = peekTypeOrGroup();
+      TypeBinding parentType = null;
+      ModelGroupBinding parentGroup = null;
+      if(o instanceof TypeBinding)
       {
-         return;
+         parentType = (TypeBinding)o;
+      }
+      else
+      {
+         parentGroup = (ModelGroupBinding)o;
       }
 
       boolean global = element.getScope() == XSConstants.SCOPE_GLOBAL;
@@ -738,6 +815,16 @@ public class XsdBinder
          if(parentType != null)
          {
             parentType.addElement(binding);
+         }
+         else if(parentGroup != null)
+         {
+            parentGroup.addElement(binding);
+         }
+
+         // todo: this is a BAD hack!
+         if(maxOccursUnbounded)
+         {
+            binding.setMaxOccursUnbounded(maxOccursUnbounded);
          }
          return;
       }
@@ -773,9 +860,26 @@ public class XsdBinder
       {
          parentType.addElement(binding);
       }
+      else if(parentGroup != null)
+      {
+         if(!MODELGROUPS)
+         {
+            throw new JBossXBRuntimeException("NO GROUPS!");
+         }
+         parentGroup.addElement(binding);
+         if(log.isTraceEnabled())
+         {
+            log.trace("Element " + binding.getQName() + " added to " + parentGroup);
+         }
+      }
 
       if(log.isTraceEnabled())
       {
+         if(parentType == null)
+         {
+            parentType = peekType();
+         }
+
          log.trace("element: name=" +
             qName +
             ", type=" +
@@ -966,18 +1070,52 @@ public class XsdBinder
 
    private static void popType()
    {
-      getXsdBinding().typeStack.removeLast();
+      Object o = getXsdBinding().typeGroupStack.removeLast();
+      if(!(o instanceof TypeBinding))
+      {
+         throw new JBossXBRuntimeException("Should have poped type binding but got " + o);
+      }
    }
 
    private static void pushType(TypeBinding binding)
    {
-      getXsdBinding().typeStack.addLast(binding);
+      getXsdBinding().typeGroupStack.addLast(binding);
+   }
+
+   private static Object peekTypeOrGroup()
+   {
+      LinkedList stack = getXsdBinding().typeGroupStack;
+      return stack.isEmpty() ? null : stack.getLast();
    }
 
    private static TypeBinding peekType()
    {
-      LinkedList typeStack = getXsdBinding().typeStack;
-      return (TypeBinding)(typeStack.isEmpty() ? null : typeStack.getLast());
+      LinkedList stack = getXsdBinding().typeGroupStack;
+      TypeBinding binding = null;
+      for(int i = stack.size() - 1; i >= 0; --i)
+      {
+         Object o = stack.get(i);
+         if(o instanceof TypeBinding)
+         {
+            binding = (TypeBinding)o;
+            break;
+         }
+      }
+      return binding;
+   }
+
+   private static void popModelGroup()
+   {
+      Object o = getXsdBinding().typeGroupStack.removeLast();
+      if(!(o instanceof ModelGroupBinding))
+      {
+         throw new JBossXBRuntimeException("Should have poped model group binding but got " + o);
+      }
+   }
+
+   private static void pushModelGroup(ModelGroupBinding binding)
+   {
+      getXsdBinding().typeGroupStack.addLast(binding);
    }
 
    private static final class SharedElements
@@ -1067,7 +1205,7 @@ public class XsdBinder
 
    private static final class XsdBinding
    {
-      public final LinkedList typeStack = new LinkedList();
+      public final LinkedList typeGroupStack = new LinkedList();
       public final SchemaBinding schemaBinding = new SchemaBinding();
    }
 }

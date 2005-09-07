@@ -65,10 +65,33 @@ public class SundayContentHandler
 
    public void endElement(String namespaceURI, String localName, String qName)
    {
-      ElementBinding elementBinding = (ElementBinding)elementStack.pop();
-      if(elementBinding == null)
+      Object poped = pop();
+      if(poped == null)
       {
          return;
+      }
+
+      ElementBinding elementBinding = null;
+      if(poped instanceof ElementBinding)
+      {
+         elementBinding = (ElementBinding)poped;
+      }
+      else
+      {
+         while(!elementStack.isEmpty())
+         {
+            Object peeked = elementStack.pop();
+            if(peeked instanceof ElementBinding)
+            {
+               elementBinding = (ElementBinding)peeked;
+               break;
+            }
+         }
+
+         if(elementBinding == null)
+         {
+            throw new JBossXBRuntimeException("Failed to endElement " + qName + ": binding not found");
+         }
       }
 
       QName endName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
@@ -171,7 +194,7 @@ public class SundayContentHandler
       //
 
       Object parent = objectStack.isEmpty() ? null : objectStack.peek();
-      o = typeBinding.endElement(parent, o, elementBinding, endName);
+      o = typeBinding.getHandler().endElement(o, endName, elementBinding);
 
       int i = elementHandlers.size();
       while(i-- > 0)
@@ -188,12 +211,26 @@ public class SundayContentHandler
       // todo yack...
       if(i == 0)
       {
-         ElementBinding parentElement = elementStack.isEmpty() ? null : (ElementBinding)elementStack.peek();
+         ElementBinding parentElement = null;
+         for(int j = 0; j < elementStack.size(); ++j)
+         {
+            Object peeked = elementStack.peek(j);
+            if(peeked instanceof ElementBinding)
+            {
+               parentElement = (ElementBinding)peeked;
+               break;
+            }
+         }
+
          if(parent != null)
          {
+            /*if(o == null)
+            {
+               throw new JBossXBRuntimeException(endName + " is null!");
+            } */
             typeBinding.getHandler().setParent(parent, o, endName, elementBinding, parentElement);
          }
-         else if(parentElement != null && parentElement.getType().isWildcard() && !objectStack.isEmpty())
+         else if(parentElement != null && parentElement.getType().hasWildcard() && !objectStack.isEmpty())
          {
             // todo: review this> the parent has anyType, so it gets the value of its child
             objectStack.pop();
@@ -219,6 +256,26 @@ public class SundayContentHandler
       {
          root = o;
       }
+
+      if(!elementStack.isEmpty())
+      {
+         Object peeked = elementStack.peek();
+         if(peeked instanceof ElementBinding)
+         {
+            throw new JBossXBRuntimeException("Expected model group for " + endName);
+         }
+         ModelGroupBinding.Cursor cursor = (ModelGroupBinding.Cursor)peeked;
+         if(cursor.isElementFinished())
+         {
+            pop();
+            if(elementStack.isEmpty())
+            {
+               throw new JBossXBRuntimeException("There is no cursor to end element: " + endName);
+            }
+            cursor = (ModelGroupBinding.Cursor)elementStack.peek();
+         }
+         cursor.endElement(endName);
+      }
    }
 
    public void startElement(String namespaceURI,
@@ -230,8 +287,9 @@ public class SundayContentHandler
       QName startName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
       ElementBinding binding = null;
 
-      ElementBinding parentBinding = null;
+      //ElementBinding parentBinding = null;
       SchemaBinding schemaBinding = schema;
+
       if(elementStack.isEmpty())
       {
          if(schemaBinding != null)
@@ -254,15 +312,72 @@ public class SundayContentHandler
       }
       else
       {
-         parentBinding = (ElementBinding)elementStack.peek();
-         if(parentBinding != null)
+         Object peeked = elementStack.peek();
+         if(peeked != null)
          {
-            binding = parentBinding.getType().getElement(startName, atts);
-            schemaBinding = parentBinding.getSchema();
+            ModelGroupBinding.Cursor cursor;
+            if(peeked instanceof ElementBinding)
+            {
+               ElementBinding element = (ElementBinding)peeked;
+               ModelGroupBinding modelGroup = element.getType().getModelGroup();
+               if(modelGroup == null)
+               {
+                  throw new JBossXBRuntimeException("Element " + element.getQName() + " should have a complex type!");
+               }
+
+               cursor = modelGroup.newCursor();
+               List newCursors = cursor.startElement(startName, atts);
+               if(!newCursors.isEmpty())
+               {
+                  // push all except the last one
+                  for(int i = newCursors.size() - 1; i >= 0; --i)
+                  {
+                     cursor = (ModelGroupBinding.Cursor)newCursors.get(i);
+                     //cursor.getModelGroup().startModelGroup();
+                     push(cursor);
+                  }
+
+                  binding = (ElementBinding)cursor.getElement();
+               }
+            }
+            else
+            {
+               while(!elementStack.isEmpty())
+               {
+                  peeked = elementStack.peek();
+                  if(peeked instanceof ElementBinding)
+                  {
+                     // todo: review this situation
+                     log.warn("Element not found: " + startName);
+                     break;
+                  }
+
+                  cursor = (ModelGroupBinding.Cursor)peeked;
+                  List newCursors = cursor.startElement(startName, atts);
+                  if(!newCursors.isEmpty())
+                  {
+                     // push all except the last one
+                     for(int i = newCursors.size() - 2; i >= 0; --i)
+                     {
+                        cursor = (ModelGroupBinding.Cursor)newCursors.get(i);
+                        //cursor.getModelGroup().startModelGroup();
+                        push(cursor);
+                     }
+
+                     binding = (ElementBinding)cursor.getElement();
+                     break;
+                  }
+                  else
+                  {
+                     pop();
+                     //cursor.getModelGroup().endModelGroup();
+                  }
+               }
+            }
          }
       }
 
-      elementStack.push(binding);
+      push(startName, binding);
 
       if(binding != null)
       {
@@ -282,7 +397,7 @@ public class SundayContentHandler
          String nil = atts.getValue("xsi:nil");
          if(nil == null || !("1".equals(nil) || "true".equals(nil)))
          {
-            o = typeBinding.startElement(o, startName, binding);
+            o = typeBinding.getHandler().startElement(o, startName, binding);
          }
          else
          {
@@ -297,21 +412,26 @@ public class SundayContentHandler
             typeBinding.attributes(o, startName, binding, atts, nsRegistry);
          }
       }
-      else if(schemaBinding != null && schemaBinding.isStrictSchema())
+      else
       {
-         throw new JBossXBRuntimeException("Element " +
+         ElementBinding parentBinding = elementStack.isEmpty() ? null : (ElementBinding)elementStack.peek();
+         if(parentBinding != null && parentBinding.getSchema() != null)
+         {
+            schemaBinding = parentBinding.getSchema();
+         }
+
+         String msg = "Element " +
             startName +
             " is not bound " +
-            (parentBinding == null ? "as a global element." : "in type " + parentBinding.getType().getQName())
-         );
-      }
-      else if(log.isTraceEnabled())
-      {
-         log.trace("Element " +
-            startName +
-            " is not bound " +
-            (parentBinding == null ? "as a global element." : "in type " + parentBinding.getType().getQName())
-         );
+            (parentBinding == null ? "as a global element." : "in type " + parentBinding.getType().getQName());
+         if(schemaBinding != null && schemaBinding.isStrictSchema())
+         {
+            throw new JBossXBRuntimeException(msg);
+         }
+         else if(log.isTraceEnabled())
+         {
+            log.trace(msg);
+         }
       }
    }
 
@@ -332,6 +452,43 @@ public class SundayContentHandler
    public Object getRoot()
    {
       return root;
+   }
+
+   // Private
+
+   private void push(QName qName, ElementBinding element)
+   {
+      elementStack.push(element);
+      if(log.isTraceEnabled())
+      {
+         log.trace("pushed binding " + qName + "=" + element);
+      }
+   }
+
+   private void push(ModelGroupBinding.Cursor cursor)
+   {
+      elementStack.push(cursor);
+      if(log.isTraceEnabled())
+      {
+         log.trace("pushed cursor " + cursor);
+      }
+   }
+
+   private Object pop()
+   {
+      Object poped = elementStack.isEmpty() ? null : elementStack.pop();
+      if(log.isTraceEnabled())
+      {
+         if(poped instanceof ElementBinding)
+         {
+            log.trace("poped " + ((ElementBinding)poped).getQName() + "=" + poped);
+         }
+         else
+         {
+            log.trace("poped " + poped);
+         }
+      }
+      return poped;
    }
 
    // Inner

@@ -87,7 +87,7 @@ public class RtElementHandler
                {
                   ClassMetaData itemClsMetaData = itemType.getClassMetaData();
                   String itemClsName = itemClsMetaData == null ? null : itemClsMetaData.getImpl();
-                  itemCls = getClass(itemClsName, item, type.getArrayItemQName());
+                  itemCls = getClass(itemClsName, item, item.getQName());
                }
 
                if(itemCls != null)
@@ -489,7 +489,7 @@ public class RtElementHandler
          else
          {
             PropertyMetaData propertyMetaData = null;
-            if(parentElement != null && parentElement.getType().isWildcardElement(qName))
+            if(parentElement != null && parentElement.getType().hasWildcard())
             {
                propertyMetaData = parentElement.getType().getWildcardPropertyMetaData();
             }

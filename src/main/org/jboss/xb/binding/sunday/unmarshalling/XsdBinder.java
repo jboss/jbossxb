@@ -285,6 +285,51 @@ public class XsdBinder
       return schema;
    }
 
+   /**
+    * @deprecated
+    *
+    * <i>This method is added temporary to get anonymous type binding working in JBossWS.
+    * It will be removed when anonymous type binding in JBossWS is implemented properly.
+    * No one else should use this method.</i>
+    *
+    * <p>This method binds a type definition and adds it as a global type to the passed in schema binding.
+    *
+    * @param schema  schema binding the type should be added to
+    * @param type  type definition to be bound
+    */
+   public static void bindType(SchemaBinding schema, XSTypeDefinition type)
+   {
+      TypeBinding typeBinding = bindType(schema, type, new SharedElements());
+      schema.addType(typeBinding);
+   }
+
+   /**
+    * @deprecated
+    *
+    * <i>This method is added temporary to get anonymous type binding working in JBossWS.
+    * It will be removed when anonymous type binding in JBossWS is implemented properly.
+    * No one else should use this method.</i>
+    *
+    * <p>This method binds an element declaration and adds it as a global element to the passed in schema binding.
+    *
+    * @param schema  schema binding the type should be added to
+    * @param element  element declaration to be bound
+    * @param minOccurs
+    * @param maxOccurs
+    * @param maxOccursUnbounded
+    */
+   public static void bindElement(SchemaBinding schema,
+                                  XSElementDeclaration element,
+                                  int minOccurs,
+                                  int maxOccurs,
+                                  boolean maxOccursUnbounded)
+   {
+      ElementBinding binding = bindElement(schema, element, new SharedElements(), minOccurs, maxOccurs, maxOccursUnbounded);
+      schema.addElement(binding);
+   }
+   
+   // Private
+
    private static TypeBinding bindType(SchemaBinding doc, XSTypeDefinition type, SharedElements sharedElements)
    {
       TypeBinding binding;
@@ -787,12 +832,12 @@ public class XsdBinder
       }
    }
 
-   private static void bindElement(SchemaBinding schema,
-                                   XSElementDeclaration element,
-                                   SharedElements sharedElements,
-                                   int minOccurs,
-                                   int maxOccurs,
-                                   boolean maxOccursUnbounded)
+   private static ElementBinding bindElement(SchemaBinding schema,
+                                             XSElementDeclaration element,
+                                             SharedElements sharedElements,
+                                             int minOccurs,
+                                             int maxOccurs,
+                                             boolean maxOccursUnbounded)
    {
       QName qName = new QName(element.getNamespace(), element.getName());
 
@@ -826,7 +871,7 @@ public class XsdBinder
          {
             binding.setMaxOccursUnbounded(maxOccursUnbounded);
          }
-         return;
+         return binding;
       }
 
       TypeBinding type = null;
@@ -1054,6 +1099,7 @@ public class XsdBinder
             }
          }
       }
+      return binding;
    }
 
    private static void bindModelGroup(SchemaBinding doc, XSModelGroup modelGroup, SharedElements sharedElements)

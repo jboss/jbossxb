@@ -409,7 +409,7 @@ public class SundayContentHandler
          {
             // Expand the attributes list with any missing attrs with defaults
             atts = typeBinding.expandWithDefaultAttributes(atts);
-            typeBinding.attributes(o, startName, binding, atts, nsRegistry);
+            typeBinding.getHandler().attributes(o, startName, binding, atts, nsRegistry);
          }
       }
       else

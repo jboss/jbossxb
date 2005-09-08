@@ -10,9 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
-import java.util.List;
 import javax.xml.namespace.QName;
-import javax.xml.namespace.NamespaceContext;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.AttributesImpl;
@@ -237,15 +235,6 @@ public class TypeBinding
    public void setSimpleType(CharactersHandler simpleType)
    {
       this.simpleType = simpleType;
-   }
-
-   public void attributes(Object o,
-                          QName elementName,
-                          ElementBinding element,
-                          Attributes attrs,
-                          NamespaceContext nsCtx)
-   {
-      handler.attributes(o, elementName, element, attrs, nsCtx);
    }
 
    public void setHandler(ElementHandler handler)

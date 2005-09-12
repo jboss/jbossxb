@@ -311,6 +311,15 @@ public class XercesXsMarshaller
          }
       }
 
+      boolean result = minOccurs == 0 || value != null;
+      boolean trace = log.isTraceEnabled() && result;
+      if(trace)
+      {
+         String prefix = (String)prefixByUri.get(elementNs);
+         log.trace("started element ns=" + elementNs + ", local=" + elementLocal + ", " +
+            (prefix == null ? "no prefix for the ns, mapped ns: " + prefixByUri : "prefix=" + prefix));
+      }
+
       if(value != null)
       {
          stack.push(value);
@@ -388,7 +397,12 @@ public class XercesXsMarshaller
          content.endElement(elementNs, elementLocal, qName);
       }
 
-      return minOccurs == 0 || value != null;
+      if(trace)
+      {
+         log.trace("finished element ns=" + elementNs + ", local=" + elementLocal);
+      }
+
+      return result;
    }
 
    private void marshalElementType(String elementNs, String elementLocal, XSTypeDefinition type, boolean declareNs)

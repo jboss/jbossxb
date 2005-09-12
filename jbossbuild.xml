@@ -31,15 +31,15 @@
       <!-- ============================================================ -->
 
       <source id="main">
-         <include component="apache-commons"/>
          <include component="oswego-concurrent"/>
-         <include component="dom4j-dom4j"/>
+         <include component="dom4j"/>
          <include component="apache-jaxme"/>
          <include component="apache-log4j"/>
          <include component="gnu-regexp"/>
          <include component="apache-slide"/>
          <include component="wutka-dtdparser"/>
          <include component="apache-xerces"/>
+         <include component="apache-httpclient"/>         
       </source>
 
       <!-- ============================================================ -->
@@ -74,6 +74,28 @@
             <include pattern="javax/xml/namespace/*"/>
          </include>
       </artifactdef>
+      
+      
+      <!-- ============================================================ -->
+      <!-- jboss-archiving-browsing.jar                                 -->
+      <!-- ============================================================ -->
+
+      <artifactdef artifact="jboss-archive-browsing.jar">
+         <include input="main">
+            <include pattern="org/jboss/util/file/*"/>
+         </include>
+      </artifactdef>
+
+      <!-- ============================================================ -->
+      <!-- testsuite-support.jar                                        -->
+      <!-- ============================================================ -->
+
+      <artifactdef artifact="testsuite-support.jar">
+         <include input="main">
+           <include pattern="org/jboss/logging/**"/>
+         </include>
+      </artifactdef>
+      
 
    </componentdef>
 

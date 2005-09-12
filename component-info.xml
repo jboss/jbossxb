@@ -6,9 +6,12 @@
       <artifact id="jboss-common.jar"/>
       <artifact id="jboss-common-client.jar"/>
       <artifact id="namespace.jar"/>
+      <artifact id="jboss-archive-browsing.jar"/>
+      <artifact id="testsuite-support.jar"/>
       <export>
          <include input="jboss-common.jar"/>
          <include input="namespace.jar"/>
+         <include input="jboss-common-client.jar"/>
       </export>
    </component>
 </project>

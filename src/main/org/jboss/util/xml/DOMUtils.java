@@ -17,10 +17,10 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.jboss.logging.Logger;
@@ -66,6 +66,7 @@ public final class DOMUtils
             factory.setValidating(false);
             factory.setNamespaceAware(true);
             builder = factory.newDocumentBuilder();
+            builder.setEntityResolver(new JBossEntityResolver());
          }
          catch (ParserConfigurationException e)
          {
@@ -419,22 +420,21 @@ public final class DOMUtils
     * 
     * @throws IOException
     * @throws TransformerException
-    */ 
-   public static StringBuffer getElementContent(Element element)
-      throws IOException, TransformerException
+    */
+   public static StringBuffer getElementContent(Element element) throws IOException, TransformerException
    {
       NodeList children = element.getChildNodes();
       Element content = null;
-      for(int n = 0; n < children.getLength(); n ++)
+      for (int n = 0; n < children.getLength(); n++)
       {
          Node node = children.item(n);
-         if( node.getNodeType() == Node.ELEMENT_NODE )
+         if (node.getNodeType() == Node.ELEMENT_NODE)
          {
-            content = (Element) node;
+            content = (Element)node;
             break;
          }
       }
-      if( content == null )
+      if (content == null)
          return null;
 
       // Get a parsable representation of this elements content

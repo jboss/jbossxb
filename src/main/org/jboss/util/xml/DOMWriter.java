@@ -109,21 +109,6 @@ public class DOMWriter
       return this;
    }
 
-   public String getCharsetName()
-   {
-      return charsetName;
-   }
-
-   /** 
-    * Set the character encoding in the XML declaration.
-    * The default is none.
-    */
-   public DOMWriter setCharsetName(String characterSetEncoding)
-   {
-      this.charsetName = characterSetEncoding;
-      return this;
-   }
-
    public boolean isWriteXMLDeclaration()
    {
       return writeXMLDeclaration;

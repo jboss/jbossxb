@@ -27,8 +27,7 @@ public class XmlHelper
    public static void write(Writer out, Document dom)
       throws Exception
    {
-      DOMWriter writer = new DOMWriter(out, false);
-      writer.print(dom, true);
+      new DOMWriter(out).setPrettyprint(true).print(dom);
    }
 
    /**

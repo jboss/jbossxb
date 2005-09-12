@@ -36,7 +36,7 @@ public class DocumentEditor extends PropertyEditorSupport
     */
    public String getAsText()
    {
-      return DOMWriter.printNode((Node)getValue());
+      return DOMWriter.printNode((Node)getValue(), false);
    }
 
    /**

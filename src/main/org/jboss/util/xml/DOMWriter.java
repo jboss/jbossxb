@@ -6,8 +6,11 @@
  */
 package org.jboss.util.xml;
 
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 
 import org.w3c.dom.Attr;
@@ -16,8 +19,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * A sample DOM writer. This sample program illustrates how to
- * traverse a DOM tree in order to print a document that is parsed.
+ * Traverse a DOM tree in order to print a document that is parsed.
  *
  * @author Andy Clark, IBM
  * @author Thomas.Diesler@jboss.org
@@ -25,63 +27,139 @@ import org.w3c.dom.NodeList;
  */
 public class DOMWriter
 {
-   /** Print writer. */
-   protected PrintWriter out;
-
-   /** Canonical output. */
-   protected boolean canonical;
-
-   // is pretty printer
+   // Print writer
+   private PrintWriter out;
+   // True, if canonical output
+   private boolean canonical;
+   // True, if pretty printing should be used
    private boolean prettyprint;
+   // True, if the XML declaration should be written
+   private boolean writeXMLDeclaration;
+   // Explicit character set encoding
+   private String charsetName;
 
    // indent for the pretty printer
    private int prettyIndent;
+   // True, if the XML declaration has been written
+   private boolean wroteXMLDeclaration;
 
    public DOMWriter(Writer w)
    {
-      this(w, false);
+      this.out = new PrintWriter(w);
    }
 
-   public DOMWriter(Writer w, boolean canonical)
+   public DOMWriter(OutputStream stream) 
    {
-      out = new PrintWriter(w);
-      this.canonical = canonical;
+      this.out = new PrintWriter(new OutputStreamWriter(stream));
    }
 
-   public static String printNode(Node node)
+   public DOMWriter(OutputStream stream, String charsetName) 
    {
-      StringWriter strw = new StringWriter();
-      DOMWriter writer = new DOMWriter(strw);
-      writer.print(node);
-      return strw.toString();
+      try
+      {
+         this.out = new PrintWriter(new OutputStreamWriter(stream, charsetName));
+         this.charsetName = charsetName;
+         this.writeXMLDeclaration = true;
+      }
+      catch (UnsupportedEncodingException e)
+      {
+         throw new IllegalArgumentException("Unsupported encoding: " + charsetName);
+      }
    }
 
+   /** 
+    * Print a node with explicit prettyprinting.
+    * The defaults for all other DOMWriter properties apply. 
+    *  
+    */
    public static String printNode(Node node, boolean prettyprint)
    {
       StringWriter strw = new StringWriter();
-      DOMWriter writer = new DOMWriter(strw);
-      writer.print(node, prettyprint);
+      new DOMWriter(strw).setPrettyprint(prettyprint).print(node);
       return strw.toString();
    }
-   
+
+   public boolean isCanonical()
+   {
+      return canonical;
+   }
+
+   /** 
+    * Set wheter entities should appear in their canonical form.
+    * The default is false.
+    */
+   public DOMWriter setCanonical(boolean canonical)
+   {
+      this.canonical = canonical;
+      return this;
+   }
+
+   public boolean isPrettyprint()
+   {
+      return prettyprint;
+   }
+
+   /** 
+    * Set wheter element should be indented.
+    * The default is false.
+    */
+   public DOMWriter setPrettyprint(boolean prettyprint)
+   {
+      this.prettyprint = prettyprint;
+      return this;
+   }
+
+   public String getCharsetName()
+   {
+      return charsetName;
+   }
+
+   /** 
+    * Set the character encoding in the XML declaration.
+    * The default is none.
+    */
+   public DOMWriter setCharsetName(String characterSetEncoding)
+   {
+      this.charsetName = characterSetEncoding;
+      return this;
+   }
+
+   public boolean isWriteXMLDeclaration()
+   {
+      return writeXMLDeclaration;
+   }
+
+   /** 
+    * Set wheter the XML declaration should be written.
+    * The default is false.
+    */
+   public DOMWriter setWriteXMLDeclaration(boolean writeXMLDeclaration)
+   {
+      this.writeXMLDeclaration = writeXMLDeclaration;
+      return this;
+   }
+
    public void print(Node node)
    {
       printInternal(node, false);
    }
 
-   public void print(Node node, boolean prettyprint)
-   {
-      this.prettyprint = prettyprint;
-      printInternal(node, false);
-   }
-
    private void printInternal(Node node, boolean indentEndMarker)
    {
-
       // is there anything to do?
       if (node == null)
       {
          return;
+      }
+
+      if (wroteXMLDeclaration == false && writeXMLDeclaration == true && canonical == false)
+      {
+         out.print("<?xml version='1.0'");
+         if (charsetName != null)
+            out.print(" encoding='" + charsetName + "'");
+
+         out.println("?>");
+         wroteXMLDeclaration = true;
       }
 
       int type = node.getNodeType();
@@ -92,11 +170,6 @@ public class DOMWriter
          // print document
          case Node.DOCUMENT_NODE:
          {
-            if (!canonical)
-            {
-               out.println("<?xml version='1.0'?>");
-            }
-
             NodeList children = node.getChildNodes();
             for (int iChild = 0; iChild < children.getLength(); iChild++)
             {
@@ -236,7 +309,7 @@ public class DOMWriter
             {
                out.print('\n');
             }
-            
+
             break;
          }
       }

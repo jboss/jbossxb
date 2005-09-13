@@ -455,7 +455,8 @@ public class XercesXsMarshaller
          {
             QName qNameValue = (QName)value;
             String prefixValue = qNameValue.getPrefix();
-            if(prefixValue.equals(prefix) || prefixValue.length() == 0 && prefix == null)
+            if(elementUri != null && !qNameValue.getNamespaceURI().equals(elementUri) &&
+               (prefixValue.equals(prefix) || prefixValue.length() == 0 && prefix == null))
             {
                // how to best resolve this conflict?
                prefixValue += 'x';

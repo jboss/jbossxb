@@ -389,7 +389,7 @@ public class XercesXsMarshaller
       {
          AttributesImpl attrs;
          String prefix = (String)prefixByUri.get(elementNs);
-         if(prefix == null && elementNs.length() > 0)
+         if(prefix == null && elementNs != null && elementNs.length() > 0)
          {
             prefix = "ns_" + elementLocal;
             attrs = new AttributesImpl(2);

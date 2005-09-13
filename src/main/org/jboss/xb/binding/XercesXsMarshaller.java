@@ -438,7 +438,7 @@ public class XercesXsMarshaller
    {
       AttributesImpl attrs = null;
       String prefix = (String)prefixByUri.get(elementUri);
-      boolean genPrefix = prefix == null && elementUri.length() > 0;
+      boolean genPrefix = prefix == null && elementUri != null && elementUri.length() > 0;
       if(genPrefix)
       {
          prefix = "ns_" + elementLocal;
@@ -538,7 +538,7 @@ public class XercesXsMarshaller
       }
 
       String prefix = (String)prefixByUri.get(elementNsUri);
-      boolean genPrefix = prefix == null && elementNsUri.length() > 0;
+      boolean genPrefix = prefix == null && elementNsUri != null && elementNsUri.length() > 0;
       if(genPrefix)
       {
          // todo: it's possible that the generated prefix already mapped. this should be fixed

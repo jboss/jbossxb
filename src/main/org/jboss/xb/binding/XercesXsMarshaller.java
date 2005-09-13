@@ -102,21 +102,21 @@ public class XercesXsMarshaller
 
    /**
     * Defines a namespace. The namespace declaration will appear in the root element.
-    * <p>If <code>name</code> argument is <code>null</code> or is an empty string then
+    * <p>If <code>prefix</code> argument is <code>null</code> or is an empty string then
     * the passed in URI will be used for the default namespace, i.e. <code>xmlns</code>.
-    * Otherwise, the declaration will follow the format <code>xmlns:name=uri</code>.
-    * <p>If the namespace with the given name was already declared, its value is overwritten.
+    * Otherwise, the declaration will follow the format <code>xmlns:prefix=uri</code>.
+    * <p>If the namespace with the given prefix was already declared, its value is overwritten.
     *
-    * @param name the name of the namespace to declare (can be null or empty string)
+    * @param prefix the prefix for the namespace to declare (can be null or empty string)
     * @param uri  the URI of the namespace.
     */
-   public void declareNamespace(String name, String uri)
+   public void declareNamespace(String prefix, String uri)
    {
-      if(name != null && name.length() == 0)
+      if(prefix == null)
       {
-         name = null;
+         return;
       }
-      prefixByUri.put(uri, name);
+      prefixByUri.put(uri, prefix);
    }
 
    /**
@@ -316,8 +316,7 @@ public class XercesXsMarshaller
       if(trace)
       {
          String prefix = (String)prefixByUri.get(elementNs);
-         log.trace("started element ns=" + elementNs + ", local=" + elementLocal + ", " +
-            (prefix == null ? "no prefix for the ns, mapped ns: " + prefixByUri : "prefix=" + prefix));
+         log.trace("started element ns=" + elementNs + ", local=" + elementLocal + ", prefix=" + prefix);
       }
 
       if(value != null)
@@ -388,11 +387,23 @@ public class XercesXsMarshaller
       }
       else if(supportNil && nillable)
       {
+         AttributesImpl attrs;
          String prefix = (String)prefixByUri.get(elementNs);
-         String qName = createQName(prefix, elementLocal);
-         AttributesImpl attrs = new AttributesImpl(1);
-         String nilQName = prefixByUri.get(Constants.NS_XML_SCHEMA_INSTANCE) + ":nil";
+         if(prefix == null && elementNs.length() > 0)
+         {
+            prefix = "ns_" + elementLocal;
+            attrs = new AttributesImpl(2);
+            attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
+         }
+         else
+         {
+            attrs = new AttributesImpl(1);
+         }
+
+         String nilQName = (String)prefixByUri.get(Constants.NS_XML_SCHEMA_INSTANCE) + ":nil";
          attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "nil", nilQName, null, "1");
+
+         String qName = createQName(prefix, elementLocal);
          content.startElement(elementNs, elementLocal, qName, attrs);
          content.endElement(elementNs, elementLocal, qName);
       }
@@ -425,9 +436,13 @@ public class XercesXsMarshaller
                                   XSSimpleTypeDefinition type,
                                   boolean declareNs)
    {
-      String prefix = (String)prefixByUri.get(elementUri);
-      String qName = createQName(prefix, elementLocal);
       AttributesImpl attrs = null;
+      String prefix = (String)prefixByUri.get(elementUri);
+      boolean genPrefix = prefix == null && elementUri.length() > 0;
+      if(genPrefix)
+      {
+         prefix = "ns_" + elementLocal;
+      }
 
       Object value = stack.peek();
       String marshalled;
@@ -463,7 +478,7 @@ public class XercesXsMarshaller
          marshalled = value.toString();
       }
 
-      if(declareNs && prefixByUri.size() > 0)
+      if(declareNs && !prefixByUri.isEmpty())
       {
          if(attrs == null)
          {
@@ -471,6 +486,18 @@ public class XercesXsMarshaller
          }
          declareNs(attrs);
       }
+
+      if(genPrefix)
+      {
+         if(attrs == null)
+         {
+            attrs = new AttributesImpl(1);
+         }
+
+         attrs.add(null, prefix, "xmlns:" + prefix, null, (String)elementUri);
+      }
+
+      String qName = createQName(prefix, elementLocal);
 
       content.startElement(elementUri, elementLocal, qName, attrs);
       content.characters(marshalled.toCharArray(), 0, marshalled.length());
@@ -488,7 +515,7 @@ public class XercesXsMarshaller
       int attrsTotal = declareNs ? prefixByUri.size() + attributeUses.getLength() : attributeUses.getLength();
       AttributesImpl attrs = attrsTotal > 0 ? new AttributesImpl(attrsTotal) : null;
 
-      if(declareNs && prefixByUri.size() > 0)
+      if(declareNs && !prefixByUri.isEmpty())
       {
          declareNs(attrs);
       }
@@ -500,6 +527,7 @@ public class XercesXsMarshaller
          Object attrValue = provider.getAttributeValue(stack.peek(), null, attrDec.getNamespace(), attrDec.getName());
          if(attrValue != null)
          {
+            //todo: fix qName
             attrs.add(attrDec.getNamespace(),
                attrDec.getName(),
                attrDec.getName(),
@@ -510,6 +538,19 @@ public class XercesXsMarshaller
       }
 
       String prefix = (String)prefixByUri.get(elementNsUri);
+      boolean genPrefix = prefix == null && elementNsUri.length() > 0;
+      if(genPrefix)
+      {
+         // todo: it's possible that the generated prefix already mapped. this should be fixed
+         prefix = "ns_" + elementLocalName;
+         prefixByUri.put(elementNsUri, prefix);
+         if(attrs == null)
+         {
+            attrs = new AttributesImpl(1);
+         }
+         attrs.add(null, prefix, "xmlns:" + prefix, null, elementNsUri);
+      }
+
       String qName = createQName(prefix, elementLocalName);
       content.startElement(elementNsUri, elementLocalName, qName, attrs);
 
@@ -519,6 +560,11 @@ public class XercesXsMarshaller
       }
 
       content.endElement(elementNsUri, elementLocalName, qName);
+
+      if(genPrefix)
+      {
+         prefixByUri.remove(elementNsUri);
+      }
    }
 
    private boolean marshalParticle(XSParticle particle, boolean declareNs)
@@ -698,7 +744,7 @@ public class XercesXsMarshaller
          String localName = (String)entry.getValue();
          attrs.add(null,
             localName,
-            localName == null ? "xmlns" : "xmlns:" + localName,
+            localName == null || localName.length() == 0 ? "xmlns" : "xmlns:" + localName,
             null,
             (String)entry.getKey()
          );
@@ -707,7 +753,7 @@ public class XercesXsMarshaller
 
    private static String createQName(String prefix, String local)
    {
-      return prefix == null ? local : prefix + ':' + local;
+      return prefix == null || prefix.length() == 0 ? local : prefix + ':' + local;
    }
 
    private static boolean isArrayWrapper(XSTypeDefinition type)

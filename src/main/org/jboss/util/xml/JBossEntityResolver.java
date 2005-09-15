@@ -8,16 +8,15 @@ package org.jboss.util.xml;
 
 // $Id$
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Hashtable;
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import java.io.InputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Hashtable;
 
 /**
  * Local entity resolver to handle standard J2EE DTDs and Schemas as well as JBoss
@@ -40,6 +39,7 @@ public class JBossEntityResolver implements EntityResolver
    static
    {
       // the key does not really matter, neither does the location, we only look for the value
+      registerEntity("urn:jboss:bean-deployer bean-deployer_1_0.xsd", "bean-deployer_1_0.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/j2ee_1_4.xsd", "j2ee_1_4.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/application_1_4.xsd", "application_1_4.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/application-client_1_4.xsd", "application-client_1_4.xsd");

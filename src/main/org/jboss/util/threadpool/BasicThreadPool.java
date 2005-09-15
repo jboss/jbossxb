@@ -352,6 +352,19 @@ public class BasicThreadPool implements ThreadPool, BasicThreadPoolMBean
          blockingMode = BlockingMode.ABORT;
    }
 
+   /**
+    * For backward compatibility with the previous string based mode
+    * This is needed for microcontainer as it gets confused with overloaded
+    * setters.
+    * @param name - the string form of the mode enum
+    */
+   public void setBlockingModeString(String name)
+   {
+      blockingMode = BlockingMode.toBlockingMode(name);
+      if( blockingMode == null )
+         blockingMode = BlockingMode.ABORT;
+   }
+
    public ThreadPool getInstance()
    {
       return this;

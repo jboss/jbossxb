@@ -807,7 +807,7 @@ public class XsdBinder
 
       if(log.isTraceEnabled())
       {
-         log.trace("added wildcard to type " + type.getQName().toString());
+         log.trace("added wildcard to type " + (type.getQName() == null ? "null" : type.getQName().toString()));
       }
 
       XSAnnotation annotation = wildcard.getAnnotation();

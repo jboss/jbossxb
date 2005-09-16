@@ -168,17 +168,27 @@ public class JBossEntityResolver implements EntityResolver
     */
    private String getLocalEntityName(String publicId, String systemId)
    {
+      boolean trace = log.isTraceEnabled();
+      
       String filename = null;
 
       // First try the public id
       if( publicId != null )
+      {
          filename = (String) entities.get(publicId);
+         if (trace && filename != null)
+            log.trace("Found entity from publicId=" + publicId + " fileName=" + filename);
+      }
 
       // Next try the system id
       if( filename == null && systemId != null )
+      {
          filename = (String) entities.get(systemId);
+         if (trace && filename != null)
+            log.trace("Found entity systemId=" + systemId + " fileName=" + filename);
+      }
 
-      // Finally see if we know the file name
+      // See if we know the file name
       if( filename == null && systemId != null )
       {
          try
@@ -187,6 +197,8 @@ public class JBossEntityResolver implements EntityResolver
             String path = url.getPath();
             int slash = path.lastIndexOf('/');
             filename = path.substring(slash + 1);
+            if (trace)
+               log.trace("Trying filename=" + filename);
          }
          catch(MalformedURLException ignored)
          {
@@ -197,8 +209,8 @@ public class JBossEntityResolver implements EntityResolver
 
       // at this point we have a filename, even if it is not
       // registered with this entity resolver
-      if( entities.values().contains(filename) == false )
-         log.warn("Entity is not registered, publicId=" + publicId + " systemId=" + systemId);
+      if(trace && entities.values().contains(filename) == false )
+         log.trace("Entity is not registered, publicId=" + publicId + " systemId=" + systemId);
 
       if( filename.endsWith(".dtd") )
          filename = "dtd/" + filename;

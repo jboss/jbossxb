@@ -286,16 +286,13 @@ public class XsdBinder
    }
 
    /**
-    * @deprecated
+    * @param schema schema binding the type should be added to
+    * @param type   type definition to be bound
+    * @deprecated <i>This method is added temporary to get anonymous type binding working in JBossWS.
+    *             It will be removed when anonymous type binding in JBossWS is implemented properly.
+    *             No one else should use this method.</i>
     *
-    * <i>This method is added temporary to get anonymous type binding working in JBossWS.
-    * It will be removed when anonymous type binding in JBossWS is implemented properly.
-    * No one else should use this method.</i>
-    *
-    * <p>This method binds a type definition and adds it as a global type to the passed in schema binding.
-    *
-    * @param schema  schema binding the type should be added to
-    * @param type  type definition to be bound
+    *             <p>This method binds a type definition and adds it as a global type to the passed in schema binding.
     */
    public static void bindType(SchemaBinding schema, XSTypeDefinition type)
    {
@@ -304,19 +301,16 @@ public class XsdBinder
    }
 
    /**
-    * @deprecated
-    *
-    * <i>This method is added temporary to get anonymous type binding working in JBossWS.
-    * It will be removed when anonymous type binding in JBossWS is implemented properly.
-    * No one else should use this method.</i>
-    *
-    * <p>This method binds an element declaration and adds it as a global element to the passed in schema binding.
-    *
-    * @param schema  schema binding the type should be added to
-    * @param element  element declaration to be bound
+    * @param schema             schema binding the type should be added to
+    * @param element            element declaration to be bound
     * @param minOccurs
     * @param maxOccurs
     * @param maxOccursUnbounded
+    * @deprecated <i>This method is added temporary to get anonymous type binding working in JBossWS.
+    *             It will be removed when anonymous type binding in JBossWS is implemented properly.
+    *             No one else should use this method.</i>
+    *
+    *             <p>This method binds an element declaration and adds it as a global element to the passed in schema binding.
     */
    public static void bindElement(SchemaBinding schema,
                                   XSElementDeclaration element,
@@ -324,7 +318,13 @@ public class XsdBinder
                                   int maxOccurs,
                                   boolean maxOccursUnbounded)
    {
-      ElementBinding binding = bindElement(schema, element, new SharedElements(), minOccurs, maxOccurs, maxOccursUnbounded);
+      ElementBinding binding = bindElement(schema,
+         element,
+         new SharedElements(),
+         minOccurs,
+         maxOccurs,
+         maxOccursUnbounded
+      );
       schema.addElement(binding);
    }
    
@@ -435,11 +435,12 @@ public class XsdBinder
 
       //XSTypeDefinition baseTypeDef = type.getBaseType();
       // anyType is the parent of all the types, even the parent of itself according to xerces :)
-      TypeBinding baseType = null; /* todo: review binding inheritance for complex types
-         (baseTypeDef == sharedElements.anyType ?
-            null :
-            bindType(doc, baseTypeDef, sharedElements));*/
-      binding = (baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType));
+      /*TypeBinding baseType = (baseTypeDef == sharedElements.anyType ?
+         null :
+         bindType(doc, baseTypeDef, sharedElements)
+         );
+         */
+      binding = new TypeBinding(typeName);
       binding.setStartElementCreatesObject(true);
 
       if(typeName != null)
@@ -450,10 +451,6 @@ public class XsdBinder
       if(log.isTraceEnabled())
       {
          String msg = typeName == null ? "complex anonymous type" : "complex type " + typeName;
-         if(baseType != null)
-         {
-            msg += " inherited binding metadata from " + baseType.getQName();
-         }
          log.trace(msg);
       }
 
@@ -562,9 +559,8 @@ public class XsdBinder
 
                   if(classMetaData != null)
                   {
-                     throw new JBossXBRuntimeException(
-                        "Illegal binding: both jbxb:class and jbxb:mapEntry are specified for complex type " +
-                           type.getName()
+                     throw new JBossXBRuntimeException("Illegal binding: both jbxb:class and jbxb:mapEntry are specified for complex type " +
+                        type.getName()
                      );
                   }
                   binding.setMapEntryMetaData(mapEntryMetaData);
@@ -602,7 +598,8 @@ public class XsdBinder
                {
                   if(log.isTraceEnabled())
                   {
-                     log.trace("complex type " + type.getName() +
+                     log.trace("complex type " +
+                        type.getName() +
                         ": elements of this type will be added to parent objects with addMethod=" +
                         addMethodMetaData.getMethodName() + ", valueType=" + addMethodMetaData.getValueType()
                      );
@@ -707,60 +704,66 @@ public class XsdBinder
       {
          case XSConstants.MODEL_GROUP:
             XSModelGroup modelGroup = (XSModelGroup)term;
-
-            if(MODELGROUPS)
+            // todo: investigate this
+            if(modelGroup.getParticles().getLength() > 0)
             {
-               ModelGroupBinding binding;
-               switch(modelGroup.getCompositor())
+               if(MODELGROUPS)
                {
-                  case XSModelGroup.COMPOSITOR_ALL:
-                     binding = new AllBinding();
-                     break;
-                  case XSModelGroup.COMPOSITOR_CHOICE:
-                     binding = new ChoiceBinding();
-                     break;
-                  case XSModelGroup.COMPOSITOR_SEQUENCE:
-                     binding = new SequenceBinding();
-                     break;
-                  default:
-                     throw new JBossXBRuntimeException("Unexpected model group: " + modelGroup.getCompositor());
-               }
+                  ModelGroupBinding binding;
+                  switch(modelGroup.getCompositor())
+                  {
+                     case XSModelGroup.COMPOSITOR_ALL:
+                        binding = new AllBinding();
+                        break;
+                     case XSModelGroup.COMPOSITOR_CHOICE:
+                        binding = new ChoiceBinding();
+                        break;
+                     case XSModelGroup.COMPOSITOR_SEQUENCE:
+                        binding = new SequenceBinding();
+                        break;
+                     default:
+                        throw new JBossXBRuntimeException("Unexpected model group: " + modelGroup.getCompositor());
+                  }
 
-               if(log.isTraceEnabled())
-               {
-                  log.trace("created model group " + binding);
-               }
+                  binding.setMaxOccursUnbounded(particle.getMaxOccursUnbounded());
+                  binding.setMinOccurs(particle.getMinOccurs());
+                  binding.setMaxOccurs(particle.getMaxOccurs());
 
-               Object o = peekTypeOrGroup();
-               if(o instanceof ModelGroupBinding)
-               {
-                  ModelGroupBinding parentGroup = (ModelGroupBinding)o;
-                  parentGroup.addModelGroup(binding);
                   if(log.isTraceEnabled())
                   {
-                     log.trace("added " + binding + " to type group " + parentGroup);
+                     log.trace("created model group " + binding);
                   }
-               }
-               else if(o instanceof TypeBinding)
-               {
-                  TypeBinding typeBinding = (TypeBinding)o;
-                  typeBinding.setModelGroup(binding);
-                  if(log.isTraceEnabled())
+
+                  Object o = peekTypeOrGroup();
+                  if(o instanceof ModelGroupBinding)
                   {
-                     log.trace("added " + binding + " to type " + typeBinding.getQName());
+                     ModelGroupBinding parentGroup = (ModelGroupBinding)o;
+                     parentGroup.addModelGroup(binding);
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("added " + binding + " to type group " + parentGroup);
+                     }
                   }
+                  else if(o instanceof TypeBinding)
+                  {
+                     TypeBinding typeBinding = (TypeBinding)o;
+                     typeBinding.setModelGroup(binding);
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("added " + binding + " to type " + typeBinding.getQName());
+                     }
+                  }
+
+                  pushModelGroup(binding);
                }
 
-               pushModelGroup(binding);
+               bindModelGroup(schema, modelGroup, sharedElements);
+
+               if(MODELGROUPS)
+               {
+                  popModelGroup();
+               }
             }
-
-            bindModelGroup(schema, modelGroup, sharedElements);
-
-            if(MODELGROUPS)
-            {
-               popModelGroup();
-            }
-
             break;
          case XSConstants.WILDCARD:
             bindWildcard(schema, (XSWildcard)term);
@@ -822,7 +825,8 @@ public class XsdBinder
             {
                if(log.isTraceEnabled())
                {
-                  log.trace("wildcard is bound to property: " + propertyMetaData.getName() +
+                  log.trace("wildcard is bound to property: " +
+                     propertyMetaData.getName() +
                      ", collectionType=" + propertyMetaData.getCollectionType()
                   );
                }
@@ -931,7 +935,8 @@ public class XsdBinder
             type.getQName() +
             ", multiOccurs=" +
             binding.isMultiOccurs() +
-            ", nillable=" + binding.isNillable() +
+            ", nillable=" +
+            binding.isNillable() +
             ", " + (global ? "global scope" : " owner type=" + parentType.getQName())
          );
       }
@@ -1003,9 +1008,8 @@ public class XsdBinder
 
                if(classMetaData != null)
                {
-                  throw new JBossXBRuntimeException(
-                     "Invalid binding: both jbxb:class and jbxb:mapEntry are specified for element " +
-                        new QName(element.getNamespace(), element.getName())
+                  throw new JBossXBRuntimeException("Invalid binding: both jbxb:class and jbxb:mapEntry are specified for element " +
+                     new QName(element.getNamespace(), element.getName())
                   );
                }
                binding.setMapEntryMetaData(mapEntryMetaData);
@@ -1089,10 +1093,9 @@ public class XsdBinder
             {
                if(log.isTraceEnabled())
                {
-                  log.trace(
-                     "element name=" +
-                        new QName(element.getNamespace(), element.getName()) +
-                        ": will be skipped, it's attributes, character content and children will be set on the parent"
+                  log.trace("element name=" +
+                     new QName(element.getNamespace(), element.getName()) +
+                     ": will be skipped, it's attributes, character content and children will be set on the parent"
                   );
                }
                binding.setSkip(skip);
@@ -1167,7 +1170,6 @@ public class XsdBinder
    private static final class SharedElements
    {
       private Map elements = Collections.EMPTY_MAP;
-      //private XSTypeDefinition anyType;
 
       public void add(XSElementDeclaration element)
       {

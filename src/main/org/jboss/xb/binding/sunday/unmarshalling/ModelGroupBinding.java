@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
 
@@ -23,6 +24,8 @@ import org.xml.sax.Attributes;
 public abstract class ModelGroupBinding
    implements ParticleBinding, Cloneable
 {
+   protected static final Logger log = Logger.getLogger(ModelGroupBinding.class);
+   
    protected int minOccurs;
    protected int maxOccurs;
    protected boolean maxOccursUnbounded;
@@ -34,6 +37,21 @@ public abstract class ModelGroupBinding
    public abstract void addModelGroup(ModelGroupBinding modelGroup);
 
    public abstract void setWildcard(WildcardBinding binding);
+
+   public void setMinOccurs(int minOccurs)
+   {
+      this.minOccurs = minOccurs;
+   }
+
+   public void setMaxOccurs(int maxOccurs)
+   {
+      this.maxOccurs = maxOccurs;
+   }
+
+   public void setMaxOccursUnbounded(boolean maxOccursUnbounded)
+   {
+      this.maxOccursUnbounded = maxOccursUnbounded;
+   }
 
    public int getMinOccurs()
    {
@@ -48,6 +66,11 @@ public abstract class ModelGroupBinding
    public boolean getMaxOccursUnbounded()
    {
       return maxOccursUnbounded;
+   }
+
+   public boolean isRepeatable()
+   {
+      return maxOccursUnbounded || minOccurs > 1 || maxOccurs > 1;
    }
 
    /**

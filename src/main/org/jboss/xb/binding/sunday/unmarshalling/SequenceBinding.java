@@ -85,10 +85,46 @@ public class SequenceBinding
                );
             }
             elementStatus = ELEMENT_STATUS_FINISHED;
+
+            if(log.isTraceEnabled())
+            {
+               log.trace("endElement " + qName + " in " + getModelGroup());
+            }
          }
 
          protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
          {
+            if(log.isTraceEnabled())
+            {
+               StringBuffer sb = new StringBuffer();
+               sb.append("startElement " + qName + " in " + getModelGroup() + ", " + sequence.size() + ": ");
+
+               for(int i = 0; i < sequence.size(); ++i)
+               {
+                  Object o = sequence.get(i);
+                  if(o instanceof ElementBinding)
+                  {
+                     sb.append(((ElementBinding)o).getQName());
+                  }
+                  else if(o instanceof SequenceBinding)
+                  {
+                     sb.append("sequence");
+                  }
+                  else if(o instanceof ChoiceBinding)
+                  {
+                     sb.append("choice");
+                  }
+                  else if(o instanceof AllBinding)
+                  {
+                     sb.append("all");
+                  }
+
+                  sb.append(" ");
+               }
+               sb.append("]");
+               log.trace(sb.toString());
+            }
+
             int i = pos;
             if(pos >= 0)
             {
@@ -123,6 +159,11 @@ public class SequenceBinding
                      groupStack = addItem(groupStack, this);
                      this.element = element;
                      elementStatus = ELEMENT_STATUS_STARTED;
+
+                     if(log.isTraceEnabled())
+                     {
+                        log.trace("found " + qName + " in " + getModelGroup());
+                     }
                      break;
                   }
 
@@ -157,11 +198,12 @@ public class SequenceBinding
                            passedGroups.add(this);
                      }
 
+                     int groupStackSize = groupStack.size();
                      groupStack = modelGroup.newCursor().startElement(
                         qName, atts, passedGroups, groupStack, modelGroup.getMinOccurs() > 0
                      );
 
-                     if(!groupStack.isEmpty())
+                     if(groupStackSize != groupStack.size())
                      {
                         if(pos != i)
                         {
@@ -241,6 +283,11 @@ public class SequenceBinding
                      }
                   }
                }
+            }
+
+            if(log.isTraceEnabled() && i == sequence.size() - 1)
+            {
+               log.trace(qName + " not found in " + getModelGroup());
             }
 
             return groupStack;

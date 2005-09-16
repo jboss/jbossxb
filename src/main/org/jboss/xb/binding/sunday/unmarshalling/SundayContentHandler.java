@@ -339,6 +339,10 @@ public class SundayContentHandler
 
                   binding = (ElementBinding)cursor.getElement();
                }
+               else
+               {
+                  System.out.println(startName + " not found as a child of " + element.getQName());
+               }
             }
             else
             {
@@ -347,8 +351,39 @@ public class SundayContentHandler
                   peeked = elementStack.peek();
                   if(peeked instanceof ElementBinding)
                   {
-                     // todo: review this situation
-                     log.warn("Element not found: " + startName);
+                     ElementBinding element = (ElementBinding)peeked;
+                     ModelGroupBinding modelGroup = element.getType().getModelGroup();
+                     if(modelGroup == null)
+                     {
+                        throw new JBossXBRuntimeException(
+                           "Element " + element.getQName() + " should have a complex type!"
+                        );
+                     }
+
+                     if(modelGroup.isRepeatable())
+                     {
+                        cursor = modelGroup.newCursor();
+                        List newCursors = cursor.startElement(startName, atts);
+                        if(!newCursors.isEmpty())
+                        {
+                           // push all except the last one
+                           for(int i = newCursors.size() - 1; i >= 0; --i)
+                           {
+                              cursor = (ModelGroupBinding.Cursor)newCursors.get(i);
+                              //cursor.getModelGroup().startModelGroup();
+                              push(cursor);
+                           }
+
+                           binding = (ElementBinding)cursor.getElement();
+                        }
+                     }
+
+                     if(binding == null)
+                     {
+                        // todo: review this situation
+                        log.warn("Element not found: " + startName);
+                     }
+
                      break;
                   }
 

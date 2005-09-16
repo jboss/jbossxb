@@ -31,7 +31,7 @@ import org.jboss.util.id.SerialVersion;
 public class QName implements Serializable, Comparable
 {
    /** @since 4.0.2, compatible with jdk5 by default */
-   private static long serialVersionUID;
+   private static final long serialVersionUID;
    static
    {
       if (SerialVersion.version == SerialVersion.LEGACY)

@@ -55,9 +55,6 @@ import org.w3c.dom.DOMLocator;
  */
 public class XsdBinder
 {
-   // this constant is a temporary one to test model group bindings
-   public static boolean MODELGROUPS = true;
-
    private static final Logger log = Logger.getLogger(XsdBinder.class);
 
    private static final ThreadLocal xsdBinding = new ThreadLocal();
@@ -240,28 +237,7 @@ public class XsdBinder
       for(int i = 0; i < groups.getLength(); ++i)
       {
          XSModelGroupDefinition groupDef = (XSModelGroupDefinition)groups.item(i);
-         XSModelGroup group = groupDef.getModelGroup();
-         XSObjectList particles = group.getParticles();
-         for(int j = 0; j < particles.getLength(); ++j)
-         {
-            XSParticle particle = (XSParticle)particles.item(j);
-            XSTerm term = particle.getTerm();
-            switch(term.getType())
-            {
-               case XSConstants.ELEMENT_DECLARATION:
-                  XSElementDeclaration element = ((XSElementDeclaration)term);
-                  sharedElements.add(element);
-                  break;
-               case XSConstants.WILDCARD:
-                  break;
-               case XSConstants.MODEL_GROUP:
-               default:
-                  throw new JBossXBRuntimeException(
-                     "For now we don't support anything but elements in global model groups"
-                  );
-            }
-
-         }
+         bindGlobalGroup(groupDef.getModelGroup(), sharedElements);
       }
 
       XSNamedMap types = model.getComponents(XSConstants.TYPE_DEFINITION);
@@ -707,62 +683,54 @@ public class XsdBinder
             // todo: investigate this
             if(modelGroup.getParticles().getLength() > 0)
             {
-               if(MODELGROUPS)
+               ModelGroupBinding binding;
+               switch(modelGroup.getCompositor())
                {
-                  ModelGroupBinding binding;
-                  switch(modelGroup.getCompositor())
-                  {
-                     case XSModelGroup.COMPOSITOR_ALL:
-                        binding = new AllBinding();
-                        break;
-                     case XSModelGroup.COMPOSITOR_CHOICE:
-                        binding = new ChoiceBinding();
-                        break;
-                     case XSModelGroup.COMPOSITOR_SEQUENCE:
-                        binding = new SequenceBinding();
-                        break;
-                     default:
-                        throw new JBossXBRuntimeException("Unexpected model group: " + modelGroup.getCompositor());
-                  }
+                  case XSModelGroup.COMPOSITOR_ALL:
+                     binding = new AllBinding();
+                     break;
+                  case XSModelGroup.COMPOSITOR_CHOICE:
+                     binding = new ChoiceBinding();
+                     break;
+                  case XSModelGroup.COMPOSITOR_SEQUENCE:
+                     binding = new SequenceBinding();
+                     break;
+                  default:
+                     throw new JBossXBRuntimeException("Unexpected model group: " + modelGroup.getCompositor());
+               }
 
-                  binding.setMaxOccursUnbounded(particle.getMaxOccursUnbounded());
-                  binding.setMinOccurs(particle.getMinOccurs());
-                  binding.setMaxOccurs(particle.getMaxOccurs());
+               binding.setMaxOccursUnbounded(particle.getMaxOccursUnbounded());
+               binding.setMinOccurs(particle.getMinOccurs());
+               binding.setMaxOccurs(particle.getMaxOccurs());
 
+               if(log.isTraceEnabled())
+               {
+                  log.trace("created model group " + binding);
+               }
+
+               Object o = peekTypeOrGroup();
+               if(o instanceof ModelGroupBinding)
+               {
+                  ModelGroupBinding parentGroup = (ModelGroupBinding)o;
+                  parentGroup.addModelGroup(binding);
                   if(log.isTraceEnabled())
                   {
-                     log.trace("created model group " + binding);
+                     log.trace("added " + binding + " to " + parentGroup);
                   }
-
-                  Object o = peekTypeOrGroup();
-                  if(o instanceof ModelGroupBinding)
-                  {
-                     ModelGroupBinding parentGroup = (ModelGroupBinding)o;
-                     parentGroup.addModelGroup(binding);
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("added " + binding + " to type group " + parentGroup);
-                     }
-                  }
-                  else if(o instanceof TypeBinding)
-                  {
-                     TypeBinding typeBinding = (TypeBinding)o;
-                     typeBinding.setModelGroup(binding);
-                     if(log.isTraceEnabled())
-                     {
-                        log.trace("added " + binding + " to type " + typeBinding.getQName());
-                     }
-                  }
-
-                  pushModelGroup(binding);
                }
-
-               bindModelGroup(schema, modelGroup, sharedElements);
-
-               if(MODELGROUPS)
+               else if(o instanceof TypeBinding)
                {
-                  popModelGroup();
+                  TypeBinding typeBinding = (TypeBinding)o;
+                  typeBinding.setModelGroup(binding);
+                  if(log.isTraceEnabled())
+                  {
+                     log.trace("added " + binding + " to type " + typeBinding.getQName());
+                  }
                }
+
+               pushModelGroup(binding);
+               bindModelGroup(schema, modelGroup, sharedElements);
+               popModelGroup();
             }
             break;
          case XSConstants.WILDCARD:
@@ -787,30 +755,16 @@ public class XsdBinder
       WildcardBinding binding = new WildcardBinding();
       binding.setSchema(schema);
 
-      Object o = peekTypeOrGroup();
-      TypeBinding type = null;
-      ModelGroupBinding group = null;
-      if(o instanceof ModelGroupBinding)
-      {
-         group = (ModelGroupBinding)o;
-         group.setWildcard(binding);
+      ModelGroupBinding group = (ModelGroupBinding)peekTypeOrGroup();
+      group.setWildcard(binding);
 
-         if(log.isTraceEnabled())
-         {
-            log.trace("added wildcard to " + group);
-         }
-
-         type = peekType();
-      }
-      else
-      {
-         type = (TypeBinding)o;
-      }
+      TypeBinding type = peekType();
       type.setWildcard(binding);
 
       if(log.isTraceEnabled())
       {
-         log.trace("added wildcard to type " + (type.getQName() == null ? "null" : type.getQName().toString()));
+         log.trace("added wildcard to " + group);
+         log.trace("added wildcard to type " + type.getQName());
       }
 
       XSAnnotation annotation = wildcard.getAnnotation();
@@ -845,27 +799,13 @@ public class XsdBinder
    {
       QName qName = new QName(element.getNamespace(), element.getName());
 
-      Object o = peekTypeOrGroup();
-      TypeBinding parentType = null;
-      ModelGroupBinding parentGroup = null;
-      if(o instanceof TypeBinding)
-      {
-         parentType = (TypeBinding)o;
-      }
-      else
-      {
-         parentGroup = (ModelGroupBinding)o;
-      }
+      ModelGroupBinding parentGroup = (ModelGroupBinding)peekTypeOrGroup();
 
       boolean global = element.getScope() == XSConstants.SCOPE_GLOBAL;
       ElementBinding binding = schema.getElement(qName);
       if(global && binding != null)
       {
-         if(parentType != null)
-         {
-            parentType.addElement(binding);
-         }
-         else if(parentGroup != null)
+         if(parentGroup != null)
          {
             parentGroup.addElement(binding);
          }
@@ -905,16 +845,8 @@ public class XsdBinder
          schema.addElement(binding);
       }
 
-      if(parentType != null)
+      if(parentGroup != null)
       {
-         parentType.addElement(binding);
-      }
-      else if(parentGroup != null)
-      {
-         if(!MODELGROUPS)
-         {
-            throw new JBossXBRuntimeException("NO GROUPS!");
-         }
          parentGroup.addElement(binding);
          if(log.isTraceEnabled())
          {
@@ -924,11 +856,7 @@ public class XsdBinder
 
       if(log.isTraceEnabled())
       {
-         if(parentType == null)
-         {
-            parentType = peekType();
-         }
-
+         TypeBinding parentType = peekType();
          log.trace("element: name=" +
             qName +
             ", type=" +
@@ -1117,6 +1045,28 @@ public class XsdBinder
 
    // Private
 
+   private static void bindGlobalGroup(XSModelGroup group, SharedElements sharedElements)
+   {
+      XSObjectList particles = group.getParticles();
+      for(int j = 0; j < particles.getLength(); ++j)
+      {
+         XSParticle particle = (XSParticle)particles.item(j);
+         XSTerm term = particle.getTerm();
+         switch(term.getType())
+         {
+            case XSConstants.ELEMENT_DECLARATION:
+               XSElementDeclaration element = ((XSElementDeclaration)term);
+               sharedElements.add(element);
+               break;
+            case XSConstants.WILDCARD:
+               log.warn("NOT HANDLED WILDCARD IN GLOBAL MODEL GROUP");
+               break;
+            case XSConstants.MODEL_GROUP:
+               bindGlobalGroup((XSModelGroup)term, sharedElements);
+         }
+      }
+   }
+
    private static void popType()
    {
       Object o = getXsdBinding().typeGroupStack.removeLast();
@@ -1127,6 +1077,20 @@ public class XsdBinder
    }
 
    private static void pushType(TypeBinding binding)
+   {
+      getXsdBinding().typeGroupStack.addLast(binding);
+   }
+
+   private static void popModelGroup()
+   {
+      Object o = getXsdBinding().typeGroupStack.removeLast();
+      if(!(o instanceof ModelGroupBinding))
+      {
+         throw new JBossXBRuntimeException("Should have poped model group binding but got " + o);
+      }
+   }
+
+   private static void pushModelGroup(ModelGroupBinding binding)
    {
       getXsdBinding().typeGroupStack.addLast(binding);
    }
@@ -1153,19 +1117,7 @@ public class XsdBinder
       return binding;
    }
 
-   private static void popModelGroup()
-   {
-      Object o = getXsdBinding().typeGroupStack.removeLast();
-      if(!(o instanceof ModelGroupBinding))
-      {
-         throw new JBossXBRuntimeException("Should have poped model group binding but got " + o);
-      }
-   }
-
-   private static void pushModelGroup(ModelGroupBinding binding)
-   {
-      getXsdBinding().typeGroupStack.addLast(binding);
-   }
+   // Inner
 
    private static final class SharedElements
    {
@@ -1200,8 +1152,6 @@ public class XsdBinder
          elements.put(element, type);
       }
    }
-
-   // Inner
 
    public static class XsdBinderErrorHandler
       implements DOMErrorHandler

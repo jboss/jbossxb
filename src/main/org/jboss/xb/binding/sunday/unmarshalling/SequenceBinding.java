@@ -34,16 +34,28 @@ public class SequenceBinding
    public void addElement(ElementBinding element)
    {
       addItem(element);
+      if(element.getMinOccurs() > 0)
+      {
+         setRequiredParticle(true);
+      }
    }
 
    public void addModelGroup(ModelGroupBinding modelGroup)
    {
       addItem(modelGroup);
+      if(modelGroup.isRequired())
+      {
+         setRequiredParticle(true);
+      }
    }
 
    public void setWildcard(WildcardBinding binding)
    {
       addItem(binding);
+      if(binding.getMinOccurs() > 0)
+      {
+         setRequiredParticle(true);
+      }
    }
 
    public Cursor newCursor()
@@ -219,7 +231,7 @@ public class SequenceBinding
                         break;
                      }
 
-                     if(i != pos && modelGroup.getMinOccurs() > 0)
+                     if(i != pos && modelGroup.isRequired())
                      {
                         if(required)
                         {
@@ -234,7 +246,7 @@ public class SequenceBinding
                         }
                      }
                   }
-                  else if(i != pos && modelGroup.getMinOccurs() > 0)
+                  else if(i != pos && modelGroup.isRequired())
                   {
                      if(required)
                      {

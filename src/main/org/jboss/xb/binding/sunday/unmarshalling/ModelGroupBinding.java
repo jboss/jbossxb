@@ -30,10 +30,18 @@ public abstract class ModelGroupBinding
    protected int maxOccurs;
    protected boolean maxOccursUnbounded;
 
+   // is the presence of the model group required in the XML content
+   protected boolean requiredParticle;
+
    public abstract ElementBinding getArrayItem();
 
    public abstract void addElement(ElementBinding element);
 
+   /**
+    * Model group that is passed in as an argument to this method must be fully populated with
+    * element, wildcard and child model group bindings.
+    * @param modelGroup
+    */
    public abstract void addModelGroup(ModelGroupBinding modelGroup);
 
    public abstract void setWildcard(WildcardBinding binding);
@@ -71,6 +79,16 @@ public abstract class ModelGroupBinding
    public boolean isRepeatable()
    {
       return maxOccursUnbounded || minOccurs > 1 || maxOccurs > 1;
+   }
+
+   public boolean isRequired()
+   {
+      return minOccurs != 0 && requiredParticle;
+   }
+
+   public void setRequiredParticle(boolean required)
+   {
+      this.requiredParticle = required;
    }
 
    /**

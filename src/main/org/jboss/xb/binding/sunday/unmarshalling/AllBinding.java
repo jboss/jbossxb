@@ -45,6 +45,11 @@ public class AllBinding
          default:
             elements.put(element.getQName(), element);
       }
+
+      if(element.getMinOccurs() > 0)
+      {
+         setRequiredParticle(true);
+      }
    }
 
    public void addModelGroup(ModelGroupBinding modelGroup)

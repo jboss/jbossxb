@@ -33,16 +33,28 @@ public class ChoiceBinding
    public void addElement(ElementBinding element)
    {
       addChoice(element);
+      if(element.getMinOccurs() > 0)
+      {
+         setRequiredParticle(true);
+      }
    }
 
    public void addModelGroup(ModelGroupBinding modelGroup)
    {
       addChoice(modelGroup);
+      if(modelGroup.isRequired())
+      {
+         setRequiredParticle(true);
+      }
    }
 
    public void setWildcard(WildcardBinding binding)
    {
       addChoice(binding);
+      if(binding.getMinOccurs() > 0)
+      {
+         setRequiredParticle(true);
+      }
    }
 
    public Cursor newCursor()
@@ -203,15 +215,17 @@ public class ChoiceBinding
                         break;
                      }
 
-                     if(i != pos && modelGroup.getMinOccurs() > 0)
+                     /* this is a choice, should try the next one instead of breaking
+                     if(i != pos && modelGroup.isRequired())
                      {
                         break;
-                     }
+                     }*/
                   }
-                  else if(i != pos && modelGroup.getMinOccurs() > 0)
+                  /* this is a choice, should try the next one instead of breaking
+                  else if(i != pos && modelGroup.isRequired())
                   {
                      break;
-                  }
+                  } */
                }
                else if(item instanceof WildcardBinding)
                {
@@ -233,10 +247,11 @@ public class ChoiceBinding
                      break;
                   }
 
+                  /* this is a choice, should try the next one instead of breaking
                   if(i != pos && wildcard.getMinOccurs() > 0)
                   {
                      break;
-                  }
+                  }*/
                }
             }
 

@@ -37,9 +37,10 @@ public class SundayContentHandler
 
    private final SchemaBinding schema;
    private final SchemaBindingResolver schemaResolver;
-   private final StackImpl elementStack = new StackImpl();
-   private final StackImpl objectStack = new StackImpl();
+
    private StringBuffer textContent = new StringBuffer();
+   private final StackImpl stack = new StackImpl();
+
    private Object root;
    private NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
@@ -57,7 +58,8 @@ public class SundayContentHandler
 
    public void characters(char[] ch, int start, int length)
    {
-      if(elementStack.peek() != null)
+      // todo: textContent should be an instvar of StackItem
+      if(((StackItem)stack.peek()).particle != null)
       {
          textContent.append(ch, start, length);
       }
@@ -65,25 +67,25 @@ public class SundayContentHandler
 
    public void endElement(String namespaceURI, String localName, String qName)
    {
-      Object poped = pop();
-      if(poped == null)
+      StackItem item = pop();
+      if(item.particle == null)
       {
          return;
       }
 
       ElementBinding elementBinding = null;
-      if(poped instanceof ElementBinding)
+      if(item.particle instanceof ElementBinding)
       {
-         elementBinding = (ElementBinding)poped;
+         elementBinding = (ElementBinding)item.particle;
       }
       else
       {
-         while(!elementStack.isEmpty())
+         while(!stack.isEmpty())
          {
-            Object peeked = elementStack.pop();
-            if(peeked instanceof ElementBinding)
+            item = pop();
+            if(item.particle instanceof ElementBinding)
             {
-               elementBinding = (ElementBinding)peeked;
+               elementBinding = (ElementBinding)item.particle;
                break;
             }
          }
@@ -95,7 +97,7 @@ public class SundayContentHandler
       }
 
       QName endName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
-      Object o = objectStack.pop();
+      Object o = item.o;
 
       TypeBinding typeBinding = elementBinding.getType();
       List elementHandlers = elementBinding.getInterceptors();
@@ -178,9 +180,8 @@ public class SundayContentHandler
             while(i-- > 0)
             {
                ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-               interceptor.characters(objectStack.peek(elementHandlers.size() - 1 - i),
-                  endName, typeBinding, nsRegistry, dataContent
-               );
+               interceptor.characters(((StackItem)stack.peek(elementHandlers.size() - 1 - i)).o,
+                  endName, typeBinding, nsRegistry, dataContent);
             }
          }
       }
@@ -193,14 +194,14 @@ public class SundayContentHandler
       // endElement
       //
 
-      Object parent = objectStack.isEmpty() ? null : objectStack.peek();
+      Object parent = stack.isEmpty() ? null : ((StackItem)stack.peek()).o;
       o = typeBinding.getHandler().endElement(o, endName, elementBinding);
 
       int i = elementHandlers.size();
       while(i-- > 0)
       {
          ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-         interceptor.endElement(objectStack.peek(elementHandlers.size() - 1 - i), endName, typeBinding);
+         interceptor.endElement(((StackItem)stack.peek(elementHandlers.size() - 1 - i)).o, endName, typeBinding);
       }
 
       //
@@ -212,9 +213,9 @@ public class SundayContentHandler
       if(i == 0)
       {
          ElementBinding parentElement = null;
-         for(int j = 0; j < elementStack.size(); ++j)
+         for(int j = 0; j < stack.size(); ++j)
          {
-            Object peeked = elementStack.peek(j);
+            Object peeked = ((StackItem)stack.peek(j)).particle;
             if(peeked instanceof ElementBinding)
             {
                parentElement = (ElementBinding)peeked;
@@ -230,11 +231,21 @@ public class SundayContentHandler
             } */
             typeBinding.getHandler().setParent(parent, o, endName, elementBinding, parentElement);
          }
-         else if(parentElement != null && parentElement.getType().hasWildcard() && !objectStack.isEmpty())
+         else if(parentElement != null && parentElement.getType().hasWildcard() && !stack.isEmpty()/*!objectStack.isEmpty()*/)
          {
             // todo: review this> the parent has anyType, so it gets the value of its child
-            objectStack.pop();
-            objectStack.push(o);
+            for(int j = 0; j < stack.size(); ++j)
+            {
+               StackItem peeked = (StackItem)stack.peek(j);
+               peeked.o = o;
+               if(peeked.particle instanceof ElementBinding)
+               {
+                  //System.out.println("Value of " + endName + " " + o + " is promoted as the value of its parent " +
+                  //   ((ElementBinding)peeked.particle).getQName());
+                  break;
+               }
+            }
+
             if(log.isTraceEnabled())
             {
                log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
@@ -246,33 +257,33 @@ public class SundayContentHandler
          while(i-- > 0)
          {
             ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-            parent = objectStack.pop();
+            parent = ((StackItem)stack.pop()).o;
             interceptor.add(parent, o, endName);
             o = parent;
          }
       }
 
-      if(objectStack.isEmpty())
+      if(stack.isEmpty())
       {
          root = o;
       }
 
-      if(!elementStack.isEmpty())
+      if(!stack.isEmpty())
       {
-         Object peeked = elementStack.peek();
-         if(peeked instanceof ElementBinding)
+         StackItem peeked = (StackItem)stack.peek();
+         if(peeked.particle instanceof ElementBinding)
          {
             throw new JBossXBRuntimeException("Expected model group for " + endName);
          }
-         ModelGroupBinding.Cursor cursor = (ModelGroupBinding.Cursor)peeked;
+         ModelGroupBinding.Cursor cursor = peeked.cursor;
          if(cursor.isElementFinished())
          {
             pop();
-            if(elementStack.isEmpty())
+            if(stack.isEmpty())
             {
                throw new JBossXBRuntimeException("There is no cursor to end element: " + endName);
             }
-            cursor = (ModelGroupBinding.Cursor)elementStack.peek();
+            cursor = ((StackItem)stack.peek()).cursor;
          }
          cursor.endElement(endName);
       }
@@ -286,11 +297,9 @@ public class SundayContentHandler
    {
       QName startName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
       ElementBinding binding = null;
-
-      //ElementBinding parentBinding = null;
       SchemaBinding schemaBinding = schema;
 
-      if(elementStack.isEmpty())
+      if(stack.isEmpty())
       {
          if(schemaBinding != null)
          {
@@ -312,13 +321,13 @@ public class SundayContentHandler
       }
       else
       {
-         Object peeked = elementStack.peek();
-         if(peeked != null)
+         StackItem item = (StackItem)stack.peek();
+         if(item.particle != null)
          {
             ModelGroupBinding.Cursor cursor;
-            if(peeked instanceof ElementBinding)
+            if(item.particle instanceof ElementBinding)
             {
-               ElementBinding element = (ElementBinding)peeked;
+               ElementBinding element = (ElementBinding)item.particle;
                ModelGroupBinding modelGroup = element.getType().getModelGroup();
                if(modelGroup == null)
                {
@@ -341,17 +350,17 @@ public class SundayContentHandler
                }
                else
                {
-                  System.out.println(startName + " not found as a child of " + element.getQName());
+                  log.warn(startName + " not found as a child of " + element.getQName());
                }
             }
             else
             {
-               while(!elementStack.isEmpty())
+               while(!stack.isEmpty())
                {
-                  peeked = elementStack.peek();
-                  if(peeked instanceof ElementBinding)
+                  item = (StackItem)stack.peek();
+                  if(item.particle instanceof ElementBinding)
                   {
-                     ElementBinding element = (ElementBinding)peeked;
+                     ElementBinding element = (ElementBinding)item.particle;
                      ModelGroupBinding modelGroup = element.getType().getModelGroup();
                      if(modelGroup == null)
                      {
@@ -387,7 +396,7 @@ public class SundayContentHandler
                      break;
                   }
 
-                  cursor = (ModelGroupBinding.Cursor)peeked;
+                  cursor = item.cursor;
                   List newCursors = cursor.startElement(startName, atts);
                   if(!newCursors.isEmpty())
                   {
@@ -412,44 +421,42 @@ public class SundayContentHandler
          }
       }
 
-      push(startName, binding);
-
+      Object parent = null;
       if(binding != null)
       {
          TypeBinding typeBinding = binding.getType();
-         Object o = objectStack.isEmpty() ? null : objectStack.peek();
+         parent = stack.isEmpty() ? null : ((StackItem)stack.peek()).o;
 
          List elementHandlers = binding.getInterceptors();
          for(int i = 0; i < elementHandlers.size(); ++i)
          {
             ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-            o = interceptor.startElement(o, startName, typeBinding);
-            objectStack.push(o);
-            interceptor.attributes(o, startName, typeBinding, atts, nsRegistry);
+            parent = interceptor.startElement(parent, startName, typeBinding);
+            push(startName, binding, parent);
+            interceptor.attributes(parent, startName, typeBinding, atts, nsRegistry);
          }
 
          // todo xsi:nil handling
          String nil = atts.getValue("xsi:nil");
          if(nil == null || !("1".equals(nil) || "true".equals(nil)))
          {
-            o = typeBinding.getHandler().startElement(o, startName, binding);
+            parent = typeBinding.getHandler().startElement(parent, startName, binding);
          }
          else
          {
-            o = NIL;
+            parent = NIL;
          }
-         objectStack.push(o);
 
-         if(o != null && o != NIL)
+         if(parent != null && parent != NIL)
          {
             // Expand the attributes list with any missing attrs with defaults
             atts = typeBinding.expandWithDefaultAttributes(atts);
-            typeBinding.getHandler().attributes(o, startName, binding, atts, nsRegistry);
+            typeBinding.getHandler().attributes(parent, startName, binding, atts, nsRegistry);
          }
       }
       else
       {
-         ElementBinding parentBinding = elementStack.isEmpty() ? null : (ElementBinding)elementStack.peek();
+         ElementBinding parentBinding = stack.isEmpty() ? null : (ElementBinding)((StackItem)stack.peek()).particle;
          if(parentBinding != null && parentBinding.getSchema() != null)
          {
             schemaBinding = parentBinding.getSchema();
@@ -468,6 +475,8 @@ public class SundayContentHandler
             log.trace(msg);
          }
       }
+
+      push(startName, binding, parent);
    }
 
    public void startPrefixMapping(String prefix, String uri)
@@ -491,42 +500,56 @@ public class SundayContentHandler
 
    // Private
 
-   private void push(QName qName, ElementBinding element)
+   private void push(QName qName, ElementBinding element, Object o)
    {
-      elementStack.push(element);
+      stack.push(new StackItem(null, element, o));
       if(log.isTraceEnabled())
       {
-         log.trace("pushed binding " + qName + "=" + element);
+         log.trace("pushed " + qName + "=" + o + ", binding=" + element);
       }
    }
 
    private void push(ModelGroupBinding.Cursor cursor)
    {
-      elementStack.push(cursor);
+      stack.push(new StackItem(cursor, cursor.getModelGroup(), stack.isEmpty() ? null : ((StackItem)stack.peek()).o));
       if(log.isTraceEnabled())
       {
          log.trace("pushed cursor " + cursor);
       }
    }
 
-   private Object pop()
+   private StackItem pop()
    {
-      Object poped = elementStack.isEmpty() ? null : elementStack.pop();
+      StackItem item = (StackItem)stack.pop();
       if(log.isTraceEnabled())
       {
-         if(poped instanceof ElementBinding)
+         if(item.particle instanceof ElementBinding)
          {
-            log.trace("poped " + ((ElementBinding)poped).getQName() + "=" + poped);
+            log.trace("poped " + ((ElementBinding)item.particle).getQName() + "=" + item.particle);
          }
          else
          {
-            log.trace("poped " + poped);
+            log.trace("poped " + item.particle);
          }
       }
-      return poped;
+      return item;
    }
 
    // Inner
+
+   private static class StackItem
+   {
+      final ModelGroupBinding.Cursor cursor;
+      final ParticleBinding particle;
+      Object o;
+
+      public StackItem(ModelGroupBinding.Cursor cursor, ParticleBinding particle, Object o)
+      {
+         this.cursor = cursor;
+         this.particle = particle;
+         this.o = o;
+      }
+   }
 
    static class StackImpl
    {

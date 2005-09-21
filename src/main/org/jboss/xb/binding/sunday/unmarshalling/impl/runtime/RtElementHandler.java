@@ -37,9 +37,10 @@ import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ElementHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.util.Classes;
 import org.xml.sax.Attributes;
 
@@ -48,7 +49,7 @@ import org.xml.sax.Attributes;
  * @version <tt>$Revision$</tt>
  */
 public class RtElementHandler
-   implements ElementHandler
+   implements ParticleHandler
 {
    private static final Logger log = Logger.getLogger(RtElementHandler.class);
 
@@ -1066,5 +1067,39 @@ public class RtElementHandler
             e
          );
       }
+   }
+
+   // ParticleHandler impl
+
+   public Object startParticle(Object parent,
+                               QName elementName,
+                               ParticleBinding particle,
+                               Attributes attrs,
+                               NamespaceContext nsCtx)
+   {
+      ElementBinding element = (ElementBinding)particle;
+      Object o = startElement(parent, elementName, element);
+      if(o != null)
+      {
+         attrs = element.getType().expandWithDefaultAttributes(attrs);
+         attributes(o, elementName, element, attrs, nsCtx);
+      }
+      return o;
+   }
+
+   public Object endParticle(Object o, QName elementName, ParticleBinding particle)
+   {
+      return endElement(o, elementName, (ElementBinding)particle);
+   }
+
+   public void setParent(Object parent,
+                         Object o,
+                         QName elementName,
+                         ParticleBinding particle,
+                         ParticleBinding parentParticle)
+   {
+      ElementBinding element = (ElementBinding)particle;
+      ElementBinding parentElement = (ElementBinding)parentParticle;
+      setParent(parent, o, elementName, element, parentElement);
    }
 }

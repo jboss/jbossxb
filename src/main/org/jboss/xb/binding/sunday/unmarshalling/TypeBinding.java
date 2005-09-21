@@ -34,7 +34,7 @@ public class TypeBinding
    private ElementBinding arrayItem;
    /** Map<QName, AttributeBinding>  */
    private Map attrs = Collections.EMPTY_MAP;
-   private ElementHandler handler = RtElementHandler.INSTANCE;
+   private ParticleHandler handler = RtElementHandler.INSTANCE;
    private CharactersHandler simpleType;
    private ClassMetaData classMetaData;
    private ValueMetaData valueMetaData;
@@ -237,12 +237,12 @@ public class TypeBinding
       this.simpleType = simpleType;
    }
 
-   public void setHandler(ElementHandler handler)
+   public void setHandler(ParticleHandler handler)
    {
       this.handler = handler;
    }
 
-   public ElementHandler getHandler()
+   public ParticleHandler getHandler()
    {
       return handler;
    }

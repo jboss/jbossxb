@@ -11,11 +11,13 @@ import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.Attributes;
 
 /**
+ * This handler can only be used if model group binding is not used.
+ *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
 public class DefaultElementHandler
-   implements ElementHandler
+   implements ElementHandler, ParticleHandler
 {
    public static final DefaultElementHandler INSTANCE = new DefaultElementHandler();
 
@@ -53,7 +55,37 @@ public class DefaultElementHandler
    {
    }
 
-   protected void setData(Object o, QName elementName, TypeBinding type, Object data)
+   // ParticleHandler impl
+
+   public Object startParticle(Object parent,
+                               QName elementName,
+                               ParticleBinding particle,
+                               Attributes attrs,
+                               NamespaceContext nsCtx)
    {
+      ElementBinding element = (ElementBinding)particle;
+      Object o = startElement(parent, elementName, element);
+      if(o != null)
+      {
+         attrs = element.getType().expandWithDefaultAttributes(attrs);
+         attributes(o, elementName, element, attrs, nsCtx);
+      }
+      return o;
+   }
+
+   public Object endParticle(Object o, QName elementName, ParticleBinding particle)
+   {
+      return endElement(o, elementName, (ElementBinding)particle);
+   }
+
+   public void setParent(Object parent,
+                         Object o,
+                         QName elementName,
+                         ParticleBinding particle,
+                         ParticleBinding parentParticle)
+   {
+      ElementBinding element = (ElementBinding)particle;
+      ElementBinding parentElement = (ElementBinding)parentParticle;
+      setParent(parent, o, elementName, element, parentElement);
    }
 }

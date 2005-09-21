@@ -96,196 +96,34 @@ public class SundayContentHandler
          }
       }
 
-      QName endName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
-      Object o = item.o;
-
-      TypeBinding typeBinding = elementBinding.getType();
-      List elementHandlers = elementBinding.getInterceptors();
-
-      if(o != NIL)
+      QName endName = elementBinding.getQName();
+      if(!endName.getLocalPart().equals(localName) || !endName.getNamespaceURI().equals(namespaceURI))
       {
-         //
-         // characters
-         //
-
-         CharactersHandler simpleType = typeBinding.getSimpleType();
-         if(textContent.length() > 0 || simpleType != null)
-         {
-            String dataContent;
-            SchemaBinding schema = elementBinding.getSchema();
-            if(textContent.length() == 0)
-            {
-               dataContent = null;
-            }
-            else
-            {
-
-               dataContent = textContent.toString();
-               if(schema != null && schema.isReplacePropertyRefs())
-               {
-                  dataContent = StringPropertyReplacer.replaceProperties(dataContent);
-               }
-               textContent.delete(0, textContent.length());
-            }
-
-            Object unmarshalled;
-
-            if(simpleType == null)
-            {
-               if(schema != null && schema.isStrictSchema())
-               {
-                  throw new JBossXBRuntimeException("Element " +
-                     endName +
-                     " type binding " +
-                     typeBinding.getQName() +
-                     " does not include text content binding ('" + dataContent
-                  );
-               }
-               unmarshalled = dataContent;
-            }
-            else
-            {
-               ValueMetaData valueMetaData = elementBinding.getValueMetaData();
-               if(valueMetaData == null)
-               {
-                  CharactersMetaData charactersMetaData = typeBinding.getCharactersMetaData();
-                  if(charactersMetaData != null)
-                  {
-                     valueMetaData = charactersMetaData.getValue();
-                  }
-               }
-
-               // todo valueMetaData is available from typeBinding
-               unmarshalled = dataContent == null ?
-                  simpleType.unmarshalEmpty(endName, typeBinding, nsRegistry, valueMetaData) :
-                  simpleType.unmarshal(endName, typeBinding, nsRegistry, valueMetaData, dataContent);
-            }
-
-            if(unmarshalled != null)
-            {
-               // if startElement returned null, we use characters as the object for this element
-               // todo subject to refactoring
-               if(o == null)
-               {
-                  o = unmarshalled;
-               }
-               else if(simpleType != null)
-               {
-                  simpleType.setValue(endName, elementBinding, o, unmarshalled);
-               }
-            }
-
-            // todo interceptors get dataContent?
-            int i = elementHandlers.size();
-            while(i-- > 0)
-            {
-               ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-               interceptor.characters(((StackItem)stack.peek(elementHandlers.size() - 1 - i)).o,
-                  endName, typeBinding, nsRegistry, dataContent);
-            }
-         }
-      }
-      else
-      {
-         o = null;
+         throw new JBossXBRuntimeException("Failed to end element " + new QName(namespaceURI, localName) +
+            ": element on the stack is " + endName);
       }
 
-      //
-      // endElement
-      //
-
-      Object parent = stack.isEmpty() ? null : ((StackItem)stack.peek()).o;
-      o = typeBinding.getHandler().endElement(o, endName, elementBinding);
-
-      int i = elementHandlers.size();
-      while(i-- > 0)
-      {
-         ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-         interceptor.endElement(((StackItem)stack.peek(elementHandlers.size() - 1 - i)).o, endName, typeBinding);
-      }
-
-      //
-      // setParent
-      //
-
-      i = elementHandlers.size();
-      // todo yack...
-      if(i == 0)
-      {
-         ElementBinding parentElement = null;
-         for(int j = 0; j < stack.size(); ++j)
-         {
-            Object peeked = ((StackItem)stack.peek(j)).particle;
-            if(peeked instanceof ElementBinding)
-            {
-               parentElement = (ElementBinding)peeked;
-               break;
-            }
-         }
-
-         if(parent != null)
-         {
-            /*if(o == null)
-            {
-               throw new JBossXBRuntimeException(endName + " is null!");
-            } */
-            typeBinding.getHandler().setParent(parent, o, endName, elementBinding, parentElement);
-         }
-         else if(parentElement != null && parentElement.getType().hasWildcard() && !stack.isEmpty()/*!objectStack.isEmpty()*/)
-         {
-            // todo: review this> the parent has anyType, so it gets the value of its child
-            for(int j = 0; j < stack.size(); ++j)
-            {
-               StackItem peeked = (StackItem)stack.peek(j);
-               peeked.o = o;
-               if(peeked.particle instanceof ElementBinding)
-               {
-                  //System.out.println("Value of " + endName + " " + o + " is promoted as the value of its parent " +
-                  //   ((ElementBinding)peeked.particle).getQName());
-                  break;
-               }
-            }
-
-            if(log.isTraceEnabled())
-            {
-               log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
-            }
-         }
-      }
-      else
-      {
-         while(i-- > 0)
-         {
-            ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-            parent = ((StackItem)stack.pop()).o;
-            interceptor.add(parent, o, endName);
-            o = parent;
-         }
-      }
-
-      if(stack.isEmpty())
-      {
-         root = o;
-      }
+      endElement(item.o, (ElementBinding)item.particle);
 
       if(!stack.isEmpty())
       {
          StackItem peeked = (StackItem)stack.peek();
          if(peeked.particle instanceof ElementBinding)
          {
-            throw new JBossXBRuntimeException("Expected model group for " + endName);
+            throw new JBossXBRuntimeException("Expected model group for " + elementBinding.getQName());
          }
+
          ModelGroupBinding.Cursor cursor = peeked.cursor;
          if(cursor.isElementFinished())
          {
             pop();
             if(stack.isEmpty())
             {
-               throw new JBossXBRuntimeException("There is no cursor to end element: " + endName);
+               throw new JBossXBRuntimeException("There is no cursor to end element: " + elementBinding.getQName());
             }
             cursor = ((StackItem)stack.peek()).cursor;
          }
-         cursor.endElement(endName);
+         cursor.endElement(elementBinding.getQName());
       }
    }
 
@@ -421,38 +259,11 @@ public class SundayContentHandler
          }
       }
 
-      Object parent = null;
+      Object o = null;
       if(binding != null)
       {
-         TypeBinding typeBinding = binding.getType();
-         parent = stack.isEmpty() ? null : ((StackItem)stack.peek()).o;
-
-         List elementHandlers = binding.getInterceptors();
-         for(int i = 0; i < elementHandlers.size(); ++i)
-         {
-            ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
-            parent = interceptor.startElement(parent, startName, typeBinding);
-            push(startName, binding, parent);
-            interceptor.attributes(parent, startName, typeBinding, atts, nsRegistry);
-         }
-
-         // todo xsi:nil handling
-         String nil = atts.getValue("xsi:nil");
-         if(nil == null || !("1".equals(nil) || "true".equals(nil)))
-         {
-            parent = typeBinding.getHandler().startElement(parent, startName, binding);
-         }
-         else
-         {
-            parent = NIL;
-         }
-
-         if(parent != null && parent != NIL)
-         {
-            // Expand the attributes list with any missing attrs with defaults
-            atts = typeBinding.expandWithDefaultAttributes(atts);
-            typeBinding.getHandler().attributes(parent, startName, binding, atts, nsRegistry);
-         }
+         Object parent = stack.isEmpty() ? null : ((StackItem)stack.peek()).o;
+         o = startElement(parent, binding, atts);
       }
       else
       {
@@ -476,7 +287,7 @@ public class SundayContentHandler
          }
       }
 
-      push(startName, binding, parent);
+      push(startName, binding, o);
    }
 
    public void startPrefixMapping(String prefix, String uri)
@@ -499,6 +310,216 @@ public class SundayContentHandler
    }
 
    // Private
+
+   private Object startElement(Object parent, ElementBinding element, Attributes atts)
+   {
+      QName startName = element.getQName();
+      TypeBinding type = element.getType();
+
+      List elementHandlers = element.getInterceptors();
+      for(int i = 0; i < elementHandlers.size(); ++i)
+      {
+         ElementInterceptor interceptor = (ElementInterceptor)elementHandlers.get(i);
+         parent = interceptor.startElement(parent, startName, type);
+         push(startName, element, parent);
+         interceptor.attributes(parent, startName, type, atts, nsRegistry);
+      }
+
+      Object o;
+      // todo xsi:nil handling
+      String nil = atts.getValue("xsi:nil");
+      if(nil == null || !("1".equals(nil) || "true".equals(nil)))
+      {
+         /*
+         o = type.getHandler().startElement(parent, startName, element);
+         if(o != null)
+         {
+            // Expand the attributes list with any missing attrs with defaults
+            atts = type.expandWithDefaultAttributes(atts);
+            type.getHandler().attributes(o, startName, element, atts, nsRegistry);
+         }
+         */
+         o = type.getHandler().startParticle(parent, startName, element, atts, nsRegistry);
+      }
+      else
+      {
+         o = NIL;
+      }
+      return o;
+   }
+
+   private void endElement(Object o, ElementBinding element)
+   {
+      QName endName = element.getQName();
+      TypeBinding type = element.getType();
+      List interceptors = element.getInterceptors();
+
+      if(o != NIL)
+      {
+         //
+         // characters
+         //
+
+         CharactersHandler simpleType = type.getSimpleType();
+         if(textContent.length() > 0 || simpleType != null)
+         {
+            String dataContent;
+            SchemaBinding schema = element.getSchema();
+            if(textContent.length() == 0)
+            {
+               dataContent = null;
+            }
+            else
+            {
+
+               dataContent = textContent.toString();
+               if(schema != null && schema.isReplacePropertyRefs())
+               {
+                  dataContent = StringPropertyReplacer.replaceProperties(dataContent);
+               }
+               textContent.delete(0, textContent.length());
+            }
+
+            Object unmarshalled;
+
+            if(simpleType == null)
+            {
+               if(schema != null && schema.isStrictSchema())
+               {
+                  throw new JBossXBRuntimeException("Element " +
+                     endName +
+                     " type binding " +
+                     type.getQName() +
+                     " does not include text content binding ('" + dataContent
+                  );
+               }
+               unmarshalled = dataContent;
+            }
+            else
+            {
+               ValueMetaData valueMetaData = element.getValueMetaData();
+               if(valueMetaData == null)
+               {
+                  CharactersMetaData charactersMetaData = type.getCharactersMetaData();
+                  if(charactersMetaData != null)
+                  {
+                     valueMetaData = charactersMetaData.getValue();
+                  }
+               }
+
+               // todo valueMetaData is available from type
+               unmarshalled = dataContent == null ?
+                  simpleType.unmarshalEmpty(endName, type, nsRegistry, valueMetaData) :
+                  simpleType.unmarshal(endName, type, nsRegistry, valueMetaData, dataContent);
+            }
+
+            if(unmarshalled != null)
+            {
+               // if startElement returned null, we use characters as the object for this element
+               // todo subject to refactoring
+               if(o == null)
+               {
+                  o = unmarshalled;
+               }
+               else if(simpleType != null)
+               {
+                  simpleType.setValue(endName, element, o, unmarshalled);
+               }
+            }
+
+            // todo interceptors get dataContent?
+            int i = interceptors.size();
+            while(i-- > 0)
+            {
+               ElementInterceptor interceptor = (ElementInterceptor)interceptors.get(i);
+               interceptor.characters(((StackItem)stack.peek(interceptors.size() - 1 - i)).o,
+                  endName, type, nsRegistry, dataContent);
+            }
+         }
+      }
+      else
+      {
+         o = null;
+      }
+
+      //
+      // endElement
+      //
+
+      Object parent = stack.isEmpty() ? null : ((StackItem)stack.peek()).o;
+      o = type.getHandler().endParticle(o, endName, element);
+
+      int i = interceptors.size();
+      while(i-- > 0)
+      {
+         ElementInterceptor interceptor = (ElementInterceptor)interceptors.get(i);
+         interceptor.endElement(((StackItem)stack.peek(interceptors.size() - 1 - i)).o, endName, type);
+      }
+
+      //
+      // setParent
+      //
+
+      i = interceptors.size();
+      // todo yack...
+      if(i == 0)
+      {
+         ElementBinding parentElement = null;
+         for(int j = 0; j < stack.size(); ++j)
+         {
+            Object peeked = ((StackItem)stack.peek(j)).particle;
+            if(peeked instanceof ElementBinding)
+            {
+               parentElement = (ElementBinding)peeked;
+               break;
+            }
+         }
+
+         if(parent != null)
+         {
+            /*if(o == null)
+            {
+               throw new JBossXBRuntimeException(endName + " is null!");
+            } */
+            type.getHandler().setParent(parent, o, endName, element, parentElement);
+         }
+         else if(parentElement != null && parentElement.getType().hasWildcard() && !stack.isEmpty()/*!objectStack.isEmpty()*/)
+         {
+            // todo: review this> the parent has anyType, so it gets the value of its child
+            for(int j = 0; j < stack.size(); ++j)
+            {
+               StackItem peeked = (StackItem)stack.peek(j);
+               peeked.o = o;
+               if(peeked.particle instanceof ElementBinding)
+               {
+                  //System.out.println("Value of " + endName + " " + o + " is promoted as the value of its parent " +
+                  //   ((ElementBinding)peeked.particle).getQName());
+                  break;
+               }
+            }
+
+            if(log.isTraceEnabled())
+            {
+               log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
+            }
+         }
+      }
+      else
+      {
+         while(i-- > 0)
+         {
+            ElementInterceptor interceptor = (ElementInterceptor)interceptors.get(i);
+            parent = ((StackItem)stack.pop()).o;
+            interceptor.add(parent, o, endName);
+            o = parent;
+         }
+      }
+
+      if(stack.isEmpty())
+      {
+         root = o;
+      }
+   }
 
    private void push(QName qName, ElementBinding element, Object o)
    {

@@ -8,6 +8,9 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.Constants;
@@ -130,6 +133,35 @@ public class SchemaBinding
       ElementBinding element = new ElementBinding(this, name, type);
       addElement(element);
       return element;
+   }
+
+   public Iterator getElements()
+   {
+      return new Iterator()
+      {
+         private Iterator particleIterator = elements.values().iterator();
+
+         public boolean hasNext()
+         {
+            return particleIterator.hasNext();
+         }
+
+         public Object next()
+         {
+            ParticleBinding particle = (ParticleBinding)particleIterator.next();
+            return particle.getTerm();
+         }
+
+         public void remove()
+         {
+            throw new UnsupportedOperationException("remove is not implemented.");
+         }
+      };
+   }
+
+   public Iterator getTypes()
+   {
+      return Collections.unmodifiableCollection(types.values()).iterator();
    }
 
    public PackageMetaData getPackageMetaData()

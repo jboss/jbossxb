@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Collection;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.xml.sax.Attributes;
@@ -53,6 +54,11 @@ public class SequenceBinding
             sequence.add(particle);
       }
       super.addParticle(particle);
+   }
+
+   public Collection getParticles()
+   {
+      return Collections.unmodifiableCollection(sequence);
    }
 
    public Cursor newCursor()

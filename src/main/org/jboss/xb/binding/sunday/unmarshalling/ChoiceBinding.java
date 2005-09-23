@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.xml.sax.Attributes;
@@ -44,6 +45,11 @@ public class ChoiceBinding
       }
 
       super.addParticle(particle);
+   }
+
+   public Collection getParticles()
+   {
+      return Collections.unmodifiableCollection(choices);
    }
 
    public Cursor newCursor()

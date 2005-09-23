@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Collection;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.logging.Logger;
@@ -52,6 +53,11 @@ public class AllBinding
             elements.put(element.getQName(), particle);
       }
       super.addParticle(particle);
+   }
+
+   public Collection getParticles()
+   {
+      return Collections.unmodifiableCollection(elements.values());
    }
 
    public Cursor newCursor()

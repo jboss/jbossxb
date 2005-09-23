@@ -175,6 +175,8 @@ public class JBossEntityResolver implements EntityResolver
       if( publicId == null )
          return null;
 
+      if (trace)
+         log.trace("resolvePublicID, publicId=" + publicId);
       InputSource inputSource = null;
       String filename = (String) entities.get(publicId);
       if( filename != null )
@@ -214,6 +216,8 @@ public class JBossEntityResolver implements EntityResolver
       if( systemId == null )
          return null;
 
+      if( trace )
+         log.trace("resolveSystemID, systemId="+systemId);
       InputSource inputSource = null;
       // First try to resolve the systemId as an entity key
       String filename = (String) entities.get(systemId);
@@ -234,10 +238,14 @@ public class JBossEntityResolver implements EntityResolver
       {
          try
          {
+            if( trace )
+               log.trace("Trying to resolve systemId as a URL");
             URL url = new URL(systemId);
             InputStream is = url.openStream();
             inputSource = new InputSource(is);
             inputSource.setSystemId(systemId);
+            if( trace )
+               log.trace("Resolved systemId as a URL");
          }
          catch(MalformedURLException ignored)
          {
@@ -247,7 +255,7 @@ public class JBossEntityResolver implements EntityResolver
          }
          catch (IOException e)
          {
-            log.debug("Failed to obtain InputStream from systemId: "+systemId, e);
+            log.debug("Failed to obtain URL.InputStream from systemId: "+systemId, e);
          }
       }
       return inputSource;
@@ -267,6 +275,8 @@ public class JBossEntityResolver implements EntityResolver
       if( systemId == null )
          return null;
 
+      if( trace )
+         log.trace("resolveClasspathName, systemId="+systemId);
       String filename = systemId;
       // Parse the systemId as a uri to get the final path component
       try

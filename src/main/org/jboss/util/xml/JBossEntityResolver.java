@@ -33,7 +33,7 @@ import org.xml.sax.SAXException;
  */
 public class JBossEntityResolver implements EntityResolver
 {
-   private static final Logger log = Logger.getLogger(EntityResolver.class);
+   private static final Logger log = Logger.getLogger(JBossEntityResolver.class);
 
    private static Map entities = new ConcurrentReaderHashMap();
    private boolean entityResolved = false;

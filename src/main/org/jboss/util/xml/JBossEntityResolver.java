@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
@@ -198,7 +200,10 @@ public class JBossEntityResolver implements EntityResolver
    }
 
    /**
-    Attempt to use the systemId as a URL from which the schema can be read.
+    Attempt to use the systemId as a URL from which the schema can be read. This
+    first checks to see whether the systemId is a key to an entry in the class
+    entity map. If that fails the systemId is used as a URL.
+
     @param systemId - the systemId
     @param trace - trace level logging flag
     @return the URL InputSource if the URL input stream can be opened, null
@@ -210,29 +215,46 @@ public class JBossEntityResolver implements EntityResolver
          return null;
 
       InputSource inputSource = null;
-      try
-      {
-         URL url = new URL(systemId);
-         InputStream is = url.openStream();
-         inputSource = new InputSource(is);
-         inputSource.setSystemId(systemId);
-      }
-      catch(MalformedURLException ignored)
+      // First try to resolve the systemId as an entity key
+      String filename = (String) entities.get(systemId);
+      if ( filename != null)
       {
          if( trace )
-            log.trace("SystemId is not a url: " + systemId, ignored);
-         return null;
+            log.trace("Found entity systemId=" + systemId + " fileName=" + filename);
+         InputStream is = loadClasspathResource(filename, trace);
+         if( is != null )
+         {
+            inputSource = new InputSource(is);
+            inputSource.setSystemId(systemId);
+         }
       }
-      catch (IOException e)
+
+      // Next try to use the systemId as a URL to the schema
+      if( inputSource == null )
       {
-         log.debug("Failed to obtain InputStream from systemId: "+systemId, e);
+         try
+         {
+            URL url = new URL(systemId);
+            InputStream is = url.openStream();
+            inputSource = new InputSource(is);
+            inputSource.setSystemId(systemId);
+         }
+         catch(MalformedURLException ignored)
+         {
+            if( trace )
+               log.trace("SystemId is not a url: " + systemId, ignored);
+            return null;
+         }
+         catch (IOException e)
+         {
+            log.debug("Failed to obtain InputStream from systemId: "+systemId, e);
+         }
       }
       return inputSource;
    }
 
    /**
-    Resolve the systemId as a classpath resource. There is first an attempt to
-    map the systemId to an entry in the class entity map. If not found, the
+    Resolve the systemId as a classpath resource. If not found, the
     systemId is simply used as a classpath resource name.
 
     @param systemId - the system ID of DTD or Schema 
@@ -245,34 +267,24 @@ public class JBossEntityResolver implements EntityResolver
       if( systemId == null )
          return null;
 
-      String filename = (String) entities.get(systemId);
-      if (trace && filename != null)
-         log.trace("Found entity systemId=" + systemId + " fileName=" + filename);
-
-      // Finally see if we know the file name
-      if( filename == null )
+      String filename = systemId;
+      // Parse the systemId as a uri to get the final path component
+      try
       {
-         try
-         {
-            URL url = new URL(systemId);
-            String path = url.getPath();
-            int slash = path.lastIndexOf('/');
-            filename = path.substring(slash + 1);
-            if (trace)
-               log.trace("Trying filename=" + filename);
-         }
-         catch(MalformedURLException ignored)
-         {
-            log.trace("SystemId is not a url: " + systemId, ignored);
-            return null;
-         }
+         URI url = new URI(systemId);
+         String path = url.getPath();
+         int slash = path.lastIndexOf('/');
+         filename = path.substring(slash + 1);
+         if (trace)
+            log.trace("Mapped systemId to filename: " + filename);
+      }
+      catch (URISyntaxException e)
+      {
+         if (trace)
+            log.trace("systemId: is not a URI, using systemId as resource", e);
       }
 
-      // at this point we have a filename, even if it is not
-      // registered with this entity resolver
-      if(trace && entities.values().contains(filename) == false )
-         log.trace("Entity is not registered, systemId=" + systemId);
-
+      // Resolve the filename as a classpath resource
       InputStream is = loadClasspathResource(filename, trace);
       InputSource inputSource = null;
       if( is != null )

@@ -30,31 +30,20 @@ public class ChoiceBinding
       return null;
    }
 
-   public void addElement(ElementBinding element)
+   public void addParticle(ParticleBinding particle)
    {
-      addChoice(element);
-      if(element.getMinOccurs() > 0)
+      switch(choices.size())
       {
-         setRequiredParticle(true);
+         case 0:
+            choices = Collections.singletonList(particle);
+            break;
+         case 1:
+            choices = new ArrayList(choices);
+         default:
+            choices.add(particle);
       }
-   }
 
-   public void addModelGroup(ModelGroupBinding modelGroup)
-   {
-      addChoice(modelGroup);
-      if(modelGroup.isRequired())
-      {
-         setRequiredParticle(true);
-      }
-   }
-
-   public void setWildcard(WildcardBinding binding)
-   {
-      addChoice(binding);
-      if(binding.getMinOccurs() > 0)
-      {
-         setRequiredParticle(true);
-      }
+      super.addParticle(particle);
    }
 
    public Cursor newCursor()
@@ -112,7 +101,8 @@ public class ChoiceBinding
 
                for(int i = 0; i < choices.size(); ++i)
                {
-                  Object o = choices.get(i);
+                  ParticleBinding particle = (ParticleBinding)choices.get(i);
+                  Object o = particle.getTerm();
                   if(o instanceof ElementBinding)
                   {
                      sb.append(((ElementBinding)o).getQName());
@@ -152,7 +142,8 @@ public class ChoiceBinding
             // since the cursor is going to be thrown away in case the element has not been found
             while(i < choices.size() - 1)
             {
-               Object item = choices.get(++i);
+               ParticleBinding particle = (ParticleBinding)choices.get(++i);
+               Object item = particle.getTerm();
                if(item instanceof ElementBinding)
                {
                   ElementBinding element = (ElementBinding)item;
@@ -196,7 +187,7 @@ public class ChoiceBinding
 
                      int groupStackSize = groupStack.size();
                      groupStack = modelGroup.newCursor().startElement(
-                        qName, atts, passedGroups, groupStack, modelGroup.getMinOccurs() > 0
+                        qName, atts, passedGroups, groupStack, particle.isRequired()
                      );
 
                      if(groupStackSize != groupStack.size())
@@ -214,18 +205,7 @@ public class ChoiceBinding
                         element = null;
                         break;
                      }
-
-                     /* this is a choice, should try the next one instead of breaking
-                     if(i != pos && modelGroup.isRequired())
-                     {
-                        break;
-                     }*/
                   }
-                  /* this is a choice, should try the next one instead of breaking
-                  else if(i != pos && modelGroup.isRequired())
-                  {
-                     break;
-                  } */
                }
                else if(item instanceof WildcardBinding)
                {
@@ -246,12 +226,6 @@ public class ChoiceBinding
                      elementStatus = ELEMENT_STATUS_STARTED;
                      break;
                   }
-
-                  /* this is a choice, should try the next one instead of breaking
-                  if(i != pos && wildcard.getMinOccurs() > 0)
-                  {
-                     break;
-                  }*/
                }
             }
 
@@ -282,7 +256,8 @@ public class ChoiceBinding
       boolean result = false;
       for(int i = 0; i < choices.size(); ++i)
       {
-         Object item = choices.get(i);
+         ParticleBinding particle = (ParticleBinding)choices.get(i);
+         Object item = particle.getTerm();
          if(item instanceof ElementBinding)
          {
             ElementBinding element = (ElementBinding)item;
@@ -323,21 +298,5 @@ public class ChoiceBinding
       }
 
       return result;
-   }
-
-   // Private
-
-   private void addChoice(Object o)
-   {
-      switch(choices.size())
-      {
-         case 0:
-            choices = Collections.singletonList(o);
-            break;
-         case 1:
-            choices = new ArrayList(choices);
-         default:
-            choices.add(o);
-      }
    }
 }

@@ -31,31 +31,28 @@ public class SequenceBinding
       return arrayItem;
    }
 
-   public void addElement(ElementBinding element)
+   public void addParticle(ParticleBinding particle)
    {
-      addItem(element);
-      if(element.getMinOccurs() > 0)
+      switch(sequence.size())
       {
-         setRequiredParticle(true);
+         case 0:
+            sequence = Collections.singletonList(particle);
+            if(particle.isRepeatable() && particle.getTerm() instanceof ElementBinding)
+            {
+               ElementBinding element = (ElementBinding)particle.getTerm();
+               if(particle.isRepeatable())
+               {
+                  arrayItem = element;
+               }
+            }
+            break;
+         case 1:
+            sequence = new ArrayList(sequence);
+            arrayItem = null;
+         default:
+            sequence.add(particle);
       }
-   }
-
-   public void addModelGroup(ModelGroupBinding modelGroup)
-   {
-      addItem(modelGroup);
-      if(modelGroup.isRequired())
-      {
-         setRequiredParticle(true);
-      }
-   }
-
-   public void setWildcard(WildcardBinding binding)
-   {
-      addItem(binding);
-      if(binding.getMinOccurs() > 0)
-      {
-         setRequiredParticle(true);
-      }
+      super.addParticle(particle);
    }
 
    public Cursor newCursor()
@@ -113,7 +110,8 @@ public class SequenceBinding
 
                for(int i = 0; i < sequence.size(); ++i)
                {
-                  Object o = sequence.get(i);
+                  ParticleBinding particle = (ParticleBinding)sequence.get(i);
+                  Object o = particle.getTerm();
                   if(o instanceof ElementBinding)
                   {
                      sb.append(((ElementBinding)o).getQName());
@@ -153,7 +151,8 @@ public class SequenceBinding
             // since the cursor is going to be thrown away in case the element has not been found
             while(i < sequence.size() - 1)
             {
-               Object item = sequence.get(++i);
+               ParticleBinding particle = (ParticleBinding)sequence.get(++i);
+               Object item = particle.getTerm();
                if(item instanceof ElementBinding)
                {
                   ElementBinding element = (ElementBinding)item;
@@ -179,7 +178,7 @@ public class SequenceBinding
                      break;
                   }
 
-                  if(i != pos && element.getMinOccurs() > 0)
+                  if(i != pos && particle.getMinOccurs() > 0)
                   {
                      if(required)
                      {
@@ -212,7 +211,7 @@ public class SequenceBinding
 
                      int groupStackSize = groupStack.size();
                      groupStack = modelGroup.newCursor().startElement(
-                        qName, atts, passedGroups, groupStack, modelGroup.getMinOccurs() > 0
+                        qName, atts, passedGroups, groupStack, particle.isRequired()
                      );
 
                      if(groupStackSize != groupStack.size())
@@ -231,13 +230,13 @@ public class SequenceBinding
                         break;
                      }
 
-                     if(i != pos && modelGroup.isRequired())
+                     if(i != pos && particle.isRequired())
                      {
                         if(required)
                         {
                            throw new JBossXBRuntimeException("Requested element " + qName +
                               " is not allowed in this position in the sequence. A model group with minOccurs=" +
-                              modelGroup.getMinOccurs() + " that doesn't contain this element must follow."
+                              particle.getMinOccurs() + " that doesn't contain this element must follow."
                            );
                         }
                         else
@@ -246,13 +245,13 @@ public class SequenceBinding
                         }
                      }
                   }
-                  else if(i != pos && modelGroup.isRequired())
+                  else if(i != pos && particle.isRequired())
                   {
                      if(required)
                      {
                         throw new JBossXBRuntimeException("Requested element " + qName +
                            " is not allowed in this position in the sequence. A model group with minOccurs=" +
-                           modelGroup.getMinOccurs() + " that doesn't contain this element must follow."
+                           particle.getMinOccurs() + " that doesn't contain this element must follow."
                         );
                      }
                      else
@@ -281,7 +280,7 @@ public class SequenceBinding
                      break;
                   }
 
-                  if(i != pos && wildcard.getMinOccurs() > 0)
+                  if(i != pos && particle.getMinOccurs() > 0)
                   {
                      if(required)
                      {
@@ -317,7 +316,8 @@ public class SequenceBinding
       boolean result = false;
       for(int i = 0; i < sequence.size(); ++i)
       {
-         Object item = sequence.get(i);
+         ParticleBinding particle = (ParticleBinding)sequence.get(i);
+         Object item = particle.getTerm();
          if(item instanceof ElementBinding)
          {
             ElementBinding element = (ElementBinding)item;
@@ -327,7 +327,7 @@ public class SequenceBinding
                break;
             }
 
-            if(element.getMinOccurs() > 0)
+            if(particle.getMinOccurs() > 0)
             {
                break;
             }
@@ -350,42 +350,17 @@ public class SequenceBinding
 
                result = modelGroup.mayStartWith(qName, set);
 
-               if(result || modelGroup.getMinOccurs() > 0)
+               if(result || particle.getMinOccurs() > 0)
                {
                   break;
                }
             }
-            else if(modelGroup.getMinOccurs() > 0)
+            else if(particle.getMinOccurs() > 0)
             {
                break;
             }
          }
       }
       return result;
-   }
-
-   // Private
-
-   private void addItem(ParticleBinding o)
-   {
-      switch(sequence.size())
-      {
-         case 0:
-            sequence = Collections.singletonList(o);
-            if(o instanceof ElementBinding)
-            {
-               ElementBinding element = (ElementBinding)o;
-               if(element.isMultiOccurs())
-               {
-                  arrayItem = element;
-               }
-            }
-            break;
-         case 1:
-            sequence = new ArrayList(sequence);
-            arrayItem = null;
-         default:
-            sequence.add(o);
-      }
    }
 }

@@ -15,14 +15,10 @@ import org.jboss.xb.binding.Util;
  * @version <tt>$Revision$</tt>
  */
 public class WildcardBinding
-   implements ParticleBinding
+   implements TermBinding
 {
    private SchemaBinding schema;
    private SchemaBindingResolver schemaResolver;
-
-   private int minOccurs;
-   private int maxOccurs;
-   private boolean maxOccursUnbounded;
 
    public SchemaBinding getSchema()
    {
@@ -65,35 +61,5 @@ public class WildcardBinding
       }
 
       return element;
-   }
-
-   public void setMinOccurs(int minOccurs)
-   {
-      this.minOccurs = minOccurs;
-   }
-
-   public void setMaxOccurs(int maxOccurs)
-   {
-      this.maxOccurs = maxOccurs;
-   }
-
-   public void setMaxOccursUnbounded(boolean maxOccursUnbounded)
-   {
-      this.maxOccursUnbounded = maxOccursUnbounded;
-   }
-
-   public int getMinOccurs()
-   {
-      return minOccurs;
-   }
-
-   public int getMaxOccurs()
-   {
-      return maxOccurs;
-   }
-
-   public boolean getMaxOccursUnbounded()
-   {
-      return maxOccursUnbounded;
    }
 }

@@ -33,40 +33,32 @@ public class AllBinding
       return null;
    }
 
-   public void addElement(ElementBinding element)
+   public void addParticle(ParticleBinding particle)
    {
+      if(!(particle.getTerm() instanceof ElementBinding))
+      {
+         throw new JBossXBRuntimeException("Model group all may contain only elements!");
+      }
+
+      ElementBinding element = (ElementBinding)particle.getTerm();
       switch(elements.size())
       {
          case 0:
-            elements = Collections.singletonMap(element.getQName(), element);
+            elements = Collections.singletonMap(element.getQName(), particle);
             break;
          case 1:
             elements = new HashMap(elements);
          default:
-            elements.put(element.getQName(), element);
+            elements.put(element.getQName(), particle);
       }
-
-      if(element.getMinOccurs() > 0)
-      {
-         setRequiredParticle(true);
-      }
-   }
-
-   public void addModelGroup(ModelGroupBinding modelGroup)
-   {
-      throw new JBossXBRuntimeException("Model group all may contain only elements!");
-   }
-
-   public void setWildcard(WildcardBinding binding)
-   {
-      throw new JBossXBRuntimeException("Model group all may contain only elements!");
+      super.addParticle(particle);
    }
 
    public Cursor newCursor()
    {
       return new Cursor(this)
       {
-         private ElementBinding curElement;
+         private ParticleBinding curElement;
 
          public ParticleBinding getCurrentParticle()
          {
@@ -79,15 +71,15 @@ public class AllBinding
 
          public ElementBinding getElement()
          {
-            return (ElementBinding)getCurrentParticle();
+            return (ElementBinding)getCurrentParticle().getTerm();
          }
 
          public void endElement(QName qName)
          {
-            if(curElement == null || !curElement.getQName().equals(qName))
+            if(curElement == null || !getElement().getQName().equals(qName))
             {
                throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
-                  " since the current element is " + (curElement == null ? null : curElement.getQName())
+                  " since the current element is " + (curElement == null ? null : getElement().getQName())
                );
             }
             elementStatus = ELEMENT_STATUS_FINISHED;
@@ -95,10 +87,10 @@ public class AllBinding
 
          protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
          {
-            ElementBinding element = (ElementBinding)elements.get(qName);
-            if(element != null)
+            ParticleBinding particle = (ParticleBinding)elements.get(qName);
+            if(particle != null)
             {
-               curElement = element;
+               curElement = particle;
                groupStack = addItem(groupStack, this);
                elementStatus = ELEMENT_STATUS_STARTED;
             }
@@ -111,7 +103,8 @@ public class AllBinding
 
          protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups)
          {
-            return (ElementBinding)elements.get(qName);
+            ParticleBinding particle = (ParticleBinding)elements.get(qName);
+            return particle == null ? null : (ElementBinding)particle.getTerm();
          }
       };
    }

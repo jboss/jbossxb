@@ -114,12 +114,15 @@ public class SchemaBinding
 
    public ElementBinding getElement(QName name)
    {
-      return (ElementBinding)elements.get(name);
+      ParticleBinding particle = (ParticleBinding)elements.get(name);
+      ElementBinding element = (ElementBinding)(particle == null ? null : particle.getTerm());
+      return element;
    }
 
    public void addElement(ElementBinding element)
    {
-      elements.put(element.getQName(), element);
+      ParticleBinding particle = new ParticleBinding(element);
+      elements.put(element.getQName(), particle);
    }
 
    public ElementBinding addElement(QName name, TypeBinding type)
@@ -205,5 +208,16 @@ public class SchemaBinding
    public void setIgnoreLowLine(boolean ignoreLowLine)
    {
       this.ignoreLowLine = ignoreLowLine;
+   }
+
+   ParticleBinding getElementParticle(QName name)
+   {
+      return (ParticleBinding)elements.get(name);
+   }
+
+   void addElementParticle(ParticleBinding particle)
+   {
+      ElementBinding element = (ElementBinding)particle.getTerm();
+      elements.put(element.getQName(), particle);
    }
 }

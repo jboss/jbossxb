@@ -63,7 +63,7 @@ public class DefaultElementHandler
                                Attributes attrs,
                                NamespaceContext nsCtx)
    {
-      ElementBinding element = (ElementBinding)particle;
+      ElementBinding element = (ElementBinding)particle.getTerm();
       Object o = startElement(parent, elementName, element);
       if(o != null)
       {
@@ -75,7 +75,7 @@ public class DefaultElementHandler
 
    public Object endParticle(Object o, QName elementName, ParticleBinding particle)
    {
-      return endElement(o, elementName, (ElementBinding)particle);
+      return endElement(o, elementName, (ElementBinding)particle.getTerm());
    }
 
    public void setParent(Object parent,
@@ -84,8 +84,8 @@ public class DefaultElementHandler
                          ParticleBinding particle,
                          ParticleBinding parentParticle)
    {
-      ElementBinding element = (ElementBinding)particle;
-      ElementBinding parentElement = (ElementBinding)parentParticle;
+      ElementBinding element = (ElementBinding)particle.getTerm();
+      ElementBinding parentElement = (ElementBinding)parentParticle.getTerm();
       setParent(parent, o, elementName, element, parentElement);
    }
 }

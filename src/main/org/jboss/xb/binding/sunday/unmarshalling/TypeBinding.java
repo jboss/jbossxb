@@ -22,7 +22,7 @@ import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
-import org.jboss.xb.binding.JBossXBRuntimeException;
+
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -50,7 +50,7 @@ public class TypeBinding
    private Boolean startElementCreatesObject;
 
    private WildcardBinding wildcard;
-   private ModelGroupBinding modelGroup;
+   private ParticleBinding particle;
 
    public TypeBinding()
    {
@@ -72,16 +72,10 @@ public class TypeBinding
    {
       this(qName, baseType.simpleType);
 
-      if(baseType.modelGroup != null)
+      if(baseType.particle != null)
       {
-         try
-         {
-            this.modelGroup = (ModelGroupBinding)baseType.modelGroup.clone();
-         }
-         catch(CloneNotSupportedException e)
-         {
-            throw new JBossXBRuntimeException(e.getMessage());
-         }
+         // todo
+         this.particle = baseType.particle;
       }
 
       this.arrayItem = baseType.arrayItem;
@@ -112,8 +106,9 @@ public class TypeBinding
    public ElementBinding getElement(QName name, Attributes atts)
    {
       ElementBinding element = null;
-      if(modelGroup != null)
+      if(particle != null)
       {
+         ModelGroupBinding modelGroup = (ModelGroupBinding)particle.getTerm();
          element = modelGroup.newCursor().getElement(name, atts);
       }
 
@@ -124,21 +119,30 @@ public class TypeBinding
       return element;
    }
 
-   public void addElement(ElementBinding binding)
+   public void addParticle(ParticleBinding particle)
    {
-      if(modelGroup == null)
+      ModelGroupBinding modelGroup;
+      if(this.particle == null)
       {
          modelGroup = new AllBinding();
-         if(binding.isMultiOccurs())
+         this.particle = new ParticleBinding(modelGroup);
+
+         if(particle.isRepeatable() && particle.getTerm() instanceof ElementBinding)
          {
-            arrayItem = binding;
+            arrayItem = (ElementBinding)particle.getTerm();
          }
       }
       else
       {
+         modelGroup = (ModelGroupBinding)this.particle.getTerm();
          arrayItem = null;
       }
-      modelGroup.addElement(binding);
+      modelGroup.addParticle(particle);
+   }
+
+   public void addElement(ElementBinding element)
+   {
+      addParticle(new ParticleBinding(element));
    }
 
    public ElementBinding addElement(QName name, TypeBinding type)
@@ -264,16 +268,18 @@ public class TypeBinding
 
    public boolean isSimple()
    {
-      return modelGroup == null && attrs.isEmpty();
+      return particle == null && attrs.isEmpty();
    }
 
    public boolean isArrayWrapper()
    {
+      ModelGroupBinding modelGroup = (ModelGroupBinding)(particle == null ? null : particle.getTerm());
       return arrayItem != null || modelGroup != null && modelGroup.getArrayItem() != null;
    }
 
    public ElementBinding getArrayItem()
    {
+      ModelGroupBinding modelGroup = (ModelGroupBinding)(particle == null ? null : particle.getTerm());
       return arrayItem == null ? (modelGroup == null ? null : modelGroup.getArrayItem()) : arrayItem;
    }
 
@@ -380,7 +386,7 @@ public class TypeBinding
    public boolean isStartElementCreatesObject()
    {
       return startElementCreatesObject == null ?
-               modelGroup != null || !attrs.isEmpty() : startElementCreatesObject.booleanValue();
+         particle != null || !attrs.isEmpty() : startElementCreatesObject.booleanValue();
    }
 
    public void setStartElementCreatesObject(boolean startElementCreatesObject)
@@ -398,13 +404,13 @@ public class TypeBinding
       return wildcard != null;
    }
 
-   public ModelGroupBinding getModelGroup()
+   public ParticleBinding getParticle()
    {
-      return modelGroup;
+      return particle;
    }
 
-   public void setModelGroup(ModelGroupBinding modelGroup)
+   public void setParticle(ParticleBinding particle)
    {
-      this.modelGroup = modelGroup;
+      this.particle = particle;
    }
 }

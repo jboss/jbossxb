@@ -356,8 +356,10 @@ public class RtElementHandler
       return o;
    }
 
-   public void setParent(Object parent, Object o, QName qName, ElementBinding element, ElementBinding parentElement)
+   public void setParent(Object parent, Object o, QName qName, ParticleBinding particle, ParticleBinding parentParticle)
    {
+      ElementBinding element = (ElementBinding)particle.getTerm();
+      ElementBinding parentElement = (ElementBinding)parentParticle.getTerm();
       if(element.isSkip())
       {
          return;
@@ -515,7 +517,7 @@ public class RtElementHandler
             {
                ValueList valueList = (ValueList)owner;
                ValueListInitializer initializer = valueList.getInitializer();
-               if(element.isMultiOccurs())
+               if(particle.isRepeatable())
                {
                   String propName = propertyMetaData == null ? null : propertyMetaData.getName();
                   if(propName == null)
@@ -1077,7 +1079,7 @@ public class RtElementHandler
                                Attributes attrs,
                                NamespaceContext nsCtx)
    {
-      ElementBinding element = (ElementBinding)particle;
+      ElementBinding element = (ElementBinding)particle.getTerm();
       Object o = startElement(parent, elementName, element);
       if(o != null)
       {
@@ -1089,17 +1091,6 @@ public class RtElementHandler
 
    public Object endParticle(Object o, QName elementName, ParticleBinding particle)
    {
-      return endElement(o, elementName, (ElementBinding)particle);
-   }
-
-   public void setParent(Object parent,
-                         Object o,
-                         QName elementName,
-                         ParticleBinding particle,
-                         ParticleBinding parentParticle)
-   {
-      ElementBinding element = (ElementBinding)particle;
-      ElementBinding parentElement = (ElementBinding)parentParticle;
-      setParent(parent, o, elementName, element, parentElement);
+      return endElement(o, elementName, (ElementBinding)particle.getTerm());
    }
 }

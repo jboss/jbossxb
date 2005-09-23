@@ -294,14 +294,14 @@ public class XsdBinder
                                   int maxOccurs,
                                   boolean maxOccursUnbounded)
    {
-      ElementBinding binding = bindElement(schema,
+      ParticleBinding particle = bindElement(schema,
          element,
          new SharedElements(),
          minOccurs,
          maxOccurs,
          maxOccursUnbounded
       );
-      schema.addElement(binding);
+      schema.addElementParticle(particle);
    }
    
    // Private
@@ -683,58 +683,59 @@ public class XsdBinder
             // todo: investigate this
             if(modelGroup.getParticles().getLength() > 0)
             {
-               ModelGroupBinding binding;
+               ModelGroupBinding groupBinding;
                switch(modelGroup.getCompositor())
                {
                   case XSModelGroup.COMPOSITOR_ALL:
-                     binding = new AllBinding();
+                     groupBinding = new AllBinding();
                      break;
                   case XSModelGroup.COMPOSITOR_CHOICE:
-                     binding = new ChoiceBinding();
+                     groupBinding = new ChoiceBinding();
                      break;
                   case XSModelGroup.COMPOSITOR_SEQUENCE:
-                     binding = new SequenceBinding();
+                     groupBinding = new SequenceBinding();
                      break;
                   default:
                      throw new JBossXBRuntimeException("Unexpected model group: " + modelGroup.getCompositor());
                }
 
-               binding.setMaxOccursUnbounded(particle.getMaxOccursUnbounded());
-               binding.setMinOccurs(particle.getMinOccurs());
-               binding.setMaxOccurs(particle.getMaxOccurs());
+               ParticleBinding particleBinding = new ParticleBinding(groupBinding);
+               particleBinding.setMaxOccursUnbounded(particle.getMaxOccursUnbounded());
+               particleBinding.setMinOccurs(particle.getMinOccurs());
+               particleBinding.setMaxOccurs(particle.getMaxOccurs());
 
                if(log.isTraceEnabled())
                {
-                  log.trace("created model group " + binding);
+                  log.trace("created model group " + groupBinding);
                }
 
                Object o = peekTypeOrGroup();
                if(o instanceof ModelGroupBinding)
                {
                   ModelGroupBinding parentGroup = (ModelGroupBinding)o;
-                  parentGroup.addModelGroup(binding);
+                  parentGroup.addParticle(particleBinding);
                   if(log.isTraceEnabled())
                   {
-                     log.trace("added " + binding + " to " + parentGroup);
+                     log.trace("added " + groupBinding + " to " + parentGroup);
                   }
                }
                else if(o instanceof TypeBinding)
                {
                   TypeBinding typeBinding = (TypeBinding)o;
-                  typeBinding.setModelGroup(binding);
+                  typeBinding.setParticle(particleBinding);
                   if(log.isTraceEnabled())
                   {
-                     log.trace("added " + binding + " to type " + typeBinding.getQName());
+                     log.trace("added " + groupBinding + " to type " + typeBinding.getQName());
                   }
                }
 
-               pushModelGroup(binding);
+               pushModelGroup(groupBinding);
                bindModelGroup(schema, modelGroup, sharedElements);
                popModelGroup();
             }
             break;
          case XSConstants.WILDCARD:
-            bindWildcard(schema, (XSWildcard)term);
+            bindWildcard(schema, particle);
             break;
          case XSConstants.ELEMENT_DECLARATION:
             bindElement(schema,
@@ -750,13 +751,17 @@ public class XsdBinder
       }
    }
 
-   private static void bindWildcard(SchemaBinding schema, XSWildcard wildcard)
+   private static void bindWildcard(SchemaBinding schema, XSParticle particle)
    {
       WildcardBinding binding = new WildcardBinding();
       binding.setSchema(schema);
 
       ModelGroupBinding group = (ModelGroupBinding)peekTypeOrGroup();
-      group.setWildcard(binding);
+      ParticleBinding particleBinding = new ParticleBinding(binding);
+      particleBinding.setMaxOccurs(particle.getMaxOccurs());
+      particleBinding.setMaxOccursUnbounded(particle.getMaxOccursUnbounded());
+      particleBinding.setMinOccurs(particle.getMinOccurs());
+      group.addParticle(particleBinding);
 
       TypeBinding type = peekType();
       type.setWildcard(binding);
@@ -767,6 +772,7 @@ public class XsdBinder
          log.trace("added wildcard to type " + type.getQName());
       }
 
+      XSWildcard wildcard = (XSWildcard)particle.getTerm();
       XSAnnotation annotation = wildcard.getAnnotation();
       if(annotation != null)
       {
@@ -790,67 +796,70 @@ public class XsdBinder
       }
    }
 
-   private static ElementBinding bindElement(SchemaBinding schema,
-                                             XSElementDeclaration element,
-                                             SharedElements sharedElements,
-                                             int minOccurs,
-                                             int maxOccurs,
-                                             boolean maxOccursUnbounded)
+   private static ParticleBinding bindElement(SchemaBinding schema,
+                                              XSElementDeclaration elementDec,
+                                              SharedElements sharedElements,
+                                              int minOccurs,
+                                              int maxOccurs,
+                                              boolean maxOccursUnbounded)
    {
-      QName qName = new QName(element.getNamespace(), element.getName());
+      QName qName = new QName(elementDec.getNamespace(), elementDec.getName());
 
       ModelGroupBinding parentGroup = (ModelGroupBinding)peekTypeOrGroup();
 
-      boolean global = element.getScope() == XSConstants.SCOPE_GLOBAL;
-      ElementBinding binding = schema.getElement(qName);
-      if(global && binding != null)
+      boolean global = elementDec.getScope() == XSConstants.SCOPE_GLOBAL;
+      ElementBinding element = schema.getElement(qName);
+      ParticleBinding particle;
+      if(global && element != null)
       {
+         particle = new ParticleBinding(element);
          if(parentGroup != null)
          {
-            parentGroup.addElement(binding);
+            parentGroup.addParticle(particle);
          }
 
          // todo: this is a BAD hack!
          if(maxOccursUnbounded)
          {
-            binding.setMaxOccursUnbounded(maxOccursUnbounded);
+            particle.setMaxOccursUnbounded(maxOccursUnbounded);
          }
-         return binding;
+         return particle;
       }
 
       TypeBinding type = null;
 
-      boolean shared = sharedElements.isShared(element);
+      boolean shared = sharedElements.isShared(elementDec);
       if(shared)
       {
-         type = sharedElements.getTypeBinding(element);
+         type = sharedElements.getTypeBinding(elementDec);
       }
 
       if(type == null)
       {
-         type = bindType(schema, element.getTypeDefinition(), sharedElements);
+         type = bindType(schema, elementDec.getTypeDefinition(), sharedElements);
          if(shared)
          {
-            sharedElements.setTypeBinding(element, type);
+            sharedElements.setTypeBinding(elementDec, type);
          }
       }
 
-      binding = new ElementBinding(schema, qName, type);
-      binding.setNillable(element.getNillable());
-      binding.setMinOccurs(minOccurs);
-      binding.setMaxOccurs(maxOccurs);
-      binding.setMaxOccursUnbounded(maxOccursUnbounded);
+      element = new ElementBinding(schema, qName, type);
+      element.setNillable(elementDec.getNillable());
+      particle = new ParticleBinding(element);
+      particle.setMinOccurs(minOccurs);
+      particle.setMaxOccurs(maxOccurs);
+      particle.setMaxOccursUnbounded(maxOccursUnbounded);
       if(global)
       {
-         schema.addElement(binding);
+         schema.addElementParticle(particle);
       }
 
       if(parentGroup != null)
       {
-         parentGroup.addElement(binding);
+         parentGroup.addParticle(particle);
          if(log.isTraceEnabled())
          {
-            log.trace("Element " + binding.getQName() + " added to " + parentGroup);
+            log.trace("Element " + element.getQName() + " added to " + parentGroup);
          }
       }
 
@@ -861,16 +870,16 @@ public class XsdBinder
             qName +
             ", type=" +
             type.getQName() +
-            ", multiOccurs=" +
-            binding.isMultiOccurs() +
+            ", repeatable=" +
+            particle.isRepeatable() +
             ", nillable=" +
-            binding.isNillable() +
+            element.isNillable() +
             ", " + (global ? "global scope" : " owner type=" + parentType.getQName())
          );
       }
 
-      // customize binding with annotations
-      XSAnnotation an = element.getAnnotation();
+      // customize element with annotations
+      XSAnnotation an = elementDec.getAnnotation();
       if(an != null)
       {
          XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
@@ -881,11 +890,11 @@ public class XsdBinder
             if(classMetaData != null)
             {
                log.trace("element: name=" +
-                  new QName(element.getNamespace(), element.getName()) +
+                  new QName(elementDec.getNamespace(), elementDec.getName()) +
                   ", class=" +
                   classMetaData.getImpl()
                );
-               binding.setClassMetaData(classMetaData);
+               element.setClassMetaData(classMetaData);
             }
 
             PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
@@ -894,13 +903,13 @@ public class XsdBinder
                if(log.isTraceEnabled())
                {
                   log.trace("element: name=" +
-                     new QName(element.getNamespace(), element.getName()) +
+                     new QName(elementDec.getNamespace(), elementDec.getName()) +
                      ", property=" +
                      propertyMetaData.getName() +
                      ", collectionType=" + propertyMetaData.getCollectionType()
                   );
                }
-               binding.setPropertyMetaData(propertyMetaData);
+               element.setPropertyMetaData(propertyMetaData);
             }
 
             MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
@@ -910,14 +919,14 @@ public class XsdBinder
                {
                   throw new JBossXBRuntimeException("An element can be bound either as a property or as a map" +
                      " entry but not both: " +
-                     new QName(element.getNamespace(), element.getName())
+                     new QName(elementDec.getNamespace(), elementDec.getName())
                   );
                }
 
                if(log.isTraceEnabled())
                {
                   log.trace("element name=" +
-                     new QName(element.getNamespace(), element.getName()) +
+                     new QName(elementDec.getNamespace(), elementDec.getName()) +
                      " is bound to a map entry: impl=" +
                      mapEntryMetaData.getImpl() +
                      ", getKeyMethod=" +
@@ -936,11 +945,11 @@ public class XsdBinder
 
                if(classMetaData != null)
                {
-                  throw new JBossXBRuntimeException("Invalid binding: both jbxb:class and jbxb:mapEntry are specified for element " +
-                     new QName(element.getNamespace(), element.getName())
+                  throw new JBossXBRuntimeException("Invalid element: both jbxb:class and jbxb:mapEntry are specified for element " +
+                     new QName(elementDec.getNamespace(), elementDec.getName())
                   );
                }
-               binding.setMapEntryMetaData(mapEntryMetaData);
+               element.setMapEntryMetaData(mapEntryMetaData);
             }
 
             PutMethodMetaData putMethodMetaData = appInfo.getPutMethodMetaData();
@@ -949,7 +958,7 @@ public class XsdBinder
                if(log.isTraceEnabled())
                {
                   log.trace("element: name=" +
-                     new QName(element.getNamespace(), element.getName()) +
+                     new QName(elementDec.getNamespace(), elementDec.getName()) +
                      ", putMethod=" +
                      putMethodMetaData.getName() +
                      ", keyType=" +
@@ -957,7 +966,7 @@ public class XsdBinder
                      ", valueType=" + putMethodMetaData.getValueType()
                   );
                }
-               binding.setPutMethodMetaData(putMethodMetaData);
+               element.setPutMethodMetaData(putMethodMetaData);
             }
 
             AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
@@ -966,7 +975,7 @@ public class XsdBinder
                if(log.isTraceEnabled())
                {
                   log.trace("element: name=" +
-                     new QName(element.getNamespace(), element.getName()) +
+                     new QName(elementDec.getNamespace(), elementDec.getName()) +
                      ", addMethod=" +
                      addMethodMetaData.getMethodName() +
                      ", valueType=" +
@@ -974,7 +983,7 @@ public class XsdBinder
                      ", isChildType=" + addMethodMetaData.isChildType()
                   );
                }
-               binding.setAddMethodMetaData(addMethodMetaData);
+               element.setAddMethodMetaData(addMethodMetaData);
             }
 
             ValueMetaData valueMetaData = appInfo.getValueMetaData();
@@ -983,11 +992,11 @@ public class XsdBinder
                if(log.isTraceEnabled())
                {
                   log.trace("element " +
-                     new QName(element.getNamespace(), element.getName()) +
+                     new QName(elementDec.getNamespace(), elementDec.getName()) +
                      ": unmarshalMethod=" + valueMetaData.getUnmarshalMethod()
                   );
                }
-               binding.setValueMetaData(valueMetaData);
+               element.setValueMetaData(valueMetaData);
             }
 
             boolean mapEntryKey = appInfo.isMapEntryKey();
@@ -996,11 +1005,11 @@ public class XsdBinder
                if(log.isTraceEnabled())
                {
                   log.trace("element name=" +
-                     new QName(element.getNamespace(), element.getName()) +
+                     new QName(elementDec.getNamespace(), elementDec.getName()) +
                      ": is bound to a key in a map entry"
                   );
                }
-               binding.setMapEntryKey(mapEntryKey);
+               element.setMapEntryKey(mapEntryKey);
             }
 
             boolean mapEntryValue = appInfo.isMapEntryValue();
@@ -1009,11 +1018,11 @@ public class XsdBinder
                if(log.isTraceEnabled())
                {
                   log.trace("element name=" +
-                     new QName(element.getNamespace(), element.getName()) +
+                     new QName(elementDec.getNamespace(), elementDec.getName()) +
                      ": is bound to a value in a map entry"
                   );
                }
-               binding.setMapEntryValue(mapEntryValue);
+               element.setMapEntryValue(mapEntryValue);
             }
 
             boolean skip = appInfo.isSkip();
@@ -1022,15 +1031,15 @@ public class XsdBinder
                if(log.isTraceEnabled())
                {
                   log.trace("element name=" +
-                     new QName(element.getNamespace(), element.getName()) +
+                     new QName(elementDec.getNamespace(), elementDec.getName()) +
                      ": will be skipped, it's attributes, character content and children will be set on the parent"
                   );
                }
-               binding.setSkip(skip);
+               element.setSkip(skip);
             }
          }
       }
-      return binding;
+      return particle;
    }
 
    private static void bindModelGroup(SchemaBinding doc, XSModelGroup modelGroup, SharedElements sharedElements)

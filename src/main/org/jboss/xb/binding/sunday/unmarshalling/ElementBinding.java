@@ -24,7 +24,7 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
  * @version <tt>$Revision$</tt>
  */
 public class ElementBinding
-   implements ParticleBinding
+   implements TermBinding
 {
    private List interceptors = Collections.EMPTY_LIST;
 
@@ -40,10 +40,6 @@ public class ElementBinding
    private ValueMetaData valueMetaData;
    private boolean mapEntryKey;
    private boolean mapEntryValue;
-
-   private int minOccurs;
-   private int maxOccurs;
-   private boolean maxOccursUnbounded;
 
    private Boolean skip;
    private ValueAdapter valueAdapter;
@@ -140,41 +136,6 @@ public class ElementBinding
    public void setValueMetaData(ValueMetaData valueMetaData)
    {
       this.valueMetaData = valueMetaData;
-   }
-
-   public int getMinOccurs()
-   {
-      return minOccurs;
-   }
-
-   public void setMinOccurs(int minOccurs)
-   {
-      this.minOccurs = minOccurs;
-   }
-
-   public int getMaxOccurs()
-   {
-      return maxOccurs;
-   }
-
-   public void setMaxOccurs(int maxOccurs)
-   {
-      this.maxOccurs = maxOccurs;
-   }
-
-   public boolean getMaxOccursUnbounded()
-   {
-      return maxOccursUnbounded;
-   }
-
-   public void setMaxOccursUnbounded(boolean maxOccursUnbounded)
-   {
-      this.maxOccursUnbounded = maxOccursUnbounded;
-   }
-
-   public boolean isMultiOccurs()
-   {
-      return maxOccursUnbounded || maxOccurs > 1 || minOccurs > 1;
    }
 
    public void setMapEntryKey(boolean mapEntryKey)

@@ -1,18 +1,18 @@
 /*
- * JBoss, the OpenSource J2EE webOS
+ * JBoss, Home of Professional Open Source
  *
  * Distributable under LGPL license.
  * See terms of license at gnu.org.
  */
 package org.jboss.util.xml;
 
-// $Id$
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Hashtable;
+import java.util.Map;
+
+import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
@@ -33,13 +33,11 @@ public class JBossEntityResolver implements EntityResolver
 {
    private static final Logger log = Logger.getLogger(EntityResolver.class);
 
-   private static Hashtable entities = new Hashtable();
+   private static Map entities = new ConcurrentReaderHashMap();
    private boolean entityResolved = false;
 
    static
    {
-      // the key does not really matter, neither does the location, we only look for the value
-      registerEntity("urn:jboss:bean-deployer bean-deployer_1_0.xsd", "bean-deployer_1_0.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/j2ee_1_4.xsd", "j2ee_1_4.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/application_1_4.xsd", "application_1_4.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/application-client_1_4.xsd", "application-client_1_4.xsd");
@@ -90,7 +88,10 @@ public class JBossEntityResolver implements EntityResolver
       registerEntity("-//JBoss//DTD JBOSS JCA Config 1.0//EN", "jboss-ds_1_0.dtd");
       registerEntity("-//JBoss//DTD JBOSS JCA Config 1.5//EN", "jboss-ds_1_5.dtd");
       registerEntity("http://www.jboss.org/j2ee/schema/security-config_4_0.xsd", "security-config_4_0.xsd");
-      registerEntity("http://www.jboss.com/ws-security/schema/jboss-ws-security_1_0.xsd", "jboss-ws-security_1_0.xsd");
+      registerEntity("urn:jboss:bean-deployer", "bean-deployer_1_0.xsd");
+      registerEntity("urn:jboss:security-config:4.1", "security-config_4_1.xsd");
+      registerEntity("urn:jboss:jndi-binding-service:1.0", "jndi-binding-service_1_0.xsd");
+      registerEntity("urn:jboss:user-roles:1.0", "user-roles_1_0.xsd");
       // xml
       registerEntity("-//W3C//DTD/XMLSCHEMA 200102//EN", "XMLSchema.dtd");
       registerEntity("datatypes", "datatypes.dtd"); // This dtd doesn't have a publicId - see XMLSchema.dtd
@@ -108,12 +109,14 @@ public class JBossEntityResolver implements EntityResolver
    }
 
    /**
-    * Returns DTD/Schema inputSource. If DTD/Schema was found in the hashtable and inputSource
-    * was created flag isEntityResolved is set to true.
-    *
-    * @param publicId - Public ID of DTD, or null if it is a schema
-    * @param systemId - the system ID of DTD or Schema
-    * @return InputSource of entity
+    Returns DTD/Schema inputSource. The resolution logic is:
+    1. Check the publicId against the current registered values in the class
+    mapping of entity name to dtd/schema file name.
+    2. Attempt to use the systemId as a URL from which the schema can be read.
+    3. 
+    @param publicId - Public ID of DTD, or null if it is a schema
+    @param systemId - the system ID of DTD or Schema
+    @return InputSource of entity
     */
    public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException
    {
@@ -123,73 +126,131 @@ public class JBossEntityResolver implements EntityResolver
       if( publicId == null && systemId == null )
          return null;
 
-      InputSource inputSource = null;
-      String entityFileName = getLocalEntityName(publicId, systemId);
-      if( entityFileName != null )
-      {
-         try
-         {
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            URL url = loader.getResource(entityFileName);
-            InputStream inputStream = null;
-            if( url != null )
-            {
-               if( log.isTraceEnabled() )
-                  log.trace(entityFileName+" maps to URL: "+url);
-               try
-               {
-                  inputStream = url.openStream();
-               }
-               catch(IOException e)
-               {
-                  log.debug("Failed to open url stream", e);
-               }
-            }
+      boolean trace = log.isTraceEnabled();
+      // Look for a registered publicID
+      InputSource inputSource = resolvePublicID(publicId, trace);
 
-            if( inputStream != null )
-               inputSource = new InputSource(inputStream);
-         }
-         catch(Exception e)
-         {
-            log.error("Cannot load local entity: " + entityFileName);
-         }
+      if( inputSource == null )
+      {
+         // Try to resolve the systemID as a absolute URL
+         inputSource = resolveSystemID(systemId, trace);
       }
+
+      if( inputSource == null )
+      {
+         // Try to resolve the systemID as as a classpath reference under dtd or schema
+         inputSource = resolveClasspathName(systemId, trace);
+      }
+
 
       entityResolved = (inputSource != null);
       return inputSource;
    }
 
    /**
-    * Get the local entity name by looking it up in the entities Map
+    * Returns the boolean value to inform id DTD was found in the XML file or not
     *
-    * @param publicId the public id for DTD, probably null for schema
-    * @param systemId the system id for the DTD, we ignore the location
-    * @return the local filename
+    * @todo this is not thread safe and should be removed?
+    *
+    * @return boolean - true if DTD was found in XML
     */
-   private String getLocalEntityName(String publicId, String systemId)
+   public boolean isEntityResolved()
    {
-      boolean trace = log.isTraceEnabled();
-      
-      String filename = null;
+      return entityResolved;
+   }
 
-      // First try the public id
-      if( publicId != null )
+   /**
+    Load the schema from the class entity to schema file mapping.
+    @see #registerEntity(String, String)
+
+    @param publicId - the public entity name of the schema
+    @param trace - trace level logging flag
+    @return the InputSource for the schema file found on the classpath, null
+      if the publicId is not registered or found.
+    */
+   private InputSource resolvePublicID(String publicId, boolean trace)
+   {
+      if( publicId == null )
+         return null;
+
+      InputSource inputSource = null;
+      String filename = (String) entities.get(publicId);
+      if( filename != null )
       {
-         filename = (String) entities.get(publicId);
-         if (trace && filename != null)
+         if (trace)
             log.trace("Found entity from publicId=" + publicId + " fileName=" + filename);
+         try
+         {
+            InputStream inputStream = loadClasspathResource(filename, trace);
+            if( inputStream != null )
+            {
+               inputSource = new InputSource(inputStream);
+               inputSource.setPublicId(publicId);
+            }
+         }
+         catch(Exception e)
+         {
+            log.debug("Cannot load publicId from resource: " + filename, e);
+         }
       }
 
-      // Next try the system id
-      if( filename == null && systemId != null )
+      return inputSource;
+   }
+
+   /**
+    Attempt to use the systemId as a URL from which the schema can be read.
+    @param systemId - the systemId
+    @param trace - trace level logging flag
+    @return the URL InputSource if the URL input stream can be opened, null
+      if the systemId is not a URL or could not be opened.
+    */
+   private InputSource resolveSystemID(String systemId, boolean trace)
+   {
+      if( systemId == null )
+         return null;
+
+      InputSource inputSource = null;
+      try
       {
-         filename = (String) entities.get(systemId);
-         if (trace && filename != null)
-            log.trace("Found entity systemId=" + systemId + " fileName=" + filename);
+         URL url = new URL(systemId);
+         InputStream is = url.openStream();
+         inputSource = new InputSource(is);
+         inputSource.setSystemId(systemId);
       }
+      catch(MalformedURLException ignored)
+      {
+         if( trace )
+            log.trace("SystemId is not a url: " + systemId, ignored);
+         return null;
+      }
+      catch (IOException e)
+      {
+         log.debug("Failed to obtain InputStream from systemId: "+systemId, e);
+      }
+      return inputSource;
+   }
 
-      // See if we know the file name
-      if( filename == null && systemId != null )
+   /**
+    Resolve the systemId as a classpath resource. There is first an attempt to
+    map the systemId to an entry in the class entity map. If not found, the
+    systemId is simply used as a classpath resource name.
+
+    @param systemId - the system ID of DTD or Schema 
+    @param trace - trace level logging flag
+    @return the InputSource for the schema file found on the classpath, null
+      if the systemId is not registered or found.
+    */
+   private InputSource resolveClasspathName(String systemId, boolean trace)
+   {
+      if( systemId == null )
+         return null;
+
+      String filename = (String) entities.get(systemId);
+      if (trace && filename != null)
+         log.trace("Found entity systemId=" + systemId + " fileName=" + filename);
+
+      // Finally see if we know the file name
+      if( filename == null )
       {
          try
          {
@@ -210,23 +271,59 @@ public class JBossEntityResolver implements EntityResolver
       // at this point we have a filename, even if it is not
       // registered with this entity resolver
       if(trace && entities.values().contains(filename) == false )
-         log.trace("Entity is not registered, publicId=" + publicId + " systemId=" + systemId);
+         log.trace("Entity is not registered, systemId=" + systemId);
 
-      if( filename.endsWith(".dtd") )
-         filename = "dtd/" + filename;
-      else if( filename.endsWith(".xsd") )
-         filename = "schema/" + filename;
-
-      return filename;
+      InputStream is = loadClasspathResource(filename, trace);
+      InputSource inputSource = null;
+      if( is != null )
+      {
+         inputSource = new InputSource(is);
+         inputSource.setSystemId(systemId);
+      }
+      return inputSource;
    }
 
    /**
-    * Returns the boolean value to inform id DTD was found in the XML file or not
-    *
-    * @return boolean - true if DTD was found in XML
+    Look for the resource name on the thread context loader resource path. This
+    first simply tries the resource name as is, and if not found, the resource
+    is prepended with either "dtd/" or "schema/" depending on whether the
+    resource ends in ".dtd" or ".xsd".
+
+    @param resource - the classpath resource name of the schema
+    @param trace - trace level logging flag
+    @return the resource InputStream if found, null if not found.
     */
-   public boolean isEntityResolved()
+   private InputStream loadClasspathResource(String resource, boolean trace)
    {
-      return entityResolved;
+      ClassLoader loader = Thread.currentThread().getContextClassLoader();
+      URL url = loader.getResource(resource);
+      if( url == null )
+      {
+         /* Prefix the simple filename with the schema type patch as this is the
+               naming convention for the jboss bundled schemas.
+            */
+         if( resource.endsWith(".dtd") )
+            resource = "dtd/" + resource;
+         else if( resource.endsWith(".xsd") )
+            resource = "schema/" + resource;
+         url = loader.getResource(resource);
+      }
+
+      InputStream inputStream = null;
+      if( url != null )
+      {
+         if( trace )
+            log.trace(resource+" maps to URL: "+url);
+         try
+         {
+            inputStream = url.openStream();
+         }
+         catch(IOException e)
+         {
+            log.debug("Failed to open url stream", e);
+         }
+      }
+      return inputStream;
    }
+
 }

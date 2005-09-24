@@ -96,6 +96,7 @@ public class JBossEntityResolver implements EntityResolver
       registerEntity("urn:jboss:user-roles:1.0", "user-roles_1_0.xsd");
       // xml
       registerEntity("-//W3C//DTD/XMLSCHEMA 200102//EN", "XMLSchema.dtd");
+      registerEntity("http://www.w3.org/2001/XMLSchema.dtd", "XMLSchema.dtd");
       registerEntity("datatypes", "datatypes.dtd"); // This dtd doesn't have a publicId - see XMLSchema.dtd
    }
 

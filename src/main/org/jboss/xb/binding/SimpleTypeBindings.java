@@ -31,7 +31,7 @@ public final class SimpleTypeBindings
    implements Serializable
 {
    static final long serialVersionUID = 4372272109355825813L;
-   
+
    public static final String XS_ANYSIMPLETYPE_NAME = "anySimpleType";
 
    //
@@ -626,7 +626,7 @@ public final class SimpleTypeBindings
          throw new IllegalArgumentException("Schema type cannot be null");
       if (value == null)
          throw new IllegalArgumentException("Value string cannot be null");
-      
+
       int typeCode = xsdType.hashCode();
       Object result;
       if(typeCode == XS_INT)
@@ -1628,12 +1628,12 @@ public final class SimpleTypeBindings
       Calendar cal = Calendar.getInstance();
       cal.clear();
 
-      parseTime(value, 0, cal);
+      int tzLoc = parseTime(value, 0, cal);
 
       TimeZone tz = null;
-      if(value.length() > 12)
+      if(value.length() > tzLoc)
       {
-         tz = parseTimeZone(value, 12);
+         tz = parseTimeZone(value, tzLoc);
       }
 
       if(tz != null)
@@ -1695,12 +1695,12 @@ public final class SimpleTypeBindings
          );
       }
 
-      parseTime(value, timeInd + 1, cal);
+      int tzStart = parseTime(value, timeInd + 1, cal);
 
       TimeZone tz = null;
-      if(value.length() > timeInd + 13)
+      if(value.length() > tzStart)
       {
-         tz = parseTimeZone(value, timeInd + 13);
+         tz = parseTimeZone(value, tzStart);
       }
 
       if(tz != null)
@@ -1992,22 +1992,49 @@ public final class SimpleTypeBindings
     * @param value
     * @param cal
     */
-   private static void parseTime(String value, int start, Calendar cal)
+   private static int parseTime(String value, int start, Calendar cal)
    {
-      if(value.charAt(start + 2) != ':' || value.charAt(start + 5) != ':' || value.charAt(start + 8) != '.')
+      if(value.charAt(start + 2) != ':' || value.charAt(start + 5) != ':')
       {
-         throw new JBossXBValueFormatException("Time value does not follow the format 'hh:mm:ss:sss': " + value);
+         throw new JBossXBValueFormatException("Time value does not follow the format 'hh:mm:ss.[s+]': " + value);
       }
 
       int hh = Integer.parseInt(value.substring(start, start + 2));
       int mm = Integer.parseInt(value.substring(start + 3, start + 5));
       int ss = Integer.parseInt(value.substring(start + 6, start + 8));
-      int sss = Integer.parseInt(value.substring(start + 9, start + 12));
+
+      int millis = 0;
+
+      int x = start + 8;
+
+      if(value.length() > x && value.charAt(x) == '.')
+      {
+         int mul = 100;
+         for(x += 1; x < value.length(); x++)
+         {
+            char c = value.charAt(x);
+
+            if(Character.isDigit(c))
+            {
+               if(mul != 0)
+               {
+                  millis += Character.digit(c, 10) * mul;
+                  mul = (mul == 1) ? 0 : mul / 10;
+               }
+            }
+            else
+            {
+               break;
+            }
+         }
+      }
 
       cal.set(Calendar.HOUR_OF_DAY, hh);
       cal.set(Calendar.MINUTE, mm);
       cal.set(Calendar.SECOND, ss);
-      cal.set(Calendar.MILLISECOND, sss);
+      cal.set(Calendar.MILLISECOND, millis);
+
+      return x;
    }
 
    /**

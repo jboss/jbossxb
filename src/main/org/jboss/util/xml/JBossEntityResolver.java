@@ -13,6 +13,7 @@ import java.net.URL;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.Collections;
 
 import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 import org.jboss.logging.Logger;
@@ -35,7 +36,13 @@ public class JBossEntityResolver implements EntityResolver
 {
    private static final Logger log = Logger.getLogger(JBossEntityResolver.class);
 
+   /** A class wide Map<String, String> of publicId/systemId to dtd/xsd file */
    private static Map entities = new ConcurrentReaderHashMap();
+   /** A class flag indicating whether an attempt to resolve a systemID as a
+    non-file URL should produce a warning rather than a trace level log msg.
+    */
+   private static boolean warnOnNonFileURLs = false;
+
    private boolean entityResolved = false;
 
    static
@@ -101,22 +108,53 @@ public class JBossEntityResolver implements EntityResolver
    }
 
    /**
-    * Register the mapping from the public id to the dtd file name.
-    *
-    * @param publicId    the DOCTYPE public id, "-//Sun Microsystems, Inc.//DTD Enterprise JavaBeans 1.1//EN"
-    * @param dtdFileName the simple dtd file name, "ejb-jar.dtd"
+    Obtain a read-only view of the current entity map.
+
+    @return Map<String, String> of the publicID/systemID to dtd/schema file name
     */
-   public static void registerEntity(String publicId, String dtdFileName)
+   public static Map getEntityMap()
    {
-      entities.put(publicId, dtdFileName);
+      return Collections.unmodifiableMap(entities);
+   }
+
+   public static boolean isWarnOnNonFileURLs()
+   {
+      return warnOnNonFileURLs;
+   }
+   public static void setWarnOnNonFileURLs(boolean warnOnNonFileURLs)
+   {
+      JBossEntityResolver.warnOnNonFileURLs = warnOnNonFileURLs;
+   }
+
+   /**
+    * Register the mapping from the public id/system id to the dtd/xsd file
+    * name. This overwrites any existing mapping.
+    *
+    * @param id  the DOCTYPE public id or system id such as
+    * "-//Sun Microsystems, Inc.//DTD Enterprise JavaBeans 1.1//EN"
+    * @param dtdFileName the simple dtd/xsd file name, "ejb-jar.dtd"
+    */
+   public static void registerEntity(String id, String dtdFileName)
+   {
+      entities.put(id, dtdFileName);
    }
 
    /**
     Returns DTD/Schema inputSource. The resolution logic is:
     1. Check the publicId against the current registered values in the class
-    mapping of entity name to dtd/schema file name.
-    2. Attempt to use the systemId as a URL from which the schema can be read.
-    3. 
+    mapping of entity name to dtd/schema file name. If found, the resulting
+    file name is passed to the loadClasspathResource to locate the file as a
+    classpath resource.
+    2. Check the systemId against the current registered values in the class
+    mapping of entity name to dtd/schema file name. If found, the resulting
+    file name is passed to the loadClasspathResource to locate the file as a
+    classpath resource.
+    3. Attempt to resolve the systemId as a URL from which the schema can be
+    read. If the URL input stream can be opened this returned as the resolved
+    input.
+    4. Strip the systemId name down to the simple file name by removing an URL
+    style path elements (myschemas/x.dtd becomes x.dtd), and call
+    loadClasspathResource to locate the simple file name as a classpath resource.
     @param publicId - Public ID of DTD, or null if it is a schema
     @param systemId - the system ID of DTD or Schema
     @return InputSource of entity
@@ -222,7 +260,7 @@ public class JBossEntityResolver implements EntityResolver
       InputSource inputSource = null;
       // First try to resolve the systemId as an entity key
       String filename = (String) entities.get(systemId);
-      if ( filename != null)
+      if ( filename != null )
       {
          if( trace )
             log.trace("Found entity systemId=" + systemId + " fileName=" + filename);
@@ -242,6 +280,11 @@ public class JBossEntityResolver implements EntityResolver
             if( trace )
                log.trace("Trying to resolve systemId as a URL");
             URL url = new URL(systemId);
+            if( warnOnNonFileURLs && url.getProtocol().equalsIgnoreCase("file") == false)
+            {
+               log.warn("Trying to resolve systemId as a non-file URL: "+systemId);
+            }
+
             InputStream is = url.openStream();
             inputSource = new InputSource(is);
             inputSource.setSystemId(systemId);

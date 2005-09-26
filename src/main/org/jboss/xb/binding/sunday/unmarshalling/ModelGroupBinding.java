@@ -73,16 +73,16 @@ public abstract class ModelGroupBinding
 
    protected abstract boolean mayStartWith(QName qName, Set set);
 
+   public boolean isModelGroup()
+   {
+      return true;
+   }
+
    // Inner
 
    public static abstract class Cursor
    {
-      protected static final byte ELEMENT_STATUS_STARTED = 1;
-      protected static final byte ELEMENT_STATUS_FINISHED = 2;
-      protected static final byte ELEMENT_STATUS_UNINITIALIZED = 4;
-
       protected final ModelGroupBinding group;
-      protected byte elementStatus = ELEMENT_STATUS_UNINITIALIZED;
 
       protected Cursor(ModelGroupBinding theGroup)
       {
@@ -92,11 +92,6 @@ public abstract class ModelGroupBinding
       public ModelGroupBinding getModelGroup()
       {
          return group;
-      }
-
-      public boolean isElementFinished()
-      {
-         return (elementStatus & ELEMENT_STATUS_FINISHED) > 0;
       }
 
       public abstract ParticleBinding getCurrentParticle();

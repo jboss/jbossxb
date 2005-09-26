@@ -12,4 +12,5 @@ package org.jboss.xb.binding.sunday.unmarshalling;
  */
 public interface TermBinding
 {
+   boolean isModelGroup();
 }

@@ -88,7 +88,6 @@ public class AllBinding
                   " since the current element is " + (curElement == null ? null : getElement().getQName())
                );
             }
-            elementStatus = ELEMENT_STATUS_FINISHED;
          }
 
          protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
@@ -98,7 +97,6 @@ public class AllBinding
             {
                curElement = particle;
                groupStack = addItem(groupStack, this);
-               elementStatus = ELEMENT_STATUS_STARTED;
             }
             else
             {

@@ -62,4 +62,9 @@ public class WildcardBinding
 
       return element;
    }
+
+   public boolean isModelGroup()
+   {
+      return false;
+   }
 }

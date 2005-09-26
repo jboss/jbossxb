@@ -218,4 +218,9 @@ public class ElementBinding
    {
       this.nillable = nillable;
    }
+
+   public boolean isModelGroup()
+   {
+      return false;
+   }
 }

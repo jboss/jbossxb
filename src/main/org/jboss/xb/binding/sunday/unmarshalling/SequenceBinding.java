@@ -99,7 +99,6 @@ public class SequenceBinding
                   " since the current element is " + (element == null ? "null" : element.getQName().toString())
                );
             }
-            elementStatus = ELEMENT_STATUS_FINISHED;
 
             if(log.isTraceEnabled())
             {
@@ -175,7 +174,6 @@ public class SequenceBinding
                      }
                      groupStack = addItem(groupStack, this);
                      this.element = element;
-                     elementStatus = ELEMENT_STATUS_STARTED;
 
                      if(log.isTraceEnabled())
                      {
@@ -282,7 +280,6 @@ public class SequenceBinding
                         ++occurs;
                      }
                      groupStack = addItem(groupStack, this);
-                     elementStatus = ELEMENT_STATUS_STARTED;
                      break;
                   }
 

@@ -69,7 +69,6 @@ public class ParticleBinding
 
    public boolean isRequired()
    {
-      return minOccurs > 0 &&
-         (term instanceof ElementBinding || term instanceof WildcardBinding || ((ModelGroupBinding)term).hasRequiredParticle());
+      return minOccurs > 0 && (!term.isModelGroup() || ((ModelGroupBinding)term).hasRequiredParticle());
    }
 }

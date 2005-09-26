@@ -363,8 +363,13 @@ public class JBossEntityResolver implements EntityResolver
       {
          URI url = new URI(systemId);
          String path = url.getPath();
+         if( path == null )
+            path = url.getSchemeSpecificPart();
          int slash = path.lastIndexOf('/');
-         filename = path.substring(slash + 1);
+         if( slash >= 0 )
+            filename = path.substring(slash + 1);
+         else
+            filename = path;
          if (trace)
             log.trace("Mapped systemId to filename: " + filename);
       }

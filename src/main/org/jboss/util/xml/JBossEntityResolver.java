@@ -6,20 +6,23 @@
  */
 package org.jboss.util.xml;
 
+// $Id$
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Map;
+import java.net.URL;
 import java.util.Collections;
+import java.util.Map;
 
-import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 import org.jboss.logging.Logger;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 
 /**
  * Local entity resolver to handle standard J2EE DTDs and Schemas as well as JBoss
@@ -141,20 +144,25 @@ public class JBossEntityResolver implements EntityResolver
 
    /**
     Returns DTD/Schema inputSource. The resolution logic is:
+    
     1. Check the publicId against the current registered values in the class
     mapping of entity name to dtd/schema file name. If found, the resulting
     file name is passed to the loadClasspathResource to locate the file as a
     classpath resource.
+    
     2. Check the systemId against the current registered values in the class
     mapping of entity name to dtd/schema file name. If found, the resulting
     file name is passed to the loadClasspathResource to locate the file as a
     classpath resource.
-    3. Attempt to resolve the systemId as a URL from which the schema can be
-    read. If the URL input stream can be opened this returned as the resolved
-    input.
-    4. Strip the systemId name down to the simple file name by removing an URL
+    
+    3. Strip the systemId name down to the simple file name by removing an URL
     style path elements (myschemas/x.dtd becomes x.dtd), and call
     loadClasspathResource to locate the simple file name as a classpath resource.
+    
+    4. Attempt to resolve the systemId as a URL from which the schema can be
+    read. If the URL input stream can be opened this returned as the resolved
+    input.
+    
     @param publicId - Public ID of DTD, or null if it is a schema
     @param systemId - the system ID of DTD or Schema
     @return InputSource of entity
@@ -168,12 +176,13 @@ public class JBossEntityResolver implements EntityResolver
          return null;
 
       boolean trace = log.isTraceEnabled();
+      
       // Look for a registered publicID
       InputSource inputSource = resolvePublicID(publicId, trace);
 
       if( inputSource == null )
       {
-         // Try to resolve the systemID as a absolute URL
+         // Try to resolve the systemID from the registry
          inputSource = resolveSystemID(systemId, trace);
       }
 
@@ -183,6 +192,11 @@ public class JBossEntityResolver implements EntityResolver
          inputSource = resolveClasspathName(systemId, trace);
       }
 
+      if( inputSource == null )
+      {
+         // Try to resolve the systemID as a absolute URL
+         inputSource = resolveSystemIDasURL(systemId, trace);
+      }
 
       entityResolved = (inputSource != null);
       return inputSource;
@@ -216,7 +230,9 @@ public class JBossEntityResolver implements EntityResolver
 
       if (trace)
          log.trace("resolvePublicID, publicId=" + publicId);
+      
       InputSource inputSource = null;
+      
       String filename = (String) entities.get(publicId);
       if( filename != null )
       {
@@ -242,8 +258,8 @@ public class JBossEntityResolver implements EntityResolver
 
    /**
     Attempt to use the systemId as a URL from which the schema can be read. This
-    first checks to see whether the systemId is a key to an entry in the class
-    entity map. If that fails the systemId is used as a URL.
+    checks to see whether the systemId is a key to an entry in the class
+    entity map. 
 
     @param systemId - the systemId
     @param trace - trace level logging flag
@@ -257,8 +273,10 @@ public class JBossEntityResolver implements EntityResolver
 
       if( trace )
          log.trace("resolveSystemID, systemId="+systemId);
+      
       InputSource inputSource = null;
-      // First try to resolve the systemId as an entity key
+      
+      // Try to resolve the systemId as an entity key
       String filename = (String) entities.get(systemId);
       if ( filename != null )
       {
@@ -272,38 +290,56 @@ public class JBossEntityResolver implements EntityResolver
          }
       }
 
-      // Next try to use the systemId as a URL to the schema
-      if( inputSource == null )
-      {
-         try
-         {
-            if( trace )
-               log.trace("Trying to resolve systemId as a URL");
-            URL url = new URL(systemId);
-            if( warnOnNonFileURLs && url.getProtocol().equalsIgnoreCase("file") == false)
-            {
-               log.warn("Trying to resolve systemId as a non-file URL: "+systemId);
-            }
-
-            InputStream is = url.openStream();
-            inputSource = new InputSource(is);
-            inputSource.setSystemId(systemId);
-            if( trace )
-               log.trace("Resolved systemId as a URL");
-         }
-         catch(MalformedURLException ignored)
-         {
-            if( trace )
-               log.trace("SystemId is not a url: " + systemId, ignored);
-            return null;
-         }
-         catch (IOException e)
-         {
-            log.debug("Failed to obtain URL.InputStream from systemId: "+systemId, e);
-         }
-      }
       return inputSource;
    }
+
+   /**
+   Attempt to use the systemId as a URL from which the schema can be read. This
+   uses the systemID as a URL.
+
+   @param systemId - the systemId
+   @param trace - trace level logging flag
+   @return the URL InputSource if the URL input stream can be opened, null
+     if the systemId is not a URL or could not be opened.
+   */
+  private InputSource resolveSystemIDasURL(String systemId, boolean trace)
+  {
+     if( systemId == null )
+        return null;
+
+     if( trace )
+        log.trace("resolveSystemIDasURL, systemId="+systemId);
+     
+     InputSource inputSource = null;
+
+     // Try to use the systemId as a URL to the schema
+      try
+      {
+         if (trace)
+            log.trace("Trying to resolve systemId as a URL");
+         URL url = new URL(systemId);
+         if (warnOnNonFileURLs && url.getProtocol().equalsIgnoreCase("file") == false)
+         {
+            log.warn("Trying to resolve systemId as a non-file URL: " + systemId);
+         }
+
+         InputStream is = url.openStream();
+         inputSource = new InputSource(is);
+         inputSource.setSystemId(systemId);
+         if (trace)
+            log.trace("Resolved systemId as a URL");
+      }
+      catch (MalformedURLException ignored)
+      {
+         if (trace)
+            log.trace("SystemId is not a url: " + systemId, ignored);
+      }
+      catch (IOException e)
+      {
+         log.debug("Failed to obtain URL.InputStream from systemId: " + systemId, e);
+      }
+      return inputSource;
+  }
 
    /**
     Resolve the systemId as a classpath resource. If not found, the

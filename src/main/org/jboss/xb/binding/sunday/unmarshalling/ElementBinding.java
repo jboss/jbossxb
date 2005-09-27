@@ -223,4 +223,9 @@ public class ElementBinding
    {
       return false;
    }
+
+   public String toString()
+   {
+      return super.toString() + "[" + qName + "]";
+   }
 }

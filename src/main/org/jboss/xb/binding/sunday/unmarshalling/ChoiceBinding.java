@@ -191,7 +191,7 @@ public class ChoiceBinding
 
                      int groupStackSize = groupStack.size();
                      groupStack = modelGroup.newCursor().startElement(
-                        qName, atts, passedGroups, groupStack, particle.isRequired()
+                        qName, atts, passedGroups, groupStack, particle.isRequired(occurs)
                      );
 
                      if(groupStackSize != groupStack.size())

@@ -142,13 +142,26 @@ public class TypeBinding
 
    public void addElement(ElementBinding element)
    {
-      addParticle(new ParticleBinding(element));
+      addElement(element, 1, false);
+   }
+
+   public void addElement(ElementBinding element, int minOccurs, boolean unbounded)
+   {
+      ParticleBinding particle = new ParticleBinding(element);
+      particle.setMinOccurs(minOccurs);
+      particle.setMaxOccursUnbounded(unbounded);
+      addParticle(particle);
    }
 
    public ElementBinding addElement(QName name, TypeBinding type)
    {
+      return addElement(name, type, 1, false);
+   }
+
+   public ElementBinding addElement(QName name, TypeBinding type, int minOccurs, boolean unbounded)
+   {
       ElementBinding el = new ElementBinding(schemaBinding, name, type);
-      addElement(el);
+      addElement(el, minOccurs, unbounded);
       return el;
    }
 

@@ -687,13 +687,13 @@ public class XsdBinder
                switch(modelGroup.getCompositor())
                {
                   case XSModelGroup.COMPOSITOR_ALL:
-                     groupBinding = new AllBinding();
+                     groupBinding = new AllBinding(schema);
                      break;
                   case XSModelGroup.COMPOSITOR_CHOICE:
-                     groupBinding = new ChoiceBinding();
+                     groupBinding = new ChoiceBinding(schema);
                      break;
                   case XSModelGroup.COMPOSITOR_SEQUENCE:
-                     groupBinding = new SequenceBinding();
+                     groupBinding = new SequenceBinding(schema);
                      break;
                   default:
                      throw new JBossXBRuntimeException("Unexpected model group: " + modelGroup.getCompositor());
@@ -707,6 +707,12 @@ public class XsdBinder
                if(log.isTraceEnabled())
                {
                   log.trace("created model group " + groupBinding);
+               }
+
+               XSAnnotation annotation = modelGroup.getAnnotation();
+               if(annotation != null)
+               {
+                  customizeTerm(annotation, groupBinding);
                }
 
                Object o = peekTypeOrGroup();
@@ -753,8 +759,7 @@ public class XsdBinder
 
    private static void bindWildcard(SchemaBinding schema, XSParticle particle)
    {
-      WildcardBinding binding = new WildcardBinding();
-      binding.setSchema(schema);
+      WildcardBinding binding = new WildcardBinding(schema);
 
       ModelGroupBinding group = (ModelGroupBinding)peekTypeOrGroup();
       ParticleBinding particleBinding = new ParticleBinding(binding);
@@ -882,162 +887,7 @@ public class XsdBinder
       XSAnnotation an = elementDec.getAnnotation();
       if(an != null)
       {
-         XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
-         XsdAppInfo appInfo = xsdAn.getAppInfo();
-         if(appInfo != null)
-         {
-            ClassMetaData classMetaData = appInfo.getClassMetaData();
-            if(classMetaData != null)
-            {
-               log.trace("element: name=" +
-                  new QName(elementDec.getNamespace(), elementDec.getName()) +
-                  ", class=" +
-                  classMetaData.getImpl()
-               );
-               element.setClassMetaData(classMetaData);
-            }
-
-            PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
-            if(propertyMetaData != null)
-            {
-               if(log.isTraceEnabled())
-               {
-                  log.trace("element: name=" +
-                     new QName(elementDec.getNamespace(), elementDec.getName()) +
-                     ", property=" +
-                     propertyMetaData.getName() +
-                     ", collectionType=" + propertyMetaData.getCollectionType()
-                  );
-               }
-               element.setPropertyMetaData(propertyMetaData);
-            }
-
-            MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
-            if(mapEntryMetaData != null)
-            {
-               if(propertyMetaData != null)
-               {
-                  throw new JBossXBRuntimeException("An element can be bound either as a property or as a map" +
-                     " entry but not both: " +
-                     new QName(elementDec.getNamespace(), elementDec.getName())
-                  );
-               }
-
-               if(log.isTraceEnabled())
-               {
-                  log.trace("element name=" +
-                     new QName(elementDec.getNamespace(), elementDec.getName()) +
-                     " is bound to a map entry: impl=" +
-                     mapEntryMetaData.getImpl() +
-                     ", getKeyMethod=" +
-                     mapEntryMetaData.getGetKeyMethod() +
-                     ", setKeyMethod=" +
-                     mapEntryMetaData.getSetKeyMethod() +
-                     ", getValueMethod=" +
-                     mapEntryMetaData.getGetValueMethod() +
-                     ", setValueMethod=" +
-                     mapEntryMetaData.getSetValueMethod() +
-                     ", valueType=" +
-                     mapEntryMetaData.getValueType() +
-                     ", nonNullValue=" + mapEntryMetaData.isNonNullValue()
-                  );
-               }
-
-               if(classMetaData != null)
-               {
-                  throw new JBossXBRuntimeException("Invalid element: both jbxb:class and jbxb:mapEntry are specified for element " +
-                     new QName(elementDec.getNamespace(), elementDec.getName())
-                  );
-               }
-               element.setMapEntryMetaData(mapEntryMetaData);
-            }
-
-            PutMethodMetaData putMethodMetaData = appInfo.getPutMethodMetaData();
-            if(putMethodMetaData != null)
-            {
-               if(log.isTraceEnabled())
-               {
-                  log.trace("element: name=" +
-                     new QName(elementDec.getNamespace(), elementDec.getName()) +
-                     ", putMethod=" +
-                     putMethodMetaData.getName() +
-                     ", keyType=" +
-                     putMethodMetaData.getKeyType() +
-                     ", valueType=" + putMethodMetaData.getValueType()
-                  );
-               }
-               element.setPutMethodMetaData(putMethodMetaData);
-            }
-
-            AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
-            if(addMethodMetaData != null)
-            {
-               if(log.isTraceEnabled())
-               {
-                  log.trace("element: name=" +
-                     new QName(elementDec.getNamespace(), elementDec.getName()) +
-                     ", addMethod=" +
-                     addMethodMetaData.getMethodName() +
-                     ", valueType=" +
-                     addMethodMetaData.getValueType() +
-                     ", isChildType=" + addMethodMetaData.isChildType()
-                  );
-               }
-               element.setAddMethodMetaData(addMethodMetaData);
-            }
-
-            ValueMetaData valueMetaData = appInfo.getValueMetaData();
-            if(valueMetaData != null)
-            {
-               if(log.isTraceEnabled())
-               {
-                  log.trace("element " +
-                     new QName(elementDec.getNamespace(), elementDec.getName()) +
-                     ": unmarshalMethod=" + valueMetaData.getUnmarshalMethod()
-                  );
-               }
-               element.setValueMetaData(valueMetaData);
-            }
-
-            boolean mapEntryKey = appInfo.isMapEntryKey();
-            if(mapEntryKey)
-            {
-               if(log.isTraceEnabled())
-               {
-                  log.trace("element name=" +
-                     new QName(elementDec.getNamespace(), elementDec.getName()) +
-                     ": is bound to a key in a map entry"
-                  );
-               }
-               element.setMapEntryKey(mapEntryKey);
-            }
-
-            boolean mapEntryValue = appInfo.isMapEntryValue();
-            if(mapEntryValue)
-            {
-               if(log.isTraceEnabled())
-               {
-                  log.trace("element name=" +
-                     new QName(elementDec.getNamespace(), elementDec.getName()) +
-                     ": is bound to a value in a map entry"
-                  );
-               }
-               element.setMapEntryValue(mapEntryValue);
-            }
-
-            boolean skip = appInfo.isSkip();
-            if(skip)
-            {
-               if(log.isTraceEnabled())
-               {
-                  log.trace("element name=" +
-                     new QName(elementDec.getNamespace(), elementDec.getName()) +
-                     ": will be skipped, it's attributes, character content and children will be set on the parent"
-                  );
-               }
-               element.setSkip(skip);
-            }
-         }
+         customizeTerm(an, element);
       }
       return particle;
    }
@@ -1053,6 +903,182 @@ public class XsdBinder
    }
 
    // Private
+
+   private static void customizeTerm(XSAnnotation an, TermBinding term)
+   {
+      XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
+      XsdAppInfo appInfo = xsdAn.getAppInfo();
+      if(appInfo != null)
+      {
+         boolean trace = log.isTraceEnabled();
+         Boolean skip = null;
+
+         ClassMetaData classMetaData = appInfo.getClassMetaData();
+         if(classMetaData != null)
+         {
+            if(trace)
+            {
+               String msg = term.isModelGroup() ? term + " bound to " : "element: name=" +
+                  ((ElementBinding)term).getQName() +
+                  ", class=";
+               msg += classMetaData.getImpl();
+               log.trace(msg);
+            }
+            term.setClassMetaData(classMetaData);
+            skip = Boolean.FALSE;
+         }
+
+         PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
+         if(propertyMetaData != null)
+         {
+            if(trace)
+            {
+               String msg = term.isModelGroup() ? term + " " : "element: name=" +
+                  ((ElementBinding)term).getQName() + ", ";
+               msg += " property=" +
+                  propertyMetaData.getName() +
+                  ", collectionType=" + propertyMetaData.getCollectionType();
+               log.trace(msg);
+            }
+            term.setPropertyMetaData(propertyMetaData);
+         }
+
+         MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
+         if(mapEntryMetaData != null)
+         {
+            if(propertyMetaData != null)
+            {
+               String msg = "A term can be bound either as a property or as a map" +
+                  " entry but not both: " +
+                  (term.isModelGroup() ? term.toString() : ((ElementBinding)term).getQName().toString());
+               throw new JBossXBRuntimeException(msg);
+            }
+
+            if(trace)
+            {
+               String msg = term.isModelGroup() ? term.toString() : "element name=" +
+                  ((ElementBinding)term).getQName();
+
+               msg += " is bound to a map entry: impl=" +
+                  mapEntryMetaData.getImpl() +
+                  ", getKeyMethod=" +
+                  mapEntryMetaData.getGetKeyMethod() +
+                  ", setKeyMethod=" +
+                  mapEntryMetaData.getSetKeyMethod() +
+                  ", getValueMethod=" +
+                  mapEntryMetaData.getGetValueMethod() +
+                  ", setValueMethod=" +
+                  mapEntryMetaData.getSetValueMethod() +
+                  ", valueType=" +
+                  mapEntryMetaData.getValueType() +
+                  ", nonNullValue=" + mapEntryMetaData.isNonNullValue();
+               log.trace(msg);
+            }
+
+            if(classMetaData != null)
+            {
+               String msg = "Invalid customization: both jbxb:class and jbxb:mapEntry are specified for term " +
+                  (term.isModelGroup() ? term.toString() : ((ElementBinding)term).getQName().toString());
+               throw new JBossXBRuntimeException(msg);
+            }
+            term.setMapEntryMetaData(mapEntryMetaData);
+            skip = Boolean.FALSE;
+         }
+
+         PutMethodMetaData putMethodMetaData = appInfo.getPutMethodMetaData();
+         if(putMethodMetaData != null)
+         {
+            if(trace)
+            {
+               String msg = term.isModelGroup() ? term.toString() : "element: name=" +
+                  ((ElementBinding)term).getQName() + ",";
+
+               msg += " putMethod=" +
+                  putMethodMetaData.getName() +
+                  ", keyType=" +
+                  putMethodMetaData.getKeyType() +
+                  ", valueType=" + putMethodMetaData.getValueType();
+               log.trace(msg);
+            }
+            term.setPutMethodMetaData(putMethodMetaData);
+         }
+
+         AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
+         if(addMethodMetaData != null)
+         {
+            if(trace)
+            {
+               String msg = term.isModelGroup() ? term.toString() : "element: name=" +
+                  ((ElementBinding)term).getQName() + ",";
+               msg += " addMethod=" +
+                  addMethodMetaData.getMethodName() +
+                  ", valueType=" +
+                  addMethodMetaData.getValueType() +
+                  ", isChildType=" + addMethodMetaData.isChildType();
+               log.trace(msg);
+            }
+            term.setAddMethodMetaData(addMethodMetaData);
+         }
+
+         ValueMetaData valueMetaData = appInfo.getValueMetaData();
+         if(valueMetaData != null)
+         {
+            if(trace)
+            {
+               String msg = term.isModelGroup() ? term.toString() : "element " +
+                  ((ElementBinding)term).getQName();
+               msg += ": unmarshalMethod=" + valueMetaData.getUnmarshalMethod();
+               log.trace(msg);
+            }
+            term.setValueMetaData(valueMetaData);
+         }
+
+         boolean mapEntryKey = appInfo.isMapEntryKey();
+         if(mapEntryKey)
+         {
+            if(trace)
+            {
+               String msg = term.isModelGroup() ? term.toString() : "element name=" +
+                  ((ElementBinding)term).getQName();
+               msg += ": is bound to a key in a map entry";
+               log.trace(msg);
+            }
+            term.setMapEntryKey(mapEntryKey);
+            skip = Boolean.FALSE;
+         }
+
+         boolean mapEntryValue = appInfo.isMapEntryValue();
+         if(mapEntryValue)
+         {
+            if(trace)
+            {
+               String msg = term.isModelGroup() ? term.toString() : "element name=" +
+                  ((ElementBinding)term).getQName();
+               msg += ": is bound to a value in a map entry";
+               log.trace(msg);
+            }
+            term.setMapEntryValue(mapEntryValue);
+            skip = Boolean.FALSE;
+         }
+
+         boolean skipAnnotation = appInfo.isSkip();
+         if(skip != null)
+         {
+            term.setSkip(skip);
+         }
+         else if(skipAnnotation)
+         {
+            if(trace)
+            {
+               String msg = term.isModelGroup() ? term.toString() : "element name=" +
+                  ((ElementBinding)term).getQName();
+               msg += ": will be skipped, it's attributes, character content and children will be set on the parent";
+               log.trace(msg);
+            }
+            term.setSkip(skipAnnotation ? Boolean.TRUE : Boolean.FALSE);
+         }
+      }
+   }
 
    private static void bindGlobalGroup(XSModelGroup group, SharedElements sharedElements)
    {

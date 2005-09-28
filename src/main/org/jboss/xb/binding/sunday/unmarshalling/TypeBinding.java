@@ -109,7 +109,7 @@ public class TypeBinding
       if(particle != null)
       {
          ModelGroupBinding modelGroup = (ModelGroupBinding)particle.getTerm();
-         element = modelGroup.newCursor().getElement(name, atts);
+         element = modelGroup.newCursor(particle).getElement(name, atts);
       }
 
       if(element == null && wildcard != null)
@@ -124,7 +124,7 @@ public class TypeBinding
       ModelGroupBinding modelGroup;
       if(this.particle == null)
       {
-         modelGroup = new AllBinding();
+         modelGroup = new AllBinding(schemaBinding);
          this.particle = new ParticleBinding(modelGroup);
 
          if(particle.isRepeatable() && particle.getTerm() instanceof ElementBinding)
@@ -269,18 +269,6 @@ public class TypeBinding
    public boolean isSimple()
    {
       return particle == null && attrs.isEmpty();
-   }
-
-   public boolean isArrayWrapper()
-   {
-      ModelGroupBinding modelGroup = (ModelGroupBinding)(particle == null ? null : particle.getTerm());
-      return arrayItem != null || modelGroup != null && modelGroup.getArrayItem() != null;
-   }
-
-   public ElementBinding getArrayItem()
-   {
-      ModelGroupBinding modelGroup = (ModelGroupBinding)(particle == null ? null : particle.getTerm());
-      return arrayItem == null ? (modelGroup == null ? null : modelGroup.getArrayItem()) : arrayItem;
    }
 
    public ClassMetaData getClassMetaData()

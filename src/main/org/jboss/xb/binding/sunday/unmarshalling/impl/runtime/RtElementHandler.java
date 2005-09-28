@@ -6,27 +6,28 @@
  */
 package org.jboss.xb.binding.sunday.unmarshalling.impl.runtime;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import org.jboss.logging.Logger;
+import org.jboss.util.Classes;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.GenericValueContainer;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.Util;
-import org.jboss.xb.binding.group.ValueListInitializer;
 import org.jboss.xb.binding.group.ValueList;
 import org.jboss.xb.binding.group.ValueListHandler;
+import org.jboss.xb.binding.group.ValueListInitializer;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.ClassMetaData;
 import org.jboss.xb.binding.metadata.MapEntryMetaData;
@@ -37,11 +38,12 @@ import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
-import org.jboss.util.Classes;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.xml.sax.Attributes;
 
 /**
@@ -55,232 +57,247 @@ public class RtElementHandler
 
    public static final RtElementHandler INSTANCE = new RtElementHandler();
 
-   public Object startElement(Object parent, QName elementName, ElementBinding element)
+   public Object startElement(Object parent, QName elementName, TermBinding term)
    {
-      if(element.isSkip())
+      if(term.isSkip())
       {
          return parent;
       }
 
-      Object o = null;
-      TypeBinding type = element.getType();
-      if(type.isStartElementCreatesObject())
+      if(!term.isModelGroup())
       {
-         ClassMetaData classMetaData = element.getClassMetaData();
-         MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
-
-         // todo: if addMethod is specified, it's probably some collection field
-         // but should not be set as a property. Instead, items are added to it using the addMethod
-         if(classMetaData == null && type.isArrayWrapper() && element.getAddMethodMetaData() == null)
+         TypeBinding type = ((ElementBinding)term).getType();
+         if(!type.isStartElementCreatesObject())
          {
-            if(parent == null)
+            return null;
+         }
+      }
+
+      Object o = null;
+      ClassMetaData classMetaData = term.getClassMetaData();
+      MapEntryMetaData mapEntryMetaData = term.getMapEntryMetaData();
+
+      // if addMethod is specified, it's probably some collection field
+      // but should not be set as a property. Instead, items are added to it using the addMethod
+      ElementBinding arrayItem = null;
+      if(!term.isModelGroup())
+      {
+         ParticleBinding typeParticle = ((ElementBinding)term).getType().getParticle();
+         ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());
+         arrayItem = modelGroup == null ? null : modelGroup.getArrayItem();
+      }
+
+      if(classMetaData == null && term.getAddMethodMetaData() == null && arrayItem != null)
+      {
+         if(parent == null)
+         {
+            TypeBinding itemType = arrayItem.getType();
+
+            Class itemCls;
+            QName itemTypeQName = itemType.getQName();
+            if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
             {
-               ElementBinding item = type.getArrayItem();
-               TypeBinding itemType = item.getType();
-
-               Class itemCls;
-               QName itemTypeQName = itemType.getQName();
-               if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
-               {
-                  itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart(), item.isNillable());
-               }
-               else
-               {
-                  ClassMetaData itemClsMetaData = itemType.getClassMetaData();
-                  String itemClsName = itemClsMetaData == null ? null : itemClsMetaData.getImpl();
-                  itemCls = getClass(itemClsName, item, item.getQName());
-               }
-
-               if(itemCls != null)
-               {
-                  o = GenericValueContainer.FACTORY.array(itemCls);
-               }
+               itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart(), arrayItem.isNillable());
             }
             else
             {
-               PropertyMetaData propertyMetaData = element.getPropertyMetaData();
-               String propName = propertyMetaData == null ? null : propertyMetaData.getName();
+               ClassMetaData itemClsMetaData = itemType.getClassMetaData();
+               String itemClsName = itemClsMetaData == null ? null : itemClsMetaData.getImpl();
+               itemCls = getClass(itemClsName, arrayItem, arrayItem.getQName());
+            }
 
-               String getterName = propName == null ?
-                  Util.xmlNameToGetMethodName(elementName.getLocalPart(), element.getSchema().isIgnoreLowLine()) :
-                  "get" + propName.charAt(0) + propName.substring(1);
+            if(itemCls != null)
+            {
+               o = GenericValueContainer.FACTORY.array(itemCls);
+            }
+         }
+         else
+         {
+            PropertyMetaData propertyMetaData = term.getPropertyMetaData();
+            String propName = propertyMetaData == null ? null : propertyMetaData.getName();
 
-               Class parentClass;
-               if(parent instanceof GenericValueContainer)
+            String getterName = propName == null ?
+               Util.xmlNameToGetMethodName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
+               "get" + propName.charAt(0) + propName.substring(1);
+
+            Class parentClass;
+            if(parent instanceof GenericValueContainer)
+            {
+               parentClass = ((GenericValueContainer)parent).getTargetClass();
+            }
+            else if(parent instanceof ValueList)
+            {
+               parentClass = ((ValueList)parent).getTargetClass();
+            }
+            else
+            {
+               parentClass = parent.getClass();
+            }
+
+            Class fieldType;
+            try
+            {
+               Method getter = parentClass.getMethod(getterName, null);
+               fieldType = getter.getReturnType();
+            }
+            catch(NoSuchMethodException e)
+            {
+               String fieldName = null;
+               try
                {
-                  parentClass = ((GenericValueContainer)parent).getTargetClass();
+                  fieldName = propName == null ?
+                     Util.xmlNameToFieldName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
+                     propName;
+                  Field field = parentClass.getField(fieldName);
+                  fieldType = field.getType();
                }
-               else if(parent instanceof ValueList)
+               catch(NoSuchFieldException e1)
                {
-                  parentClass = ((ValueList)parent).getTargetClass();
+                  throw new JBossXBRuntimeException("Failed to find field " +
+                     fieldName +
+                     " and getter " +
+                     getterName +
+                     " for term " +
+                     elementName +
+                     " in " +
+                     parentClass
+                  );
+               }
+            }
+
+            if(fieldType.isArray())
+            {
+               o = GenericValueContainer.FACTORY.array(fieldType.getComponentType());
+            }
+            else if(Collection.class.isAssignableFrom(fieldType))
+            {
+               o = new ArrayList();
+            }
+         }
+      }
+      else
+      {
+         if(mapEntryMetaData != null)
+         {
+            if(mapEntryMetaData.getImpl() != null)
+            {
+               Class cls = getClassForTerm(mapEntryMetaData.getImpl(), term, elementName);
+               o = newInstance(cls, elementName);
+            }
+            else
+            {
+               o = new MapEntry();
+            }
+
+            if(mapEntryMetaData.isNonNullValue() && mapEntryMetaData.getValueType() != null)
+            {
+               Class mapValueType;
+               try
+               {
+                  mapValueType =
+                     Thread.currentThread().getContextClassLoader().loadClass(mapEntryMetaData.getValueType());
+               }
+               catch(ClassNotFoundException e)
+               {
+                  throw new JBossXBRuntimeException("startElement failed for " +
+                     elementName +
+                     ": failed to load class " +
+                     mapEntryMetaData.getValueType() +
+                     " for map entry value."
+                  );
+               }
+
+               Object value;
+               try
+               {
+                  value = mapValueType.newInstance();
+               }
+               catch(Exception e)
+               {
+                  throw new JBossXBRuntimeException("startElement failed for " +
+                     elementName +
+                     ": failed to create an instance of " +
+                     mapValueType +
+                     " for map entry value."
+                  );
+               }
+
+               if(o instanceof MapEntry)
+               {
+                  ((MapEntry)o).setValue(value);
                }
                else
                {
-                  parentClass = parent.getClass();
-               }
+                  String getValueMethodName = mapEntryMetaData.getGetValueMethod();
+                  if(getValueMethodName == null)
+                  {
+                     getValueMethodName = "getValue";
+                  }
 
-               Class fieldType;
-               try
-               {
-                  Method getter = parentClass.getMethod(getterName, null);
-                  fieldType = getter.getReturnType();
-               }
-               catch(NoSuchMethodException e)
-               {
-                  String fieldName = null;
+                  String setValueMethodName = mapEntryMetaData.getSetValueMethod();
+                  if(setValueMethodName == null)
+                  {
+                     setValueMethodName = "setValue";
+                  }
+
+                  Method getValueMethod;
                   try
                   {
-                     fieldName = propName == null ?
-                        Util.xmlNameToFieldName(elementName.getLocalPart(), element.getSchema().isIgnoreLowLine()) :
-                        propName;
-                     Field field = parentClass.getField(fieldName);
-                     fieldType = field.getType();
+                     getValueMethod = o.getClass().getMethod(getValueMethodName, null);
                   }
-                  catch(NoSuchFieldException e1)
+                  catch(NoSuchMethodException e)
                   {
-                     throw new JBossXBRuntimeException("Failed to find field " +
-                        fieldName +
-                        " and getter " +
-                        getterName +
-                        " for element " +
-                        elementName +
-                        " in " +
-                        parentClass
+                     throw new JBossXBRuntimeException("getValueMethod=" +
+                        getValueMethodName +
+                        " is not found in map entry " + o.getClass()
                      );
                   }
-               }
 
-               if(fieldType.isArray())
-               {
-                  o = GenericValueContainer.FACTORY.array(fieldType.getComponentType());
-               }
-               else if(Collection.class.isAssignableFrom(fieldType))
-               {
-                  o = new ArrayList();
+                  Method setValueMethod;
+                  try
+                  {
+                     setValueMethod =
+                        o.getClass().getMethod(setValueMethodName, new Class[]{getValueMethod.getReturnType()});
+                  }
+                  catch(NoSuchMethodException e)
+                  {
+                     throw new JBossXBRuntimeException("setValueMethod=" +
+                        setValueMethodName +
+                        "(" +
+                        getValueMethod.getReturnType().getName() +
+                        " value) is not found in map entry " + o.getClass()
+                     );
+                  }
+
+                  try
+                  {
+                     setValueMethod.invoke(o, new Object[]{value});
+                  }
+                  catch(Exception e)
+                  {
+                     throw new JBossXBRuntimeException("setValueMethod=" +
+                        setValueMethodName +
+                        " failed: owner=" +
+                        o +
+                        ", value=" + value + ", msg=" + e.getMessage(), e
+                     );
+                  }
                }
             }
          }
          else
          {
-            if(mapEntryMetaData != null)
+            // todo: for now we require metadata for model groups to be bound
+            Class cls = classMetaData == null ?
+               getClass(null, (ElementBinding)term, elementName) :
+               getClassForTerm(classMetaData.getImpl(), term, elementName);
+            if(cls != null)
             {
-               if(mapEntryMetaData.getImpl() != null)
-               {
-                  Class cls = getClass(mapEntryMetaData.getImpl(), element, elementName);
-                  o = newInstance(cls, elementName, type);
-               }
-               else
-               {
-                  o = new MapEntry();
-               }
-
-               if(mapEntryMetaData.isNonNullValue() && mapEntryMetaData.getValueType() != null)
-               {
-                  Class mapValueType;
-                  try
-                  {
-                     mapValueType =
-                        Thread.currentThread().getContextClassLoader().loadClass(mapEntryMetaData.getValueType());
-                  }
-                  catch(ClassNotFoundException e)
-                  {
-                     throw new JBossXBRuntimeException("startElement failed for " +
-                        elementName +
-                        ": failed to load class " +
-                        mapEntryMetaData.getValueType() +
-                        " for map entry value."
-                     );
-                  }
-
-                  Object value;
-                  try
-                  {
-                     value = mapValueType.newInstance();
-                  }
-                  catch(Exception e)
-                  {
-                     throw new JBossXBRuntimeException("startElement failed for " +
-                        elementName +
-                        ": failed to create an instance of " +
-                        mapValueType +
-                        " for map entry value."
-                     );
-                  }
-
-                  if(o instanceof MapEntry)
-                  {
-                     ((MapEntry)o).setValue(value);
-                  }
-                  else
-                  {
-                     String getValueMethodName = mapEntryMetaData.getGetValueMethod();
-                     if(getValueMethodName == null)
-                     {
-                        getValueMethodName = "getValue";
-                     }
-
-                     String setValueMethodName = mapEntryMetaData.getSetValueMethod();
-                     if(setValueMethodName == null)
-                     {
-                        setValueMethodName = "setValue";
-                     }
-
-                     Method getValueMethod;
-                     try
-                     {
-                        getValueMethod = o.getClass().getMethod(getValueMethodName, null);
-                     }
-                     catch(NoSuchMethodException e)
-                     {
-                        throw new JBossXBRuntimeException("getValueMethod=" +
-                           getValueMethodName +
-                           " is not found in map entry " + o.getClass()
-                        );
-                     }
-
-                     Method setValueMethod;
-                     try
-                     {
-                        setValueMethod =
-                           o.getClass().getMethod(setValueMethodName, new Class[]{getValueMethod.getReturnType()});
-                     }
-                     catch(NoSuchMethodException e)
-                     {
-                        throw new JBossXBRuntimeException("setValueMethod=" +
-                           setValueMethodName +
-                           "(" +
-                           getValueMethod.getReturnType().getName() +
-                           " value) is not found in map entry " + o.getClass()
-                        );
-                     }
-
-                     try
-                     {
-                        setValueMethod.invoke(o, new Object[]{value});
-                     }
-                     catch(Exception e)
-                     {
-                        throw new JBossXBRuntimeException("setValueMethod=" +
-                           setValueMethodName +
-                           " failed: owner=" +
-                           o +
-                           ", value=" + value + ", msg=" + e.getMessage(), e
-                        );
-                     }
-                  }
-               }
-            }
-            else
-            {
-               String clsName = classMetaData == null ? null : classMetaData.getImpl();
-               Class cls = getClass(clsName, element, elementName);
-               if(cls != null)
-               {
-                  o = newInstance(cls, elementName, type);
-               }
+               o = newInstance(cls, elementName);
             }
          }
       }
+
       return o;
    }
 
@@ -326,55 +343,52 @@ public class RtElementHandler
       }
    }
 
-   public Object endElement(Object o, QName elementName, ElementBinding element)
+   // ParticleHandler impl
+
+   public Object startParticle(Object parent,
+                               QName elementName,
+                               ParticleBinding particle,
+                               Attributes attrs,
+                               NamespaceContext nsCtx)
    {
-      if(element.isSkip())
+      TermBinding term = particle.getTerm();
+      Object o = startElement(parent, elementName, term);
+      if(!term.isModelGroup())
       {
-         return o;
-      }
-
-      if(o instanceof GenericValueContainer)
-      {
-         try
+         ElementBinding element = (ElementBinding)term;
+         if(o != null)
          {
-            o = ((GenericValueContainer)o).instantiate();
-         }
-         catch(RuntimeException e)
-         {
-            throw new JBossXBRuntimeException("Container failed to create an instance for " +
-               elementName +
-               ": " + e.getMessage(), e
-            );
+            attrs = element.getType().expandWithDefaultAttributes(attrs);
+            attributes(o, elementName, element, attrs, nsCtx);
          }
       }
-      else if(o instanceof ValueList)
-      {
-         ValueList valueList = (ValueList)o;
-         o = valueList.getHandler().newInstance(valueList);
-      }
-
       return o;
    }
 
-   public void setParent(Object parent, Object o, QName qName, ParticleBinding particle, ParticleBinding parentParticle)
+   public void setParent(Object parent,
+                         Object o,
+                         QName qName,
+                         ParticleBinding particle,
+                         ParticleBinding parentParticle)
    {
-      ElementBinding element = (ElementBinding)particle.getTerm();
-      ElementBinding parentElement = (ElementBinding)parentParticle.getTerm();
-      if(element.isSkip())
+      TermBinding term = particle.getTerm();
+      if(term.isSkip())
       {
          return;
       }
 
-      if(element.isMapEntryKey())
+      TermBinding parentTerm = parentParticle.getTerm();
+
+      if(term.isMapEntryKey())
       {
          if(parent instanceof MapEntry)
          {
             MapEntry mapEntry = (MapEntry)parent;
             mapEntry.setKey(o);
          }
-         else if(parentElement != null)
+         else if(parentTerm != null)
          {
-            MapEntryMetaData mapEntryMetaData = getMapEntryMetaData(parentElement, qName);
+            MapEntryMetaData mapEntryMetaData = getMapEntryMetaData(parentTerm, qName);
 
             String getKeyMethodName = mapEntryMetaData.getGetKeyMethod();
             if(getKeyMethodName == null)
@@ -396,29 +410,29 @@ public class RtElementHandler
          {
             throw new JBossXBRuntimeException(
                "Element " +
-                  qName +
-                  " bound as map entry key but parent element is not recognized as map entry and its metadata is not available."
+               qName +
+               " bound as map entry key but parent element is not recognized as map entry and its metadata is not available."
             );
          }
       }
-      else if(element.isMapEntryValue())
+      else if(term.isMapEntryValue())
       {
          if(parent instanceof MapEntry)
          {
             MapEntry mapEntry = (MapEntry)parent;
             mapEntry.setValue(o);
          }
-         else if(parentElement != null)
+         else if(parentTerm != null)
          {
-            MapEntryMetaData mapEntryMetaData = getMapEntryMetaData(parentElement, qName);
+            MapEntryMetaData mapEntryMetaData = getMapEntryMetaData(parentTerm, qName);
             setMapEntryValue(mapEntryMetaData, parent, o);
          }
          else
          {
             throw new JBossXBRuntimeException(
                "Element " +
-                  qName +
-                  " bound as map entry key but parent element is not recognized as map entry and its metadata is not available."
+               qName +
+               " bound as map entry key but parent element is not recognized as map entry and its metadata is not available."
             );
          }
       }
@@ -431,23 +445,20 @@ public class RtElementHandler
             owner = mapEntry.getValue();
             if(owner == null)
             {
-               if(parentElement == null)
+               if(parentTerm == null)
                {
-                  throw new JBossXBRuntimeException(
-                     "Binding metadata needed for lazy map entry value instantiation is not available " +
-                        "for parent element of element " +
-                        qName
+                  throw new JBossXBRuntimeException("Binding metadata needed for lazy map entry value instantiation is not available " +
+                     "for parent element of element " +
+                     qName
                   );
                }
 
-               MapEntryMetaData mapEntryMetaData = getMapEntryMetaData(parentElement, qName);
+               MapEntryMetaData mapEntryMetaData = getMapEntryMetaData(parentTerm, qName);
                String valueType = mapEntryMetaData.getValueType();
                if(valueType == null)
                {
                   throw new JBossXBRuntimeException("Element " +
                      qName +
-                     " of type " +
-                     element.getType() +
                      " is supposed to be bound as map entry value with lazy value instantiation " +
                      "but value type is not specified in its map entry metadata."
                   );
@@ -480,26 +491,26 @@ public class RtElementHandler
             }
          }
 
-         if(element.getPutMethodMetaData() != null ||
-            element.getMapEntryMetaData() != null && owner instanceof Map)
+         if(term.getPutMethodMetaData() != null ||
+            term.getMapEntryMetaData() != null && owner instanceof Map)
          {
-            invokePut(qName, element, owner, o);
+            invokePut(qName, term, owner, o);
          }
-         else if(element.getAddMethodMetaData() != null)
+         else if(term.getAddMethodMetaData() != null)
          {
-            invokeAdd(qName, element, owner, o);
+            invokeAdd(qName, term, owner, o);
          }
          else
          {
             PropertyMetaData propertyMetaData = null;
-            if(parentElement != null && parentElement.getType().hasWildcard())
+            if(parentTerm != null && !parentTerm.isModelGroup())
             {
-               propertyMetaData = parentElement.getType().getWildcardPropertyMetaData();
+               propertyMetaData = ((ElementBinding)parentTerm).getType().getWildcardPropertyMetaData();
             }
 
             if(propertyMetaData == null)
             {
-               propertyMetaData = element.getPropertyMetaData();
+               propertyMetaData = term.getPropertyMetaData();
             }
 
             /*
@@ -522,7 +533,7 @@ public class RtElementHandler
                   String propName = propertyMetaData == null ? null : propertyMetaData.getName();
                   if(propName == null)
                   {
-                     propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getSchema().isIgnoreLowLine());
+                     propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
                   }
 
                   Class fieldType;
@@ -534,7 +545,7 @@ public class RtElementHandler
                   {
                      String msg = "Neither getter/setter nor field were found for field " +
                         propName + " in " + valueList.getTargetClass();
-                     if(element.getSchema().isIgnoreUnresolvedFieldOrClass())
+                     if(term.getSchema().isIgnoreUnresolvedFieldOrClass())
                      {
                         log.warn(msg);
                         return;
@@ -555,8 +566,10 @@ public class RtElementHandler
                            }
                            catch(Exception e)
                            {
-                              throw new JBossXBRuntimeException("Failed to create an instance of " + fieldType +
-                                 " for element " + qName);
+                              throw new JBossXBRuntimeException("Failed to create an instance of " +
+                                 fieldType +
+                                 " for element " + qName
+                              );
                            }
                         }
                         else if(Set.class.isAssignableFrom(fieldType))
@@ -567,7 +580,8 @@ public class RtElementHandler
                         {
                            col = new ArrayList();
                         }
-                        initializer.addElementValue(qName, element, valueList, col);
+                        // todo: add support for terms
+                        initializer.addElementValue(qName, (ElementBinding)term, valueList, col);
                      }
                      col.add(o);
                   }
@@ -587,17 +601,21 @@ public class RtElementHandler
                         System.arraycopy(tmp, 0, arr, 0, index);
                      }
                      Array.set(arr, index, o);
-                     initializer.addElementValue(qName, element, valueList, arr);
+                     // todo: add support for terms
+                     initializer.addElementValue(qName, (ElementBinding)term, valueList, arr);
                   }
                   else
                   {
-                     throw new JBossXBRuntimeException("Failed to recognize collection type of " + fieldType +
-                        " for element " + qName);
+                     throw new JBossXBRuntimeException("Failed to recognize collection type of " +
+                        fieldType +
+                        " for element " + qName
+                     );
                   }
                }
                else
                {
-                  initializer.addElementValue(qName, element, valueList, o);
+                  // todo: add support for terms
+                  initializer.addElementValue(qName, (ElementBinding)term, valueList, o);
                }
             }
             else if(propertyMetaData != null)
@@ -605,12 +623,12 @@ public class RtElementHandler
                String propName = propertyMetaData.getName();
                if(propName == null)
                {
-                  propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getSchema().isIgnoreLowLine());
+                  propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
                }
 
                RtUtil.set(owner, o, propName, propertyMetaData.getCollectionType(),
-                  element.getSchema().isIgnoreUnresolvedFieldOrClass(),
-                  element.getValueAdapter()
+                  term.getSchema().isIgnoreUnresolvedFieldOrClass(),
+                  term.getValueAdapter()
                );
             }
             else if(owner instanceof Collection)
@@ -620,14 +638,45 @@ public class RtElementHandler
             else
             {
                // no metadata available
-               String propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getSchema().isIgnoreLowLine());
+               String propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
                RtUtil.set(owner, o, propName, null,
-                  element.getSchema().isIgnoreUnresolvedFieldOrClass(),
-                  element.getValueAdapter()
+                  term.getSchema().isIgnoreUnresolvedFieldOrClass(),
+                  term.getValueAdapter()
                );
             }
          }
       }
+   }
+
+   public Object endParticle(Object o, QName elementName, ParticleBinding particle)
+   {
+      TermBinding term = particle.getTerm();
+      if(term.isSkip())
+      {
+         return o;
+      }
+
+      if(o instanceof GenericValueContainer)
+      {
+         try
+         {
+            o = ((GenericValueContainer)o).instantiate();
+         }
+         catch(RuntimeException e)
+         {
+            throw new JBossXBRuntimeException("Container failed to create an instance for " +
+               elementName +
+               ": " + e.getMessage(), e
+            );
+         }
+      }
+      else if(o instanceof ValueList)
+      {
+         ValueList valueList = (ValueList)o;
+         o = valueList.getHandler().newInstance(valueList);
+      }
+
+      return o;
    }
 
    // Private
@@ -701,25 +750,36 @@ public class RtElementHandler
       return setKeyMethod;
    }
 
-   private static MapEntryMetaData getMapEntryMetaData(ElementBinding element, QName qName)
+   private static MapEntryMetaData getMapEntryMetaData(TermBinding term, QName qName)
    {
-      MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
+      MapEntryMetaData mapEntryMetaData = term.getMapEntryMetaData();
       if(mapEntryMetaData == null)
       {
-         throw new JBossXBRuntimeException("Element " +
-            qName +
-            " bound as map entry key or value but map entry metadata is not available for its parent element nor its " +
-            (element.getType().getQName() == null ?
+         String msg;
+         if(term.isModelGroup())
+         {
+            msg = "Term " +
+               qName +
+               " bound as map entry key or value but map entry metadata is not available for its parent term.";
+         }
+         else
+         {
+            ElementBinding element = (ElementBinding)term;
+            msg = "Element " +
+               qName +
+               " bound as map entry key or value but map entry metadata is not available for its parent element nor its " +
+               (element.getType().getQName() == null ?
                "annonymous" :
                element.getType().getQName().toString()
-            ) +
-            " type."
-         );
+               ) +
+               " type.";
+         }
+         throw new JBossXBRuntimeException(msg);
       }
       return mapEntryMetaData;
    }
 
-   private static Object newInstance(Class cls, QName elementName, TypeBinding type)
+   private static Object newInstance(Class cls, QName elementName)
    {
       Object o;
       try
@@ -740,9 +800,7 @@ public class RtElementHandler
                throw new JBossXBRuntimeException("Failed to create an instance of " +
                   cls +
                   " using default constructor for element " +
-                  elementName +
-                  " of type " +
-                  type.getQName() + ": " + e.getMessage(), e
+                  elementName + ": " + e.getMessage(), e
                );
             }
          }
@@ -778,23 +836,26 @@ public class RtElementHandler
          }
       }
 
+      return getClassForTerm(localClassName, element, elementName);
+   }
+
+   private static Class getClassForTerm(String className, TermBinding term, QName elementName)
+   {
       Class cls = null;
       try
       {
-         cls = Thread.currentThread().getContextClassLoader().loadClass(localClassName);
+         cls = Thread.currentThread().getContextClassLoader().loadClass(className);
       }
       catch(ClassNotFoundException e)
       {
-         if(element.getSchema().isIgnoreUnresolvedFieldOrClass())
+         if(term.getSchema().isIgnoreUnresolvedFieldOrClass())
          {
             if(log.isTraceEnabled())
             {
                log.trace("Failed to resolve class for element " +
                   elementName +
-                  " of type " +
-                  type.getQName() +
                   ": " +
-                  localClassName
+                  className
                );
             }
          }
@@ -802,8 +863,6 @@ public class RtElementHandler
          {
             throw new JBossXBRuntimeException("Failed to resolve class name for " +
                elementName +
-               " of type " +
-               type.getQName() +
                ": " +
                e.getMessage()
             );
@@ -812,9 +871,9 @@ public class RtElementHandler
       return cls;
    }
 
-   private void invokeAdd(QName qName, ElementBinding element, Object owner, Object o)
+   private void invokeAdd(QName qName, TermBinding term, Object owner, Object o)
    {
-      AddMethodMetaData addMethodMetaData = element.getAddMethodMetaData();
+      AddMethodMetaData addMethodMetaData = term.getAddMethodMetaData();
       Class valueType = Object.class;
       if(addMethodMetaData.getValueType() != null)
       {
@@ -837,12 +896,12 @@ public class RtElementHandler
       {
          if(o == null)
          {
-            throw new JBossXBRuntimeException(
-               "addMethod=" +
-                  addMethodMetaData.getMethodName() +
-                  " for element " + qName +
-                  " is configured with valueType='child'. The valueType cannot be determined because" +
-                  " the child is null"
+            throw new JBossXBRuntimeException("addMethod=" +
+               addMethodMetaData.getMethodName() +
+               " for element " +
+               qName +
+               " is configured with valueType='child'. The valueType cannot be determined because" +
+               " the child is null"
             );
          }
          valueType = o.getClass();
@@ -890,21 +949,20 @@ public class RtElementHandler
       }
    }
 
-   private void invokePut(QName qName, ElementBinding element, Object owner, Object o)
+   private void invokePut(QName qName, TermBinding term, Object owner, Object o)
    {
-      PutMethodMetaData putMethodMetaData = element.getPutMethodMetaData();
+      PutMethodMetaData putMethodMetaData = term.getPutMethodMetaData();
 
-      MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
+      MapEntryMetaData mapEntryMetaData = term.getMapEntryMetaData();
       if(mapEntryMetaData == null)
       {
          throw new JBossXBRuntimeException((putMethodMetaData == null ?
             "Parent object is an instance of java.util.Map" :
             "putMethod is specified for element " + qName
-         ) +
+            ) +
             " but mapEntry is specified for neither element " +
             qName +
-            " nor it's type " +
-            element.getType().getQName()
+            " nor it's type."
          );
       }
 
@@ -1069,28 +1127,5 @@ public class RtElementHandler
             e
          );
       }
-   }
-
-   // ParticleHandler impl
-
-   public Object startParticle(Object parent,
-                               QName elementName,
-                               ParticleBinding particle,
-                               Attributes attrs,
-                               NamespaceContext nsCtx)
-   {
-      ElementBinding element = (ElementBinding)particle.getTerm();
-      Object o = startElement(parent, elementName, element);
-      if(o != null)
-      {
-         attrs = element.getType().expandWithDefaultAttributes(attrs);
-         attributes(o, elementName, element, attrs, nsCtx);
-      }
-      return o;
-   }
-
-   public Object endParticle(Object o, QName elementName, ParticleBinding particle)
-   {
-      return endElement(o, elementName, (ElementBinding)particle.getTerm());
    }
 }

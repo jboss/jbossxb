@@ -29,6 +29,11 @@ public class AllBinding
 
    private Map elements = Collections.EMPTY_MAP;
 
+   public AllBinding(SchemaBinding schema)
+   {
+      super(schema);
+   }
+
    public ElementBinding getArrayItem()
    {
       return null;
@@ -60,9 +65,9 @@ public class AllBinding
       return Collections.unmodifiableCollection(elements.values());
    }
 
-   public Cursor newCursor()
+   public Cursor newCursor(ParticleBinding particle)
    {
-      return new Cursor(this)
+      return new Cursor(particle)
       {
          private ParticleBinding curElement;
 

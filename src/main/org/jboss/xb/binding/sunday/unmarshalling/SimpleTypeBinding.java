@@ -20,7 +20,7 @@ public class SimpleTypeBinding
 {
    private static final RtElementHandler DEFAULT_HANDLER = new RtElementHandler()
    {
-      public Object startElement(Object parent, QName qName, ElementBinding element)
+      public Object startParticle(Object parent, QName qName, ParticleBinding particle)
       {
          return null;
       }

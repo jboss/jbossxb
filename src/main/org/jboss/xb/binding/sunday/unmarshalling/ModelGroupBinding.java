@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.Collection;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
@@ -23,11 +24,28 @@ import org.xml.sax.Attributes;
  * @version <tt>$Revision$</tt>
  */
 public abstract class ModelGroupBinding
-   implements TermBinding, Cloneable
+   extends TermBinding
+   implements Cloneable
 {
    protected static final Logger log = Logger.getLogger(ModelGroupBinding.class);
 
    protected boolean requiredParticle;
+   protected ParticleHandler handler = RtElementHandler.INSTANCE;
+
+   protected ModelGroupBinding(SchemaBinding schema)
+   {
+      super(schema);
+   }
+
+   public ParticleHandler getHandler()
+   {
+      return handler;
+   }
+
+   public void setHandler(ParticleHandler handler)
+   {
+      this.handler = handler;
+   }
 
    public abstract ElementBinding getArrayItem();
 
@@ -62,7 +80,7 @@ public abstract class ModelGroupBinding
       return mayStartWith(qName, Collections.EMPTY_SET);
    }
 
-   public abstract Cursor newCursor();
+   public abstract Cursor newCursor(ParticleBinding particle);
 
    public Object clone() throws CloneNotSupportedException
    {
@@ -73,6 +91,11 @@ public abstract class ModelGroupBinding
 
    protected abstract boolean mayStartWith(QName qName, Set set);
 
+   public boolean isSkip()
+   {
+      return skip == null ? true : skip.booleanValue();
+   }
+
    public boolean isModelGroup()
    {
       return true;
@@ -82,16 +105,21 @@ public abstract class ModelGroupBinding
 
    public static abstract class Cursor
    {
-      protected final ModelGroupBinding group;
+      protected final ParticleBinding particle;
 
-      protected Cursor(ModelGroupBinding theGroup)
+      protected Cursor(ParticleBinding particle)
       {
-         this.group = theGroup;
+         this.particle = particle;
+      }
+
+      public ParticleBinding getParticle()
+      {
+         return particle;
       }
 
       public ModelGroupBinding getModelGroup()
       {
-         return group;
+         return (ModelGroupBinding)particle.getTerm();
       }
 
       public abstract ParticleBinding getCurrentParticle();
@@ -152,7 +180,7 @@ public abstract class ModelGroupBinding
                         passedGroups.add(this);
                   }
 
-                  ElementBinding e = modelGroup.newCursor().getElement(qName, atts, passedGroups);
+                  ElementBinding e = modelGroup.newCursor(nextParticle).getElement(qName, atts, passedGroups);
                   if(e != null)
                   {
                      element = e;

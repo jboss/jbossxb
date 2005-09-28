@@ -78,7 +78,10 @@ public class RtUtil
          }
       }
 
-      value = valueAdapter.cast(value, fieldType);
+      if(valueAdapter != null)
+      {
+         value = valueAdapter.cast(value, fieldType);
+      }
 
       if(colType != null ||
          // todo collections of collections

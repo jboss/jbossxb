@@ -26,6 +26,11 @@ public class ChoiceBinding
 {
    private List choices = Collections.EMPTY_LIST;
 
+   public ChoiceBinding(SchemaBinding schema)
+   {
+      super(schema);
+   }
+
    public ElementBinding getArrayItem()
    {
       return null;
@@ -52,9 +57,9 @@ public class ChoiceBinding
       return Collections.unmodifiableCollection(choices);
    }
 
-   public Cursor newCursor()
+   public Cursor newCursor(ParticleBinding particle)
    {
-      return new Cursor(this)
+      return new Cursor(particle)
       {
          private int pos = -1;
          private ElementBinding element;
@@ -190,7 +195,7 @@ public class ChoiceBinding
                      }
 
                      int groupStackSize = groupStack.size();
-                     groupStack = modelGroup.newCursor().startElement(
+                     groupStack = modelGroup.newCursor(particle).startElement(
                         qName, atts, passedGroups, groupStack, particle.isRequired(occurs)
                      );
 

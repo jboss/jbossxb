@@ -15,19 +15,13 @@ import org.jboss.xb.binding.Util;
  * @version <tt>$Revision$</tt>
  */
 public class WildcardBinding
-   implements TermBinding
+   extends TermBinding
 {
-   private SchemaBinding schema;
    private SchemaBindingResolver schemaResolver;
 
-   public SchemaBinding getSchema()
+   public WildcardBinding(SchemaBinding schema)
    {
-      return schema;
-   }
-
-   public void setSchema(SchemaBinding schema)
-   {
-      this.schema = schema;
+      super(schema);
    }
 
    public SchemaBindingResolver getSchemaResolver()
@@ -61,6 +55,11 @@ public class WildcardBinding
       }
 
       return element;
+   }
+
+   public boolean isSkip()
+   {
+      return skip == null ? false : skip.booleanValue();
    }
 
    public boolean isModelGroup()

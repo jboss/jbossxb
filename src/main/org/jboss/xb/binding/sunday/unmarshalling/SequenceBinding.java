@@ -27,6 +27,11 @@ public class SequenceBinding
    private List sequence = Collections.EMPTY_LIST;
    private ElementBinding arrayItem;
 
+   public SequenceBinding(SchemaBinding schema)
+   {
+      super(schema);
+   }
+
    public ElementBinding getArrayItem()
    {
       return arrayItem;
@@ -61,9 +66,9 @@ public class SequenceBinding
       return Collections.unmodifiableCollection(sequence);
    }
 
-   public Cursor newCursor()
+   public Cursor newCursor(ParticleBinding particle)
    {
-      return new Cursor(this)
+      return new Cursor(particle)
       {
          private int pos = -1;
          private ElementBinding element;
@@ -214,7 +219,7 @@ public class SequenceBinding
                      }
 
                      int groupStackSize = groupStack.size();
-                     groupStack = modelGroup.newCursor().startElement(
+                     groupStack = modelGroup.newCursor(particle).startElement(
                         qName, atts, passedGroups, groupStack, particle.isRequired(occurs)
                      );
 

@@ -138,6 +138,8 @@ public abstract class ModelGroupBinding
 
       public abstract void endElement(QName qName);
 
+      public abstract int getOccurence();
+
       // Protected
 
       protected abstract List startElement(QName qName,

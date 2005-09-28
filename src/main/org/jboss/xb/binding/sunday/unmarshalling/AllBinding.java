@@ -69,15 +69,16 @@ public class AllBinding
    {
       return new Cursor(particle)
       {
-         private ParticleBinding curElement;
+         private ParticleBinding curParticle;
+         private int occurence;
 
          public ParticleBinding getCurrentParticle()
          {
-            if(curElement == null)
+            if(curParticle == null)
             {
                throw new JBossXBRuntimeException("The cursor in all group has not been positioned yet!");
             }
-            return curElement;
+            return curParticle;
          }
 
          public ElementBinding getElement()
@@ -87,12 +88,17 @@ public class AllBinding
 
          public void endElement(QName qName)
          {
-            if(curElement == null || !getElement().getQName().equals(qName))
+            if(curParticle == null || !getElement().getQName().equals(qName))
             {
                throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
-                  " since the current element is " + (curElement == null ? null : getElement().getQName())
+                  " since the current element is " + (curParticle == null ? null : getElement().getQName())
                );
             }
+         }
+
+         public int getOccurence()
+         {
+            return occurence;
          }
 
          protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
@@ -100,7 +106,15 @@ public class AllBinding
             ParticleBinding particle = (ParticleBinding)elements.get(qName);
             if(particle != null)
             {
-               curElement = particle;
+               if(curParticle == particle)
+               {
+                  ++occurence;
+               }
+               else
+               {
+                  curParticle = particle;
+                  occurence = 1;
+               }
                groupStack = addItem(groupStack, this);
             }
             else

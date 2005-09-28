@@ -240,6 +240,7 @@ public class SundayContentHandler
                else
                {
                   ModelGroupBinding.Cursor cursor = item.cursor;
+                  int currentOccurence = cursor.getOccurence();
                   List newCursors = cursor.startElement(startName, atts);
                   if(newCursors.isEmpty())
                   {
@@ -248,6 +249,17 @@ public class SundayContentHandler
                   }
                   else
                   {
+                     if(cursor.getOccurence() - currentOccurence > 0)
+                     {
+                        item = endParticle(item, startName);
+
+                        ParticleBinding modelGroupParticle = cursor.getParticle();
+                        ParticleHandler handler = ((ModelGroupBinding)modelGroupParticle.getTerm()).getHandler();
+                        Object o = handler.startParticle(item.o, startName, modelGroupParticle, atts, nsRegistry);
+
+                        item = push(cursor, o);
+                     }
+
                      // push all except the last one
                      for(int i = newCursors.size() - 2; i >= 0; --i)
                      {
@@ -584,7 +596,7 @@ public class SundayContentHandler
       }
    }
 
-   private void push(ModelGroupBinding.Cursor cursor, Object o)
+   private StackItem push(ModelGroupBinding.Cursor cursor, Object o)
    {
       StackItem item = new StackItem(cursor, null, o);
       stack.push(item);
@@ -592,6 +604,7 @@ public class SundayContentHandler
       {
          log.trace("pushed cursor " + cursor);
       }
+      return item;
    }
 
    private StackItem pop()

@@ -63,7 +63,7 @@ public class ChoiceBinding
       {
          private int pos = -1;
          private ElementBinding element;
-         private int occurs;
+         private int occurence;
 
          public ParticleBinding getCurrentParticle()
          {
@@ -100,6 +100,11 @@ public class ChoiceBinding
             {
                log.trace("endElement " + qName + " in " + getModelGroup());
             }
+         }
+
+         public int getOccurence()
+         {
+            return occurence;
          }
 
          protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
@@ -141,8 +146,8 @@ public class ChoiceBinding
             {
                ParticleBinding particle = getCurrentParticle();
                if(particle.getMaxOccursUnbounded() ||
-                  occurs < particle.getMinOccurs() ||
-                  occurs < particle.getMaxOccurs())
+                  occurence < particle.getMinOccurs() ||
+                  occurence < particle.getMaxOccurs())
                {
                   --i;
                }
@@ -161,12 +166,12 @@ public class ChoiceBinding
                   {
                      if(pos == i)
                      {
-                        ++occurs;
+                        ++occurence;
                      }
                      else
                      {
                         pos = i;
-                        occurs = 1;
+                        occurence = 1;
                      }
                      groupStack = addItem(groupStack, this);
                      this.element = element;
@@ -196,7 +201,7 @@ public class ChoiceBinding
 
                      int groupStackSize = groupStack.size();
                      groupStack = modelGroup.newCursor(particle).startElement(
-                        qName, atts, passedGroups, groupStack, particle.isRequired(occurs)
+                        qName, atts, passedGroups, groupStack, particle.isRequired(occurence)
                      );
 
                      if(groupStackSize != groupStack.size())
@@ -204,11 +209,11 @@ public class ChoiceBinding
                         if(pos != i)
                         {
                            pos = i;
-                           occurs = 1;
+                           occurence = 1;
                         }
                         else
                         {
-                           ++occurs;
+                           ++occurence;
                         }
                         groupStack = addItem(groupStack, this);
                         element = null;
@@ -225,11 +230,11 @@ public class ChoiceBinding
                      if(pos != i)
                      {
                         pos = i;
-                        occurs = 1;
+                        occurence = 1;
                      }
                      else
                      {
-                        ++occurs;
+                        ++occurence;
                      }
                      groupStack = addItem(groupStack, this);
                      break;

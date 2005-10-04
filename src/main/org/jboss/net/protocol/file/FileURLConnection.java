@@ -40,7 +40,9 @@ public class FileURLConnection
    static boolean decodeFilePaths = false;
    static
    {
-      decodeFilePaths = Boolean.getBoolean("org.jboss.net.protocol.file.decodeFilePaths");
+      String flag = System.getProperty("org.jboss.net.protocol.file.decodeFilePaths");
+      if( flag != null )
+         decodeFilePaths = Boolean.getBoolean(flag);
    }
    protected File file;
 

@@ -17,8 +17,6 @@ import org.jboss.logging.Logger;
  */
 public class BasicTaskWrapper implements TaskWrapper
 {
-   // Constants -----------------------------------------------------
-
    /** The log */
    private static final Logger log = Logger.getLogger(BasicTaskWrapper.class);
 
@@ -39,8 +37,6 @@ public class BasicTaskWrapper implements TaskWrapper
 
    /** The task has been stopped */
    public static final int TASK_STOPPED = -2;
-
-   // Attributes ----------------------------------------------------
 
    /** The state of the task */
    private int state = TASK_NOT_ACCEPTED;
@@ -72,10 +68,6 @@ public class BasicTaskWrapper implements TaskWrapper
    /** The thread */
    private Thread runThread;
 
-   // Static --------------------------------------------------------
-
-   // Constructors --------------------------------------------------
-
    /**
     * Create a task wrapper without a task
     */
@@ -93,10 +85,6 @@ public class BasicTaskWrapper implements TaskWrapper
    {
       setTask(task);
    }
-
-   // Public --------------------------------------------------------
-
-   // TaskWrapper implementation ---------------------------------------
 
    public int getTaskWaitType()
    {
@@ -150,7 +138,6 @@ public class BasicTaskWrapper implements TaskWrapper
       taskRejected(e);
    }
 
-   // Inner classes -------------------------------------------------
    public boolean isComplete()
    {
       return state == TASK_COMPLETED;
@@ -214,8 +201,6 @@ public class BasicTaskWrapper implements TaskWrapper
       }
    }
 
-   // Runnable implementation ---------------------------------------
-
    /**
     * Called by the thread pool executor
     */ 
@@ -276,10 +261,6 @@ public class BasicTaskWrapper implements TaskWrapper
             stateLock.notifyAll();
       }
    }
-
-   // Package protected ---------------------------------------------
-
-   // Protected -----------------------------------------------------
 
    /**
     * Set thetask for this wrapper
@@ -409,8 +390,30 @@ public class BasicTaskWrapper implements TaskWrapper
    {
       return System.currentTimeMillis() - startTime;
    }
-
-   // Private -------------------------------------------------------
-
-   // Inner classes -------------------------------------------------
+   
+   /**
+    * Get the state as a string
+    * 
+    * @return the state string
+    */
+   protected String getStateString()
+   {
+      switch (state)
+      {
+         case TASK_NOT_ACCEPTED:
+            return "NOT_ACCEPTED";
+         case TASK_REJECTED:
+            return "REJECTED";
+         case TASK_ACCEPTED:
+            return "ACCEPTED";
+         case TASK_STARTED:
+            return "STARTED";
+         case TASK_STOPPED:
+            return "STOPPED";
+         case TASK_COMPLETED:
+            return "COMPLETED";
+         default:
+            return "???";
+      }
+   }
 }

@@ -39,6 +39,8 @@ public class PropertyEditors
    
    /** Whether we handle nulls */
    private static boolean disableIsNull = false;
+   /** Whether or not initialization of the editor search path has been done */
+   private static boolean initialized = false;
 
    /** Augment the PropertyEditorManager search path to incorporate the JBoss
     specific editors by appending the org.jboss.util.propertyeditor package
@@ -46,40 +48,52 @@ public class PropertyEditors
     */
    static
    {
-      String[] currentPath = PropertyEditorManager.getEditorSearchPath();
-      int length = currentPath != null ? currentPath.length : 0;
-      String[] newPath = new String[length+2];
-      System.arraycopy(currentPath, 0, newPath, 2, length);
-      // Put the JBoss editor path first
-      // The default editors are not very flexible
-      newPath[0] = "org.jboss.util.propertyeditor";
-      newPath[1] = "org.jboss.mx.util.propertyeditor";
-      PropertyEditorManager.setEditorSearchPath(newPath);
-
-      /* Register the editor types that will not be found using the standard
-      class name to editor name algorithm. For example, the type String[] has
-      a name '[Ljava.lang.String;' which does not map to a XXXEditor name.
-      */
-      Class strArrayType = String[].class;
-      PropertyEditorManager.registerEditor(strArrayType, StringArrayEditor.class);
-      Class clsArrayType = Class[].class;
-      PropertyEditorManager.registerEditor(clsArrayType, ClassArrayEditor.class);
-      Class intArrayType = int[].class;
-      PropertyEditorManager.registerEditor(intArrayType, IntArrayEditor.class);
-      Class byteArrayType = byte[].class;
-      PropertyEditorManager.registerEditor(byteArrayType, ByteArrayEditor.class);
-
-      // There is no default char editor.
-      PropertyEditorManager.registerEditor(Character.TYPE, CharacterEditor.class);
-      
-      try
+      init();
+   }
+   /** Augment the PropertyEditorManager search path to incorporate the JBoss
+    specific editors by appending the org.jboss.util.propertyeditor package
+    to the PropertyEditorManager editor search path.
+    */
+   public synchronized static void init()
+   {
+      if( initialized == false )
       {
-         if (System.getProperty("org.jboss.util.property.disablenull") != null)
-            disableIsNull = true;
-      }
-      catch (Throwable ignored)
-      {
-         log.trace("Error retrieving system property org.jboss.util.property.diablenull", ignored);
+         String[] currentPath = PropertyEditorManager.getEditorSearchPath();
+         int length = currentPath != null ? currentPath.length : 0;
+         String[] newPath = new String[length+2];
+         System.arraycopy(currentPath, 0, newPath, 2, length);
+         // Put the JBoss editor path first
+         // The default editors are not very flexible
+         newPath[0] = "org.jboss.util.propertyeditor";
+         newPath[1] = "org.jboss.mx.util.propertyeditor";
+         PropertyEditorManager.setEditorSearchPath(newPath);
+   
+         /* Register the editor types that will not be found using the standard
+         class name to editor name algorithm. For example, the type String[] has
+         a name '[Ljava.lang.String;' which does not map to a XXXEditor name.
+         */
+         Class strArrayType = String[].class;
+         PropertyEditorManager.registerEditor(strArrayType, StringArrayEditor.class);
+         Class clsArrayType = Class[].class;
+         PropertyEditorManager.registerEditor(clsArrayType, ClassArrayEditor.class);
+         Class intArrayType = int[].class;
+         PropertyEditorManager.registerEditor(intArrayType, IntArrayEditor.class);
+         Class byteArrayType = byte[].class;
+         PropertyEditorManager.registerEditor(byteArrayType, ByteArrayEditor.class);
+   
+         // There is no default char editor.
+         PropertyEditorManager.registerEditor(Character.TYPE, CharacterEditor.class);
+         
+         try
+         {
+            if (System.getProperty("org.jboss.util.property.disablenull") != null)
+               disableIsNull = true;
+         }
+         catch (Throwable ignored)
+         {
+            log.trace("Error retrieving system property org.jboss.util.property.diablenull", ignored);
+         }
+         initialized = true;
       }
    }
 

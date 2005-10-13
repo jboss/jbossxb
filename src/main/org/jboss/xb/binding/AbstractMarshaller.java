@@ -159,6 +159,10 @@ public abstract class AbstractMarshaller
       return props == null ? null : props.getProperty(name);
    }
 
+   public abstract void declareNamespace(String prefix, String uri);
+
+   public abstract void addAttribute(String prefix, String localName, String type, String value);
+
    // Protected
 
    protected boolean propertyIsTrueOrNotSet(String name)
@@ -404,7 +408,7 @@ public abstract class AbstractMarshaller
       boolean isEmpty();
    }
 
-   protected static class StackImpl
+   public static class StackImpl
       implements Stack
    {
       private LinkedList list = new LinkedList();

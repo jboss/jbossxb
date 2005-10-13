@@ -778,6 +778,11 @@ public class XsdBinder
       }
 
       XSWildcard wildcard = (XSWildcard)particle.getTerm();
+      if(wildcard.getName() != null)
+      {
+         binding.setQName(new QName(wildcard.getNamespace(), wildcard.getName()));
+      }
+
       XSAnnotation annotation = wildcard.getAnnotation();
       if(annotation != null)
       {

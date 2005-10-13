@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.Collection;
 import javax.xml.namespace.QName;
 
 import org.xml.sax.Attributes;
@@ -242,6 +243,11 @@ public class TypeBinding
             attrs.put(name, attr);
       }
       return attr;
+   }
+
+   public Collection getAttributes()
+   {
+      return attrs.values();
    }
 
    public CharactersHandler getSimpleType()

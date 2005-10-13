@@ -101,6 +101,11 @@ public abstract class ModelGroupBinding
       return true;
    }
 
+   public boolean isWildcard()
+   {
+      return false;
+   }
+
    // Inner
 
    public static abstract class Cursor

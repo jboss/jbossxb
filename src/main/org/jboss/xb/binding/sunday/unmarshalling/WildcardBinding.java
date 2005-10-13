@@ -17,11 +17,22 @@ import org.jboss.xb.binding.Util;
 public class WildcardBinding
    extends TermBinding
 {
+   private QName qName;
    private SchemaBindingResolver schemaResolver;
 
    public WildcardBinding(SchemaBinding schema)
    {
       super(schema);
+   }
+
+   public QName getQName()
+   {
+      return qName;
+   }
+
+   public void setQName(QName qName)
+   {
+      this.qName = qName;
    }
 
    public SchemaBindingResolver getSchemaResolver()
@@ -65,5 +76,10 @@ public class WildcardBinding
    public boolean isModelGroup()
    {
       return false;
+   }
+
+   public boolean isWildcard()
+   {
+      return true;
    }
 }

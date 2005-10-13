@@ -68,6 +68,16 @@ public class DtdMarshaller
       this.systemId = systemId;
    }
 
+   public void declareNamespace(String prefix, String uri)
+   {
+      throw new UnsupportedOperationException("declareNamespace is not implemented.");
+   }
+
+   public void addAttribute(String prefix, String localName, String type, String value)
+   {
+      throw new UnsupportedOperationException("addAttribute is not implemented.");
+   }
+
    public void marshal(Reader dtdReader, ObjectModelProvider provider, Object document, Writer writer)
       throws IOException, SAXException
    {

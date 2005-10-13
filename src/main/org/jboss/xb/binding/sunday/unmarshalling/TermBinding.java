@@ -140,4 +140,6 @@ public abstract class TermBinding
    }
 
    public abstract boolean isModelGroup();
+
+   public abstract boolean isWildcard();
 }

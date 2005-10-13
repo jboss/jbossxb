@@ -139,6 +139,11 @@ public class ElementBinding
       return false;
    }
 
+   public boolean isWildcard()
+   {
+      return false;
+   }
+
    public String toString()
    {
       return super.toString() + "[" + qName + "]";

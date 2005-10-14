@@ -1099,7 +1099,7 @@ public class XsdBinder
                sharedElements.add(element);
                break;
             case XSConstants.WILDCARD:
-               log.warn("NOT HANDLED WILDCARD IN GLOBAL MODEL GROUP");
+               // todo is it actually possible?
                break;
             case XSConstants.MODEL_GROUP:
                bindGlobalGroup((XSModelGroup)term, sharedElements);

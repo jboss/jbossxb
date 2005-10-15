@@ -365,7 +365,7 @@ public class XercesXsMarshaller
 
             if(i == null)
             {
-               marshalElementType(elementNs, elementLocal, type, declareNs);
+               marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
             }
             else
             {
@@ -373,39 +373,21 @@ public class XercesXsMarshaller
                {
                   Object item = i.next();
                   stack.push(item);
-                  marshalElementType(elementNs, elementLocal, type, declareNs);
+                  marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
                   stack.pop();
                }
             }
          }
          else
          {
-            marshalElementType(elementNs, elementLocal, type, declareNs);
+            marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
          }
 
          stack.pop();
       }
       else if(supportNil && nillable)
       {
-         AttributesImpl attrs;
-         String prefix = (String)prefixByUri.get(elementNs);
-         if(prefix == null && elementNs != null && elementNs.length() > 0)
-         {
-            prefix = "ns_" + elementLocal;
-            attrs = new AttributesImpl(2);
-            attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
-         }
-         else
-         {
-            attrs = new AttributesImpl(1);
-         }
-
-         String nilQName = (String)prefixByUri.get(Constants.NS_XML_SCHEMA_INSTANCE) + ":nil";
-         attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "nil", nilQName, null, "1");
-
-         String qName = createQName(prefix, elementLocal);
-         content.startElement(elementNs, elementLocal, qName, attrs);
-         content.endElement(elementNs, elementLocal, qName);
+         writeNillable(elementNs, elementLocal);
       }
 
       if(trace)
@@ -416,12 +398,12 @@ public class XercesXsMarshaller
       return result;
    }
 
-   private void marshalElementType(String elementNs, String elementLocal, XSTypeDefinition type, boolean declareNs)
+   private void marshalElementType(String elementNs, String elementLocal, XSTypeDefinition type, boolean declareNs, boolean nillable)
    {
       switch(type.getTypeCategory())
       {
          case XSTypeDefinition.SIMPLE_TYPE:
-            marshalSimpleType(elementNs, elementLocal, (XSSimpleTypeDefinition)type, declareNs);
+            marshalSimpleType(elementNs, elementLocal, (XSSimpleTypeDefinition)type, declareNs, nillable);
             break;
          case XSTypeDefinition.COMPLEX_TYPE:
             marshalComplexType(elementNs, elementLocal, (XSComplexTypeDefinition)type, declareNs);
@@ -434,76 +416,83 @@ public class XercesXsMarshaller
    private void marshalSimpleType(String elementUri,
                                   String elementLocal,
                                   XSSimpleTypeDefinition type,
-                                  boolean declareNs)
+                                  boolean declareNs,
+                                  boolean nillable)
    {
-      AttributesImpl attrs = null;
-      String prefix = (String)prefixByUri.get(elementUri);
-      boolean genPrefix = prefix == null && elementUri != null && elementUri.length() > 0;
-      if(genPrefix)
-      {
-         prefix = "ns_" + elementLocal;
-      }
-
       Object value = stack.peek();
-      String marshalled;
-      if(Constants.NS_XML_SCHEMA.equals(type.getNamespace()))
+      if(value != null)
       {
-         // todo: pass non-null namespace context
-         String typeName = type.getName();
-
-         if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) || SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
+         AttributesImpl attrs = null;
+         String prefix = (String)prefixByUri.get(elementUri);
+         boolean genPrefix = prefix == null && elementUri != null && elementUri.length() > 0;
+         if(genPrefix)
          {
-            QName qNameValue = (QName)value;
-            String prefixValue = qNameValue.getPrefix();
-            if((elementUri != null && !qNameValue.getNamespaceURI().equals(elementUri) ||
-               elementUri == null && qNameValue.getNamespaceURI().length() > 0) &&
-               (prefixValue.equals(prefix) || prefixValue.length() == 0 && prefix == null))
+            prefix = "ns_" + elementLocal;
+         }
+
+         String marshalled;
+         if(Constants.NS_XML_SCHEMA.equals(type.getNamespace()))
+         {
+            // todo: pass non-null namespace context
+            String typeName = type.getName();
+
+            if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) || SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
             {
-               // how to best resolve this conflict?
-               prefixValue += 'x';
-               value = new QName(qNameValue.getNamespaceURI(), qNameValue.getLocalPart(), prefixValue);
+               QName qNameValue = (QName)value;
+               String prefixValue = qNameValue.getPrefix();
+               if((elementUri != null && !qNameValue.getNamespaceURI().equals(elementUri) ||
+                  elementUri == null && qNameValue.getNamespaceURI().length() > 0) &&
+                  (prefixValue.equals(prefix) || prefixValue.length() == 0 && prefix == null))
+               {
+                  // how to best resolve this conflict?
+                  prefixValue += 'x';
+                  value = new QName(qNameValue.getNamespaceURI(), qNameValue.getLocalPart(), prefixValue);
+               }
+
+               attrs = new AttributesImpl(1);
+               attrs.add(null,
+                  prefixValue,
+                  prefixValue.length() == 0 ? "xmlns" : "xmlns:" + prefixValue,
+                  null,
+                  qNameValue.getNamespaceURI()
+               );
             }
 
-            attrs = new AttributesImpl(1);
-            attrs.add(null,
-               prefixValue,
-               prefixValue.length() == 0 ? "xmlns" : "xmlns:" + prefixValue,
-               null,
-               qNameValue.getNamespaceURI()
-            );
+            marshalled = SimpleTypeBindings.marshal(typeName, value, null);
          }
-
-         marshalled = SimpleTypeBindings.marshal(typeName, value, null);
-      }
-      else
-      {
-         marshalled = value.toString();
-      }
-
-      if(declareNs && !prefixByUri.isEmpty())
-      {
-         if(attrs == null)
+         else
          {
-            attrs = new AttributesImpl(prefixByUri.size());
+            marshalled = value.toString();
          }
-         declareNs(attrs);
-      }
 
-      if(genPrefix)
-      {
-         if(attrs == null)
+         if(declareNs && !prefixByUri.isEmpty())
          {
-            attrs = new AttributesImpl(1);
+            if(attrs == null)
+            {
+               attrs = new AttributesImpl(prefixByUri.size());
+            }
+            declareNs(attrs);
          }
 
-         attrs.add(null, prefix, "xmlns:" + prefix, null, (String)elementUri);
+         if(genPrefix)
+         {
+            if(attrs == null)
+            {
+               attrs = new AttributesImpl(1);
+            }
+            attrs.add(null, prefix, "xmlns:" + prefix, null, (String)elementUri);
+         }
+
+         String qName = createQName(prefix, elementLocal);
+
+         content.startElement(elementUri, elementLocal, qName, attrs);
+         content.characters(marshalled.toCharArray(), 0, marshalled.length());
+         content.endElement(elementUri, elementLocal, qName);
       }
-
-      String qName = createQName(prefix, elementLocal);
-
-      content.startElement(elementUri, elementLocal, qName, attrs);
-      content.characters(marshalled.toCharArray(), 0, marshalled.length());
-      content.endElement(elementUri, elementLocal, qName);
+      else if(supportNil && nillable)
+      {
+         writeNillable(elementUri, elementLocal);
+      }
    }
 
    private void marshalComplexType(String elementNsUri,
@@ -736,6 +725,41 @@ public class XercesXsMarshaller
          marshalled &= marshalParticle(particle, declareNs);
       }
       return marshalled;
+   }
+
+   private void writeNillable(String elementNs, String elementLocal)
+   {
+      AttributesImpl attrs;
+      String prefix = (String)prefixByUri.get(elementNs);
+      if(prefix == null && elementNs != null && elementNs.length() > 0)
+      {
+         prefix = "ns_" + elementLocal;
+         attrs = new AttributesImpl(2);
+         attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
+      }
+      else
+      {
+         attrs = new AttributesImpl(1);
+      }
+
+      String xsiPrefix = (String)prefixByUri.get(Constants.NS_XML_SCHEMA_INSTANCE);
+      if(xsiPrefix == null)
+      {
+         xsiPrefix = "xsi";
+         attrs.add(null,
+            xsiPrefix,
+            "xmlns:xsi",
+            null,
+            Constants.NS_XML_SCHEMA_INSTANCE
+         );
+      }
+
+      String nilQName = xsiPrefix + ":nil";
+      attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "nil", nilQName, null, "1");
+
+      String qName = createQName(prefix, elementLocal);
+      content.startElement(elementNs, elementLocal, qName, attrs);
+      content.endElement(elementNs, elementLocal, qName);
    }
 
    private void declareNs(AttributesImpl attrs)

@@ -141,6 +141,6 @@ public class DefaultSchemaResolver
 
    public LSInput resolveAsLSInput(String nsUri, String baseUri, String schemaLocation)
    {
-      throw new UnsupportedOperationException("resolveResource is not implemented.");
+      throw new UnsupportedOperationException("resolveAsLSInput is not implemented.");
    }
 }

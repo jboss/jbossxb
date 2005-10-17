@@ -273,8 +273,8 @@ public final class Util
          setResourceResolver(schemaLoader, schemaResolver);
       }
 
-      XSModel model = schemaLoader.loadURI(xsdURL);
       setDOMErrorHandler(schemaLoader);
+      XSModel model = schemaLoader.loadURI(xsdURL);
       if(model == null)
       {
          throw new IllegalArgumentException("Invalid URI for schema: " + xsdURL);

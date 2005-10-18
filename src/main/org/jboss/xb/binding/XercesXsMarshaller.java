@@ -325,44 +325,7 @@ public class XercesXsMarshaller
 
          if(maxOccurs != 1)
          {
-            Iterator i = null;
-            if(value instanceof Collection)
-            {
-               i = ((Collection)value).iterator();
-            }
-            else if(value.getClass().isArray())
-            {
-               final Object arr = value;
-               i = new Iterator()
-               {
-                  private int curInd = 0;
-                  private int length = Array.getLength(arr);
-
-                  public boolean hasNext()
-                  {
-                     return curInd < length;
-                  }
-
-                  public Object next()
-                  {
-                     return Array.get(arr, curInd++);
-                  }
-
-                  public void remove()
-                  {
-                     throw new UnsupportedOperationException("remove is not implemented.");
-                  }
-               };
-            }
-            else if(value instanceof Iterator)
-            {
-               i = (Iterator)value;
-            }
-            else
-            {
-               //throw new JBossXBRuntimeException("Unexpected type for children: " + value.getClass());
-            }
-
+            Iterator i = getIterator(value);
             if(i == null)
             {
                marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
@@ -565,7 +528,7 @@ public class XercesXsMarshaller
       switch(term.getType())
       {
          case XSConstants.MODEL_GROUP:
-            marshalled = marshalModelGroup((XSModelGroup)term, declareNs);
+            marshalled = marshalModelGroup(particle, declareNs);
             break;
          case XSConstants.WILDCARD:
             marshalled = marshalWildcard((XSWildcard)term, declareNs);
@@ -665,8 +628,9 @@ public class XercesXsMarshaller
       return marshalled;
    }
 
-   private boolean marshalModelGroup(XSModelGroup modelGroup, boolean declareNs)
+   private boolean marshalModelGroup(XSParticle particle, boolean declareNs)
    {
+      XSModelGroup modelGroup = (XSModelGroup)particle.getTerm();
       boolean marshalled;
       switch(modelGroup.getCompositor())
       {
@@ -795,5 +759,47 @@ public class XercesXsMarshaller
          }
       }
       return is;
+   }
+
+   private Iterator getIterator(Object value)
+   {
+      Iterator i = null;
+      if(value instanceof Collection)
+      {
+         i = ((Collection)value).iterator();
+      }
+      else if(value.getClass().isArray())
+      {
+         final Object arr = value;
+         i = new Iterator()
+         {
+            private int curInd = 0;
+            private int length = Array.getLength(arr);
+
+            public boolean hasNext()
+            {
+               return curInd < length;
+            }
+
+            public Object next()
+            {
+               return Array.get(arr, curInd++);
+            }
+
+            public void remove()
+            {
+               throw new UnsupportedOperationException("remove is not implemented.");
+            }
+         };
+      }
+      else if(value instanceof Iterator)
+      {
+         i = (Iterator)value;
+      }
+      else
+      {
+         //throw new JBossXBRuntimeException("Unexpected type for children: " + value.getClass());
+      }
+      return i;
    }
 }

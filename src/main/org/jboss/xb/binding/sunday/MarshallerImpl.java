@@ -27,6 +27,7 @@ import org.jboss.xb.binding.GenericObjectModelProvider;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.ObjectModelProvider;
 import org.jboss.xb.binding.SimpleTypeBindings;
+import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ChoiceBinding;
@@ -331,44 +332,7 @@ public class MarshallerImpl
 
          if(maxOccurs != 1)
          {
-            Iterator i = null;
-            if(value instanceof Collection)
-            {
-               i = ((Collection)value).iterator();
-            }
-            else if(value.getClass().isArray())
-            {
-               final Object arr = value;
-               i = new Iterator()
-               {
-                  private int curInd = 0;
-                  private int length = Array.getLength(arr);
-
-                  public boolean hasNext()
-                  {
-                     return curInd < length;
-                  }
-
-                  public Object next()
-                  {
-                     return Array.get(arr, curInd++);
-                  }
-
-                  public void remove()
-                  {
-                     throw new UnsupportedOperationException("remove is not implemented.");
-                  }
-               };
-            }
-            else if(value instanceof Iterator)
-            {
-               i = (Iterator)value;
-            }
-            else
-            {
-               //throw new JBossXBRuntimeException("Unexpected type for children: " + value.getClass());
-            }
-
+            Iterator i = getIterator(value);
             if(i == null)
             {
                marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
@@ -578,7 +542,7 @@ public class MarshallerImpl
       TermBinding term = particle.getTerm();
       if(term.isModelGroup())
       {
-         marshalled = marshalModelGroup((ModelGroupBinding)term, declareNs);
+         marshalled = marshalModelGroup(particle, declareNs);
       }
       else if(term.isWildcard())
       {
@@ -689,6 +653,51 @@ public class MarshallerImpl
       return marshalled;
    }
 
+   private boolean marshalModelGroup(ParticleBinding particle, boolean declareNs)
+   {
+      ModelGroupBinding modelGroup = (ModelGroupBinding)particle.getTerm();
+      boolean marshalled = true;
+      if(modelGroup.isSkip() || stack.isEmpty())
+      {
+         marshalled = marshalModelGroup(modelGroup, declareNs);
+      }
+      else
+      {
+         PropertyMetaData propertyMetaData = modelGroup.getPropertyMetaData();
+         if(propertyMetaData == null)
+         {
+            throw new JBossXBRuntimeException(
+               "Currently, property binding metadata must be available for a model group to be marshalled!"
+            );
+         }
+
+         Object value = provider.getChildren(stack.peek(), null, null, propertyMetaData.getName());
+         if(particle.isRepeatable() && value != null)
+         {
+            Iterator i = getIterator(value);
+            if(i == null)
+            {
+               throw new JBossXBRuntimeException("Failed to create an iterator for " + value);
+            }
+
+            while(i.hasNext() && marshalled)
+            {
+               value = i.next();
+               stack.push(value);
+               marshalled &= marshalModelGroup(modelGroup, declareNs);
+               stack.pop();
+            }
+         }
+         else
+         {
+            stack.push(value);
+            marshalled = marshalModelGroup(modelGroup, declareNs);
+            stack.pop();
+         }
+      }
+      return marshalled;
+   }
+
    private boolean marshalModelGroup(ModelGroupBinding modelGroup, boolean declareNs)
    {
       boolean marshalled;
@@ -783,7 +792,7 @@ public class MarshallerImpl
       content.startElement(elementNs, elementLocal, qName, attrs);
       content.endElement(elementNs, elementLocal, qName);
    }
-   
+
    private void declareNs(AttributesImpl attrs)
    {
       for(Iterator i = prefixByUri.entrySet().iterator(); i.hasNext();)
@@ -816,5 +825,47 @@ public class MarshallerImpl
          }
       }
       return is;
+   }
+
+   private Iterator getIterator(Object value)
+   {
+      Iterator i = null;
+      if(value instanceof Collection)
+      {
+         i = ((Collection)value).iterator();
+      }
+      else if(value.getClass().isArray())
+      {
+         final Object arr = value;
+         i = new Iterator()
+         {
+            private int curInd = 0;
+            private int length = Array.getLength(arr);
+
+            public boolean hasNext()
+            {
+               return curInd < length;
+            }
+
+            public Object next()
+            {
+               return Array.get(arr, curInd++);
+            }
+
+            public void remove()
+            {
+               throw new UnsupportedOperationException("remove is not implemented.");
+            }
+         };
+      }
+      else if(value instanceof Iterator)
+      {
+         i = (Iterator)value;
+      }
+      else
+      {
+         //throw new JBossXBRuntimeException("Unexpected type for children: " + value.getClass());
+      }
+      return i;
    }
 }

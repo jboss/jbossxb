@@ -91,21 +91,7 @@ public class RtElementHandler
       {
          if(parent == null)
          {
-            TypeBinding itemType = arrayItem.getType();
-
-            Class itemCls;
-            QName itemTypeQName = itemType.getQName();
-            if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
-            {
-               itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart(), arrayItem.isNillable());
-            }
-            else
-            {
-               ClassMetaData itemClsMetaData = itemType.getClassMetaData();
-               String itemClsName = itemClsMetaData == null ? null : itemClsMetaData.getImpl();
-               itemCls = getClass(itemClsName, arrayItem, arrayItem.getQName());
-            }
-
+            Class itemCls = classForElement(arrayItem);
             if(itemCls != null)
             {
                o = GenericValueContainer.FACTORY.array(itemCls);
@@ -135,33 +121,40 @@ public class RtElementHandler
             }
 
             Class fieldType;
-            try
+            if(parentClass.isArray())
             {
-               Method getter = parentClass.getMethod(getterName, null);
-               fieldType = getter.getReturnType();
+               fieldType = parentClass.getComponentType();
             }
-            catch(NoSuchMethodException e)
+            else
             {
-               String fieldName = null;
                try
                {
-                  fieldName = propName == null ?
-                     Util.xmlNameToFieldName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
-                     propName;
-                  Field field = parentClass.getField(fieldName);
-                  fieldType = field.getType();
+                  Method getter = parentClass.getMethod(getterName, null);
+                  fieldType = getter.getReturnType();
                }
-               catch(NoSuchFieldException e1)
+               catch(NoSuchMethodException e)
                {
-                  throw new JBossXBRuntimeException("Failed to find field " +
-                     fieldName +
-                     " and getter " +
-                     getterName +
-                     " for term " +
-                     elementName +
-                     " in " +
-                     parentClass
-                  );
+                  String fieldName = null;
+                  try
+                  {
+                     fieldName = propName == null ?
+                        Util.xmlNameToFieldName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
+                        propName;
+                     Field field = parentClass.getField(fieldName);
+                     fieldType = field.getType();
+                  }
+                  catch(NoSuchFieldException e1)
+                  {
+                     throw new JBossXBRuntimeException("Failed to find field " +
+                        fieldName +
+                        " and getter " +
+                        getterName +
+                        " for term " +
+                        elementName +
+                        " in " +
+                        parentClass
+                     );
+                  }
                }
             }
 
@@ -299,6 +292,42 @@ public class RtElementHandler
       }
 
       return o;
+   }
+
+   private Class classForElement(ElementBinding arrayItem)
+   {
+      TypeBinding itemType = arrayItem.getType();
+
+      Class itemCls;
+      QName itemTypeQName = itemType.getQName();
+      if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
+      {
+         itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart(), arrayItem.isNillable());
+      }
+      else
+      {
+         ElementBinding item = null;
+         if(!itemType.isSimple())
+         {
+            ParticleBinding typeParticle = itemType.getParticle();
+            ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());
+            item = modelGroup == null ? null : modelGroup.getArrayItem();
+         }
+
+         if(item != null)
+         {
+            itemCls = classForElement(item);
+            // todo: what's the best way to get an array class having the item class
+            itemCls = Array.newInstance(itemCls, 0).getClass();
+         }
+         else
+         {
+            ClassMetaData itemClsMetaData = itemType.getClassMetaData();
+            String itemClsName = itemClsMetaData == null ? null : itemClsMetaData.getImpl();
+            itemCls = getClass(itemClsName, arrayItem, arrayItem.getQName());
+         }
+      }
+      return itemCls;
    }
 
    public void attributes(Object o,

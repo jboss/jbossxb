@@ -43,7 +43,9 @@ public interface GenericValueContainer
 
             public Class getTargetClass()
             {
-               throw new JBossXBRuntimeException("This should not be used for arrays!");
+               // this method should only be called for multidimansional arrays
+               // todo: what's the best way to get a class for array having the item class?
+               return Array.newInstance(itemType, 0).getClass();
             }
          };
       }

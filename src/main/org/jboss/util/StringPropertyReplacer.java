@@ -8,6 +8,8 @@ package org.jboss.util;
 
 import java.util.Properties;
 
+import org.jboss.util.platform.Constants;
+
 /**
  * A utility class for replacing properties in strings. 
  *
@@ -21,13 +23,13 @@ import java.util.Properties;
 public final class StringPropertyReplacer
 {
    /** New line string constant */
-   public static final String NEWLINE = org.jboss.util.platform.Constants.LINE_SEPARATOR;
+   public static final String NEWLINE = Constants.LINE_SEPARATOR;
 
    /** File separator value */
-   private static final String FILE_SEPARATOR = org.jboss.util.platform.Constants.FILE_SEPARATOR;
+   private static final String FILE_SEPARATOR = Constants.FILE_SEPARATOR;
 
    /** Path separator value */
-   private static final String PATH_SEPARATOR = org.jboss.util.platform.Constants.PATH_SEPARATOR;
+   private static final String PATH_SEPARATOR = Constants.PATH_SEPARATOR;
 
    /** File separator alias */
    private static final String FILE_SEPARATOR_ALIAS = "/";

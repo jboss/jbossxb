@@ -1,12 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ * 
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.property;
 
 import java.util.Properties;
@@ -28,10 +25,12 @@ import org.jboss.util.NullArgumentException;
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author  <a href="mailto:adrian@jboss.com">Adrian Brock</a>
  */
-public class PropertyGroup
-   extends PropertyMap
-{
+public class PropertyGroup extends PropertyMap
+{    
+   /** Serial version uid */
+   private static final long serialVersionUID = -2557641199743063159L;
    /** Base property name */
    protected final String basename;
 
@@ -43,9 +42,10 @@ public class PropertyGroup
     *
     * @throws NullArgumentException    Basename is <tt>null</tt>.
     */
-   public PropertyGroup(final String basename, final Properties container) {
+   public PropertyGroup(final String basename, final Properties container)
+   {
       super(container);
-      
+
       if (basename == null)
          throw new NullArgumentException("basename");
 
@@ -57,7 +57,8 @@ public class PropertyGroup
     *
     * @return  Base property name.
     */
-   public final String getBaseName() {
+   public final String getBaseName()
+   {
       return basename;
    }
 
@@ -65,8 +66,9 @@ public class PropertyGroup
     * Make a fully qualified property name.
     *
     * @param suffix  Property name suffix.
-    */      
-   private String makePropertyName(final String suffix) {
+    */
+   private String makePropertyName(final String suffix)
+   {
       return basename + PropertyMap.PROPERTY_NAME_SEPARATOR + suffix;
    }
 
@@ -74,15 +76,11 @@ public class PropertyGroup
     * Make a fully qualified property name.
     *
     * @param suffix  Property name suffix.
-    */      
-   private String makePropertyName(final Object suffix) {
+    */
+   private String makePropertyName(final Object suffix)
+   {
       return makePropertyName(String.valueOf(suffix));
    }
-   
-
-   /////////////////////////////////////////////////////////////////////////
-   //                         Properties Overrides                        //
-   /////////////////////////////////////////////////////////////////////////
 
    /**
     * Check if this <tt>PropertyMap</tt> contains a given property name.
@@ -90,10 +88,11 @@ public class PropertyGroup
     * @param name    Property name.
     * @return        True if property map or defaults contains key.
     */
-   public boolean containsKey(final Object name) {
+   public boolean containsKey(final Object name)
+   {
       if (name == null)
          throw new NullArgumentException("name");
-         
+
       return super.containsKey(makePropertyName(name));
    }
 
@@ -104,10 +103,11 @@ public class PropertyGroup
     * @param value   Property value.
     * @return        Previous property value or <tt>null</tt>.
     */
-   public Object put(final Object name, final Object value) {
+   public Object put(final Object name, final Object value)
+   {
       if (name == null)
          throw new NullArgumentException("name");
-      
+
       return super.put(makePropertyName(name), value);
    }
 
@@ -117,7 +117,8 @@ public class PropertyGroup
     * @param name    Property name.
     * @return        Property value or <tt>null</tt>.
     */
-   public Object get(final Object name) {
+   public Object get(final Object name)
+   {
       if (name == null)
          throw new NullArgumentException("name");
 
@@ -130,7 +131,8 @@ public class PropertyGroup
     * @param name    Property name.
     * @return        Removed property value.
     */
-   public Object remove(final Object name) {
+   public Object remove(final Object name)
+   {
       if (name == null)
          throw new NullArgumentException("name");
 
@@ -147,81 +149,83 @@ public class PropertyGroup
    public Set entrySet()
    {
       final Set superSet = super.entrySet(true);
-         
+
       return new java.util.AbstractSet()
+      {
+         private boolean isInGroup(Map.Entry entry)
          {
-            private boolean isInGroup(Map.Entry entry)
+            String key = (String) entry.getKey();
+            return key.startsWith(basename);
+         }
+
+         public int size()
+         {
+            Iterator iter = superSet.iterator();
+            int count = 0;
+            while (iter.hasNext())
             {
-               String key = (String)entry.getKey();
-               return key.startsWith(basename);
+               Map.Entry entry = (Map.Entry) iter.next();
+               if (isInGroup(entry))
+               {
+                  count++;
+               }
             }
 
-            public int size()
+            return count;
+         }
+
+         public Iterator iterator()
+         {
+            return new Iterator()
             {
-               Iterator iter = superSet.iterator();
-               int count = 0;
-               while (iter.hasNext()) {
-                  Map.Entry entry = (Map.Entry)iter.next();
-                  if (isInGroup(entry)) {
-                     count++;
+               private Iterator iter = superSet.iterator();
+
+               private Object next;
+
+               public boolean hasNext()
+               {
+                  if (next != null)
+                     return true;
+
+                  while (next == null)
+                  {
+                     if (iter.hasNext())
+                     {
+                        Map.Entry entry = (Map.Entry) iter.next();
+                        if (isInGroup(entry))
+                        {
+                           next = entry;
+                           return true;
+                        }
+                     }
+                     else
+                     {
+                        break;
+                     }
                   }
+
+                  return false;
                }
 
-               return count;
-            }
+               public Object next()
+               {
+                  if (next == null)
+                     throw new java.util.NoSuchElementException();
 
-            public Iterator iterator()
-            {
-               return new Iterator()
-                  {
-                     private Iterator iter = superSet.iterator();
-                     private Object next;
-                     
-                     public boolean hasNext()
-                     {
-                        if (next != null)
-                           return true;
+                  Object obj = next;
+                  next = null;
 
-                        while (next == null) {
-                           if (iter.hasNext()) {
-                              Map.Entry entry = (Map.Entry)iter.next();
-                              if (isInGroup(entry)) {
-                                 next = entry;
-                                 return true;
-                              }
-                           }
-                           else {
-                              break;
-                           }
-                        }
+                  return obj;
+               }
 
-                        return false;
-                     }
-
-                     public Object next()
-                     {
-                        if (next == null)
-                           throw new java.util.NoSuchElementException();
-
-                        Object obj = next;
-                        next = null;
-
-                        return obj;
-                     }
-
-                     public void remove()
-                     {
-                        iter.remove();
-                     }
-                  };
-            }
-         };
+               public void remove()
+               {
+                  iter.remove();
+               }
+            };
+         }
+      };
    }
-
-   
-   /////////////////////////////////////////////////////////////////////////
-   //                     Property Listener Overrides                     //
-   /////////////////////////////////////////////////////////////////////////
 
    /**
     * Add a bound property listener.
@@ -231,21 +235,24 @@ public class PropertyGroup
     *
     * @param listener   Bound property listener to add.
     */
-   protected void addPropertyListener(final BoundPropertyListener listener) {
+   protected void addPropertyListener(final BoundPropertyListener listener)
+   {
       // get the bound property name
       String name = makePropertyName(listener.getPropertyName());
 
       // get the bound listener list for the property
-      List list = (List)boundListeners.get(name);
-      
+      List list = (List) boundListeners.get(name);
+
       // if list is null, then add a new list
-      if (list == null) {
+      if (list == null)
+      {
          list = new ArrayList();
          boundListeners.put(name, list);
       }
-      
+
       // if listener is not in the list already, then add it
-      if (! list.contains(listener)) {
+      if (!list.contains(listener))
+      {
          list.add(listener);
          // notify listener that is is bound
          listener.propertyBound(this);
@@ -261,18 +268,21 @@ public class PropertyGroup
     * @param listener   Bound property listener to remove.
     * @return           True if listener was removed.
     */
-   protected boolean removePropertyListener(final BoundPropertyListener listener) {
+   protected boolean removePropertyListener(final BoundPropertyListener listener)
+   {
       // get the bound property name
       String name = makePropertyName(listener.getPropertyName());
-      
+
       // get the bound listener list for the property
-      List list = (List)boundListeners.get(name);
+      List list = (List) boundListeners.get(name);
       boolean removed = false;
-      if (list != null) {
+      if (list != null)
+      {
          removed = list.remove(listener);
-         
+
          // notify listener that is was unbound
-         if (removed) listener.propertyUnbound(this);
+         if (removed)
+            listener.propertyUnbound(this);
       }
 
       return removed;

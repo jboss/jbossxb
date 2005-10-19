@@ -1,12 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ * 
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.property;
 
 /**
@@ -14,6 +11,7 @@ package org.jboss.util.property;
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author  <a href="mailto:adrian@jboss.com">Adrian Brock</a>
  */
 public final class Property
 {
@@ -22,7 +20,8 @@ public final class Property
     *
     * @param listener   Property listener to add
     */
-   public static void addListener(PropertyListener listener) {
+   public static void addListener(PropertyListener listener)
+   {
       PropertyManager.addPropertyListener(listener);
    }
 
@@ -31,7 +30,8 @@ public final class Property
     *
     * @param listeners     Array of property listeners to add
     */
-   public static void addListeners(PropertyListener[] listeners) {
+   public static void addListeners(PropertyListener[] listeners)
+   {
       PropertyManager.addPropertyListeners(listeners);
    }
 
@@ -41,7 +41,8 @@ public final class Property
     * @param listener   Property listener to remove
     * @return           True if listener was removed
     */
-   public static boolean removeListener(PropertyListener listener) {
+   public static boolean removeListener(PropertyListener listener)
+   {
       return PropertyManager.removePropertyListener(listener);
    }
 
@@ -52,7 +53,8 @@ public final class Property
     * @param value   Property value
     * @return        Previous property value or null
     */
-   public static String set(String name, String value) {
+   public static String set(String name, String value)
+   {
       return PropertyManager.setProperty(name, value);
    }
 
@@ -62,7 +64,8 @@ public final class Property
     * @param name    Property name
     * @return        Removed property value or null
     */
-   public static String remove(String name) {
+   public static String remove(String name)
+   {
       return PropertyManager.getProperty(name);
    }
 
@@ -73,7 +76,8 @@ public final class Property
     * @param defaultValue  Default property value
     * @return              Property value or default
     */
-   public static String get(String name, String defaultValue) {
+   public static String get(String name, String defaultValue)
+   {
       return PropertyManager.getProperty(name, defaultValue);
    }
 
@@ -83,7 +87,8 @@ public final class Property
     * @param name       Property name
     * @return           Property value or null
     */
-   public static String get(String name) {
+   public static String get(String name)
+   {
       return PropertyManager.getProperty(name);
    }
 
@@ -94,7 +99,8 @@ public final class Property
     * @param defaultValues Default property values
     * @return              Array of property values or default
     */
-   public static String[] getArray(String base, String[] defaultValues) {
+   public static String[] getArray(String base, String[] defaultValues)
+   {
       return PropertyManager.getArrayProperty(base, defaultValues);
    }
 
@@ -104,7 +110,8 @@ public final class Property
     * @param name       Property name
     * @return           Array of property values or empty array
     */
-   public static String[] getArray(String name) {
+   public static String[] getArray(String name)
+   {
       return PropertyManager.getArrayProperty(name);
    }
 
@@ -114,7 +121,8 @@ public final class Property
     * @param name    Property name
     * @return        True if property exists
     */
-   public static boolean exists(String name) {
+   public static boolean exists(String name)
+   {
       return PropertyManager.containsProperty(name);
    }
 
@@ -124,7 +132,8 @@ public final class Property
     * @param basename   Base property name
     * @return           Property group
     */
-   public static PropertyGroup getGroup(String basename) {
+   public static PropertyGroup getGroup(String basename)
+   {
       return PropertyManager.getPropertyGroup(basename);
    }
 
@@ -135,7 +144,8 @@ public final class Property
     * @param index      Array property index
     * @return           Property group
     */
-   public static PropertyGroup getGroup(String basename, int index) {
+   public static PropertyGroup getGroup(String basename, int index)
+   {
       return PropertyManager.getPropertyGroup(basename, index);
    }
 }

@@ -1,12 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ * 
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.property;
 
 import java.io.IOException;
@@ -36,10 +33,13 @@ import org.jboss.util.NullArgumentException;
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
  * @author Scott.Stark@jboss.org
+ * @author  <a href="mailto:adrian@jboss.com">Adrian Brock</a>
  */
-public class PropertyMap
-   extends Properties
+public class PropertyMap extends Properties
 {
+   /** Serial version uid */
+   private static final long serialVersionUID = 8747802918099008518L;
+
    /** Property name separator */
    public static final String PROPERTY_NAME_SEPARATOR = ".";
 
@@ -139,11 +139,6 @@ public class PropertyMap
       if( isJndiProperty == true )
          jndiMap.put(name, value);
    }
-
-   /////////////////////////////////////////////////////////////////////////
-   //                     Properties Override Methods                     //
-   /////////////////////////////////////////////////////////////////////////
-
 
    /**
     * Set a property.
@@ -247,11 +242,6 @@ public class PropertyMap
 
       return super.entrySet();
    }   
-   
-
-   /////////////////////////////////////////////////////////////////////////
-   //                      Property Listener Methods                      //
-   /////////////////////////////////////////////////////////////////////////
 
    /**
     * Add a property listener.
@@ -367,11 +357,6 @@ public class PropertyMap
       }
       return removed;
    }
-
-
-   /////////////////////////////////////////////////////////////////////////
-   //                   Listener Notification Methods                     //
-   /////////////////////////////////////////////////////////////////////////
 
    /**
     * Fire a property added event to the given list of listeners.
@@ -490,11 +475,6 @@ public class PropertyMap
       firePropertyChanged(unboundListeners, event);
    }
 
-
-   /////////////////////////////////////////////////////////////////////////
-   //                       Property Loading Methods                      //
-   /////////////////////////////////////////////////////////////////////////
-
    /**
     * Make a optionaly prefixed property name.
     *
@@ -594,11 +574,6 @@ public class PropertyMap
       // load the properties from the source
       load(reader);
    }
-
-
-   /////////////////////////////////////////////////////////////////////////
-   //                    Direct Property Access Methods                   //
-   /////////////////////////////////////////////////////////////////////////
 
    /**
     * Set a property.
@@ -715,11 +690,6 @@ public class PropertyMap
       return getArrayProperty(name, EMPTY_ARRAY_PROPERTY);
    }
 
-
-   /////////////////////////////////////////////////////////////////////////
-   //                          Iterator Methods                           //
-   /////////////////////////////////////////////////////////////////////////
-
    /**
     * Return an iterator over all contained property names.
     *
@@ -729,11 +699,6 @@ public class PropertyMap
    {
       return keySet().iterator();
    }
-
-
-   /////////////////////////////////////////////////////////////////////////
-   //                            State Methods                            //
-   /////////////////////////////////////////////////////////////////////////
 
    /**
     * Check if this map contains a given property.
@@ -745,11 +710,6 @@ public class PropertyMap
    {
       return containsKey(name);
    }
-
-
-   /////////////////////////////////////////////////////////////////////////
-   //                        Property Group Methods                       //
-   /////////////////////////////////////////////////////////////////////////
 
    /**
     * Get a property group for the given property base.
@@ -774,11 +734,6 @@ public class PropertyMap
       String name = makeIndexPropertyName(basename, index);
       return getPropertyGroup(name);
    }
-
-
-   /////////////////////////////////////////////////////////////////////////
-   //                         Serialization Methods                       //
-   /////////////////////////////////////////////////////////////////////////
 
    private void readObject(ObjectInputStream stream)
       throws IOException, ClassNotFoundException

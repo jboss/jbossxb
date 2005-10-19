@@ -1,12 +1,9 @@
-/***************************************
- *                                     *
- *  JBoss: The OpenSource J2EE WebOS   *
- *                                     *
- *  Distributable under LGPL license.  *
- *  See terms of license at gnu.org.   *
- *                                     *
- ***************************************/
-
+/*
+ * JBoss, Home of Professional Open Source
+ * 
+ * Distributable under LGPL license.
+ * See terms of license at gnu.org.
+ */
 package org.jboss.util.property;
 
 import java.util.Map;
@@ -15,13 +12,14 @@ import java.util.Iterator;
 import java.io.IOException;
 
 import org.jboss.util.ThrowableHandler;
-   
+
 /**
  * A more robust replacement of <tt>java.lang.System</tt> for property
  * access.
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
+ * @author  <a href="mailto:adrian@jboss.com">Adrian Brock</a>
  */
 public final class PropertyManager
 {
@@ -32,9 +30,8 @@ public final class PropertyManager
    public static final String DEFAULT_PROPERTY_READER_TOKEN = "DEFAULT";
 
    /** The default property reader name array */
-   private static final String[] DEFAULT_PROPERTY_READERS = { 
-      DEFAULT_PROPERTY_READER_TOKEN
-   };
+   private static final String[] DEFAULT_PROPERTY_READERS =
+   {DEFAULT_PROPERTY_READER_TOKEN};
 
    /** Default property container */
    private static PropertyMap props;
@@ -42,17 +39,15 @@ public final class PropertyManager
    /**
     * Do not allow instantiation of this class.
     */
-   private PropertyManager() {}
-   
-
-   /////////////////////////////////////////////////////////////////////////
-   //                    Property System Initialization                   //
-   /////////////////////////////////////////////////////////////////////////
+   private PropertyManager()
+   {
+   }
 
    /**
     * Initialize the property system.
     */
-   static {
+   static
+   {
       // construct default property container and initialze from system props
       props = new PropertyMap();
       props.putAll(System.getProperties());
@@ -61,48 +56,46 @@ public final class PropertyManager
       System.setProperties(props);
 
       // load properties from initial property readers
-      String[] readerNames = getArrayProperty(READER_PROPERTY_NAME,
-                                              DEFAULT_PROPERTY_READERS);
+      String[] readerNames = getArrayProperty(READER_PROPERTY_NAME, DEFAULT_PROPERTY_READERS);
 
       // construct each source and read its properties
-      for (int i=0; i<readerNames.length; i++) {
-         try {
-            if (readerNames[i].equals(DEFAULT_PROPERTY_READER_TOKEN)) {
+      for (int i = 0; i < readerNames.length; i++)
+      {
+         try
+         {
+            if (readerNames[i].equals(DEFAULT_PROPERTY_READER_TOKEN))
+            {
                load(new DefaultPropertyReader());
             }
-            else {
+            else
+            {
                load(readerNames[i]);
             }
          }
-         catch (IOException e) {
+         catch (IOException e)
+         {
             ThrowableHandler.add(e);
          }
       }
    }
-
-   /////////////////////////////////////////////////////////////////////////
-   //                        Access to Default Map                        //
-   /////////////////////////////////////////////////////////////////////////
 
    /**
     * Get the default <tt>PropertyMap</tt>.
     *
     * @return  Default <tt>PropertyMap</tt>.
     */
-   public static PropertyMap getDefaultPropertyMap() {
+   public static PropertyMap getDefaultPropertyMap()
+   {
       return props;
    }
-
-   /////////////////////////////////////////////////////////////////////////
-   //               Static Accessors to Default Property Map              //
-   /////////////////////////////////////////////////////////////////////////
 
    /**
     * Add a property listener.
     *
     * @param listener   Property listener to add.
     */
-   public static void addPropertyListener(final PropertyListener listener) {
+   public static void addPropertyListener(final PropertyListener listener)
+   {
       props.addPropertyListener(listener);
    }
 
@@ -133,9 +126,7 @@ public final class PropertyManager
     * @param prefix  Prefix to append to all map keys (or <tt>null</tt>).
     * @param map     Map containing properties to load.
     */
-   public static void load(final String prefix,
-                           final Map map)
-      throws PropertyException
+   public static void load(final String prefix, final Map map) throws PropertyException
    {
       props.load(prefix, map);
    }
@@ -145,8 +136,7 @@ public final class PropertyManager
     *
     * @param map  Map containing properties to load.
     */
-   public static void load(final Map map)
-      throws PropertyException, IOException
+   public static void load(final Map map) throws PropertyException, IOException
    {
       props.load(map);
    }
@@ -156,8 +146,7 @@ public final class PropertyManager
     *
     * @param reader  <tt>PropertyReader</tt> to read properties from.
     */
-   public static void load(final PropertyReader reader)
-      throws PropertyException, IOException
+   public static void load(final PropertyReader reader) throws PropertyException, IOException
    {
       props.load(reader);
    }
@@ -169,8 +158,7 @@ public final class PropertyManager
     * @param classname     Class name of a <tt>PropertyReader</tt> to 
     *                      read from.
     */
-   public static void load(final String classname)
-      throws PropertyException, IOException
+   public static void load(final String classname) throws PropertyException, IOException
    {
       props.load(classname);
    }
@@ -182,8 +170,9 @@ public final class PropertyManager
     * @param value   Property value.
     * @return        Previous property value or <tt>null</tt>.
     */
-   public static String setProperty(final String name, final String value) {
-      return (String)props.setProperty(name, value);
+   public static String setProperty(final String name, final String value)
+   {
+      return (String) props.setProperty(name, value);
    }
 
    /**
@@ -192,7 +181,8 @@ public final class PropertyManager
     * @param name    Property name.
     * @return        Removed property value or <tt>null</tt>.
     */
-   public static String removeProperty(final String name) {
+   public static String removeProperty(final String name)
+   {
       return props.removeProperty(name);
    }
 
@@ -203,8 +193,7 @@ public final class PropertyManager
     * @param defaultValue  Default property value.
     * @return              Property value or default.
     */
-   public static String getProperty(final String name,
-                                    final String defaultValue)
+   public static String getProperty(final String name, final String defaultValue)
    {
       return props.getProperty(name, defaultValue);
    }
@@ -215,7 +204,8 @@ public final class PropertyManager
     * @param name       Property name.
     * @return           Property value or <tt>null</tt>.
     */
-   public static String getProperty(final String name) {
+   public static String getProperty(final String name)
+   {
       return props.getProperty(name);
    }
 
@@ -226,8 +216,7 @@ public final class PropertyManager
     * @param defaultValues    Default property values.
     * @return                 Array of property values or default.
     */
-   public static String[] getArrayProperty(final String base,
-                                           final String[] defaultValues)
+   public static String[] getArrayProperty(final String base, final String[] defaultValues)
    {
       return props.getArrayProperty(base, defaultValues);
    }
@@ -238,7 +227,8 @@ public final class PropertyManager
     * @param name       Property name.
     * @return           Array of property values or empty array.
     */
-   public static String[] getArrayProperty(final String name) {
+   public static String[] getArrayProperty(final String name)
+   {
       return props.getArrayProperty(name);
    }
 
@@ -247,7 +237,8 @@ public final class PropertyManager
     *
     * @return     Property name iterator.
     */
-   public static Iterator names() {
+   public static Iterator names()
+   {
       return props.names();
    }
 
@@ -257,7 +248,8 @@ public final class PropertyManager
     * @param name    Property name.
     * @return        True if contains property.
     */
-   public static boolean containsProperty(final String name) {
+   public static boolean containsProperty(final String name)
+   {
       return props.containsProperty(name);
    }
 
@@ -267,7 +259,8 @@ public final class PropertyManager
     * @param basename   Base property name.
     * @return           Property group.
     */
-   public static PropertyGroup getPropertyGroup(final String basename) {
+   public static PropertyGroup getPropertyGroup(final String basename)
+   {
       return props.getPropertyGroup(basename);
    }
 
@@ -278,9 +271,8 @@ public final class PropertyManager
     * @param index      Array property index.
     * @return           Property group.
     */
-   public static PropertyGroup getPropertyGroup(final String basename,
-                                                final int index)
+   public static PropertyGroup getPropertyGroup(final String basename, final int index)
    {
       return props.getPropertyGroup(basename, index);
    }
-}  
+}

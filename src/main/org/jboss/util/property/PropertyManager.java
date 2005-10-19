@@ -95,6 +95,9 @@ public final class PropertyManager
     */
    public static PropertyMap getDefaultPropertyMap()
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertiesAccess();
       return props;
    }
 
@@ -105,6 +108,9 @@ public final class PropertyManager
     */
    public static void addPropertyListener(final PropertyListener listener)
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertiesAccess();
       props.addPropertyListener(listener);
    }
 
@@ -115,6 +121,9 @@ public final class PropertyManager
     */
    public static void addPropertyListeners(final PropertyListener[] listeners)
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertiesAccess();
       props.addPropertyListeners(listeners);
    }
 
@@ -137,6 +146,9 @@ public final class PropertyManager
     */
    public static void load(final String prefix, final Map map) throws PropertyException
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertiesAccess();
       props.load(prefix, map);
    }
 
@@ -147,6 +159,9 @@ public final class PropertyManager
     */
    public static void load(final Map map) throws PropertyException, IOException
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertiesAccess();
       props.load(map);
    }
 
@@ -157,6 +172,9 @@ public final class PropertyManager
     */
    public static void load(final PropertyReader reader) throws PropertyException, IOException
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertiesAccess();
       props.load(reader);
    }
 
@@ -169,6 +187,9 @@ public final class PropertyManager
     */
    public static void load(final String classname) throws PropertyException, IOException
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertiesAccess();
       props.load(classname);
    }
 
@@ -181,6 +202,9 @@ public final class PropertyManager
     */
    public static String setProperty(final String name, final String value)
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertyAccess(name);
       return (String) props.setProperty(name, value);
    }
 
@@ -192,6 +216,9 @@ public final class PropertyManager
     */
    public static String removeProperty(final String name)
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertyAccess(name);
       return props.removeProperty(name);
    }
 
@@ -204,6 +231,9 @@ public final class PropertyManager
     */
    public static String getProperty(final String name, final String defaultValue)
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertyAccess(name);
       return props.getProperty(name, defaultValue);
    }
 
@@ -215,6 +245,9 @@ public final class PropertyManager
     */
    public static String getProperty(final String name)
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertyAccess(name);
       return props.getProperty(name);
    }
 
@@ -227,6 +260,9 @@ public final class PropertyManager
     */
    public static String[] getArrayProperty(final String base, final String[] defaultValues)
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertiesAccess();
       return props.getArrayProperty(base, defaultValues);
    }
 
@@ -238,6 +274,9 @@ public final class PropertyManager
     */
    public static String[] getArrayProperty(final String name)
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertyAccess(name);
       return props.getArrayProperty(name);
    }
 
@@ -248,6 +287,9 @@ public final class PropertyManager
     */
    public static Iterator names()
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertiesAccess();
       return props.names();
    }
 
@@ -259,6 +301,9 @@ public final class PropertyManager
     */
    public static boolean containsProperty(final String name)
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertyAccess(name);
       return props.containsProperty(name);
    }
 
@@ -270,6 +315,9 @@ public final class PropertyManager
     */
    public static PropertyGroup getPropertyGroup(final String basename)
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertiesAccess();
       return props.getPropertyGroup(basename);
    }
 
@@ -282,6 +330,9 @@ public final class PropertyManager
     */
    public static PropertyGroup getPropertyGroup(final String basename, final int index)
    {
+      SecurityManager sm = System.getSecurityManager();
+      if (sm != null)
+         sm.checkPropertiesAccess();
       return props.getPropertyGroup(basename, index);
    }
 }

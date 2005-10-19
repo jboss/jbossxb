@@ -6,6 +6,9 @@
  */
 package org.jboss.util.property;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+
 /**
  * Provides shorter method names for working with the {@link PropertyManager}.
  *
@@ -15,6 +18,30 @@ package org.jboss.util.property;
  */
 public final class Property
 {
+   /** Platform dependent line separator. */
+   public static String LINE_SEPARATOR;
+
+   /** Platform dependant file separator. */
+   public static String FILE_SEPARATOR;
+
+   /** Platform dependant path separator. */
+   public static String PATH_SEPARATOR;
+   
+   static
+   {
+      PrivilegedAction action = new PrivilegedAction()
+      {
+         public Object run()
+         {
+            LINE_SEPARATOR = Property.get("line.separator");
+            FILE_SEPARATOR = Property.get("file.separator");
+            PATH_SEPARATOR = Property.get("path.separator");
+            return null;
+         }
+      };
+      AccessController.doPrivileged(action);
+   }
+   
    /**
     * Add a property listener
     *

@@ -6,6 +6,8 @@
  */
 package org.jboss.util;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Properties;
 
 import org.jboss.util.platform.Constants;
@@ -57,13 +59,15 @@ public final class StringPropertyReplacer
     * The property ${/} is replaced with System.getProperty("file.separator")
     * value and the property ${:} is replaced with System.getProperty("path.separator").
     * 
+    * @todo make the caller establishthe access control context?
     * @param string - the string with possible ${} references
     * @return the input string with all property references replaced if any.
     *    If there are no valid references the input string will be returned.
     */
    public static String replaceProperties(final String string)
    {
-      return replaceProperties(string, System.getProperties());
+      Properties properties = (Properties) AccessController.doPrivileged(GetSystemProperties.instance);
+      return replaceProperties(string, properties);
    }
 
    /**
@@ -226,5 +230,15 @@ public final class StringPropertyReplacer
       }
       // Return whatever we've found or null
       return value;
+   }
+   
+   private static class GetSystemProperties implements PrivilegedAction
+   {
+      private static GetSystemProperties instance = new GetSystemProperties();
+      
+      public Object run()
+      {
+         return System.getProperties();
+      }
    }
 }

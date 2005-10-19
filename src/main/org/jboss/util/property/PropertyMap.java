@@ -9,6 +9,8 @@ package org.jboss.util.property;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.ArrayList;
@@ -87,36 +89,43 @@ public class PropertyMap extends Properties
    {
       unboundListeners = Collections.synchronizedList(new ArrayList());
       boundListeners = Collections.synchronizedMap(new HashMap());
-      Object value;
       jndiMap = new HashMap();
 
-      value = System.getProperty(Context.PROVIDER_URL);
-      if (value == null) value = NULL_VALUE;
-      jndiMap.put(Context.PROVIDER_URL, value);
+      PrivilegedAction action = new PrivilegedAction()
+      {
+         public Object run()
+         {
+            Object value = System.getProperty(Context.PROVIDER_URL);
+            if (value == null) value = NULL_VALUE;
+            jndiMap.put(Context.PROVIDER_URL, value);
 
-      value = System.getProperty(Context.INITIAL_CONTEXT_FACTORY);
-      if (value == null) value = NULL_VALUE;
-      jndiMap.put(Context.INITIAL_CONTEXT_FACTORY, value);
+            value = System.getProperty(Context.INITIAL_CONTEXT_FACTORY);
+            if (value == null) value = NULL_VALUE;
+            jndiMap.put(Context.INITIAL_CONTEXT_FACTORY, value);
 
-      value = System.getProperty(Context.OBJECT_FACTORIES);
-      if (value == null) value = NULL_VALUE;
-      jndiMap.put(Context.OBJECT_FACTORIES, value);
+            value = System.getProperty(Context.OBJECT_FACTORIES);
+            if (value == null) value = NULL_VALUE;
+            jndiMap.put(Context.OBJECT_FACTORIES, value);
 
-      value = System.getProperty(Context.URL_PKG_PREFIXES);
-      if (value == null) value = NULL_VALUE;
-      jndiMap.put(Context.URL_PKG_PREFIXES, value);
+            value = System.getProperty(Context.URL_PKG_PREFIXES);
+            if (value == null) value = NULL_VALUE;
+            jndiMap.put(Context.URL_PKG_PREFIXES, value);
 
-      value = System.getProperty(Context.STATE_FACTORIES);
-      if (value == null) value = NULL_VALUE;
-      jndiMap.put(Context.STATE_FACTORIES, value);
+            value = System.getProperty(Context.STATE_FACTORIES);
+            if (value == null) value = NULL_VALUE;
+            jndiMap.put(Context.STATE_FACTORIES, value);
 
-      value = System.getProperty(Context.DNS_URL);
-      if (value == null) value = NULL_VALUE;
-      jndiMap.put(Context.DNS_URL, value);
+            value = System.getProperty(Context.DNS_URL);
+            if (value == null) value = NULL_VALUE;
+            jndiMap.put(Context.DNS_URL, value);
 
-      value = System.getProperty(LdapContext.CONTROL_FACTORIES);
-      if (value == null) value = NULL_VALUE;
-      jndiMap.put(LdapContext.CONTROL_FACTORIES, value);
+            value = System.getProperty(LdapContext.CONTROL_FACTORIES);
+            if (value == null) value = NULL_VALUE;
+            jndiMap.put(LdapContext.CONTROL_FACTORIES, value);
+            return null;
+         }
+      };
+      AccessController.doPrivileged(action);
    }
 
    /** Called by setProperty to update the jndiMap cache values.

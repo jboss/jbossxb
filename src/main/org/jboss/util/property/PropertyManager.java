@@ -6,6 +6,8 @@
  */
 package org.jboss.util.property;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.Iterator;
 
@@ -30,8 +32,7 @@ public final class PropertyManager
    public static final String DEFAULT_PROPERTY_READER_TOKEN = "DEFAULT";
 
    /** The default property reader name array */
-   private static final String[] DEFAULT_PROPERTY_READERS =
-   {DEFAULT_PROPERTY_READER_TOKEN};
+   private static final String[] DEFAULT_PROPERTY_READERS = { DEFAULT_PROPERTY_READER_TOKEN };
 
    /** Default property container */
    private static PropertyMap props;
@@ -50,33 +51,41 @@ public final class PropertyManager
    {
       // construct default property container and initialze from system props
       props = new PropertyMap();
-      props.putAll(System.getProperties());
-
-      // replace system props to enable notifications via System.setProperty()
-      System.setProperties(props);
-
-      // load properties from initial property readers
-      String[] readerNames = getArrayProperty(READER_PROPERTY_NAME, DEFAULT_PROPERTY_READERS);
-
-      // construct each source and read its properties
-      for (int i = 0; i < readerNames.length; i++)
+      PrivilegedAction action = new PrivilegedAction()
       {
-         try
+         public Object run()
          {
-            if (readerNames[i].equals(DEFAULT_PROPERTY_READER_TOKEN))
+            props.putAll(System.getProperties());
+
+            // replace system props to enable notifications via System.setProperty()
+            System.setProperties(props);
+
+            // load properties from initial property readers
+            String[] readerNames = getArrayProperty(READER_PROPERTY_NAME, DEFAULT_PROPERTY_READERS);
+
+            // construct each source and read its properties
+            for (int i = 0; i < readerNames.length; i++)
             {
-               load(new DefaultPropertyReader());
+               try
+               {
+                  if (readerNames[i].equals(DEFAULT_PROPERTY_READER_TOKEN))
+                  {
+                     load(new DefaultPropertyReader());
+                  }
+                  else
+                  {
+                     load(readerNames[i]);
+                  }
+               }
+               catch (IOException e)
+               {
+                  ThrowableHandler.add(e);
+               }
             }
-            else
-            {
-               load(readerNames[i]);
-            }
+            return null;
          }
-         catch (IOException e)
-         {
-            ThrowableHandler.add(e);
-         }
-      }
+      };
+      AccessController.doPrivileged(action);
    }
 
    /**

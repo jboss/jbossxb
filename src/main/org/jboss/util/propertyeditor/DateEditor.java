@@ -6,6 +6,8 @@
  */
 package org.jboss.util.propertyeditor;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -26,15 +28,24 @@ public class DateEditor extends TextPropertyEditorSupport
 
    static
    {
-      String defaultFormat = System.getProperty("org.jboss.util.propertyeditor.DateEditor.format",
-         "MMM d, yyyy");
-      formats = new DateFormat[] {
-         new SimpleDateFormat(defaultFormat),
-         // Tue Jan 04 00:00:00 PST 2005
-         new SimpleDateFormat("EEE MMM d HH:mm:ss z yyyy"),
-         // Wed, 4 Jul 2001 12:08:56 -0700
-         new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z")
+      PrivilegedAction action = new PrivilegedAction()
+      {
+         public Object run()
+         {
+            String defaultFormat = System.getProperty("org.jboss.util.propertyeditor.DateEditor.format",
+               "MMM d, yyyy");
+            formats = new DateFormat[] 
+            {
+               new SimpleDateFormat(defaultFormat),
+               // Tue Jan 04 00:00:00 PST 2005
+               new SimpleDateFormat("EEE MMM d HH:mm:ss z yyyy"),
+               // Wed, 4 Jul 2001 12:08:56 -0700
+               new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z")
+            };
+            return null;
+         }
       };
+      AccessController.doPrivileged(action);
    }
 
    /**

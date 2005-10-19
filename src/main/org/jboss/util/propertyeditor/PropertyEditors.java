@@ -13,6 +13,8 @@ import java.beans.PropertyDescriptor;
 import java.beans.PropertyEditor;
 import java.beans.PropertyEditorManager;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Properties;
@@ -50,6 +52,7 @@ public class PropertyEditors
    {
       init();
    }
+   
    /** Augment the PropertyEditorManager search path to incorporate the JBoss
     specific editors by appending the org.jboss.util.propertyeditor package
     to the PropertyEditorManager editor search path.
@@ -58,41 +61,7 @@ public class PropertyEditors
    {
       if( initialized == false )
       {
-         String[] currentPath = PropertyEditorManager.getEditorSearchPath();
-         int length = currentPath != null ? currentPath.length : 0;
-         String[] newPath = new String[length+2];
-         System.arraycopy(currentPath, 0, newPath, 2, length);
-         // Put the JBoss editor path first
-         // The default editors are not very flexible
-         newPath[0] = "org.jboss.util.propertyeditor";
-         newPath[1] = "org.jboss.mx.util.propertyeditor";
-         PropertyEditorManager.setEditorSearchPath(newPath);
-   
-         /* Register the editor types that will not be found using the standard
-         class name to editor name algorithm. For example, the type String[] has
-         a name '[Ljava.lang.String;' which does not map to a XXXEditor name.
-         */
-         Class strArrayType = String[].class;
-         PropertyEditorManager.registerEditor(strArrayType, StringArrayEditor.class);
-         Class clsArrayType = Class[].class;
-         PropertyEditorManager.registerEditor(clsArrayType, ClassArrayEditor.class);
-         Class intArrayType = int[].class;
-         PropertyEditorManager.registerEditor(intArrayType, IntArrayEditor.class);
-         Class byteArrayType = byte[].class;
-         PropertyEditorManager.registerEditor(byteArrayType, ByteArrayEditor.class);
-   
-         // There is no default char editor.
-         PropertyEditorManager.registerEditor(Character.TYPE, CharacterEditor.class);
-         
-         try
-         {
-            if (System.getProperty("org.jboss.util.property.disablenull") != null)
-               disableIsNull = true;
-         }
-         catch (Throwable ignored)
-         {
-            log.trace("Error retrieving system property org.jboss.util.property.diablenull", ignored);
-         }
+         AccessController.doPrivileged(Initialize.instance);
          initialized = true;
       }
    }
@@ -418,5 +387,50 @@ public class PropertyEditors
    public void setEditorSearchPath(final String[] path)
    {
       PropertyEditorManager.setEditorSearchPath(path);
+   }
+
+   private static class Initialize implements PrivilegedAction
+   {
+      static Initialize instance = new Initialize(); 
+
+      public Object run()
+      {
+         String[] currentPath = PropertyEditorManager.getEditorSearchPath();
+         int length = currentPath != null ? currentPath.length : 0;
+         String[] newPath = new String[length+2];
+         System.arraycopy(currentPath, 0, newPath, 2, length);
+         // Put the JBoss editor path first
+         // The default editors are not very flexible
+         newPath[0] = "org.jboss.util.propertyeditor";
+         newPath[1] = "org.jboss.mx.util.propertyeditor";
+         PropertyEditorManager.setEditorSearchPath(newPath);
+
+         /* Register the editor types that will not be found using the standard
+         class name to editor name algorithm. For example, the type String[] has
+         a name '[Ljava.lang.String;' which does not map to a XXXEditor name.
+         */
+         Class strArrayType = String[].class;
+         PropertyEditorManager.registerEditor(strArrayType, StringArrayEditor.class);
+         Class clsArrayType = Class[].class;
+         PropertyEditorManager.registerEditor(clsArrayType, ClassArrayEditor.class);
+         Class intArrayType = int[].class;
+         PropertyEditorManager.registerEditor(intArrayType, IntArrayEditor.class);
+         Class byteArrayType = byte[].class;
+         PropertyEditorManager.registerEditor(byteArrayType, ByteArrayEditor.class);
+
+         // There is no default char editor.
+         PropertyEditorManager.registerEditor(Character.TYPE, CharacterEditor.class);
+         
+         try
+         {
+            if (System.getProperty("org.jboss.util.property.disablenull") != null)
+               disableIsNull = true;
+         }
+         catch (Throwable ignored)
+         {
+            log.trace("Error retrieving system property org.jboss.util.property.diablenull", ignored);
+         }
+         return null;
+      }
    }
 }

@@ -296,7 +296,11 @@ public class XercesXsMarshaller
       else
       {
          Object peeked = stack.peek();
-         if(peeked instanceof Collection || peeked.getClass().isArray())
+         if(peeked == null)
+         {
+            value = null;
+         }
+         else if(peeked instanceof Collection || peeked.getClass().isArray())
          {
             // collection is the provider
             value = peeked;
@@ -335,9 +339,16 @@ public class XercesXsMarshaller
                while(i.hasNext())
                {
                   Object item = i.next();
-                  stack.push(item);
-                  marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
-                  stack.pop();
+                  if(item == null && supportNil && nillable)
+                  {
+                     writeNillable(elementNs, elementLocal);
+                  }
+                  else
+                  {
+                     stack.push(item);
+                     marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
+                     stack.pop();
+                  }
                }
             }
          }

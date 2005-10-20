@@ -8,7 +8,6 @@ package org.jboss.util;
 
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
 import org.jboss.util.platform.Constants;
 
 /**
@@ -23,9 +22,6 @@ import org.jboss.util.platform.Constants;
  */
 public final class StringPropertyReplacer
 {
-   /** The logger */
-   private static final Logger log = Logger.getLogger(StringPropertyReplacer.class);
-   
    /** New line string constant */
    public static final String NEWLINE = Constants.LINE_SEPARATOR;
 
@@ -67,16 +63,7 @@ public final class StringPropertyReplacer
     */
    public static String replaceProperties(final String string)
    {
-      Properties properties = null;
-      try
-      {
-         properties = System.getProperties();
-      }
-      catch (Exception e)
-      {
-         log.debug("Unable to retrieve system properties", e);
-      }
-      return replaceProperties(string, properties);
+      return replaceProperties(string, null);
    }
 
    /**
@@ -95,9 +82,10 @@ public final class StringPropertyReplacer
     * value and the property ${:} is replaced with System.getProperty("path.separator").
     *
     * @param string - the string with possible ${} references
-    * @param props - the source for ${x} property ref values
+    * @param props - the source for ${x} property ref values, null means use System.getProperty()
     * @return the input string with all property references replaced if any.
     *    If there are no valid references the input string will be returned.
+    * @throws java.lang.AccessControlException when not authorised to retrieved system properties
     */
    public static String replaceProperties(final String string, final Properties props)
    {
@@ -154,6 +142,8 @@ public final class StringPropertyReplacer
                   // check from the properties
                   if (props != null)
                      value = props.getProperty(key);
+                  else
+                     value = System.getProperty(key);
                   
                   if (value == null)
                   {
@@ -164,6 +154,8 @@ public final class StringPropertyReplacer
                         String realKey = key.substring(0, colon);
                         if (props != null)
                            value = props.getProperty(realKey);
+                        else
+                           value = System.getProperty(realKey);
 
                         if (value == null)
                         {
@@ -219,9 +211,6 @@ public final class StringPropertyReplacer
     */
    private static String resolveCompositeKey(String key, Properties props)
    {
-      if (props == null)
-         return null;
-      
       String value = null;
       
       // Look for the comma
@@ -233,13 +222,19 @@ public final class StringPropertyReplacer
          {  
             // Check the first part
             String key1 = key.substring(0, comma);
-            value = props.getProperty(key1);            
+            if (props != null)
+               value = props.getProperty(key1);            
+            else
+               value = System.getProperty(key1);
          }
          // Check the second part, if there is one and first lookup failed
          if (value == null && comma < key.length() - 1)
          {
             String key2 = key.substring(comma + 1);
-            value = props.getProperty(key2);
+            if (props != null)
+               value = props.getProperty(key2);
+            else
+               value = System.getProperty(key2);
          }         
       }
       // Return whatever we've found or null

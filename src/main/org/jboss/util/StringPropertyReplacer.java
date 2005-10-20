@@ -6,10 +6,9 @@
  */
 package org.jboss.util;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.Properties;
 
+import org.jboss.logging.Logger;
 import org.jboss.util.platform.Constants;
 
 /**
@@ -24,6 +23,9 @@ import org.jboss.util.platform.Constants;
  */
 public final class StringPropertyReplacer
 {
+   /** The logger */
+   private static final Logger log = Logger.getLogger(StringPropertyReplacer.class);
+   
    /** New line string constant */
    public static final String NEWLINE = Constants.LINE_SEPARATOR;
 
@@ -59,14 +61,21 @@ public final class StringPropertyReplacer
     * The property ${/} is replaced with System.getProperty("file.separator")
     * value and the property ${:} is replaced with System.getProperty("path.separator").
     * 
-    * @todo make the caller establishthe access control context?
     * @param string - the string with possible ${} references
     * @return the input string with all property references replaced if any.
     *    If there are no valid references the input string will be returned.
     */
    public static String replaceProperties(final String string)
    {
-      Properties properties = (Properties) AccessController.doPrivileged(GetSystemProperties.instance);
+      Properties properties = null;
+      try
+      {
+         properties = System.getProperties();
+      }
+      catch (Exception e)
+      {
+         log.debug("Unable to retrieve system properties", e);
+      }
       return replaceProperties(string, properties);
    }
 
@@ -143,7 +152,8 @@ public final class StringPropertyReplacer
                else
                {
                   // check from the properties
-                  value = props.getProperty(key);
+                  if (props != null)
+                     value = props.getProperty(key);
                   
                   if (value == null)
                   {
@@ -152,8 +162,9 @@ public final class StringPropertyReplacer
                      if (colon > 0)
                      {
                         String realKey = key.substring(0, colon);
-                        value = props.getProperty(realKey);
-                        
+                        if (props != null)
+                           value = props.getProperty(realKey);
+
                         if (value == null)
                         {
                            // Check for a composite key, "key1,key2"                           
@@ -208,6 +219,9 @@ public final class StringPropertyReplacer
     */
    private static String resolveCompositeKey(String key, Properties props)
    {
+      if (props == null)
+         return null;
+      
       String value = null;
       
       // Look for the comma
@@ -230,15 +244,5 @@ public final class StringPropertyReplacer
       }
       // Return whatever we've found or null
       return value;
-   }
-   
-   private static class GetSystemProperties implements PrivilegedAction
-   {
-      private static GetSystemProperties instance = new GetSystemProperties();
-      
-      public Object run()
-      {
-         return System.getProperties();
-      }
    }
 }

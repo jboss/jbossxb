@@ -7,9 +7,9 @@
 package org.jboss.xb.binding.sunday.unmarshalling.impl.runtime;
 
 import java.lang.reflect.Method;
-import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
-
+import javax.xml.namespace.QName;
+import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
@@ -18,6 +18,7 @@ import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.util.Classes;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -37,66 +38,72 @@ public class RtCharactersHandler
       Object unmarshalled = null;
       if(valueMetaData != null)
       {
-         String parseMethod = valueMetaData.getUnmarshalMethod();
-         if(parseMethod == null)
+         String unmarshalMethod = valueMetaData.getUnmarshalMethod();
+         if(unmarshalMethod == null)
          {
             throw new JBossXBRuntimeException(
                "javaType annotation is specified for " + qName + " but does not contain parseMethod attribute"
             );
          }
 
-         int lastDot = parseMethod.lastIndexOf('.');
-         String clsName = parseMethod.substring(0, lastDot);
-         Class cls;
-         try
-         {
-            cls = Thread.currentThread().getContextClassLoader().loadClass(clsName);
-         }
-         catch(ClassNotFoundException e)
-         {
-            throw new JBossXBRuntimeException("Failed to load class " + clsName + " for parseMethod " + parseMethod);
-         }
+         int lastDot = unmarshalMethod.lastIndexOf('.');
+         String clsName = unmarshalMethod.substring(0, lastDot);
+         String methodName = unmarshalMethod.substring(lastDot + 1);
 
-         String methodName = parseMethod.substring(lastDot + 1);
-         Method method;
-         try
-         {
-            method = cls.getMethod(methodName, new Class[]{String.class, NamespaceContext.class});
-         }
-         catch(NoSuchMethodException e)
-         {
-            throw new JBossXBRuntimeException("Failed to find method " +
-               methodName +
-               "(" +
-               String.class.getName() +
-               " p1, " +
-               NamespaceContext.class.getName() +
-               " p2) in " +
-               cls
-            );
-         }
-
-         try
-         {
-            unmarshalled = method.invoke(null, new Object[]{value, nsCtx});
-         }
-         catch(Exception e)
-         {
-            throw new JBossXBRuntimeException("Failed to invoke parseMethod " +
-               parseMethod +
-               " for element " +
-               qName +
-               " and value " +
-               value +
-               ": " +
-               e.getMessage(),
-               e
-            );
-         }
+         Class cls = loadClass(clsName, true);
+         unmarshalled = invokeUnmarshalMethod(cls, methodName, value, String.class, nsCtx, qName);
       }
       else
       {
          unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, valueMetaData, value);
+
+         if(typeBinding.isSimple())
+         {
+            String clsName = null;
+            boolean failIfNotFound = false;
+            if(typeBinding.getClassMetaData() != null)
+            {
+               clsName = typeBinding.getClassMetaData().getImpl();
+               failIfNotFound = true;
+            }
+            else
+            {
+               QName typeName = typeBinding.getQName();
+               if(typeName != null && !Constants.NS_XML_SCHEMA.equals(typeName.getNamespaceURI()))
+               {
+                  boolean ignoreLowLine = typeBinding.getSchemaBinding() != null ?
+                     typeBinding.getSchemaBinding().isIgnoreLowLine() :
+                     true;
+                  clsName =
+                     Util.xmlNameToClassName(typeName.getNamespaceURI(), typeName.getLocalPart(), ignoreLowLine);
+               }
+            }
+
+            Class cls = clsName == null ? null : loadClass(clsName, failIfNotFound);
+            if(cls != null && !cls.isPrimitive())
+            {
+               // I assume if it doesn't have ctors, there should be static fromValue
+               // method like it is defined for enum types in JAXB2.0
+               // for java5 cls.isEnum() should be used instead
+               if(cls.getConstructors().length == 0)
+               {
+                  // it should probably invoke fromValue even if unmarshalled is null
+                  unmarshalled = unmarshalled == null ? null :
+                     invokeUnmarshalMethod(cls, "fromValue", unmarshalled, unmarshalled.getClass(), nsCtx, qName);
+               }
+               else
+               {
+                  throw new JBossXBRuntimeException("This case is not yet supported (create a feature request): " +
+                     "simple type (" +
+                     typeBinding.getQName() +
+                     ") is bound to a class (" +
+                     cls +
+                     ") with optional property metadata with " +
+                     "default value for the property name 'value'."
+                  );
+               }
+            }
+         }
       }
 
       return unmarshalled;
@@ -155,7 +162,7 @@ public class RtCharactersHandler
                   CharactersMetaData charactersMetaData = type.getCharactersMetaData();
                   propertyMetaData = charactersMetaData == null ? null : charactersMetaData.getProperty();
                }
-               
+
                if(propertyMetaData != null)
                {
                   propName = propertyMetaData.getName();
@@ -184,8 +191,88 @@ public class RtCharactersHandler
 
             RtUtil.set(owner, value, propName, colType,
                element.getSchema().isIgnoreUnresolvedFieldOrClass(),
-               element.getValueAdapter());
+               element.getValueAdapter()
+            );
          }
       }
+   }
+
+   private Object invokeUnmarshalMethod(Class cls,
+                                        String methodName,
+                                        Object value,
+                                        Class valueType,
+                                        NamespaceContext nsCtx,
+                                        QName qName)
+   {
+      Method method;
+      Object[] args;
+      try
+      {
+         method = cls.getMethod(methodName, new Class[]{valueType});
+         args = new Object[]{value};
+      }
+      catch(NoSuchMethodException e)
+      {
+         try
+         {
+            method = cls.getMethod(methodName, new Class[]{valueType, NamespaceContext.class});
+            args = new Object[]{value, nsCtx};
+         }
+         catch(NoSuchMethodException e1)
+         {
+            throw new JBossXBRuntimeException("Neither " +
+               methodName +
+               "(" +
+               valueType.getName() +
+               " p1, " +
+               NamespaceContext.class.getName() +
+               " p2) nor " +
+               methodName +
+               "(" +
+               String.class.getName() +
+               " p) were found in " +
+               cls
+            );
+         }
+      }
+
+      Object unmarshalled;
+      try
+      {
+         unmarshalled = method.invoke(null, args);
+      }
+      catch(Exception e)
+      {
+         throw new JBossXBRuntimeException("Failed to invoke unmarshalMethod " +
+            method.getDeclaringClass().getName() +
+            "." +
+            method.getName() +
+            " for element " +
+            qName +
+            " and value " +
+            value +
+            ": " +
+            e.getMessage(),
+            e
+         );
+      }
+      return unmarshalled;
+   }
+
+   private Class loadClass(String clsName, boolean failIfNotFound)
+   {
+      Class cls = null;
+      try
+      {
+         cls = Classes.loadClass(clsName);
+      }
+      catch(ClassNotFoundException e)
+      {
+         if(failIfNotFound)
+         {
+            throw new JBossXBRuntimeException("Failed to load class " + clsName);
+         }
+      }
+      return cls;
    }
 }

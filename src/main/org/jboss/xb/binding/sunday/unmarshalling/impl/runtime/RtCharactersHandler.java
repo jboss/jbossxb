@@ -87,9 +87,16 @@ public class RtCharactersHandler
                // for java5 cls.isEnum() should be used instead
                if(cls.getConstructors().length == 0)
                {
+                  Class valueType = unmarshalled.getClass();
+                  // todo: this should be used in combination element.isNillable...
+                  if(Classes.isPrimitiveWrapper(valueType))
+                  {
+                     valueType = Classes.getPrimitive(valueType);
+                  }
+
                   // it should probably invoke fromValue even if unmarshalled is null
                   unmarshalled = unmarshalled == null ? null :
-                     invokeUnmarshalMethod(cls, "fromValue", unmarshalled, unmarshalled.getClass(), nsCtx, qName);
+                     invokeUnmarshalMethod(cls, "fromValue", unmarshalled, valueType, nsCtx, qName);
                }
                else
                {
@@ -224,14 +231,13 @@ public class RtCharactersHandler
                methodName +
                "(" +
                valueType.getName() +
-               " p1, " +
-               NamespaceContext.class.getName() +
-               " p2) nor " +
+               " p) nor " +
                methodName +
                "(" +
-               String.class.getName() +
-               " p) were found in " +
-               cls
+               valueType.getName() +
+               " p1, " +
+               NamespaceContext.class.getName() +
+               " p2) were found in " + cls
             );
          }
       }

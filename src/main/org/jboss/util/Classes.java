@@ -419,6 +419,52 @@ public final class Classes
    }
 
    /**
+    * @param wrapper  a primitive wrapper type
+    * @return  primitive type the passed in wrapper type corresponds to
+    */
+   public static Class getPrimitive(Class wrapper)
+   {
+      Class primitive;
+      if(Integer.class == wrapper)
+      {
+         primitive = int.class;
+      }
+      else if(Long.class == wrapper)
+      {
+         primitive = long.class;
+      }
+      else if(Double.class == wrapper)
+      {
+         primitive = double.class;
+      }
+      else if(Boolean.class == wrapper)
+      {
+         primitive = boolean.class;
+      }
+      else if(Short.class == wrapper)
+      {
+         primitive = short.class;
+      }
+      else if(Float.class == wrapper)
+      {
+         primitive = float.class;
+      }
+      else if(Byte.class == wrapper)
+      {
+         primitive = byte.class;
+      }
+      else if(Character.class == wrapper)
+      {
+         primitive = char.class;
+      }
+      else
+      {
+         throw new IllegalArgumentException("The class is not a primitive wrapper type: " + wrapper);
+      }
+      return primitive;
+   }
+
+   /**
     * Instantiate a java class object
     * 
     * @param expected the expected class type
@@ -592,10 +638,10 @@ public final class Classes
     */
    public final static Method getAttributeGetter(Class cls, String attr) throws NoSuchMethodException
    {
+      String base = Character.toUpperCase(attr.charAt(0)) + attr.substring(1);
       try
       {
-         String getterName = "get" + Character.toUpperCase(attr.charAt(0)) + attr.substring(1);
-         return cls.getMethod(getterName, null);
+         return cls.getMethod("get" + base, null);
       }
       catch (NoSuchMethodException e)
       {
@@ -603,8 +649,7 @@ public final class Classes
       }
       
       // Try a possible boolean isFoo() getter
-      String getterName = "is" + Character.toUpperCase(attr.charAt(0)) + attr.substring(1);
-      return cls.getMethod(getterName, null);
+      return cls.getMethod("is" + base, null);
    }
 
    /**

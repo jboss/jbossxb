@@ -309,7 +309,7 @@ public class SequenceBinding
                }
             }
 
-            if(log.isTraceEnabled() && i == sequence.size() - 1)
+            if(log.isTraceEnabled() && i == sequence.size())
             {
                log.trace(qName + " not found in " + getModelGroup());
             }

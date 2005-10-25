@@ -244,7 +244,7 @@ public class ChoiceBinding
 
             if(log.isTraceEnabled())
             {
-               if(i == choices.size() - 1)
+               if(i == choices.size())
                {
                   log.trace(qName + " not found in " + getModelGroup());
                }

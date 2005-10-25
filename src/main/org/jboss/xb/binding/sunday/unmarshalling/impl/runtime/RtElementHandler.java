@@ -870,6 +870,9 @@ public class RtElementHandler
 
    private static Class getClassForTerm(String className, TermBinding term, QName elementName)
    {
+      if (className == null)
+         throw new JBossXBRuntimeException("No class for " + elementName);
+
       Class cls = null;
       try
       {

@@ -69,7 +69,7 @@ public class SundayContentHandler
    {
       ElementBinding elementBinding = null;
       QName endName = null;
-      StackItem item = (StackItem)stack.pop();
+      StackItem item = pop();
       while(true)
       {
          if(item.particle != null)

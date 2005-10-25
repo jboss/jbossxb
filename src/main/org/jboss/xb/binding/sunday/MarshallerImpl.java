@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,16 +19,16 @@ import java.util.Map;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import org.jboss.logging.Logger;
+import org.jboss.util.Classes;
 import org.jboss.xb.binding.AbstractMarshaller;
 import org.jboss.xb.binding.AttributesImpl;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.Content;
 import org.jboss.xb.binding.ContentWriter;
-import org.jboss.xb.binding.DelegatingObjectModelProvider;
-import org.jboss.xb.binding.GenericObjectModelProvider;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.ObjectModelProvider;
 import org.jboss.xb.binding.SimpleTypeBindings;
+import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
@@ -52,11 +54,6 @@ public class MarshallerImpl
    private static final Logger log = Logger.getLogger(MarshallerImpl.class);
 
    private Stack stack = new StackImpl();
-
-   /**
-    * ObjectModelProvider for this marshaller
-    */
-   private GenericObjectModelProvider provider;
 
    /**
     * Content the result is written to
@@ -171,9 +168,6 @@ public class MarshallerImpl
          throw new JBossXBRuntimeException("XSModel is not available!");
       }
 
-      this.provider = provider instanceof GenericObjectModelProvider ?
-         (GenericObjectModelProvider)provider : new DelegatingObjectModelProvider(provider);
-
       this.root = root;
 
       content.startDocument();
@@ -207,7 +201,10 @@ public class MarshallerImpl
          }
          else
          {
-            marshalElement(rootQName.getNamespaceURI(), rootQName.getLocalPart(), type, true, 1, 1, true);
+            ElementBinding element = new ElementBinding(model, rootQName, type);
+            marshalElement(element, 1, 1, true,
+               model.isIgnoreLowLine(), model.isIgnoreUnresolvedFieldOrClass()
+            );
          }
       }
       else if(rootQNames.isEmpty())
@@ -221,13 +218,10 @@ public class MarshallerImpl
          while(elements.hasNext())
          {
             ElementBinding element = (ElementBinding)elements.next();
-            marshalElement(element.getQName().getNamespaceURI(),
-               element.getQName().getLocalPart(),
-               element.getType(),
-               element.isNillable(),
-               1,
-               1,
-               true
+            marshalElement(element, 1, 1,
+               true,
+               model.isIgnoreLowLine(),
+               model.isIgnoreUnresolvedFieldOrClass()
             );// todo fix min/max
          }
       }
@@ -253,13 +247,12 @@ public class MarshallerImpl
                throw new IllegalStateException("Root element not found: " + qName + " among " + roots);
             }
 
-            marshalElement(element.getQName().getNamespaceURI(),
-               element.getQName().getLocalPart(),
-               element.getType(),
-               element.isNillable(),
+            marshalElement(element,
                1,
                1,
-               true
+               true,
+               model.isIgnoreLowLine(),
+               model.isIgnoreUnresolvedFieldOrClass()
             );// todo fix min/max
          }
       }
@@ -285,16 +278,22 @@ public class MarshallerImpl
       }
    }
 
-   private boolean marshalElement(String elementNs, String elementLocal,
-                                  TypeBinding type,
-                                  boolean nillable,
-                                  int minOccurs, int maxOccurs,
-                                  boolean declareNs)
+   private boolean marshalElement(ElementBinding element,
+                                  int minOccurs,
+                                  int maxOccurs,
+                                  boolean declareNs,
+                                  boolean ignoreLowLine,
+                                  boolean ignoreNotFoundField)
    {
+      String elementNs = element.getQName().getNamespaceURI();
+      String elementLocal = element.getQName().getLocalPart();
+      TypeBinding type = element.getType();
+      boolean nillable = element.isNillable();
+
       Object value;
       if(stack.isEmpty())
       {
-         value = provider.getRoot(root, null, elementNs, elementLocal);
+         value = root;
          if(value == null)
          {
             return false;
@@ -309,15 +308,26 @@ public class MarshallerImpl
          }
          else if(peeked instanceof Collection || peeked.getClass().isArray())
          {
-            // collection is the provider
             value = peeked;
          }
          else
          {
-            value = provider.getChildren(peeked, null, elementNs, elementLocal);
+            String fieldName = null;
+            PropertyMetaData propertyMetaData = element.getPropertyMetaData();
+            if(propertyMetaData != null)
+            {
+               fieldName = propertyMetaData.getName();
+            }
+
+            if(fieldName == null)
+            {
+               fieldName = Util.xmlNameToFieldName(elementLocal, ignoreLowLine);
+            }
+
+            value = getChildren(element.getQName(), peeked, fieldName, ignoreNotFoundField);
             if(value == null)
             {
-               value = provider.getElementValue(peeked, null, elementNs, elementLocal);
+               value = getElementValue(element.getQName(), peeked, fieldName, ignoreNotFoundField);
             }
          }
       }
@@ -500,10 +510,9 @@ public class MarshallerImpl
       {
          AttributeBinding attrUse = (AttributeBinding)i.next();
          QName attrQName = attrUse.getQName();
-         Object attrValue = provider.getAttributeValue(stack.peek(),
-            null,
-            attrQName.getNamespaceURI(),
-            attrQName.getLocalPart()
+         Object attrValue = getElementValue(attrUse.getQName(), stack.peek(),
+            attrQName.getLocalPart(),
+            particle.getTerm().getSchema().isIgnoreUnresolvedFieldOrClass()
          );
          if(attrValue != null)
          {
@@ -563,13 +572,12 @@ public class MarshallerImpl
       {
          ElementBinding element = (ElementBinding)term;
          marshalled =
-            marshalElement(element.getQName().getNamespaceURI(),
-               element.getQName().getLocalPart(),
-               element.getType(),
-               element.isNillable(),
+            marshalElement(element,
                particle.getMinOccurs(),
                particle.getMaxOccurs(),
-               declareNs
+               declareNs,
+               term.getSchema().isIgnoreLowLine(),
+               term.getSchema().isIgnoreUnresolvedFieldOrClass()
             );
       }
       return marshalled;
@@ -590,12 +598,10 @@ public class MarshallerImpl
          );
       }
 
-      GenericObjectModelProvider parentProvider = this.provider;
       Object parentRoot = this.root;
       Stack parentStack = this.stack;
 
       this.root = o;
-      this.provider = mapping.provider;
       this.stack = new StackImpl();
 
       boolean marshalled;
@@ -604,13 +610,12 @@ public class MarshallerImpl
       {
          ElementBinding elDec = model.getElement(mapping.elementName);
          marshalled =
-            marshalElement(elDec.getQName().getNamespaceURI(),
-               elDec.getQName().getLocalPart(),
-               elDec.getType(),
-               elDec.isNillable(),
+            marshalElement(elDec,
                1,
                1,
-               declareNs
+               declareNs,
+               model.isIgnoreLowLine(),
+               model.isIgnoreUnresolvedFieldOrClass()
             );// todo fix min/max
       }
       else if(mapping.typeName != null)
@@ -620,17 +625,18 @@ public class MarshallerImpl
          {
             throw new JBossXBRuntimeException("Expected the wildcard to have a non-null QName.");
          }
-         marshalElement(wildcard.getQName().getNamespaceURI(),
-            wildcard.getQName().getLocalPart(),
-            typeDef,
-            false,
-            1,
-            1,
-            declareNs
+
+         ElementBinding element = new ElementBinding(model, new QName(wildcard.getQName().getNamespaceURI(),
+            wildcard.getQName().getLocalPart()
+         ), typeDef
          );
-         //marshalElementType(wildcard.getNamespace(), wildcard.getName(), typeDef, declareNs);
-         //todo
-         marshalled = true;
+         marshalled = marshalElement(element,
+            1,
+            1,
+            declareNs,
+            model.isIgnoreLowLine(),
+            model.isIgnoreUnresolvedFieldOrClass()
+         );
       }
       else
       {
@@ -640,25 +646,7 @@ public class MarshallerImpl
          );
       }
 
-      /*
-      XSNamedMap components = model.getComponents(XSConstants.ELEMENT_DECLARATION);
-      for(int i = 0; i < components.getLength(); ++i)
-      {
-         XSElementDeclaration element = (XSElementDeclaration)components.item(i);
-         marshalled =
-            marshalElement(element.getNamespace(),
-               element.getName(),
-               element.getTypeDefinition(),
-               element.getNillable(),
-               1,
-               1,
-               declareNs
-            );// todo fix min/max
-      }
-      */
-
       this.root = parentRoot;
-      this.provider = parentProvider;
       this.stack = parentStack;
 
       return marshalled;
@@ -682,7 +670,10 @@ public class MarshallerImpl
             );
          }
 
-         Object value = provider.getChildren(stack.peek(), null, null, propertyMetaData.getName());
+         Object value = getChildren(null, stack.peek(), propertyMetaData.getName(),
+            modelGroup.getSchema().isIgnoreUnresolvedFieldOrClass()
+         );
+
          if(particle.isRepeatable() && value != null)
          {
             Iterator i = getIterator(value);
@@ -878,5 +869,113 @@ public class MarshallerImpl
          //throw new JBossXBRuntimeException("Unexpected type for children: " + value.getClass());
       }
       return i;
+   }
+
+   private static Object getChildren(QName qName, Object o,
+                                     String fieldName,
+                                     boolean ignoreNotFoundField)
+   {
+      Object children = null;
+      if(!writeAsValue(o.getClass()))
+      {
+         children = getJavaValue(qName, fieldName, o, true, ignoreNotFoundField);
+      }
+      return children;
+   }
+
+   private static Object getJavaValue(QName qName, String fieldName,
+                                      Object o,
+                                      boolean forComplexType,
+                                      boolean ignoreNotFoundField)
+   {
+      Method getter = null;
+      Field field = null;
+      Class fieldType = null;
+
+      try
+      {
+         getter = Classes.getAttributeGetter(o.getClass(), fieldName);
+         fieldType = getter.getReturnType();
+      }
+      catch(NoSuchMethodException e)
+      {
+         try
+         {
+            field = o.getClass().getField(fieldName);
+            fieldType = field.getType();
+         }
+         catch(NoSuchFieldException e3)
+         {
+            if(ignoreNotFoundField)
+            {
+               if(log.isTraceEnabled())
+               {
+                  log.trace("getChildren: found neither getter nor field for " + qName + " in " + o.getClass());
+               }
+            }
+            else
+            {
+               throw new JBossXBRuntimeException("getChildren: found neither getter nor field for " +
+                  qName +
+                  " in "
+                  + o.getClass()
+               );
+            }
+         }
+      }
+
+      Object value = null;
+      if(fieldType != null && (!forComplexType || forComplexType && !writeAsValue(fieldType)))
+      {
+         if(getter != null)
+         {
+            try
+            {
+               value = getter.invoke(o, null);
+            }
+            catch(Exception e)
+            {
+               log.error("Failed to invoke getter '" + getter + "' on object: " + o);
+               throw new JBossXBRuntimeException("Failed to provide value for " + qName + " from " + o, e);
+            }
+         }
+         else
+         {
+            try
+            {
+               value = field.get(o);
+            }
+            catch(Exception e)
+            {
+               log.error("Failed to invoke get on field '" + field + "' on object: " + o);
+               throw new JBossXBRuntimeException("Failed to provide value for " + qName + " from " + o, e);
+            }
+         }
+      }
+
+      return value;
+   }
+
+   private static Object getElementValue(QName qName, Object o,
+                                         String fieldName,
+                                         boolean ignoreNotFoundField)
+   {
+      Object value;
+      if(writeAsValue(o.getClass()))
+      {
+         value = o;
+      }
+      else
+      {
+         value = getJavaValue(qName, fieldName, o, false, ignoreNotFoundField);
+      }
+      return value;
+   }
+
+   private static boolean writeAsValue(final Class type)
+   {
+      return Classes.isPrimitive(type) ||
+         type == String.class ||
+         type == java.util.Date.class;
    }
 }

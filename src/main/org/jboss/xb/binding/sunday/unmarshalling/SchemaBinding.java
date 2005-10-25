@@ -121,6 +121,11 @@ public class SchemaBinding
       return element;
    }
 
+   public ParticleBinding getElementParticle(QName name)
+   {
+      return (ParticleBinding)elements.get(name);
+   }
+
    public void addElement(ElementBinding element)
    {
       ParticleBinding particle = new ParticleBinding(element);
@@ -156,6 +161,11 @@ public class SchemaBinding
             throw new UnsupportedOperationException("remove is not implemented.");
          }
       };
+   }
+
+   public Iterator getElementParticles()
+   {
+      return elements.values().iterator();
    }
 
    public Iterator getTypes()
@@ -239,11 +249,6 @@ public class SchemaBinding
    public void setIgnoreLowLine(boolean ignoreLowLine)
    {
       this.ignoreLowLine = ignoreLowLine;
-   }
-
-   ParticleBinding getElementParticle(QName name)
-   {
-      return (ParticleBinding)elements.get(name);
    }
 
    void addElementParticle(ParticleBinding particle)

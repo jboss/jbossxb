@@ -418,6 +418,7 @@ public class XsdBinder
          */
       binding = new TypeBinding(typeName);
       binding.setStartElementCreatesObject(true);
+      binding.setSimple(false);
 
       if(typeName != null)
       {

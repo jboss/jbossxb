@@ -49,6 +49,7 @@ public class TypeBinding
    private AddMethodMetaData addMethodMetaData;
    private ValueAdapter valueAdapter = ValueAdapter.NOOP;
    private Boolean startElementCreatesObject;
+   private Boolean simple;
 
    private WildcardBinding wildcard;
    private ParticleBinding particle;
@@ -287,7 +288,12 @@ public class TypeBinding
 
    public boolean isSimple()
    {
-      return particle == null && attrs.isEmpty();
+      return simple == null ? particle == null && attrs.isEmpty() : simple.booleanValue();
+   }
+
+   public void setSimple(boolean simple)
+   {
+      this.simple = simple ? Boolean.TRUE : Boolean.FALSE;
    }
 
    public ClassMetaData getClassMetaData()

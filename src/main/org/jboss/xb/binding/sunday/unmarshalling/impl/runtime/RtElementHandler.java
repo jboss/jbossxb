@@ -104,7 +104,7 @@ public class RtElementHandler
 
             String getterName = propName == null ?
                Util.xmlNameToGetMethodName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
-               "get" + propName.charAt(0) + propName.substring(1);
+               "get" + Character.toUpperCase(propName.charAt(0)) + propName.substring(1);
 
             Class parentClass;
             if(parent instanceof GenericValueContainer)
@@ -690,6 +690,10 @@ public class RtElementHandler
          try
          {
             o = ((GenericValueContainer)o).instantiate();
+         }
+         catch(JBossXBRuntimeException e)
+         {
+            throw e;
          }
          catch(RuntimeException e)
          {

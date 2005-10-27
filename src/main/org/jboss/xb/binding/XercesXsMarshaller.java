@@ -359,9 +359,18 @@ public class XercesXsMarshaller
 
          stack.pop();
       }
-      else if(supportNil && nillable)
+      else if(nillable)
       {
-         writeNillable(elementNs, elementLocal);
+         if(supportNil)
+         {
+            writeNillable(elementNs, elementLocal);
+         }
+      }
+      else
+      {
+         throw new JBossXBRuntimeException("Failed to marshal " +
+            new QName(elementNs, elementLocal) +
+            ": Java value is null but the element is not nillable.");
       }
 
       if(trace)

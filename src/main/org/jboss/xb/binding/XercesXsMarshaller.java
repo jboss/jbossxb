@@ -366,12 +366,14 @@ public class XercesXsMarshaller
             writeNillable(elementNs, elementLocal);
          }
       }
+      /* todo: this breaks existing tests
       else
       {
          throw new JBossXBRuntimeException("Failed to marshal " +
             new QName(elementNs, elementLocal) +
             ": Java value is null but the element is not nillable.");
       }
+      */
 
       if(trace)
       {

@@ -36,7 +36,16 @@ public interface GenericValueContainer
                Object arr = Array.newInstance(itemType, items.size());
                for(int i = 0; i < items.size(); ++i)
                {
-                  Array.set(arr, i, items.get(i));
+                  try
+                  {
+                     Array.set(arr, i, items.get(i));
+                  }
+                  catch(IllegalArgumentException e)
+                  {
+                     throw new JBossXBRuntimeException(
+                        "Failed to set " + items.get(i) +
+                        " as an item of array " + arr);
+                  }
                }
                return arr;
             }

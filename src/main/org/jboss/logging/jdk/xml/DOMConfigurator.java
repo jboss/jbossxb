@@ -387,7 +387,7 @@ public class DOMConfigurator
       synchronized (logger)
       {
          String flag = subst(loggerElement.getAttribute(ADDITIVITY_ATTR));
-         boolean additivity = Boolean.parseBoolean(flag);
+         boolean additivity = Boolean.valueOf(flag).booleanValue();
          debug("Setting [" + logger.getName() + "] additivity to [" + additivity + "].");
          logger.setUseParentHandlers(additivity);
          parseChildrenOfLoggerElement(loggerElement, logger, false);

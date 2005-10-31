@@ -100,6 +100,8 @@ public class ObjectModelBuilder
 
    private BindingCursor metadataCursor;
 
+   private boolean trace = log.isTraceEnabled();
+   
    // Public
 
    public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
@@ -307,11 +309,6 @@ public class ObjectModelBuilder
                             Attributes atts,
                             XSTypeDefinition type)
    {
-      boolean trace = log.isTraceEnabled();
-      if (trace)
-         log.trace("startElement namespace=" + namespaceURI + " localName=" + localName +
-               " type=" + type);
-      
       Object parent = accepted.isEmpty() ? root : peekAccepted();
       metadataCursor.startElement(namespaceURI, localName);
 
@@ -354,7 +351,7 @@ public class ObjectModelBuilder
          pushAll(element);
          pushAccepted(element);
 
-         if(log.isTraceEnabled())
+         if(trace)
          {
             log.trace("accepted " + namespaceURI + ':' + qName);
          }
@@ -363,10 +360,6 @@ public class ObjectModelBuilder
 
    public void endElement(String namespaceURI, String localName, String qName)
    {
-      boolean trace = log.isTraceEnabled();
-      if (trace)
-         log.trace("endElement namespace=" + namespaceURI + " localName=" + localName);
-
       AllElement element = popAll();
 
       if(!accepted.isEmpty())

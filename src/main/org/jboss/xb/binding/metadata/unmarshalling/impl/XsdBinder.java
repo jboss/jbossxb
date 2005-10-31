@@ -222,7 +222,7 @@ public class XsdBinder
       {
          // Try the 2.6.2 version
          String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
-         Class c = loader.loadClass(name);
+         loader.loadClass(name);
          System.setProperty(DOMImplementationRegistry.PROPERTY, name);
       }
       catch(ClassNotFoundException e)

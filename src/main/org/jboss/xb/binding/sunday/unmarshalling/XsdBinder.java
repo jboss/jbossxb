@@ -213,11 +213,15 @@ public class XsdBinder
 
    public static SchemaBinding bind(XSModel model, SchemaBindingResolver resolver)
    {
+      boolean trace = log.isTraceEnabled();
+      
       SchemaBinding schema = getXsdBinding().schemaBinding;
       schema.setSchemaResolver(resolver);
 
       // read annotations. for now just log the ones that are going to be used
       XSObjectList annotations = model.getAnnotations();
+      if (trace)
+         log.trace("Schema annotations: " + annotations.getLength());
       for(int i = 0; i < annotations.getLength(); ++i)
       {
          XSAnnotation annotation = (XSAnnotation)annotations.item(i);
@@ -236,10 +240,8 @@ public class XsdBinder
                PackageMetaData packageMetaData = schemaBindings.getPackage();
                if(packageMetaData != null)
                {
-                  if(log.isTraceEnabled())
-                  {
+                  if (trace)
                      log.trace("schema default package: " + packageMetaData.getName());
-                  }
                   schema.setPackageMetaData(packageMetaData);
                }
             }
@@ -249,6 +251,8 @@ public class XsdBinder
       SharedElements sharedElements = new SharedElements();
 
       XSNamedMap groups = model.getComponents(XSConstants.MODEL_GROUP_DEFINITION);
+      if (trace)
+         log.trace("Model groups: " + groups.getLength());
       for(int i = 0; i < groups.getLength(); ++i)
       {
          XSModelGroupDefinition groupDef = (XSModelGroupDefinition)groups.item(i);
@@ -256,6 +260,8 @@ public class XsdBinder
       }
 
       XSNamedMap types = model.getComponents(XSConstants.TYPE_DEFINITION);
+      if (trace)
+         log.trace("Model types: " + types.getLength());
       for(int i = 0; i < types.getLength(); ++i)
       {
          XSTypeDefinition type = (XSTypeDefinition)types.item(i);
@@ -266,6 +272,8 @@ public class XsdBinder
       }
 
       XSNamedMap elements = model.getComponents(XSConstants.ELEMENT_DECLARATION);
+      if (trace)
+         log.trace("Model elements: " + types.getLength());
       for(int i = 0; i < elements.getLength(); ++i)
       {
          XSElementDeclaration element = (XSElementDeclaration)elements.item(i);
@@ -340,10 +348,14 @@ public class XsdBinder
 
    private static TypeBinding bindSimpleType(SchemaBinding doc, XSSimpleTypeDefinition type)
    {
+      boolean trace = log.isTraceEnabled();
+      
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
       TypeBinding binding = typeName == null ? null : doc.getType(typeName);
       if(binding == null)
       {
+         if (trace)
+            log.trace("binding simple type " + typeName);
          XSTypeDefinition baseTypeDef = type.getBaseType();
          TypeBinding baseType = baseTypeDef == null ? null : bindType(doc, baseTypeDef, null);
 
@@ -354,9 +366,9 @@ public class XsdBinder
             doc.addType(binding);
          }
 
-         if(log.isTraceEnabled())
+         if (trace)
          {
-            String msg = typeName == null ? "simple anonymous type" : "simple type " + typeName;
+            String msg = typeName == null ? "bound simple anonymous type" : "bound simple type " + typeName;
             if(baseType != null)
             {
                msg += " inherited binding metadata from " + baseType.getQName();
@@ -368,6 +380,8 @@ public class XsdBinder
          XSObjectList annotations = type.getAnnotations();
          if(annotations != null)
          {
+            if (trace)
+               log.trace(typeName + " annotations " + annotations.getLength());
             for(int i = 0; i < annotations.getLength(); ++i)
             {
                XSAnnotation an = (XSAnnotation)annotations.item(i);
@@ -378,7 +392,7 @@ public class XsdBinder
                   ClassMetaData classMetaData = appInfo.getClassMetaData();
                   if(classMetaData != null)
                   {
-                     if(log.isTraceEnabled())
+                     if (trace)
                      {
                         log.trace("simple type " +
                            type.getName() +
@@ -392,7 +406,7 @@ public class XsdBinder
                   ValueMetaData valueMetaData = appInfo.getValueMetaData();
                   if(valueMetaData != null)
                   {
-                     if(log.isTraceEnabled())
+                     if (trace)
                      {
                         log.trace("simple type " +
                            type.getName() +
@@ -417,12 +431,17 @@ public class XsdBinder
                                               XSComplexTypeDefinition type,
                                               SharedElements sharedElements)
    {
+      boolean trace = log.isTraceEnabled();
+      
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
       TypeBinding binding = typeName == null ? null : doc.getType(typeName);
       if(binding != null)
       {
          return binding;
       }
+
+      if (trace)
+         log.trace("binding complex type " + typeName);
 
       //XSTypeDefinition baseTypeDef = type.getBaseType();
       // anyType is the parent of all the types, even the parent of itself according to xerces :)
@@ -440,15 +459,17 @@ public class XsdBinder
          doc.addType(binding);
       }
 
-      if(log.isTraceEnabled())
+      if (trace)
       {
-         String msg = typeName == null ? "complex anonymous type" : "complex type " + typeName;
+         String msg = typeName == null ? "bound complex anonymous type" : "bound complex type " + typeName;
          log.trace(msg);
       }
 
       binding.setSchemaBinding(doc);
 
       XSObjectList attrs = type.getAttributeUses();
+      if (trace)
+         log.trace(typeName + " attributes " + attrs.getLength());
       for(int i = 0; i < attrs.getLength(); ++i)
       {
          XSAttributeUse attr = (XSAttributeUse)attrs.item(i);
@@ -459,6 +480,8 @@ public class XsdBinder
       XSObjectList annotations = type.getAnnotations();
       if(annotations != null)
       {
+         if (trace)
+            log.trace(typeName + " annotations " + annotations.getLength());
          for(int i = 0; i < annotations.getLength(); ++i)
          {
             XSAnnotation an = (XSAnnotation)annotations.item(i);
@@ -469,7 +492,7 @@ public class XsdBinder
                ClassMetaData classMetaData = appInfo.getClassMetaData();
                if(classMetaData != null)
                {
-                  if(log.isTraceEnabled())
+                  if (trace)
                   {
                      log.trace("complex type " +
                         type.getName() +
@@ -483,7 +506,7 @@ public class XsdBinder
                CharactersMetaData charactersMetaData = appInfo.getCharactersMetaData();
                if(charactersMetaData != null)
                {
-                  if(log.isTraceEnabled())
+                  if (trace)
                   {
                      PropertyMetaData propertyMetaData = charactersMetaData.getProperty();
                      if(propertyMetaData != null)
@@ -529,7 +552,7 @@ public class XsdBinder
                MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
                if(mapEntryMetaData != null)
                {
-                  if(log.isTraceEnabled())
+                  if (trace)
                   {
                      log.trace("complex type " +
                         type.getName() +
@@ -561,7 +584,7 @@ public class XsdBinder
                boolean skip = appInfo.isSkip();
                if(skip)
                {
-                  if(log.isTraceEnabled())
+                  if (trace)
                   {
                      log.trace("complex type " +
                         type.getName() +
@@ -575,7 +598,7 @@ public class XsdBinder
                PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
                if(propertyMetaData != null)
                {
-                  if(log.isTraceEnabled())
+                  if (trace)
                   {
                      log.trace("complex type " +
                         type.getName() +
@@ -588,7 +611,7 @@ public class XsdBinder
                AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
                if(addMethodMetaData != null)
                {
-                  if(log.isTraceEnabled())
+                  if (trace)
                   {
                      log.trace("complex type " +
                         type.getName() +
@@ -617,10 +640,14 @@ public class XsdBinder
                                       TypeBinding type,
                                       XSAttributeUse attrUse)
    {
+      boolean trace = log.isTraceEnabled();
+      
       XSAttributeDeclaration attr = attrUse.getAttrDeclaration();
+      QName attrName = new QName(attr.getNamespace(), attr.getName());
+      if (trace)
+         log.trace("binding attribute " + attrName + " for " + type.getQName());
       XSSimpleTypeDefinition attrType = attr.getTypeDefinition();
       TypeBinding typeBinding = bindSimpleType(doc, attrType);
-      QName attrName = new QName(attr.getNamespace(), attr.getName());
       AttributeBinding binding = type.addAttribute(attrName, typeBinding, RtAttributeHandler.INSTANCE);
       if(attrUse.getConstraintType() == XSConstants.VC_DEFAULT)
       {
@@ -631,6 +658,8 @@ public class XsdBinder
       XSAnnotation an = attr.getAnnotation();
       if(an != null)
       {
+         if (trace)
+            log.trace(attrName + " attribute annotation");
          XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
          XsdAppInfo appInfo = xsdAn.getAppInfo();
          if(appInfo != null)
@@ -655,11 +684,9 @@ public class XsdBinder
          }
       }
 
-      if(log.isTraceEnabled())
+      if (trace)
       {
-         String msg = "attribute " +
-            new QName(attr.getNamespace(), attr.getName()) +
-            ": ";
+         String msg = "bound attribute " + attrName;
 
          if(binding.getPropertyMetaData() != null)
          {
@@ -691,6 +718,8 @@ public class XsdBinder
 
    private static void bindParticle(SchemaBinding schema, XSParticle particle, SharedElements sharedElements)
    {
+      boolean trace = log.isTraceEnabled();
+      
       XSTerm term = particle.getTerm();
       switch(term.getType())
       {
@@ -720,7 +749,7 @@ public class XsdBinder
                particleBinding.setMinOccurs(particle.getMinOccurs());
                particleBinding.setMaxOccurs(particle.getMaxOccurs());
 
-               if(log.isTraceEnabled())
+               if (trace)
                {
                   log.trace("created model group " + groupBinding);
                }
@@ -736,7 +765,7 @@ public class XsdBinder
                {
                   ModelGroupBinding parentGroup = (ModelGroupBinding)o;
                   parentGroup.addParticle(particleBinding);
-                  if(log.isTraceEnabled())
+                  if (trace)
                   {
                      log.trace("added " + groupBinding + " to " + parentGroup);
                   }
@@ -745,7 +774,7 @@ public class XsdBinder
                {
                   TypeBinding typeBinding = (TypeBinding)o;
                   typeBinding.setParticle(particleBinding);
-                  if(log.isTraceEnabled())
+                  if (trace)
                   {
                      log.trace("added " + groupBinding + " to type " + typeBinding.getQName());
                   }
@@ -775,6 +804,8 @@ public class XsdBinder
 
    private static void bindWildcard(SchemaBinding schema, XSParticle particle)
    {
+      boolean trace = log.isTraceEnabled();
+      
       WildcardBinding binding = new WildcardBinding(schema);
 
       ModelGroupBinding group = (ModelGroupBinding)peekTypeOrGroup();
@@ -787,7 +818,7 @@ public class XsdBinder
       TypeBinding type = peekType();
       type.setWildcard(binding);
 
-      if(log.isTraceEnabled())
+      if (trace)
       {
          log.trace("added wildcard to " + group);
          log.trace("added wildcard to type " + type.getQName());
@@ -802,6 +833,8 @@ public class XsdBinder
       XSAnnotation annotation = wildcard.getAnnotation();
       if(annotation != null)
       {
+         if (trace)
+            log.trace(group + " annotation");
          XsdAnnotation xsdAn = XsdAnnotation.unmarshal(annotation.getAnnotationString());
          XsdAppInfo appInfo = xsdAn.getAppInfo();
          if(appInfo != null)
@@ -809,7 +842,7 @@ public class XsdBinder
             PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
             if(propertyMetaData != null)
             {
-               if(log.isTraceEnabled())
+               if (trace)
                {
                   log.trace("wildcard is bound to property: " +
                      propertyMetaData.getName() +
@@ -829,6 +862,8 @@ public class XsdBinder
                                               int maxOccurs,
                                               boolean maxOccursUnbounded)
    {
+      boolean trace = log.isTraceEnabled();
+      
       QName qName = new QName(elementDec.getNamespace(), elementDec.getName());
 
       ModelGroupBinding parentGroup = (ModelGroupBinding)peekTypeOrGroup();
@@ -883,13 +918,13 @@ public class XsdBinder
       if(parentGroup != null)
       {
          parentGroup.addParticle(particle);
-         if(log.isTraceEnabled())
+         if (trace)
          {
             log.trace("Element " + element.getQName() + " added to " + parentGroup);
          }
       }
 
-      if(log.isTraceEnabled())
+      if (trace)
       {
          TypeBinding parentType = peekType();
          log.trace("element: name=" +
@@ -937,7 +972,7 @@ public class XsdBinder
          ClassMetaData classMetaData = appInfo.getClassMetaData();
          if(classMetaData != null)
          {
-            if(trace)
+            if (trace)
             {
                String msg = term.isModelGroup() ? term + " bound to " : "element: name=" +
                   ((ElementBinding)term).getQName() +
@@ -952,7 +987,7 @@ public class XsdBinder
          PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
          if(propertyMetaData != null)
          {
-            if(trace)
+            if (trace)
             {
                String msg = term.isModelGroup() ? term + " " : "element: name=" +
                   ((ElementBinding)term).getQName() + ", ";
@@ -975,7 +1010,7 @@ public class XsdBinder
                throw new JBossXBRuntimeException(msg);
             }
 
-            if(trace)
+            if (trace)
             {
                String msg = term.isModelGroup() ? term.toString() : "element name=" +
                   ((ElementBinding)term).getQName();
@@ -1009,7 +1044,7 @@ public class XsdBinder
          PutMethodMetaData putMethodMetaData = appInfo.getPutMethodMetaData();
          if(putMethodMetaData != null)
          {
-            if(trace)
+            if (trace)
             {
                String msg = term.isModelGroup() ? term.toString() : "element: name=" +
                   ((ElementBinding)term).getQName() + ",";
@@ -1027,7 +1062,7 @@ public class XsdBinder
          AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
          if(addMethodMetaData != null)
          {
-            if(trace)
+            if (trace)
             {
                String msg = term.isModelGroup() ? term.toString() : "element: name=" +
                   ((ElementBinding)term).getQName() + ",";
@@ -1044,7 +1079,7 @@ public class XsdBinder
          ValueMetaData valueMetaData = appInfo.getValueMetaData();
          if(valueMetaData != null)
          {
-            if(trace)
+            if (trace)
             {
                String msg = term.isModelGroup() ? term.toString() : "element " +
                   ((ElementBinding)term).getQName();
@@ -1057,7 +1092,7 @@ public class XsdBinder
          boolean mapEntryKey = appInfo.isMapEntryKey();
          if(mapEntryKey)
          {
-            if(trace)
+            if (trace)
             {
                String msg = term.isModelGroup() ? term.toString() : "element name=" +
                   ((ElementBinding)term).getQName();
@@ -1071,7 +1106,7 @@ public class XsdBinder
          boolean mapEntryValue = appInfo.isMapEntryValue();
          if(mapEntryValue)
          {
-            if(trace)
+            if (trace)
             {
                String msg = term.isModelGroup() ? term.toString() : "element name=" +
                   ((ElementBinding)term).getQName();
@@ -1089,7 +1124,7 @@ public class XsdBinder
          }
          else if(skipAnnotation)
          {
-            if(trace)
+            if (trace)
             {
                String msg = term.isModelGroup() ? term.toString() : "element name=" +
                   ((ElementBinding)term).getQName();
@@ -1243,9 +1278,9 @@ public class XsdBinder
          DOMLocator location = error.getLocation();
          if(location != null)
          {
-            buf.append(location.getColumnNumber())
+            buf.append(location.getLineNumber())
                .append(':')
-               .append(location.getLineNumber());
+               .append(location.getColumnNumber());
          }
          else
          {

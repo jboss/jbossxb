@@ -21,24 +21,25 @@
   */
 package org.jboss.xb.binding.parser.sax;
 
+import java.io.InputStream;
+import java.io.Reader;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.jboss.logging.Logger;
+import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.xb.binding.JBossXBException;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.parser.JBossXBParser;
-import org.jboss.util.xml.JBossEntityResolver;
-import org.jboss.logging.Logger;
-import org.xml.sax.XMLReader;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.SAXException;
-import org.xml.sax.Locator;
 import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
 import org.xml.sax.EntityResolver;
-
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.parsers.SAXParser;
-import java.io.Reader;
-import java.io.InputStream;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.Locator;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.XMLReader;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -172,6 +173,8 @@ public class SaxJBossXBParser
    private final class DelegatingContentHandler
       implements org.xml.sax.ContentHandler
    {
+      boolean trace = log.isTraceEnabled();
+      
       public void endDocument()
       {
       }
@@ -224,12 +227,46 @@ public class SaxJBossXBParser
 
       public void endElement(String namespaceURI, String localName, String qName)
       {
-         contentHandler.endElement(namespaceURI, localName, qName);
+         String name = null;
+         if (trace)
+         {
+            if (localName.length() == 0)
+               name = qName;
+            else
+               name = namespaceURI + ':' + localName; 
+            log.trace("endElement enter " + name);
+         }
+         try
+         {
+            contentHandler.endElement(namespaceURI, localName, qName);
+         }
+         finally
+         {
+            if (trace)
+               log.trace("endElement exit  " + name);
+         }
       }
 
       public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
       {
-         contentHandler.startElement(namespaceURI, localName, qName, atts, null);
+         String name = null;
+         if (trace)
+         {
+            if (localName.length() == 0)
+               name = qName;
+            else
+               name = namespaceURI + ':' + localName; 
+            log.trace("startElement enter " + name);
+         }
+         try
+         {
+            contentHandler.startElement(namespaceURI, localName, qName, atts, null);
+         }
+         finally
+         {
+            if (trace)
+               log.trace("startElement exit  " + name);
+         }
       }
    }
 

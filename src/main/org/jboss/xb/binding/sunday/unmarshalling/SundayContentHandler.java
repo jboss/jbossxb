@@ -23,7 +23,9 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.LinkedList;
 import java.util.List;
+
 import javax.xml.namespace.QName;
+
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.jboss.logging.Logger;
 import org.jboss.util.StringPropertyReplacer;
@@ -58,7 +60,7 @@ public class SundayContentHandler
 
    private Object root;
    private NamespaceRegistry nsRegistry = new NamespaceRegistry();
-
+   
    public SundayContentHandler(SchemaBinding schema)
    {
       this.schema = schema;

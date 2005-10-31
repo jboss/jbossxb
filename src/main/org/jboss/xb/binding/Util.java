@@ -21,23 +21,25 @@
   */
 package org.jboss.xb.binding;
 
-import java.util.StringTokenizer;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.StringTokenizer;
+
 import javax.xml.XMLConstants;
-import org.jboss.util.Classes;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
-import org.jboss.xb.binding.sunday.unmarshalling.LSInputAdaptor;
-import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
-import org.jboss.logging.Logger;
-import org.xml.sax.Attributes;
-import org.apache.xerces.xs.XSModel;
+
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSLoader;
+import org.apache.xerces.xs.XSModel;
+import org.jboss.logging.Logger;
+import org.jboss.util.Classes;
+import org.jboss.xb.binding.sunday.unmarshalling.LSInputAdaptor;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.bootstrap.DOMImplementationRegistry;
-import org.w3c.dom.ls.LSResourceResolver;
 import org.w3c.dom.ls.LSInput;
+import org.w3c.dom.ls.LSResourceResolver;
+import org.xml.sax.Attributes;
 
 /**
  * Various utilities for XML binding.
@@ -276,10 +278,10 @@ public final class Util
 
    public static XSModel loadSchema(String xsdURL, SchemaBindingResolver schemaResolver)
    {
-      if(log.isTraceEnabled())
-      {
+      boolean trace = log.isTraceEnabled();
+      long start = System.currentTimeMillis();
+      if(trace)
          log.trace("loading xsd: " + xsdURL);
-      }
 
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);
@@ -295,6 +297,8 @@ public final class Util
          throw new IllegalArgumentException("Invalid URI for schema: " + xsdURL);
       }
 
+      if (trace)
+         log.trace("Loaded xsd: " + xsdURL + " in " + (System.currentTimeMillis() - start) + "ms");
       return model;
    }
 

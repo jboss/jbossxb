@@ -80,11 +80,17 @@ public class RtElementHandler
          return parent;
       }
 
+      boolean trace = log.isTraceEnabled();
+      if (trace)
+         log.trace("startElement " + elementName + " parent=" + parent + " term=" + term);
+      
       if(!term.isModelGroup())
       {
          TypeBinding type = ((ElementBinding)term).getType();
          if(!type.isStartElementCreatesObject())
          {
+            if (trace)
+               log.trace("startElement " + elementName + " does not create an object");
             return null;
          }
       }
@@ -110,6 +116,8 @@ public class RtElementHandler
             Class itemCls = classForElement(arrayItem);
             if(itemCls != null)
             {
+               if (trace)
+                  log.trace("startElement " + elementName + " new array " + itemCls.getName());
                o = GenericValueContainer.FACTORY.array(itemCls);
             }
          }
@@ -117,6 +125,9 @@ public class RtElementHandler
          {
             PropertyMetaData propertyMetaData = term.getPropertyMetaData();
             String propName = propertyMetaData == null ? null : propertyMetaData.getName();
+
+            if (trace)
+               log.trace("startElement " + elementName + " property=" + propName);
 
             String getterName = propName == null ?
                Util.xmlNameToGetMethodName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
@@ -196,10 +207,14 @@ public class RtElementHandler
             if(mapEntryMetaData.getImpl() != null)
             {
                Class cls = getClassForTerm(mapEntryMetaData.getImpl(), term, elementName);
+               if (trace)
+                  log.trace("startElement " + elementName + " new map entry " + cls.getName());
                o = newInstance(cls, elementName);
             }
             else
             {
+               if (trace)
+                  log.trace("startElement " + elementName + " new map entry");
                o = new MapEntry();
             }
 
@@ -224,6 +239,8 @@ public class RtElementHandler
                Object value;
                try
                {
+                  if (trace)
+                     log.trace("startElement " + elementName + " map value type " + mapEntryMetaData.getValueType());
                   value = mapValueType.newInstance();
                }
                catch(Exception e)
@@ -307,6 +324,8 @@ public class RtElementHandler
                getClassForTerm(classMetaData.getImpl(), term, elementName);
             if(cls != null)
             {
+               if (trace)
+                  log.trace("startElement " + elementName + " new " + cls.getName());
                o = newInstance(cls, elementName);
             }
          }
@@ -427,10 +446,16 @@ public class RtElementHandler
          return;
       }
 
+      boolean trace = log.isTraceEnabled();
+      if (trace)
+         log.trace("setParent " + qName + " parent=" + parent + " object=" + o + " term=" + term);
+      
       TermBinding parentTerm = parentParticle.getTerm();
 
       if(term.isMapEntryKey())
       {
+         if (trace)
+            log.trace("setParent " + qName + " mapKey");
          if(parent instanceof MapEntry)
          {
             MapEntry mapEntry = (MapEntry)parent;
@@ -467,6 +492,8 @@ public class RtElementHandler
       }
       else if(term.isMapEntryValue())
       {
+         if (trace)
+            log.trace("setParent " + qName + " mapValue");
          if(parent instanceof MapEntry)
          {
             MapEntry mapEntry = (MapEntry)parent;
@@ -491,6 +518,8 @@ public class RtElementHandler
          Object owner = parent;
          if(parent instanceof MapEntry)
          {
+            if (trace)
+               log.trace("setParent " + qName + " mapEntry");
             MapEntry mapEntry = (MapEntry)parent;
             owner = mapEntry.getValue();
             if(owner == null)
@@ -544,10 +573,14 @@ public class RtElementHandler
          if(term.getPutMethodMetaData() != null ||
             term.getMapEntryMetaData() != null && owner instanceof Map)
          {
+            if (trace)
+               log.trace("setParent " + qName + " mapPut");
             invokePut(qName, term, owner, o);
          }
          else if(term.getAddMethodMetaData() != null)
          {
+            if (trace)
+               log.trace("setParent " + qName + " add");
             invokeAdd(qName, term, owner, o);
          }
          else
@@ -562,7 +595,7 @@ public class RtElementHandler
             {
                propertyMetaData = term.getPropertyMetaData();
             }
-
+            
             /*
             if(propertyMetaData == null)
             {
@@ -572,10 +605,14 @@ public class RtElementHandler
 
             if(owner instanceof GenericValueContainer)
             {
+               if (trace)
+                  log.trace("setParent " + qName + " addChild");
                ((GenericValueContainer)owner).addChild(qName, o);
             }
             else if(owner instanceof ValueList)
             {
+               if (trace)
+                  log.trace("setParent " + qName + " add");
                ValueList valueList = (ValueList)owner;
                ValueListInitializer initializer = valueList.getInitializer();
                if(particle.isRepeatable())
@@ -676,6 +713,9 @@ public class RtElementHandler
                   propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
                }
 
+               if (trace)
+                  log.trace("setParent " + qName + " metadata set " + propName);
+
                RtUtil.set(owner, o, propName, propertyMetaData.getCollectionType(),
                   term.getSchema().isIgnoreUnresolvedFieldOrClass(),
                   term.getValueAdapter()
@@ -683,12 +723,16 @@ public class RtElementHandler
             }
             else if(owner instanceof Collection)
             {
+               if (trace)
+                  log.trace("setParent " + qName + " collection.add()");
                ((Collection)owner).add(o);
             }
             else
             {
                // no metadata available
                String propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
+               if (trace)
+                  log.trace("setParent " + qName + " no metadata set " + propName);
                RtUtil.set(owner, o, propName, null,
                   term.getSchema().isIgnoreUnresolvedFieldOrClass(),
                   term.getValueAdapter()
@@ -706,10 +750,16 @@ public class RtElementHandler
          return o;
       }
 
+      boolean trace = log.isTraceEnabled();
+      if (trace)
+         log.trace("endParticle " + elementName +" object=" + o + " term=" + term);
+      
       if(o instanceof GenericValueContainer)
       {
          try
          {
+            if (trace)
+               log.trace("endParticle " + elementName + " instantiate()");
             o = ((GenericValueContainer)o).instantiate();
          }
          catch(JBossXBRuntimeException e)
@@ -726,6 +776,8 @@ public class RtElementHandler
       }
       else if(o instanceof ValueList)
       {
+         if (trace)
+            log.trace("endParticle " + elementName + " valueList");
          ValueList valueList = (ValueList)o;
          o = valueList.getHandler().newInstance(valueList);
       }

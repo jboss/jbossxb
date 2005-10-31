@@ -72,8 +72,9 @@ public class RtElementHandler
 
    public static final RtElementHandler INSTANCE = new RtElementHandler();
 
-   public Object startElement(Object parent, QName elementName, TermBinding term)
+   public Object startElement(Object parent, QName elementName, ParticleBinding particle)
    {
+      TermBinding term = particle.getTerm();
       if(term.isSkip())
       {
          return parent;
@@ -170,6 +171,11 @@ public class RtElementHandler
                         parentClass
                      );
                   }
+               }
+
+               if(particle.isRepeatable() && fieldType.isArray())
+               {
+                  fieldType = fieldType.getComponentType();
                }
             }
 
@@ -396,7 +402,7 @@ public class RtElementHandler
                                NamespaceContext nsCtx)
    {
       TermBinding term = particle.getTerm();
-      Object o = startElement(parent, elementName, term);
+      Object o = startElement(parent, elementName, particle);
       if(!term.isModelGroup())
       {
          ElementBinding element = (ElementBinding)term;

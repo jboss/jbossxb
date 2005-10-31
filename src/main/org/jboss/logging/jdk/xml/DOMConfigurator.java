@@ -37,6 +37,7 @@ import javax.xml.parsers.FactoryConfigurationError;
 
 import org.jboss.util.propertyeditor.PropertyEditors;
 import org.jboss.util.StringPropertyReplacer;
+import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.logging.jdk.handlers.HandlerSkeleton;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

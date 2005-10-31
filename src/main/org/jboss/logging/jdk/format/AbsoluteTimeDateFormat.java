@@ -28,7 +28,8 @@ import java.util.Date;
  *
  * @author Ceki G&uuml;lc&uuml;
  * @author Andrew Vajoczki
- * @since 0.7.5
+ * @author Scott.Stark@jboss.org
+ * @version $Revision$
  */
 public class AbsoluteTimeDateFormat extends DateFormat
 {

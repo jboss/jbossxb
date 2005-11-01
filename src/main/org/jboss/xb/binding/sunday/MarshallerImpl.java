@@ -371,9 +371,9 @@ public class MarshallerImpl
                while(i.hasNext())
                {
                   Object item = i.next();
-                  if(item == null && supportNil && nillable)
+                  if(item == null)
                   {
-                     writeNillable(elementNs, elementLocal);
+                     writeNillable(elementNs, elementLocal, nillable);
                   }
                   else
                   {
@@ -391,9 +391,9 @@ public class MarshallerImpl
 
          stack.pop();
       }
-      else if(supportNil && nillable)
+      else
       {
-         writeNillable(elementNs, elementLocal);
+         writeNillable(elementNs, elementLocal, nillable);
       }
 
       if(trace)
@@ -499,9 +499,9 @@ public class MarshallerImpl
          content.characters(marshalled.toCharArray(), 0, marshalled.length());
          content.endElement(elementUri, elementLocal, qName);
       }
-      else if(supportNil && nillable)
+      else
       {
-         writeNillable(elementUri, elementLocal);
+         writeNillable(elementUri, elementLocal, nillable);
       }
    }
 
@@ -775,8 +775,20 @@ public class MarshallerImpl
       return marshalled;
    }
 
-   private void writeNillable(String elementNs, String elementLocal)
+   private void writeNillable(String elementNs, String elementLocal, boolean nillable)
    {
+      if(!supportNil)
+      {
+         return;
+      }
+
+      if(!nillable)
+      {
+         throw new JBossXBRuntimeException("Failed to marshal " +
+            new QName(elementNs, elementLocal) +
+            ": Java value is null but the element is not nillable.");
+      }
+
       AttributesImpl attrs;
       String prefix = (String)prefixByUri.get(elementNs);
       if(prefix == null && elementNs != null && elementNs.length() > 0)

@@ -72,346 +72,6 @@ public class RtElementHandler
 
    public static final RtElementHandler INSTANCE = new RtElementHandler();
 
-   public Object startElement(Object parent, QName elementName, ParticleBinding particle)
-   {
-      TermBinding term = particle.getTerm();
-      if(term.isSkip())
-      {
-         return parent;
-      }
-
-      boolean trace = log.isTraceEnabled();
-      if (trace)
-         log.trace("startElement " + elementName + " parent=" + parent + " term=" + term);
-      
-      if(!term.isModelGroup())
-      {
-         TypeBinding type = ((ElementBinding)term).getType();
-         if(!type.isStartElementCreatesObject())
-         {
-            if (trace)
-               log.trace("startElement " + elementName + " does not create an object");
-            return null;
-         }
-      }
-
-      Object o = null;
-      ClassMetaData classMetaData = term.getClassMetaData();
-      MapEntryMetaData mapEntryMetaData = term.getMapEntryMetaData();
-
-      // if addMethod is specified, it's probably some collection field
-      // but should not be set as a property. Instead, items are added to it using the addMethod
-      ElementBinding arrayItem = null;
-      if(!term.isModelGroup())
-      {
-         ParticleBinding typeParticle = ((ElementBinding)term).getType().getParticle();
-         ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());
-         arrayItem = modelGroup == null ? null : modelGroup.getArrayItem();
-      }
-
-      if(classMetaData == null && term.getAddMethodMetaData() == null && arrayItem != null)
-      {
-         if(parent == null)
-         {
-            Class itemCls = classForElement(arrayItem);
-            if(itemCls != null)
-            {
-               if (trace)
-                  log.trace("startElement " + elementName + " new array " + itemCls.getName());
-               o = GenericValueContainer.FACTORY.array(itemCls);
-            }
-         }
-         else
-         {
-            PropertyMetaData propertyMetaData = term.getPropertyMetaData();
-            String propName = propertyMetaData == null ? null : propertyMetaData.getName();
-
-            if (trace)
-               log.trace("startElement " + elementName + " property=" + propName);
-
-            String getterName = propName == null ?
-               Util.xmlNameToGetMethodName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
-               "get" + Character.toUpperCase(propName.charAt(0)) + propName.substring(1);
-
-            Class parentClass;
-            if(parent instanceof GenericValueContainer)
-            {
-               parentClass = ((GenericValueContainer)parent).getTargetClass();
-            }
-            else if(parent instanceof ValueList)
-            {
-               parentClass = ((ValueList)parent).getTargetClass();
-            }
-            else
-            {
-               parentClass = parent.getClass();
-            }
-
-            Class fieldType;
-            if(parentClass.isArray())
-            {
-               fieldType = parentClass.getComponentType();
-            }
-            else
-            {
-               try
-               {
-                  Method getter = parentClass.getMethod(getterName, null);
-                  fieldType = getter.getReturnType();
-               }
-               catch(NoSuchMethodException e)
-               {
-                  String fieldName = null;
-                  try
-                  {
-                     fieldName = propName == null ?
-                        Util.xmlNameToFieldName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
-                        propName;
-                     Field field = parentClass.getField(fieldName);
-                     fieldType = field.getType();
-                  }
-                  catch(NoSuchFieldException e1)
-                  {
-                     throw new JBossXBRuntimeException("Failed to find field " +
-                        fieldName +
-                        " and getter " +
-                        getterName +
-                        " for term " +
-                        elementName +
-                        " in " +
-                        parentClass
-                     );
-                  }
-               }
-
-               if(particle.isRepeatable() && fieldType.isArray())
-               {
-                  fieldType = fieldType.getComponentType();
-               }
-            }
-
-            if(fieldType.isArray())
-            {
-               o = GenericValueContainer.FACTORY.array(fieldType.getComponentType());
-            }
-            else if(Collection.class.isAssignableFrom(fieldType))
-            {
-               o = new ArrayList();
-            }
-         }
-      }
-      else
-      {
-         if(mapEntryMetaData != null)
-         {
-            if(mapEntryMetaData.getImpl() != null)
-            {
-               Class cls = getClassForTerm(mapEntryMetaData.getImpl(), term, elementName);
-               if (trace)
-                  log.trace("startElement " + elementName + " new map entry " + cls.getName());
-               o = newInstance(cls, elementName);
-            }
-            else
-            {
-               if (trace)
-                  log.trace("startElement " + elementName + " new map entry");
-               o = new MapEntry();
-            }
-
-            if(mapEntryMetaData.isNonNullValue() && mapEntryMetaData.getValueType() != null)
-            {
-               Class mapValueType;
-               try
-               {
-                  mapValueType =
-                     Thread.currentThread().getContextClassLoader().loadClass(mapEntryMetaData.getValueType());
-               }
-               catch(ClassNotFoundException e)
-               {
-                  throw new JBossXBRuntimeException("startElement failed for " +
-                     elementName +
-                     ": failed to load class " +
-                     mapEntryMetaData.getValueType() +
-                     " for map entry value."
-                  );
-               }
-
-               Object value;
-               try
-               {
-                  if (trace)
-                     log.trace("startElement " + elementName + " map value type " + mapEntryMetaData.getValueType());
-                  value = mapValueType.newInstance();
-               }
-               catch(Exception e)
-               {
-                  throw new JBossXBRuntimeException("startElement failed for " +
-                     elementName +
-                     ": failed to create an instance of " +
-                     mapValueType +
-                     " for map entry value."
-                  );
-               }
-
-               if(o instanceof MapEntry)
-               {
-                  ((MapEntry)o).setValue(value);
-               }
-               else
-               {
-                  String getValueMethodName = mapEntryMetaData.getGetValueMethod();
-                  if(getValueMethodName == null)
-                  {
-                     getValueMethodName = "getValue";
-                  }
-
-                  String setValueMethodName = mapEntryMetaData.getSetValueMethod();
-                  if(setValueMethodName == null)
-                  {
-                     setValueMethodName = "setValue";
-                  }
-
-                  Method getValueMethod;
-                  try
-                  {
-                     getValueMethod = o.getClass().getMethod(getValueMethodName, null);
-                  }
-                  catch(NoSuchMethodException e)
-                  {
-                     throw new JBossXBRuntimeException("getValueMethod=" +
-                        getValueMethodName +
-                        " is not found in map entry " + o.getClass()
-                     );
-                  }
-
-                  Method setValueMethod;
-                  try
-                  {
-                     setValueMethod =
-                        o.getClass().getMethod(setValueMethodName, new Class[]{getValueMethod.getReturnType()});
-                  }
-                  catch(NoSuchMethodException e)
-                  {
-                     throw new JBossXBRuntimeException("setValueMethod=" +
-                        setValueMethodName +
-                        "(" +
-                        getValueMethod.getReturnType().getName() +
-                        " value) is not found in map entry " + o.getClass()
-                     );
-                  }
-
-                  try
-                  {
-                     setValueMethod.invoke(o, new Object[]{value});
-                  }
-                  catch(Exception e)
-                  {
-                     throw new JBossXBRuntimeException("setValueMethod=" +
-                        setValueMethodName +
-                        " failed: owner=" +
-                        o +
-                        ", value=" + value + ", msg=" + e.getMessage(), e
-                     );
-                  }
-               }
-            }
-         }
-         else
-         {
-            // todo: for now we require metadata for model groups to be bound
-            Class cls = classMetaData == null ?
-               getClass(null, (ElementBinding)term, elementName) :
-               getClassForTerm(classMetaData.getImpl(), term, elementName);
-            if(cls != null)
-            {
-               if (trace)
-                  log.trace("startElement " + elementName + " new " + cls.getName());
-               o = newInstance(cls, elementName);
-            }
-         }
-      }
-
-      return o;
-   }
-
-   private Class classForElement(ElementBinding arrayItem)
-   {
-      TypeBinding itemType = arrayItem.getType();
-
-      Class itemCls;
-      QName itemTypeQName = itemType.getQName();
-      if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
-      {
-         itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart(), arrayItem.isNillable());
-      }
-      else
-      {
-         ElementBinding item = null;
-         if(!itemType.isSimple())
-         {
-            ParticleBinding typeParticle = itemType.getParticle();
-            ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());
-            item = modelGroup == null ? null : modelGroup.getArrayItem();
-         }
-
-         if(item != null)
-         {
-            itemCls = classForElement(item);
-            // todo: what's the best way to get an array class having the item class
-            itemCls = Array.newInstance(itemCls, 0).getClass();
-         }
-         else
-         {
-            ClassMetaData itemClsMetaData = itemType.getClassMetaData();
-            String itemClsName = itemClsMetaData == null ? null : itemClsMetaData.getImpl();
-            itemCls = getClass(itemClsName, arrayItem, arrayItem.getQName());
-         }
-      }
-      return itemCls;
-   }
-
-   public void attributes(Object o,
-                          QName elementName,
-                          ElementBinding element,
-                          Attributes attrs,
-                          NamespaceContext nsCtx)
-   {
-      TypeBinding type = element.getType();
-      for(int i = 0; i < attrs.getLength(); ++i)
-      {
-         QName attrName = new QName(attrs.getURI(i), attrs.getLocalName(i));
-         AttributeBinding binding = type.getAttribute(attrName);
-         if(binding != null)
-         {
-            AttributeHandler handler = binding.getHandler();
-            if(handler != null)
-            {
-               Object value = handler.unmarshal(elementName, attrName, binding, nsCtx, attrs.getValue(i));
-               handler.attribute(elementName, attrName, binding, o, value);
-            }
-            else
-            {
-               throw new JBossXBRuntimeException(
-                  "Attribute binding present but has no handler: element=" + elementName + ", attrinute=" + attrName
-               );
-            }
-         }
-         else
-         {
-            if(!Constants.NS_XML_SCHEMA_INSTANCE.equals(attrs.getURI(i)))
-            {
-               CharactersHandler simpleType = type.getSimpleType();
-               Object value;
-               if(simpleType == null)
-               {
-                  value = attrs.getValue(i);
-                  RtUtil.set(o, attrName, value, element.getSchema().isIgnoreLowLine());
-               }
-            }
-         }
-      }
-   }
-
    // ParticleHandler impl
 
    public Object startParticle(Object parent,
@@ -448,14 +108,19 @@ public class RtElementHandler
 
       boolean trace = log.isTraceEnabled();
       if (trace)
+      {
          log.trace("setParent " + qName + " parent=" + parent + " object=" + o + " term=" + term);
-      
+      }
+
       TermBinding parentTerm = parentParticle.getTerm();
 
       if(term.isMapEntryKey())
       {
          if (trace)
+         {
             log.trace("setParent " + qName + " mapKey");
+         }
+
          if(parent instanceof MapEntry)
          {
             MapEntry mapEntry = (MapEntry)parent;
@@ -493,7 +158,10 @@ public class RtElementHandler
       else if(term.isMapEntryValue())
       {
          if (trace)
+         {
             log.trace("setParent " + qName + " mapValue");
+         }
+
          if(parent instanceof MapEntry)
          {
             MapEntry mapEntry = (MapEntry)parent;
@@ -519,7 +187,10 @@ public class RtElementHandler
          if(parent instanceof MapEntry)
          {
             if (trace)
+            {
                log.trace("setParent " + qName + " mapEntry");
+            }
+
             MapEntry mapEntry = (MapEntry)parent;
             owner = mapEntry.getValue();
             if(owner == null)
@@ -574,13 +245,17 @@ public class RtElementHandler
             term.getMapEntryMetaData() != null && owner instanceof Map)
          {
             if (trace)
+            {
                log.trace("setParent " + qName + " mapPut");
+            }
             invokePut(qName, term, owner, o);
          }
          else if(term.getAddMethodMetaData() != null)
          {
             if (trace)
+            {
                log.trace("setParent " + qName + " add");
+            }
             invokeAdd(qName, term, owner, o);
          }
          else
@@ -595,7 +270,7 @@ public class RtElementHandler
             {
                propertyMetaData = term.getPropertyMetaData();
             }
-            
+
             /*
             if(propertyMetaData == null)
             {
@@ -606,13 +281,17 @@ public class RtElementHandler
             if(owner instanceof GenericValueContainer)
             {
                if (trace)
+               {
                   log.trace("setParent " + qName + " addChild");
+               }
                ((GenericValueContainer)owner).addChild(qName, o);
             }
             else if(owner instanceof ValueList)
             {
                if (trace)
+               {
                   log.trace("setParent " + qName + " add");
+               }
                ValueList valueList = (ValueList)owner;
                ValueListInitializer initializer = valueList.getInitializer();
                if(particle.isRepeatable())
@@ -714,29 +393,57 @@ public class RtElementHandler
                }
 
                if (trace)
+               {
                   log.trace("setParent " + qName + " metadata set " + propName);
+               }
 
-               RtUtil.set(owner, o, propName, propertyMetaData.getCollectionType(),
-                  term.getSchema().isIgnoreUnresolvedFieldOrClass(),
-                  term.getValueAdapter()
-               );
+               if(particle.isRepeatable())
+               {
+                  RtUtil.add(owner, o, propName, propertyMetaData.getCollectionType(),
+                     term.getSchema().isIgnoreUnresolvedFieldOrClass(),
+                     term.getValueAdapter()
+                  );
+               }
+               else
+               {
+                  RtUtil.set(owner, o, propName, propertyMetaData.getCollectionType(),
+                     term.getSchema().isIgnoreUnresolvedFieldOrClass(),
+                     term.getValueAdapter()
+                  );
+               }
             }
             else if(owner instanceof Collection)
             {
                if (trace)
+               {
                   log.trace("setParent " + qName + " collection.add()");
+               }
                ((Collection)owner).add(o);
             }
             else
             {
                // no metadata available
                String propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
+
                if (trace)
+               {
                   log.trace("setParent " + qName + " no metadata set " + propName);
-               RtUtil.set(owner, o, propName, null,
-                  term.getSchema().isIgnoreUnresolvedFieldOrClass(),
-                  term.getValueAdapter()
-               );
+               }
+
+               if(particle.isRepeatable())
+               {
+                  RtUtil.add(owner, o, propName, null,
+                     term.getSchema().isIgnoreUnresolvedFieldOrClass(),
+                     term.getValueAdapter()
+                  );
+               }
+               else
+               {
+                  RtUtil.set(owner, o, propName, null,
+                     term.getSchema().isIgnoreUnresolvedFieldOrClass(),
+                     term.getValueAdapter()
+                  );
+               }
             }
          }
       }
@@ -752,14 +459,18 @@ public class RtElementHandler
 
       boolean trace = log.isTraceEnabled();
       if (trace)
+      {
          log.trace("endParticle " + elementName +" object=" + o + " term=" + term);
-      
+      }
+
       if(o instanceof GenericValueContainer)
       {
          try
          {
             if (trace)
+            {
                log.trace("endParticle " + elementName + " instantiate()");
+            }
             o = ((GenericValueContainer)o).instantiate();
          }
          catch(JBossXBRuntimeException e)
@@ -777,7 +488,9 @@ public class RtElementHandler
       else if(o instanceof ValueList)
       {
          if (trace)
+         {
             log.trace("endParticle " + elementName + " valueList");
+         }
          ValueList valueList = (ValueList)o;
          o = valueList.getHandler().newInstance(valueList);
       }
@@ -786,6 +499,362 @@ public class RtElementHandler
    }
 
    // Private
+
+   private Object startElement(Object parent, QName elementName, ParticleBinding particle)
+   {
+      TermBinding term = particle.getTerm();
+      if(term.isSkip())
+      {
+         return parent;
+      }
+
+      boolean trace = log.isTraceEnabled();
+      if (trace)
+         log.trace("startElement " + elementName + " parent=" + parent + " term=" + term);
+
+      if(!term.isModelGroup())
+      {
+         TypeBinding type = ((ElementBinding)term).getType();
+         if(!type.isStartElementCreatesObject())
+         {
+            if (trace)
+            {
+               log.trace("startElement " + elementName + " does not create an object");
+            }
+            return null;
+         }
+      }
+
+      Object o = null;
+      ClassMetaData classMetaData = term.getClassMetaData();
+      MapEntryMetaData mapEntryMetaData = term.getMapEntryMetaData();
+
+      // if addMethod is specified, it's probably some collection field
+      // but should not be set as a property. Instead, items are added to it using the addMethod
+      ElementBinding arrayItem = null;
+      if(!term.isModelGroup())
+      {
+         ParticleBinding typeParticle = ((ElementBinding)term).getType().getParticle();
+         ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());
+         arrayItem = modelGroup == null ? null : modelGroup.getArrayItem();
+      }
+
+      if(classMetaData == null && term.getAddMethodMetaData() == null && arrayItem != null)
+      {
+         if(parent == null)
+         {
+            Class itemCls = classForElement(arrayItem);
+            if(itemCls != null)
+            {
+               if (trace)
+               {
+                  log.trace("startElement " + elementName + " new array " + itemCls.getName());
+               }
+               o = GenericValueContainer.FACTORY.array(itemCls);
+            }
+         }
+         else
+         {
+            PropertyMetaData propertyMetaData = term.getPropertyMetaData();
+            String propName = propertyMetaData == null ? null : propertyMetaData.getName();
+
+            if (trace)
+            {
+               log.trace("startElement " + elementName + " property=" + propName);
+            }
+
+            String getterName = propName == null ?
+               Util.xmlNameToGetMethodName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
+               "get" + Character.toUpperCase(propName.charAt(0)) + propName.substring(1);
+
+            Class parentClass;
+            if(parent instanceof GenericValueContainer)
+            {
+               parentClass = ((GenericValueContainer)parent).getTargetClass();
+            }
+            else if(parent instanceof ValueList)
+            {
+               parentClass = ((ValueList)parent).getTargetClass();
+            }
+            else
+            {
+               parentClass = parent.getClass();
+            }
+
+            Class fieldType;
+            if(parentClass.isArray())
+            {
+               fieldType = parentClass.getComponentType();
+            }
+            else
+            {
+               try
+               {
+                  Method getter = parentClass.getMethod(getterName, null);
+                  fieldType = getter.getReturnType();
+               }
+               catch(NoSuchMethodException e)
+               {
+                  String fieldName = null;
+                  try
+                  {
+                     fieldName = propName == null ?
+                        Util.xmlNameToFieldName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
+                        propName;
+                     Field field = parentClass.getField(fieldName);
+                     fieldType = field.getType();
+                  }
+                  catch(NoSuchFieldException e1)
+                  {
+                     throw new JBossXBRuntimeException("Failed to find field " +
+                        fieldName +
+                        " and getter " +
+                        getterName +
+                        " for term " +
+                        elementName +
+                        " in " +
+                        parentClass
+                     );
+                  }
+               }
+
+               if(particle.isRepeatable() && fieldType.isArray())
+               {
+                  fieldType = fieldType.getComponentType();
+               }
+            }
+
+            if(fieldType.isArray())
+            {
+               o = GenericValueContainer.FACTORY.array(fieldType.getComponentType());
+            }
+            else if(Collection.class.isAssignableFrom(fieldType))
+            {
+               o = new ArrayList();
+            }
+         }
+      }
+      else
+      {
+         if(mapEntryMetaData != null)
+         {
+            if(mapEntryMetaData.getImpl() != null)
+            {
+               Class cls = getClassForTerm(mapEntryMetaData.getImpl(), term, elementName);
+
+               if (trace)
+               {
+                  log.trace("startElement " + elementName + " new map entry " + cls.getName());
+               }
+
+               o = newInstance(cls, elementName);
+            }
+            else
+            {
+               o = new MapEntry();
+               if (trace)
+               {
+                  log.trace("startElement " + elementName + " new map entry");
+               }
+            }
+
+            if(mapEntryMetaData.isNonNullValue() && mapEntryMetaData.getValueType() != null)
+            {
+               Class mapValueType;
+               try
+               {
+                  mapValueType =
+                     Thread.currentThread().getContextClassLoader().loadClass(mapEntryMetaData.getValueType());
+               }
+               catch(ClassNotFoundException e)
+               {
+                  throw new JBossXBRuntimeException("startElement failed for " +
+                     elementName +
+                     ": failed to load class " +
+                     mapEntryMetaData.getValueType() +
+                     " for map entry value."
+                  );
+               }
+
+               Object value;
+               try
+               {
+                  if (trace)
+                  {
+                     log.trace("startElement " + elementName + " map value type " + mapEntryMetaData.getValueType());
+                  }
+                  value = mapValueType.newInstance();
+               }
+               catch(Exception e)
+               {
+                  throw new JBossXBRuntimeException("startElement failed for " +
+                     elementName +
+                     ": failed to create an instance of " +
+                     mapValueType +
+                     " for map entry value."
+                  );
+               }
+
+               if(o instanceof MapEntry)
+               {
+                  ((MapEntry)o).setValue(value);
+               }
+               else
+               {
+                  String getValueMethodName = mapEntryMetaData.getGetValueMethod();
+                  if(getValueMethodName == null)
+                  {
+                     getValueMethodName = "getValue";
+                  }
+
+                  String setValueMethodName = mapEntryMetaData.getSetValueMethod();
+                  if(setValueMethodName == null)
+                  {
+                     setValueMethodName = "setValue";
+                  }
+
+                  Method getValueMethod;
+                  try
+                  {
+                     getValueMethod = o.getClass().getMethod(getValueMethodName, null);
+                  }
+                  catch(NoSuchMethodException e)
+                  {
+                     throw new JBossXBRuntimeException("getValueMethod=" +
+                        getValueMethodName +
+                        " is not found in map entry " + o.getClass()
+                     );
+                  }
+
+                  Method setValueMethod;
+                  try
+                  {
+                     setValueMethod =
+                        o.getClass().getMethod(setValueMethodName, new Class[]{getValueMethod.getReturnType()});
+                  }
+                  catch(NoSuchMethodException e)
+                  {
+                     throw new JBossXBRuntimeException("setValueMethod=" +
+                        setValueMethodName +
+                        "(" +
+                        getValueMethod.getReturnType().getName() +
+                        " value) is not found in map entry " + o.getClass()
+                     );
+                  }
+
+                  try
+                  {
+                     setValueMethod.invoke(o, new Object[]{value});
+                  }
+                  catch(Exception e)
+                  {
+                     throw new JBossXBRuntimeException("setValueMethod=" +
+                        setValueMethodName +
+                        " failed: owner=" +
+                        o +
+                        ", value=" + value + ", msg=" + e.getMessage(), e
+                     );
+                  }
+               }
+            }
+         }
+         else
+         {
+            // todo: for now we require metadata for model groups to be bound
+            Class cls = classMetaData == null ?
+               getClass(null, (ElementBinding)term, elementName) :
+               getClassForTerm(classMetaData.getImpl(), term, elementName);
+            if(cls != null)
+            {
+               if (trace)
+               {
+                  log.trace("startElement " + elementName + " new " + cls.getName());
+               }
+               o = newInstance(cls, elementName);
+            }
+         }
+      }
+
+      return o;
+   }
+
+   private void attributes(Object o,
+                           QName elementName,
+                           ElementBinding element,
+                           Attributes attrs,
+                           NamespaceContext nsCtx)
+   {
+      TypeBinding type = element.getType();
+      for(int i = 0; i < attrs.getLength(); ++i)
+      {
+         QName attrName = new QName(attrs.getURI(i), attrs.getLocalName(i));
+         AttributeBinding binding = type.getAttribute(attrName);
+         if(binding != null)
+         {
+            AttributeHandler handler = binding.getHandler();
+            if(handler != null)
+            {
+               Object value = handler.unmarshal(elementName, attrName, binding, nsCtx, attrs.getValue(i));
+               handler.attribute(elementName, attrName, binding, o, value);
+            }
+            else
+            {
+               throw new JBossXBRuntimeException(
+                  "Attribute binding present but has no handler: element=" + elementName + ", attrinute=" + attrName
+               );
+            }
+         }
+         else
+         {
+            if(!Constants.NS_XML_SCHEMA_INSTANCE.equals(attrs.getURI(i)))
+            {
+               CharactersHandler simpleType = type.getSimpleType();
+               Object value;
+               if(simpleType == null)
+               {
+                  value = attrs.getValue(i);
+                  RtUtil.set(o, attrName, value, element.getSchema().isIgnoreLowLine());
+               }
+            }
+         }
+      }
+   }
+
+   private Class classForElement(ElementBinding arrayItem)
+   {
+      TypeBinding itemType = arrayItem.getType();
+
+      Class itemCls;
+      QName itemTypeQName = itemType.getQName();
+      if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
+      {
+         itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart(), arrayItem.isNillable());
+      }
+      else
+      {
+         ElementBinding item = null;
+         if(!itemType.isSimple())
+         {
+            ParticleBinding typeParticle = itemType.getParticle();
+            ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());
+            item = modelGroup == null ? null : modelGroup.getArrayItem();
+         }
+
+         if(item != null)
+         {
+            itemCls = classForElement(item);
+            // todo: what's the best way to get an array class having the item class
+            itemCls = Array.newInstance(itemCls, 0).getClass();
+         }
+         else
+         {
+            ClassMetaData itemClsMetaData = itemType.getClassMetaData();
+            String itemClsName = itemClsMetaData == null ? null : itemClsMetaData.getImpl();
+            itemCls = getClass(itemClsName, arrayItem, arrayItem.getQName());
+         }
+      }
+      return itemCls;
+   }
 
    private static void setMapEntryValue(MapEntryMetaData mapEntryMetaData, Object parent, Object o)
    {
@@ -947,8 +1016,10 @@ public class RtElementHandler
 
    private static Class getClassForTerm(String className, TermBinding term, QName elementName)
    {
-      if (className == null)
+      if(className == null)
+      {
          throw new JBossXBRuntimeException("No class for " + elementName);
+      }
 
       Class cls = null;
       try

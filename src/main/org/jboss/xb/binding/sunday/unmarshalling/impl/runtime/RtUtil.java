@@ -46,6 +46,132 @@ public class RtUtil
    {
    }
 
+   public static void add(Object o,
+                          Object value,
+                          String prop,
+                          String colType,
+                          boolean ignoreNotFoundField,
+                          ValueAdapter valueAdapter)
+   {
+      Class cls = o.getClass();
+      Method getter = null;
+      Method setter = null;
+      Field field = null;
+      Class fieldType;
+      try
+      {
+         String methodBase = Character.toUpperCase(prop.charAt(0)) + prop.substring(1);
+         try
+         {
+            getter = cls.getMethod("get" + methodBase, null);
+         }
+         catch(NoSuchMethodException e)
+         {
+            getter = cls.getMethod("is" + methodBase, null);
+         }
+
+         fieldType = getter.getReturnType();
+         setter = cls.getMethod("set" + methodBase, new Class[]{fieldType});
+      }
+      catch(NoSuchMethodException e)
+      {
+         try
+         {
+            field = cls.getField(prop);
+            fieldType = field.getType();
+         }
+         catch(NoSuchFieldException e1)
+         {
+            if(ignoreNotFoundField)
+            {
+               log.warn("Neither getter/setter nor field were found for field " + prop + " in " + cls);
+               return;
+            }
+
+            throw new JBossXBRuntimeException(
+               "Neither getter/setter nor field were found for field " + prop + " in " + cls
+            );
+         }
+      }
+
+      boolean arrType;
+      if(fieldType.isArray())
+      {
+         arrType = true;
+      }
+      else if(Collection.class.isAssignableFrom(fieldType))
+      {
+         arrType = false;
+      }
+      else
+      {
+         throw new JBossXBRuntimeException(
+            "Expected type for " + prop + " in " + cls + " is an array or java.util.Collection but was " + fieldType
+         );
+      }
+
+
+      if(valueAdapter != null)
+      {
+         value = valueAdapter.cast(value, fieldType);
+      }
+
+      if(!arrType || colType != null)
+      {
+         Collection col = (Collection)get(o, getter, field);
+         if(col == null)
+         {
+            if(colType == null)
+            {
+               col = new ArrayList();
+            }
+            else
+            {
+               Class colCls;
+               try
+               {
+                  colCls = Thread.currentThread().getContextClassLoader().loadClass(colType);
+               }
+               catch(ClassNotFoundException e)
+               {
+                  throw new JBossXBRuntimeException("Failed to load collection type: " + colType);
+               }
+
+               try
+               {
+                  col = (Collection)colCls.newInstance();
+               }
+               catch(Exception e)
+               {
+                  throw new JBossXBRuntimeException("Failed to create an instance of " + colCls);
+               }
+            }
+
+            set(o, col, setter, field);
+         }
+
+         col.add(value);
+      }
+      else
+      {
+         Object arr = get(o, getter, field);
+         int length = 0;
+         if(arr == null)
+         {
+            arr = Array.newInstance(fieldType.getComponentType(), 1);
+         }
+         else
+         {
+            Object tmp = arr;
+            length = Array.getLength(arr);
+            arr = Array.newInstance(fieldType.getComponentType(), length + 1);
+            System.arraycopy(tmp, 0, arr, 0, length);
+         }
+         Array.set(arr, length, value);
+         set(o, arr, setter, field);
+      }
+   }
+
    public static void set(Object o,
                           Object value,
                           String prop,

@@ -182,7 +182,6 @@ public class SundayContentHandler
             List newCursors = cursor.startElement(startName, atts);
             if(newCursors.isEmpty())
             {
-               // todo: it was a warning
                throw new JBossXBRuntimeException(
                   startName + " not found as a child of " + ((ElementBinding)term).getQName()
                );
@@ -232,7 +231,6 @@ public class SundayContentHandler
                   List newCursors = cursor.startElement(startName, atts);
                   if(newCursors.isEmpty())
                   {
-                     // todo: it was a warning
                      throw new JBossXBRuntimeException(
                         startName + " not found as a child of " + ((ElementBinding)term).getQName()
                      );
@@ -310,7 +308,6 @@ public class SundayContentHandler
                   startName + " for wildcard."
                );
             }
-            // todo
             particle = new ParticleBinding(element);
          }
 
@@ -413,7 +410,6 @@ public class SundayContentHandler
       }
 
       Object o;
-      // todo xsi:nil handling
       String nil = atts.getValue("xsi:nil");
       if(nil == null || !("1".equals(nil) || "true".equals(nil)))
       {
@@ -495,7 +491,6 @@ public class SundayContentHandler
             if(unmarshalled != null)
             {
                // if startElement returned null, we use characters as the object for this element
-               // todo subject to refactoring
                if(o == null)
                {
                   o = unmarshalled;
@@ -565,7 +560,7 @@ public class SundayContentHandler
          }
          else if(parentParticle != null &&
             ((ElementBinding)parentParticle.getTerm()).getType().hasWildcard() &&
-            !stack.isEmpty()/*!objectStack.isEmpty()*/)
+            !stack.isEmpty())
          {
             // todo: review this> the parent has anyType, so it gets the value of its child
             for(int j = 0; j < stack.size(); ++j)
@@ -574,8 +569,6 @@ public class SundayContentHandler
                peeked.o = o;
                if(peeked.particle != null)
                {
-                  //System.out.println("Value of " + endName + " " + o + " is promoted as the value of its parent " +
-                  //   ((ElementBinding)peeked.particle).getQName());
                   break;
                }
             }

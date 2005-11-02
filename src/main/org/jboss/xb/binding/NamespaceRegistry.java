@@ -23,6 +23,8 @@ package org.jboss.xb.binding;
 
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
+
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,8 +44,10 @@ import java.util.Map;
  * @author <a href="mailto:anil.saldhana@jboss.org">Anil Saldhana</a>
  * @since 08-June-2004
  */
-public class NamespaceRegistry implements NamespaceContext
+public class NamespaceRegistry implements NamespaceContext, Serializable
 {
+   private static final long serialVersionUID = 8435680858785550261L;
+
    // The index of the last assigned prefix
    private int namespaceIndex;
 

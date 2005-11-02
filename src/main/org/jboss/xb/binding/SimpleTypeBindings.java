@@ -1368,6 +1368,73 @@ public final class SimpleTypeBindings
       return result;
    }
 
+   public static QName typeQName(Class cls)
+   {
+      if(cls == null)
+      {
+         throw new IllegalArgumentException("The argument must not be null.");
+      }
+
+      QName result = null;
+      if(Integer.class == cls)
+      {
+         result = Constants.QNAME_INT;
+      }
+      else if(cls == Long.class)
+      {
+         result = Constants.QNAME_LONG;
+      }
+      else if(cls == Short.class)
+      {
+         result = Constants.QNAME_SHORT;
+      }
+      else if(cls == Byte.class)
+      {
+         result = Constants.QNAME_BYTE;
+      }
+      else if(cls == Float.class)
+      {
+         result = Constants.QNAME_FLOAT;
+      }
+      else if(cls == Double.class)
+      {
+         result = Constants.QNAME_DOUBLE;
+      }
+      else if(cls == Boolean.class)
+      {
+         result = Constants.QNAME_BOOLEAN;
+      }
+      else if(cls == String.class)
+      {
+         result = Constants.QNAME_STRING;
+      }
+      else if(cls == BigInteger.class)
+      {
+         result = Constants.QNAME_INTEGER;
+      }
+      else if(cls == BigDecimal.class)
+      {
+         result = Constants.QNAME_DECIMAL;
+      }
+      else if(cls == java.util.Date.class || java.util.Calendar.class.isAssignableFrom(cls))
+      {
+         result = Constants.QNAME_DATETIME;
+      }
+      else if(cls == QName.class)
+      {
+         result = Constants.QNAME_QNAME;
+      }
+      else if(cls == java.net.URI.class)
+      {
+         result = Constants.QNAME_ANYURI;
+      }
+      else if(cls == byte[].class)
+      {
+         result = Constants.QNAME_BASE64BINARY;
+      }
+      return result;
+   }
+
    public static String[] unmarshalNMTokens(String value)
    {
       StringTokenizer tokenizer = new StringTokenizer(value);

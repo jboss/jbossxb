@@ -88,6 +88,8 @@ public class MarshallerImpl
 
    private SchemaBindingResolver schemaResolver;
 
+   private SchemaBinding schema;
+
    public SchemaBindingResolver getSchemaResolver()
    {
       return schemaResolver;
@@ -175,14 +177,15 @@ public class MarshallerImpl
       marshallInternal(provider, root, model, writer);
    }
 
-   private void marshallInternal(ObjectModelProvider provider, Object root, SchemaBinding model, Writer writer)
+   private void marshallInternal(ObjectModelProvider provider, Object root, SchemaBinding schema, Writer writer)
       throws IOException, SAXException
    {
-      if(model == null)
+      if(schema == null)
       {
          throw new JBossXBRuntimeException("XSModel is not available!");
       }
 
+      this.schema = schema;
       this.root = root;
 
       content.startDocument();
@@ -198,7 +201,7 @@ public class MarshallerImpl
          }
          QName rootQName = (QName)rootQNames.get(0);
 
-         TypeBinding type = model.getType(rootTypeQName);
+         TypeBinding type = schema.getType(rootTypeQName);
          if(type == null)
          {
             throw new JBossXBRuntimeException("Global type definition is not found: " + rootTypeQName);
@@ -216,39 +219,38 @@ public class MarshallerImpl
          }
          else
          {
-            ElementBinding element = new ElementBinding(model, rootQName, type);
-            marshalElement(element, 1, 1, true,
-               model.isIgnoreLowLine(), model.isIgnoreUnresolvedFieldOrClass()
-            );
+            stack.push(root);
+            ElementBinding element = new ElementBinding(schema, rootQName, type);
+            marshalElement(element, true);
+            stack.pop();
          }
       }
       else if(rootQNames.isEmpty())
       {
-         Iterator elements = model.getElements();
+         Iterator elements = schema.getElements();
          if(!elements.hasNext())
          {
             throw new JBossXBRuntimeException("The schema doesn't contain global element declarations.");
          }
 
+         stack.push(root);
          while(elements.hasNext())
          {
             ElementBinding element = (ElementBinding)elements.next();
-            marshalElement(element, 1, 1,
-               true,
-               model.isIgnoreLowLine(),
-               model.isIgnoreUnresolvedFieldOrClass()
-            );// todo fix min/max
+            marshalElement(element, true);
          }
+         stack.pop();
       }
       else
       {
+         stack.push(root);
          for(int i = 0; i < rootQNames.size(); ++i)
          {
             QName qName = (QName)rootQNames.get(i);
-            ElementBinding element = model.getElement(qName);
+            ElementBinding element = schema.getElement(qName);
             if(element == null)
             {
-               Iterator components = model.getElements();
+               Iterator components = schema.getElements();
                String roots = "";
                for(int j = 0; components.hasNext(); ++j)
                {
@@ -262,14 +264,9 @@ public class MarshallerImpl
                throw new IllegalStateException("Root element not found: " + qName + " among " + roots);
             }
 
-            marshalElement(element,
-               1,
-               1,
-               true,
-               model.isIgnoreLowLine(),
-               model.isIgnoreUnresolvedFieldOrClass()
-            );// todo fix min/max
+            marshalElement(element, true);
          }
+         stack.pop();
       }
 
       content.endDocument();
@@ -293,61 +290,12 @@ public class MarshallerImpl
       }
    }
 
-   private boolean marshalElement(ElementBinding element,
-                                  int minOccurs,
-                                  int maxOccurs,
-                                  boolean declareNs,
-                                  boolean ignoreLowLine,
-                                  boolean ignoreNotFoundField)
+   private boolean marshalElement(ElementBinding element, boolean declareNs)
    {
+      Object value = stack.peek();
+      boolean result = value != null;
       String elementNs = element.getQName().getNamespaceURI();
       String elementLocal = element.getQName().getLocalPart();
-      TypeBinding type = element.getType();
-      boolean nillable = element.isNillable();
-
-      Object value;
-      if(stack.isEmpty())
-      {
-         value = root;
-         if(value == null)
-         {
-            return false;
-         }
-      }
-      else
-      {
-         Object peeked = stack.peek();
-         if(peeked == null)
-         {
-            value = null;
-         }
-         else if(peeked instanceof Collection || peeked.getClass().isArray())
-         {
-            value = peeked;
-         }
-         else
-         {
-            String fieldName = null;
-            PropertyMetaData propertyMetaData = element.getPropertyMetaData();
-            if(propertyMetaData != null)
-            {
-               fieldName = propertyMetaData.getName();
-            }
-
-            if(fieldName == null)
-            {
-               fieldName = Util.xmlNameToFieldName(elementLocal, ignoreLowLine);
-            }
-
-            value = getChildren(element.getQName(), peeked, fieldName, ignoreNotFoundField);
-            if(value == null)
-            {
-               value = getElementValue(element.getQName(), peeked, fieldName, ignoreNotFoundField);
-            }
-         }
-      }
-
-      boolean result = minOccurs == 0 || value != null;
       boolean trace = log.isTraceEnabled() && result;
       if(trace)
       {
@@ -357,43 +305,11 @@ public class MarshallerImpl
 
       if(value != null)
       {
-         stack.push(value);
-
-         if(maxOccurs != 1)
-         {
-            Iterator i = getIterator(value);
-            if(i == null)
-            {
-               marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
-            }
-            else
-            {
-               while(i.hasNext())
-               {
-                  Object item = i.next();
-                  if(item == null)
-                  {
-                     writeNillable(elementNs, elementLocal, nillable);
-                  }
-                  else
-                  {
-                     stack.push(item);
-                     marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
-                     stack.pop();
-                  }
-               }
-            }
-         }
-         else
-         {
-            marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
-         }
-
-         stack.pop();
+         marshalElementType(elementNs, elementLocal, element.getType(), declareNs, element.isNillable());
       }
       else
       {
-         writeNillable(elementNs, elementLocal, nillable);
+         writeNillable(elementNs, elementLocal, element.isNillable());
       }
 
       if(trace)
@@ -467,7 +383,17 @@ public class MarshallerImpl
                );
             }
 
-            marshalled = SimpleTypeBindings.marshal(typeName, value, null);
+            try
+            {
+               marshalled = SimpleTypeBindings.marshal(typeName, value, null);
+            }
+            catch(ClassCastException e)
+            {
+               throw new JBossXBRuntimeException(
+                  "ClassCastException marshalling " + new QName(elementUri, elementLocal) + " of type " +
+                  type.getQName() + ": " + e.getMessage()
+               );
+            }
          }
          else
          {
@@ -575,83 +501,164 @@ public class MarshallerImpl
    {
       boolean marshalled;
       TermBinding term = particle.getTerm();
+      Object o;
+      Iterator i;
       if(term.isModelGroup())
       {
-         marshalled = marshalModelGroup(particle, declareNs);
+         ModelGroupBinding modelGroup = (ModelGroupBinding)term;
+         if(modelGroup.isSkip() || stack.isEmpty())
+         {
+            marshalled = marshalModelGroup(modelGroup, declareNs);
+         }
+         else
+         {
+            PropertyMetaData propertyMetaData = modelGroup.getPropertyMetaData();
+            if(propertyMetaData == null)
+            {
+               throw new JBossXBRuntimeException(
+                  "Currently, property binding metadata must be available for a model group to be marshalled!"
+               );
+            }
+
+            o = getChildren(null, stack.peek(), propertyMetaData.getName(),
+               modelGroup.getSchema().isIgnoreUnresolvedFieldOrClass()
+            );
+
+            i = o != null && isRepeatable(particle) ? getIterator(o) : null;
+            if(i != null)
+            {
+               marshalled = true;
+               while(i.hasNext() && marshalled)
+               {
+                  Object value = i.next();
+                  stack.push(value);
+                  marshalled = marshalModelGroup(modelGroup, declareNs);
+                  stack.pop();
+               }
+            }
+            else
+            {
+               stack.push(o);
+               marshalled = marshalModelGroup(modelGroup, declareNs);
+               stack.pop();
+            }
+         }
       }
       else if(term.isWildcard())
       {
-         marshalled = marshalWildcard((WildcardBinding)term, declareNs);
+         o = stack.peek();
+         i = o != null && isRepeatable(particle) ? getIterator(o) : null;
+         if(i != null)
+         {
+            marshalled = true;
+            while(i.hasNext() && marshalled)
+            {
+               Object value = i.next();
+               stack.push(value);
+               marshalled = marshalWildcard((WildcardBinding)term, declareNs);
+               stack.pop();
+            }
+         }
+         else
+         {
+            marshalled = marshalWildcard((WildcardBinding)term, declareNs);
+         }
       }
       else
       {
          ElementBinding element = (ElementBinding)term;
-         marshalled =
-            marshalElement(element,
-               particle.getMinOccurs(),
-               particle.getMaxOccurs(),
-               declareNs,
-               term.getSchema().isIgnoreLowLine(),
-               term.getSchema().isIgnoreUnresolvedFieldOrClass()
-            );
+         SchemaBinding schema = element.getSchema();
+         o = getElementValue(element, schema.isIgnoreLowLine(), schema.isIgnoreUnresolvedFieldOrClass());
+
+         i = o != null && isRepeatable(particle) ? getIterator(o) : null;
+         if(i != null)
+         {
+            marshalled = true;
+            while(i.hasNext() && marshalled)
+            {
+               Object value = i.next();
+               stack.push(value);
+               marshalled = marshalElement(element, declareNs);
+               stack.pop();
+            }
+         }
+         else
+         {
+            stack.push(o);
+            marshalled = marshalElement(element, declareNs);
+            stack.pop();
+         }
       }
       return marshalled;
    }
 
    private boolean marshalWildcard(WildcardBinding wildcard, boolean declareNs)
    {
-      // todo class resolution
       Object o = stack.peek();
       ClassMapping mapping = getClassMapping(o.getClass());
       if(mapping == null)
       {
-         throw new IllegalStateException("Failed to marshal wildcard. Class mapping not found for " +
-            o.getClass() +
-            "@" +
-            o.hashCode() +
-            ": " + o
-         );
+         // todo: YAH (yet another hack)
+         QName autoType = SimpleTypeBindings.typeQName(o.getClass());
+         if(autoType != null)
+         {
+            String marshalled = SimpleTypeBindings.marshal(autoType.getLocalPart(), o, null);
+            content.characters(marshalled.toCharArray(), 0, marshalled.length());
+            return true;
+         }
+         else
+         {
+            throw new IllegalStateException("Failed to marshal wildcard. Class mapping not found for " +
+               o.getClass() +
+               "@" +
+               o.hashCode() +
+               ": " + o
+            );
+         }
       }
 
       Object parentRoot = this.root;
       Stack parentStack = this.stack;
+      SchemaBinding parentSchema = this.schema;
 
       this.root = o;
       this.stack = new StackImpl();
+      this.schema = XsdBinder.bind(mapping.schemaUrl, schemaResolver);
 
       boolean marshalled;
-      SchemaBinding model = XsdBinder.bind(mapping.schemaUrl, schemaResolver);
       if(mapping.elementName != null)
       {
-         ElementBinding elDec = model.getElement(mapping.elementName);
+         ElementBinding elDec = schema.getElement(mapping.elementName);
+         if(elDec == null)
+         {
+            throw new JBossXBRuntimeException("Element " + mapping.elementName + " is not declared in the schema.");
+         }
+
+         stack.push(root);
          marshalled =
-            marshalElement(elDec,
-               1,
-               1,
-               declareNs,
-               model.isIgnoreLowLine(),
-               model.isIgnoreUnresolvedFieldOrClass()
-            );// todo fix min/max
+            marshalElement(elDec, declareNs);
+         stack.pop();
       }
       else if(mapping.typeName != null)
       {
-         TypeBinding typeDef = model.getType(mapping.typeName);
+         TypeBinding typeDef = schema.getType(mapping.typeName);
+         if(typeDef == null)
+         {
+            throw new JBossXBRuntimeException("Type " +
+               mapping.typeName +
+               " is not defined in the schema."
+            );
+         }
+
          if(wildcard.getQName() == null)
          {
             throw new JBossXBRuntimeException("Expected the wildcard to have a non-null QName.");
          }
 
-         ElementBinding element = new ElementBinding(model, new QName(wildcard.getQName().getNamespaceURI(),
-            wildcard.getQName().getLocalPart()
-         ), typeDef
-         );
-         marshalled = marshalElement(element,
-            1,
-            1,
-            declareNs,
-            model.isIgnoreLowLine(),
-            model.isIgnoreUnresolvedFieldOrClass()
-         );
+         stack.push(root);
+         ElementBinding element = new ElementBinding(schema, wildcard.getQName(), typeDef);
+         marshalled = marshalElement(element, declareNs);
+         stack.pop();
       }
       else
       {
@@ -663,55 +670,8 @@ public class MarshallerImpl
 
       this.root = parentRoot;
       this.stack = parentStack;
+      this.schema = parentSchema;
 
-      return marshalled;
-   }
-
-   private boolean marshalModelGroup(ParticleBinding particle, boolean declareNs)
-   {
-      ModelGroupBinding modelGroup = (ModelGroupBinding)particle.getTerm();
-      boolean marshalled = true;
-      if(modelGroup.isSkip() || stack.isEmpty())
-      {
-         marshalled = marshalModelGroup(modelGroup, declareNs);
-      }
-      else
-      {
-         PropertyMetaData propertyMetaData = modelGroup.getPropertyMetaData();
-         if(propertyMetaData == null)
-         {
-            throw new JBossXBRuntimeException(
-               "Currently, property binding metadata must be available for a model group to be marshalled!"
-            );
-         }
-
-         Object value = getChildren(null, stack.peek(), propertyMetaData.getName(),
-            modelGroup.getSchema().isIgnoreUnresolvedFieldOrClass()
-         );
-
-         if(particle.isRepeatable() && value != null)
-         {
-            Iterator i = getIterator(value);
-            if(i == null)
-            {
-               throw new JBossXBRuntimeException("Failed to create an iterator for " + value);
-            }
-
-            while(i.hasNext() && marshalled)
-            {
-               value = i.next();
-               stack.push(value);
-               marshalled &= marshalModelGroup(modelGroup, declareNs);
-               stack.pop();
-            }
-         }
-         else
-         {
-            stack.push(value);
-            marshalled = marshalModelGroup(modelGroup, declareNs);
-            stack.pop();
-         }
-      }
       return marshalled;
    }
 
@@ -728,7 +688,7 @@ public class MarshallerImpl
       }
       else
       {
-         marshalled = marshalModelGroupSequence(modelGroup.getParticles(), declareNs);
+         marshalled = marshalModelGroupSequence(modelGroup, declareNs);
       }
       return marshalled;
    }
@@ -764,13 +724,36 @@ public class MarshallerImpl
       return marshalled;
    }
 
-   private boolean marshalModelGroupSequence(Collection particles, boolean declareNs)
+   private boolean marshalModelGroupSequence(ModelGroupBinding sequence, boolean declareNs)
    {
-      boolean marshalled = true;
-      for(Iterator i = particles.iterator(); i.hasNext();)
+      // if sequence is bound to a collection,
+      // we assume the iterator over the collection is in sync with the particle iterator
+      Iterator valueIterator = null;
+      if(!sequence.isSkip() && !stack.isEmpty())
       {
+         Object o = stack.peek();
+         if(o != null && (Collection.class.isAssignableFrom(o.getClass()) || o.getClass().isArray()))
+         {
+            valueIterator = getIterator(o);
+         }
+      }
+
+      boolean marshalled = true;
+      for(Iterator i = sequence.getParticles().iterator(); i.hasNext();)
+      {
+         if(valueIterator != null)
+         {
+            Object o =  valueIterator.hasNext() ? valueIterator.next(): null;
+            stack.push(o);
+         }
+
          ParticleBinding particle = (ParticleBinding)i.next();
          marshalled &= marshalParticle(particle, declareNs);
+
+         if(valueIterator != null)
+         {
+            stack.pop();
+         }
       }
       return marshalled;
    }
@@ -786,7 +769,8 @@ public class MarshallerImpl
       {
          throw new JBossXBRuntimeException("Failed to marshal " +
             new QName(elementNs, elementLocal) +
-            ": Java value is null but the element is not nillable.");
+            ": Java value is null but the element is not nillable."
+         );
       }
 
       AttributesImpl attrs;
@@ -820,6 +804,43 @@ public class MarshallerImpl
       String qName = createQName(prefix, elementLocal);
       content.startElement(elementNs, elementLocal, qName, attrs);
       content.endElement(elementNs, elementLocal, qName);
+   }
+
+   private Object getElementValue(ElementBinding element,
+                                  boolean ignoreLowLine,
+                                  boolean ignoreNotFoundField)
+   {
+      Object value;
+      Object peeked = stack.peek();
+      if(peeked == null)
+      {
+         value = null;
+      }
+      else if(peeked instanceof Collection || peeked.getClass().isArray())
+      {
+         value = peeked;
+      }
+      else
+      {
+         String fieldName = null;
+         PropertyMetaData propertyMetaData = element.getPropertyMetaData();
+         if(propertyMetaData != null)
+         {
+            fieldName = propertyMetaData.getName();
+         }
+
+         if(fieldName == null)
+         {
+            fieldName = Util.xmlNameToFieldName(element.getQName().getLocalPart(), ignoreLowLine);
+         }
+
+         value = getChildren(element.getQName(), peeked, fieldName, ignoreNotFoundField);
+         if(value == null)
+         {
+            value = getElementValue(element.getQName(), peeked, fieldName, ignoreNotFoundField);
+         }
+      }
+      return value;
    }
 
    private void declareNs(AttributesImpl attrs)
@@ -1004,5 +1025,10 @@ public class MarshallerImpl
       return Classes.isPrimitive(type) ||
          type == String.class ||
          type == java.util.Date.class;
+   }
+
+   private static boolean isRepeatable(ParticleBinding particle)
+   {
+      return particle.getMaxOccursUnbounded() || particle.getMaxOccurs() > 1 || particle.getMinOccurs() > 1;
    }
 }

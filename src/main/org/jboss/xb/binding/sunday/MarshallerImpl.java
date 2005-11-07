@@ -447,26 +447,6 @@ public class MarshallerImpl
          declareNs(attrs);
       }
 
-      for(Iterator i = attributeUses.iterator(); i.hasNext();)
-      {
-         AttributeBinding attrUse = (AttributeBinding)i.next();
-         QName attrQName = attrUse.getQName();
-         Object attrValue = getElementValue(attrUse.getQName(), stack.peek(),
-            attrQName.getLocalPart(),
-            particle.getTerm().getSchema().isIgnoreUnresolvedFieldOrClass()
-         );
-         if(attrValue != null)
-         {
-            //todo: fix qName
-            attrs.add(attrQName.getNamespaceURI(),
-               attrQName.getLocalPart(),
-               attrQName.getLocalPart(),
-               attrUse.getType().getQName().getLocalPart(),
-               attrValue.toString()
-            );
-         }
-      }
-
       String prefix = (String)prefixByUri.get(elementNsUri);
       boolean genPrefix = prefix == null && elementNsUri != null && elementNsUri.length() > 0;
       if(genPrefix)
@@ -479,6 +459,46 @@ public class MarshallerImpl
             attrs = new AttributesImpl(1);
          }
          attrs.add(null, prefix, "xmlns:" + prefix, null, elementNsUri);
+      }
+
+      for(Iterator i = attributeUses.iterator(); i.hasNext();)
+      {
+         AttributeBinding attrUse = (AttributeBinding)i.next();
+         QName attrQName = attrUse.getQName();
+         Object attrValue = getElementValue(attrQName, stack.peek(),
+            attrQName.getLocalPart(),
+            type.getSchemaBinding().isIgnoreUnresolvedFieldOrClass()
+         );
+
+         if(attrValue != null)
+         {
+            String attrNs = attrQName.getNamespaceURI();
+            String attrLocal = attrQName.getLocalPart();
+            String attrPrefix = null;
+            if(attrNs != null)
+            {
+               attrPrefix = (String)prefixByUri.get(attrNs);
+               if(attrPrefix == null && attrNs != null && attrNs.length() > 0)
+               {
+                  attrPrefix = "ns_" + attrLocal;
+                  if(attrs == null)
+                  {
+                     attrs = new AttributesImpl(1);
+                  }
+                  attrs.add(null, attrPrefix, "xmlns:" + attrPrefix, null, attrNs);
+               }
+            }
+
+            String qName = attrPrefix == null || attrPrefix.length() == 0 ? attrLocal : attrPrefix + ":" + attrLocal;
+            QName typeQName = attrUse.getType().getQName();
+            String typeName = typeQName == null ? null : typeQName.getLocalPart();
+            attrs.add(attrNs,
+               attrLocal,
+               qName,
+               typeName,
+               attrValue.toString()
+            );
+         }
       }
 
       String qName = createQName(prefix, elementLocalName);

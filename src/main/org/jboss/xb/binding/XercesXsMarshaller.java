@@ -456,23 +456,6 @@ public class XercesXsMarshaller
          declareNs(attrs);
       }
 
-      for(int i = 0; i < attributeUses.getLength(); ++i)
-      {
-         XSAttributeUse attrUse = (XSAttributeUse)attributeUses.item(i);
-         XSAttributeDeclaration attrDec = attrUse.getAttrDeclaration();
-         Object attrValue = provider.getAttributeValue(o, null, attrDec.getNamespace(), attrDec.getName());
-         if(attrValue != null)
-         {
-            //todo: fix qName
-            attrs.add(attrDec.getNamespace(),
-               attrDec.getName(),
-               attrDec.getName(),
-               attrDec.getTypeDefinition().getName(),
-               attrValue.toString()
-            );
-         }
-      }
-
       String prefix = (String)prefixByUri.get(elementNsUri);
       boolean genPrefix = prefix == null && elementNsUri != null && elementNsUri.length() > 0;
       if(genPrefix)
@@ -485,6 +468,40 @@ public class XercesXsMarshaller
             attrs = new AttributesImpl(1);
          }
          attrs.add(null, prefix, "xmlns:" + prefix, null, elementNsUri);
+      }
+
+      for(int i = 0; i < attributeUses.getLength(); ++i)
+      {
+         XSAttributeUse attrUse = (XSAttributeUse)attributeUses.item(i);
+         XSAttributeDeclaration attrDec = attrUse.getAttrDeclaration();
+         String attrNs = attrDec.getNamespace();
+         String attrLocal = attrDec.getName();
+         Object attrValue = provider.getAttributeValue(o, null, attrNs, attrLocal);
+         if(attrValue != null)
+         {
+            String attrPrefix = null;
+            if(attrNs != null)
+            {
+               attrPrefix = (String)prefixByUri.get(attrNs);
+               if(attrPrefix == null && attrNs != null && attrNs.length() > 0)
+               {
+                  attrPrefix = "ns_" + attrLocal;
+                  if(attrs == null)
+                  {
+                     attrs = new AttributesImpl(1);
+                  }
+                  attrs.add(null, attrPrefix, "xmlns:" + attrPrefix, null, attrNs);
+               }
+            }
+
+            String qName = attrPrefix == null || attrPrefix.length() == 0 ? attrLocal : attrPrefix + ":" + attrLocal;
+            attrs.add(attrNs,
+               attrLocal,
+               qName,
+               attrDec.getTypeDefinition().getName(),
+               attrValue.toString()
+            );
+         }
       }
 
       String qName = createQName(prefix, elementLocalName);
@@ -646,8 +663,7 @@ public class XercesXsMarshaller
       }
       else if(mapping.typeName != null)
       {
-         XSTypeDefinition typeDef = model.getTypeDefinition(
-            mapping.typeName.getLocalPart(),
+         XSTypeDefinition typeDef = model.getTypeDefinition(mapping.typeName.getLocalPart(),
             mapping.typeName.getNamespaceURI()
          );
 

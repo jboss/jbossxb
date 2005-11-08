@@ -75,6 +75,7 @@ public class JBossEntityResolver implements EntityResolver
       registerEntity("http://www.ibm.com/webservices/xsd/j2ee_jaxrpc_mapping_1_1.xsd", "j2ee_jaxrpc_mapping_1_1.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd", "web-app_2_4.xsd");
       registerEntity("http://www.w3.org/2001/xml.xsd", "xml.xsd");
+      registerEntity("http://schemas.xmlsoap.org/soap/encoding/", "soap-encoding_1_1.xsd");
 
       // ejb related
       registerEntity("-//Sun Microsystems, Inc.//DTD Enterprise JavaBeans 1.1//EN", "ejb-jar.dtd");
@@ -174,25 +175,25 @@ public class JBossEntityResolver implements EntityResolver
 
    /**
     Returns DTD/Schema inputSource. The resolution logic is:
-    
+
     1. Check the publicId against the current registered values in the class
     mapping of entity name to dtd/schema file name. If found, the resulting
     file name is passed to the loadClasspathResource to locate the file as a
     classpath resource.
-    
+
     2. Check the systemId against the current registered values in the class
     mapping of entity name to dtd/schema file name. If found, the resulting
     file name is passed to the loadClasspathResource to locate the file as a
     classpath resource.
-    
+
     3. Strip the systemId name down to the simple file name by removing an URL
     style path elements (myschemas/x.dtd becomes x.dtd), and call
     loadClasspathResource to locate the simple file name as a classpath resource.
-    
+
     4. Attempt to resolve the systemId as a URL from which the schema can be
     read. If the URL input stream can be opened this returned as the resolved
     input.
-    
+
     @param publicId - Public ID of DTD, or null if it is a schema
     @param systemId - the system ID of DTD or Schema
     @return InputSource of entity
@@ -206,7 +207,7 @@ public class JBossEntityResolver implements EntityResolver
          return null;
 
       boolean trace = log.isTraceEnabled();
-      
+
       // Look for a registered publicID
       InputSource inputSource = resolvePublicID(publicId, trace);
 
@@ -260,9 +261,9 @@ public class JBossEntityResolver implements EntityResolver
 
       if (trace)
          log.trace("resolvePublicID, publicId=" + publicId);
-      
+
       InputSource inputSource = null;
-      
+
       String filename = null;
       if( localEntities != null )
          filename = (String) localEntities.get(publicId);
@@ -293,7 +294,7 @@ public class JBossEntityResolver implements EntityResolver
    /**
     Attempt to use the systemId as a URL from which the schema can be read. This
     checks to see whether the systemId is a key to an entry in the class
-    entity map. 
+    entity map.
 
     @param systemId - the systemId
     @param trace - trace level logging flag
@@ -307,9 +308,9 @@ public class JBossEntityResolver implements EntityResolver
 
       if( trace )
          log.trace("resolveSystemID, systemId="+systemId);
-      
+
       InputSource inputSource = null;
-      
+
       // Try to resolve the systemId as an entity key
       String filename = null;
       if( localEntities != null )
@@ -347,7 +348,7 @@ public class JBossEntityResolver implements EntityResolver
 
      if( trace )
         log.trace("resolveSystemIDasURL, systemId="+systemId);
-     
+
      InputSource inputSource = null;
 
      // Try to use the systemId as a URL to the schema
@@ -383,7 +384,7 @@ public class JBossEntityResolver implements EntityResolver
     Resolve the systemId as a classpath resource. If not found, the
     systemId is simply used as a classpath resource name.
 
-    @param systemId - the system ID of DTD or Schema 
+    @param systemId - the system ID of DTD or Schema
     @param trace - trace level logging flag
     @return the InputSource for the schema file found on the classpath, null
       if the systemId is not registered or found.

@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.Collection;
+import java.util.List;
+import java.util.ArrayList;
 import javax.xml.namespace.QName;
 
 import org.xml.sax.Attributes;
@@ -68,6 +70,8 @@ public class TypeBinding
 
    private WildcardBinding wildcard;
    private ParticleBinding particle;
+
+   private List patternValues;
 
    public TypeBinding()
    {
@@ -440,5 +444,26 @@ public class TypeBinding
    public void setParticle(ParticleBinding particle)
    {
       this.particle = particle;
+   }
+
+   public List getLexicalPattern()
+   {
+      return patternValues;
+   }
+
+   public void addLexicalPattern(String patternValue)
+   {
+      if(patternValues == null)
+      {
+         patternValues = Collections.singletonList(patternValue);
+      }
+      else
+      {
+         if(patternValues.size() == 1)
+         {
+            patternValues = new ArrayList(patternValues);
+         }
+         patternValues.add(patternValue);
+      }
    }
 }

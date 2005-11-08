@@ -404,6 +404,20 @@ public class XercesXsMarshaller
 
             marshalled = SimpleTypeBindings.marshal(typeName, value, null);
          }
+         // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
+         else if(type.getLexicalPattern() != null &&
+            type.derivedFrom(Constants.NS_XML_SCHEMA, Constants.QNAME_BOOLEAN.getLocalPart(), XSConstants.DERIVATION_RESTRICTION))
+         {
+            String item = type.getLexicalPattern().item(0);
+            if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
+            {
+               marshalled = ((Boolean)value).booleanValue() ? "1" : "0";
+            }
+            else
+            {
+               marshalled = ((Boolean)value).booleanValue() ? "true" : "false";
+            }
+         }
          else
          {
             marshalled = value.toString();
@@ -477,6 +491,7 @@ public class XercesXsMarshaller
          String attrNs = attrDec.getNamespace();
          String attrLocal = attrDec.getName();
          Object attrValue = provider.getAttributeValue(o, null, attrNs, attrLocal);
+
          if(attrValue != null)
          {
             String attrPrefix = null;
@@ -495,6 +510,27 @@ public class XercesXsMarshaller
             }
 
             String qName = attrPrefix == null || attrPrefix.length() == 0 ? attrLocal : attrPrefix + ":" + attrLocal;
+
+            // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
+            XSSimpleTypeDefinition attrType = attrDec.getTypeDefinition();
+            if(attrType.getLexicalPattern() != null &&
+               attrType.derivedFrom(Constants.NS_XML_SCHEMA, Constants.QNAME_BOOLEAN.getLocalPart(), XSConstants.DERIVATION_RESTRICTION))
+            {
+               String item = attrType.getLexicalPattern().item(0);
+               if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
+               {
+                  attrValue = ((Boolean)attrValue).booleanValue() ? "1" : "0";
+               }
+               else
+               {
+                  attrValue = ((Boolean)attrValue).booleanValue() ? "true" : "false";
+               }
+            }
+            else
+            {
+               attrValue = attrValue.toString();
+            }
+
             attrs.add(attrNs,
                attrLocal,
                qName,

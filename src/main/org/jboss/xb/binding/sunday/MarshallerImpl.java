@@ -160,24 +160,24 @@ public class MarshallerImpl
       throws IOException, SAXException, ParserConfigurationException
    {
       SchemaBinding model = XsdBinder.bind(xsdReader, null, schemaResolver);
-      marshallInternal(provider, root, model, writer);
+      marshallInternal(root, model, writer);
    }
 
    public void marshal(String xsdURL, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
       SAXException
    {
       SchemaBinding model = XsdBinder.bind(xsdURL, schemaResolver);
-      marshallInternal(provider, root, model, writer);
+      marshallInternal(root, model, writer);
    }
 
    public void marshal(SchemaBinding model, ObjectModelProvider provider, Object root, Writer writer)
       throws IOException,
       SAXException
    {
-      marshallInternal(provider, root, model, writer);
+      marshallInternal(root, model, writer);
    }
 
-   private void marshallInternal(ObjectModelProvider provider, Object root, SchemaBinding schema, Writer writer)
+   private void marshallInternal(Object root, SchemaBinding schema, Writer writer)
       throws IOException, SAXException
    {
       if(schema == null)
@@ -395,6 +395,21 @@ public class MarshallerImpl
                );
             }
          }
+         // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
+         else if(type.getLexicalPattern() != null &&
+            type.getBaseType() != null &&
+            Constants.QNAME_BOOLEAN.equals(type.getBaseType().getQName()))
+         {
+            String item = (String)type.getLexicalPattern().get(0);
+            if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
+            {
+               marshalled = ((Boolean)value).booleanValue() ? "1" : "0";
+            }
+            else
+            {
+               marshalled = ((Boolean)value).booleanValue() ? "true" : "false";
+            }
+         }
          else
          {
             marshalled = value.toString();
@@ -489,8 +504,27 @@ public class MarshallerImpl
                }
             }
 
+            TypeBinding attrType = attrUse.getType();
+            if(attrType.getLexicalPattern() != null && attrType.getBaseType() != null &&
+               Constants.QNAME_BOOLEAN.equals(attrType.getBaseType().getQName()))
+            {
+               String item = (String)attrType.getLexicalPattern().get(0);
+               if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
+               {
+                  attrValue = ((Boolean)attrValue).booleanValue() ? "1" : "0";
+               }
+               else
+               {
+                  attrValue = ((Boolean)attrValue).booleanValue() ? "true" : "false";
+               }
+            }
+            else
+            {
+               attrValue = attrValue.toString();
+            }
+
             String qName = attrPrefix == null || attrPrefix.length() == 0 ? attrLocal : attrPrefix + ":" + attrLocal;
-            QName typeQName = attrUse.getType().getQName();
+            QName typeQName = attrType.getQName();
             String typeName = typeQName == null ? null : typeQName.getLocalPart();
             attrs.add(attrNs,
                attrLocal,

@@ -44,6 +44,7 @@ import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
+import org.apache.xerces.xs.StringList;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -355,11 +356,23 @@ public class XsdBinder
       if(binding == null)
       {
          if (trace)
+         {
             log.trace("binding simple type " + typeName);
+         }
+
          XSTypeDefinition baseTypeDef = type.getBaseType();
          TypeBinding baseType = baseTypeDef == null ? null : bindType(doc, baseTypeDef, null);
 
          binding = baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType);
+
+         StringList pattern = type.getLexicalPattern();
+         if(pattern != null && pattern.getLength() > 0)
+         {
+            for(int i = 0; i < pattern.getLength(); ++i)
+            {
+               binding.addLexicalPattern(pattern.item(i));
+            }
+         }
 
          if(typeName != null)
          {

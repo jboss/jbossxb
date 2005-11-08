@@ -603,12 +603,19 @@ public final class Util
       {
          public char firstCharacter(char ch, String str, int secondCharIndex)
          {
-            return (str.length() > secondCharIndex &&
-               Character.isJavaIdentifierPart(str.charAt(secondCharIndex)) &&
-               Character.isUpperCase(str.charAt(secondCharIndex))
-               ) ?
-               Character.toUpperCase(ch) :
-               Character.toLowerCase(ch);
+            if(Character.isLowerCase(ch))
+            {
+               return ch;
+            }
+            else
+            {
+               return (str.length() > secondCharIndex &&
+                  Character.isJavaIdentifierPart(str.charAt(secondCharIndex)) &&
+                  Character.isUpperCase(str.charAt(secondCharIndex))
+                  ) ?
+                  Character.toUpperCase(ch) :
+                  Character.toLowerCase(ch);
+            }
          }
 
          public byte commandForNext(char prev, char next, boolean ignoreLowLine)

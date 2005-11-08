@@ -21,18 +21,67 @@
   */
 package org.jboss.xb.binding;
 
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
+import org.jboss.xb.binding.parser.JBossXBParser;
+
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
 public abstract class UnmarshallerFactory
 {
+   protected Map features;
+   protected Boolean validation = Boolean.TRUE;
+   protected Boolean namespaces = Boolean.TRUE;
+
    public static UnmarshallerFactory newInstance()
    {
       return new UnmarshallerFactoryImpl();
    }
 
    public abstract Unmarshaller newUnmarshaller();
+
+   public void setFeature(String name, Object value)
+   {
+      Boolean bValue;
+      if(value == null)
+      {
+         bValue = null;
+      }
+      else if(value instanceof String)
+      {
+         bValue = Boolean.valueOf((String)value);
+      }
+      else if(value instanceof Boolean)
+      {
+         bValue = (Boolean)value;
+      }
+      else
+      {
+         throw new JBossXBRuntimeException(
+            "Allowed feature values are null, 'true, 'false', Boolean.TRUE, Boolean.FALSE. Passed in value: " + value
+         );
+      }
+
+      if(Unmarshaller.VALIDATION.equals(name))
+      {
+         validation = bValue;
+      }
+      else if(Unmarshaller.NAMESPACES.equals(name))
+      {
+         namespaces = bValue;
+      }
+      else
+      {
+         if(features == null)
+         {
+            features = new HashMap();
+         }
+         features.put(name, value);
+      }
+   }
 
    // Inner
 
@@ -41,14 +90,53 @@ public abstract class UnmarshallerFactory
    {
       public Unmarshaller newUnmarshaller()
       {
+         UnmarshallerImpl unmarshaller;
          try
          {
-            return new UnmarshallerImpl();
+            unmarshaller = new UnmarshallerImpl();
          }
          catch(JBossXBException e)
          {
             throw new JBossXBRuntimeException(e.getMessage(), e);
          }
+
+         JBossXBParser parser = unmarshaller.getParser();
+         if(validation != null)
+         {
+            parser.setFeature(Unmarshaller.VALIDATION, validation.booleanValue());
+         }
+
+         if(namespaces != null)
+         {
+            parser.setFeature(Unmarshaller.NAMESPACES, namespaces.booleanValue());
+         }
+
+         if(features != null)
+         {
+            for(Iterator i = features.entrySet().iterator(); i.hasNext();)
+            {
+               Map.Entry entry = (Map.Entry)i.next();
+               if(entry.getValue() != null)
+               {
+                  Boolean value = (Boolean)entry.getValue();
+                  parser.setFeature((String)entry.getKey(), value.booleanValue());
+               }
+            }
+         }
+
+         //parser.setFeature(Unmarshaller.SCHEMA_VALIDATION, true);
+         //parser.setFeature(Unmarshaller.SCHEMA_FULL_CHECKING, true);
+
+         try
+         {
+            parser.setFeature(Unmarshaller.DYNAMIC_VALIDATION, true);
+         }
+         catch(JBossXBRuntimeException e)
+         {
+            // dynamic_validation is a required xerces-specific feature
+         }
+
+         return unmarshaller;
       }
    }
 }

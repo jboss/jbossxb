@@ -172,12 +172,12 @@ public class XniJBossXBParser
       );
    }
 
-   public void setProperty(String name, Object value) throws JBossXBException
+   public void setProperty(String name, Object value)
    {
       config.setProperty(name, value);
    }
 
-   public void setFeature(String name, boolean value) throws JBossXBException
+   public void setFeature(String name, boolean value)
    {
       config.setFeature(name, value);
    }

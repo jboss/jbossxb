@@ -23,14 +23,12 @@ package org.jboss.xb.binding.parser.sax;
 
 import java.io.InputStream;
 import java.io.Reader;
-
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-
 import org.jboss.logging.Logger;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.xb.binding.JBossXBException;
-import org.jboss.xb.binding.Unmarshaller;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.xml.sax.Attributes;
 import org.xml.sax.EntityResolver;
@@ -69,25 +67,18 @@ public class SaxJBossXBParser
          throw new JBossXBException("Failed to create a new SAX parser", e);
       }
 
-      XMLReader reader = null;
-      try
-      {
-         reader = parser.getXMLReader();
-      }
-      catch(SAXException e)
-      {
-         throw new JBossXBException("Failed to get parser's XMLReader", e);
-      }
-
+      XMLReader reader = getXmlReader();
       reader.setContentHandler(new DelegatingContentHandler());
       reader.setErrorHandler(new MetaDataErrorHandler());
       reader.setEntityResolver(new JBossEntityResolver());
 
+/*
       setFeature(Unmarshaller.VALIDATION, true);
       setFeature(Unmarshaller.SCHEMA_VALIDATION, true);
       setFeature(Unmarshaller.SCHEMA_FULL_CHECKING, true);
       setFeature(Unmarshaller.DYNAMIC_VALIDATION, true);
       setFeature(Unmarshaller.NAMESPACES, true);
+*/
    }
 
    // JBossXBParser implementation
@@ -95,37 +86,30 @@ public class SaxJBossXBParser
    public void setEntityResolver(EntityResolver entityResolver)
       throws JBossXBException
    {
-      try
-      {
-         parser.getXMLReader().setEntityResolver(entityResolver);
-      }
-      catch(SAXException e)
-      {
-         throw new JBossXBException("Failed to set EntityResolver", e);
-      }
+      getXmlReader().setEntityResolver(entityResolver);
    }
 
-   public void setProperty(String name, Object value) throws JBossXBException
+   public void setProperty(String name, Object value)
    {
       try
       {
-         parser.getXMLReader().setProperty(name, value);
+         getXmlReader().setProperty(name, value);
       }
       catch(SAXException e)
       {
-         throw new JBossXBException("Failed to get parser's XMLReader", e);
+         throw new JBossXBRuntimeException("Failed to set property on the XML reader", e);
       }
    }
 
-   public void setFeature(String name, boolean value) throws JBossXBException
+   public void setFeature(String name, boolean value)
    {
       try
       {
-         parser.getXMLReader().setFeature(name, value);
+         getXmlReader().setFeature(name, value);
       }
       catch(SAXException e)
       {
-         throw new JBossXBException("Failed to get parser's XMLReader", e);
+         throw new JBossXBRuntimeException("Failed to set feature on the XMLReader", e);
       }
    }
 
@@ -134,7 +118,7 @@ public class SaxJBossXBParser
       this.contentHandler = handler;
       try
       {
-         parser.getXMLReader().parse(systemId);
+         getXmlReader().parse(systemId);
       }
       catch(Exception e)
       {
@@ -147,7 +131,7 @@ public class SaxJBossXBParser
       this.contentHandler = handler;
       try
       {
-         parser.getXMLReader().parse(new InputSource(is));
+         getXmlReader().parse(new InputSource(is));
       }
       catch(Exception e)
       {
@@ -160,11 +144,23 @@ public class SaxJBossXBParser
       this.contentHandler = handler;
       try
       {
-         parser.getXMLReader().parse(new InputSource(reader));
+         getXmlReader().parse(new InputSource(reader));
       }
       catch(Exception e)
       {
          throw new JBossXBException("Failed to parse source: " + e.getMessage(), e);
+      }
+   }
+
+   private XMLReader getXmlReader()
+   {
+      try
+      {
+         return parser.getXMLReader();
+      }
+      catch(SAXException e)
+      {
+         throw new JBossXBRuntimeException("Failed to get parser's XMLReader", e);
       }
    }
 
@@ -174,7 +170,7 @@ public class SaxJBossXBParser
       implements org.xml.sax.ContentHandler
    {
       boolean trace = log.isTraceEnabled();
-      
+
       public void endDocument()
       {
       }
@@ -217,7 +213,7 @@ public class SaxJBossXBParser
 
       public void processingInstruction(String target, String data)
       {
-         contentHandler.processingInstruction(target, data);         
+         contentHandler.processingInstruction(target, data);
       }
 
       public void startPrefixMapping(String prefix, String uri)
@@ -228,12 +224,16 @@ public class SaxJBossXBParser
       public void endElement(String namespaceURI, String localName, String qName)
       {
          String name = null;
-         if (trace)
+         if(trace)
          {
-            if (localName.length() == 0)
+            if(localName.length() == 0)
+            {
                name = qName;
+            }
             else
-               name = namespaceURI + ':' + localName; 
+            {
+               name = namespaceURI + ':' + localName;
+            }
             log.trace("endElement enter " + name);
          }
          try
@@ -242,20 +242,26 @@ public class SaxJBossXBParser
          }
          finally
          {
-            if (trace)
+            if(trace)
+            {
                log.trace("endElement exit  " + name);
+            }
          }
       }
 
       public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
       {
          String name = null;
-         if (trace)
+         if(trace)
          {
-            if (localName.length() == 0)
+            if(localName.length() == 0)
+            {
                name = qName;
+            }
             else
-               name = namespaceURI + ':' + localName; 
+            {
+               name = namespaceURI + ':' + localName;
+            }
             log.trace("startElement enter " + name);
          }
          try
@@ -264,8 +270,10 @@ public class SaxJBossXBParser
          }
          finally
          {
-            if (trace)
+            if(trace)
+            {
                log.trace("startElement exit  " + name);
+            }
          }
       }
    }

@@ -61,12 +61,6 @@ public class UnmarshallerImpl
       parser = new SaxJBossXBParser();
       //parser = new XniJBossXBParser();
 
-      parser.setFeature(VALIDATION, true);
-      parser.setFeature(SCHEMA_VALIDATION, true);
-      parser.setFeature(SCHEMA_FULL_CHECKING, true);
-      parser.setFeature(DYNAMIC_VALIDATION, true);
-      parser.setFeature(NAMESPACES, true);
-
       parser.setEntityResolver(new JBossEntityResolver());
    }
 
@@ -201,5 +195,10 @@ public class UnmarshallerImpl
       builder.init(factory, null, cursor);
       parser.parse(systemId, builder);
       return builder.getRoot();
+   }
+
+   public JBossXBParser getParser()
+   {
+      return parser;
    }
 }

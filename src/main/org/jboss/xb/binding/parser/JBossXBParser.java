@@ -54,9 +54,9 @@ public interface JBossXBParser
 
    void setEntityResolver(EntityResolver entityResolver) throws JBossXBException;
 
-   void setProperty(String name, Object value) throws JBossXBException;
+   void setProperty(String name, Object value);
 
-   void setFeature(String name, boolean value) throws JBossXBException;
+   void setFeature(String name, boolean value);
 
    void parse(String source, ContentHandler handler) throws JBossXBException;
 

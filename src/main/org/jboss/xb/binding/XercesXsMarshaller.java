@@ -26,6 +26,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -364,7 +365,6 @@ public class XercesXsMarshaller
       Object value = stack.peek();
       if(value != null)
       {
-         AttributesImpl attrs = null;
          String prefix = (String)prefixByUri.get(elementUri);
          boolean genPrefix = prefix == null && elementUri != null && elementUri.length() > 0;
          if(genPrefix)
@@ -372,56 +372,20 @@ public class XercesXsMarshaller
             prefix = "ns_" + elementLocal;
          }
 
-         String marshalled;
-         if(Constants.NS_XML_SCHEMA.equals(type.getNamespace()))
+         AttributesImpl attrs = null;
+         String typeName = type.getName();
+         if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
+            SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
+            type.getItemType() != null &&
+            (SimpleTypeBindings.XS_QNAME_NAME.equals(type.getItemType().getName()) ||
+            SimpleTypeBindings.XS_NOTATION_NAME.equals(type.getItemType().getName())
+            )
+         )
          {
-            // todo: pass non-null namespace context
-            String typeName = type.getName();
-
-            if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
-               SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
-            {
-               QName qNameValue = (QName)value;
-               String prefixValue = qNameValue.getPrefix();
-               if((elementUri != null && !qNameValue.getNamespaceURI().equals(elementUri) ||
-                  elementUri == null && qNameValue.getNamespaceURI().length() > 0
-                  ) &&
-                  (prefixValue.equals(prefix) || prefixValue.length() == 0 && prefix == null))
-               {
-                  // how to best resolve this conflict?
-                  prefixValue += 'x';
-                  value = new QName(qNameValue.getNamespaceURI(), qNameValue.getLocalPart(), prefixValue);
-               }
-
-               attrs = new AttributesImpl(1);
-               attrs.add(null,
-                  prefixValue,
-                  prefixValue.length() == 0 ? "xmlns" : "xmlns:" + prefixValue,
-                  null,
-                  qNameValue.getNamespaceURI()
-               );
-            }
-
-            marshalled = SimpleTypeBindings.marshal(typeName, value, null);
+            attrs = new AttributesImpl(5);
          }
-         // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
-         else if(type.getLexicalPattern() != null &&
-            type.derivedFrom(Constants.NS_XML_SCHEMA, Constants.QNAME_BOOLEAN.getLocalPart(), XSConstants.DERIVATION_RESTRICTION))
-         {
-            String item = type.getLexicalPattern().item(0);
-            if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
-            {
-               marshalled = ((Boolean)value).booleanValue() ? "1" : "0";
-            }
-            else
-            {
-               marshalled = ((Boolean)value).booleanValue() ? "true" : "false";
-            }
-         }
-         else
-         {
-            marshalled = value.toString();
-         }
+
+         String marshalled = marshalCharacters(elementUri, prefix, type, value, attrs);
 
          if(declareNs && !prefixByUri.isEmpty())
          {
@@ -513,8 +477,45 @@ public class XercesXsMarshaller
 
             // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
             XSSimpleTypeDefinition attrType = attrDec.getTypeDefinition();
-            if(attrType.getLexicalPattern() != null &&
-               attrType.derivedFrom(Constants.NS_XML_SCHEMA, Constants.QNAME_BOOLEAN.getLocalPart(), XSConstants.DERIVATION_RESTRICTION))
+            if(attrType.getItemType() != null)
+            {
+               XSSimpleTypeDefinition itemType = attrType.getItemType();
+               if(Constants.NS_XML_SCHEMA.equals(itemType.getNamespace()))
+               {
+                  List list;
+                  if(attrValue instanceof List)
+                  {
+                     list = (List)attrValue;
+                  }
+                  else if(attrValue.getClass().isArray())
+                  {
+                     list = Arrays.asList((Object[])attrValue);
+                  }
+                  else
+                  {
+                     // todo: qname are also not yet supported
+                     throw new JBossXBRuntimeException(
+                        "Expected value for list type is an array or " +
+                        List.class.getName() +
+                        " but got: " +
+                        attrValue
+                     );
+                  }
+
+                  attrValue = SimpleTypeBindings.marshalList(itemType.getName(), list, null);
+               }
+               else
+               {
+                  throw new JBossXBRuntimeException("Marshalling of list types with item types not from " +
+                     Constants.NS_XML_SCHEMA + " is not supported."
+                  );
+               }
+            }
+            else if(attrType.getLexicalPattern() != null &&
+               attrType.derivedFrom(Constants.NS_XML_SCHEMA,
+                  Constants.QNAME_BOOLEAN.getLocalPart(),
+                  XSConstants.DERIVATION_RESTRICTION
+               ))
             {
                String item = attrType.getLexicalPattern().item(0);
                if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
@@ -540,6 +541,30 @@ public class XercesXsMarshaller
          }
       }
 
+      String characters = null;
+      if(type.getSimpleType() != null)
+      {
+         Object value = getElementValue(elementNsUri, elementLocalName);
+         if(value != null)
+         {
+            XSSimpleTypeDefinition simpleType = type.getSimpleType();
+            String typeName = simpleType.getName();
+            if(attrs == null && (SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
+               SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
+               simpleType.getItemType() != null &&
+               (SimpleTypeBindings.XS_QNAME_NAME.equals(simpleType.getItemType().getName()) ||
+               SimpleTypeBindings.XS_NOTATION_NAME.equals(simpleType.getItemType().getName())
+               )
+               )
+            )
+            {
+               attrs = new AttributesImpl(5);
+            }
+
+            characters = marshalCharacters(elementNsUri, prefix, simpleType, value, attrs);
+         }
+      }
+
       String qName = createQName(prefix, elementLocalName);
       content.startElement(elementNsUri, elementLocalName, qName, attrs);
 
@@ -548,6 +573,10 @@ public class XercesXsMarshaller
          marshalParticle(particle, false);
       }
 
+      if(characters != null)
+      {
+         content.characters(characters.toCharArray(), 0, characters.length());
+      }
       content.endElement(elementNsUri, elementLocalName, qName);
 
       if(genPrefix)
@@ -802,6 +831,98 @@ public class XercesXsMarshaller
       {
          XSParticle particle = (XSParticle)particles.item(i);
          marshalled &= marshalParticle(particle, declareNs);
+      }
+      return marshalled;
+   }
+
+   private String marshalCharacters(String elementUri,
+                                    String elementPrefix,
+                                    XSSimpleTypeDefinition type,
+                                    Object value,
+                                    AttributesImpl attrs)
+   {
+      String marshalled;
+      if(type.getItemType() != null)
+      {
+         XSSimpleTypeDefinition itemType = type.getItemType();
+         if(Constants.NS_XML_SCHEMA.equals(itemType.getNamespace()))
+         {
+            List list;
+            if(value instanceof List)
+            {
+               list = (List)value;
+            }
+            else if(value.getClass().isArray())
+            {
+               list = Arrays.asList((Object[])value);
+            }
+            else
+            {
+               // todo: qname are also not yet supported
+               throw new JBossXBRuntimeException(
+                  "Expected value for list type is an array or " + List.class.getName() + " but got: " + value
+               );
+            }
+
+            marshalled = SimpleTypeBindings.marshalList(itemType.getName(), list, null);
+         }
+         else
+         {
+            throw new JBossXBRuntimeException("Marshalling of list types with item types not from " +
+               Constants.NS_XML_SCHEMA + " is not supported."
+            );
+         }
+      }
+      else if(Constants.NS_XML_SCHEMA.equals(type.getNamespace()))
+      {
+         // todo: pass non-null namespace context
+         String typeName = type.getName();
+
+         if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
+            SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
+         {
+            QName qNameValue = (QName)value;
+            String prefixValue = qNameValue.getPrefix();
+            if((elementUri != null && !qNameValue.getNamespaceURI().equals(elementUri) ||
+               elementUri == null && qNameValue.getNamespaceURI().length() > 0
+               ) &&
+               (prefixValue.equals(elementPrefix) || prefixValue.length() == 0 && elementPrefix == null))
+            {
+               // how to best resolve this conflict?
+               prefixValue += 'x';
+               value = new QName(qNameValue.getNamespaceURI(), qNameValue.getLocalPart(), prefixValue);
+            }
+
+            attrs.add(null,
+               prefixValue,
+               prefixValue.length() == 0 ? "xmlns" : "xmlns:" + prefixValue,
+               null,
+               qNameValue.getNamespaceURI()
+            );
+         }
+
+         marshalled = SimpleTypeBindings.marshal(typeName, value, null);
+      }
+      // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
+      else if(type.getLexicalPattern() != null &&
+         type.derivedFrom(Constants.NS_XML_SCHEMA,
+            Constants.QNAME_BOOLEAN.getLocalPart(),
+            XSConstants.DERIVATION_RESTRICTION
+         ))
+      {
+         String item = type.getLexicalPattern().item(0);
+         if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
+         {
+            marshalled = ((Boolean)value).booleanValue() ? "1" : "0";
+         }
+         else
+         {
+            marshalled = ((Boolean)value).booleanValue() ? "true" : "false";
+         }
+      }
+      else
+      {
+         marshalled = value.toString();
       }
       return marshalled;
    }

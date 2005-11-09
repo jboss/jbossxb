@@ -27,9 +27,11 @@ import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
@@ -44,6 +46,7 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.ObjectModelProvider;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
@@ -345,7 +348,6 @@ public class MarshallerImpl
       Object value = stack.peek();
       if(value != null)
       {
-         AttributesImpl attrs = null;
          String prefix = (String)prefixByUri.get(elementUri);
          boolean genPrefix = prefix == null && elementUri != null && elementUri.length() > 0;
          if(genPrefix)
@@ -353,7 +355,22 @@ public class MarshallerImpl
             prefix = "ns_" + elementLocal;
          }
 
-         String marshalled;
+         AttributesImpl attrs = null;
+         String typeName = type.getQName().getLocalPart();
+         if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
+            SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
+            type.getItemType() != null &&
+            (SimpleTypeBindings.XS_QNAME_NAME.equals(type.getItemType().getQName().getLocalPart()) ||
+            SimpleTypeBindings.XS_NOTATION_NAME.equals(type.getItemType().getQName().getLocalPart())
+            )
+         )
+         {
+            attrs = new AttributesImpl(5);
+         }
+
+         String marshalled = marshalCharacters(elementUri, prefix, type, value, attrs);
+
+/*
          if(Constants.NS_XML_SCHEMA.equals(type.getQName().getNamespaceURI()))
          {
             // todo: pass non-null namespace context
@@ -414,6 +431,7 @@ public class MarshallerImpl
          {
             marshalled = value.toString();
          }
+*/
 
          if(declareNs && !prefixByUri.isEmpty())
          {
@@ -476,13 +494,15 @@ public class MarshallerImpl
          attrs.add(null, prefix, "xmlns:" + prefix, null, elementNsUri);
       }
 
+      Object o = stack.peek();
+      boolean ignoreUnresolvedFieldOrClass = type.getSchemaBinding().isIgnoreUnresolvedFieldOrClass();
       for(Iterator i = attributeUses.iterator(); i.hasNext();)
       {
          AttributeBinding attrUse = (AttributeBinding)i.next();
          QName attrQName = attrUse.getQName();
-         Object attrValue = getElementValue(attrQName, stack.peek(),
+         Object attrValue = getElementValue(attrQName, o,
             attrQName.getLocalPart(),
-            type.getSchemaBinding().isIgnoreUnresolvedFieldOrClass()
+            ignoreUnresolvedFieldOrClass
          );
 
          if(attrValue != null)
@@ -505,7 +525,41 @@ public class MarshallerImpl
             }
 
             TypeBinding attrType = attrUse.getType();
-            if(attrType.getLexicalPattern() != null && attrType.getBaseType() != null &&
+            if(attrType.getItemType() != null)
+            {
+               TypeBinding itemType = attrType.getItemType();
+               if(Constants.NS_XML_SCHEMA.equals(itemType.getQName().getNamespaceURI()))
+               {
+                  List list;
+                  if(attrValue instanceof List)
+                  {
+                     list = (List)attrValue;
+                  }
+                  else if(attrValue.getClass().isArray())
+                  {
+                     list = Arrays.asList((Object[])attrValue);
+                  }
+                  else
+                  {
+                     // todo: qname are also not yet supported
+                     throw new JBossXBRuntimeException("Expected value for list type is an array or " +
+                        List.class.getName() +
+                        " but got: " +
+                        attrValue
+                     );
+                  }
+
+                  attrValue = SimpleTypeBindings.marshalList(itemType.getQName().getLocalPart(), list, null);
+               }
+               else
+               {
+                  throw new JBossXBRuntimeException("Marshalling of list types with item types not from " +
+                     Constants.NS_XML_SCHEMA + " is not supported."
+                  );
+               }
+            }
+            else if(attrType.getLexicalPattern() != null &&
+               attrType.getBaseType() != null &&
                Constants.QNAME_BOOLEAN.equals(attrType.getBaseType().getQName()))
             {
                String item = (String)attrType.getLexicalPattern().get(0);
@@ -535,6 +589,47 @@ public class MarshallerImpl
          }
       }
 
+      String characters = null;
+      TypeBinding simpleType = type.getSimpleType();
+      if(simpleType != null)
+      {
+         // todo: should also support 'value'?
+         // the problem here is with the ignoreIfNotFound...
+         String fieldName = null;
+         CharactersMetaData charactersMetaData = type.getCharactersMetaData();
+         PropertyMetaData propertyMetaData = charactersMetaData == null ? null : charactersMetaData.getProperty();
+         if(propertyMetaData != null)
+         {
+            fieldName = propertyMetaData.getName();
+         }
+
+         if(fieldName != null)
+         {
+            Object value = getElementValue(new QName(elementNsUri, elementLocalName),
+               o,
+               fieldName,
+               ignoreUnresolvedFieldOrClass
+            );
+            if(value != null)
+            {
+               String typeName = simpleType.getQName().getLocalPart();
+               if(attrs == null && (SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
+                  SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
+                  simpleType.getItemType() != null &&
+                  (SimpleTypeBindings.XS_QNAME_NAME.equals(simpleType.getItemType().getQName().getLocalPart()) ||
+                  SimpleTypeBindings.XS_NOTATION_NAME.equals(simpleType.getItemType().getQName().getLocalPart())
+                  )
+                  )
+               )
+               {
+                  attrs = new AttributesImpl(5);
+               }
+
+               characters = marshalCharacters(elementNsUri, prefix, simpleType, value, attrs);
+            }
+         }
+      }
+
       String qName = createQName(prefix, elementLocalName);
       content.startElement(elementNsUri, elementLocalName, qName, attrs);
 
@@ -543,6 +638,10 @@ public class MarshallerImpl
          marshalParticle(particle, false);
       }
 
+      if(characters != null)
+      {
+         content.characters(characters.toCharArray(), 0, characters.length());
+      }
       content.endElement(elementNsUri, elementLocalName, qName);
 
       if(genPrefix)
@@ -797,7 +896,7 @@ public class MarshallerImpl
       {
          if(valueIterator != null)
          {
-            Object o =  valueIterator.hasNext() ? valueIterator.next(): null;
+            Object o = valueIterator.hasNext() ? valueIterator.next() : null;
             stack.push(o);
          }
 
@@ -808,6 +907,97 @@ public class MarshallerImpl
          {
             stack.pop();
          }
+      }
+      return marshalled;
+   }
+
+   private String marshalCharacters(String elementUri,
+                                    String elementPrefix,
+                                    TypeBinding simpleType,
+                                    Object value,
+                                    AttributesImpl attrs)
+   {
+      String marshalled;
+      if(simpleType.getItemType() != null)
+      {
+         TypeBinding itemType = simpleType.getItemType();
+         if(Constants.NS_XML_SCHEMA.equals(itemType.getQName().getNamespaceURI()))
+         {
+            List list;
+            if(value instanceof List)
+            {
+               list = (List)value;
+            }
+            else if(value.getClass().isArray())
+            {
+               list = Arrays.asList((Object[])value);
+            }
+            else
+            {
+               // todo: qname are also not yet supported
+               throw new JBossXBRuntimeException(
+                  "Expected value for list type is an array or " + List.class.getName() + " but got: " + value
+               );
+            }
+
+            marshalled = SimpleTypeBindings.marshalList(itemType.getQName().getLocalPart(), list, null);
+         }
+         else
+         {
+            throw new JBossXBRuntimeException("Marshalling of list types with item types not from " +
+               Constants.NS_XML_SCHEMA + " is not supported."
+            );
+         }
+      }
+      else if(Constants.NS_XML_SCHEMA.equals(simpleType.getQName().getNamespaceURI()))
+      {
+         // todo: pass non-null namespace context
+         String typeName = simpleType.getQName().getLocalPart();
+
+         if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
+            SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
+         {
+            QName qNameValue = (QName)value;
+            String prefixValue = qNameValue.getPrefix();
+            if((elementUri != null && !qNameValue.getNamespaceURI().equals(elementUri) ||
+               elementUri == null && qNameValue.getNamespaceURI().length() > 0
+               ) &&
+               (prefixValue.equals(elementPrefix) || prefixValue.length() == 0 && elementPrefix == null))
+            {
+               // how to best resolve this conflict?
+               prefixValue += 'x';
+               value = new QName(qNameValue.getNamespaceURI(), qNameValue.getLocalPart(), prefixValue);
+            }
+
+            attrs = new AttributesImpl(1);
+            attrs.add(null,
+               prefixValue,
+               prefixValue.length() == 0 ? "xmlns" : "xmlns:" + prefixValue,
+               null,
+               qNameValue.getNamespaceURI()
+            );
+         }
+
+         marshalled = SimpleTypeBindings.marshal(typeName, value, null);
+      }
+      // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
+      else if(simpleType.getLexicalPattern() != null &&
+         simpleType.getBaseType() != null &&
+         Constants.QNAME_BOOLEAN.equals(simpleType.getBaseType().getQName()))
+      {
+         String item = (String)simpleType.getLexicalPattern().get(0);
+         if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
+         {
+            marshalled = ((Boolean)value).booleanValue() ? "1" : "0";
+         }
+         else
+         {
+            marshalled = ((Boolean)value).booleanValue() ? "true" : "false";
+         }
+      }
+      else
+      {
+         marshalled = value.toString();
       }
       return marshalled;
    }
@@ -1012,12 +1202,12 @@ public class MarshallerImpl
             {
                if(log.isTraceEnabled())
                {
-                  log.trace("getChildren: found neither getter nor field for " + qName + " in " + o.getClass());
+                  log.trace("Found neither getter nor field for " + qName + " in " + o.getClass());
                }
             }
             else
             {
-               throw new JBossXBRuntimeException("getChildren: found neither getter nor field for " +
+               throw new JBossXBRuntimeException("Found neither getter nor field for " +
                   qName +
                   " in "
                   + o.getClass()

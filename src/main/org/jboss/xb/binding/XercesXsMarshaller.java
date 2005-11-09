@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.AbstractList;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.xerces.xs.XSAttributeDeclaration;
@@ -854,7 +855,7 @@ public class XercesXsMarshaller
             }
             else if(value.getClass().isArray())
             {
-               list = Arrays.asList((Object[])value);
+               list = asList(value);
             }
             else
             {
@@ -1079,5 +1080,23 @@ public class XercesXsMarshaller
    private static boolean isRepeatable(XSParticle particle)
    {
       return particle.getMaxOccursUnbounded() || particle.getMaxOccurs() > 1 || particle.getMinOccurs() > 1;
+   }
+
+   private static final List asList(final Object arr)
+   {
+      return new AbstractList()
+      {
+         private final Object array = arr;
+
+         public Object get(int index)
+         {
+            return Array.get(array, index);
+         }
+
+         public int size()
+         {
+            return Array.getLength(array);
+         }
+      };
    }
 }

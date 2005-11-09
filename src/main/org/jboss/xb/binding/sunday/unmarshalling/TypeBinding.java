@@ -53,7 +53,7 @@ public class TypeBinding
    /** Map<QName, AttributeBinding>  */
    private Map attrs = Collections.EMPTY_MAP;
    private ParticleHandler handler = RtElementHandler.INSTANCE;
-   private CharactersHandler simpleType;
+   private CharactersHandler charactersHandler;
    private ClassMetaData classMetaData;
    private ValueMetaData valueMetaData;
    private PropertyMetaData propertyMetaData;
@@ -72,10 +72,12 @@ public class TypeBinding
    private ParticleBinding particle;
 
    private List patternValues;
+   private TypeBinding itemType; // the type is a list type with this item type
+   private TypeBinding simpleType;
 
    public TypeBinding()
    {
-      this(null);
+      this.qName = null;
    }
 
    public TypeBinding(QName qName)
@@ -83,15 +85,20 @@ public class TypeBinding
       this(qName, RtCharactersHandler.INSTANCE);
    }
 
-   public TypeBinding(QName qName, CharactersHandler simple)
+   public TypeBinding(CharactersHandler charactersHandler)
+   {
+      this(null, charactersHandler);
+   }
+
+   public TypeBinding(QName qName, CharactersHandler charactersHandler)
    {
       this.qName = qName;
-      this.simpleType = simple;
+      this.charactersHandler = charactersHandler;
    }
 
    public TypeBinding(QName qName, TypeBinding baseType)
    {
-      this(qName, baseType.simpleType);
+      this(qName, baseType.charactersHandler);
 
       if(baseType.particle != null)
       {
@@ -270,12 +277,27 @@ public class TypeBinding
       return attrs.values();
    }
 
-   public CharactersHandler getSimpleType()
+   public CharactersHandler getCharactersHandler()
+   {
+      return charactersHandler;
+   }
+
+   /**
+    * This method will create a new simple type binding with the passed in characters handler
+    * and set this simple type as the simple type of the complex type the method was invoked on.
+    * @param charactersHandler
+    */
+   public void setSimpleType(CharactersHandler charactersHandler)
+   {
+      setSimpleType(new TypeBinding(charactersHandler));
+   }
+
+   public TypeBinding getSimpleType()
    {
       return simpleType;
    }
 
-   public void setSimpleType(CharactersHandler simpleType)
+   public void setSimpleType(TypeBinding simpleType)
    {
       this.simpleType = simpleType;
    }
@@ -465,5 +487,15 @@ public class TypeBinding
          }
          patternValues.add(patternValue);
       }
+   }
+
+   public void setItemType(TypeBinding itemType)
+   {
+      this.itemType = itemType;
+   }
+
+   public TypeBinding getItemType()
+   {
+      return itemType;
    }
 }

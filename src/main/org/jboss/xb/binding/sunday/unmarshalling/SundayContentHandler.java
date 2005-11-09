@@ -435,8 +435,28 @@ public class SundayContentHandler
          // characters
          //
 
-         CharactersHandler simpleType = type.getSimpleType();
-         if(textContent.length() > 0 || simpleType != null)
+
+         CharactersHandler charHandler;
+         TypeBinding charType = type.getSimpleType();
+         if(charType == null)
+         {
+            charType = type;
+            charHandler = type.getCharactersHandler();
+         }
+         else
+         {
+            charHandler = charType.getCharactersHandler();
+         }
+
+         /**
+          * If there is text content then unmarshal it and set.
+          * If there is no text content and the type is simple and
+          * its characters handler is not null then unmarshal and set.
+          * If the type is complex and there is no text data then the unmarshalled value
+          * of the empty text content is assumed to be null
+          * (in case of simple types that's not always true and depends on nillable attribute).
+          */
+         if(textContent.length() > 0 || charHandler != null && type.isSimple())
          {
             String dataContent;
             SchemaBinding schema = element.getSchema();
@@ -457,15 +477,15 @@ public class SundayContentHandler
 
             Object unmarshalled;
 
-            if(simpleType == null)
+            if(charHandler == null)
             {
-               if(schema != null && schema.isStrictSchema())
+               if(!type.isSimple() && schema != null && schema.isStrictSchema())
                {
                   throw new JBossXBRuntimeException("Element " +
                      endName +
-                     " type binding " +
+                     " with type binding " +
                      type.getQName() +
-                     " does not include text content binding ('" + dataContent
+                     " does not include text content binding: " + dataContent
                   );
                }
                unmarshalled = dataContent;
@@ -484,8 +504,8 @@ public class SundayContentHandler
 
                // todo valueMetaData is available from type
                unmarshalled = dataContent == null ?
-                  simpleType.unmarshalEmpty(endName, type, nsRegistry, valueMetaData) :
-                  simpleType.unmarshal(endName, type, nsRegistry, valueMetaData, dataContent);
+                  charHandler.unmarshalEmpty(endName, charType, nsRegistry, valueMetaData) :
+                  charHandler.unmarshal(endName, charType, nsRegistry, valueMetaData, dataContent);
             }
 
             if(unmarshalled != null)
@@ -495,9 +515,9 @@ public class SundayContentHandler
                {
                   o = unmarshalled;
                }
-               else if(simpleType != null)
+               else if(charHandler != null)
                {
-                  simpleType.setValue(endName, element, o, unmarshalled);
+                  charHandler.setValue(endName, element, o, unmarshalled);
                }
             }
 

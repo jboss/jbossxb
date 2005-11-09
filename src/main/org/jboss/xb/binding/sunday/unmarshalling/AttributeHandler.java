@@ -47,7 +47,7 @@ public abstract class AttributeHandler
    {
       TypeBinding type = binding.getType();
       ValueMetaData valueMetaData = binding.getValueMetaData();
-      return type == null ? value : type.getSimpleType().unmarshal(attrName, type, nsCtx, valueMetaData, value);
+      return type == null ? value : type.getCharactersHandler().unmarshal(attrName, type, nsCtx, valueMetaData, value);
    }
 
    public abstract void attribute(QName elemName,

@@ -26,6 +26,7 @@ import javax.xml.namespace.NamespaceContext;
 
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.SimpleTypeBindings;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 
 /**
@@ -69,7 +70,24 @@ public abstract class CharactersHandler
    {
       Object o;
       QName typeQName = typeBinding.getQName();
-      if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))
+      TypeBinding itemType = typeBinding.getItemType();
+      if(itemType != null)
+      {
+         QName itemTypeQName = itemType.getQName();
+         if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
+         {
+            o = SimpleTypeBindings.unmarshalList(itemTypeQName.getLocalPart(), value, nsCtx);
+         }
+         else
+         {
+            // todo
+            throw new JBossXBRuntimeException(
+               "Only list types with item type from " + Constants.NS_XML_SCHEMA +
+               " namespace are supported currently."
+            );
+         }
+      }
+      else if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))
       {
          o = SimpleTypeBindings.unmarshal(typeQName.getLocalPart(), value, nsCtx);
       }

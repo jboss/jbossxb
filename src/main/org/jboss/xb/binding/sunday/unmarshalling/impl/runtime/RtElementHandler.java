@@ -808,7 +808,7 @@ public class RtElementHandler
          {
             if(!Constants.NS_XML_SCHEMA_INSTANCE.equals(attrs.getURI(i)))
             {
-               CharactersHandler simpleType = type.getSimpleType();
+               CharactersHandler simpleType = type.getCharactersHandler();
                Object value;
                if(simpleType == null)
                {

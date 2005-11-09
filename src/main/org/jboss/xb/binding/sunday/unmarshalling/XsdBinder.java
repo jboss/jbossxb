@@ -347,12 +347,12 @@ public class XsdBinder
       return binding;
    }
 
-   private static TypeBinding bindSimpleType(SchemaBinding doc, XSSimpleTypeDefinition type)
+   private static TypeBinding bindSimpleType(SchemaBinding schema, XSSimpleTypeDefinition type)
    {
       boolean trace = log.isTraceEnabled();
-      
+
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
-      TypeBinding binding = typeName == null ? null : doc.getType(typeName);
+      TypeBinding binding = typeName == null ? null : schema.getType(typeName);
       if(binding == null)
       {
          if (trace)
@@ -361,7 +361,7 @@ public class XsdBinder
          }
 
          XSTypeDefinition baseTypeDef = type.getBaseType();
-         TypeBinding baseType = baseTypeDef == null ? null : bindType(doc, baseTypeDef, null);
+         TypeBinding baseType = baseTypeDef == null ? null : bindType(schema, baseTypeDef, null);
 
          binding = baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType);
 
@@ -374,9 +374,15 @@ public class XsdBinder
             }
          }
 
+         if(type.getItemType() != null)
+         {
+            TypeBinding itemType = bindSimpleType(schema, type.getItemType());
+            binding.setItemType(itemType);
+         }
+
          if(typeName != null)
          {
-            doc.addType(binding);
+            schema.addType(binding);
          }
 
          if (trace)
@@ -435,19 +441,19 @@ public class XsdBinder
             }
          }
 
-         binding.setSchemaBinding(doc);
+         binding.setSchemaBinding(schema);
       }
       return binding;
    }
 
-   private static TypeBinding bindComplexType(SchemaBinding doc,
+   private static TypeBinding bindComplexType(SchemaBinding schema,
                                               XSComplexTypeDefinition type,
                                               SharedElements sharedElements)
    {
       boolean trace = log.isTraceEnabled();
-      
+
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
-      TypeBinding binding = typeName == null ? null : doc.getType(typeName);
+      TypeBinding binding = typeName == null ? null : schema.getType(typeName);
       if(binding != null)
       {
          return binding;
@@ -467,9 +473,15 @@ public class XsdBinder
       binding.setStartElementCreatesObject(true);
       binding.setSimple(false);
 
+      if(type.getSimpleType() != null)
+      {
+         TypeBinding simpleType = bindSimpleType(schema, type.getSimpleType());
+         binding.setSimpleType(simpleType);
+      }
+
       if(typeName != null)
       {
-         doc.addType(binding);
+         schema.addType(binding);
       }
 
       if (trace)
@@ -478,7 +490,7 @@ public class XsdBinder
          log.trace(msg);
       }
 
-      binding.setSchemaBinding(doc);
+      binding.setSchemaBinding(schema);
 
       XSObjectList attrs = type.getAttributeUses();
       if (trace)
@@ -486,7 +498,7 @@ public class XsdBinder
       for(int i = 0; i < attrs.getLength(); ++i)
       {
          XSAttributeUse attr = (XSAttributeUse)attrs.item(i);
-         bindAttributes(doc, binding, attr);
+         bindAttributes(schema, binding, attr);
       }
 
       // customize binding with xsd annotations
@@ -642,7 +654,7 @@ public class XsdBinder
       if(particle != null)
       {
          pushType(binding);
-         bindParticle(doc, particle, sharedElements);
+         bindParticle(schema, particle, sharedElements);
          popType();
       }
 

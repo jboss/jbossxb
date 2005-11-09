@@ -36,6 +36,9 @@ import java.text.ParseException;
 import java.util.Calendar;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
+import java.util.List;
+import java.util.ArrayList;
+
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -937,6 +940,34 @@ public final class SimpleTypeBindings
          throw new IllegalStateException("Not supported xsdType: " + xsdType + ", hashCode=" + xsdType.hashCode());
       }
       return result;
+   }
+
+   public static List unmarshalList(String itemType, String value, NamespaceContext nsCtx)
+   {
+      StringTokenizer tokenizer = new StringTokenizer(value);
+      int total = tokenizer.countTokens();
+      List list = new ArrayList(total);
+      for(int i = 0; i < total; ++i)
+      {
+         Object o = unmarshal(itemType, tokenizer.nextToken(), nsCtx);
+         list.add(o);
+      }
+      return list;
+   }
+
+   public static String marshalList(String itemType, List value, NamespaceContext nsCtx)
+   {
+      StringBuffer buf = new StringBuffer();
+      for(int i = 0; i < value.size(); ++i)
+      {
+         String item = marshal(itemType, value.get(i), nsCtx);
+         if(i > 0)
+         {
+            buf.append(' ');
+         }
+         buf.append(item);
+      }
+      return buf.toString();
    }
 
    public static Object unmarshal(String value, Class javaType)

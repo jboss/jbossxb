@@ -459,6 +459,11 @@ public class XercesXsMarshaller
 
          if(attrValue != null)
          {
+            if(attrs == null)
+            {
+               attrs = new AttributesImpl(5);
+            }
+
             String attrPrefix = null;
             if(attrNs != null)
             {
@@ -466,10 +471,6 @@ public class XercesXsMarshaller
                if(attrPrefix == null && attrNs != null && attrNs.length() > 0)
                {
                   attrPrefix = "ns_" + attrLocal;
-                  if(attrs == null)
-                  {
-                     attrs = new AttributesImpl(1);
-                  }
                   attrs.add(null, attrPrefix, "xmlns:" + attrPrefix, null, attrNs);
                }
             }
@@ -494,13 +495,40 @@ public class XercesXsMarshaller
                   }
                   else
                   {
-                     // todo: qname are also not yet supported
                      throw new JBossXBRuntimeException(
                         "Expected value for list type is an array or " +
                         List.class.getName() +
                         " but got: " +
                         attrValue
                      );
+                  }
+
+                  if(Constants.QNAME_QNAME.getLocalPart().equals(itemType.getName()))
+                  {
+                     for(int listInd = 0; listInd < list.size(); ++listInd)
+                     {
+                        QName item = (QName)list.get(listInd);
+                        String itemNs = item.getNamespaceURI();
+                        if(itemNs != null && itemNs.length() > 0)
+                        {
+                           String itemPrefix;
+                           if(itemNs.equals(elementNsUri))
+                           {
+                              itemPrefix = prefix;
+                           }
+                           else
+                           {
+                              itemPrefix = (String)prefixByUri.get(itemNs);
+                              if(itemPrefix == null)
+                              {
+                                itemPrefix = attrLocal + listInd;
+                                declareNs(attrs, itemPrefix, itemNs);
+                              }
+                           }
+                           item = new QName(item.getNamespaceURI(), item.getLocalPart(), itemPrefix);
+                           list.set(listInd, item);
+                        }
+                     }
                   }
 
                   attrValue = SimpleTypeBindings.marshalList(itemType.getName(), list, null);
@@ -882,24 +910,20 @@ public class XercesXsMarshaller
          if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
             SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
          {
-            QName qNameValue = (QName)value;
-            String prefixValue = qNameValue.getPrefix();
-            if((elementUri != null && !qNameValue.getNamespaceURI().equals(elementUri) ||
-               elementUri == null && qNameValue.getNamespaceURI().length() > 0
+            QName qName = (QName)value;
+            String prefixValue = qName.getPrefix();
+            if((elementUri != null && !qName.getNamespaceURI().equals(elementUri) ||
+               elementUri == null && qName.getNamespaceURI().length() > 0
                ) &&
                (prefixValue.equals(elementPrefix) || prefixValue.length() == 0 && elementPrefix == null))
             {
                // how to best resolve this conflict?
                prefixValue += 'x';
-               value = new QName(qNameValue.getNamespaceURI(), qNameValue.getLocalPart(), prefixValue);
+               qName = new QName(qName.getNamespaceURI(), qName.getLocalPart(), prefixValue);
             }
 
-            attrs.add(null,
-               prefixValue,
-               prefixValue.length() == 0 ? "xmlns" : "xmlns:" + prefixValue,
-               null,
-               qNameValue.getNamespaceURI()
-            );
+            declareNs(attrs, prefixValue, qName.getNamespaceURI());
+            value = qName;
          }
 
          marshalled = SimpleTypeBindings.marshal(typeName, value, null);
@@ -926,6 +950,16 @@ public class XercesXsMarshaller
          marshalled = value.toString();
       }
       return marshalled;
+   }
+
+   private void declareNs(AttributesImpl attrs, String prefix, String ns)
+   {
+      attrs.add(null,
+         prefix,
+         prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix,
+         null,
+         ns
+      );
    }
 
    private Object getElementValue(String elementNs, String elementLocal)

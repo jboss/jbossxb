@@ -113,6 +113,7 @@ public class SchemaBinding
    private boolean ignoreUnresolvedFieldOrClass = true;
    private boolean ignoreLowLine = true;
    private boolean replacePropertyRefs = true;
+   private boolean unmarshalListsToArrays;
 
    public TypeBinding getType(QName qName)
    {
@@ -264,6 +265,16 @@ public class SchemaBinding
    public void setIgnoreLowLine(boolean ignoreLowLine)
    {
       this.ignoreLowLine = ignoreLowLine;
+   }
+
+   public boolean isUnmarshalListsToArrays()
+   {
+      return unmarshalListsToArrays;
+   }
+
+   public void setUnmarshalListsToArrays(boolean unmarshalListsToArrays)
+   {
+      this.unmarshalListsToArrays = unmarshalListsToArrays;
    }
 
    void addElementParticle(ParticleBinding particle)

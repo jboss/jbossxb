@@ -508,6 +508,11 @@ public class MarshallerImpl
 
          if(attrValue != null)
          {
+            if(attrs == null)
+            {
+               attrs = new AttributesImpl(5);
+            }
+
             String attrNs = attrQName.getNamespaceURI();
             String attrLocal = attrQName.getLocalPart();
             String attrPrefix = null;
@@ -517,10 +522,6 @@ public class MarshallerImpl
                if(attrPrefix == null && attrNs != null && attrNs.length() > 0)
                {
                   attrPrefix = "ns_" + attrLocal;
-                  if(attrs == null)
-                  {
-                     attrs = new AttributesImpl(1);
-                  }
                   attrs.add(null, attrPrefix, "xmlns:" + attrPrefix, null, attrNs);
                }
             }
@@ -542,12 +543,39 @@ public class MarshallerImpl
                   }
                   else
                   {
-                     // todo: qname are also not yet supported
                      throw new JBossXBRuntimeException("Expected value for list type is an array or " +
                         List.class.getName() +
                         " but got: " +
                         attrValue
                      );
+                  }
+
+                  if(Constants.QNAME_QNAME.getLocalPart().equals(itemType.getQName().getLocalPart()))
+                  {
+                     for(int listInd = 0; listInd < list.size(); ++listInd)
+                     {
+                        QName item = (QName)list.get(listInd);
+                        String itemNs = item.getNamespaceURI();
+                        if(itemNs != null && itemNs.length() > 0)
+                        {
+                           String itemPrefix;
+                           if(itemNs.equals(elementNsUri))
+                           {
+                              itemPrefix = prefix;
+                           }
+                           else
+                           {
+                              itemPrefix = (String)prefixByUri.get(itemNs);
+                              if(itemPrefix == null)
+                              {
+                                itemPrefix = attrLocal + listInd;
+                                declareNs(attrs, itemPrefix, itemNs);
+                              }
+                           }
+                           item = new QName(item.getNamespaceURI(), item.getLocalPart(), itemPrefix);
+                           list.set(listInd, item);
+                        }
+                     }
                   }
 
                   attrValue = SimpleTypeBindings.marshalList(itemType.getQName().getLocalPart(), list, null);
@@ -971,12 +999,7 @@ public class MarshallerImpl
             }
 
             attrs = new AttributesImpl(1);
-            attrs.add(null,
-               prefixValue,
-               prefixValue.length() == 0 ? "xmlns" : "xmlns:" + prefixValue,
-               null,
-               qNameValue.getNamespaceURI()
-            );
+            declareNs(attrs, prefixValue, qNameValue.getNamespaceURI());
          }
 
          marshalled = SimpleTypeBindings.marshal(typeName, value, null);
@@ -1001,6 +1024,16 @@ public class MarshallerImpl
          marshalled = value.toString();
       }
       return marshalled;
+   }
+
+   private void declareNs(AttributesImpl attrs, String prefix, String ns)
+   {
+      attrs.add(null,
+         prefix,
+         prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix,
+         null,
+         ns
+      );
    }
 
    private void writeNillable(String elementNs, String elementLocal, boolean nillable)

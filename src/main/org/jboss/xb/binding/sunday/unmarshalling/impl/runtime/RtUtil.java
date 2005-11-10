@@ -21,18 +21,18 @@
   */
 package org.jboss.xb.binding.sunday.unmarshalling.impl.runtime;
 
-import java.util.Collection;
-import java.util.ArrayList;
-import java.lang.reflect.Method;
-import java.lang.reflect.Field;
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import javax.xml.namespace.QName;
-
+import org.jboss.logging.Logger;
+import org.jboss.util.Classes;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
-import org.jboss.logging.Logger;
-import org.jboss.util.Classes;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -264,10 +264,12 @@ public class RtUtil
 
          col.add(value);
       }
-      else if(fieldType.isArray() && value != null &&
+      else if(fieldType.isArray() &&
+         value != null &&
          (fieldType.getComponentType().isAssignableFrom(value.getClass()) ||
          fieldType.getComponentType().isPrimitive() &&
-         Classes.getPrimitiveWrapper(fieldType.getComponentType()) == value.getClass()))
+         Classes.getPrimitiveWrapper(fieldType.getComponentType()) == value.getClass()
+         ))
       {
          Object arr = get(o, getter, field);
          int length = 0;
@@ -287,6 +289,41 @@ public class RtUtil
       }
       else
       {
+         // todo: unmarshalling should produce the right type instead
+         Class valueClass = value == null ? null : value.getClass();
+         if(valueClass != null && !fieldType.isAssignableFrom(valueClass))
+         {
+            if(fieldType.isArray() && Collection.class.isAssignableFrom(valueClass))
+            {
+               Collection col = (Collection)value;
+               Class compType = fieldType.getComponentType();
+               value = Array.newInstance(compType, col.size());
+               if(compType.isPrimitive())
+               {
+                  int i = 0;
+                  for(Iterator iter = col.iterator(); iter.hasNext();)
+                  {
+                     Array.set(value, i++, iter.next());
+                  }
+               }
+               else
+               {
+                  value = col.toArray((Object[])value);
+               }
+            }
+            else if(Collection.class.isAssignableFrom(fieldType) && valueClass.isArray())
+            {
+               int length = Array.getLength(value);
+               Collection col = new ArrayList(length);
+               for(int i = 0; i < length; ++i)
+               {
+                  col.add(Array.get(value, i));
+               }
+               value = col;
+            }
+            // else hopefully it's a primitive/wrapper case
+         }
+
          set(o, value, setter, field);
       }
    }
@@ -357,7 +394,7 @@ public class RtUtil
             " using field " + field.getName()
             ) +
             " on " +
-            (o == null ? "null" : o.getClass().getName() + '@' + o.hashCode() + "[" + o + "]") +
+            (o == null ? "null" : o.getClass().getName() + '@' + o.hashCode() + " (toString=" + o + ")") +
             " : " +
             e.getMessage(),
             e

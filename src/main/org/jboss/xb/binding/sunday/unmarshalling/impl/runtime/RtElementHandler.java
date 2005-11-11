@@ -512,10 +512,14 @@ public class RtElementHandler
       if (trace)
          log.trace("startElement " + elementName + " parent=" + parent + " term=" + term);
 
+      ClassMetaData classMetaData = term.getClassMetaData();
+      MapEntryMetaData mapEntryMetaData = term.getMapEntryMetaData();
+
       if(!term.isModelGroup())
       {
          TypeBinding type = ((ElementBinding)term).getType();
-         if(!type.isStartElementCreatesObject())
+         if(!type.isStartElementCreatesObject() ||
+            classMetaData == null && mapEntryMetaData == null && Constants.QNAME_ANYTYPE.equals(type.getQName()))
          {
             if (trace)
             {
@@ -526,8 +530,6 @@ public class RtElementHandler
       }
 
       Object o = null;
-      ClassMetaData classMetaData = term.getClassMetaData();
-      MapEntryMetaData mapEntryMetaData = term.getMapEntryMetaData();
 
       // if addMethod is specified, it's probably some collection field
       // but should not be set as a property. Instead, items are added to it using the addMethod

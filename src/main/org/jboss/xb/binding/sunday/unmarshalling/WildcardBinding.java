@@ -22,8 +22,8 @@
 package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
-import org.xml.sax.Attributes;
 import org.jboss.xb.binding.Util;
+import org.xml.sax.Attributes;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -62,24 +62,32 @@ public class WildcardBinding
 
    public ElementBinding getElement(QName qName, Attributes attrs)
    {
-      SchemaBindingResolver resolver = schemaResolver;
-      if(resolver == null && schema != null)
+      ElementBinding element = null;
+      // first, look into the own schema
+      if(schema != null)
       {
-         resolver = schema.getSchemaResolver();
+         element = schema.getElement(qName);
       }
 
-      ElementBinding element = null;
-      if(resolver != null)
+      if(element == null)
       {
-         // this is wildcard handling
-         String schemaLocation = attrs == null ? null : Util.getSchemaLocation(attrs, qName.getNamespaceURI());
-         SchemaBinding schema = resolver.resolve(qName.getNamespaceURI(), null, schemaLocation);
-         if(schema != null)
+         SchemaBindingResolver resolver = schemaResolver;
+         if(resolver == null && schema != null)
          {
-            element = schema.getElement(qName);
+            resolver = schema.getSchemaResolver();
+         }
+
+         if(resolver != null)
+         {
+            // this is wildcard handling
+            String schemaLocation = attrs == null ? null : Util.getSchemaLocation(attrs, qName.getNamespaceURI());
+            SchemaBinding schema = resolver.resolve(qName.getNamespaceURI(), null, schemaLocation);
+            if(schema != null)
+            {
+               element = schema.getElement(qName);
+            }
          }
       }
-
       return element;
    }
 

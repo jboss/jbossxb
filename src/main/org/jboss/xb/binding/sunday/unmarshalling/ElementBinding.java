@@ -161,6 +161,6 @@ public class ElementBinding
 
    public String toString()
    {
-      return super.toString() + "[" + qName + "]";
+      return super.toString() + "(" + qName + ", type=" + typeBinding.getQName() + ")";
    }
 }

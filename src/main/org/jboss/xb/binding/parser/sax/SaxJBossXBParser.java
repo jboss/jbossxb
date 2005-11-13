@@ -122,7 +122,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         throw new JBossXBException("Failed to parse source: " + e.getMessage(), e);
+         throw new JBossXBException("Failed to parse source: " + systemId, e);
       }
    }
 
@@ -135,7 +135,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         throw new JBossXBException("Failed to parse source: " + e.getMessage(), e);
+         throw new JBossXBException("Failed to parse source", e);
       }
    }
 
@@ -148,7 +148,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         throw new JBossXBException("Failed to parse source: " + e.getMessage(), e);
+         throw new JBossXBException("Failed to parse source", e);
       }
    }
 
@@ -234,7 +234,7 @@ public class SaxJBossXBParser
             {
                name = namespaceURI + ':' + localName;
             }
-            log.trace("endElement enter " + name);
+            log.trace("Enter endElement " + name);
          }
          try
          {
@@ -244,7 +244,7 @@ public class SaxJBossXBParser
          {
             if(trace)
             {
-               log.trace("endElement exit  " + name);
+               log.trace("Exit endElement  " + name);
             }
          }
       }
@@ -262,7 +262,7 @@ public class SaxJBossXBParser
             {
                name = namespaceURI + ':' + localName;
             }
-            log.trace("startElement enter " + name);
+            log.trace("Enter startElement " + name);
          }
          try
          {
@@ -272,7 +272,7 @@ public class SaxJBossXBParser
          {
             if(trace)
             {
-               log.trace("startElement exit  " + name);
+               log.trace("Exit startElement  " + name);
             }
          }
       }

@@ -32,7 +32,7 @@ import org.jboss.xb.binding.metadata.ValueMetaData;
  */
 public abstract class AttributeHandler
 {
-   public static final AttributeHandler NOOP = new AttributeHandler()
+   public static AttributeHandler NOOP = new AttributeHandler()
    {
       public void attribute(QName elemName, QName attrName, AttributeBinding binding, Object owner, Object value)
       {

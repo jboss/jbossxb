@@ -34,7 +34,7 @@ import org.jboss.xb.binding.metadata.ValueMetaData;
  */
 public abstract class TermBinding
 {
-   protected final SchemaBinding schema;
+   protected SchemaBinding schema;
 
    protected ClassMetaData classMetaData;
    protected PropertyMetaData propertyMetaData;
@@ -52,6 +52,10 @@ public abstract class TermBinding
       this.schema = schema;
    }
 
+   protected TermBinding()
+   {
+   }
+   
    public ClassMetaData getClassMetaData()
    {
       return classMetaData;

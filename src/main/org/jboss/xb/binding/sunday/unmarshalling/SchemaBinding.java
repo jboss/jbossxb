@@ -100,7 +100,12 @@ public class SchemaBinding
       addSimpleType(new SimpleTypeBinding(Constants.QNAME_POSITIVEINTEGER));
    }
 
-   private void addSimpleType(TypeBinding type)
+   protected static TypeBinding getSimpleType(QName name)
+   {
+      return (TypeBinding) SIMPLE_TYPES.get(name);
+   }
+   
+   private static void addSimpleType(TypeBinding type)
    {
       SIMPLE_TYPES.put(type.getQName(), type);
    }

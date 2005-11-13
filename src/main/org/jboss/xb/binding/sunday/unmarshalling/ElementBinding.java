@@ -40,11 +40,11 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
 public class ElementBinding
    extends TermBinding
 {
-   private List interceptors = Collections.EMPTY_LIST;
+   protected List interceptors = Collections.EMPTY_LIST;
 
-   private final QName qName;
-   private final TypeBinding typeBinding;
-   private boolean nillable;
+   protected QName qName;
+   protected TypeBinding typeBinding;
+   protected boolean nillable;
 
    public ElementBinding(SchemaBinding schema, QName qName, TypeBinding typeBinding)
    {
@@ -58,6 +58,10 @@ public class ElementBinding
       }
    }
 
+   protected ElementBinding()
+   {
+   }
+   
    public QName getQName()
    {
       return qName;

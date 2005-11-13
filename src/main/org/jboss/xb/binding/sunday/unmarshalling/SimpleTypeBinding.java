@@ -24,7 +24,6 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -33,14 +32,6 @@ import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
 public class SimpleTypeBinding
    extends TypeBinding
 {
-   private static final RtElementHandler DEFAULT_HANDLER = new RtElementHandler()
-   {
-      public Object startParticle(Object parent, QName qName, ParticleBinding particle)
-      {
-         return null;
-      }
-   };
-
    public SimpleTypeBinding()
    {
       setDefaultHandler();
@@ -67,7 +58,7 @@ public class SimpleTypeBinding
 
    private void setDefaultHandler()
    {
-      setHandler(DEFAULT_HANDLER);
+      setHandler(DefaultHandlers.SIMPLE_HANDLER);
    }
 
    public AttributeBinding addAttribute(QName name, TypeBinding type, AttributeHandler handler)

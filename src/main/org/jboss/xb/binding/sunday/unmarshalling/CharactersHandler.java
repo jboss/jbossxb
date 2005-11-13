@@ -37,7 +37,7 @@ import org.jboss.xb.binding.metadata.ValueMetaData;
  */
 public abstract class CharactersHandler
 {
-   public static final CharactersHandler NOOP = new CharactersHandler()
+   public static CharactersHandler NOOP = new CharactersHandler()
    {
       public Object unmarshal(QName qName,
                               TypeBinding typeBinding,
@@ -49,7 +49,7 @@ public abstract class CharactersHandler
       }
    };
 
-   public static final CharactersHandler DEFAULT = new CharactersHandler()
+   public static CharactersHandler DEFAULT = new CharactersHandler()
    {
    };
 

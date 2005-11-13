@@ -71,7 +71,7 @@ public class RtElementHandler
    private static final Logger log = Logger.getLogger(RtElementHandler.class);
 
    public static final RtElementHandler INSTANCE = new RtElementHandler();
-
+   
    // ParticleHandler impl
 
    public Object startParticle(Object parent,

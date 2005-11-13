@@ -27,7 +27,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+
 import javax.xml.namespace.QName;
+
+import org.apache.xerces.xs.StringList;
 import org.apache.xerces.xs.XSAnnotation;
 import org.apache.xerces.xs.XSAttributeDeclaration;
 import org.apache.xerces.xs.XSAttributeUse;
@@ -44,7 +47,6 @@ import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
-import org.apache.xerces.xs.StringList;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -60,7 +62,6 @@ import org.jboss.xb.binding.metadata.SchemaMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.metadata.XsdAnnotation;
 import org.jboss.xb.binding.metadata.XsdAppInfo;
-import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtAttributeHandler;
 import org.w3c.dom.DOMError;
 import org.w3c.dom.DOMErrorHandler;
 import org.w3c.dom.DOMLocator;
@@ -673,7 +674,7 @@ public class XsdBinder
          log.trace("binding attribute " + attrName + " for " + type.getQName());
       XSSimpleTypeDefinition attrType = attr.getTypeDefinition();
       TypeBinding typeBinding = bindSimpleType(doc, attrType);
-      AttributeBinding binding = type.addAttribute(attrName, typeBinding, RtAttributeHandler.INSTANCE);
+      AttributeBinding binding = type.addAttribute(attrName, typeBinding, DefaultHandlers.ATTRIBUTE_HANDLER);
       if(attrUse.getConstraintType() == XSConstants.VC_DEFAULT)
       {
          // Associate the default value with the binding

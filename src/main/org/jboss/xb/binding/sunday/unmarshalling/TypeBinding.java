@@ -21,26 +21,24 @@
   */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Iterator;
-import java.util.Collection;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
+
 import javax.xml.namespace.QName;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.helpers.AttributesImpl;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ClassMetaData;
 import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
-import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
-
+import org.xml.sax.Attributes;
+import org.xml.sax.helpers.AttributesImpl;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -48,11 +46,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
  */
 public class TypeBinding
 {
-   private final QName qName;
+   protected QName qName;
    private ElementBinding arrayItem;
    /** Map<QName, AttributeBinding>  */
    private Map attrs = Collections.EMPTY_MAP;
-   private ParticleHandler handler = RtElementHandler.INSTANCE;
+   private ParticleHandler handler = DefaultHandlers.ELEMENT_HANDLER;
    private CharactersHandler charactersHandler;
    private ClassMetaData classMetaData;
    private ValueMetaData valueMetaData;
@@ -82,7 +80,7 @@ public class TypeBinding
 
    public TypeBinding(QName qName)
    {
-      this(qName, RtCharactersHandler.INSTANCE);
+      this(qName, DefaultHandlers.CHARACTERS_HANDLER);
    }
 
    public TypeBinding(CharactersHandler charactersHandler)
@@ -497,5 +495,10 @@ public class TypeBinding
    public TypeBinding getItemType()
    {
       return itemType;
+   }
+
+   public String toString()
+   {
+      return super.toString() + "[" + qName + "]";
    }
 }

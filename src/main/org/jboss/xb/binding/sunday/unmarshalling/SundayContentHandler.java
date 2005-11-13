@@ -175,7 +175,7 @@ public class SundayContentHandler
                (ModelGroupBinding)typeParticle.getTerm();
             if(modelGroup == null)
             {
-               throw new JBossXBRuntimeException("Element " + element.getQName() + " should be of a complex type!");
+               throw new JBossXBRuntimeException("Element " + element.getQName() + " should be of a complex type for " + startName);
             }
 
             ModelGroupBinding.Cursor cursor = modelGroup.newCursor(typeParticle);
@@ -413,6 +413,8 @@ public class SundayContentHandler
       String nil = atts.getValue("xsi:nil");
       if(nil == null || !("1".equals(nil) || "true".equals(nil)))
       {
+         if (type == null)
+            throw new JBossXBRuntimeException("No type for " + particle);
          o = type.getHandler().startParticle(parent, startName, particle, atts, nsRegistry);
       }
       else
@@ -622,7 +624,10 @@ public class SundayContentHandler
       stack.push(item);
       if(log.isTraceEnabled())
       {
-         log.trace("pushed " + qName + "=" + o + ", binding=" + particle.getTerm());
+         Object binding = null;
+         if (particle != null)
+            binding = particle.getTerm();
+         log.trace("pushed " + qName + "=" + o + ", binding=" + binding);
       }
    }
 
@@ -646,9 +651,13 @@ public class SundayContentHandler
          {
             log.trace("poped " + ((ElementBinding)item.particle.getTerm()).getQName() + "=" + item.particle);
          }
-         else
+         else if (item.cursor != null)
          {
             log.trace("poped " + item.cursor.getCurrentParticle().getTerm());
+         }
+         else
+         {
+            log.trace("poped null");
          }
       }
       return item;

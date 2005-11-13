@@ -22,17 +22,17 @@
 package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Collection;
-import javax.xml.namespace.QName;
-import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
-import org.jboss.logging.Logger;
-import org.xml.sax.Attributes;
 
+import javax.xml.namespace.QName;
+
+import org.jboss.logging.Logger;
+import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.xml.sax.Attributes;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -45,7 +45,7 @@ public abstract class ModelGroupBinding
    protected static final Logger log = Logger.getLogger(ModelGroupBinding.class);
 
    protected boolean requiredParticle;
-   protected ParticleHandler handler = RtElementHandler.INSTANCE;
+   protected ParticleHandler handler = DefaultHandlers.ELEMENT_HANDLER;
 
    protected ModelGroupBinding(SchemaBinding schema)
    {

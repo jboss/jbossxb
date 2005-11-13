@@ -91,4 +91,9 @@ public class ParticleBinding
    {
       return minOccurs > occurs && (!term.isModelGroup() || ((ModelGroupBinding)term).hasRequiredParticle());
    }
+   
+   public String toString()
+   {
+      return term.toString();
+   }
 }

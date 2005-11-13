@@ -141,4 +141,9 @@ public class AttributeBinding
    {
       this.valueAdapter = valueAdapter;
    }
+
+   public String toString()
+   {
+      return super.toString() + "[" + qName + "]";
+   }
 }

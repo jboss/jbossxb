@@ -21,6 +21,9 @@
   */
 package org.jboss.xb.binding.metadata;
 
+import org.jboss.util.JBossStringBuilder;
+import org.jboss.util.Strings;
+
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -64,5 +67,15 @@ public class ClassMetaData
    public int hashCode()
    {
       return (impl != null ? impl.hashCode() : 0);
+   }
+   
+   public String toString()
+   {
+      JBossStringBuilder buffer = new JBossStringBuilder();
+      Strings.defaultToString(buffer, this);
+      buffer.append('[');
+      buffer.append("impl=").append(impl);
+      buffer.append(']');
+      return buffer.toString();
    }
 }

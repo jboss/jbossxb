@@ -977,6 +977,44 @@ public final class Strings
       else
          return object.getClass().getName() + '@' + Integer.toHexString(System.identityHashCode(object));
    }
+
+   /**
+    * The default toString implementation of an object
+    * 
+    * @param object the object
+    * @param buffer the string builder
+    * @return a string in the form className@hexHashCode
+    */
+   public static final void defaultToString(JBossStringBuilder buffer, Object object)
+   {
+      if (object == null)
+         buffer.append("null");
+      else
+      {
+         buffer.append(object.getClass().getName());
+         buffer.append('@');
+         buffer.append(Integer.toHexString(System.identityHashCode(object)));
+      }
+   }
+
+   /**
+    * The default toString implementation of an object
+    * 
+    * @param object the object
+    * @param buffer the string buffer
+    * @return a string in the form className@hexHashCode
+    */
+   public static final void defaultToString(StringBuffer buffer, Object object)
+   {
+      if (object == null)
+         buffer.append("null");
+      else
+      {
+         buffer.append(object.getClass().getName());
+         buffer.append('@');
+         buffer.append(Integer.toHexString(System.identityHashCode(object)));
+      }
+   }
    
    /**
     * Parses a time period into a long.

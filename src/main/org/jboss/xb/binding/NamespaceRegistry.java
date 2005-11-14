@@ -263,7 +263,7 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
 
    /** Return an iterator over all registered nsURIs.
     */
-   public Iterator getRegisteredPrefix()
+   public Iterator getRegisteredPrefixes()
    {
       return uriByPrefix.keySet().iterator();
    }

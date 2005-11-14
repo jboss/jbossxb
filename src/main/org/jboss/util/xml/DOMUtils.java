@@ -24,7 +24,6 @@ package org.jboss.util.xml;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -32,11 +31,6 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.jboss.logging.Logger;
 import org.w3c.dom.Attr;
@@ -171,7 +165,46 @@ public final class DOMUtils
       Document doc = getOwnerDocument();
       return doc.createTextNode(value);
    }
+   
+   /** Get the qname of the given node.
+    */
+   public static QName getElementQName(Element el)
+   {
+      String qualifiedName = el.getNodeName();
+      return resolveQName(el, qualifiedName);
+   }
 
+   /** Transform the giveen qualified name into a QName
+    */
+   public static QName resolveQName(Element el, String qualifiedName)
+   {
+      QName qname;
+      String prefix = "";
+      String namespaceURI = "";
+      String localPart = qualifiedName;
+
+      int colIndex = qualifiedName.indexOf(":");
+      if (colIndex > 0)
+      {
+         prefix = qualifiedName.substring(0, colIndex);
+         localPart = qualifiedName.substring(colIndex + 1);
+
+         Element nsElement = el;
+         while (namespaceURI.equals("") && nsElement != null)
+         {
+            namespaceURI = nsElement.getAttribute("xmlns:" + prefix);
+            if (namespaceURI.equals(""))
+               nsElement = getParentElement(nsElement);
+         }
+
+         if (namespaceURI.equals(""))
+            throw new IllegalArgumentException("Cannot find namespace uri for: " + qualifiedName);
+      }
+
+      qname = new QName(namespaceURI, localPart, prefix);
+      return qname;
+   }
+   
    /** Get the value from the given attribute
     *
     * @return null if the attribute value is empty or the attribute is not present
@@ -212,32 +245,10 @@ public final class DOMUtils
    {
       QName qname = null;
 
-      String attr = getAttributeValue(el, attrName);
-      if (attr != null)
+      String qualifiedName = getAttributeValue(el, attrName);
+      if (qualifiedName != null)
       {
-         String prefix = "";
-         String localPart = attr;
-         String namespaceURI = "";
-
-         int colonIndex = attr.indexOf(":");
-         if (colonIndex > 0)
-         {
-            prefix = attr.substring(0, colonIndex);
-            localPart = attr.substring(colonIndex + 1);
-
-            Element nsElement = el;
-            while (namespaceURI.equals("") && nsElement != null)
-            {
-               namespaceURI = nsElement.getAttribute("xmlns:" + prefix);
-               if (namespaceURI.equals(""))
-                  nsElement = getParentElement(nsElement);
-            }
-
-            if (namespaceURI.equals(""))
-               throw new IllegalArgumentException("Cannot find namespace uri for: " + attr);
-         }
-
-         qname = new QName(namespaceURI, localPart, prefix);
+         qname = resolveQName(el, qualifiedName);
       }
 
       return qname;
@@ -423,43 +434,5 @@ public final class DOMUtils
    public static void setOwnerDocument(Document doc)
    {
       documentThreadLocal.set(doc);
-   }
-
-   /**
-    * A utility method that transforms the contents of the argument element into
-    * a StringBuffer representation that can be reparsed.
-    * 
-    * @param element - the parent dom element whose contents are to be extracted
-    *    as an xml document string. 
-    * @return the xml document string.
-    * 
-    * @throws IOException
-    * @throws TransformerException
-    */
-   public static StringBuffer getElementContent(Element element) throws IOException, TransformerException
-   {
-      NodeList children = element.getChildNodes();
-      Element content = null;
-      for (int n = 0; n < children.getLength(); n++)
-      {
-         Node node = children.item(n);
-         if (node.getNodeType() == Node.ELEMENT_NODE)
-         {
-            content = (Element)node;
-            break;
-         }
-      }
-      if (content == null)
-         return null;
-
-      // Get a parsable representation of this elements content
-      DOMSource source = new DOMSource(content);
-      TransformerFactory tFactory = TransformerFactory.newInstance();
-      Transformer transformer = tFactory.newTransformer();
-      StringWriter sw = new StringWriter();
-      StreamResult result = new StreamResult(sw);
-      transformer.transform(source, result);
-      sw.close();
-      return sw.getBuffer();
    }
 }

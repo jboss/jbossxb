@@ -670,11 +670,16 @@ public class XsdBinder
       
       XSAttributeDeclaration attr = attrUse.getAttrDeclaration();
       QName attrName = new QName(attr.getNamespace(), attr.getName());
+
       if (trace)
-         log.trace("binding attribute " + attrName + " for " + type.getQName());
+      {
+         log.trace("binding attribute " + attrName + " for " + type.getQName() + ", required=" + attrUse.getRequired());
+      }
+
       XSSimpleTypeDefinition attrType = attr.getTypeDefinition();
       TypeBinding typeBinding = bindSimpleType(doc, attrType);
       AttributeBinding binding = type.addAttribute(attrName, typeBinding, DefaultHandlers.ATTRIBUTE_HANDLER);
+      binding.setRequired(attrUse.getRequired());
       if(attrUse.getConstraintType() == XSConstants.VC_DEFAULT)
       {
          // Associate the default value with the binding
@@ -685,7 +690,10 @@ public class XsdBinder
       if(an != null)
       {
          if (trace)
+         {
             log.trace(attrName + " attribute annotation");
+         }
+
          XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
          XsdAppInfo appInfo = xsdAn.getAppInfo();
          if(appInfo != null)

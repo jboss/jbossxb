@@ -30,4 +30,9 @@ import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
 public interface MarshallingContext
 {
    FieldBinding getFieldBinding();
+
+   /**
+    * @return true if current attribute is required, false otherwise
+    */
+   boolean isAttributeRequired();
 }

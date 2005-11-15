@@ -43,6 +43,7 @@ public class AttributeBinding
    private boolean mapEntryKey;
    private boolean mapEntryValue;
    private ValueAdapter valueAdapter;
+   private boolean required;
 
    public AttributeBinding(SchemaBinding schema, QName qName, TypeBinding type, AttributeHandler handler)
    {
@@ -145,5 +146,15 @@ public class AttributeBinding
    public String toString()
    {
       return super.toString() + "[" + qName + "]";
+   }
+
+   public void setRequired(boolean required)
+   {
+      this.required = required;
+   }
+
+   public boolean getRequired()
+   {
+      return required;
    }
 }

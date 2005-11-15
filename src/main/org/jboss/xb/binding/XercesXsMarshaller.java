@@ -52,6 +52,7 @@ import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
 import org.xml.sax.SAXException;
 
 /**
@@ -89,6 +90,25 @@ public class XercesXsMarshaller
    private SchemaBindingResolver schemaResolver;
 
    private XSModel model;
+
+   private XSAttributeUse currentAttribute;
+
+   private MarshallingContext ctx = new MarshallingContext()
+   {
+      public FieldBinding getFieldBinding()
+      {
+         throw new UnsupportedOperationException("getFieldBinding is not implemented.");
+      }
+
+      public boolean isAttributeRequired()
+      {
+         if(currentAttribute == null)
+         {
+            throw new JBossXBRuntimeException("There is no current attribute!");
+         }
+         return currentAttribute.getRequired();
+      }
+   };
 
    public SchemaBindingResolver getSchemaResolver()
    {
@@ -451,11 +471,11 @@ public class XercesXsMarshaller
 
       for(int i = 0; i < attributeUses.getLength(); ++i)
       {
-         XSAttributeUse attrUse = (XSAttributeUse)attributeUses.item(i);
-         XSAttributeDeclaration attrDec = attrUse.getAttrDeclaration();
+         currentAttribute = (XSAttributeUse)attributeUses.item(i);
+         XSAttributeDeclaration attrDec = currentAttribute.getAttrDeclaration();
          String attrNs = attrDec.getNamespace();
          String attrLocal = attrDec.getName();
-         Object attrValue = provider.getAttributeValue(o, null, attrNs, attrLocal);
+         Object attrValue = provider.getAttributeValue(o, ctx, attrNs, attrLocal);
 
          if(attrValue != null)
          {
@@ -569,6 +589,7 @@ public class XercesXsMarshaller
             );
          }
       }
+      currentAttribute = null;
 
       String characters = null;
       if(type.getSimpleType() != null)

@@ -92,7 +92,7 @@ public class MappingObjectModelProvider
       Object children = null;
       if(!writeAsValue(o.getClass()))
       {
-         children = getJavaValue(localName, o, true);
+         children = getJavaValue(localName, o, true, ignoreNotFoundField);
       }
       return children;
    }
@@ -106,7 +106,7 @@ public class MappingObjectModelProvider
       }
       else
       {
-         value = getJavaValue(localName, o, false);
+         value = getJavaValue(localName, o, false, ignoreNotFoundField);
       }
       return value;
    }
@@ -120,7 +120,8 @@ public class MappingObjectModelProvider
       }
       else
       {
-         value = getJavaValue(localName, o, false);
+         boolean optional = ctx == null ? ignoreNotFoundField : !ctx.isAttributeRequired() || ignoreNotFoundField;
+         value = getJavaValue(localName, o, false, optional);
       }
       return value;
    }
@@ -135,7 +136,7 @@ public class MappingObjectModelProvider
 
    // Private
 
-   private Object getJavaValue(String localName, Object o, boolean forComplexType)
+   private Object getJavaValue(String localName, Object o, boolean forComplexType, boolean optional)
    {
       Method getter = null;
       Field field = null;
@@ -190,7 +191,7 @@ public class MappingObjectModelProvider
             }
             catch (NoSuchFieldException e1)
             {
-               if (ignoreNotFoundField)
+               if (optional)
                {
                   if (log.isTraceEnabled())
                   {
@@ -245,7 +246,9 @@ public class MappingObjectModelProvider
    {
       return Classes.isPrimitive(type) ||
          type == String.class ||
-         type == java.util.Date.class;
+         type == java.util.Date.class ||
+         type == java.math.BigDecimal.class ||
+         type == java.math.BigInteger.class;
    }
 
    // Inner

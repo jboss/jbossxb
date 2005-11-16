@@ -1529,7 +1529,7 @@ public final class SimpleTypeBindings
       result += marshalInt(value.get(Calendar.MONTH) + 1, 2);
       result += '-';
       result += marshalInt(value.get(Calendar.DAY_OF_MONTH), 2);
-      result += marshalTimeZone(value.getTimeZone());
+      result += marshalTimeZone(value);
       return result;
    }
 
@@ -1567,7 +1567,7 @@ public final class SimpleTypeBindings
    {
       String result = "--";
       result += marshalInt(value.get(Calendar.MONTH) + 1, 2);
-      result += marshalTimeZone(value.getTimeZone());
+      result += marshalTimeZone(value);
       return result;
    }
 
@@ -1587,7 +1587,7 @@ public final class SimpleTypeBindings
    public static String marshalGYear(Calendar value)
    {
       String result = String.valueOf(value.get(Calendar.YEAR));
-      result += marshalTimeZone(value.getTimeZone());
+      result += marshalTimeZone(value);
       return result;
    }
 
@@ -1632,7 +1632,7 @@ public final class SimpleTypeBindings
       String result = String.valueOf(value.get(Calendar.YEAR));
       result += '-';
       result += marshalInt(value.get(Calendar.MONTH) + 1, 2);
-      result += marshalTimeZone(value.getTimeZone());
+      result += marshalTimeZone(value);
       return result;
    }
 
@@ -1680,7 +1680,7 @@ public final class SimpleTypeBindings
    {
       String result = "---";
       result += marshalInt(value.get(Calendar.DAY_OF_MONTH), 2);
-      result += marshalTimeZone(value.getTimeZone());
+      result += marshalTimeZone(value);
       return result;
    }
 
@@ -1726,7 +1726,7 @@ public final class SimpleTypeBindings
       result += marshalInt(value.get(Calendar.MONTH) + 1, 2);
       result += '-';
       result += marshalInt(value.get(Calendar.DAY_OF_MONTH), 2);
-      result += marshalTimeZone(value.getTimeZone());
+      result += marshalTimeZone(value);
       return result;
    }
 
@@ -1785,7 +1785,7 @@ public final class SimpleTypeBindings
          result += "00" + String.valueOf(millis);
       }
 
-      result += marshalTimeZone(value.getTimeZone());
+      result += marshalTimeZone(value);
       return result;
    }
 
@@ -1859,7 +1859,7 @@ public final class SimpleTypeBindings
          result += "00" + String.valueOf(millis);
       }
 
-      result += marshalTimeZone(value.getTimeZone());
+      result += marshalTimeZone(value);
       return result;
    }
 
@@ -2196,9 +2196,9 @@ public final class SimpleTypeBindings
     *
     * @return
     */
-   private static String marshalTimeZone(TimeZone value)
+   private static String marshalTimeZone(Calendar value)
    {
-      int offset = value.getRawOffset();
+      int offset = value.get(Calendar.ZONE_OFFSET) + value.get(Calendar.DST_OFFSET);
       if(offset == 0)
       {
          return "Z";

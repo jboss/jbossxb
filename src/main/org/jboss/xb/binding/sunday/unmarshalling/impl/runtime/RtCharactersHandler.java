@@ -53,20 +53,11 @@ public class RtCharactersHandler
       Object unmarshalled = null;
       if(valueMetaData != null)
       {
-         String unmarshalMethod = valueMetaData.getUnmarshalMethod();
-         if(unmarshalMethod == null)
-         {
-            throw new JBossXBRuntimeException(
-               "javaType annotation is specified for " + qName + " but does not contain parseMethod attribute"
-            );
-         }
-
-         int lastDot = unmarshalMethod.lastIndexOf('.');
-         String clsName = unmarshalMethod.substring(0, lastDot);
-         String methodName = unmarshalMethod.substring(lastDot + 1);
-
-         Class cls = loadClass(clsName, true);
-         unmarshalled = invokeUnmarshalMethod(cls, methodName, value, String.class, nsCtx, qName);
+         Method unmarshalMethod = RtUtil.getUnmarshalMethod(qName, valueMetaData);
+         Object args[] = unmarshalMethod.getParameterTypes().length == 1 ?
+            new Object[]{value} :
+            new Object[]{value, nsCtx};
+         unmarshalled = RtUtil.invokeUnmarshalMethod(unmarshalMethod, args, qName);
       }
       else
       {
@@ -94,7 +85,7 @@ public class RtCharactersHandler
                }
             }
 
-            Class cls = clsName == null ? null : loadClass(clsName, failIfNotFound);
+            Class cls = clsName == null ? null : RtUtil.loadClass(clsName, failIfNotFound);
             if(cls != null && !cls.isPrimitive())
             {
                // I assume if it doesn't have ctors, there should be static fromValue
@@ -111,7 +102,7 @@ public class RtCharactersHandler
 
                   // it should probably invoke fromValue even if unmarshalled is null
                   unmarshalled = unmarshalled == null ? null :
-                     invokeUnmarshalMethod(cls, "fromValue", unmarshalled, valueType, nsCtx, qName);
+                     RtUtil.invokeUnmarshalMethod(cls, "fromValue", unmarshalled, valueType, nsCtx, qName);
                }
                else
                {
@@ -217,83 +208,5 @@ public class RtCharactersHandler
             );
          }
       }
-   }
-
-   private Object invokeUnmarshalMethod(Class cls,
-                                        String methodName,
-                                        Object value,
-                                        Class valueType,
-                                        NamespaceContext nsCtx,
-                                        QName qName)
-   {
-      Method method;
-      Object[] args;
-      try
-      {
-         method = cls.getMethod(methodName, new Class[]{valueType});
-         args = new Object[]{value};
-      }
-      catch(NoSuchMethodException e)
-      {
-         try
-         {
-            method = cls.getMethod(methodName, new Class[]{valueType, NamespaceContext.class});
-            args = new Object[]{value, nsCtx};
-         }
-         catch(NoSuchMethodException e1)
-         {
-            throw new JBossXBRuntimeException("Neither " +
-               methodName +
-               "(" +
-               valueType.getName() +
-               " p) nor " +
-               methodName +
-               "(" +
-               valueType.getName() +
-               " p1, " +
-               NamespaceContext.class.getName() +
-               " p2) were found in " + cls
-            );
-         }
-      }
-
-      Object unmarshalled;
-      try
-      {
-         unmarshalled = method.invoke(null, args);
-      }
-      catch(Exception e)
-      {
-         throw new JBossXBRuntimeException("Failed to invoke unmarshalMethod " +
-            method.getDeclaringClass().getName() +
-            "." +
-            method.getName() +
-            " for element " +
-            qName +
-            " and value " +
-            value +
-            ": " +
-            e.getMessage(),
-            e
-         );
-      }
-      return unmarshalled;
-   }
-
-   private Class loadClass(String clsName, boolean failIfNotFound)
-   {
-      Class cls = null;
-      try
-      {
-         cls = Classes.loadClass(clsName);
-      }
-      catch(ClassNotFoundException e)
-      {
-         if(failIfNotFound)
-         {
-            throw new JBossXBRuntimeException("Failed to load class " + clsName);
-         }
-      }
-      return cls;
    }
 }

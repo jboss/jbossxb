@@ -49,6 +49,7 @@ import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PackageMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.PutMethodMetaData;
+import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
@@ -74,6 +75,12 @@ public class RtElementHandler
    
    // ParticleHandler impl
 
+   /**
+    * TODO: it seems like for correct type resolution in startParticle
+    * I should take into account the way the object is going to be added
+    * to the parent in setParent (and, hence, do some steps that are done in setParticle).
+    * In setParent then I should reuse the results of what has been done in startParticle.
+    */
    public Object startParticle(Object parent,
                                QName elementName,
                                ParticleBinding particle,
@@ -107,7 +114,7 @@ public class RtElementHandler
       }
 
       boolean trace = log.isTraceEnabled();
-      if (trace)
+      if(trace)
       {
          log.trace("setParent " + qName + " parent=" + parent + " object=" + o + " term=" + term);
       }
@@ -116,7 +123,7 @@ public class RtElementHandler
 
       if(term.isMapEntryKey())
       {
-         if (trace)
+         if(trace)
          {
             log.trace("setParent " + qName + " mapKey");
          }
@@ -157,7 +164,7 @@ public class RtElementHandler
       }
       else if(term.isMapEntryValue())
       {
-         if (trace)
+         if(trace)
          {
             log.trace("setParent " + qName + " mapValue");
          }
@@ -186,7 +193,7 @@ public class RtElementHandler
          Object owner = parent;
          if(parent instanceof MapEntry)
          {
-            if (trace)
+            if(trace)
             {
                log.trace("setParent " + qName + " mapEntry");
             }
@@ -244,7 +251,7 @@ public class RtElementHandler
          if(term.getPutMethodMetaData() != null ||
             term.getMapEntryMetaData() != null && owner instanceof Map)
          {
-            if (trace)
+            if(trace)
             {
                log.trace("setParent " + qName + " mapPut");
             }
@@ -252,7 +259,7 @@ public class RtElementHandler
          }
          else if(term.getAddMethodMetaData() != null)
          {
-            if (trace)
+            if(trace)
             {
                log.trace("setParent " + qName + " add");
             }
@@ -280,7 +287,7 @@ public class RtElementHandler
 
             if(owner instanceof GenericValueContainer)
             {
-               if (trace)
+               if(trace)
                {
                   log.trace("setParent " + qName + " addChild");
                }
@@ -288,7 +295,7 @@ public class RtElementHandler
             }
             else if(owner instanceof ValueList)
             {
-               if (trace)
+               if(trace)
                {
                   log.trace("setParent " + qName + " add");
                }
@@ -392,7 +399,7 @@ public class RtElementHandler
                   propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
                }
 
-               if (trace)
+               if(trace)
                {
                   log.trace("setParent " + qName + " metadata set " + propName);
                }
@@ -414,7 +421,7 @@ public class RtElementHandler
             }
             else if(owner instanceof Collection)
             {
-               if (trace)
+               if(trace)
                {
                   log.trace("setParent " + qName + " collection.add()");
                }
@@ -425,7 +432,7 @@ public class RtElementHandler
                // no metadata available
                String propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
 
-               if (trace)
+               if(trace)
                {
                   log.trace("setParent " + qName + " no metadata set " + propName);
                }
@@ -458,16 +465,16 @@ public class RtElementHandler
       }
 
       boolean trace = log.isTraceEnabled();
-      if (trace)
+      if(trace)
       {
-         log.trace("endParticle " + elementName +" object=" + o + " term=" + term);
+         log.trace("endParticle " + elementName + " object=" + o + " term=" + term);
       }
 
       if(o instanceof GenericValueContainer)
       {
          try
          {
-            if (trace)
+            if(trace)
             {
                log.trace("endParticle " + elementName + " instantiate()");
             }
@@ -487,7 +494,7 @@ public class RtElementHandler
       }
       else if(o instanceof ValueList)
       {
-         if (trace)
+         if(trace)
          {
             log.trace("endParticle " + elementName + " valueList");
          }
@@ -509,8 +516,10 @@ public class RtElementHandler
       }
 
       boolean trace = log.isTraceEnabled();
-      if (trace)
+      if(trace)
+      {
          log.trace("startElement " + elementName + " parent=" + parent + " term=" + term);
+      }
 
       ClassMetaData classMetaData = term.getClassMetaData();
       MapEntryMetaData mapEntryMetaData = term.getMapEntryMetaData();
@@ -521,7 +530,7 @@ public class RtElementHandler
          if(!type.isStartElementCreatesObject() ||
             classMetaData == null && mapEntryMetaData == null && Constants.QNAME_ANYTYPE.equals(type.getQName()))
          {
-            if (trace)
+            if(trace)
             {
                log.trace("startElement " + elementName + " does not create an object");
             }
@@ -545,10 +554,10 @@ public class RtElementHandler
       {
          if(parent == null)
          {
-            Class itemCls = classForElement(arrayItem);
+            Class itemCls = classForElement(arrayItem, parent == null ? null : parent.getClass());
             if(itemCls != null)
             {
-               if (trace)
+               if(trace)
                {
                   log.trace("startElement " + elementName + " new array " + itemCls.getName());
                }
@@ -560,7 +569,7 @@ public class RtElementHandler
             PropertyMetaData propertyMetaData = term.getPropertyMetaData();
             String propName = propertyMetaData == null ? null : propertyMetaData.getName();
 
-            if (trace)
+            if(trace)
             {
                log.trace("startElement " + elementName + " property=" + propName);
             }
@@ -642,9 +651,9 @@ public class RtElementHandler
          {
             if(mapEntryMetaData.getImpl() != null)
             {
-               Class cls = getClassForTerm(mapEntryMetaData.getImpl(), term, elementName);
+               Class cls = loadClassForTerm(mapEntryMetaData.getImpl(), term, elementName);
 
-               if (trace)
+               if(trace)
                {
                   log.trace("startElement " + elementName + " new map entry " + cls.getName());
                }
@@ -654,7 +663,7 @@ public class RtElementHandler
             else
             {
                o = new MapEntry();
-               if (trace)
+               if(trace)
                {
                   log.trace("startElement " + elementName + " new map entry");
                }
@@ -681,7 +690,7 @@ public class RtElementHandler
                Object value;
                try
                {
-                  if (trace)
+                  if(trace)
                   {
                      log.trace("startElement " + elementName + " map value type " + mapEntryMetaData.getValueType());
                   }
@@ -763,12 +772,60 @@ public class RtElementHandler
          else
          {
             // todo: for now we require metadata for model groups to be bound
-            Class cls = classMetaData == null ?
-               getClass(null, (ElementBinding)term, elementName) :
-               getClassForTerm(classMetaData.getImpl(), term, elementName);
+            // todo 2: parent.getClass() is not going to work for containers
+            Class parentClass = null;
+            if(parent != null)
+            {
+               if(parent instanceof GenericValueContainer)
+               {
+                  parentClass = ((GenericValueContainer)parent).getTargetClass();
+               }
+               else if(parent instanceof ValueList)
+               {
+                  parentClass = ((ValueList)parent).getTargetClass();
+               }
+               else
+               {
+                  parentClass = parent.getClass();
+               }
+            }
+
+            Class cls;
+            if(term.isModelGroup())
+            {
+               if(classMetaData == null)
+               {
+                  throw new JBossXBRuntimeException(
+                     "Model groups should be annotated with 'class' annotation to be bound."
+                  );
+               }
+               cls = loadClassForTerm(classMetaData.getImpl(), term, elementName);
+            }
+            else
+            {
+               ElementBinding element = (ElementBinding)term;
+               cls = classForNonArrayItem(element, parentClass);
+
+               if(cls != null)
+               {
+                  // todo: before that, the type should be checked for required attributes and elements
+                  TypeBinding simpleType = element.getType().getSimpleType();
+                  if(simpleType != null)
+                  {
+                     Class simpleCls = classForSimpleType(simpleType, element.isNillable());
+                     if(cls.equals(simpleCls) ||
+                        cls.isPrimitive() && Classes.getPrimitiveWrapper(cls) == simpleCls ||
+                        simpleCls.isPrimitive() && Classes.getPrimitiveWrapper(simpleCls) == cls)
+                     {
+                        cls = null;
+                     }
+                  }
+               }
+            }
+
             if(cls != null)
             {
-               if (trace)
+               if(trace)
                {
                   log.trace("startElement " + elementName + " new " + cls.getName());
                }
@@ -822,40 +879,37 @@ public class RtElementHandler
       }
    }
 
-   private Class classForElement(ElementBinding arrayItem)
+   private Class classForElement(ElementBinding element, Class parentClass)
    {
-      TypeBinding itemType = arrayItem.getType();
-
-      Class itemCls;
-      QName itemTypeQName = itemType.getQName();
-      if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
+      Class cls;
+      TypeBinding type = element.getType();
+      QName typeQName = type.getQName();
+      if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))
       {
-         itemCls = SimpleTypeBindings.classForType(itemType.getQName().getLocalPart(), arrayItem.isNillable());
+         cls = SimpleTypeBindings.classForType(type.getQName().getLocalPart(), element.isNillable());
       }
       else
       {
-         ElementBinding item = null;
-         if(!itemType.isSimple())
+         ElementBinding arrayItem = null;
+         if(!type.isSimple())
          {
-            ParticleBinding typeParticle = itemType.getParticle();
+            ParticleBinding typeParticle = type.getParticle();
             ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());
-            item = modelGroup == null ? null : modelGroup.getArrayItem();
+            arrayItem = modelGroup == null ? null : modelGroup.getArrayItem();
          }
 
-         if(item != null)
+         if(arrayItem != null)
          {
-            itemCls = classForElement(item);
+            cls = classForElement(arrayItem, parentClass);
             // todo: what's the best way to get an array class having the item class
-            itemCls = Array.newInstance(itemCls, 0).getClass();
+            cls = Array.newInstance(cls, 0).getClass();
          }
          else
          {
-            ClassMetaData itemClsMetaData = itemType.getClassMetaData();
-            String itemClsName = itemClsMetaData == null ? null : itemClsMetaData.getImpl();
-            itemCls = getClass(itemClsName, arrayItem, arrayItem.getQName());
+            cls = classForNonArrayItem(element, parentClass);
          }
       }
-      return itemCls;
+      return cls;
    }
 
    private static void setMapEntryValue(MapEntryMetaData mapEntryMetaData, Object parent, Object o)
@@ -989,16 +1043,17 @@ public class RtElementHandler
       return o;
    }
 
-   private static Class getClass(String className, ElementBinding element, QName elementName)
+   private static Class getClass(ElementBinding element)
    {
-      TypeBinding type = element.getType();
-      String localClassName = className;
+      ClassMetaData clsMetaData = element.getClassMetaData();
+      String localClassName = clsMetaData == null ? null : clsMetaData.getImpl();
       if(localClassName == null)
       {
+         TypeBinding type = element.getType();
          QName typeBaseQName = type.getQName();
          if(typeBaseQName == null)
          {
-            typeBaseQName = elementName;
+            typeBaseQName = element.getQName();
          }
 
          SchemaBinding schemaBinding = type.getSchemaBinding();
@@ -1013,10 +1068,12 @@ public class RtElementHandler
          }
       }
 
-      return getClassForTerm(localClassName, element, elementName);
+      return loadClassForTerm(localClassName, element, element.getQName());
    }
 
-   private static Class getClassForTerm(String className, TermBinding term, QName elementName)
+   private static Class loadClassForTerm(String className,
+                                         TermBinding term,
+                                         QName elementName)
    {
       if(className == null)
       {
@@ -1308,6 +1365,166 @@ public class RtElementHandler
             e.getMessage(),
             e
          );
+      }
+   }
+
+   private Class classForNonArrayItem(ElementBinding element, Class parentClass)
+   {
+      String clsName;
+
+      // first, class metadata and map entry metadata
+      ClassMetaData clsMetaData = element.getClassMetaData();
+      clsName = clsMetaData == null ? null : clsMetaData.getImpl();
+      if(clsName == null)
+      {
+         MapEntryMetaData mapEntryMetaData = element.getMapEntryMetaData();
+         if(mapEntryMetaData != null)
+         {
+            clsName = mapEntryMetaData.getImpl();
+            if(clsName == null)
+            {
+               clsName = MapEntry.class.getName();
+            }
+         }
+      }
+
+      // second, property metadata and property type
+      if(clsName == null)
+      {
+         if(parentClass == null)
+         {
+            clsName = classFromQName(element);
+         }
+         else
+         {
+            PropertyMetaData propertyMetaData = element.getPropertyMetaData();
+            String propName = propertyMetaData == null ? null : propertyMetaData.getName();
+            if(propName == null)
+            {
+               // if there is add or put method metadata then fallback to XML-name-to-class-name algorithm
+               if(element.getAddMethodMetaData() == null && element.getPutMethodMetaData() == null)
+               {
+                  propName =
+                     Util.xmlNameToFieldName(element.getQName().getLocalPart(), element.getSchema().isIgnoreLowLine());
+               }
+            }
+
+            if(propName != null)
+            {
+               Class fieldType;
+               try
+               {
+                  fieldType = Classes.getAttributeGetter(parentClass, propName).getReturnType();
+               }
+               catch(NoSuchMethodException e)
+               {
+                  try
+                  {
+                     fieldType = parentClass.getField(propName).getType();
+                  }
+                  catch(NoSuchFieldException e1)
+                  {
+                     fieldType = null;
+                  }
+               }
+
+               if(fieldType == null ||
+                  Modifier.isAbstract(fieldType.getModifiers()) ||
+                  Modifier.isInterface(fieldType.getModifiers()) ||
+                  fieldType.isArray() ||
+                  Collection.class.isAssignableFrom(fieldType))
+               {
+                  clsName = classFromQName(element);
+               }
+               else
+               {
+                  return fieldType;
+               }
+            }
+         }
+      }
+
+      return loadClassForTerm(clsName, element, element.getQName());
+   }
+
+   private String classFromQName(ElementBinding element)
+   {
+      String clsName;
+      QName typeBase = element.getType().getQName();
+      if(typeBase == null)
+      {
+         typeBase = element.getQName();
+      }
+
+      SchemaBinding schema = element.getSchema();
+      PackageMetaData pkgMetaData = schema.getPackageMetaData();
+      if(pkgMetaData == null)
+      {
+         clsName =
+            Util.xmlNameToClassName(typeBase.getNamespaceURI(),
+               typeBase.getLocalPart(),
+               schema.isIgnoreLowLine()
+            );
+      }
+      else
+      {
+         String pkg = pkgMetaData.getName();
+         clsName =
+            pkg == null || pkg.length() == 0 ?
+            Util.xmlNameToClassName(typeBase.getLocalPart(), schema.isIgnoreLowLine()) :
+            pkg + "." + Util.xmlNameToClassName(typeBase.getLocalPart(), schema.isIgnoreLowLine());
+      }
+      return clsName;
+   }
+
+   private static boolean createInstance(Class cls)
+   {
+      return cls != null && !Classes.isPrimitive(cls) && cls != String.class;
+   }
+
+   private static Class classForSimpleType(TypeBinding type, boolean nillable)
+   {
+      ValueMetaData valueMetaData = type.getValueMetaData();
+      if(valueMetaData != null && valueMetaData.getUnmarshalMethod() != null)
+      {
+         return RtUtil.getUnmarshalMethod(type.getQName(), valueMetaData).getReturnType();
+      }
+      else if(type.getClassMetaData() != null && type.getClassMetaData().getImpl() != null)
+      {
+         return RtUtil.loadClass(type.getClassMetaData().getImpl(), true);
+      }
+
+      TypeBinding itemType = type.getItemType();
+      if(itemType != null)
+      {
+         if(type.getSchemaBinding().isUnmarshalListsToArrays())
+         {
+            // todo: nillable not always should be propagated to the item
+            Class itemClass = classForSimpleType(itemType, nillable);
+            return Array.newInstance(itemClass, 0).getClass();
+         }
+         else
+         {
+            return java.util.List.class;
+         }
+      }
+      else
+      {
+         QName qName = type.getQName();
+         if(qName != null && Constants.NS_XML_SCHEMA.equals(qName.getNamespaceURI()))
+         {
+            return SimpleTypeBindings.classForType(qName.getLocalPart(), nillable);
+         }
+         else
+         {
+            TypeBinding baseType = type.getBaseType();
+            if(baseType == null)
+            {
+               throw new JBossXBRuntimeException("Expected a base type here.");
+            }
+
+            return classForSimpleType(baseType, nillable);
+         }
       }
    }
 }

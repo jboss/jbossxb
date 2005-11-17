@@ -27,11 +27,13 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 
 /**
@@ -442,6 +444,130 @@ public class RtUtil
       return result;
    }
 
-   // Inner
+   public static Class loadClass(String clsName, boolean failIfNotFound)
+   {
+      Class cls = null;
+      try
+      {
+         cls = Classes.loadClass(clsName);
+      }
+      catch(ClassNotFoundException e)
+      {
+         if(failIfNotFound)
+         {
+            throw new JBossXBRuntimeException("Failed to load class " + clsName);
+         }
+      }
+      return cls;
+   }
 
+   public static Method getUnmarshalMethod(QName qName, ValueMetaData valueMetaData)
+   {
+      String unmarshalMethod = valueMetaData.getUnmarshalMethod();
+      if(unmarshalMethod == null)
+      {
+         throw new JBossXBRuntimeException(
+            "javaType annotation is specified for " + qName + " but does not contain parseMethod attribute"
+         );
+      }
+
+      int lastDot = unmarshalMethod.lastIndexOf('.');
+      String clsName = unmarshalMethod.substring(0, lastDot);
+      String methodName = unmarshalMethod.substring(lastDot + 1);
+
+      Class cls = RtUtil.loadClass(clsName, true);
+
+      try
+      {
+         return cls.getMethod(methodName, new Class[]{String.class});
+      }
+      catch(NoSuchMethodException e)
+      {
+         try
+         {
+            return cls.getMethod(methodName, new Class[]{String.class, NamespaceContext.class});
+         }
+         catch(NoSuchMethodException e1)
+         {
+            throw new JBossXBRuntimeException("Neither " +
+               methodName +
+               "(" +
+               String.class.getName() +
+               " p) nor " +
+               methodName +
+               "(" +
+               String.class.getName() +
+               " p1, " +
+               NamespaceContext.class.getName() +
+               " p2) were found in " + cls
+            );
+         }
+      }
+   }
+
+   public static Object invokeUnmarshalMethod(Class cls,
+                                              String methodName,
+                                              Object value,
+                                              Class valueType,
+                                              NamespaceContext nsCtx,
+                                              QName qName)
+   {
+      Method method;
+      Object[] args;
+      try
+      {
+         method = cls.getMethod(methodName, new Class[]{valueType});
+         args = new Object[]{value};
+      }
+      catch(NoSuchMethodException e)
+      {
+         try
+         {
+            method = cls.getMethod(methodName, new Class[]{valueType, NamespaceContext.class});
+            args = new Object[]{value, nsCtx};
+         }
+         catch(NoSuchMethodException e1)
+         {
+            throw new JBossXBRuntimeException("Neither " +
+               methodName +
+               "(" +
+               valueType.getName() +
+               " p) nor " +
+               methodName +
+               "(" +
+               valueType.getName() +
+               " p1, " +
+               NamespaceContext.class.getName() +
+               " p2) were found in " + cls
+            );
+         }
+      }
+
+      return invokeUnmarshalMethod(method, args, qName);
+   }
+
+   public static Object invokeUnmarshalMethod(Method method, Object[] args, QName qName)
+   {
+      Object unmarshalled;
+      try
+      {
+         unmarshalled = method.invoke(null, args);
+      }
+      catch(Exception e)
+      {
+         throw new JBossXBRuntimeException("Failed to invoke unmarshalMethod " +
+            method.getDeclaringClass().getName() +
+            "." +
+            method.getName() +
+            " for element " +
+            qName +
+            " and value " +
+            args[0] +
+            ": " +
+            e.getMessage(),
+            e
+         );
+      }
+      return unmarshalled;
+   }
 }

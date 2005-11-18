@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,7 +34,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.AbstractList;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.xerces.xs.XSAttributeDeclaration;
@@ -51,8 +52,8 @@ import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.xml.sax.SAXException;
 
 /**
@@ -515,8 +516,7 @@ public class XercesXsMarshaller
                   }
                   else
                   {
-                     throw new JBossXBRuntimeException(
-                        "Expected value for list type is an array or " +
+                     throw new JBossXBRuntimeException("Expected value for list type is an array or " +
                         List.class.getName() +
                         " but got: " +
                         attrValue
@@ -541,8 +541,8 @@ public class XercesXsMarshaller
                               itemPrefix = (String)prefixByUri.get(itemNs);
                               if(itemPrefix == null)
                               {
-                                itemPrefix = attrLocal + listInd;
-                                declareNs(attrs, itemPrefix, itemNs);
+                                 itemPrefix = attrLocal + listInd;
+                                 declareNs(attrs, itemPrefix, itemNs);
                               }
                            }
                            item = new QName(item.getNamespaceURI(), item.getLocalPart(), itemPrefix);
@@ -968,7 +968,48 @@ public class XercesXsMarshaller
       }
       else
       {
-         marshalled = value.toString();
+         if(type.getLexicalEnumeration() != null)
+         {
+            Method getValue;
+            try
+            {
+               getValue = value.getClass().getMethod("value", null);
+            }
+            catch(NoSuchMethodException e)
+            {
+               try
+               {
+                  getValue = value.getClass().getMethod("getValue", null);
+               }
+               catch(NoSuchMethodException e1)
+               {
+                  throw new JBossXBRuntimeException("Failed to find neither value() nor getValue() in " +
+                     value.getClass() +
+                     " which is bound to enumeration type (" +
+                     type.getNamespace() +
+                     ", " +
+                     type.getName()
+                  );
+               }
+            }
+
+            try
+            {
+               value = getValue.invoke(value, null);
+            }
+            catch(Exception e)
+            {
+               throw new JBossXBRuntimeException(
+                  "Failed to invoke getValue() on " + value + " to get the enumeration value", e
+               );
+            }
+         }
+
+         marshalled = marshalCharacters(elementUri,
+            elementPrefix,
+            (XSSimpleTypeDefinition)type.getBaseType(),
+            value, attrs
+         );
       }
       return marshalled;
    }

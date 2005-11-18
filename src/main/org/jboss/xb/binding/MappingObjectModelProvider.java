@@ -113,17 +113,8 @@ public class MappingObjectModelProvider
 
    public Object getAttributeValue(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
-      Object value;
-      if(writeAsValue(o.getClass()))
-      {
-         value = o;
-      }
-      else
-      {
-         boolean optional = ctx == null ? ignoreNotFoundField : !ctx.isAttributeRequired() || ignoreNotFoundField;
-         value = getJavaValue(localName, o, false, optional);
-      }
-      return value;
+      boolean optional = ctx == null ? ignoreNotFoundField : !ctx.isAttributeRequired() || ignoreNotFoundField;
+      return getJavaValue(localName, o, false, optional);
    }
 
    public Object getRoot(Object o, MarshallingContext ctx, String namespaceURI, String localName)

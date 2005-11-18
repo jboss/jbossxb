@@ -22,10 +22,11 @@
 package org.jboss.util.naming;
 
 import javax.naming.Context;
-import javax.naming.NamingException;
+import javax.naming.InitialContext;
+import javax.naming.LinkRef;
 import javax.naming.Name;
 import javax.naming.NameNotFoundException;
-import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 import org.jboss.logging.Logger;
 
@@ -231,7 +232,80 @@ public class Util
       checkObject(context, name.toString(), result, clazz);
       return result;
    }
+
+   /**
+    * Create a link
+    * 
+    * @param fromName the from name
+    * @param toName the to name
+    * @throws NamingException for any error
+    */
+   public static void createLinkRef(String fromName, String toName) throws NamingException
+   {
+      InitialContext ctx = new InitialContext();
+      createLinkRef(ctx, fromName, toName);
+   }
    
+   /**
+    * Create a link
+    * 
+    * @param ctx the context
+    * @param fromName the from name
+    * @param toName the to name
+    * @throws NamingException for any error
+    */
+   public static void createLinkRef(Context ctx, String fromName, String toName) throws NamingException
+   {
+      LinkRef link = new LinkRef(toName);
+      Context fromCtx = ctx;
+      Name name = ctx.getNameParser("").parse(fromName);
+      String atom = name.get(name.size()-1);
+      for(int n = 0; n < name.size()-1; n ++)
+      {
+         String comp = name.get(n);
+         try
+         {
+            fromCtx = (Context) fromCtx.lookup(comp);
+         }
+         catch(NameNotFoundException e)
+         {
+            fromCtx = fromCtx.createSubcontext(comp);
+         }
+      }
+
+      log.debug("atom: " + atom);
+      log.debug("link: " + link);
+      
+      fromCtx.rebind(atom, link);
+
+      log.debug("Bound link " + fromName + " to " + toName);
+   }
+   
+   /**
+    * Remove the link ref
+    *
+    * @param name the name of the link binding
+    * @throws NamingException for any error
+    */
+   public static void removeLinkRef(String name) throws NamingException
+   {
+      InitialContext ctx = new InitialContext();
+      removeLinkRef(ctx, name);
+   }
+   
+   /**
+    * Remove the link ref
+    *
+    * @param ctx the context
+    * @param name the name of the link binding
+    * @throws NamingException for any error
+    */
+   public static void removeLinkRef(Context ctx, String name) throws NamingException
+   {
+      log.debug("Unbinding link " + name);
+      ctx.unbind(name);
+   }
+
    
    /**
     * Checks an object implements the given class

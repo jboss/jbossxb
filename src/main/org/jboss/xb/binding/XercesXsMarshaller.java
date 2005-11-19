@@ -51,6 +51,7 @@ import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
+import org.apache.xerces.xs.StringList;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
@@ -968,7 +969,8 @@ public class XercesXsMarshaller
       }
       else
       {
-         if(type.getLexicalEnumeration() != null)
+         StringList lexicalEnumeration = type.getLexicalEnumeration();
+         if(lexicalEnumeration != null && lexicalEnumeration.getLength() > 0)
          {
             Method getValue;
             try
@@ -983,12 +985,18 @@ public class XercesXsMarshaller
                }
                catch(NoSuchMethodException e1)
                {
+                  List values = new ArrayList(lexicalEnumeration.getLength());
+                  for(int i = 0; i < lexicalEnumeration.getLength(); ++i)
+                  {
+                     values.add(lexicalEnumeration.item(i));
+                  }
+
                   throw new JBossXBRuntimeException("Failed to find neither value() nor getValue() in " +
                      value.getClass() +
                      " which is bound to enumeration type (" +
                      type.getNamespace() +
                      ", " +
-                     type.getName()
+                     type.getName() + "): " + values
                   );
                }
             }

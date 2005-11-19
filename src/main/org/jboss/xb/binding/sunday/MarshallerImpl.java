@@ -501,10 +501,20 @@ public class MarshallerImpl
       {
          AttributeBinding attrUse = (AttributeBinding)i.next();
          QName attrQName = attrUse.getQName();
-         Object attrValue = getElementValue(attrQName, o,
-            attrQName.getLocalPart(),
-            ignoreUnresolvedFieldOrClass
-         );
+
+         String fieldName = null;
+         PropertyMetaData propertyMetaData = attrUse.getPropertyMetaData();
+         if(propertyMetaData != null)
+         {
+            fieldName = propertyMetaData.getName();
+         }
+
+         if(fieldName == null)
+         {
+            fieldName = Util.xmlNameToFieldName(attrQName.getLocalPart(), type.getSchemaBinding().isIgnoreLowLine());
+         }
+
+         Object attrValue = getJavaValue(attrQName, fieldName, o, false, ignoreUnresolvedFieldOrClass);
 
          if(attrValue != null)
          {
@@ -1021,7 +1031,45 @@ public class MarshallerImpl
       }
       else
       {
-         marshalled = value.toString();
+         if(simpleType.getLexicalEnumeration() != null)
+         {
+            Method getValue;
+            try
+            {
+               getValue = value.getClass().getMethod("value", null);
+            }
+            catch(NoSuchMethodException e)
+            {
+               try
+               {
+                  getValue = value.getClass().getMethod("getValue", null);
+               }
+               catch(NoSuchMethodException e1)
+               {
+                  throw new JBossXBRuntimeException("Failed to find neither value() nor getValue() in " +
+                     value.getClass() +
+                     " which is bound to enumeration type " + simpleType.getQName()
+                  );
+               }
+            }
+
+            try
+            {
+               value = getValue.invoke(value, null);
+            }
+            catch(Exception e)
+            {
+               throw new JBossXBRuntimeException(
+                  "Failed to invoke getValue() on " + value + " to get the enumeration value", e
+               );
+            }
+         }
+
+         marshalled = marshalCharacters(elementUri,
+            elementPrefix,
+            simpleType.getBaseType(),
+            value, attrs
+         );
       }
       return marshalled;
    }

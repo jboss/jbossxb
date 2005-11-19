@@ -70,6 +70,7 @@ public class TypeBinding
    private ParticleBinding particle;
 
    private List patternValues;
+   private List enumValues;
    private TypeBinding itemType; // the type is a list type with this item type
    private TypeBinding simpleType;
 
@@ -484,6 +485,27 @@ public class TypeBinding
             patternValues = new ArrayList(patternValues);
          }
          patternValues.add(patternValue);
+      }
+   }
+
+   public List getLexicalEnumeration()
+   {
+      return enumValues;
+   }
+
+   public void addEnumValue(String value)
+   {
+      if(enumValues == null)
+      {
+         enumValues = Collections.singletonList(value);
+      }
+      else
+      {
+         if(enumValues.size() == 1)
+         {
+            enumValues = new ArrayList(enumValues);
+         }
+         enumValues.add(value);
       }
    }
 

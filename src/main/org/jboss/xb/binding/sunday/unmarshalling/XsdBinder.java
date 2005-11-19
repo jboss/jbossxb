@@ -366,12 +366,21 @@ public class XsdBinder
 
          binding = baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType);
 
-         StringList pattern = type.getLexicalPattern();
-         if(pattern != null && pattern.getLength() > 0)
+         StringList strList = type.getLexicalPattern();
+         if(strList != null && strList.getLength() > 0)
          {
-            for(int i = 0; i < pattern.getLength(); ++i)
+            for(int i = 0; i < strList.getLength(); ++i)
             {
-               binding.addLexicalPattern(pattern.item(i));
+               binding.addLexicalPattern(strList.item(i));
+            }
+         }
+
+         strList = type.getLexicalEnumeration();
+         if(strList != null && strList.getLength() > 0)
+         {
+            for(int i = 0; i < strList.getLength(); ++i)
+            {
+               binding.addEnumValue(strList.item(i));
             }
          }
 

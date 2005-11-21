@@ -225,7 +225,7 @@ public class MarshallerImpl
          {
             stack.push(root);
             ElementBinding element = new ElementBinding(schema, rootQName, type);
-            marshalElement(element, true);
+            marshalElement(element, false, true);
             stack.pop();
          }
       }
@@ -241,7 +241,7 @@ public class MarshallerImpl
          while(elements.hasNext())
          {
             ElementBinding element = (ElementBinding)elements.next();
-            marshalElement(element, true);
+            marshalElement(element, true, true);
          }
          stack.pop();
       }
@@ -268,7 +268,7 @@ public class MarshallerImpl
                throw new IllegalStateException("Root element not found: " + qName + " among " + roots);
             }
 
-            marshalElement(element, true);
+            marshalElement(element, true, true);
          }
          stack.pop();
       }
@@ -294,10 +294,11 @@ public class MarshallerImpl
       }
    }
 
-   private boolean marshalElement(ElementBinding element, boolean declareNs)
+   private boolean marshalElement(ElementBinding element, boolean optional, boolean declareNs)
    {
       Object value = stack.peek();
-      boolean result = value != null;
+      boolean nillable = element.isNillable();
+      boolean result = value != null || value == null && (optional || nillable);
       String elementNs = element.getQName().getNamespaceURI();
       String elementLocal = element.getQName().getLocalPart();
       boolean trace = log.isTraceEnabled() && result;
@@ -309,11 +310,11 @@ public class MarshallerImpl
 
       if(value != null)
       {
-         marshalElementType(elementNs, elementLocal, element.getType(), declareNs, element.isNillable());
+         marshalElementType(elementNs, elementLocal, element.getType(), declareNs, nillable);
       }
-      else
+      else if(nillable)
       {
-         writeNillable(elementNs, elementLocal, element.isNillable());
+         writeNillable(elementNs, elementLocal, nillable);
       }
 
       if(trace)
@@ -747,13 +748,13 @@ public class MarshallerImpl
             {
                Object value = i.next();
                stack.push(value);
-               marshalled = marshalWildcard((WildcardBinding)term, declareNs);
+               marshalled = marshalWildcard(particle, declareNs);
                stack.pop();
             }
          }
          else
          {
-            marshalled = marshalWildcard((WildcardBinding)term, declareNs);
+            marshalled = marshalWildcard(particle, declareNs);
          }
       }
       else
@@ -770,22 +771,23 @@ public class MarshallerImpl
             {
                Object value = i.next();
                stack.push(value);
-               marshalled = marshalElement(element, declareNs);
+               marshalled = marshalElement(element, particle.getMinOccurs() == 0, declareNs);
                stack.pop();
             }
          }
          else
          {
             stack.push(o);
-            marshalled = marshalElement(element, declareNs);
+            marshalled = marshalElement(element, particle.getMinOccurs() == 0, declareNs);
             stack.pop();
          }
       }
       return marshalled;
    }
 
-   private boolean marshalWildcard(WildcardBinding wildcard, boolean declareNs)
+   private boolean marshalWildcard(ParticleBinding particle, boolean declareNs)
    {
+      WildcardBinding wildcard = (WildcardBinding)particle.getTerm();
       Object o = stack.peek();
       ClassMapping mapping = getClassMapping(o.getClass());
       if(mapping == null)
@@ -827,8 +829,7 @@ public class MarshallerImpl
          }
 
          stack.push(root);
-         marshalled =
-            marshalElement(elDec, declareNs);
+         marshalled = marshalElement(elDec, particle.getMinOccurs() == 0, declareNs);
          stack.pop();
       }
       else if(mapping.typeName != null)
@@ -849,7 +850,7 @@ public class MarshallerImpl
 
          stack.push(root);
          ElementBinding element = new ElementBinding(schema, wildcard.getQName(), typeDef);
-         marshalled = marshalElement(element, declareNs);
+         marshalled = marshalElement(element, particle.getMinOccurs() == 0, declareNs);
          stack.pop();
       }
       else

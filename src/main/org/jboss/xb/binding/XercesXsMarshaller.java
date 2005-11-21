@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
+import org.apache.xerces.xs.StringList;
 import org.apache.xerces.xs.XSAttributeDeclaration;
 import org.apache.xerces.xs.XSAttributeUse;
 import org.apache.xerces.xs.XSComplexTypeDefinition;
@@ -51,7 +52,6 @@ import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
-import org.apache.xerces.xs.StringList;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
@@ -248,7 +248,7 @@ public class XercesXsMarshaller
          {
             Object o = provider.getRoot(root, null, rootQName.getNamespaceURI(), rootQName.getLocalPart());
             stack.push(o);
-            marshalElement(rootQName.getNamespaceURI(), rootQName.getLocalPart(), type, true, true);
+            marshalElement(rootQName.getNamespaceURI(), rootQName.getLocalPart(), type, false, true, true);
             stack.pop();
          }
       }
@@ -269,6 +269,7 @@ public class XercesXsMarshaller
                element.getName(),
                element.getTypeDefinition(),
                element.getNillable(),
+               true,
                true
             );
             stack.pop();
@@ -302,6 +303,7 @@ public class XercesXsMarshaller
                element.getName(),
                element.getTypeDefinition(),
                element.getNillable(),
+               true,
                true
             );
             stack.pop();
@@ -331,11 +333,12 @@ public class XercesXsMarshaller
 
    private boolean marshalElement(String elementNs, String elementLocal,
                                   XSTypeDefinition type,
+                                  boolean optional,
                                   boolean nillable,
                                   boolean declareNs)
    {
       Object value = stack.peek();
-      boolean result = value != null;
+      boolean result = value != null || value == null && (optional || nillable);
       boolean trace = log.isTraceEnabled() && result;
       if(trace)
       {
@@ -347,7 +350,7 @@ public class XercesXsMarshaller
       {
          marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
       }
-      else
+      else if(nillable)
       {
          writeNillable(elementNs, elementLocal, nillable);
       }
@@ -673,13 +676,13 @@ public class XercesXsMarshaller
                {
                   Object value = i.next();
                   stack.push(value);
-                  marshalled = marshalWildcard((XSWildcard)term, declareNs);
+                  marshalled = marshalWildcard(particle, declareNs);
                   stack.pop();
                }
             }
             else
             {
-               marshalled = marshalWildcard((XSWildcard)term, declareNs);
+               marshalled = marshalWildcard(particle, declareNs);
             }
             break;
          case XSConstants.ELEMENT_DECLARATION:
@@ -696,6 +699,7 @@ public class XercesXsMarshaller
                   marshalled = marshalElement(element.getNamespace(),
                      element.getName(),
                      element.getTypeDefinition(),
+                     particle.getMinOccurs() == 0,
                      element.getNillable(),
                      declareNs
                   );
@@ -708,6 +712,7 @@ public class XercesXsMarshaller
                marshalled = marshalElement(element.getNamespace(),
                   element.getName(),
                   element.getTypeDefinition(),
+                  particle.getMinOccurs() == 0,
                   element.getNillable(),
                   declareNs
                );
@@ -720,8 +725,9 @@ public class XercesXsMarshaller
       return marshalled;
    }
 
-   private boolean marshalWildcard(XSWildcard wildcard, boolean declareNs)
+   private boolean marshalWildcard(XSParticle particle, boolean declareNs)
    {
+      XSWildcard wildcard = (XSWildcard)particle.getTerm();
       Object o = stack.peek();
       ClassMapping mapping = getClassMapping(o.getClass());
       if(mapping == null)
@@ -772,6 +778,7 @@ public class XercesXsMarshaller
          marshalled = marshalElement(elDec.getNamespace(),
             elDec.getName(),
             elDec.getTypeDefinition(),
+            particle.getMinOccurs() == 0,
             elDec.getNillable(),
             declareNs
          );
@@ -804,7 +811,14 @@ public class XercesXsMarshaller
 
          Object elementValue = provider.getRoot(root, null, wildcard.getNamespace(), wildcard.getName());
          stack.push(elementValue);
-         marshalled = marshalElement(wildcard.getNamespace(), wildcard.getName(), typeDef, false, declareNs);
+         marshalled =
+            marshalElement(wildcard.getNamespace(),
+               wildcard.getName(),
+               typeDef,
+               particle.getMinOccurs() == 0,
+               false,
+               declareNs
+            );
          stack.pop();
       }
       else

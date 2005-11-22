@@ -21,7 +21,6 @@
   */
 package org.jboss.util;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Array;
@@ -650,18 +649,27 @@ public final class Classes
     */
    public final static Method getAttributeGetter(Class cls, String attr) throws NoSuchMethodException
    {
-      String base = Character.toUpperCase(attr.charAt(0)) + attr.substring(1);
+      StringBuffer buf = new StringBuffer(attr.length() + 3);
+      buf.append("get");
+      if(Character.isLowerCase(attr.charAt(0)))
+      {
+         buf.append(Character.toUpperCase(attr.charAt(0)))
+            .append(attr.substring(1));
+      }
+      else
+      {
+         buf.append(attr);
+      }
+
       try
       {
-         return cls.getMethod("get" + base, null);
+         return cls.getMethod(buf.toString(), null);
       }
       catch (NoSuchMethodException e)
       {
-         // ignore
+         buf.replace(0, 3, "is");
+         return cls.getMethod(buf.toString(), null);
       }
-      
-      // Try a possible boolean isFoo() getter
-      return cls.getMethod("is" + base, null);
    }
 
    /**
@@ -674,8 +682,19 @@ public final class Classes
     */
    public final static Method getAttributeSetter(Class cls, String attr, Class type) throws NoSuchMethodException
    {
-      String setterName = "set" + Character.toUpperCase(attr.charAt(0)) + attr.substring(1);
-      return cls.getMethod(setterName, new Class[]{type});
+      StringBuffer buf = new StringBuffer(attr.length() + 3);
+      buf.append("set");
+      if(Character.isLowerCase(attr.charAt(0)))
+      {
+         buf.append(Character.toUpperCase(attr.charAt(0)))
+            .append(attr.substring(1));
+      }
+      else
+      {
+         buf.append(attr);
+      }
+
+      return cls.getMethod(buf.toString(), new Class[]{type});
    }
 
    /**

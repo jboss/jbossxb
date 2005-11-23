@@ -90,7 +90,7 @@ public class MappingObjectModelProvider
       Object children = null;
       if(!writeAsValue(o.getClass()))
       {
-         children = getJavaValue(localName, o, true, ignoreNotFoundField);
+         children = getJavaValue(localName, null, o, true, ignoreNotFoundField);
       }
       return children;
    }
@@ -104,19 +104,21 @@ public class MappingObjectModelProvider
       }
       else
       {
-         String fieldName = localName;
+         String fieldName = null;
          if(ctx != null && ctx.isTypeComplex())
          {
             // this is how it should be
             fieldName = ctx.getSimpleContentProperty();
          }
-         //value = getJavaValue(fieldName, o, false, ignoreNotFoundField);
-         value = getJavaValue(fieldName, o, false, true);
 
-         if(value == null)
+         // this is a hack for soap enc
+         try
          {
-            // this is a hack for soap enc
-            value = getJavaValue(localName, o, false, ignoreNotFoundField);
+            value = getJavaValue(localName, fieldName, o, false, false);
+         }
+         catch(JBossXBRuntimeException e)
+         {
+            value = getJavaValue(localName, null, o, false, ignoreNotFoundField);
          }
       }
       return value;
@@ -125,7 +127,7 @@ public class MappingObjectModelProvider
    public Object getAttributeValue(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
       boolean optional = ctx == null ? ignoreNotFoundField : !ctx.isAttributeRequired() || ignoreNotFoundField;
-      return getJavaValue(localName, o, false, optional);
+      return getJavaValue(localName, null, o, false, optional);
    }
 
    public Object getRoot(Object o, MarshallingContext ctx, String namespaceURI, String localName)
@@ -138,7 +140,7 @@ public class MappingObjectModelProvider
 
    // Private
 
-   private Object getJavaValue(String localName, Object o, boolean forComplexType, boolean optional)
+   private Object getJavaValue(String localName, String fieldName, Object o, boolean forComplexType, boolean optional)
    {
       Method getter = null;
       Field field = null;
@@ -158,7 +160,11 @@ public class MappingObjectModelProvider
       }
       else
       {
-         String fieldName = Util.xmlNameToFieldName(localName, ignoreLowLine);
+         if(fieldName == null)
+         {
+            fieldName = Util.xmlNameToFieldName(localName, ignoreLowLine);
+         }
+
          try
          {
             getter = Classes.getAttributeGetter(o.getClass(), fieldName);
@@ -171,20 +177,22 @@ public class MappingObjectModelProvider
             }
             catch(NoSuchFieldException e2)
             {
+               String msg = "getJavaValue: found neither getter nor field for element " +
+                  localName +
+                  " bound to field " +
+                  fieldName +
+                  " in "
+                  + o.getClass();
                if(optional)
                {
                   if(log.isTraceEnabled())
                   {
-                     log.trace("getChildren: found neither getter nor field for " + localName + " in " + o.getClass());
+                     log.trace(msg);
                   }
                }
                else
                {
-                  throw new JBossXBRuntimeException("getChildren: found neither getter nor field for " +
-                     localName +
-                     " in "
-                     + o.getClass()
-                  );
+                  throw new JBossXBRuntimeException(msg);
                }
             }
          }
@@ -199,8 +207,9 @@ public class MappingObjectModelProvider
          }
          catch(Exception e)
          {
-            log.error("Cannot invoke getter '" + getter + "' on object: " + o);
-            throw new JBossXBRuntimeException("Failed to provide value for " + localName + " from " + o, e);
+            throw new JBossXBRuntimeException(
+               "Failed to provide value for element " + localName + " bound to field " + fieldName + " in " + o, e
+            );
          }
       }
       else if(field != null && (!forComplexType || forComplexType && !writeAsValue(field.getType())))
@@ -211,8 +220,9 @@ public class MappingObjectModelProvider
          }
          catch(Exception e)
          {
-            log.error("Cannot invoke field '" + field + "' on object: " + o);
-            throw new JBossXBRuntimeException("Failed to provide value for " + localName + " from " + o, e);
+            throw new JBossXBRuntimeException(
+               "Failed to provide value for element " + localName + " bound to field " + fieldName + " in " + o, e
+            );
          }
       }
 

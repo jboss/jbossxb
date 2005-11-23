@@ -637,7 +637,7 @@ public class XercesXsMarshaller
       String characters = null;
       if(type.getSimpleType() != null)
       {
-         Object value = getElementValue(elementNsUri, elementLocalName, type);
+         Object value = getSimpleContentValue(elementNsUri, elementLocalName, type);
          if(value != null)
          {
             XSSimpleTypeDefinition simpleType = type.getSimpleType();
@@ -1115,12 +1115,30 @@ public class XercesXsMarshaller
          XSTypeDefinition parentType = currentElementType;
          currentElementType = type;
 
-         value = provider.getChildren(peeked, null, elementNs, elementLocal);
+         value = provider.getChildren(peeked, ctx, elementNs, elementLocal);
          if(value == null)
          {
             value = provider.getElementValue(peeked, ctx, elementNs, elementLocal);
          }
 
+         currentElementType = parentType;
+      }
+      return value;
+   }
+
+   private Object getSimpleContentValue(String elementNs, String elementLocal, XSTypeDefinition type)
+   {
+      Object value;
+      Object peeked = stack.isEmpty() ? root : stack.peek();
+      if(peeked == null)
+      {
+         value = null;
+      }
+      else
+      {
+         XSTypeDefinition parentType = currentElementType;
+         currentElementType = type;
+         value = provider.getElementValue(peeked, ctx, elementNs, elementLocal);
          currentElementType = parentType;
       }
       return value;

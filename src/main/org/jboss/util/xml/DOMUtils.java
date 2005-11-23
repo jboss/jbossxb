@@ -1,31 +1,33 @@
 /*
-  * JBoss, Home of Professional Open Source
-  * Copyright 2005, JBoss Inc., and individual contributors as indicated
-  * by the @authors tag. See the copyright.txt in the distribution for a
-  * full listing of individual contributors.
-  *
-  * This is free software; you can redistribute it and/or modify it
-  * under the terms of the GNU Lesser General Public License as
-  * published by the Free Software Foundation; either version 2.1 of
-  * the License, or (at your option) any later version.
-  *
-  * This software is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  * Lesser General Public License for more details.
-  *
-  * You should have received a copy of the GNU Lesser General Public
-  * License along with this software; if not, write to the Free
-  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
-  */
+ * JBoss, Home of Professional Open Source
+ * Copyright 2005, JBoss Inc., and individual contributors as indicated
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.jboss.util.xml;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
@@ -165,7 +167,7 @@ public final class DOMUtils
       Document doc = getOwnerDocument();
       return doc.createTextNode(value);
    }
-   
+
    /** Get the qname of the given node.
     */
    public static QName getElementQName(Element el)
@@ -189,12 +191,19 @@ public final class DOMUtils
          prefix = qualifiedName.substring(0, colIndex);
          localPart = qualifiedName.substring(colIndex + 1);
 
-         Element nsElement = el;
-         while (namespaceURI.equals("") && nsElement != null)
+         if ("xmlns".equals(prefix))
          {
-            namespaceURI = nsElement.getAttribute("xmlns:" + prefix);
-            if (namespaceURI.equals(""))
-               nsElement = getParentElement(nsElement);
+            namespaceURI = "URI:XML_PREDEFINED_NAMESPACE";
+         }
+         else
+         {
+            Element nsElement = el;
+            while (namespaceURI.equals("") && nsElement != null)
+            {
+               namespaceURI = nsElement.getAttribute("xmlns:" + prefix);
+               if (namespaceURI.equals(""))
+                  nsElement = getParentElement(nsElement);
+            }
          }
 
          if (namespaceURI.equals(""))
@@ -204,7 +213,7 @@ public final class DOMUtils
       qname = new QName(namespaceURI, localPart, prefix);
       return qname;
    }
-   
+
    /** Get the value from the given attribute
     *
     * @return null if the attribute value is empty or the attribute is not present
@@ -283,6 +292,23 @@ public final class DOMUtils
    {
       String attrVal = getAttributeValue(el, attrName);
       return (attrVal != null ? new Integer(attrVal) : null);
+   }
+
+   /** Get the attributes as Map<QName, String>
+    */
+   public static Map getAttributes(Element el)
+   {
+      Map attmap = new HashMap();
+      NamedNodeMap attribs = el.getAttributes();
+      for (int i = 0; i < attribs.getLength(); i++)
+      {
+         Attr attr = (Attr)attribs.item(i);
+         String name = attr.getName();
+         QName qname = resolveQName(el, name);
+         String value = attr.getNodeValue();
+         attmap.put(qname, value);
+      }
+      return attmap;
    }
 
    /** Copy attributes between elements

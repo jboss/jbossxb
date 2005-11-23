@@ -21,15 +21,13 @@
   */
 package org.jboss.xb.binding;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+import javax.xml.namespace.QName;
 import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
-
-import java.lang.reflect.Method;
-import java.lang.reflect.Field;
-import java.util.Map;
-import java.util.HashMap;
-
-import javax.xml.namespace.QName;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -39,7 +37,7 @@ public class MappingObjectModelProvider
    implements GenericObjectModelProvider
 {
    private static final Logger log = Logger.getLogger(MappingObjectModelProvider.class);
-   
+
    private final Map classMappings = new HashMap();
    private final Map fieldMappings = new HashMap();
    private boolean ignoreLowLine = true;
@@ -106,7 +104,20 @@ public class MappingObjectModelProvider
       }
       else
       {
-         value = getJavaValue(localName, o, false, ignoreNotFoundField);
+         String fieldName = localName;
+         if(ctx != null && ctx.isTypeComplex())
+         {
+            // this is how it should be
+            fieldName = ctx.getSimpleContentProperty();
+         }
+         //value = getJavaValue(fieldName, o, false, ignoreNotFoundField);
+         value = getJavaValue(fieldName, o, false, true);
+
+         if(value == null)
+         {
+            // this is a hack for soap enc
+            value = getJavaValue(localName, o, false, ignoreNotFoundField);
+         }
       }
       return value;
    }
@@ -147,82 +158,62 @@ public class MappingObjectModelProvider
       }
       else
       {
-         String getterStr = Util.xmlNameToGetMethodName(localName, ignoreLowLine);
+         String fieldName = Util.xmlNameToFieldName(localName, ignoreLowLine);
          try
          {
-            getter = o.getClass().getMethod(getterStr, null);
+            getter = Classes.getAttributeGetter(o.getClass(), fieldName);
          }
          catch(NoSuchMethodException e)
          {
-            // ignore
-         }
-
-         // Try boolean getter
-         if (getter == null)
-         {
-            String booleanGetterStr = "is" + getterStr.substring(3);
             try
             {
-               getter = o.getClass().getMethod(booleanGetterStr, null);
+               field = o.getClass().getField(fieldName);
             }
-            catch (NoSuchMethodException e)
+            catch(NoSuchFieldException e2)
             {
-               // ignore
-            }
-         }
-         
-         // Try field access
-         if (getter == null)
-         {
-            String attr = Util.xmlNameToClassName(localName, ignoreLowLine);
-            attr = Character.toLowerCase(attr.charAt(0)) + attr.substring(1);
-            try
-            {
-               field = o.getClass().getField(attr);
-            }
-            catch (NoSuchFieldException e1)
-            {
-               if (optional)
+               if(optional)
                {
-                  if (log.isTraceEnabled())
+                  if(log.isTraceEnabled())
                   {
                      log.trace("getChildren: found neither getter nor field for " + localName + " in " + o.getClass());
                   }
                }
                else
                {
-                  throw new JBossXBRuntimeException("getChildren: found neither getter nor field for " + localName + " in "
-                        + o.getClass());
+                  throw new JBossXBRuntimeException("getChildren: found neither getter nor field for " +
+                     localName +
+                     " in "
+                     + o.getClass()
+                  );
                }
             }
          }
       }
 
       Object value = null;
-      try
+      if(getter != null && (!forComplexType || forComplexType && !writeAsValue(getter.getReturnType())))
       {
-         if(getter != null && (!forComplexType || forComplexType && !writeAsValue(getter.getReturnType())))
+         try
          {
             value = getter.invoke(o, null);
          }
+         catch(Exception e)
+         {
+            log.error("Cannot invoke getter '" + getter + "' on object: " + o);
+            throw new JBossXBRuntimeException("Failed to provide value for " + localName + " from " + o, e);
+         }
       }
-      catch(Exception e)
+      else if(field != null && (!forComplexType || forComplexType && !writeAsValue(field.getType())))
       {
-         log.error("Cannot invoke getter '" + getter + "' on object: " + o);
-         throw new JBossXBRuntimeException("Failed to provide value for " + localName + " from " + o, e);
-      }
-      
-      try
-      {
-         if(field != null && (!forComplexType || forComplexType && !writeAsValue(field.getType())))
+         try
          {
             value = field.get(o);
          }
-      }
-      catch(Exception e)
-      {
-         log.error("Cannot invoke field '" + field + "' on object: " + o);
-         throw new JBossXBRuntimeException("Failed to provide value for " + localName + " from " + o, e);
+         catch(Exception e)
+         {
+            log.error("Cannot invoke field '" + field + "' on object: " + o);
+            throw new JBossXBRuntimeException("Failed to provide value for " + localName + " from " + o, e);
+         }
       }
 
       if(value != null && mapping != null && mapping.converter != null)
@@ -260,10 +251,15 @@ public class MappingObjectModelProvider
          this.namespaceURI = namespaceURI;
          this.localName = localName;
          this.provider = provider;
-         
-         if (log.isTraceEnabled())
+
+         if(log.isTraceEnabled())
          {
-            log.trace("new ClassToElementMapping: [cls=" + cls.getName() + ",qname=" + new QName(namespaceURI, localName) + "]");
+            log.trace("new ClassToElementMapping: [cls=" +
+               cls.getName() +
+               ",qname=" +
+               new QName(namespaceURI, localName) +
+               "]"
+            );
          }
       }
 
@@ -332,11 +328,18 @@ public class MappingObjectModelProvider
          this.localName = localName;
          this.converter = converter;
 
-         if (log.isTraceEnabled())
+         if(log.isTraceEnabled())
          {
-            log.trace("new FieldToElementMapping: [cls=" + cls.getName() + ",field=" + field + ",qname=" + new QName(namespaceURI, localName) + "]");
+            log.trace("new FieldToElementMapping: [cls=" +
+               cls.getName() +
+               ",field=" +
+               field +
+               ",qname=" +
+               new QName(namespaceURI, localName) +
+               "]"
+            );
          }
-         
+
          Method localGetter = null;
          Field localField = null;
 
@@ -352,9 +355,7 @@ public class MappingObjectModelProvider
             }
             catch(NoSuchFieldException e1)
             {
-               throw new JBossXBRuntimeException(
-                  "Neither getter nor field where found for " + field + " in " + cls
-               );
+               throw new JBossXBRuntimeException("Neither getter nor field where found for " + field + " in " + cls);
             }
          }
 
@@ -379,7 +380,9 @@ public class MappingObjectModelProvider
          {
             return false;
          }
-         if(fieldName != null ? !fieldName.equals(fieldToElementMapping.fieldName) : fieldToElementMapping.fieldName != null)
+         if(fieldName != null ?
+            !fieldName.equals(fieldToElementMapping.fieldName) :
+            fieldToElementMapping.fieldName != null)
          {
             return false;
          }

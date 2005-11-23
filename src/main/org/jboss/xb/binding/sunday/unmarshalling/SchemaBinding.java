@@ -119,6 +119,7 @@ public class SchemaBinding
    private boolean ignoreLowLine = true;
    private boolean replacePropertyRefs = true;
    private boolean unmarshalListsToArrays;
+   private String simpleContentProperty = "value";
 
    public TypeBinding getType(QName qName)
    {
@@ -280,6 +281,16 @@ public class SchemaBinding
    public void setUnmarshalListsToArrays(boolean unmarshalListsToArrays)
    {
       this.unmarshalListsToArrays = unmarshalListsToArrays;
+   }
+
+   public String getSimpleContentProperty()
+   {
+      return simpleContentProperty;
+   }
+
+   public void setSimpleContentProperty(String simpleContentProperty)
+   {
+      this.simpleContentProperty = simpleContentProperty;
    }
 
    void addElementParticle(ParticleBinding particle)

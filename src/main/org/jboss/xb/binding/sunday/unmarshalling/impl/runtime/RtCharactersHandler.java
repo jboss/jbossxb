@@ -184,7 +184,7 @@ public class RtCharactersHandler
 
                if(propName == null)
                {
-                  propName = "value";
+                  propName = type.getSchemaBinding().getSimpleContentProperty();
                }
             }
             else

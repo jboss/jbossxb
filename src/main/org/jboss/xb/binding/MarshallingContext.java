@@ -35,4 +35,14 @@ public interface MarshallingContext
     * @return true if current attribute is required, false otherwise
     */
    boolean isAttributeRequired();
+
+   /**
+    * @return  true if the element being marshalled has a complex type
+    */
+   boolean isTypeComplex();
+
+   /**
+    * @return the name of the property a simple content of a complex type is bound to
+    */
+   String getSimpleContentProperty();
 }

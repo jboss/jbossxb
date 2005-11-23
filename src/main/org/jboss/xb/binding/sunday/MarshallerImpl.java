@@ -633,9 +633,7 @@ public class MarshallerImpl
       TypeBinding simpleType = type.getSimpleType();
       if(simpleType != null)
       {
-         // todo: should also support 'value'?
-         // the problem here is with the ignoreIfNotFound...
-         String fieldName = null;
+         String fieldName = "value";
          CharactersMetaData charactersMetaData = type.getCharactersMetaData();
          PropertyMetaData propertyMetaData = charactersMetaData == null ? null : charactersMetaData.getProperty();
          if(propertyMetaData != null)

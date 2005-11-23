@@ -93,7 +93,12 @@ public class XercesXsMarshaller
 
    private XSModel model;
 
+   private boolean ignoreUnresolvedWildcard;
+
    private XSAttributeUse currentAttribute;
+   private XSTypeDefinition currentElementType;
+
+   private String simpleContentProperty = "value";
 
    private MarshallingContext ctx = new MarshallingContext()
    {
@@ -110,7 +115,41 @@ public class XercesXsMarshaller
          }
          return currentAttribute.getRequired();
       }
+
+      public boolean isTypeComplex()
+      {
+         if(currentElementType == null)
+         {
+            throw new JBossXBRuntimeException("There is no current element!");
+         }
+         return currentElementType.getTypeCategory() == XSTypeDefinition.COMPLEX_TYPE;
+      }
+
+      public String getSimpleContentProperty()
+      {
+         return simpleContentProperty;
+      }
    };
+
+   public String getSimpleContentProperty()
+   {
+      return simpleContentProperty;
+   }
+
+   public void setSimpleContentProperty(String simpleContentProperty)
+   {
+      this.simpleContentProperty = simpleContentProperty;
+   }
+
+   public boolean isIgnoreUnresolvedWildcard()
+   {
+      return ignoreUnresolvedWildcard;
+   }
+
+   public void setIgnoreUnresolvedWildcard(boolean ignoreUnresolvedWildcard)
+   {
+      this.ignoreUnresolvedWildcard = ignoreUnresolvedWildcard;
+   }
 
    public SchemaBindingResolver getSchemaResolver()
    {
@@ -598,7 +637,7 @@ public class XercesXsMarshaller
       String characters = null;
       if(type.getSimpleType() != null)
       {
-         Object value = getElementValue(elementNsUri, elementLocalName);
+         Object value = getElementValue(elementNsUri, elementLocalName, type);
          if(value != null)
          {
             XSSimpleTypeDefinition simpleType = type.getSimpleType();
@@ -687,7 +726,7 @@ public class XercesXsMarshaller
             break;
          case XSConstants.ELEMENT_DECLARATION:
             XSElementDeclaration element = (XSElementDeclaration)term;
-            o = getElementValue(element.getNamespace(), element.getName());
+            o = getElementValue(element.getNamespace(), element.getName(), element.getTypeDefinition());
             i = o != null && isRepeatable(particle) ? getIterator(o) : null;
             if(i != null)
             {
@@ -742,12 +781,24 @@ public class XercesXsMarshaller
          }
          else
          {
-            throw new IllegalStateException("Failed to marshal wildcard. Class mapping not found for " +
-               o.getClass() +
-               "@" +
-               o.hashCode() +
-               ": " + o
-            );
+            if(ignoreUnresolvedWildcard)
+            {
+               log.warn("Failed to marshal wildcard. Class mapping not found for " +
+                  o.getClass() +
+                  "@" +
+                  o.hashCode() +
+                  ": " + o);
+               return true;
+            }
+            else
+            {
+               throw new IllegalStateException("Failed to marshal wildcard. Class mapping not found for " +
+                  o.getClass() +
+                  "@" +
+                  o.hashCode() +
+                  ": " + o
+               );
+            }
          }
       }
 
@@ -1046,7 +1097,7 @@ public class XercesXsMarshaller
       );
    }
 
-   private Object getElementValue(String elementNs, String elementLocal)
+   private Object getElementValue(String elementNs, String elementLocal, XSTypeDefinition type)
    {
       Object value;
       Object peeked = stack.isEmpty() ? root : stack.peek();
@@ -1061,11 +1112,16 @@ public class XercesXsMarshaller
       }
       else
       {
+         XSTypeDefinition parentType = currentElementType;
+         currentElementType = type;
+
          value = provider.getChildren(peeked, null, elementNs, elementLocal);
          if(value == null)
          {
-            value = provider.getElementValue(peeked, null, elementNs, elementLocal);
+            value = provider.getElementValue(peeked, ctx, elementNs, elementLocal);
          }
+
+         currentElementType = parentType;
       }
       return value;
    }

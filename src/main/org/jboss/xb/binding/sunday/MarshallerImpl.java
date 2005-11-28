@@ -1349,7 +1349,9 @@ public class MarshallerImpl
    {
       return Classes.isPrimitive(type) ||
          type == String.class ||
-         type == java.util.Date.class;
+         type == java.util.Date.class ||
+         type == java.math.BigDecimal.class ||
+         type == java.math.BigInteger.class;
    }
 
    private static boolean isRepeatable(ParticleBinding particle)

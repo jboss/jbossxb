@@ -44,7 +44,7 @@ import java.util.TimerTask;
     @version $Revision$
 */
 public class TimedCachePolicy
-   extends TimerTask
+   extends TimerTask /* A legacy base class that is no longer used as this level */
    implements CachePolicy
 {
    /** The interface that cache entries support.
@@ -90,6 +90,8 @@ public class TimedCachePolicy
    protected long now;
    /** The resolution in seconds of the cach current time */
    protected int resolution;
+   /** */
+   protected ResolutionTimer theTimer;
 
    /** Creates a new TimedCachePolicy with a default entry lifetime of 30 mins
        that does not synchronized access to its policy store and uses a 60
@@ -145,13 +147,14 @@ public class TimedCachePolicy
    */
    public void start()
    {
-      resolutionTimer.scheduleAtFixedRate(this, 0, 1000*resolution);
+      theTimer = new ResolutionTimer();
+      resolutionTimer.scheduleAtFixedRate(theTimer, 0, 1000*resolution);
    }
    /** Stop cancels the resolution timer and flush()es the cache.
     */
    public void stop() 
    {
-      super.cancel();
+      theTimer.cancel();
       flush();
    }
    /** Clears the cache of all entries.
@@ -319,8 +322,9 @@ public class TimedCachePolicy
       if( resolution != this.resolution )
       {
          this.resolution = resolution;
-         resolutionTimer.cancel();
-         resolutionTimer.scheduleAtFixedRate(this, 0, 1000*resolution);
+         theTimer.cancel();
+         theTimer = new ResolutionTimer();
+         resolutionTimer.scheduleAtFixedRate(theTimer, 0, 1000*resolution);
       }
    }
 
@@ -381,6 +385,17 @@ public class TimedCachePolicy
       {
          return value;
       }        
+   }
+
+   /**
+    
+    */
+   private class ResolutionTimer extends TimerTask
+   {
+      public void run()
+      {
+         TimedCachePolicy.this.run();
+      }
    }
 }
 

@@ -86,7 +86,7 @@ public class MarshallerImpl
    /**
     * Whether NULL values should be ignored or marshalled as xsi:nil='1'
     */
-   private boolean supportNil;
+   private boolean supportNil = true;
 
    private QName rootTypeQName;
 

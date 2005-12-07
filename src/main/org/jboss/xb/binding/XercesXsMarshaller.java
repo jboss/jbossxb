@@ -85,7 +85,7 @@ public class XercesXsMarshaller
    /**
     * Whether NULL values should be ignored or marshalled as xsi:nil='1'
     */
-   private boolean supportNil;
+   private boolean supportNil = true;
 
    private QName rootTypeQName;
 
@@ -787,7 +787,8 @@ public class XercesXsMarshaller
                   o.getClass() +
                   "@" +
                   o.hashCode() +
-                  ": " + o);
+                  ": " + o
+               );
                return true;
             }
             else

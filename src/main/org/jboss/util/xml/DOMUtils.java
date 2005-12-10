@@ -426,10 +426,25 @@ public final class DOMUtils
          Node child = nlist.item(i);
          if (child.getNodeType() == Node.ELEMENT_NODE)
          {
-            QName qname = new QName(child.getNamespaceURI(), child.getLocalName());
-            if (nodeName == null || qname.equals(nodeName))
+            if (nodeName == null)
             {
                list.add(child);
+            }
+            else
+            {
+               QName qname;
+               if (nodeName.getNamespaceURI().length() > 0)
+               {
+                  qname = new QName(child.getNamespaceURI(), child.getLocalName());
+               }
+               else
+               {
+                  qname = new QName(child.getLocalName());
+               }
+               if (qname.equals(nodeName))
+               {
+                  list.add(child);
+               }
             }
          }
       }

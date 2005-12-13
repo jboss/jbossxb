@@ -603,14 +603,11 @@ public class XercesXsMarshaller
                   );
                }
             }
-            else if(attrType.getLexicalPattern() != null &&
-               attrType.derivedFrom(Constants.NS_XML_SCHEMA,
-                  Constants.QNAME_BOOLEAN.getLocalPart(),
-                  XSConstants.DERIVATION_RESTRICTION
-               ))
+            else if (attrType.getLexicalPattern().item(0) != null
+                  && attrType.derivedFrom(Constants.NS_XML_SCHEMA, Constants.QNAME_BOOLEAN.getLocalPart(), XSConstants.DERIVATION_RESTRICTION))
             {
                String item = attrType.getLexicalPattern().item(0);
-               if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
+               if (item.indexOf('0') != -1 && item.indexOf('1') != -1)
                {
                   attrValue = ((Boolean)attrValue).booleanValue() ? "1" : "0";
                }
@@ -1017,14 +1014,11 @@ public class XercesXsMarshaller
          marshalled = SimpleTypeBindings.marshal(typeName, value, null);
       }
       // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
-      else if(type.getLexicalPattern() != null &&
-         type.derivedFrom(Constants.NS_XML_SCHEMA,
-            Constants.QNAME_BOOLEAN.getLocalPart(),
-            XSConstants.DERIVATION_RESTRICTION
-         ))
+      else if (type.getLexicalPattern().item(0) != null
+            && type.derivedFrom(Constants.NS_XML_SCHEMA, Constants.QNAME_BOOLEAN.getLocalPart(), XSConstants.DERIVATION_RESTRICTION))
       {
          String item = type.getLexicalPattern().item(0);
-         if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
+         if (item.indexOf('0') != -1 && item.indexOf('1') != -1)
          {
             marshalled = ((Boolean)value).booleanValue() ? "1" : "0";
          }
@@ -1090,12 +1084,15 @@ public class XercesXsMarshaller
 
    private void declareNs(AttributesImpl attrs, String prefix, String ns)
    {
-      attrs.add(null,
-         prefix,
-         prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix,
-         null,
-         ns
-      );
+      String prefixStr = prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix;
+      if (attrs != null)
+      {
+         attrs.add(null, prefix, prefixStr, null, ns);
+      }
+      else
+      {
+         log.warn("Cannot add namespace declaration: " + prefixStr + "='" + ns + "'");
+      }
    }
 
    private Object getElementValue(String elementNs, String elementLocal, XSTypeDefinition type)

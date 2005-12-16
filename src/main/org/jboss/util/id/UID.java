@@ -101,9 +101,9 @@ public class UID
     * @return  A string representation of this UID.
     */
    public String toString() {
-      return 
+      return
          Long.toString(time, Character.MAX_RADIX) +
-         "-" + 
+         "-" +
          Long.toString(id, Character.MAX_RADIX);
    }
 
@@ -113,7 +113,7 @@ public class UID
     * @return  The hash code of this UID.
     */
    public int hashCode() {
-      return (int)((time ^ id) >> 32);
+      return (int)id;
    }
 
    /**
@@ -128,7 +128,7 @@ public class UID
       if (obj != null && obj.getClass() == getClass()) {
          UID uid = (UID)obj;
 
-         return 
+         return
             uid.time == time &&
             uid.id == id;
       }

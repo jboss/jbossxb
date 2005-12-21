@@ -34,8 +34,10 @@ import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.sunday.unmarshalling.LSInputAdaptor;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
-import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
+import org.jboss.xb.binding.sunday.unmarshalling.XsdBinderLoggingErrorHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.XsdBinderTerminatingErrorHandler;
 import org.w3c.dom.DOMConfiguration;
+import org.w3c.dom.DOMErrorHandler;
 import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 import org.w3c.dom.ls.LSInput;
 import org.w3c.dom.ls.LSResourceResolver;
@@ -387,15 +389,12 @@ public final class Util
       DOMConfiguration config = schemaLoader.getConfig();
       config.setParameter("resource-resolver", new LSResourceResolver()
       {
-         public LSInput resolveResource(String type,
-                                                       String namespaceURI,
-                                                       String publicId,
-                                                       String systemId,
-                                                       String baseURI)
+         public LSInput resolveResource(String type, String namespaceURI, String publicId, String systemId, String baseURI)
          {
-            if(Constants.NS_XML_SCHEMA.equals(type))
+            if (Constants.NS_XML_SCHEMA.equals(type))
             {
-               return schemaResolver.resolveAsLSInput(namespaceURI, null, null);
+               String schemaLocation = systemId;
+               return schemaResolver.resolveAsLSInput(namespaceURI, baseURI, schemaLocation);
             }
             return null;
          }
@@ -406,7 +405,11 @@ public final class Util
    private static void setDOMErrorHandler(XSLoader schemaLoader)
    {
       DOMConfiguration config = schemaLoader.getConfig();
-      config.setParameter("error-handler", XsdBinder.XsdBinderErrorHandler.INSTANCE);
+      DOMErrorHandler errorHandler = (DOMErrorHandler)config.getParameter("error-handler");
+      if (errorHandler == null)
+      {
+         config.setParameter("error-handler", XsdBinderTerminatingErrorHandler.newInstance());
+      }
    }
 
    private static XSImplementation getXSImplementation()

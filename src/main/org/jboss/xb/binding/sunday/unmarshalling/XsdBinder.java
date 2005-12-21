@@ -62,9 +62,6 @@ import org.jboss.xb.binding.metadata.SchemaMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.metadata.XsdAnnotation;
 import org.jboss.xb.binding.metadata.XsdAppInfo;
-import org.w3c.dom.DOMError;
-import org.w3c.dom.DOMErrorHandler;
-import org.w3c.dom.DOMLocator;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -72,7 +69,7 @@ import org.w3c.dom.DOMLocator;
  */
 public class XsdBinder
 {
-   private static final Logger log = Logger.getLogger(XsdBinder.class);
+   static final Logger log = Logger.getLogger(XsdBinder.class);
 
    private static final ThreadLocal xsdBinding = new ThreadLocal();
 
@@ -1284,54 +1281,6 @@ public class XsdBinder
       public void setTypeBinding(XSElementDeclaration element, TypeBinding type)
       {
          elements.put(element, type);
-      }
-   }
-
-   public static class XsdBinderErrorHandler
-      implements DOMErrorHandler
-   {
-      public static final XsdBinderErrorHandler INSTANCE = new XsdBinderErrorHandler();
-
-      private XsdBinderErrorHandler()
-      {
-      }
-
-      public boolean handleError(DOMError error)
-      {
-         // todo: i do throw exceptions here instead of returning false to stop parsing immediately
-         // since returning false seems to be no different from true (a bug in the parser?)
-         // Although, throwing an exception reports the same error twice but the second time with
-         // location -1:-1
-         switch(error.getSeverity())
-         {
-            case DOMError.SEVERITY_ERROR:
-               throw new JBossXBRuntimeException(formatMessage(error));
-            case DOMError.SEVERITY_FATAL_ERROR:
-               throw new JBossXBRuntimeException(formatMessage(error));
-            case DOMError.SEVERITY_WARNING:
-               log.warn(formatMessage(error));
-               break;
-         }
-         return false;
-      }
-
-      private String formatMessage(DOMError error)
-      {
-         StringBuffer buf = new StringBuffer();
-         DOMLocator location = error.getLocation();
-         if(location != null)
-         {
-            buf.append(location.getLineNumber())
-               .append(':')
-               .append(location.getColumnNumber());
-         }
-         else
-         {
-            buf.append("[location unavailable]");
-         }
-
-         buf.append(' ').append(error.getMessage());
-         return buf.toString();
       }
    }
 

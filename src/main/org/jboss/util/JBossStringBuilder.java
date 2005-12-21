@@ -85,6 +85,29 @@ public class JBossStringBuilder implements Serializable, CharSequence
       append(charSequence);
    }
    
+   /**
+    * Create a new StringBuilder from the given character array
+    * 
+    * @param ch the array
+    */
+   public JBossStringBuilder(char[] ch)
+   {
+      this(ch, 0, ch.length);
+   }
+   
+   /**
+    * Create a new StringBuilder from the given character array
+    * 
+    * @param ch the array
+    * @param start the start of the array from which to take characters
+    * @param length the lengh of the array from which to take characters
+    */
+   public JBossStringBuilder(char[] ch, int start, int length)
+   {
+      this(length + 16);
+      append(ch, start, length);
+   }
+   
    public JBossStringBuilder append(Object object)
    {
       return append(String.valueOf(object));
@@ -370,17 +393,41 @@ public class JBossStringBuilder implements Serializable, CharSequence
    
    public int indexOf(String string, int fromIndex)
    {
+      // FIXME
       return toString().indexOf(string, fromIndex);
+   }
+   
+   public int indexOf(char ch)
+   {
+      return indexOf(ch, 0);
+   }
+   
+   public int indexOf(char ch, int fromIndex)
+   {
+      // FIXME
+      return toString().indexOf(ch, fromIndex);
    }
    
    public int lastIndexOf(String string)
    {
-      return lastIndexOf(string, 0);
+      return lastIndexOf(string, pos);
    }
    
    public int lastIndexOf(String string, int fromIndex)
    {
+      // FIXME
       return toString().lastIndexOf(string, fromIndex);
+   }
+   
+   public int lastIndexOf(char ch)
+   {
+      return lastIndexOf(ch, pos);
+   }
+   
+   public int lastIndexOf(char ch, int fromIndex)
+   {
+      // FIXME
+      return toString().lastIndexOf(ch, fromIndex);
    }
    
    public JBossStringBuilder reverse()

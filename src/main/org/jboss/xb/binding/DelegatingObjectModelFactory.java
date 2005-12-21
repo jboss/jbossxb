@@ -70,36 +70,27 @@ public class DelegatingObjectModelFactory
       return typedFactory.newRoot(root, navigator, namespaceURI, localName, attrs);
    }
 
-   public Object newChild(Object parent,
-                          UnmarshallingContext navigator,
-                          String namespaceURI,
-                          String localName,
-                          Attributes attrs)
+   public Object newChild(Object parent, UnmarshallingContext navigator, String namespaceURI, String localName, Attributes attrs)
    {
-      Method method = ObjectModelBuilder.getMethodForElement(typedFactory,
-         "newChild",
-         new Class[]{
-            parent.getClass(),
-            UnmarshallingContext.class,
-            String.class,
-            String.class,
-            Attributes.class
-         }
-      );
+      // Get the newChild method
+      Class objClass = parent.getClass();
+      Class[] classes = new Class[] { objClass, UnmarshallingContext.class, String.class, String.class, Attributes.class };
+      Method method = ObjectModelBuilder.getMethodForElement(typedFactory, "newChild", classes);
 
-      Object child = null;
-      if(method != null)
+      // If null, try to get the newChild method from the super class
+      while (method == null && objClass.getSuperclass() != Object.class)
       {
-         child = ObjectModelBuilder.invokeFactory(typedFactory,
-            method,
-            new Object[]{
-               parent,
-               navigator,
-               namespaceURI,
-               localName,
-               attrs
-            }
-         );
+         objClass = objClass.getSuperclass();
+         classes = new Class[] { objClass, UnmarshallingContext.class, String.class, String.class, Attributes.class };
+         method = ObjectModelBuilder.getMethodForElement(typedFactory, "newChild", classes);
+      }
+
+      // invoke the setValue method
+      Object child = null;
+      if (method != null)
+      {
+         Object[] objects = new Object[] { parent, navigator, namespaceURI, localName, attrs };
+         child = ObjectModelBuilder.invokeFactory(typedFactory, method, objects);
       }
       return child;
    }
@@ -143,29 +134,24 @@ public class DelegatingObjectModelFactory
 
    public void setValue(Object o, UnmarshallingContext navigator, String namespaceURI, String localName, String value)
    {
-      Method method = ObjectModelBuilder.getMethodForElement(typedFactory,
-         "setValue",
-         new Class[]{
-            o.getClass(),
-            UnmarshallingContext.class,
-            String.class,
-            String.class,
-            String.class
-         }
-      );
-
-      if(method != null)
+      // Get the setValue method
+      Class objClass = o.getClass();
+      Class[] classes = new Class[] { objClass, UnmarshallingContext.class, String.class, String.class, String.class };
+      Method method = ObjectModelBuilder.getMethodForElement(typedFactory, "setValue", classes);
+      
+      // If null, try to get the setValue method from the super class
+      while (method == null && objClass.getSuperclass() != Object.class)
       {
-         ObjectModelBuilder.invokeFactory(typedFactory,
-            method,
-            new Object[]{
-               o,
-               navigator,
-               namespaceURI,
-               localName,
-               value
-            }
-         );
+         objClass = objClass.getSuperclass();
+         classes = new Class[] { objClass, UnmarshallingContext.class, String.class, String.class, String.class };
+         method = ObjectModelBuilder.getMethodForElement(typedFactory, "setValue", classes);
+      }
+
+      // invoke the setValue method
+      if (method != null)
+      {
+         Object[] objects = new Object[] { o, navigator, namespaceURI, localName, value };
+         ObjectModelBuilder.invokeFactory(typedFactory, method, objects);
       }
    }
 

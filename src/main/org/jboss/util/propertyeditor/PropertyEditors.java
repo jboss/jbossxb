@@ -1,24 +1,24 @@
 /*
-  * JBoss, Home of Professional Open Source
-  * Copyright 2005, JBoss Inc., and individual contributors as indicated
-  * by the @authors tag. See the copyright.txt in the distribution for a
-  * full listing of individual contributors.
-  *
-  * This is free software; you can redistribute it and/or modify it
-  * under the terms of the GNU Lesser General Public License as
-  * published by the Free Software Foundation; either version 2.1 of
-  * the License, or (at your option) any later version.
-  *
-  * This software is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  * Lesser General Public License for more details.
-  *
-  * You should have received a copy of the GNU Lesser General Public
-  * License along with this software; if not, write to the Free
-  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
-  */
+ * JBoss, Home of Professional Open Source
+ * Copyright 2005, JBoss Inc., and individual contributors as indicated
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.jboss.util.propertyeditor;
 
 import java.beans.BeanInfo;
@@ -38,17 +38,18 @@ import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 
 /**
- * A collection of PropertyEditor utilities.  Provides the same interface
- * as PropertyManagerEditor plus more...
+ * A collection of PropertyEditor utilities. Provides the same interface
+ * as PropertyEditorManager plus more...
  *
  * <p>Installs the default PropertyEditors.
  *
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
- * @author Scott.Stark@jboss.org
+ * @author  <a href="mailto:scott.stark@jboss.org">Scott Stark</a>
  * @version <tt>$Revision$</tt>
  */
 public class PropertyEditors
 {
+   /** The Logger object */
    private static Logger log = Logger.getLogger(PropertyEditors.class);
 
    /** The null string */
@@ -56,21 +57,19 @@ public class PropertyEditors
    
    /** Whether we handle nulls */
    private static boolean disableIsNull = false;
+   
    /** Whether or not initialization of the editor search path has been done */
    private static boolean initialized = false;
-
-   /** Augment the PropertyEditorManager search path to incorporate the JBoss
-    specific editors by appending the org.jboss.util.propertyeditor package
-    to the PropertyEditorManager editor search path.
-    */
+   
    static
    {
       init();
    }
-   
-   /** Augment the PropertyEditorManager search path to incorporate the JBoss
-    specific editors by appending the org.jboss.util.propertyeditor package
-    to the PropertyEditorManager editor search path.
+
+   /** 
+    * Augment the PropertyEditorManager search path to incorporate the JBoss
+    * specific editors by appending the org.jboss.util.propertyeditor package
+    * to the PropertyEditorManager editor search path.
     */
    public synchronized static void init()
    {
@@ -82,7 +81,7 @@ public class PropertyEditors
    }
 
    /**
-    * Whether a string is interrupted as the null value,
+    * Whether a string is interpreted as the null value,
     * including the empty string.
     * 
     * @param value the value
@@ -94,7 +93,7 @@ public class PropertyEditors
    }
 
    /**
-    * Whether a string is interrupted as the null value
+    * Whether a string is interpreted as the null value
     * 
     * @param value the value
     * @param trim whether to trim the string
@@ -128,7 +127,7 @@ public class PropertyEditors
    {
       return !disableIsNull;
    }
-
+   
    /**
     * Locate a value editor for a given target type.
     *
@@ -419,7 +418,7 @@ public class PropertyEditors
          newPath[0] = "org.jboss.util.propertyeditor";
          newPath[1] = "org.jboss.mx.util.propertyeditor";
          PropertyEditorManager.setEditorSearchPath(newPath);
-
+   
          /* Register the editor types that will not be found using the standard
          class name to editor name algorithm. For example, the type String[] has
          a name '[Ljava.lang.String;' which does not map to a XXXEditor name.
@@ -432,7 +431,7 @@ public class PropertyEditors
          PropertyEditorManager.registerEditor(intArrayType, IntArrayEditor.class);
          Class byteArrayType = byte[].class;
          PropertyEditorManager.registerEditor(byteArrayType, ByteArrayEditor.class);
-
+   
          // There is no default char editor.
          PropertyEditorManager.registerEditor(Character.TYPE, CharacterEditor.class);
          

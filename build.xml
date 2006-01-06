@@ -122,6 +122,15 @@
       <fileset dir="${build.classes}">
         <include name="org/jboss/**"/>
         <include name="org/apache/xerces/**"/>
+        <exclude name="org/jboss/xb/**"/>
+      </fileset>
+    </jar>
+
+    <!-- Build jboss-xml-binding.jar -->
+    <jar jarfile="${build.lib}/jboss-xml-binding.jar"
+      manifest="${build.etc}/default.mf">
+      <fileset dir="${build.classes}">
+        <include name="org/jboss/xb/**"/>
       </fileset>
     </jar>
 
@@ -132,6 +141,7 @@
         <include name="org/jboss/**"/>
         <include name="org/apache/xerces/**"/>
         <exclude name="org/jboss/deployment/**"/>
+        <exclude name="org/jboss/xb/**"/>
       </fileset>
     </jar>
 

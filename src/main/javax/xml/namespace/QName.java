@@ -44,14 +44,14 @@ import org.jboss.util.id.SerialVersion;
  * @author Jeff Suttor (javadoc)
  * @version $Revision$
  */
-public class QName implements Serializable, Comparable
+public class QName implements Serializable
 {
-   /** @since 4.0.2, compatible with jdk5 by default */
-   private static final long serialVersionUID;
+   /** @since 4.0.2, compatible with j2ee1.4 by default */
+   final static long serialVersionUID;
    static
    {
       if (SerialVersion.version == SerialVersion.LEGACY)
-         serialVersionUID = 4418622981026545151L;
+         serialVersionUID = 8217399441836960859L;
       else
          serialVersionUID = -3852060120346905000L;
    }
@@ -80,7 +80,7 @@ public class QName implements Serializable, Comparable
     * @see #toString()
     * @param toStringName - a QName string in the format of toString().
     * @return QName for the toStringName
-    */ 
+    */
    public static QName valueOf(String toStringName)
    {
       String uri = null;
@@ -88,7 +88,7 @@ public class QName implements Serializable, Comparable
 
       StringTokenizer tokenizer = new StringTokenizer(toStringName, "{}");
       int tokenCount = tokenizer.countTokens();
-      
+
       if (tokenCount < 1 || tokenCount > 2)
          throw new IllegalArgumentException("Invalid QName string: " + toStringName);
 
@@ -104,7 +104,7 @@ public class QName implements Serializable, Comparable
       this(null, localPart);
    }
 
-   public QName(String namespaceURI, String localPart) 
+   public QName(String namespaceURI, String localPart)
    {
       this(namespaceURI, localPart, "");
    }
@@ -123,19 +123,23 @@ public class QName implements Serializable, Comparable
     * @param namespaceURI - Namespace URI of the QName
     * @param localPart - local part of the QName
     * @param prefix - prefix of the QName
-    */ 
+    */
    public QName(String namespaceURI, String localPart, String prefix)
    {
       this.namespaceURI = namespaceURI;
-      if( this.namespaceURI == null )
+      if (this.namespaceURI == null)
          this.namespaceURI = "";
 
-      if( localPart == null )
+      if (localPart == null)
          throw new IllegalArgumentException("localPart cannot be null");
+
+      if (localPart.startsWith(":"))
+         throw new IllegalArgumentException("Illegal localPart: " + localPart);
+
       this.localPart = localPart;
 
       this.prefix = prefix;
-      if( this.prefix == null )
+      if (this.prefix == null)
          this.prefix = "";
    }
 
@@ -163,7 +167,7 @@ public class QName implements Serializable, Comparable
     * Note the prefix value is NOT returned as part of the String representation.
     *
     * @return '{' + namespaceURI + '}' + localPart
-    */ 
+    */
    public String toString()
    {
       if (namespaceURI.equals(""))
@@ -175,12 +179,12 @@ public class QName implements Serializable, Comparable
    /** Equality is based on the namespaceURI and localPart
     * @param obj the QName to compare too
     * @return true if both namespaceURI and localPart, false otherwise
-    */ 
+    */
    public boolean equals(Object obj)
    {
       if (obj instanceof QName)
       {
-         QName qn = (QName) obj;
+         QName qn = (QName)obj;
          boolean equals = namespaceURI.equals(qn.namespaceURI);
          return equals && localPart.equals(qn.localPart);
       }
@@ -189,7 +193,7 @@ public class QName implements Serializable, Comparable
 
    /** Calculate the hash of namespaceURI and localPart 
     * @return namespaceURI.hashCode() + localPart.hashCode()
-    */ 
+    */
    public int hashCode()
    {
       int hashCode = namespaceURI.hashCode() + localPart.hashCode();

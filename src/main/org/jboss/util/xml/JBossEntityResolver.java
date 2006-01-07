@@ -126,6 +126,7 @@ public class JBossEntityResolver implements EntityResolver
       registerEntity("urn:jboss:security-config:4.1", "security-config_4_1.xsd");
       registerEntity("urn:jboss:security-config:5.0", "security-config_5_0.xsd");
       registerEntity("urn:jboss:jndi-binding-service:1.0", "jndi-binding-service_1_0.xsd");
+      registerEntity("urn:jboss:jbossws-config:5.0", "jbossws-config_1_0.xsd");
       registerEntity("urn:jboss:user-roles:1.0", "user-roles_1_0.xsd");
       // xml
       registerEntity("-//W3C//DTD/XMLSCHEMA 200102//EN", "XMLSchema.dtd");

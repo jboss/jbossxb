@@ -22,11 +22,11 @@
 package org.jboss.logging.appender;
 
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.spi.LoggingEvent;
 import org.apache.log4j.spi.TriggeringEventEvaluator;
-import gnu.regexp.RE;
-import gnu.regexp.REException;
 
 /** An implementation of the log4j TriggeringEventEvaluator that matches the
  * LoggingEvent message against the MDB{RegexEventEvaluator} regular
@@ -55,24 +55,21 @@ public class RegexEventEvaluator implements TriggeringEventEvaluator
       if( regex != null )
       {
          // Look for a cached regex pattern
-         RE re = (RE) regexMap.get(regex);
+         Pattern re = (Pattern) regexMap.get(regex);
          if( re == null )
          {
-            try
-            {
-               re = new RE(regex);
-               regexMap.put(regex, re);
-            }
-            catch (REException e)
-            {
-            }
+            re = Pattern.compile(regex);
+            regexMap.put(regex, re);
          }
 
          if( re != null )
          {
             String msg = event.getRenderedMessage();
             if( msg != null )
-               isTriggeringEvent = re.isMatch(msg);
+            {
+               Matcher m = re.matcher(msg);
+               isTriggeringEvent = m.matches();
+            }
          }
       }
       return isTriggeringEvent;

@@ -71,7 +71,6 @@
       <path refid="apache.jaxme.classpath"/>
       <path refid="apache.slide.classpath"/>
       <path refid="dom4j.dom4j.classpath"/>
-      <path refid="gnu.regexp.classpath"/>
       <path refid="wutka.dtdparser.classpath"/>
       <path refid="oswego.concurrent.classpath"/>
     </path>

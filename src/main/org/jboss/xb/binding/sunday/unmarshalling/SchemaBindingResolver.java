@@ -51,7 +51,7 @@ public interface SchemaBindingResolver
     * @param nsUri
     * @param baseUri
     * @param schemaLocation
-    * @return
+    * @return LIInput for the resolved namespace schema if found, null otherwise
     */
    LSInput resolveAsLSInput(String nsUri, String baseUri, String schemaLocation);
 }

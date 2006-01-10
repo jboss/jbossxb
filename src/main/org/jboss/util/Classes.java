@@ -62,25 +62,35 @@ public final class Classes
     */
    public static void displayClassInfo(Class clazz, StringBuffer results)
    {
-      // Print out some codebase info for the ProbeHome
+      // Print out some codebase info for the clazz
       ClassLoader cl = clazz.getClassLoader();
-      results.append("\n"+clazz.getName()+"("+Integer.toHexString(clazz.hashCode())+").ClassLoader="+cl);
+      results.append("\n");
+      results.append(clazz.getName());
+      results.append("(");
+      results.append(Integer.toHexString(clazz.hashCode()));
+      results.append(").ClassLoader=");
+      results.append(cl);
       ClassLoader parent = cl;
       while( parent != null )
       {
-         results.append("\n.."+parent);
+         results.append("\n..");
+         results.append(parent);
          URL[] urls = getClassLoaderURLs(parent);
          int length = urls != null ? urls.length : 0;
          for(int u = 0; u < length; u ++)
          {
-            results.append("\n...."+urls[u]);
+            results.append("\n....");
+            results.append(urls[u]);
          }
          if( parent != null )
             parent = parent.getParent();
       }
       CodeSource clazzCS = clazz.getProtectionDomain().getCodeSource();
       if( clazzCS != null )
-         results.append("\n++++CodeSource: "+clazzCS);
+      {
+         results.append("\n++++CodeSource: ");
+         results.append(clazzCS);
+      }
       else
          results.append("\n++++Null CodeSource");
 
@@ -89,13 +99,21 @@ public final class Classes
       for(int i = 0; i < ifaces.length; i ++)
       {
          Class iface = ifaces[i];
-         results.append("\n++"+iface+"("+Integer.toHexString(iface.hashCode())+")");
+         results.append("\n++");
+         results.append(iface);
+         results.append("(");
+         results.append(Integer.toHexString(iface.hashCode()));
+         results.append(")");
          ClassLoader loader = ifaces[i].getClassLoader();
-         results.append("\n++++ClassLoader: "+loader);
+         results.append("\n++++ClassLoader: ");
+         results.append(loader);
          ProtectionDomain pd = ifaces[i].getProtectionDomain();
          CodeSource cs = pd.getCodeSource();
          if( cs != null )
-            results.append("\n++++CodeSource: "+cs);
+         {
+            results.append("\n++++CodeSource: ");
+            results.append(cs);
+         }
          else
             results.append("\n++++Null CodeSource");
       }

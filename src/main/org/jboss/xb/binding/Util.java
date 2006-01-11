@@ -264,15 +264,14 @@ public final class Util
       if(schemaLocation != null)
       {
          StringTokenizer tokenizer = new StringTokenizer(schemaLocation, " \t\n\r");
-         String ns = tokenizer.nextToken();
-         while(ns != null)
+         while (tokenizer.hasMoreTokens())
          {
-            location = tokenizer.nextToken();
-            if(ns.equals(nsUri))
+            String namespace = tokenizer.nextToken();
+            if (namespace.equals(nsUri) && tokenizer.hasMoreTokens())
             {
+               location = tokenizer.nextToken();
                break;
             }
-            ns = tokenizer.nextToken();
          }
       }
       return location;

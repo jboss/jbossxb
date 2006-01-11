@@ -74,10 +74,12 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    public SchemaBinding resolve(String nsURI, String baseURI, String schemaLocation)
    {
       InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
-
+      
       SchemaBinding schema = null;
       if (is != null)
       {
+         if( baseURI == null )
+            baseURI = this.baseURI;
          schema = XsdBinder.bind(is.getByteStream(), null, baseURI);
       }
       return schema;
@@ -104,6 +106,8 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       boolean trace = log.isTraceEnabled();
       InputSource is = null;
 
+      if( trace )
+         log.trace("getInputSource, nsURI="+nsURI+", baseURI="+baseURI+", schemaLocation="+schemaLocation);
       // First try to resolve the namespace as a systemID
       try
       {
@@ -121,6 +125,8 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
          try
          {
             is = resolver.resolveEntity(null, schemaLocation);
+            if( trace && is != null )
+               log.trace("Resolved schemaLocation as systemID");
          }
          catch (Exception e)
          {
@@ -136,6 +142,8 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
                if (baseURI == null)
                {
                   baseURI = this.baseURI;
+                  if( trace )
+                     log.trace("Using resolver baseURI="+baseURI);
                }
 
                URL schemaURL = null;
@@ -153,6 +161,8 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
                {
                   InputStream is2 = schemaURL.openStream();
                   is = new InputSource(is2);
+                  if( trace )
+                     log.trace("Using resolver schemaURL="+schemaURL);
                }
             }
             catch (Exception e)
@@ -161,6 +171,11 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
                   log.trace("Failed to use schemaLocation as URL", e);
             }
          }
+      }
+      if( trace )
+      {
+         log.trace("getInputSource, nsURI="+nsURI+", baseURI="
+            +baseURI+", schemaLocation="+schemaLocation+", is="+is);
       }
       return is;
    }

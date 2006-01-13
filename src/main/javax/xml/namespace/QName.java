@@ -1,24 +1,24 @@
 /*
-* JBoss, Home of Professional Open Source
-* Copyright 2005, JBoss Inc., and individual contributors as indicated
-* by the @authors tag. See the copyright.txt in the distribution for a
-* full listing of individual contributors.
-*
-* This is free software; you can redistribute it and/or modify it
-* under the terms of the GNU Lesser General Public License as
-* published by the Free Software Foundation; either version 2.1 of
-* the License, or (at your option) any later version.
-*
-* This software is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-* Lesser General Public License for more details.
-*
-* You should have received a copy of the GNU Lesser General Public
-* License along with this software; if not, write to the Free
-* Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-* 02110-1301 USA, or see the FSF site: http://www.fsf.org.
-*/
+ * JBoss, Home of Professional Open Source
+ * Copyright 2005, JBoss Inc., and individual contributors as indicated
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package javax.xml.namespace;
 
 // $Id$
@@ -52,57 +52,13 @@ public class QName implements Serializable
    {
       if (SerialVersion.version == SerialVersion.LEGACY)
          serialVersionUID = 8217399441836960859L;
-      else
+      else 
          serialVersionUID = -3852060120346905000L;
    }
 
    private String namespaceURI;
    private String localPart;
    private String prefix;
-
-   /** QName derived from parsing the formatted String.
-    * If the String is null or does not conform to QName.toString() formatting,
-    * an IllegalArgumentException is thrown.
-    * 
-    * The String MUST be in the form returned by QName.toString(). There is NO
-    * standard specification for representing a QName as a String. The String
-    * format is NOT portable across implementations and will change when a
-    * standard String representation is defined. This implementation currently
-    * parses a String formatted as: "{" + Namespace URI + "}" + local part. If
-    * the Namespace URI .equals(""), only the local part should be provided.
-    * 
-    * The prefix value CANNOT be represented in the String and will be set to ""
-    * 
-    * This method does not do full validation of the resulting QName. In
-    * particular, the local part is not validated as a NCName as specified in
-    * Namespaces in XML.
-    * 
-    * @see #toString()
-    * @param toStringName - a QName string in the format of toString().
-    * @return QName for the toStringName
-    */
-   public static QName valueOf(String toStringName)
-   {
-      String uri = null;
-      String localPart = null;
-
-      StringTokenizer tokenizer = new StringTokenizer(toStringName, "{}");
-      int tokenCount = tokenizer.countTokens();
-
-      if (tokenCount < 1 || tokenCount > 2)
-         throw new IllegalArgumentException("Invalid QName string: " + toStringName);
-
-      if (tokenCount > 1)
-         uri = tokenizer.nextToken();
-
-      localPart = tokenizer.nextToken();
-      return new QName(uri, localPart);
-   }
-
-   public QName(String localPart)
-   {
-      this(null, localPart);
-   }
 
    public QName(String namespaceURI, String localPart)
    {
@@ -142,6 +98,11 @@ public class QName implements Serializable
       if (this.prefix == null)
          this.prefix = "";
    }
+   
+   public QName(String localPart)
+   {
+      this(null, localPart);
+   }
 
    public String getNamespaceURI()
    {
@@ -156,24 +117,6 @@ public class QName implements Serializable
    public String getPrefix()
    {
       return prefix;
-   }
-
-   /** There is NO standard specification for representing a QName as a String.
-    * The returned String is not portable across implementations and will change when a standard String representation is defined.
-    * This implementation currently represents a QName as: "{" + Namespace URI + "}" + local part.
-    * If the Namespace URI .equals(""), only the local part is returned.
-    * An appropriate use of this method is for debugging or logging for human consumption.
-    *
-    * Note the prefix value is NOT returned as part of the String representation.
-    *
-    * @return '{' + namespaceURI + '}' + localPart
-    */
-   public String toString()
-   {
-      if (namespaceURI.equals(""))
-         return localPart;
-      else
-         return '{' + namespaceURI + '}' + localPart;
    }
 
    /** Equality is based on the namespaceURI and localPart
@@ -200,14 +143,59 @@ public class QName implements Serializable
       return hashCode;
    }
 
-   /**
-    * Compares this object with the specified object for order.  Returns a
-    * negative integer, zero, or a positive integer as this object is less
-    * than, equal to, or greater than the specified object.<p>
+   /** There is NO standard specification for representing a QName as a String.
+    * The returned String is not portable across implementations and will change when a standard String representation is defined.
+    * This implementation currently represents a QName as: "{" + Namespace URI + "}" + local part.
+    * If the Namespace URI .equals(""), only the local part is returned.
+    * An appropriate use of this method is for debugging or logging for human consumption.
+    *
+    * Note the prefix value is NOT returned as part of the String representation.
+    *
+    * @return '{' + namespaceURI + '}' + localPart
     */
-   public int compareTo(Object o)
+   public String toString()
    {
-      QName other = (QName)o;
-      return toString().compareTo(other.toString());
+      if (namespaceURI.equals(""))
+         return localPart;
+      else return '{' + namespaceURI + '}' + localPart;
+   }
+   
+   /** QName derived from parsing the formatted String.
+    * If the String is null or does not conform to QName.toString() formatting,
+    * an IllegalArgumentException is thrown.
+    * 
+    * The String MUST be in the form returned by QName.toString(). There is NO
+    * standard specification for representing a QName as a String. The String
+    * format is NOT portable across implementations and will change when a
+    * standard String representation is defined. This implementation currently
+    * parses a String formatted as: "{" + Namespace URI + "}" + local part. If
+    * the Namespace URI .equals(""), only the local part should be provided.
+    * 
+    * The prefix value CANNOT be represented in the String and will be set to ""
+    * 
+    * This method does not do full validation of the resulting QName. In
+    * particular, the local part is not validated as a NCName as specified in
+    * Namespaces in XML.
+    * 
+    * @see #toString()
+    * @param toStringName - a QName string in the format of toString().
+    * @return QName for the toStringName
+    */
+   public static QName valueOf(String toStringName)
+   {
+      String uri = null;
+      String localPart = null;
+
+      StringTokenizer tokenizer = new StringTokenizer(toStringName, "{}");
+      int tokenCount = tokenizer.countTokens();
+
+      if (tokenCount < 1 || tokenCount > 2)
+         throw new IllegalArgumentException("Invalid QName string: " + toStringName);
+
+      if (tokenCount > 1)
+         uri = tokenizer.nextToken();
+
+      localPart = tokenizer.nextToken();
+      return new QName(uri, localPart);
    }
 }

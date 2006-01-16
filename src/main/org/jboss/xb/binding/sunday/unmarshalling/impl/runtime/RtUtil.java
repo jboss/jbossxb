@@ -188,18 +188,9 @@ public class RtUtil
       Class fieldType;
       try
       {
-         String methodBase = Character.toUpperCase(prop.charAt(0)) + prop.substring(1);
-         try
-         {
-            getter = cls.getMethod("get" + methodBase, null);
-         }
-         catch(NoSuchMethodException e)
-         {
-            getter = cls.getMethod("is" + methodBase, null);
-         }
-
+         getter = Classes.getAttributeGetter(cls, prop);
          fieldType = getter.getReturnType();
-         setter = cls.getMethod("set" + methodBase, new Class[]{fieldType});
+         setter = Classes.getAttributeSetter(cls, prop, fieldType);
       }
       catch(NoSuchMethodException e)
       {

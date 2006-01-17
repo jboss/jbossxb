@@ -21,13 +21,12 @@
   */
 package org.jboss.xb.binding;
 
+import java.io.IOException;
+import java.io.Writer;
+import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
-import org.xml.sax.Attributes;
-
-import java.io.Writer;
-import java.io.IOException;
 
 /**
  * org.xml.sax.ContentHandler implementation that serializes an instance of org.jboss.xb.binding.Content
@@ -108,7 +107,7 @@ public class ContentWriter
             write(writer, ' ');
             write(writer, atts.getQName(i));
             write(writer, "=\"");
-            write(writer, atts.getValue(i));
+            writeNormalized(writer, atts.getValue(i));
             write(writer, '\"');
          }
       }
@@ -181,7 +180,7 @@ public class ContentWriter
    public void characters(char ch[], int start, int length)
       throws SAXException
    {
-      write(writer, ch, start, length);
+      writeNormalized(writer, ch, start, length);
    }
 
    public void ignorableWhitespace(char ch[], int start, int length)
@@ -216,6 +215,11 @@ public class ContentWriter
       }
    }
 
+   private static void writeNormalized(Writer writer, String str) throws SAXException
+   {
+      writeNormalized(writer, str.toCharArray(), 0, str.length());
+   }
+
    private static void write(Writer writer, int ch) throws SAXException
    {
       try
@@ -228,11 +232,51 @@ public class ContentWriter
       }
    }
 
-   private static void write(Writer writer, char[] ch, int start, int length) throws SAXException
+   private static void writeNormalized(Writer writer, char[] ch, int start, int length) throws SAXException
    {
       try
       {
-         writer.write(ch, start, length);
+         int left = start;
+         int i = start;
+         while(i < start + length)
+         {
+            char c = ch[i++];
+            if(c == '<')
+            {
+               writer.write(ch, left, i - left - 1);
+               writer.write("&lt;");
+               left = i;
+            }
+            else if(c == '>')
+            {
+               writer.write(ch, left, i - left - 1);
+               writer.write("&gt;");
+               left = i;
+            }
+            else if(c == '&')
+            {
+               writer.write(ch, left, i - left - 1);
+               writer.write("&amp;");
+               left = i;
+            }
+            else if(c == '\'')
+            {
+               writer.write(ch, left, i - left - 1);
+               writer.write("&apos;");
+               left = i;
+            }
+            else if(c == '\"')
+            {
+               writer.write(ch, left, i - left - 1);
+               writer.write("&quot;");
+               left = i;
+            }
+         }
+
+         if(left < i)
+         {
+            writer.write(ch, left, i - left);
+         }
       }
       catch(IOException e)
       {

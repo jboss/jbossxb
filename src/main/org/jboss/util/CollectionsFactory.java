@@ -25,6 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.util.collection.LazyList;
+import org.jboss.util.collection.LazyMap;
+import org.jboss.util.collection.LazySet;
+
 import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 import EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArrayList;
 import EDU.oswego.cs.dl.util.concurrent.CopyOnWriteArraySet;
@@ -40,13 +44,37 @@ public class CollectionsFactory
    /**
     * Defines the map implementation
     */
+   public static final Map createLazyMap()
+   {
+      return new LazyMap();
+   }
+
+   /**
+    * Defines the list implementation
+    */
+   public static final List createLazyList()
+   {
+      return new LazyList();
+   }
+
+   /**
+    * Defines the set implementation
+    */
+   public static final Set createLazySet()
+   {
+      return new LazySet();
+   }
+
+   /**
+    * Defines the concurrent map implementation
+    */
    public static final Map createConcurrentReaderMap()
    {
       return new ConcurrentReaderHashMap();
    }
 
    /**
-    * Defines the list implementation
+    * Defines the concurrent list implementation
     */
    public static final List createCopyOnWriteList()
    {
@@ -54,7 +82,7 @@ public class CollectionsFactory
    }
 
    /**
-    * Defines the set implementation
+    * Defines the concurrent set implementation
     */
    public static final Set createCopyOnWriteSet()
    {

@@ -270,7 +270,9 @@ public class DOMWriter
          // print text
          case Node.TEXT_NODE:
          {
-            out.print(normalize(node.getNodeValue()));
+            String text = normalize(node.getNodeValue());
+            if (prettyprint == false || text.trim().length() > 0)
+               out.print(text);
             break;
          }
 

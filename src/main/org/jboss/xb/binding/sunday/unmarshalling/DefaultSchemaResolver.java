@@ -23,6 +23,9 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Map;
+import java.util.Collections;
+import java.util.HashMap;
 
 import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.logging.Logger;
@@ -42,6 +45,8 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
 
    private String baseURI;
    private JBossEntityResolver resolver;
+   private boolean cacheResolvedSchemas = true;
+   private Map schemasByUri = Collections.EMPTY_MAP;
 
    public DefaultSchemaResolver()
    {
@@ -51,6 +56,30 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    public DefaultSchemaResolver(JBossEntityResolver resolver)
    {
       this.resolver = resolver;
+   }
+
+   /**
+    * @return true if resolved SchemaBinding's are cached, false otherwise
+    */
+   public boolean isCacheResolvedSchemas()
+   {
+      return cacheResolvedSchemas;
+   }
+
+   /**
+    * Passing in true will make the schema resolver to cache successfully resolved
+    * schemas (which is the default) with namespace URI being the identifier of a schema.
+    * False will flush the cache and make the schema resolver to resolve schemas
+    * on each request.
+    * @param cacheResolvedSchemas
+    */
+   public void setCacheResolvedSchemas(boolean cacheResolvedSchemas)
+   {
+      this.cacheResolvedSchemas = cacheResolvedSchemas;
+      if(!cacheResolvedSchemas)
+      {
+         schemasByUri = Collections.EMPTY_MAP;
+      }
    }
 
    public String getBaseURI()
@@ -73,15 +102,30 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
     */
    public SchemaBinding resolve(String nsURI, String baseURI, String schemaLocation)
    {
+      SchemaBinding schema = (SchemaBinding)schemasByUri.get(nsURI);
+      if(schema != null)
+      {
+         return schema;
+      }
+
       InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
       
-      SchemaBinding schema = null;
       if (is != null)
       {
          if( baseURI == null )
             baseURI = this.baseURI;
          schema = XsdBinder.bind(is.getByteStream(), null, baseURI);
       }
+
+      if(schema != null && cacheResolvedSchemas)
+      {
+         if(schemasByUri == Collections.EMPTY_MAP)
+         {
+            schemasByUri = new HashMap();
+         }
+         schemasByUri.put(nsURI, schema);
+      }
+
       return schema;
    }
 

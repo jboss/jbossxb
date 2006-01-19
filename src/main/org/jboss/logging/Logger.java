@@ -90,7 +90,11 @@ public class Logger implements Serializable
     */
    public static void setPluginClassName(String pluginClassName)
    {
-      Logger.pluginClassName = pluginClassName;
+      if( pluginClassName.equals(Logger.pluginClassName) == false )
+      {
+         Logger.pluginClassName = pluginClassName;
+         init();
+      }
    }
 
    /**

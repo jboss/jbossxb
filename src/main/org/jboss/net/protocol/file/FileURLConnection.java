@@ -48,7 +48,7 @@ import java.io.BufferedInputStream;
  */
 public class FileURLConnection extends URLConnection
 {
-   static boolean decodeFilePaths = false;
+   static boolean decodeFilePaths = true;
    static
    {
       String flag = System.getProperty("org.jboss.net.protocol.file.decodeFilePaths");

@@ -76,7 +76,7 @@ public class JBossEntityResolver implements EntityResolver
       registerEntity("http://www.ibm.com/webservices/xsd/j2ee_web_services_1_1.xsd", "j2ee_web_services_1_1.xsd");
       registerEntity("http://www.ibm.com/webservices/xsd/j2ee_jaxrpc_mapping_1_1.xsd", "j2ee_jaxrpc_mapping_1_1.xsd");
       registerEntity("http://www.w3.org/2001/xml.xsd", "xml.xsd");
-      registerEntity("http://www.w3.org/2004/06/xmlmime", "xml-media-types.xsd");
+      registerEntity("http://www.w3.org/2005/05/xmlmime", "xml-media-types.xsd");
 
       // ejb related
       registerEntity("-//Sun Microsystems, Inc.//DTD Enterprise JavaBeans 1.1//EN", "ejb-jar.dtd");

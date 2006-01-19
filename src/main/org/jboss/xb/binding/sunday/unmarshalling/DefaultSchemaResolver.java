@@ -47,6 +47,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    private JBossEntityResolver resolver;
    private boolean cacheResolvedSchemas = true;
    private Map schemasByUri = Collections.EMPTY_MAP;
+   private Map schemaInitByUri = Collections.EMPTY_MAP;
 
    public DefaultSchemaResolver()
    {
@@ -80,6 +81,41 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       {
          schemasByUri = Collections.EMPTY_MAP;
       }
+   }
+
+   /**
+    * Registers an instance of SchemaBindingInitializer for the namespace URI.
+    * When the schema binding that corresponds to the namespace URI
+    * is resolved, the init(SchemaBinding schema) method will be invoked on the
+    * instance of SchemaBindingInitializer with the SchemaBinding returned from the
+    * XsdBinder.bind() method.
+    *
+    * @param nsUri  the namespace URI to register the schema initializer for
+    * @param sbi  an instance of SchemaBindingInitializer
+    */
+   public void addSchemaInitializer(String nsUri, SchemaBindingInitializer sbi)
+   {
+      switch(schemaInitByUri.size())
+      {
+         case 0:
+            schemaInitByUri = Collections.singletonMap(nsUri, sbi);
+            break;
+         case 1:
+            schemaInitByUri = new HashMap(schemaInitByUri);
+         default:
+            schemaInitByUri.put(nsUri, sbi);
+      }
+   }
+
+   /**
+    * Unregisters and returns the SchemaBindingInitializer for the namespace URI.
+    * @param nsUri  the namespace URI to unregister SchemaBindingInitializer for
+    * @return  unregistered SchemaBindingInitializer for the namespace URI or null
+    * if there was no SchemaBindingInitialzer registered for the namespace URI
+    */
+   public SchemaBindingInitializer removeSchemaInitializer(String nsUri)
+   {
+      return (SchemaBindingInitializer)schemaInitByUri.remove(nsUri);
    }
 
    public String getBaseURI()
@@ -117,13 +153,22 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
          schema = XsdBinder.bind(is.getByteStream(), null, baseURI);
       }
 
-      if(schema != null && cacheResolvedSchemas)
+      if(schema != null)
       {
-         if(schemasByUri == Collections.EMPTY_MAP)
+         SchemaBindingInitializer sbi = (SchemaBindingInitializer)schemaInitByUri.get(nsURI);
+         if(sbi != null)
          {
-            schemasByUri = new HashMap();
+            schema = sbi.init(schema);
          }
-         schemasByUri.put(nsURI, schema);
+
+         if(schema != null && cacheResolvedSchemas)
+         {
+            if(schemasByUri == Collections.EMPTY_MAP)
+            {
+               schemasByUri = new HashMap();
+            }
+            schemasByUri.put(nsURI, schema);
+         }
       }
 
       return schema;

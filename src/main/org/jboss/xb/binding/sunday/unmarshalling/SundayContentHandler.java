@@ -77,7 +77,6 @@ public class SundayContentHandler
 
    public void characters(char[] ch, int start, int length)
    {
-      // todo: textContent should be an instvar of StackItem
       StackItem stackItem = (StackItem)stack.peek();
       if(stackItem.particle != null)
       {

@@ -485,6 +485,15 @@ public class XsdBinder
          TypeBinding simpleType = bindSimpleType(schema, type.getSimpleType());
          binding.setSimpleType(simpleType);
       }
+      else if(type.getContentType() == XSComplexTypeDefinition.CONTENTTYPE_MIXED)
+      {
+         TypeBinding stringType = schema.getType(Constants.QNAME_STRING);
+         if(stringType == null)
+         {
+            throw new JBossXBRuntimeException("xsd:string has not been bound yet!");
+         }
+         binding.setSimpleType(stringType);
+      }
 
       if(typeName != null)
       {

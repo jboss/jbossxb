@@ -50,8 +50,11 @@ public class TypeBinding
    private ElementBinding arrayItem;
    /** Map<QName, AttributeBinding>  */
    private Map attrs = Collections.EMPTY_MAP;
-   private ParticleHandler handler = DefaultHandlers.ELEMENT_HANDLER;
+   private ParticleHandler handler;//todo default handlers are now in schema binding = DefaultHandlers.ELEMENT_HANDLER;
+   private ParticleHandler newDefParticleHandler;
+   //private ParticleHandler handler = DefaultHandlers.ELEMENT_HANDLER;
    private CharactersHandler charactersHandler;
+   private CharactersHandler newDefCharHandler;
    private ClassMetaData classMetaData;
    private ValueMetaData valueMetaData;
    private PropertyMetaData propertyMetaData;
@@ -81,6 +84,7 @@ public class TypeBinding
 
    public TypeBinding(QName qName)
    {
+      //this(qName, (CharactersHandler)null);
       this(qName, DefaultHandlers.CHARACTERS_HANDLER);
    }
 
@@ -123,6 +127,26 @@ public class TypeBinding
    public QName getQName()
    {
       return qName;
+   }
+
+   public ParticleHandler getNewDefParticleHandler()
+   {
+      return newDefParticleHandler;
+   }
+
+   public void setNewDefParticleHandler(ParticleHandler newDefaultHandler)
+   {
+      this.newDefParticleHandler = newDefaultHandler;
+   }
+
+   public CharactersHandler getNewDefCharHandler()
+   {
+      return newDefCharHandler;
+   }
+
+   public void setNewDefCharHandler(CharactersHandler newDefCharHandler)
+   {
+      this.newDefCharHandler = newDefCharHandler;
    }
 
    public ElementBinding getElement(QName name)

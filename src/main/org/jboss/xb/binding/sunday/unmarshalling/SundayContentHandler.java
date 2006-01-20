@@ -55,7 +55,6 @@ public class SundayContentHandler
    private final SchemaBinding schema;
    private final SchemaBindingResolver schemaResolver;
 
-   private StringBuffer textContent = new StringBuffer();
    private final StackImpl stack = new StackImpl();
 
    private Object root;
@@ -79,9 +78,14 @@ public class SundayContentHandler
    public void characters(char[] ch, int start, int length)
    {
       // todo: textContent should be an instvar of StackItem
-      if(((StackItem)stack.peek()).particle != null)
+      StackItem stackItem = (StackItem)stack.peek();
+      if(stackItem.particle != null)
       {
-         textContent.append(ch, start, length);
+         if(stackItem.textContent == null)
+         {
+            stackItem.textContent = new StringBuffer(length);
+         }
+         stackItem.textContent.append(ch, start, length);
       }
    }
 
@@ -126,18 +130,18 @@ public class SundayContentHandler
          );
       }
 
-      endElement(item.o, item.particle);
-
-      if(item.restoreParticleHandler != null)
-      {
-         defParticleHandler = item.restoreParticleHandler;
-         defCharHandler = item.restoreCharHandler;
-      }
+      endElement(item.o, item.particle, item.textContent == null ? "" : item.textContent.toString());
 
       // if parent group is choice, it should also be finished
       if(!stack.isEmpty() && ((StackItem)stack.peek()).cursor.getParticle().getTerm() instanceof ChoiceBinding)
       {
          endParticle(pop(), endName);
+      }
+
+      if(item.restoreParticleHandler != null)
+      {
+         defParticleHandler = item.restoreParticleHandler;
+         defCharHandler = item.restoreCharHandler;
       }
    }
 
@@ -471,7 +475,7 @@ public class SundayContentHandler
 
    // Private
 
-   private void endElement(Object o, ParticleBinding particle)
+   private void endElement(Object o, ParticleBinding particle, String textContent)
    {
       ElementBinding element = (ElementBinding)particle.getTerm();
       QName endName = element.getQName();
@@ -523,7 +527,8 @@ public class SundayContentHandler
                {
                   dataContent = StringPropertyReplacer.replaceProperties(dataContent);
                }
-               textContent.delete(0, textContent.length());
+
+               //textContent.delete(0, textContent.length());
             }
 
             Object unmarshalled;
@@ -738,6 +743,7 @@ public class SundayContentHandler
       final ParticleHandler restoreParticleHandler;
       final CharactersHandler restoreCharHandler;
       Object o;
+      StringBuffer textContent;
 
       public StackItem(ModelGroupBinding.Cursor cursor, Object o)
       {

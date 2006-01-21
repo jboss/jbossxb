@@ -23,6 +23,10 @@ package org.jboss.xb.binding;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.security.PrivilegedExceptionAction;
 import java.util.StringTokenizer;
 
 import javax.xml.XMLConstants;
@@ -34,7 +38,6 @@ import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.sunday.unmarshalling.LSInputAdaptor;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
-import org.jboss.xb.binding.sunday.unmarshalling.XsdBinderLoggingErrorHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinderTerminatingErrorHandler;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMErrorHandler;
@@ -413,34 +416,41 @@ public final class Util
 
    private static XSImplementation getXSImplementation()
    {
-      // Get DOM Implementation using DOM Registry
-      ClassLoader loader = Thread.currentThread().getContextClassLoader();
-      try
+      return (XSImplementation) AccessController.doPrivileged(new PrivilegedAction()
       {
-         // Try the 2.6.2 version
-         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
-         loader.loadClass(name);
-         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
-      }
-      catch(ClassNotFoundException e)
-      {
-         // Try the 2.7.0 version
-         String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
-         System.setProperty(DOMImplementationRegistry.PROPERTY, name);
-      }
+         public Object run()
+         {
+            
+            // Get DOM Implementation using DOM Registry
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            try
+            {
+               // Try the 2.6.2 version
+               String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
+               loader.loadClass(name);
+               System.setProperty(DOMImplementationRegistry.PROPERTY, name);
+            }
+            catch(ClassNotFoundException e)
+            {
+               // Try the 2.7.0 version
+               String name = "org.apache.xerces.dom.DOMXSImplementationSourceImpl";
+               System.setProperty(DOMImplementationRegistry.PROPERTY, name);
+            }
 
-      XSImplementation impl;
-      try
-      {
-         DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
-         impl = (XSImplementation)registry.getDOMImplementation("XS-Loader");
-      }
-      catch(Exception e)
-      {
-         log.error("Failed to create schema loader.", e);
-         throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());
-      }
-      return impl;
+            XSImplementation impl;
+            try
+            {
+               DOMImplementationRegistry registry = DOMImplementationRegistry.newInstance();
+               impl = (XSImplementation)registry.getDOMImplementation("XS-Loader");
+            }
+            catch(Exception e)
+            {
+               log.error("Failed to create schema loader.", e);
+               throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());
+            }
+            return impl;
+         }
+      });
    }
 
    // Inner

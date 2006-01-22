@@ -159,14 +159,27 @@ public class TimeoutFactory
     */
    private class TimeoutImpl extends PooledRunner
    {
+      private TimeoutTarget target;
+      Timeout timeout = new Timeout()
+         {
+            public boolean cancel()
+            {
+               target = null;
+               timeout = null;
+               run = null;
+               return TimeoutImpl.this.cancel();
+            }
+         };
 
-      public TimeoutImpl(final TimeoutTarget target) {
+      public TimeoutImpl(final TimeoutTarget theTarget)
+      {
          super();
+         this.target = theTarget;
          this.run = new Runnable()
             {
                public void run()
                {
-                  target.timedOut(TimeoutImpl.this);
+                  target.timedOut(timeout);
                }
             };
       }

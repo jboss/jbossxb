@@ -1289,7 +1289,16 @@ public class XsdBinder
 
       public void setTypeBinding(XSElementDeclaration element, TypeBinding type)
       {
-         elements.put(element, type);
+         switch(elements.size())
+         {
+            case 0:
+               elements = Collections.singletonMap(element, type);
+               break;
+            case 1:
+               elements = new HashMap(elements);
+            default:
+               elements.put(element, type);
+         }
       }
    }
 

@@ -84,6 +84,29 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    }
 
    /**
+    * Registers a SchemaBindingInitializer for the namespace URI.
+    * When the schema binding that corresponds to the namespace URI
+    * is resolved, the init(SchemaBinding schema) method will be invoked on the
+    * instance of SchemaBindingInitializer with the SchemaBinding returned from the
+    * XsdBinder.bind() method.
+    *
+    * @param nsUri  the namespace URI to register the schema initializer for
+    * @param sbiClassName  the class name SchemaBindingInitializer
+    * @throws Exception for any error
+    */
+   public void addSchemaInitializer(String nsUri, String sbiClassName) throws Exception
+   {
+      if (sbiClassName == null)
+         throw new IllegalArgumentException("Null class name");
+      Class clazz = Thread.currentThread().getContextClassLoader().loadClass(sbiClassName);
+      Object object = clazz.newInstance();
+      if (object instanceof SchemaBindingInitializer == false)
+         throw new IllegalArgumentException(clazz.getName() + " is not an instance of " + SchemaBindingInitializer.class.getName());
+      SchemaBindingInitializer sbi = (SchemaBindingInitializer) object;
+      addSchemaInitializer(nsUri, sbi);
+   }
+
+   /**
     * Registers an instance of SchemaBindingInitializer for the namespace URI.
     * When the schema binding that corresponds to the namespace URI
     * is resolved, the init(SchemaBinding schema) method will be invoked on the
@@ -95,6 +118,10 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
     */
    public void addSchemaInitializer(String nsUri, SchemaBindingInitializer sbi)
    {
+      if (nsUri == null)
+         throw new IllegalArgumentException("Null namespace uri");
+      if (sbi == null)
+         throw new IllegalArgumentException("Null schema binding initializer");
       switch(schemaInitByUri.size())
       {
          case 0:
@@ -115,6 +142,8 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
     */
    public SchemaBindingInitializer removeSchemaInitializer(String nsUri)
    {
+      if (nsUri == null)
+         throw new IllegalArgumentException("Null namespace uri");
       return (SchemaBindingInitializer)schemaInitByUri.remove(nsUri);
    }
 

@@ -84,6 +84,31 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    }
 
    /**
+    * Registers a location for the namespace URI.<p>
+    * 
+    * This location is looked using the JBossEntityResolver, i.e. it is a classpath location
+    * 
+    * @param nsUri the namespace location
+    * @param location the classpath location
+    */
+   public void addSchemaLocation(String nsUri, String location)
+   {
+      resolver.registerLocalEntity(nsUri, location);
+   }
+   
+
+   /**
+    * Removes a location for the namespace URI.
+    * 
+    * @todo actually remove it rather than setting null
+    * @param nsUri the namespace location
+    */
+   public void removeSchemaLocation(String nsUri)
+   {
+      resolver.registerLocalEntity(nsUri, null);
+   }
+   
+   /**
     * Registers a SchemaBindingInitializer for the namespace URI.
     * When the schema binding that corresponds to the namespace URI
     * is resolved, the init(SchemaBinding schema) method will be invoked on the
@@ -184,6 +209,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
 
       if(schema != null)
       {
+         schema.setSchemaResolver(this);
          SchemaBindingInitializer sbi = (SchemaBindingInitializer)schemaInitByUri.get(nsURI);
          if(sbi != null)
          {

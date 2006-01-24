@@ -854,7 +854,7 @@ public class XsdBinder
    private static void bindWildcard(SchemaBinding schema, XSParticle particle)
    {
       boolean trace = log.isTraceEnabled();
-      
+
       WildcardBinding binding = new WildcardBinding(schema);
 
       ModelGroupBinding group = (ModelGroupBinding)peekTypeOrGroup();
@@ -878,6 +878,8 @@ public class XsdBinder
       {
          binding.setQName(new QName(wildcard.getNamespace(), wildcard.getName()));
       }
+
+      binding.setProcessContents(wildcard.getProcessContents());
 
       XSAnnotation annotation = wildcard.getAnnotation();
       if(annotation != null)

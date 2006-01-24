@@ -23,6 +23,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.xml.sax.Attributes;
 
 /**
@@ -32,8 +33,13 @@ import org.xml.sax.Attributes;
 public class WildcardBinding
    extends TermBinding
 {
+   private static final short PC_LAX = 3;
+   private static final short PC_SKIP = 2;
+   private static final short PC_STRICT = 1;
+
    private QName qName;
    private SchemaBindingResolver schemaResolver;
+   private short pc;
 
    public WildcardBinding(SchemaBinding schema)
    {
@@ -60,8 +66,50 @@ public class WildcardBinding
       this.schemaResolver = schemaResolver;
    }
 
+   public short getProcessContents()
+   {
+      return pc;
+   }
+
+   public void setProcessContents(short pc)
+   {
+      this.pc = pc;
+      if(pc != PC_LAX && pc != PC_SKIP && pc != PC_STRICT)
+      {
+         throw new JBossXBRuntimeException("Unexpected value for process contents: " + pc);
+      }
+   }
+
+   public boolean isProcessContentsLax()
+   {
+      return pc == PC_LAX;
+   }
+
+   public boolean isProcessContentsSkip()
+   {
+      return pc == PC_SKIP;
+   }
+
+   public boolean isProcessContentsStrict()
+   {
+      return pc == PC_STRICT;
+   }
+
    public ElementBinding getElement(QName qName, Attributes attrs)
    {
+      // todo: this is quick & dirty. and this method is currently called TWICE for each element...
+      if(pc == PC_SKIP)
+      {
+         WildcardBinding wc = new WildcardBinding(schema);
+         wc.setProcessContents(pc);
+         ParticleBinding particle = new ParticleBinding(wc);
+         TypeBinding type = new TypeBinding();
+         SequenceBinding sequence = new SequenceBinding(schema);
+         sequence.addParticle(particle);
+         type.setParticle(new ParticleBinding(sequence));
+         return new ElementBinding(schema, qName, type);
+      }
+
       ElementBinding element = null;
       // first, look into the own schema
       if(schema != null)
@@ -88,6 +136,19 @@ public class WildcardBinding
             }
          }
       }
+
+      if(element == null && pc == PC_LAX)
+      {
+         WildcardBinding wc = new WildcardBinding(schema);
+         wc.setProcessContents(pc);
+         ParticleBinding particle = new ParticleBinding(wc);
+         TypeBinding type = new TypeBinding();
+         SequenceBinding sequence = new SequenceBinding(schema);
+         sequence.addParticle(particle);
+         type.setParticle(new ParticleBinding(sequence));
+         element = new ElementBinding(schema, qName, type);         
+      }
+
       return element;
    }
 

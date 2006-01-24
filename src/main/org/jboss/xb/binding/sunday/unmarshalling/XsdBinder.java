@@ -885,7 +885,10 @@ public class XsdBinder
       if(annotation != null)
       {
          if (trace)
+         {
             log.trace(group + " annotation");
+         }
+
          XsdAnnotation xsdAn = XsdAnnotation.unmarshal(annotation.getAnnotationString());
          XsdAppInfo appInfo = xsdAn.getAppInfo();
          if(appInfo != null)
@@ -901,7 +904,7 @@ public class XsdBinder
                   );
                }
             }
-            type.setWildcardPropertyMetaData(propertyMetaData);
+            binding.setPropertyMetaData(propertyMetaData);
          }
       }
    }

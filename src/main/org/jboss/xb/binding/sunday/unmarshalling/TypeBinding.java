@@ -63,7 +63,6 @@ public class TypeBinding
    private TypeBinding baseType;
    private boolean skip;
    private CharactersMetaData charMetaData;
-   private PropertyMetaData wildcardPropertyMetaData;
    private AddMethodMetaData addMethodMetaData;
    private ValueAdapter valueAdapter = ValueAdapter.NOOP;
    private Boolean startElementCreatesObject;
@@ -430,16 +429,6 @@ public class TypeBinding
       this.charMetaData = charMetaData;
    }
 
-   public PropertyMetaData getWildcardPropertyMetaData()
-   {
-      return wildcardPropertyMetaData;
-   }
-
-   public void setWildcardPropertyMetaData(PropertyMetaData wildcardPropertyMetaData)
-   {
-      this.wildcardPropertyMetaData = wildcardPropertyMetaData;
-   }
-
    public void setAddMethodMetaData(AddMethodMetaData addMethodMetaData)
    {
       this.addMethodMetaData = addMethodMetaData;
@@ -474,6 +463,11 @@ public class TypeBinding
    public void setWildcard(WildcardBinding wildcard)
    {
       this.wildcard = wildcard;
+   }
+
+   public WildcardBinding getWildcard()
+   {
+      return wildcard;
    }
 
    public boolean hasWildcard()

@@ -60,6 +60,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.xml.sax.Attributes;
 
 /**
@@ -270,7 +271,11 @@ public class RtElementHandler
             PropertyMetaData propertyMetaData = null;
             if(parentTerm != null && !parentTerm.isModelGroup())
             {
-               propertyMetaData = ((ElementBinding)parentTerm).getType().getWildcardPropertyMetaData();
+               // todo: this smells
+               ElementBinding parentElement = (ElementBinding)parentTerm;
+               TypeBinding parentType = parentElement.getType();
+               WildcardBinding wildcard = parentType.getWildcard();
+               propertyMetaData = wildcard == null ? null : wildcard.getPropertyMetaData();
             }
 
             if(propertyMetaData == null)

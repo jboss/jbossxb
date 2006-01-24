@@ -384,7 +384,8 @@ public class JBossEntityResolver implements EntityResolver
       }
       catch (IOException e)
       {
-         log.debug("Failed to obtain URL.InputStream from systemId: " + systemId, e);
+         if (trace)
+            log.trace("Failed to obtain URL.InputStream from systemId: " + systemId, e);
       }
       return inputSource;
   }
@@ -418,6 +419,10 @@ public class JBossEntityResolver implements EntityResolver
             filename = path.substring(slash + 1);
          else
             filename = path;
+
+         if(path.length() == 0)
+            return null;
+
          if (trace)
             log.trace("Mapped systemId to filename: " + filename);
       }

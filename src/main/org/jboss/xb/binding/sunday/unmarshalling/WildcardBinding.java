@@ -24,6 +24,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
 /**
@@ -33,6 +34,8 @@ import org.xml.sax.Attributes;
 public class WildcardBinding
    extends TermBinding
 {
+   private static final Logger log = Logger.getLogger(WildcardBinding.class);
+
    private static final short PC_LAX = 3;
    private static final short PC_SKIP = 2;
    private static final short PC_STRICT = 1;
@@ -40,6 +43,9 @@ public class WildcardBinding
    private QName qName;
    private SchemaBindingResolver schemaResolver;
    private short pc;
+
+   private ParticleHandler unresolvedElementHandler;
+   private CharactersHandler unresolvedCharactersHandler;
 
    public WildcardBinding(SchemaBinding schema)
    {
@@ -95,19 +101,31 @@ public class WildcardBinding
       return pc == PC_STRICT;
    }
 
+   public ParticleHandler getUnresolvedElementHandler()
+   {
+      return unresolvedElementHandler;
+   }
+
+   public void setUnresolvedElementHandler(ParticleHandler unresolvedElementHandler)
+   {
+      this.unresolvedElementHandler = unresolvedElementHandler;
+   }
+
+   public CharactersHandler getUnresolvedCharactersHandler()
+   {
+      return unresolvedCharactersHandler;
+   }
+
+   public void setUnresolvedCharactersHandler(CharactersHandler unresolvedCharactersHandler)
+   {
+      this.unresolvedCharactersHandler = unresolvedCharactersHandler;
+   }
+
    public ElementBinding getElement(QName qName, Attributes attrs)
    {
-      // todo: this is quick & dirty. and this method is currently called TWICE for each element...
       if(pc == PC_SKIP)
       {
-         WildcardBinding wc = new WildcardBinding(schema);
-         wc.setProcessContents(pc);
-         ParticleBinding particle = new ParticleBinding(wc);
-         TypeBinding type = new TypeBinding();
-         SequenceBinding sequence = new SequenceBinding(schema);
-         sequence.addParticle(particle);
-         type.setParticle(new ParticleBinding(sequence));
-         return new ElementBinding(schema, qName, type);
+         return getUnresolvedElement(qName);
       }
 
       ElementBinding element = null;
@@ -139,17 +157,50 @@ public class WildcardBinding
 
       if(element == null && pc == PC_LAX)
       {
-         WildcardBinding wc = new WildcardBinding(schema);
-         wc.setProcessContents(pc);
-         ParticleBinding particle = new ParticleBinding(wc);
-         TypeBinding type = new TypeBinding();
-         SequenceBinding sequence = new SequenceBinding(schema);
-         sequence.addParticle(particle);
-         type.setParticle(new ParticleBinding(sequence));
-         element = new ElementBinding(schema, qName, type);         
+         element = getUnresolvedElement(qName);
       }
 
       return element;
+   }
+
+   /**
+    * todo: this method is called for each unresolved element TWICE currently
+    * because getElement() is called TWICE. Look into fixing this!
+    * @param qName
+    * @return
+    */
+   private ElementBinding getUnresolvedElement(QName qName)
+   {
+      if(log.isTraceEnabled())
+      {
+         log.trace("getUnresolvedElement for " + qName);
+      }
+
+      if(unresolvedElementHandler == null)
+      {
+         throw new JBossXBRuntimeException(
+            "Schema could not be resolved for wildcard content element " + qName +
+            " and particle handler for unresolved wildcard content elements is not initialized."
+         );
+      }
+
+      // todo "clone" wildcard or pass this?
+      //WildcardBinding wc = new WildcardBinding(schema);
+      //wc.setProcessContents(pc);
+      //wc.setUnresolvedElementHandler(unresolvedElementHandler);
+      //wc.setUnresolvedCharactersHandler(unresolvedCharactersHandler);
+
+      // todo this stuff could be cached
+      ParticleBinding particle = new ParticleBinding(this);
+      SequenceBinding sequence = new SequenceBinding(schema);
+      sequence.addParticle(particle);
+
+      TypeBinding type = new TypeBinding();
+      type.setHandler(unresolvedElementHandler);
+      type.setSimpleType(unresolvedCharactersHandler);
+      type.setParticle(new ParticleBinding(sequence));
+
+      return new ElementBinding(schema, qName, type);
    }
 
    public boolean isSkip()

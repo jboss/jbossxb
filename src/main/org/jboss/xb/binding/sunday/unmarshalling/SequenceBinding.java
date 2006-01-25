@@ -332,9 +332,9 @@ public class SequenceBinding
             return groupStack;
          }
 
-         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups)
+         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups, boolean ignoreWildcards)
          {
-            return getElement(sequence, qName, atts, passedGroups);
+            return getElement(sequence, qName, atts, passedGroups, ignoreWildcards);
          }
       };
    }

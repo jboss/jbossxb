@@ -151,9 +151,9 @@ public abstract class ModelGroupBinding
          return startElement(qName, attrs, Collections.EMPTY_SET, Collections.EMPTY_LIST, true);
       }
 
-      public ElementBinding getElement(QName qName, Attributes attrs)
+      public ElementBinding getElement(QName qName, Attributes attrs, boolean ignoreWildcards)
       {
-         return getElement(qName, attrs, Collections.EMPTY_SET);
+         return getElement(qName, attrs, Collections.EMPTY_SET, ignoreWildcards);
       }
 
       public abstract void endElement(QName qName);
@@ -168,9 +168,9 @@ public abstract class ModelGroupBinding
                                            List groupStack,
                                            boolean required);
 
-      protected abstract ElementBinding getElement(QName qName, Attributes atts, Set passedGroups);
+      protected abstract ElementBinding getElement(QName qName, Attributes atts, Set passedGroups, boolean ignoreWildcards);
 
-      protected ElementBinding getElement(List group, QName qName, Attributes atts, Set passedGroups)
+      protected ElementBinding getElement(List group, QName qName, Attributes atts, Set passedGroups, boolean ignoreWildcards)
       {
          ElementBinding element = null;
          for(int i = 0; i < group.size(); ++i)
@@ -202,7 +202,7 @@ public abstract class ModelGroupBinding
                         passedGroups.add(this);
                   }
 
-                  ElementBinding e = modelGroup.newCursor(nextParticle).getElement(qName, atts, passedGroups);
+                  ElementBinding e = modelGroup.newCursor(nextParticle).getElement(qName, atts, passedGroups, ignoreWildcards);
                   if(e != null)
                   {
                      element = e;
@@ -216,7 +216,7 @@ public abstract class ModelGroupBinding
                   }
                }
             }
-            else if(item instanceof WildcardBinding)
+            else if(item instanceof WildcardBinding && !ignoreWildcards)
             {
                WildcardBinding wildcard = (WildcardBinding)item;
                ElementBinding e = wildcard.getElement(qName, atts);

@@ -139,7 +139,7 @@ public class AllBinding
             return groupStack;
          }
 
-         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups)
+         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups, boolean ignoreWildcards)
          {
             ParticleBinding particle = (ParticleBinding)elements.get(qName);
             return particle == null ? null : (ElementBinding)particle.getTerm();

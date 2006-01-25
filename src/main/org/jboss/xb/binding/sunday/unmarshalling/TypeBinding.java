@@ -128,21 +128,21 @@ public class TypeBinding
 
    public ElementBinding getElement(QName name)
    {
-      return getElement(name, null);
+      return getElement(name, true);
    }
 
-   public ElementBinding getElement(QName name, Attributes atts)
+   private ElementBinding getElement(QName name, boolean ignoreWildcards)
    {
       ElementBinding element = null;
       if(particle != null)
       {
          ModelGroupBinding modelGroup = (ModelGroupBinding)particle.getTerm();
-         element = modelGroup.newCursor(particle).getElement(name, atts);
+         element = modelGroup.newCursor(particle).getElement(name, null, ignoreWildcards);
       }
 
-      if(element == null && wildcard != null)
+      if(element == null && !ignoreWildcards && wildcard != null)
       {
-         element = wildcard.getElement(name, atts);
+         element = wildcard.getElement(name, null);
       }
       return element;
    }

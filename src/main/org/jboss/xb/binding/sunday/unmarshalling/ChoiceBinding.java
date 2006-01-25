@@ -272,9 +272,9 @@ public class ChoiceBinding
             return groupStack;
          }
 
-         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups)
+         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups, boolean ignoreWildcards)
          {
-            return getElement(choices, qName, atts, passedGroups);
+            return getElement(choices, qName, atts, passedGroups, ignoreWildcards);
          }
       };
    }

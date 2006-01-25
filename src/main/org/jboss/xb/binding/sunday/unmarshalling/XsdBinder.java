@@ -220,7 +220,11 @@ public class XsdBinder
       // read annotations. for now just log the ones that are going to be used
       XSObjectList annotations = model.getAnnotations();
       if (trace)
+      {
+         log.trace("started binding schema " + schema);
          log.trace("Schema annotations: " + annotations.getLength());
+      }
+
       for(int i = 0; i < annotations.getLength(); ++i)
       {
          XSAnnotation annotation = (XSAnnotation)annotations.item(i);
@@ -277,6 +281,11 @@ public class XsdBinder
       {
          XSElementDeclaration element = (XSElementDeclaration)elements.item(i);
          bindElement(schema, element, sharedElements, 1, 0, false);
+      }
+
+      if (trace)
+      {
+         log.trace("finished binding schema " + schema);
       }
 
       xsdBinding.set(null);

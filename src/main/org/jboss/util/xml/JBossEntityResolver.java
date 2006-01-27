@@ -123,6 +123,7 @@ public class JBossEntityResolver implements EntityResolver
       registerEntity("-//JBoss//DTD JBOSS JCA Config 1.0//EN", "jboss-ds_1_0.dtd");
       registerEntity("-//JBoss//DTD JBOSS JCA Config 1.5//EN", "jboss-ds_1_5.dtd");
       registerEntity("http://www.jboss.org/j2ee/schema/security-config_4_0.xsd", "security-config_4_0.xsd");
+      registerEntity("urn:jboss:aop-deployer", "aop-deployer_1_1.xsd");
       registerEntity("urn:jboss:bean-deployer", "bean-deployer_1_0.xsd");
       registerEntity("urn:jboss:security-config:4.1", "security-config_4_1.xsd");
       registerEntity("urn:jboss:security-config:5.0", "security-config_5_0.xsd");

@@ -286,10 +286,10 @@ public class TimeoutFactory
    {
       if (cancelled == true)
          throw new IllegalStateException("TimeoutFactory has been cancelled");      
-      if (time <= 0)
-         throw new IllegalArgumentException("Time not positive");
+      if (time < 0)
+         throw new IllegalArgumentException("Negative time");
       if (target == null)
-         throw new IllegalArgumentException("Null target");
+         throw new IllegalArgumentException("Null timeout target");
       
       return newTimeout(time, target);
    }
@@ -525,6 +525,7 @@ public class TimeoutFactory
       {
          timeout = q[size] = freeList;
          freeList = timeout.nextFree;
+         timeout.nextFree = null;
          // INV: checkFreeList();
          // INV: assertExpr(timeout.index == TimeoutImpl.DONE);
       }
@@ -615,9 +616,22 @@ public class TimeoutFactory
          // Do work, if any
          if (work != null)
          {
-            // Create a new thread to do the callback.
+            // Wrap the TimeoutImpl with a runnable that invokes the target callback
             TimeoutWorker worker = new TimeoutWorker(work);
-            threadPool.run(worker);
+            try
+            {
+               threadPool.run(worker);
+            }
+            catch (Throwable t)
+            {
+               // protect the worker thread from pool enqueue errors
+               ThrowableHandler.add(ThrowableHandler.Type.ERROR, t);
+            }
+            synchronized (work)
+            {
+               // maybe we should have a state POOL_ENQUEUE_FAILED
+               work.index = TimeoutImpl.DONE;
+            }            
          }
       }
       
@@ -684,7 +698,7 @@ public class TimeoutFactory
    }
    
    /**
-    *  A worker thread that fires the timeout.
+    *  A runnable that fires the timeout callback
     */
    private static class TimeoutWorker implements Runnable
    {
@@ -711,10 +725,12 @@ public class TimeoutFactory
          }
          catch (Throwable t)
          {
+            // protect the thread pool thread from receiving this error
             ThrowableHandler.add(ThrowableHandler.Type.ERROR, t);
          }
          synchronized (work)
          {
+            // maybe we should have a state EXECUTION_FAILED
             work.index = TimeoutImpl.DONE;
          }
       }

@@ -23,6 +23,8 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
+
+import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
 /**
@@ -34,6 +36,9 @@ import org.xml.sax.Attributes;
 public class DefaultElementHandler
    implements ElementHandler, ParticleHandler
 {
+   /** The log */
+   private static final Logger log = Logger.getLogger(DefaultElementHandler.class);
+   
    public static final DefaultElementHandler INSTANCE = new DefaultElementHandler();
 
    private AttributesHandler attrsHandler;
@@ -68,6 +73,8 @@ public class DefaultElementHandler
 
    public void setParent(Object parent, Object o, QName qName, ElementBinding element, ElementBinding parentElement)
    {
+      if (log.isTraceEnabled())
+         log.trace("Not setting " + o + " on " + parent + " for " + qName);
    }
 
    // ParticleHandler impl

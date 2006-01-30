@@ -46,6 +46,7 @@ public class WildcardBinding
 
    private ParticleHandler unresolvedElementHandler;
    private CharactersHandler unresolvedCharactersHandler;
+   private ParticleHandler wildcardHandler;
 
    public WildcardBinding(SchemaBinding schema)
    {
@@ -99,6 +100,16 @@ public class WildcardBinding
    public boolean isProcessContentsStrict()
    {
       return pc == PC_STRICT;
+   }
+
+   public void setWildcardHandler(ParticleHandler wildcardHandler)
+   {
+      this.wildcardHandler = wildcardHandler;
+   }
+
+   public ParticleHandler getWildcardHandler()
+   {
+      return wildcardHandler;
    }
 
    public ParticleHandler getUnresolvedElementHandler()

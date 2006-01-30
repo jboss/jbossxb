@@ -591,13 +591,19 @@ public class SundayContentHandler
       // todo yack...
       if(i == 0)
       {
+         ParticleHandler wildcardHandler = null; 
+         
          ParticleBinding parentParticle = null;
          for(int j = 0; j < stack.size(); ++j)
          {
-            ParticleBinding peeked = ((StackItem)stack.peek(j)).particle;
+            StackItem item = (StackItem) stack.peek(j);
+            ParticleBinding peeked = item.particle;
             if(peeked != null && peeked.getTerm() instanceof ElementBinding)
             {
                parentParticle = peeked;
+               WildcardBinding wildcard = ((ElementBinding) parentParticle.getTerm()).getType().getWildcard();
+               if (wildcard != null)
+                  wildcardHandler = wildcard.getWildcardHandler();
                break;
             }
          }
@@ -608,7 +614,10 @@ public class SundayContentHandler
             {
                throw new JBossXBRuntimeException(endName + " is null!");
             } */
-            handler.setParent(parent, o, endName, particle, parentParticle);
+            if (wildcardHandler != null)
+               wildcardHandler.setParent(parent, o, endName, particle, parentParticle);
+            else
+               handler.setParent(parent, o, endName, particle, parentParticle);
          }
          else if(parentParticle != null &&
             ((ElementBinding)parentParticle.getTerm()).getType().hasWildcard() &&

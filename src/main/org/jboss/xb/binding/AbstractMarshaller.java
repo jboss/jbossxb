@@ -21,25 +21,24 @@
   */
 package org.jboss.xb.binding;
 
-import org.jboss.logging.Logger;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.namespace.QName;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Writer;
 import java.lang.reflect.Method;
-import java.util.List;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
-import java.io.Writer;
-import java.io.InputStreamReader;
-import java.io.InputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.net.MalformedURLException;
+import javax.xml.namespace.QName;
+import javax.xml.parsers.ParserConfigurationException;
+import org.jboss.logging.Logger;
+import org.xml.sax.SAXException;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -101,15 +100,20 @@ public abstract class AbstractMarshaller
                                        String schemaUrl,
                                        ObjectModelProvider provider)
    {
-      ClassMapping mapping = new ClassMapping(
-         cls,
+      GenericObjectModelProvider delProv = null;
+      if(provider != null)
+      {
+         delProv = provider instanceof GenericObjectModelProvider ?
+         (GenericObjectModelProvider)provider :
+         new DelegatingObjectModelProvider(provider);
+      }
+
+      ClassMapping mapping = new ClassMapping(cls,
          localName,
          null,
          namespaceUri,
          schemaUrl,
-         provider instanceof GenericObjectModelProvider ?
-         (GenericObjectModelProvider)provider :
-         new DelegatingObjectModelProvider(provider)
+         delProv
       );
 
       addClassMapping(mapping);
@@ -121,8 +125,7 @@ public abstract class AbstractMarshaller
                                     String schemaUrl,
                                     ObjectModelProvider provider)
    {
-      ClassMapping mapping = new ClassMapping(
-         cls,
+      ClassMapping mapping = new ClassMapping(cls,
          null,
          localName,
          nsUri,
@@ -214,9 +217,9 @@ public abstract class AbstractMarshaller
    }
 
    static Object provideChildren(ObjectModelProvider provider,
-                                       Object parent,
-                                       String namespaceUri,
-                                       String name)
+                                 Object parent,
+                                 String namespaceUri,
+                                 String name)
    {
       Class providerClass = provider.getClass();
       Class parentClass = parent.getClass();
@@ -247,9 +250,9 @@ public abstract class AbstractMarshaller
    }
 
    static Object provideValue(ObjectModelProvider provider,
-                                    Object parent,
-                                    String namespaceUri,
-                                    String name)
+                              Object parent,
+                              String namespaceUri,
+                              String name)
    {
       Class providerClass = provider.getClass();
       Class parentClass = parent.getClass();
@@ -279,9 +282,9 @@ public abstract class AbstractMarshaller
    }
 
    static Object provideAttributeValue(ObjectModelProvider provider,
-                                             Object object,
-                                             String namespaceUri,
-                                             String name)
+                                       Object object,
+                                       String namespaceUri,
+                                       String name)
    {
       Class providerClass = provider.getClass();
       Class objectClass = object.getClass();

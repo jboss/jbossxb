@@ -806,9 +806,12 @@ public class XercesXsMarshaller
       XSModel parentModel = this.model;
 
       this.root = o;
-      this.provider = mapping.provider;
       this.stack = new StackImpl();
       this.model = mapping.schemaUrl == null ? this.model : Util.loadSchema(mapping.schemaUrl, schemaResolver);
+      if(mapping.provider != null)
+      {
+         this.provider = mapping.provider;
+      }
 
       boolean marshalled;
       if(mapping.elementName != null)

@@ -26,6 +26,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.xerces.xs.StringList;
@@ -55,7 +57,11 @@ import org.apache.xerces.xs.XSWildcard;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.jboss.util.Classes;
 import org.xml.sax.SAXException;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.Locator;
+import org.xml.sax.Attributes;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -100,8 +106,12 @@ public class XercesXsMarshaller
 
    private String simpleContentProperty = "value";
 
+   private Map field2WildcardMap = Collections.EMPTY_MAP;
+
    private MarshallingContext ctx = new MarshallingContext()
    {
+      private ContentHandler ch;
+
       public FieldBinding getFieldBinding()
       {
          throw new UnsupportedOperationException("getFieldBinding is not implemented.");
@@ -129,7 +139,31 @@ public class XercesXsMarshaller
       {
          return simpleContentProperty;
       }
+
+      public ContentHandler getContentHandler()
+      {
+         if(ch == null)
+         {
+            ch = new ContentHandlerAdaptor();
+         }
+         return ch;
+      }
    };
+
+   public void mapFieldToWildcard(Class cls, String field, ObjectLocalMarshaller marshaller)
+   {
+      FieldToWildcardMapping mapping = new FieldToWildcardMapping(cls, field, marshaller);
+      switch(field2WildcardMap.size())
+      {
+         case 0:
+            field2WildcardMap = Collections.singletonMap(cls, mapping);
+            break;
+         case 1:
+            field2WildcardMap = new HashMap(field2WildcardMap);
+         default:
+            field2WildcardMap.put(cls, mapping);
+      }
+   }
 
    public String getSimpleContentProperty()
    {
@@ -704,6 +738,45 @@ public class XercesXsMarshaller
             break;
          case XSConstants.WILDCARD:
             o = stack.peek();
+
+            boolean popWildcardValue = false;
+            ObjectLocalMarshaller marshaller = null;
+            FieldToWildcardMapping mapping = (FieldToWildcardMapping)field2WildcardMap.get(o.getClass());
+            if(mapping != null)
+            {
+               marshaller = mapping.marshaller;
+               if(mapping.getter != null)
+               {
+                  try
+                  {
+                     o = mapping.getter.invoke(o, null);
+                  }
+                  catch(Exception e)
+                  {
+                     throw new JBossXBRuntimeException(
+                        "Failed to invoke getter " + mapping.getter.getName() + " on " + o.getClass() +
+                        " to get wildcard value: " + e.getMessage()
+                     );
+                  }
+               }
+               else
+               {
+                  try
+                  {
+                     o = mapping.field.get(o);
+                  }
+                  catch(Exception e)
+                  {
+                     throw new JBossXBRuntimeException(
+                        "Failed to invoke get on field " + mapping.field.getName() + " in " + o.getClass() +
+                        " to get wildcard value: " + e.getMessage()
+                     );
+                  }
+               }
+               stack.push(o);
+               popWildcardValue = true;
+            }
+
             i = o != null && isRepeatable(particle) ? getIterator(o) : null;
             if(i != null)
             {
@@ -711,15 +784,19 @@ public class XercesXsMarshaller
                while(i.hasNext() && marshalled)
                {
                   Object value = i.next();
-                  stack.push(value);
-                  marshalled = marshalWildcard(particle, declareNs);
-                  stack.pop();
+                  marshalled = marshalWildcardOccurence(particle, marshaller, value, declareNs);
                }
             }
             else
             {
-               marshalled = marshalWildcard(particle, declareNs);
+               marshalled = marshalWildcardOccurence(particle, marshaller, o, declareNs);
             }
+
+            if(popWildcardValue)
+            {
+               stack.pop();
+            }
+
             break;
          case XSConstants.ELEMENT_DECLARATION:
             XSElementDeclaration element = (XSElementDeclaration)term;
@@ -757,6 +834,34 @@ public class XercesXsMarshaller
             break;
          default:
             throw new IllegalStateException("Unexpected term type: " + term.getType());
+      }
+      return marshalled;
+   }
+
+   private boolean marshalWildcardOccurence(XSParticle particle,
+                                            ObjectLocalMarshaller marshaller,
+                                            Object value,
+                                            boolean declareNs)
+   {
+      boolean marshalled = true;
+      if(marshaller != null)
+      {
+         java.io.StringWriter writer = new java.io.StringWriter();
+         marshaller.marshal(ctx, value);
+         StringBuffer buffer = writer.getBuffer();
+         int length = buffer.length();
+         if(length > 0)
+         {
+            char[] chr = new char[length];
+            buffer.getChars(0, length, chr, 0);
+            content.characters(chr, 0, length);
+         }
+      }
+      else
+      {
+         stack.push(value);
+         marshalled = marshalWildcard(particle, declareNs);
+         stack.pop();
       }
       return marshalled;
    }
@@ -1291,5 +1396,141 @@ public class XercesXsMarshaller
             return Array.getLength(array);
          }
       };
+   }
+
+   private class FieldToWildcardMapping
+   {
+      public final Class cls;
+      public final String fieldName;
+      public final ObjectLocalMarshaller marshaller;
+      public final Method getter;
+      public final Field field;
+
+      public FieldToWildcardMapping(Class cls, String field, ObjectLocalMarshaller marshaller)
+      {
+         this.cls = cls;
+         this.fieldName = field;
+         this.marshaller = marshaller;
+
+         if(log.isTraceEnabled())
+         {
+            log.trace("new FieldToWildcardMapping: [cls=" +
+               cls.getName() +
+               ",field=" +
+               field +
+               "]"
+            );
+         }
+
+         Method localGetter = null;
+         Field localField = null;
+
+         try
+         {
+            localGetter = Classes.getAttributeGetter(cls, field);
+         }
+         catch(NoSuchMethodException e)
+         {
+            try
+            {
+               localField = cls.getField(field);
+            }
+            catch(NoSuchFieldException e1)
+            {
+               throw new JBossXBRuntimeException("Neither getter nor field where found for " + field + " in " + cls);
+            }
+         }
+
+         this.getter = localGetter;
+         this.field = localField;
+      }
+
+      public boolean equals(Object o)
+      {
+         if(this == o)
+         {
+            return true;
+         }
+         if(!(o instanceof FieldToWildcardMapping))
+         {
+            return false;
+         }
+
+         final FieldToWildcardMapping fieldToWildcardMapping = (FieldToWildcardMapping)o;
+
+         if(!cls.equals(fieldToWildcardMapping.cls))
+         {
+            return false;
+         }
+         if(!fieldName.equals(fieldToWildcardMapping.fieldName))
+         {
+            return false;
+         }
+
+         return true;
+      }
+
+      public int hashCode()
+      {
+         int result;
+         result = cls.hashCode();
+         result = 29 * result + fieldName.hashCode();
+         return result;
+      }
+   }
+
+   private class ContentHandlerAdaptor
+      implements ContentHandler
+   {
+      public void setDocumentLocator(Locator locator)
+      {
+      }
+
+      public void startDocument() throws SAXException
+      {
+         content.startDocument();
+      }
+
+      public void endDocument() throws SAXException
+      {
+         content.endDocument();
+      }
+
+      public void startPrefixMapping(String prefix, String uri) throws SAXException
+      {
+         content.startPrefixMapping(prefix, uri);
+      }
+
+      public void endPrefixMapping(String prefix) throws SAXException
+      {
+         content.endPrefixMapping(prefix);
+      }
+
+      public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException
+      {
+         content.startElement(uri, localName, qName, atts);
+      }
+
+      public void endElement(String uri, String localName, String qName) throws SAXException
+      {
+         content.endElement(uri, localName, qName);
+      }
+
+      public void characters(char ch[], int start, int length) throws SAXException
+      {
+         content.characters(ch, start, length);
+      }
+
+      public void ignorableWhitespace(char ch[], int start, int length) throws SAXException
+      {
+      }
+
+      public void processingInstruction(String target, String data) throws SAXException
+      {
+      }
+
+      public void skippedEntity(String name) throws SAXException
+      {
+      }
    }
 }

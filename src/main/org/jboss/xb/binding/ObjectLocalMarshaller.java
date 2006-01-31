@@ -21,31 +21,12 @@
   */
 package org.jboss.xb.binding;
 
-import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
-import org.xml.sax.ContentHandler;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface MarshallingContext
+public interface ObjectLocalMarshaller
 {
-   FieldBinding getFieldBinding();
-
-   /**
-    * @return true if current attribute is required, false otherwise
-    */
-   boolean isAttributeRequired();
-
-   /**
-    * @return  true if the element being marshalled has a complex type
-    */
-   boolean isTypeComplex();
-
-   /**
-    * @return the name of the property a simple content of a complex type is bound to
-    */
-   String getSimpleContentProperty();
-
-   ContentHandler getContentHandler();
+   void marshal(MarshallingContext ctx, Object o);
 }

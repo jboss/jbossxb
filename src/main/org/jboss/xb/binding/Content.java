@@ -21,13 +21,12 @@
   */
 package org.jboss.xb.binding;
 
+import java.io.StringWriter;
+import java.util.LinkedList;
+import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
-import org.jboss.logging.Logger;
-
-import java.util.LinkedList;
-import java.io.StringWriter;
 
 /**
  * An instance of this class represents XML content.
@@ -36,8 +35,8 @@ import java.io.StringWriter;
  * And on marshalling, first, an instance of this class is created and then it
  * is serialized into XML content with org.jboss.xb.binding.ContentWriter.
  *
- * @version <tt>$Revision$</tt>
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @version <tt>$Revision$</tt>
  */
 public class Content
 {
@@ -120,6 +119,26 @@ public class Content
             Characters ch = (Characters)item;
             handler.characters(ch.ch, ch.start, ch.length);
          }
+         else if(item instanceof StartPrefixMapping)
+         {
+/*
+            if(log.isTraceEnabled())
+            {
+               StartPrefixMapping startPrefix = (StartPrefixMapping)item;
+               log.trace("start prefix mapping: " + startPrefix.prefix + "=" + startPrefix.uri);
+            }
+*/
+         }
+         else if(item instanceof EndPrefixMapping)
+         {
+/*
+            if(log.isTraceEnabled())
+            {
+               EndPrefixMapping endPrefix = (EndPrefixMapping)item;
+               log.trace("end prefix mapping: " + endPrefix.prefix);
+            }
+*/
+         }
          else
          {
             throw new IllegalStateException("Unexpected element type: " + item);
@@ -193,7 +212,7 @@ public class Content
    {
       Characters characters = new Characters(ch, start, length);
       // ignore whitespace-only characters
-      if (characters.toString().trim().length() > 0)
+      if(characters.toString().trim().length() > 0)
       {
          content.addLast(characters);
 
@@ -302,7 +321,8 @@ public class Content
       }
    }
 
-   public static class StartPrefixMapping implements Node
+   public static class StartPrefixMapping
+      implements Node
    {
       public final String prefix;
       public final String uri;
@@ -320,13 +340,25 @@ public class Content
 
       public boolean equals(Object o)
       {
-         if(this == o) return true;
-         if(!(o instanceof StartPrefixMapping)) return false;
+         if(this == o)
+         {
+            return true;
+         }
+         if(!(o instanceof StartPrefixMapping))
+         {
+            return false;
+         }
 
-         final StartPrefixMapping startPrefixMapping = (StartPrefixMapping) o;
+         final StartPrefixMapping startPrefixMapping = (StartPrefixMapping)o;
 
-         if(prefix != null ? !prefix.equals(startPrefixMapping.prefix) : startPrefixMapping.prefix != null) return false;
-         if(uri != null ? !uri.equals(startPrefixMapping.uri) : startPrefixMapping.uri != null) return false;
+         if(prefix != null ? !prefix.equals(startPrefixMapping.prefix) : startPrefixMapping.prefix != null)
+         {
+            return false;
+         }
+         if(uri != null ? !uri.equals(startPrefixMapping.uri) : startPrefixMapping.uri != null)
+         {
+            return false;
+         }
 
          return true;
       }
@@ -340,7 +372,8 @@ public class Content
       }
    }
 
-   public static class EndPrefixMapping implements Node
+   public static class EndPrefixMapping
+      implements Node
    {
       public final String prefix;
 

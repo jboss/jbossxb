@@ -846,16 +846,7 @@ public class XercesXsMarshaller
       boolean marshalled = true;
       if(marshaller != null)
       {
-         java.io.StringWriter writer = new java.io.StringWriter();
          marshaller.marshal(ctx, value);
-         StringBuffer buffer = writer.getBuffer();
-         int length = buffer.length();
-         if(length > 0)
-         {
-            char[] chr = new char[length];
-            buffer.getChars(0, length, chr, 0);
-            content.characters(chr, 0, length);
-         }
       }
       else
       {
@@ -1488,12 +1479,12 @@ public class XercesXsMarshaller
 
       public void startDocument() throws SAXException
       {
-         content.startDocument();
+         // this is used to marshal a fragment of a document so we don't delegate startDocument
       }
 
       public void endDocument() throws SAXException
       {
-         content.endDocument();
+         // this is used to marshal a fragment of a document so we don't delegate endDocument
       }
 
       public void startPrefixMapping(String prefix, String uri) throws SAXException

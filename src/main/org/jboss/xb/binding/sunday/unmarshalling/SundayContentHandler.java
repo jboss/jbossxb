@@ -338,6 +338,44 @@ public class SundayContentHandler
          }
 
          ElementBinding element = (ElementBinding)particle.getTerm();
+
+         // todo xsi:type support should be implemented in a better way
+         String xsiType = atts.getValue("xsi:type");
+         if(xsiType != null)
+         {
+            if(log.isTraceEnabled())
+            {
+               log.trace(element.getQName() + " uses xsi:type " + xsiType);
+            }
+
+            String xsiTypePrefix;
+            String xsiTypeLocal;
+            int colon = xsiType.indexOf(':');
+            if(colon == -1)
+            {
+               xsiTypePrefix = "";
+               xsiTypeLocal = xsiType;
+            }
+            else
+            {
+               xsiTypePrefix = xsiType.substring(0, colon);
+               xsiTypeLocal = xsiType.substring(colon + 1);
+            }
+
+            String xsiTypeNs = nsRegistry.getNamespaceURI(xsiTypePrefix);
+            QName xsiTypeQName = new QName(xsiTypeNs, xsiTypeLocal);
+
+            TypeBinding xsiTypeBinding = schemaBinding.getType(xsiTypeQName);
+            if(xsiTypeBinding == null)
+            {
+               throw new JBossXBRuntimeException("Type binding not found for type " + xsiType +
+                  " specified with xsi:type for element " + startName);
+            }
+
+            element = new ElementBinding(schemaBinding, startName, xsiTypeBinding);
+            particle = new ParticleBinding(element);
+         }
+
          TypeBinding type = element.getType();
          if(type == null)
          {

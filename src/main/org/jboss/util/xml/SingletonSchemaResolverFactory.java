@@ -80,7 +80,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
       try
       {
          resolver.addSchemaInitializer(namespace, initializer);
-         log.debug("Mapped initializer '" + namespace + "' to '" + initializer + "'");
+         log.trace("Mapped initializer '" + namespace + "' to '" + initializer + "'");
          return true;
       }
       catch (Exception ignored)
@@ -103,7 +103,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
       if (addSchema(namespace, initializer) == false)
          return false;
       resolver.addSchemaLocation(namespace, location);
-      log.debug("Mapped location '" + namespace + "' to '" + location + "'");
+      log.trace("Mapped location '" + namespace + "' to '" + location + "'");
       return true;
    }
 }

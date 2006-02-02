@@ -25,17 +25,17 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Array;
-import java.lang.reflect.Method;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Collections;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.xerces.xs.StringList;
@@ -55,13 +55,13 @@ import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
 import org.jboss.logging.Logger;
+import org.jboss.util.Classes;
 import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
-import org.jboss.util.Classes;
-import org.xml.sax.SAXException;
+import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
-import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -84,7 +84,7 @@ public class XercesXsMarshaller
     */
    private Content content = new Content();
 
-   private final Map prefixByUri = new HashMap();
+   private Map prefixByUri = Collections.EMPTY_MAP;
 
    private Object root;
 
@@ -107,6 +107,8 @@ public class XercesXsMarshaller
    private String simpleContentProperty = "value";
 
    private Map field2WildcardMap = Collections.EMPTY_MAP;
+
+   private Map cls2TypeMap = Collections.EMPTY_MAP;
 
    private MarshallingContext ctx = new MarshallingContext()
    {
@@ -162,6 +164,26 @@ public class XercesXsMarshaller
             field2WildcardMap = new HashMap(field2WildcardMap);
          default:
             field2WildcardMap.put(cls, mapping);
+      }
+   }
+
+   public void mapClassToXsiType(Class cls, String typeNs, String typeLocalPart)
+   {
+      QName typeQName = new QName(typeNs, typeLocalPart);
+      switch(cls2TypeMap.size())
+      {
+         case 0:
+            cls2TypeMap = Collections.singletonMap(cls, typeQName);
+            break;
+         case 1:
+            cls2TypeMap = new HashMap(cls2TypeMap);
+         default:
+            cls2TypeMap.put(cls, typeQName);
+      }
+
+      if(log.isTraceEnabled())
+      {
+         log.trace("mapped " + cls + " to xsi:type " + typeQName);
       }
    }
 
@@ -231,7 +253,29 @@ public class XercesXsMarshaller
       {
          return;
       }
-      prefixByUri.put(uri, prefix);
+
+      switch(prefixByUri.size())
+      {
+         case 0:
+            prefixByUri = Collections.singletonMap(uri, prefix);
+            break;
+         case 1:
+            prefixByUri = new HashMap(prefixByUri);
+         default:
+            prefixByUri.put(uri, prefix);
+      }
+   }
+
+   public void removeNamespace(String uri)
+   {
+      if(prefixByUri.size() > 1)
+      {
+         prefixByUri.remove(uri);
+      }
+      else if(prefixByUri.containsKey(uri))
+      {
+         prefixByUri = Collections.EMPTY_MAP;
+      }
    }
 
    /**
@@ -313,16 +357,22 @@ public class XercesXsMarshaller
             marshalComplexType(rootQName.getNamespaceURI(),
                rootQName.getLocalPart(),
                (XSComplexTypeDefinition)type,
-               true
+               true,
+               false
             );
             stack.pop();
          }
          else
          {
             Object o = provider.getRoot(root, null, rootQName.getNamespaceURI(), rootQName.getLocalPart());
-            stack.push(o);
-            marshalElement(rootQName.getNamespaceURI(), rootQName.getLocalPart(), type, false, true, true);
-            stack.pop();
+            marshalElementOccurence(rootQName.getNamespaceURI(),
+               rootQName.getLocalPart(),
+               type,
+               o,
+               false,
+               false,
+               true
+            );
          }
       }
       else if(rootQNames.isEmpty())
@@ -337,15 +387,14 @@ public class XercesXsMarshaller
          {
             XSElementDeclaration element = (XSElementDeclaration)components.item(i);
             Object o = provider.getRoot(root, null, element.getNamespace(), element.getName());
-            stack.push(o);
-            marshalElement(element.getNamespace(),
+            marshalElementOccurence(element.getNamespace(),
                element.getName(),
                element.getTypeDefinition(),
+               o,
                element.getNillable(),
-               true,
+               false,
                true
             );
-            stack.pop();
          }
       }
       else
@@ -371,15 +420,14 @@ public class XercesXsMarshaller
             }
 
             Object o = provider.getRoot(root, null, element.getNamespace(), element.getName());
-            stack.push(o);
-            marshalElement(element.getNamespace(),
+            marshalElementOccurence(element.getNamespace(),
                element.getName(),
                element.getTypeDefinition(),
+               o,
                element.getNillable(),
-               true,
+               false,
                true
             );
-            stack.pop();
          }
       }
 
@@ -408,7 +456,8 @@ public class XercesXsMarshaller
                                   XSTypeDefinition type,
                                   boolean optional,
                                   boolean nillable,
-                                  boolean declareNs)
+                                  boolean declareNs,
+                                  boolean declareXsiType)
    {
       Object value = stack.peek();
       boolean result = value != null || value == null && (optional || nillable);
@@ -421,7 +470,7 @@ public class XercesXsMarshaller
 
       if(value != null)
       {
-         marshalElementType(elementNs, elementLocal, type, declareNs, nillable);
+         marshalElementType(elementNs, elementLocal, type, declareNs, nillable, declareXsiType);
       }
       else if(nillable)
       {
@@ -440,15 +489,22 @@ public class XercesXsMarshaller
                                    String elementLocal,
                                    XSTypeDefinition type,
                                    boolean declareNs,
-                                   boolean nillable)
+                                   boolean nillable,
+                                   boolean declareXsiType)
    {
       switch(type.getTypeCategory())
       {
          case XSTypeDefinition.SIMPLE_TYPE:
-            marshalSimpleType(elementNs, elementLocal, (XSSimpleTypeDefinition)type, declareNs, nillable);
+            marshalSimpleType(elementNs,
+               elementLocal,
+               (XSSimpleTypeDefinition)type,
+               declareNs,
+               nillable,
+               declareXsiType
+            );
             break;
          case XSTypeDefinition.COMPLEX_TYPE:
-            marshalComplexType(elementNs, elementLocal, (XSComplexTypeDefinition)type, declareNs);
+            marshalComplexType(elementNs, elementLocal, (XSComplexTypeDefinition)type, declareNs, declareXsiType);
             break;
          default:
             throw new IllegalStateException("Unexpected type category: " + type.getTypeCategory());
@@ -459,7 +515,8 @@ public class XercesXsMarshaller
                                   String elementLocal,
                                   XSSimpleTypeDefinition type,
                                   boolean declareNs,
-                                  boolean nillable)
+                                  boolean nillable,
+                                  boolean declareXsiType)
    {
       Object value = stack.peek();
       if(value != null)
@@ -486,13 +543,18 @@ public class XercesXsMarshaller
 
          String marshalled = marshalCharacters(elementUri, prefix, type, value, attrs);
 
-         if(declareNs && !prefixByUri.isEmpty())
+         if((declareNs || declareXsiType) && !prefixByUri.isEmpty())
          {
             if(attrs == null)
             {
-               attrs = new AttributesImpl(prefixByUri.size());
+               attrs = new AttributesImpl(prefixByUri.size() + 1);
             }
             declareNs(attrs);
+         }
+
+         if(declareXsiType)
+         {
+            declareXsiType(type, attrs);
          }
 
          if(genPrefix)
@@ -519,18 +581,26 @@ public class XercesXsMarshaller
    private void marshalComplexType(String elementNsUri,
                                    String elementLocalName,
                                    XSComplexTypeDefinition type,
-                                   boolean declareNs)
+                                   boolean declareNs,
+                                   boolean declareXsiType)
    {
       Object o = stack.peek();
       XSParticle particle = type.getParticle();
 
       XSObjectList attributeUses = type.getAttributeUses();
-      int attrsTotal = declareNs ? prefixByUri.size() + attributeUses.getLength() : attributeUses.getLength();
+      int attrsTotal = declareNs || declareXsiType ?
+         prefixByUri.size() + attributeUses.getLength() + 1 :
+         attributeUses.getLength();
       AttributesImpl attrs = attrsTotal > 0 ? new AttributesImpl(attrsTotal) : null;
 
       if(declareNs && !prefixByUri.isEmpty())
       {
          declareNs(attrs);
+      }
+
+      if(declareXsiType)
+      {
+         declareXsiType(type, attrs);
       }
 
       String prefix = (String)prefixByUri.get(elementNsUri);
@@ -539,7 +609,7 @@ public class XercesXsMarshaller
       {
          // todo: it's possible that the generated prefix already mapped. this should be fixed
          prefix = "ns_" + elementLocalName;
-         prefixByUri.put(elementNsUri, prefix);
+         declareNamespace(prefix, elementNsUri);
          if(attrs == null)
          {
             attrs = new AttributesImpl(1);
@@ -637,11 +707,15 @@ public class XercesXsMarshaller
                   );
                }
             }
-            else if (attrType.getLexicalPattern().item(0) != null
-                  && attrType.derivedFrom(Constants.NS_XML_SCHEMA, Constants.QNAME_BOOLEAN.getLocalPart(), XSConstants.DERIVATION_RESTRICTION))
+            else if(attrType.getLexicalPattern().item(0) != null
+               &&
+               attrType.derivedFrom(Constants.NS_XML_SCHEMA,
+                  Constants.QNAME_BOOLEAN.getLocalPart(),
+                  XSConstants.DERIVATION_RESTRICTION
+               ))
             {
                String item = attrType.getLexicalPattern().item(0);
-               if (item.indexOf('0') != -1 && item.indexOf('1') != -1)
+               if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
                {
                   attrValue = ((Boolean)attrValue).booleanValue() ? "1" : "0";
                }
@@ -705,7 +779,7 @@ public class XercesXsMarshaller
 
       if(genPrefix)
       {
-         prefixByUri.remove(elementNsUri);
+         removeNamespace(elementNsUri);
       }
    }
 
@@ -753,8 +827,10 @@ public class XercesXsMarshaller
                   }
                   catch(Exception e)
                   {
-                     throw new JBossXBRuntimeException(
-                        "Failed to invoke getter " + mapping.getter.getName() + " on " + o.getClass() +
+                     throw new JBossXBRuntimeException("Failed to invoke getter " +
+                        mapping.getter.getName() +
+                        " on " +
+                        o.getClass() +
                         " to get wildcard value: " + e.getMessage()
                      );
                   }
@@ -767,8 +843,10 @@ public class XercesXsMarshaller
                   }
                   catch(Exception e)
                   {
-                     throw new JBossXBRuntimeException(
-                        "Failed to invoke get on field " + mapping.field.getName() + " in " + o.getClass() +
+                     throw new JBossXBRuntimeException("Failed to invoke get on field " +
+                        mapping.field.getName() +
+                        " in " +
+                        o.getClass() +
                         " to get wildcard value: " + e.getMessage()
                      );
                   }
@@ -800,7 +878,9 @@ public class XercesXsMarshaller
             break;
          case XSConstants.ELEMENT_DECLARATION:
             XSElementDeclaration element = (XSElementDeclaration)term;
-            o = getElementValue(element.getNamespace(), element.getName(), element.getTypeDefinition());
+            XSTypeDefinition type = element.getTypeDefinition();
+            o = getElementValue(element.getNamespace(), element.getName(), type);
+
             i = o != null && isRepeatable(particle) ? getIterator(o) : null;
             if(i != null)
             {
@@ -808,33 +888,90 @@ public class XercesXsMarshaller
                while(i.hasNext() && marshalled)
                {
                   Object value = i.next();
-                  stack.push(value);
-                  marshalled = marshalElement(element.getNamespace(),
-                     element.getName(),
-                     element.getTypeDefinition(),
-                     particle.getMinOccurs() == 0,
-                     element.getNillable(),
-                     declareNs
-                  );
-                  stack.pop();
+                  marshalled =
+                     marshalElementOccurence(element.getNamespace(),
+                        element.getName(),
+                        type,
+                        value,
+                        element.getNillable(),
+                        particle.getMinOccurs() == 0,
+                        declareNs
+                     );
                }
             }
             else
             {
-               stack.push(o);
-               marshalled = marshalElement(element.getNamespace(),
-                  element.getName(),
-                  element.getTypeDefinition(),
-                  particle.getMinOccurs() == 0,
-                  element.getNillable(),
-                  declareNs
-               );
-               stack.pop();
+               marshalled =
+                  marshalElementOccurence(element.getNamespace(),
+                     element.getName(),
+                     type,
+                     o,
+                     element.getNillable(),
+                     particle.getMinOccurs() == 0,
+                     declareNs
+                  );
             }
             break;
          default:
             throw new IllegalStateException("Unexpected term type: " + term.getType());
       }
+      return marshalled;
+   }
+
+   private boolean marshalElementOccurence(String elementNs,
+                                           String elementLocal,
+                                           XSTypeDefinition type,
+                                           Object value,
+                                           boolean nillable,
+                                           boolean optional,
+                                           boolean declareNs)
+   {
+      QName xsiTypeQName = null;
+      if(value != null)
+      {
+         xsiTypeQName = (QName)cls2TypeMap.get(value.getClass());
+         if(xsiTypeQName != null &&
+            !(type.getName().equals(xsiTypeQName.getLocalPart()) &&
+            type.getNamespace().equals(xsiTypeQName.getNamespaceURI())
+            ))
+         {
+            if(log.isTraceEnabled())
+            {
+               log.trace(value.getClass() + " is mapped to xsi:type " + xsiTypeQName);
+            }
+
+            XSTypeDefinition xsiType = model.getTypeDefinition(xsiTypeQName.getLocalPart(),
+               xsiTypeQName.getNamespaceURI()
+            );
+
+            if(xsiType == null)
+            {
+               log.warn("Class " +
+                  value.getClass() +
+                  " is mapped to type " +
+                  xsiTypeQName +
+                  " but the type is not found in schema."
+               );
+            }
+            // todo should check derivation also, i.e. if(xsiType.derivedFrom())
+            else
+            {
+               type = xsiType;
+            }
+         }
+      }
+
+      stack.push(value);
+      boolean marshalled = marshalElement(elementNs,
+         elementLocal,
+         type,
+         optional,
+         nillable,
+         declareNs,
+         xsiTypeQName != null
+      );
+      stack.pop();
+
       return marshalled;
    }
 
@@ -922,15 +1059,14 @@ public class XercesXsMarshaller
          }
 
          Object elementValue = provider.getRoot(root, null, elDec.getNamespace(), elDec.getName());
-         stack.push(elementValue);
-         marshalled = marshalElement(elDec.getNamespace(),
+         marshalled = marshalElementOccurence(elDec.getNamespace(),
             elDec.getName(),
             elDec.getTypeDefinition(),
-            particle.getMinOccurs() == 0,
+            elementValue,
             elDec.getNillable(),
+            particle.getMinOccurs() == 0,
             declareNs
          );
-         stack.pop();
       }
       else if(mapping.typeName != null)
       {
@@ -958,16 +1094,15 @@ public class XercesXsMarshaller
          }
 
          Object elementValue = provider.getRoot(root, null, wildcard.getNamespace(), wildcard.getName());
-         stack.push(elementValue);
          marshalled =
-            marshalElement(wildcard.getNamespace(),
+            marshalElementOccurence(wildcard.getNamespace(),
                wildcard.getName(),
                typeDef,
+               elementValue,
+               true,
                particle.getMinOccurs() == 0,
-               false,
                declareNs
             );
-         stack.pop();
       }
       else
       {
@@ -1113,11 +1248,15 @@ public class XercesXsMarshaller
          marshalled = SimpleTypeBindings.marshal(typeName, value, null);
       }
       // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
-      else if (type.getLexicalPattern().item(0) != null
-            && type.derivedFrom(Constants.NS_XML_SCHEMA, Constants.QNAME_BOOLEAN.getLocalPart(), XSConstants.DERIVATION_RESTRICTION))
+      else if(type.getLexicalPattern().item(0) != null
+         &&
+         type.derivedFrom(Constants.NS_XML_SCHEMA,
+            Constants.QNAME_BOOLEAN.getLocalPart(),
+            XSConstants.DERIVATION_RESTRICTION
+         ))
       {
          String item = type.getLexicalPattern().item(0);
-         if (item.indexOf('0') != -1 && item.indexOf('1') != -1)
+         if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
          {
             marshalled = ((Boolean)value).booleanValue() ? "1" : "0";
          }
@@ -1181,10 +1320,22 @@ public class XercesXsMarshaller
       return marshalled;
    }
 
+   private void declareXsiType(XSTypeDefinition type, AttributesImpl attrs)
+   {
+      if(!prefixByUri.containsKey(Constants.NS_XML_SCHEMA_INSTANCE))
+      {
+         attrs.add(Constants.NS_XML_SCHEMA, "xmlns", "xmlns:xsi", null, Constants.NS_XML_SCHEMA_INSTANCE);
+      }
+
+      String pref = (String)prefixByUri.get(type.getNamespace());
+      String typeQName = pref == null ? type.getName() : pref + ':' + type.getName();
+      attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "type", "xsi:type", null, typeQName);
+   }
+
    private void declareNs(AttributesImpl attrs, String prefix, String ns)
    {
       String prefixStr = prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix;
-      if (attrs != null)
+      if(attrs != null)
       {
          attrs.add(null, prefix, prefixStr, null, ns);
       }

@@ -23,6 +23,12 @@ package org.jboss.util.xml;
 
 import java.util.Properties;
 
+/**
+ * SchemaResolverConfigMBean.
+ * 
+ * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @version $Revision$
+ */
 public interface SchemaResolverConfigMBean
 {
    /**
@@ -52,4 +58,18 @@ public interface SchemaResolverConfigMBean
     * @param schemaLocations the schemaLocations.
     */
    void setSchemaLocations(Properties schemaLocations);
+
+   /**
+    * Get the parseAnnotations.
+    * 
+    * @return the parseAnnotations.
+    */
+   Properties getParseAnnotations();
+
+   /**
+    * Set the parseAnnotations.
+    * 
+    * @param parseAnnotations the parseAnnotations.
+    */
+   void setParseAnnotations(Properties parseAnnotations);
 }

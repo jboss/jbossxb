@@ -48,6 +48,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    private boolean cacheResolvedSchemas = true;
    private Map schemasByUri = Collections.EMPTY_MAP;
    private Map schemaInitByUri = Collections.EMPTY_MAP;
+   private Map schemaParseAnnotationsByUri = Collections.EMPTY_MAP;
 
    public DefaultSchemaResolver()
    {
@@ -106,6 +107,43 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    public void removeSchemaLocation(String nsUri)
    {
       resolver.registerLocalEntity(nsUri, null);
+   }
+
+   /**
+    * Whether to parse annotations for this namespace.
+    * 
+    * @param nsUri the namespace
+    * @param value the value of the option
+    */
+   public void addSchemaParseAnnotations(String nsUri, Boolean value)
+   {
+      if (nsUri == null)
+         throw new IllegalArgumentException("Null namespace uri");
+      if (value == null)
+         throw new IllegalArgumentException("Null value");
+      switch(schemaParseAnnotationsByUri.size())
+      {
+         case 0:
+            schemaParseAnnotationsByUri = Collections.singletonMap(nsUri, value);
+            break;
+         case 1:
+            schemaParseAnnotationsByUri = new HashMap(schemaParseAnnotationsByUri);
+         default:
+            schemaParseAnnotationsByUri.put(nsUri, value);
+      }
+   }
+   
+   /**
+    * Removes the parse annotation configuration for this namespace
+    * 
+    * @param nsUri the namespace
+    * @return the previous value
+    */
+   public Boolean removeSchemaParseAnnotations(String nsUri)
+   {
+      if (nsUri == null)
+         throw new IllegalArgumentException("Null namespace uri");
+      return (Boolean) schemaParseAnnotationsByUri.remove(nsUri);
    }
    
    /**
@@ -204,7 +242,10 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       {
          if( baseURI == null )
             baseURI = this.baseURI;
-         schema = XsdBinder.bind(is.getByteStream(), null, baseURI);
+
+         Boolean processAnnotationsBoolean = (Boolean) schemaParseAnnotationsByUri.get(nsURI);
+         boolean processAnnotations = (processAnnotationsBoolean == null) ? true : processAnnotationsBoolean.booleanValue();
+         schema = XsdBinder.bind(is.getByteStream(), null, baseURI, processAnnotations);
       }
 
       if(schema != null)

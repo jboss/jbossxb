@@ -48,6 +48,9 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
    /** The locations by namespace */
    protected Properties schemaLocations;
 
+   /** The parse annotations by namespace */
+   protected Properties parseAnnotations;
+
    public Properties getSchemaInitializers()
    {
       return schemaInitializers;
@@ -83,7 +86,7 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
    public void setSchemaLocations(Properties schemaLocations)
    {
       this.schemaLocations = schemaLocations;
-      if (schemaInitializers != null && schemaInitializers.size() != 0)
+      if (schemaLocations != null && schemaLocations.size() != 0)
       {
          for (Iterator i = schemaLocations.entrySet().iterator(); i.hasNext();)
          {
@@ -91,6 +94,27 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
             String namespace = (String) entry.getKey();
             String location = (String) entry.getValue();
             resolver.addSchemaLocation(namespace, location);
+         }
+      }
+   }
+
+   public Properties getParseAnnotations()
+   {
+      return parseAnnotations;
+   }
+
+   public void setParseAnnotations(Properties parseAnnotations)
+   {
+      this.parseAnnotations = parseAnnotations;
+      if (parseAnnotations != null && parseAnnotations.size() != 0)
+      {
+         for (Iterator i = parseAnnotations.entrySet().iterator(); i.hasNext();)
+         {
+            Map.Entry entry = (Map.Entry) i.next();
+            String namespace = (String) entry.getKey();
+            String value = (String) entry.getValue();
+            Boolean booleanValue = Boolean.valueOf(value); 
+            resolver.addSchemaParseAnnotations(namespace, booleanValue);
          }
       }
    }

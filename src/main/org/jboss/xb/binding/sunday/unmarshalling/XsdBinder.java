@@ -129,9 +129,22 @@ public class XsdBinder
     */
    public static SchemaBinding bind(InputStream xsdStream, String encoding, String baseURI)
    {
+      return bind(xsdStream, encoding, baseURI, true);
+   }
+
+   /**
+    * Create a SchemaBinding from and xsd stream.
+    *
+    * @param xsdStream - the xsd InputStream
+    * @param encoding  - optional stream encoding
+    * @param processAnnotations - process annotations
+    * @return SchemaBinding mapping
+    */
+   public static SchemaBinding bind(InputStream xsdStream, String encoding, String baseURI, boolean processAnnotations)
+   {
       DefaultSchemaResolver resolver = new DefaultSchemaResolver();
       resolver.setBaseURI(baseURI);
-      return bind(xsdStream, encoding, resolver);
+      return bind(xsdStream, encoding, resolver, processAnnotations);
    }
 
    /**
@@ -145,8 +158,23 @@ public class XsdBinder
     */
    public static SchemaBinding bind(InputStream xsdStream, String encoding, SchemaBindingResolver resolver)
    {
+      return bind(xsdStream, encoding, resolver, true);
+   }
+
+   /**
+    * Create a SchemaBinding from and xsd stream.
+    *
+    * @param xsdStream - the xsd InputStream
+    * @param encoding  - optional stream encoding
+    * @param resolver  the resolver will be used to resolve imported schemas in the schema being loaded
+    *                  and also will be set on the returned instance of SchemaBinding
+    * @param processAnnotations whether to process annotations
+    * @return SchemaBinding mapping
+    */
+   public static SchemaBinding bind(InputStream xsdStream, String encoding, SchemaBindingResolver resolver, boolean processAnnotations)
+   {
       XSModel model = Util.loadSchema(xsdStream, encoding, resolver);
-      return bind(model, resolver);
+      return bind(model, resolver, processAnnotations);
    }
 
    public static SchemaBinding bind(Reader xsdReader, String encoding)
@@ -212,40 +240,48 @@ public class XsdBinder
 
    public static SchemaBinding bind(XSModel model, SchemaBindingResolver resolver)
    {
+      return bind(model,resolver, true);
+   }
+
+   public static SchemaBinding bind(XSModel model, SchemaBindingResolver resolver, boolean processAnnotations)
+   {
       boolean trace = log.isTraceEnabled();
       
       SchemaBinding schema = getXsdBinding().schemaBinding;
       schema.setSchemaResolver(resolver);
 
       // read annotations. for now just log the ones that are going to be used
-      XSObjectList annotations = model.getAnnotations();
-      if (trace)
+      if (processAnnotations)
       {
-         log.trace("started binding schema " + schema);
-         log.trace("Schema annotations: " + annotations.getLength());
-      }
-
-      for(int i = 0; i < annotations.getLength(); ++i)
-      {
-         XSAnnotation annotation = (XSAnnotation)annotations.item(i);
-         XsdAnnotation an = XsdAnnotation.unmarshal(annotation.getAnnotationString());
-         XsdAppInfo appinfo = an.getAppInfo();
-         if(appinfo != null)
+         XSObjectList annotations = model.getAnnotations();
+         if (trace)
          {
-            SchemaMetaData schemaBindings = appinfo.getSchemaMetaData();
-            if(schemaBindings != null)
+            log.trace("started binding schema " + schema);
+            log.trace("Schema annotations: " + annotations.getLength());
+         }
+
+         for(int i = 0; i < annotations.getLength(); ++i)
+         {
+            XSAnnotation annotation = (XSAnnotation)annotations.item(i);
+            XsdAnnotation an = XsdAnnotation.unmarshal(annotation.getAnnotationString());
+            XsdAppInfo appinfo = an.getAppInfo();
+            if(appinfo != null)
             {
-               // Get the ignoreUnresolvedFieldOrClass
-               schema.setIgnoreUnresolvedFieldOrClass(schemaBindings.isIgnoreUnresolvedFieldOrClass());
-               // Get the ignoreUnresolvedFieldOrClass
-               schema.setReplacePropertyRefs(schemaBindings.isReplacePropertyRefs());
-               // Get the default package
-               PackageMetaData packageMetaData = schemaBindings.getPackage();
-               if(packageMetaData != null)
+               SchemaMetaData schemaBindings = appinfo.getSchemaMetaData();
+               if(schemaBindings != null)
                {
-                  if (trace)
-                     log.trace("schema default package: " + packageMetaData.getName());
-                  schema.setPackageMetaData(packageMetaData);
+                  // Get the ignoreUnresolvedFieldOrClass
+                  schema.setIgnoreUnresolvedFieldOrClass(schemaBindings.isIgnoreUnresolvedFieldOrClass());
+                  // Get the ignoreUnresolvedFieldOrClass
+                  schema.setReplacePropertyRefs(schemaBindings.isReplacePropertyRefs());
+                  // Get the default package
+                  PackageMetaData packageMetaData = schemaBindings.getPackage();
+                  if(packageMetaData != null)
+                  {
+                     if (trace)
+                        log.trace("schema default package: " + packageMetaData.getName());
+                     schema.setPackageMetaData(packageMetaData);
+                  }
                }
             }
          }
@@ -270,7 +306,7 @@ public class XsdBinder
          XSTypeDefinition type = (XSTypeDefinition)types.item(i);
          if(!Constants.NS_XML_SCHEMA.equals(type.getNamespace()))
          {
-            bindType(schema, type, sharedElements);
+            bindType(schema, type, sharedElements, processAnnotations);
          }
       }
 
@@ -280,7 +316,7 @@ public class XsdBinder
       for(int i = 0; i < elements.getLength(); ++i)
       {
          XSElementDeclaration element = (XSElementDeclaration)elements.item(i);
-         bindElement(schema, element, sharedElements, 1, 0, false);
+         bindElement(schema, element, sharedElements, 1, 0, false, processAnnotations);
       }
 
       if (trace)
@@ -303,7 +339,7 @@ public class XsdBinder
     */
    public static void bindType(SchemaBinding schema, XSTypeDefinition type)
    {
-      TypeBinding typeBinding = bindType(schema, type, new SharedElements());
+      TypeBinding typeBinding = bindType(schema, type, new SharedElements(), true);
       schema.addType(typeBinding);
    }
 
@@ -330,23 +366,24 @@ public class XsdBinder
          new SharedElements(),
          minOccurs,
          maxOccurs,
-         maxOccursUnbounded
+         maxOccursUnbounded,
+         true
       );
       schema.addElementParticle(particle);
    }
    
    // Private
 
-   private static TypeBinding bindType(SchemaBinding doc, XSTypeDefinition type, SharedElements sharedElements)
+   private static TypeBinding bindType(SchemaBinding doc, XSTypeDefinition type, SharedElements sharedElements, boolean processAnnotations)
    {
       TypeBinding binding;
       switch(type.getTypeCategory())
       {
          case XSTypeDefinition.SIMPLE_TYPE:
-            binding = bindSimpleType(doc, (XSSimpleTypeDefinition)type);
+            binding = bindSimpleType(doc, (XSSimpleTypeDefinition)type, processAnnotations);
             break;
          case XSTypeDefinition.COMPLEX_TYPE:
-            binding = bindComplexType(doc, (XSComplexTypeDefinition)type, sharedElements);
+            binding = bindComplexType(doc, (XSComplexTypeDefinition)type, sharedElements, processAnnotations);
             break;
          default:
             throw new JBossXBRuntimeException("Unexpected type category: " + type.getTypeCategory());
@@ -354,7 +391,7 @@ public class XsdBinder
       return binding;
    }
 
-   private static TypeBinding bindSimpleType(SchemaBinding schema, XSSimpleTypeDefinition type)
+   private static TypeBinding bindSimpleType(SchemaBinding schema, XSSimpleTypeDefinition type, boolean processAnnotations)
    {
       boolean trace = log.isTraceEnabled();
 
@@ -368,7 +405,7 @@ public class XsdBinder
          }
 
          XSTypeDefinition baseTypeDef = type.getBaseType();
-         TypeBinding baseType = baseTypeDef == null ? null : bindType(schema, baseTypeDef, null);
+         TypeBinding baseType = baseTypeDef == null ? null : bindType(schema, baseTypeDef, null, processAnnotations);
 
          binding = baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType);
 
@@ -392,7 +429,7 @@ public class XsdBinder
 
          if(type.getItemType() != null)
          {
-            TypeBinding itemType = bindSimpleType(schema, type.getItemType());
+            TypeBinding itemType = bindSimpleType(schema, type.getItemType(), processAnnotations);
             binding.setItemType(itemType);
          }
 
@@ -412,46 +449,49 @@ public class XsdBinder
          }
 
          // customize binding with annotations
-         XSObjectList annotations = type.getAnnotations();
-         if(annotations != null)
+         if (processAnnotations)
          {
-            if (trace)
-               log.trace(typeName + " annotations " + annotations.getLength());
-            for(int i = 0; i < annotations.getLength(); ++i)
+            XSObjectList annotations = type.getAnnotations();
+            if(annotations != null)
             {
-               XSAnnotation an = (XSAnnotation)annotations.item(i);
-               XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
-               XsdAppInfo appInfo = xsdAn.getAppInfo();
-               if(appInfo != null)
+               if (trace)
+                  log.trace(typeName + " annotations " + annotations.getLength());
+               for(int i = 0; i < annotations.getLength(); ++i)
                {
-                  ClassMetaData classMetaData = appInfo.getClassMetaData();
-                  if(classMetaData != null)
+                  XSAnnotation an = (XSAnnotation)annotations.item(i);
+                  XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
+                  XsdAppInfo appInfo = xsdAn.getAppInfo();
+                  if(appInfo != null)
                   {
-                     if (trace)
+                     ClassMetaData classMetaData = appInfo.getClassMetaData();
+                     if(classMetaData != null)
                      {
-                        log.trace("simple type " +
-                           type.getName() +
-                           ": impl=" +
-                           classMetaData.getImpl()
-                        );
+                        if (trace)
+                        {
+                           log.trace("simple type " +
+                              type.getName() +
+                              ": impl=" +
+                              classMetaData.getImpl()
+                           );
+                        }
+                        binding.setClassMetaData(classMetaData);
                      }
-                     binding.setClassMetaData(classMetaData);
-                  }
 
-                  ValueMetaData valueMetaData = appInfo.getValueMetaData();
-                  if(valueMetaData != null)
-                  {
-                     if (trace)
+                     ValueMetaData valueMetaData = appInfo.getValueMetaData();
+                     if(valueMetaData != null)
                      {
-                        log.trace("simple type " +
-                           type.getName() +
-                           ": unmarshalMethod=" +
-                           valueMetaData.getUnmarshalMethod() +
-                           ", marshalMethod=" +
-                           valueMetaData.getMarshalMethod()
-                        );
+                        if (trace)
+                        {
+                           log.trace("simple type " +
+                              type.getName() +
+                              ": unmarshalMethod=" +
+                              valueMetaData.getUnmarshalMethod() +
+                              ", marshalMethod=" +
+                              valueMetaData.getMarshalMethod()
+                           );
+                        }
+                        binding.setValueMetaData(valueMetaData);
                      }
-                     binding.setValueMetaData(valueMetaData);
                   }
                }
             }
@@ -464,7 +504,8 @@ public class XsdBinder
 
    private static TypeBinding bindComplexType(SchemaBinding schema,
                                               XSComplexTypeDefinition type,
-                                              SharedElements sharedElements)
+                                              SharedElements sharedElements,
+                                              boolean processAnnotations)
    {
       boolean trace = log.isTraceEnabled();
 
@@ -491,7 +532,7 @@ public class XsdBinder
 
       if(type.getSimpleType() != null)
       {
-         TypeBinding simpleType = bindSimpleType(schema, type.getSimpleType());
+         TypeBinding simpleType = bindSimpleType(schema, type.getSimpleType(), processAnnotations);
          binding.setSimpleType(simpleType);
       }
       else if(type.getContentType() == XSComplexTypeDefinition.CONTENTTYPE_MIXED)
@@ -523,153 +564,156 @@ public class XsdBinder
       for(int i = 0; i < attrs.getLength(); ++i)
       {
          XSAttributeUse attr = (XSAttributeUse)attrs.item(i);
-         bindAttributes(schema, binding, attr);
+         bindAttributes(schema, binding, attr, processAnnotations);
       }
 
       // customize binding with xsd annotations
-      XSObjectList annotations = type.getAnnotations();
-      if(annotations != null)
+      if (processAnnotations)
       {
-         if (trace)
-            log.trace(typeName + " annotations " + annotations.getLength());
-         for(int i = 0; i < annotations.getLength(); ++i)
+         XSObjectList annotations = type.getAnnotations();
+         if(annotations != null)
          {
-            XSAnnotation an = (XSAnnotation)annotations.item(i);
-            XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
-            XsdAppInfo appInfo = xsdAn.getAppInfo();
-            if(appInfo != null)
+            if (trace)
+               log.trace(typeName + " annotations " + annotations.getLength());
+            for(int i = 0; i < annotations.getLength(); ++i)
             {
-               ClassMetaData classMetaData = appInfo.getClassMetaData();
-               if(classMetaData != null)
+               XSAnnotation an = (XSAnnotation)annotations.item(i);
+               XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
+               XsdAppInfo appInfo = xsdAn.getAppInfo();
+               if(appInfo != null)
                {
-                  if (trace)
-                  {
-                     log.trace("complex type " +
-                        type.getName() +
-                        ": impl=" +
-                        classMetaData.getImpl()
-                     );
-                  }
-                  binding.setClassMetaData(classMetaData);
-               }
-
-               CharactersMetaData charactersMetaData = appInfo.getCharactersMetaData();
-               if(charactersMetaData != null)
-               {
-                  if (trace)
-                  {
-                     PropertyMetaData propertyMetaData = charactersMetaData.getProperty();
-                     if(propertyMetaData != null)
-                     {
-                        log.trace("complex type " +
-                           type.getName() +
-                           ": characters bound to " + propertyMetaData.getName()
-                        );
-                     }
-
-                     ValueMetaData valueMetaData = charactersMetaData.getValue();
-                     if(valueMetaData != null)
-                     {
-                        log.trace("complex type " +
-                           type.getName() +
-                           ": characters unmarshalMethod=" +
-                           valueMetaData.getUnmarshalMethod() +
-                           ", marshalMethod=" + valueMetaData.getMarshalMethod()
-                        );
-                     }
-
-                     boolean mapEntryKey = appInfo.isMapEntryKey();
-                     if(mapEntryKey)
-                     {
-                        log.trace("complex type " +
-                           type.getName() +
-                           ": characters are bound as a key in a map entry"
-                        );
-                     }
-
-                     boolean mapEntryValue = appInfo.isMapEntryValue();
-                     if(mapEntryValue)
-                     {
-                        log.trace("complex type " +
-                           type.getName() +
-                           ": characters are bound as a value in a map entry"
-                        );
-                     }
-                  }
-                  binding.setCharactersMetaData(charactersMetaData);
-               }
-
-               MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
-               if(mapEntryMetaData != null)
-               {
-                  if (trace)
-                  {
-                     log.trace("complex type " +
-                        type.getName() +
-                        " is bound to a map entry: impl=" +
-                        mapEntryMetaData.getImpl() +
-                        ", getKeyMethod=" +
-                        mapEntryMetaData.getGetKeyMethod() +
-                        ", setKeyMethod=" +
-                        mapEntryMetaData.getSetKeyMethod() +
-                        ", getValueMethod=" +
-                        mapEntryMetaData.getGetValueMethod() +
-                        ", setValueMethod=" +
-                        mapEntryMetaData.getSetValueMethod() +
-                        ", valueType=" +
-                        mapEntryMetaData.getValueType() +
-                        ", nonNullValue=" + mapEntryMetaData.isNonNullValue()
-                     );
-                  }
-
+                  ClassMetaData classMetaData = appInfo.getClassMetaData();
                   if(classMetaData != null)
                   {
-                     throw new JBossXBRuntimeException("Illegal binding: both jbxb:class and jbxb:mapEntry are specified for complex type " +
-                        type.getName()
-                     );
+                     if (trace)
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": impl=" +
+                           classMetaData.getImpl()
+                        );
+                     }
+                     binding.setClassMetaData(classMetaData);
                   }
-                  binding.setMapEntryMetaData(mapEntryMetaData);
-               }
 
-               boolean skip = appInfo.isSkip();
-               if(skip)
-               {
-                  if (trace)
+                  CharactersMetaData charactersMetaData = appInfo.getCharactersMetaData();
+                  if(charactersMetaData != null)
                   {
-                     log.trace("complex type " +
-                        type.getName() +
-                        ": elements of this type will be skipped; their attrs, character content " +
-                        "and elements will be set the parent."
-                     );
-                  }
-                  binding.setSkip(skip);
-               }
+                     if (trace)
+                     {
+                        PropertyMetaData propertyMetaData = charactersMetaData.getProperty();
+                        if(propertyMetaData != null)
+                        {
+                           log.trace("complex type " +
+                              type.getName() +
+                              ": characters bound to " + propertyMetaData.getName()
+                           );
+                        }
 
-               PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
-               if(propertyMetaData != null)
-               {
-                  if (trace)
-                  {
-                     log.trace("complex type " +
-                        type.getName() +
-                        ": the content of elements of this type is bound to property " + propertyMetaData.getName()
-                     );
-                  }
-                  binding.setPropertyMetaData(propertyMetaData);
-               }
+                        ValueMetaData valueMetaData = charactersMetaData.getValue();
+                        if(valueMetaData != null)
+                        {
+                           log.trace("complex type " +
+                              type.getName() +
+                              ": characters unmarshalMethod=" +
+                              valueMetaData.getUnmarshalMethod() +
+                              ", marshalMethod=" + valueMetaData.getMarshalMethod()
+                           );
+                        }
 
-               AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
-               if(addMethodMetaData != null)
-               {
-                  if (trace)
-                  {
-                     log.trace("complex type " +
-                        type.getName() +
-                        ": elements of this type will be added to parent objects with addMethod=" +
-                        addMethodMetaData.getMethodName() + ", valueType=" + addMethodMetaData.getValueType()
-                     );
+                        boolean mapEntryKey = appInfo.isMapEntryKey();
+                        if(mapEntryKey)
+                        {
+                           log.trace("complex type " +
+                              type.getName() +
+                              ": characters are bound as a key in a map entry"
+                           );
+                        }
+
+                        boolean mapEntryValue = appInfo.isMapEntryValue();
+                        if(mapEntryValue)
+                        {
+                           log.trace("complex type " +
+                              type.getName() +
+                              ": characters are bound as a value in a map entry"
+                           );
+                        }
+                     }
+                     binding.setCharactersMetaData(charactersMetaData);
                   }
-                  binding.setAddMethodMetaData(addMethodMetaData);
+
+                  MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
+                  if(mapEntryMetaData != null)
+                  {
+                     if (trace)
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           " is bound to a map entry: impl=" +
+                           mapEntryMetaData.getImpl() +
+                           ", getKeyMethod=" +
+                           mapEntryMetaData.getGetKeyMethod() +
+                           ", setKeyMethod=" +
+                           mapEntryMetaData.getSetKeyMethod() +
+                           ", getValueMethod=" +
+                           mapEntryMetaData.getGetValueMethod() +
+                           ", setValueMethod=" +
+                           mapEntryMetaData.getSetValueMethod() +
+                           ", valueType=" +
+                           mapEntryMetaData.getValueType() +
+                           ", nonNullValue=" + mapEntryMetaData.isNonNullValue()
+                        );
+                     }
+
+                     if(classMetaData != null)
+                     {
+                        throw new JBossXBRuntimeException("Illegal binding: both jbxb:class and jbxb:mapEntry are specified for complex type " +
+                           type.getName()
+                        );
+                     }
+                     binding.setMapEntryMetaData(mapEntryMetaData);
+                  }
+
+                  boolean skip = appInfo.isSkip();
+                  if(skip)
+                  {
+                     if (trace)
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": elements of this type will be skipped; their attrs, character content " +
+                           "and elements will be set the parent."
+                        );
+                     }
+                     binding.setSkip(skip);
+                  }
+
+                  PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
+                  if(propertyMetaData != null)
+                  {
+                     if (trace)
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": the content of elements of this type is bound to property " + propertyMetaData.getName()
+                        );
+                     }
+                     binding.setPropertyMetaData(propertyMetaData);
+                  }
+
+                  AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
+                  if(addMethodMetaData != null)
+                  {
+                     if (trace)
+                     {
+                        log.trace("complex type " +
+                           type.getName() +
+                           ": elements of this type will be added to parent objects with addMethod=" +
+                           addMethodMetaData.getMethodName() + ", valueType=" + addMethodMetaData.getValueType()
+                        );
+                     }
+                     binding.setAddMethodMetaData(addMethodMetaData);
+                  }
                }
             }
          }
@@ -679,7 +723,7 @@ public class XsdBinder
       if(particle != null)
       {
          pushType(binding);
-         bindParticle(schema, particle, sharedElements);
+         bindParticle(schema, particle, sharedElements, processAnnotations);
          popType();
       }
 
@@ -688,7 +732,8 @@ public class XsdBinder
 
    private static void bindAttributes(SchemaBinding doc,
                                       TypeBinding type,
-                                      XSAttributeUse attrUse)
+                                      XSAttributeUse attrUse,
+                                      boolean processAnnotations)
    {
       boolean trace = log.isTraceEnabled();
       
@@ -701,7 +746,7 @@ public class XsdBinder
       }
 
       XSSimpleTypeDefinition attrType = attr.getTypeDefinition();
-      TypeBinding typeBinding = bindSimpleType(doc, attrType);
+      TypeBinding typeBinding = bindSimpleType(doc, attrType, processAnnotations);
       AttributeBinding binding = type.addAttribute(attrName, typeBinding, DefaultHandlers.ATTRIBUTE_HANDLER);
       binding.setRequired(attrUse.getRequired());
       if(attrUse.getConstraintType() == XSConstants.VC_DEFAULT)
@@ -710,37 +755,41 @@ public class XsdBinder
          binding.setDefaultConstraint(attrUse.getConstraintValue());
       }
 
-      XSAnnotation an = attr.getAnnotation();
-      if(an != null)
+      if (processAnnotations)
       {
-         if (trace)
+         XSAnnotation an = attr.getAnnotation();
+         if(an != null)
          {
-            log.trace(attrName + " attribute annotation");
-         }
-
-         XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
-         XsdAppInfo appInfo = xsdAn.getAppInfo();
-         if(appInfo != null)
-         {
-            PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
-            if(propertyMetaData != null)
+            if (trace)
             {
-               binding.setPropertyMetaData(propertyMetaData);
+               log.trace(attrName + " attribute annotation");
             }
 
-            boolean mapEntryKey = appInfo.isMapEntryKey();
-            if(mapEntryKey)
+            XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
+            XsdAppInfo appInfo = xsdAn.getAppInfo();
+            if(appInfo != null)
             {
-               binding.setMapEntryKey(mapEntryKey);
-            }
+               PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
+               if(propertyMetaData != null)
+               {
+                  binding.setPropertyMetaData(propertyMetaData);
+               }
 
-            boolean mapEntryValue = appInfo.isMapEntryValue();
-            if(mapEntryValue)
-            {
-               binding.setMapEntryValue(mapEntryValue);
+               boolean mapEntryKey = appInfo.isMapEntryKey();
+               if(mapEntryKey)
+               {
+                  binding.setMapEntryKey(mapEntryKey);
+               }
+
+               boolean mapEntryValue = appInfo.isMapEntryValue();
+               if(mapEntryValue)
+               {
+                  binding.setMapEntryValue(mapEntryValue);
+               }
             }
          }
       }
+      
 
       if (trace)
       {
@@ -774,7 +823,7 @@ public class XsdBinder
       }
    }
 
-   private static void bindParticle(SchemaBinding schema, XSParticle particle, SharedElements sharedElements)
+   private static void bindParticle(SchemaBinding schema, XSParticle particle, SharedElements sharedElements, boolean processAnnotations)
    {
       boolean trace = log.isTraceEnabled();
       
@@ -812,10 +861,13 @@ public class XsdBinder
                   log.trace("created model group " + groupBinding);
                }
 
-               XSAnnotation annotation = modelGroup.getAnnotation();
-               if(annotation != null)
+               if (processAnnotations)
                {
-                  customizeTerm(annotation, groupBinding);
+                  XSAnnotation annotation = modelGroup.getAnnotation();
+                  if(annotation != null)
+                  {
+                     customizeTerm(annotation, groupBinding);
+                  }
                }
 
                Object o = peekTypeOrGroup();
@@ -839,12 +891,12 @@ public class XsdBinder
                }
 
                pushModelGroup(groupBinding);
-               bindModelGroup(schema, modelGroup, sharedElements);
+               bindModelGroup(schema, modelGroup, sharedElements, processAnnotations);
                popModelGroup();
             }
             break;
          case XSConstants.WILDCARD:
-            bindWildcard(schema, particle);
+            bindWildcard(schema, particle, processAnnotations);
             break;
          case XSConstants.ELEMENT_DECLARATION:
             bindElement(schema,
@@ -852,7 +904,8 @@ public class XsdBinder
                sharedElements,
                particle.getMinOccurs(),
                particle.getMaxOccurs(),
-               particle.getMaxOccursUnbounded()
+               particle.getMaxOccursUnbounded(),
+               processAnnotations
             );
             break;
          default:
@@ -860,7 +913,7 @@ public class XsdBinder
       }
    }
 
-   private static void bindWildcard(SchemaBinding schema, XSParticle particle)
+   private static void bindWildcard(SchemaBinding schema, XSParticle particle, boolean processAnnotations)
    {
       boolean trace = log.isTraceEnabled();
 
@@ -890,30 +943,33 @@ public class XsdBinder
 
       binding.setProcessContents(wildcard.getProcessContents());
 
-      XSAnnotation annotation = wildcard.getAnnotation();
-      if(annotation != null)
+      if (processAnnotations)
       {
-         if (trace)
+         XSAnnotation annotation = wildcard.getAnnotation();
+         if(annotation != null)
          {
-            log.trace(group + " annotation");
-         }
-
-         XsdAnnotation xsdAn = XsdAnnotation.unmarshal(annotation.getAnnotationString());
-         XsdAppInfo appInfo = xsdAn.getAppInfo();
-         if(appInfo != null)
-         {
-            PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
-            if(propertyMetaData != null)
+            if (trace)
             {
-               if (trace)
-               {
-                  log.trace("wildcard is bound to property: " +
-                     propertyMetaData.getName() +
-                     ", collectionType=" + propertyMetaData.getCollectionType()
-                  );
-               }
+               log.trace(group + " annotation");
             }
-            binding.setPropertyMetaData(propertyMetaData);
+
+            XsdAnnotation xsdAn = XsdAnnotation.unmarshal(annotation.getAnnotationString());
+            XsdAppInfo appInfo = xsdAn.getAppInfo();
+            if(appInfo != null)
+            {
+               PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
+               if(propertyMetaData != null)
+               {
+                  if (trace)
+                  {
+                     log.trace("wildcard is bound to property: " +
+                        propertyMetaData.getName() +
+                        ", collectionType=" + propertyMetaData.getCollectionType()
+                     );
+                  }
+               }
+               binding.setPropertyMetaData(propertyMetaData);
+            }
          }
       }
    }
@@ -923,7 +979,8 @@ public class XsdBinder
                                               SharedElements sharedElements,
                                               int minOccurs,
                                               int maxOccurs,
-                                              boolean maxOccursUnbounded)
+                                              boolean maxOccursUnbounded,
+                                              boolean processAnnotations)
    {
       boolean trace = log.isTraceEnabled();
       
@@ -960,7 +1017,7 @@ public class XsdBinder
 
       if(type == null)
       {
-         type = bindType(schema, elementDec.getTypeDefinition(), sharedElements);
+         type = bindType(schema, elementDec.getTypeDefinition(), sharedElements, processAnnotations);
          if(shared)
          {
             sharedElements.setTypeBinding(elementDec, type);
@@ -1003,21 +1060,24 @@ public class XsdBinder
       }
 
       // customize element with annotations
-      XSAnnotation an = elementDec.getAnnotation();
-      if(an != null)
+      if (processAnnotations)
       {
-         customizeTerm(an, element);
+         XSAnnotation an = elementDec.getAnnotation();
+         if(an != null)
+         {
+            customizeTerm(an, element);
+         }
       }
       return particle;
    }
 
-   private static void bindModelGroup(SchemaBinding doc, XSModelGroup modelGroup, SharedElements sharedElements)
+   private static void bindModelGroup(SchemaBinding doc, XSModelGroup modelGroup, SharedElements sharedElements, boolean processAnnotations)
    {
       XSObjectList particles = modelGroup.getParticles();
       for(int i = 0; i < particles.getLength(); ++i)
       {
          XSParticle particle = (XSParticle)particles.item(i);
-         bindParticle(doc, particle, sharedElements);
+         bindParticle(doc, particle, sharedElements, processAnnotations);
       }
    }
 

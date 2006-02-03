@@ -57,10 +57,10 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
     */
    private SingletonSchemaResolverFactory()
    {
-      addSchema("urn:jboss:aop-deployer", "org.jboss.aspects.kernel.schema.AspectSchemaBindingInitalizer");
-      addSchema("urn:jboss:bean-deployer", "org.jboss.kernel.plugins.deployment.xml.BeanSchemaInitializer");
-      addSchema("urn:jboss:bean-deployer:2.0", "org.jboss.kernel.plugins.deployment.xml.BeanSchemaInitializer20");
-      addSchema("urn:jboss:javabean:1.0", "org.jboss.kernel.plugins.config.xml.JavaBeanSchemaInitializer");
+      addSchema("urn:jboss:aop-deployer", "org.jboss.aspects.kernel.schema.AspectSchemaBindingInitalizer", Boolean.FALSE);
+      addSchema("urn:jboss:bean-deployer", "org.jboss.kernel.plugins.deployment.xml.BeanSchemaInitializer", Boolean.FALSE);
+      addSchema("urn:jboss:bean-deployer:2.0", "org.jboss.kernel.plugins.deployment.xml.BeanSchemaInitializer20", Boolean.FALSE);
+      addSchema("urn:jboss:javabean:1.0", "org.jboss.kernel.plugins.config.xml.JavaBeanSchemaInitializer", Boolean.FALSE);
    }
    
    public SchemaBindingResolver getSchemaBindingResolver()
@@ -95,6 +95,22 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
     * 
     * @param namespace the namespace
     * @param initializer the initializer
+    * @param parseAnnotations whether to parse annotations
+    * @return true when added
+    */
+   protected boolean addSchema(String namespace, String initializer, Boolean parseAnnotations)
+   {
+      if (addSchema(namespace, initializer) == false)
+         return false;
+      setParseAnnotations(namespace, parseAnnotations);
+      return true;
+   }
+
+   /**
+    * Add a schema
+    * 
+    * @param namespace the namespace
+    * @param initializer the initializer
     * @param location the location
     * @return true when added
     */
@@ -102,8 +118,45 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
    {
       if (addSchema(namespace, initializer) == false)
          return false;
-      resolver.addSchemaLocation(namespace, location);
-      log.trace("Mapped location '" + namespace + "' to '" + location + "'");
+      try
+      {
+         resolver.addSchemaLocation(namespace, location);
+         log.trace("Mapped location '" + namespace + "' to '" + location + "'");
+         return true;
+      }
+      catch (Exception ignored)
+      {
+         log.trace("Ignored: ", ignored);
+         return false;
+      }
+   }
+
+   /**
+    * Add a schema
+    * 
+    * @param namespace the namespace
+    * @param initializer the initializer
+    * @param location the location
+    * @param parseAnnotations whether to parse annotations
+    * @return true when added
+    */
+   protected boolean addSchema(String namespace, String initializer, String location, Boolean parseAnnotations)
+   {
+      if (addSchema(namespace, initializer, location) == false)
+         return false;
+      setParseAnnotations(namespace, parseAnnotations);
       return true;
+   }
+
+   /**
+    * Set the parse annotations for a schema
+    * 
+    * @param namespace the namespace
+    * @param parseAnnotations whether to parse annotations
+    */
+   protected void setParseAnnotations(String namespace, Boolean parseAnnotations)
+   {
+      resolver.addSchemaParseAnnotations(namespace, parseAnnotations);
+      log.trace("Parse annotations '" + namespace + "' set to '" + parseAnnotations + "'");
    }
 }

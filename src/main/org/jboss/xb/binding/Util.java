@@ -23,10 +23,8 @@ package org.jboss.xb.binding;
 
 import java.io.InputStream;
 import java.io.Reader;
-import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
 import java.util.StringTokenizer;
 
 import javax.xml.XMLConstants;

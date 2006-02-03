@@ -926,6 +926,7 @@ public class XercesXsMarshaller
                                            boolean optional,
                                            boolean declareNs)
    {
+      boolean declareXsiType = false;
       QName xsiTypeQName = null;
       if(value != null)
       {
@@ -935,6 +936,7 @@ public class XercesXsMarshaller
             type.getNamespace().equals(xsiTypeQName.getNamespaceURI())
             ))
          {
+            declareXsiType = true;
             if(log.isTraceEnabled())
             {
                log.trace(value.getClass() + " is mapped to xsi:type " + xsiTypeQName);
@@ -968,7 +970,7 @@ public class XercesXsMarshaller
          optional,
          nillable,
          declareNs,
-         xsiTypeQName != null
+         declareXsiType
       );
       stack.pop();
 

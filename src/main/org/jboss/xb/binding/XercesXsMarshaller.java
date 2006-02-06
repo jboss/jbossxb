@@ -598,9 +598,16 @@ public class XercesXsMarshaller
          declareNs(attrs);
       }
 
+      String typeNsWithGeneratedPrefix = null;
       if(declareXsiType)
       {
-         declareXsiType(type, attrs);
+         String generatedPrefix = declareXsiType(type, attrs);
+         if(generatedPrefix != null)
+         {
+            typeNsWithGeneratedPrefix = type.getNamespace();
+            declareNs(attrs, generatedPrefix, typeNsWithGeneratedPrefix);
+            declareNamespace(generatedPrefix, typeNsWithGeneratedPrefix);
+         }
       }
 
       String prefix = (String)prefixByUri.get(elementNsUri);
@@ -780,6 +787,11 @@ public class XercesXsMarshaller
       if(genPrefix)
       {
          removeNamespace(elementNsUri);
+      }
+
+      if(typeNsWithGeneratedPrefix != null)
+      {
+         removeNamespace(typeNsWithGeneratedPrefix);
       }
    }
 
@@ -1322,16 +1334,30 @@ public class XercesXsMarshaller
       return marshalled;
    }
 
-   private void declareXsiType(XSTypeDefinition type, AttributesImpl attrs)
+   /**
+    * Adds xsi:type attribute and optionally declares namespaces for xsi and type's namespace.
+    * @param type  the type to declare xsi:type attribute for
+    * @param attrs  the attributes to add xsi:type attribute to
+    * @return  prefix for the type's ns if it was generated
+    */
+   private String declareXsiType(XSTypeDefinition type, AttributesImpl attrs)
    {
+      String result = null;
       if(!prefixByUri.containsKey(Constants.NS_XML_SCHEMA_INSTANCE))
       {
          attrs.add(Constants.NS_XML_SCHEMA, "xmlns", "xmlns:xsi", null, Constants.NS_XML_SCHEMA_INSTANCE);
       }
 
       String pref = (String)prefixByUri.get(type.getNamespace());
+      if(pref == null)
+      {
+         // the ns is not declared
+         result = pref = type.getName() + "_ns";
+      }
+
       String typeQName = pref == null ? type.getName() : pref + ':' + type.getName();
       attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "type", "xsi:type", null, typeQName);
+      return result;
    }
 
    private void declareNs(AttributesImpl attrs, String prefix, String ns)

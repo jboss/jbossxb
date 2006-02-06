@@ -368,7 +368,7 @@ public class SundayContentHandler
             TypeBinding xsiTypeBinding = schemaBinding.getType(xsiTypeQName);
             if(xsiTypeBinding == null)
             {
-               throw new JBossXBRuntimeException("Type binding not found for type " + xsiType +
+               throw new JBossXBRuntimeException("Type binding not found for type " + xsiTypeQName +
                   " specified with xsi:type for element " + startName);
             }
 

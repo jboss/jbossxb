@@ -359,7 +359,7 @@ public class RtElementHandler
                            col = new ArrayList();
                         }
                         // todo: add support for terms
-                        initializer.addElementValue(qName, (ElementBinding)term, valueList, col);
+                        initializer.addElementValue(qName, particle, valueList, col);
                      }
                      col.add(o);
                   }
@@ -380,7 +380,7 @@ public class RtElementHandler
                      }
                      Array.set(arr, index, o);
                      // todo: add support for terms
-                     initializer.addElementValue(qName, (ElementBinding)term, valueList, arr);
+                     initializer.addElementValue(qName, particle, valueList, arr);
                   }
                   else
                   {
@@ -393,7 +393,7 @@ public class RtElementHandler
                else
                {
                   // todo: add support for terms
-                  initializer.addElementValue(qName, (ElementBinding)term, valueList, o);
+                  initializer.addElementValue(qName, particle, valueList, o);
                }
             }
             else if(propertyMetaData != null)
@@ -504,7 +504,7 @@ public class RtElementHandler
             log.trace("endParticle " + elementName + " valueList");
          }
          ValueList valueList = (ValueList)o;
-         o = valueList.getHandler().newInstance(valueList);
+         o = valueList.getHandler().newInstance(particle, valueList);
       }
 
       return o;
@@ -1045,6 +1045,42 @@ public class RtElementHandler
       {
          o = new ValueListInitializer().newValueList(ValueListHandler.IMMUTABLE, cls);
       }
+
+/*
+   if(cls.isArray())
+   {
+      o = GenericValueContainer.FACTORY.array(cls.getComponentType());
+   }
+   else
+   {
+      Constructor[] ctors = cls.getConstructors();
+      if(ctors.length == 0)
+      {
+         throw new JBossXBRuntimeException(
+            "Class " + cls.getName() + " has no public constructors or the class reflects a primitive type or void"
+         );
+      }
+      else if(ctors.length > 1 || ctors[0].getParameterTypes().length > 0)
+      {
+         o = new ValueListInitializer().newValueList(ValueListHandler.NON_DEFAULT_CTOR, cls);
+      }
+      else
+      {
+         try
+         {
+            o = ctors[0].newInstance(null);
+         }
+         catch(Exception e)
+         {
+            throw new JBossXBRuntimeException("Failed to create an instance of " +
+               cls +
+               " using default constructor for element " +
+               elementName + ": " + e.getMessage(), e
+            );
+         }
+      }
+*/
+
       return o;
    }
 

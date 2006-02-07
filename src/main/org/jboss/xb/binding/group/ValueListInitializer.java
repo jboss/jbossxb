@@ -30,6 +30,7 @@ import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -98,7 +99,7 @@ public class ValueListInitializer
       }
    }
 
-   public void addElementValue(QName qName, ElementBinding binding, ValueList valueList, Object value)
+   public void addElementValue(QName qName, ParticleBinding binding, ValueList valueList, Object value)
    {
       Integer index = (Integer)elemIndex.get(qName);
       if(index == null)

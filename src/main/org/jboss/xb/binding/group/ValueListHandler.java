@@ -25,19 +25,16 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import javax.xml.namespace.QName;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
+import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -138,10 +135,9 @@ public interface ValueListHandler
       public Object newInstance(ParticleBinding particle, ValueList valueList)
       {
          Class cls = valueList.getTargetClass();
-         Map map = valueList.getNonRequiredValues();
+         int size = valueList.size();
 
-         Collection values = map.values();
-         if(values.isEmpty())
+         if(size == 0)
          {
             try
             {
@@ -155,112 +151,63 @@ public interface ValueListHandler
             }
          }
 
-         Constructor bestMatch = null;
-         int bestMatchArgsTotal = 0;
-         Constructor[] ctors = cls.getConstructors();
+         Constructor ctor = matchBestCtor(cls, valueList);
 
-         for(int i = 0; i < ctors.length; ++i)
-         {
-            Constructor ctor = ctors[i];
-            Class[] types = ctor.getParameterTypes();
-
-            if((types == null || types.length == 0) && bestMatch == null)
-            {
-               bestMatch = ctor;
-               continue;
-            }
-
-            if(bestMatch != null && bestMatchArgsTotal < types.length)
-            {
-               int typeInd = 0;
-               Iterator iter = values.iterator();
-               while(typeInd < types.length && iter.hasNext())
-               {
-                  Class type = types[typeInd++];
-                  if(type.isPrimitive())
-                  {
-                     type = Classes.getPrimitiveWrapper(type);
-                  }
-
-                  if(!type.isAssignableFrom(iter.next().getClass()))
-                  {
-                     break;
-                  }
-               }
-
-               if(typeInd == types.length)
-               {
-                  bestMatch = ctor;
-                  bestMatchArgsTotal = types.length;
-               }
-            }
-         }
-
-         if(bestMatch == null)
+         if(ctor == null)
          {
             StringBuffer buf = new StringBuffer();
             buf.append("Failed to find no-arg ctor or best-match ctor in ")
                .append(cls)
                .append(", property values:\n");
             int cnt = 0;
-            for(Iterator i = values.iterator(); i.hasNext();)
+            for(int i = 0; i < size; ++i)
             {
-               Object o = i.next();
-               buf.append(' ').append(++cnt).append(") ").append(o.getClass()).append(": ").append(o).append('\n');
+               Object o = valueList.getValue(i).value;
+               buf.append(' ').append(++cnt).append(") ").append(o).append('\n');
             }
-            throw new IllegalStateException(buf.toString());
+            throw new JBossXBRuntimeException(buf.toString());
          }
 
          Object o;
-         if(bestMatchArgsTotal == values.size())
+         int argsTotal = ctor.getParameterTypes().length;
+         if(argsTotal == size)
          {
-            o = newInstance(bestMatch, values.toArray());
+            Object[] args = new Object[size];
+            for(int i = 0; i < size; ++i)
+            {
+               args[i] = valueList.getValue(i).value;
+            }
+            o = newInstance(ctor, args);
          }
          else
          {
-            QName elementName = null;
-            if(particle.getTerm() instanceof ElementBinding)
-            {
-               elementName = ((ElementBinding)particle.getTerm()).getQName();
-            }
-
-            Object[] args = new Object[bestMatchArgsTotal];
+            Object[] args = new Object[argsTotal];
             int i = 0;
-            Iterator iter = values.iterator();
-            while(i < bestMatchArgsTotal)
+            while(i < argsTotal)
             {
-               args[i++] = iter.next();
+               args[i] = valueList.getValue(i++).value;
             }
 
-            o = newInstance(bestMatch, args);
+            o = newInstance(ctor, args);
 
-            List bindings = valueList.getNonRequiredBindings();
-            while(iter.hasNext())
+            while(i < size)
             {
-               Object value = iter.next();
-               Object binding = bindings.get(i++);
-               QName qName = null;
+               ValueList.NonRequiredValue valueEntry = valueList.getValue(i++);
+               Object value = valueEntry.value;
+               Object binding = valueEntry.binding;
+               QName qName = valueEntry.qName;
                if(binding instanceof ParticleBinding)
                {
+                  Object handler = valueEntry.handler;
                   ParticleBinding childParticle = (ParticleBinding)binding;
-                  TermBinding term = childParticle.getTerm();
-                  ParticleHandler handler;
-                  if(term instanceof ElementBinding)
+                  if(handler instanceof ParticleHandler)
                   {
-                     ElementBinding e = (ElementBinding)term;
-                     qName = e.getQName();
-                     handler = e.getType().getHandler();
-                     if(handler == null)
-                     {
-                        handler = DefaultHandlers.ELEMENT_HANDLER;
-                     }
+                     ((ParticleHandler)handler).setParent(o, value, qName, childParticle, particle);
                   }
                   else
                   {
-                     handler = ((ModelGroupBinding)term).getHandler();
+                     ((CharactersHandler)handler).setValue(qName, (ElementBinding)childParticle.getTerm(), o, value);
                   }
-
-                  handler.setParent(o, value, qName, childParticle, particle);
                }
                else if(binding instanceof AttributeBinding)
                {
@@ -268,12 +215,12 @@ public interface ValueListHandler
                   AttributeHandler handler = attr.getHandler();
                   if(handler != null)
                   {
-                     handler.attribute(elementName, attr.getQName(), attr, o, value);
+                     handler.attribute(qName, attr.getQName(), attr, o, value);
                   }
                   else
                   {
                      throw new JBossXBRuntimeException("Attribute binding present but has no handler: element=" +
-                        elementName +
+                        qName +
                         ", attrinute=" +
                         attr.getQName()
                      );
@@ -289,6 +236,80 @@ public interface ValueListHandler
          return o;
       }
 
+      private Constructor matchBestCtor(Class cls, ValueList valueList)
+      {
+         Constructor bestMatch = null;
+         int bestMatchArgsTotal = 0;
+         Constructor[] ctors = cls.getConstructors();
+         int size = valueList.size();
+
+         for(int i = 0; i < ctors.length; ++i)
+         {
+            Constructor ctor = ctors[i];
+            Class[] types = ctor.getParameterTypes();
+
+            if((types == null || types.length == 0) && bestMatch == null)
+            {
+               bestMatch = ctor;
+               continue;
+            }
+
+            if(bestMatchArgsTotal <= types.length)
+            {
+               // todo this doesn't take into account repeatable particles that should be passed as, e.g., a collection
+               int typeInd = 0;
+               for(int valueInd = 0; typeInd < types.length && valueInd < size; ++typeInd, ++valueInd)
+               {
+                  Class type = types[typeInd];
+                  if(type.isPrimitive())
+                  {
+                     type = Classes.getPrimitiveWrapper(type);
+                  }
+
+                  ValueList.NonRequiredValue valueEntry = valueList.getValue(valueInd);
+                  Object value = valueEntry.value;
+                  if(value != null && !type.isAssignableFrom(value.getClass()))
+                  {
+                     break;
+                  }
+/*
+todo support repeatable particles passed in as array or collection args
+                  else if(valueEntry.binding instanceof ParticleBinding)
+                  {
+                     ParticleBinding childParticle = (ParticleBinding)valueEntry.binding;
+                     if(childParticle.isRepeatable() && !(type.isArray() || Collection.class.isAssignableFrom(type)))
+                     {
+                        break;
+                     }
+                  }
+*/
+
+                  if(bestMatchArgsTotal == types.length &&
+                     !bestMatch.getParameterTypes()[typeInd].isAssignableFrom(type))
+                  {
+                     break;
+                  }
+               }
+
+               if(typeInd == types.length)
+               {
+/*
+                  java.util.ArrayList args = new java.util.ArrayList(types.length);
+                  for(int j = 0; j < types.length; ++j)
+                  {
+                     Object value = valueList.getValue(j).value;
+                     args.add(value);
+                  }
+*/
+
+                  bestMatch = ctor;
+                  bestMatchArgsTotal = types.length;
+               }
+            }
+         }
+         return bestMatch;
+      }
+
       private Object newInstance(Constructor bestMatch, Object[] args)
       {
          try
@@ -300,7 +321,7 @@ public interface ValueListHandler
             throw new JBossXBRuntimeException("Failed to create an instance of " +
                bestMatch.getDeclaringClass() +
                " using the following ctor arguments " +
-               Arrays.asList(args)
+               Arrays.asList(args), e
             );
          }
       }

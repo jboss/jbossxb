@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -39,24 +40,27 @@ public class ValueList
    private final ValueListInitializer initializer;
    private final ValueListHandler handler;
    private final Class targetClass;
-   private final int requiredTotal;
+   //private final int requiredTotal;
 
-   private final Object[] requiredValues;
-   private int state;
-   private Map nonRequiredValues = Collections.EMPTY_MAP;
-   private List nonRequiredBindings;
+   //private final Object[] requiredValues;
+   //private int state;
+   //private Map nonRequiredValues = Collections.EMPTY_MAP;
+   //private List nonRequiredBindings;
+   private List nonRequiredValues = Collections.EMPTY_LIST;
 
    ValueList(ValueListInitializer initializer, ValueListHandler handler, Class targetClass)
    {
       this.initializer = initializer;
       this.handler = handler;
       this.targetClass = targetClass;
-      this.requiredTotal = initializer.getRequiredBindings().size();
-      requiredValues = new Object[requiredTotal];
+      //this.requiredTotal = initializer.getRequiredBindings().size();
+      //requiredValues = new Object[requiredTotal];
    }
 
    void setRequiredValue(int index, int stateIncrement, Object value)
    {
+      throw new UnsupportedOperationException();
+/*
       if(index >= requiredTotal)
       {
          throw new JBossXBRuntimeException(
@@ -65,10 +69,12 @@ public class ValueList
       }
       requiredValues[index] = value;
       state += stateIncrement;
+*/
    }
 
    Object getRequiredValue(int index)
    {
+/*
       if(index >= requiredTotal)
       {
          throw new JBossXBRuntimeException(
@@ -76,15 +82,30 @@ public class ValueList
          );
       }
       return requiredValues[index];
+*/
+      throw new UnsupportedOperationException();
    }
 
    int getState()
    {
-      return state;
+//      return state;
+      throw new UnsupportedOperationException();
    }
 
-   void setNonRequiredValue(QName qName, Object binding, Object value)
+   void setNonRequiredValue(QName qName, Object binding, Object handler, Object value)
    {
+      NonRequiredValue val = new NonRequiredValue(qName, binding, handler, value);
+      switch(nonRequiredValues.size())
+      {
+         case 0:
+            nonRequiredValues = Collections.singletonList(val);
+            break;
+         case 1:
+            nonRequiredValues = new ArrayList(nonRequiredValues);
+         default:
+            nonRequiredValues.add(val);
+      }
+/*
       switch(nonRequiredValues.size())
       {
          case 0:
@@ -98,11 +119,13 @@ public class ValueList
             nonRequiredValues.put(qName, value);
             nonRequiredBindings.add(binding);
       }
+*/
    }
 
    Object getNonRequiredValue(QName qName)
    {
-      return nonRequiredValues.get(qName);
+//      return nonRequiredValues.get(qName);
+      throw new UnsupportedOperationException();
    }
 
    public ValueListInitializer getInitializer()
@@ -112,17 +135,20 @@ public class ValueList
 
    public List getRequiredValues()
    {
-      return Arrays.asList(requiredValues);
+//      return Arrays.asList(requiredValues);
+      throw new UnsupportedOperationException();
    }
 
    public Map getNonRequiredValues()
    {
-      return nonRequiredValues;
+//      return nonRequiredValues;
+      throw new UnsupportedOperationException();
    }
 
    public List getNonRequiredBindings()
    {
-      return nonRequiredBindings;
+//      return nonRequiredBindings;
+      throw new UnsupportedOperationException();
    }
 
    public ValueListHandler getHandler()
@@ -133,5 +159,31 @@ public class ValueList
    public Class getTargetClass()
    {
       return targetClass;
+   }
+
+   public NonRequiredValue getValue(int i)
+   {
+      return (NonRequiredValue)nonRequiredValues.get(i);
+   }
+
+   public int size()
+   {
+      return nonRequiredValues.size();
+   }
+
+   public static final class NonRequiredValue
+   {
+      public final QName qName;
+      public final Object binding;
+      public final Object handler;
+      public final Object value;
+
+      public NonRequiredValue(QName qName, Object binding, Object handler, Object value)
+      {
+         this.qName = qName;
+         this.binding = binding;
+         this.handler = handler;
+         this.value = value;
+      }
    }
 }

@@ -28,9 +28,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import org.jboss.logging.Logger;
@@ -249,7 +247,17 @@ public class RtElementHandler
             }
          }
 
-         if(term.getPutMethodMetaData() != null ||
+/*         if(owner instanceof ValueList)
+         {
+            if(trace)
+            {
+               log.trace("setParent " + qName + " add");
+            }
+            ValueList valueList = (ValueList)owner;
+            ValueListInitializer initializer = valueList.getInitializer();
+            initializer.addElementValue(qName, particle, this, valueList, o);
+         }         
+         else */if(term.getPutMethodMetaData() != null ||
             term.getMapEntryMetaData() != null && owner instanceof Map)
          {
             if(trace)
@@ -298,6 +306,7 @@ public class RtElementHandler
                }
                ((GenericValueContainer)owner).addChild(qName, o);
             }
+/*
             else if(owner instanceof ValueList)
             {
                if(trace)
@@ -321,14 +330,21 @@ public class RtElementHandler
                   }
                   catch(NoSuchMethodException e)
                   {
-                     String msg = "Neither getter/setter nor field were found for field " +
-                        propName + " in " + valueList.getTargetClass();
-                     if(term.getSchema().isIgnoreUnresolvedFieldOrClass())
+                     try
                      {
-                        log.warn(msg);
-                        return;
+                        fieldType = valueList.getTargetClass().getField(propName).getType();
                      }
-                     throw new JBossXBRuntimeException(msg);
+                     catch(NoSuchFieldException e1)
+                     {
+                        String msg = "Neither getter/setter nor field were found for field " +
+                           propName + " in " + valueList.getTargetClass();
+                        if(term.getSchema().isIgnoreUnresolvedFieldOrClass())
+                        {
+                           log.warn(msg);
+                           return;
+                        }
+                        throw new JBossXBRuntimeException(msg);
+                     }
                   }
 
                   if(Collection.class.isAssignableFrom(fieldType))
@@ -392,10 +408,10 @@ public class RtElementHandler
                }
                else
                {
-                  // todo: add support for terms
                   initializer.addElementValue(qName, particle, valueList, o);
                }
             }
+*/
             else if(propertyMetaData != null)
             {
                String propName = propertyMetaData.getName();
@@ -497,7 +513,7 @@ public class RtElementHandler
             );
          }
       }
-      else if(o instanceof ValueList)
+      /*else if(o instanceof ValueList)
       {
          if(trace)
          {
@@ -505,7 +521,7 @@ public class RtElementHandler
          }
          ValueList valueList = (ValueList)o;
          o = valueList.getHandler().newInstance(particle, valueList);
-      }
+      }*/
 
       return o;
    }
@@ -1018,6 +1034,7 @@ public class RtElementHandler
    private static Object newInstance(Class cls, QName elementName)
    {
       Object o;
+/*
       try
       {
          if(cls.isArray())
@@ -1045,71 +1062,64 @@ public class RtElementHandler
       {
          o = new ValueListInitializer().newValueList(ValueListHandler.IMMUTABLE, cls);
       }
+*/
 
-/*
-   if(cls.isArray())
-   {
-      o = GenericValueContainer.FACTORY.array(cls.getComponentType());
-   }
-   else
-   {
-      Constructor[] ctors = cls.getConstructors();
-      if(ctors.length == 0)
+      if(cls.isArray())
       {
-         throw new JBossXBRuntimeException(
-            "Class " + cls.getName() + " has no public constructors or the class reflects a primitive type or void"
-         );
-      }
-      else if(ctors.length > 1 || ctors[0].getParameterTypes().length > 0)
-      {
-         o = new ValueListInitializer().newValueList(ValueListHandler.NON_DEFAULT_CTOR, cls);
+         o = GenericValueContainer.FACTORY.array(cls.getComponentType());
       }
       else
       {
-         try
+         Constructor[] ctors = cls.getConstructors();
+         if(ctors.length == 0)
          {
-            o = ctors[0].newInstance(null);
-         }
-         catch(Exception e)
-         {
-            throw new JBossXBRuntimeException("Failed to create an instance of " +
-               cls +
-               " using default constructor for element " +
-               elementName + ": " + e.getMessage(), e
+            throw new JBossXBRuntimeException(
+               "Class " + cls.getName() + " has no public constructors or the class reflects a primitive type or void"
             );
          }
-      }
-*/
 
+         boolean useNoArgCtorIfFound = true;
+         if(useNoArgCtorIfFound)
+         {
+            try
+            {
+               Constructor ctor = cls.getConstructor(null);
+               o = ctor.newInstance(null);
+            }
+            catch(NoSuchMethodException e)
+            {
+               o = new ValueListInitializer().newValueList(ValueListHandler.NON_DEFAULT_CTOR, cls);
+            }
+            catch(Exception e)
+            {
+               throw new JBossXBRuntimeException("Failed to create an instance of " +
+                  cls +
+                  " using default constructor for element " +
+                  elementName + ": " + e.getMessage(), e
+               );
+            }
+         }
+         else if(ctors.length > 1 || ctors[0].getParameterTypes().length > 0)
+         {
+            o = new ValueListInitializer().newValueList(ValueListHandler.NON_DEFAULT_CTOR, cls);
+         }
+         else
+         {
+            try
+            {
+               o = ctors[0].newInstance(null);
+            }
+            catch(Exception e)
+            {
+               throw new JBossXBRuntimeException("Failed to create an instance of " +
+                  cls +
+                  " using default constructor for element " +
+                  elementName + ": " + e.getMessage(), e
+               );
+            }
+         }
+      }
       return o;
-   }
-
-   private static Class getClass(ElementBinding element)
-   {
-      ClassMetaData clsMetaData = element.getClassMetaData();
-      String localClassName = clsMetaData == null ? null : clsMetaData.getImpl();
-      if(localClassName == null)
-      {
-         TypeBinding type = element.getType();
-         QName typeBaseQName = type.getQName();
-         if(typeBaseQName == null)
-         {
-            typeBaseQName = element.getQName();
-         }
-
-         SchemaBinding schemaBinding = type.getSchemaBinding();
-         PackageMetaData jaxbPackage = schemaBinding == null ? null : schemaBinding.getPackageMetaData();
-         String pkg = jaxbPackage == null ?
-            Util.xmlNamespaceToJavaPackage(typeBaseQName.getNamespaceURI()) :
-            jaxbPackage.getName();
-         localClassName = Util.xmlNameToClassName(typeBaseQName.getLocalPart(), element.getSchema().isIgnoreLowLine());
-         if(pkg != null && pkg.length() > 0)
-         {
-            localClassName = pkg + '.' + localClassName;
-         }
-      }
-
-      return loadClassForTerm(localClassName, element, element.getQName());
    }
 
    private static Class loadClassForTerm(String className,
@@ -1516,11 +1526,6 @@ public class RtElementHandler
             pkg + "." + Util.xmlNameToClassName(typeBase.getLocalPart(), schema.isIgnoreLowLine());
       }
       return clsName;
-   }
-
-   private static boolean createInstance(Class cls)
-   {
-      return cls != null && !Classes.isPrimitive(cls) && cls != String.class;
    }
 
    private static Class classForSimpleType(TypeBinding type, boolean nillable)

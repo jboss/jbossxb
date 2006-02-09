@@ -31,6 +31,7 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -45,6 +46,7 @@ public class ValueListInitializer
 
    public void addRequiredAttribute(QName qName, AttributeBinding binding)
    {
+/*
       Integer index = new Integer(requiredBindings.size());
       switch(attrIndex.size())
       {
@@ -58,10 +60,13 @@ public class ValueListInitializer
       }
       addBinding(binding);
       initializedState += Math.abs(qName.hashCode());
+*/
+      throw new UnsupportedOperationException();
    }
 
    public void addRequiredElement(QName qName, ElementBinding binding)
    {
+/*
       Integer index = new Integer(requiredBindings.size());
       switch(elemIndex.size())
       {
@@ -75,6 +80,8 @@ public class ValueListInitializer
       }
       addBinding(binding);
       initializedState += Math.abs(qName.hashCode());
+*/
+      throw new UnsupportedOperationException();
    }
 
    public ValueList newValueList(ValueListHandler handler, Class targetClass)
@@ -87,7 +94,7 @@ public class ValueListInitializer
       Integer index = (Integer)attrIndex.get(qName);
       if(index == null)
       {
-         valueList.setNonRequiredValue(qName, binding, value);
+         valueList.setNonRequiredValue(qName, binding, null, value);
       }
       else
       {
@@ -99,12 +106,12 @@ public class ValueListInitializer
       }
    }
 
-   public void addElementValue(QName qName, ParticleBinding binding, ValueList valueList, Object value)
+   public void addElementValue(QName qName, ParticleBinding binding, Object handler, ValueList valueList, Object value)
    {
       Integer index = (Integer)elemIndex.get(qName);
       if(index == null)
       {
-         valueList.setNonRequiredValue(qName, binding, value);
+         valueList.setNonRequiredValue(qName, binding, handler, value);
       }
       else
       {
@@ -118,11 +125,13 @@ public class ValueListInitializer
 
    public boolean isInitialized(ValueList valueList)
    {
-      return requiredBindings.size() == 0 || initializedState == valueList.getState();
+//      return requiredBindings.size() == 0 || initializedState == valueList.getState();
+      throw new UnsupportedOperationException();
    }
 
    public Object getAttributeValue(QName qName, ValueList valueList)
    {
+/*
       Object value;
       Integer index = (Integer)attrIndex.get(qName);
       if(index == null)
@@ -134,10 +143,13 @@ public class ValueListInitializer
          value = valueList.getRequiredValue(index.intValue());
       }
       return value;
+*/
+      throw new UnsupportedOperationException();
    }
 
    public Object getElementValue(QName qName, ValueList valueList)
    {
+/*
       Object value;
       Integer index = (Integer)elemIndex.get(qName);
       if(index == null)
@@ -149,11 +161,14 @@ public class ValueListInitializer
          value = valueList.getRequiredValue(index.intValue());
       }
       return value;
+*/
+      throw new UnsupportedOperationException();
    }
 
    public List getRequiredBindings()
    {
-      return requiredBindings;
+//      return requiredBindings;
+      throw new UnsupportedOperationException();
    }
 
    // Private

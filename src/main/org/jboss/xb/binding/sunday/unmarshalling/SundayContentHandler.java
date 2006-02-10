@@ -602,7 +602,14 @@ public class SundayContentHandler
                   if(o instanceof ValueList)
                   {
                      ValueList valueList = (ValueList)o;
-                     valueList.getInitializer().addElementValue(endName, particle, charHandler, valueList, unmarshalled);
+                     if(type.isSimple())
+                     {
+                        valueList.getInitializer().addTermValue(endName, particle, charHandler, valueList, unmarshalled);
+                     }
+                     else
+                     {
+                        valueList.getInitializer().addTextValue(endName, particle, charHandler, valueList, unmarshalled);
+                     }
                   }
                   else
                   {
@@ -749,7 +756,7 @@ public class SundayContentHandler
       if(parent instanceof ValueList && !particle.getTerm().isSkip())
       {
          ValueList valueList = (ValueList)parent;
-         valueList.getInitializer().addElementValue(endName, particle, handler, valueList, o);
+         valueList.getInitializer().addTermValue(endName, particle, handler, valueList, o);
       }
       else
       {

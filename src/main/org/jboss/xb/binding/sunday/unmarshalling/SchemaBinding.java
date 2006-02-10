@@ -119,6 +119,7 @@ public class SchemaBinding
    private boolean ignoreLowLine = true;
    private boolean replacePropertyRefs = true;
    private boolean unmarshalListsToArrays;
+   private boolean useNoArgCtorIfFound;
    private String simpleContentProperty = "value";
 
    public TypeBinding getType(QName qName)
@@ -281,6 +282,16 @@ public class SchemaBinding
    public void setUnmarshalListsToArrays(boolean unmarshalListsToArrays)
    {
       this.unmarshalListsToArrays = unmarshalListsToArrays;
+   }
+
+   public boolean isUseNoArgCtorIfFound()
+   {
+      return useNoArgCtorIfFound;
+   }
+
+   public void setUseNoArgCtorIfFound(boolean useNoArgCtorIfFound)
+   {
+      this.useNoArgCtorIfFound = useNoArgCtorIfFound;
    }
 
    public String getSimpleContentProperty()

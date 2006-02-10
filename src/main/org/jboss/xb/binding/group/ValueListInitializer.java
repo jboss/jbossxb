@@ -32,6 +32,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -94,7 +95,7 @@ public class ValueListInitializer
       Integer index = (Integer)attrIndex.get(qName);
       if(index == null)
       {
-         valueList.setNonRequiredValue(qName, binding, null, value);
+         valueList.setAttributeValue(qName, binding, value);
       }
       else
       {
@@ -106,12 +107,21 @@ public class ValueListInitializer
       }
    }
 
-   public void addElementValue(QName qName, ParticleBinding binding, Object handler, ValueList valueList, Object value)
+   public void addTextValue(QName qName,
+                            ParticleBinding particle,
+                            CharactersHandler handler,
+                            ValueList valueList,
+                            Object value)
+   {
+      valueList.addTextValue(qName, particle, handler, value);
+   }
+
+   public void addTermValue(QName qName, ParticleBinding binding, Object handler, ValueList valueList, Object value)
    {
       Integer index = (Integer)elemIndex.get(qName);
       if(index == null)
       {
-         valueList.setNonRequiredValue(qName, binding, handler, value);
+         valueList.addTermValue(qName, binding, handler, value);
       }
       else
       {

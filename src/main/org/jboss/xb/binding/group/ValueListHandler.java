@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
-import javax.xml.namespace.QName;
+import java.util.List;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
@@ -193,20 +193,30 @@ public interface ValueListHandler
             while(i < size)
             {
                ValueList.NonRequiredValue valueEntry = valueList.getValue(i++);
-               Object value = valueEntry.value;
                Object binding = valueEntry.binding;
-               QName qName = valueEntry.qName;
                if(binding instanceof ParticleBinding)
                {
                   Object handler = valueEntry.handler;
                   ParticleBinding childParticle = (ParticleBinding)binding;
                   if(handler instanceof ParticleHandler)
                   {
-                     ((ParticleHandler)handler).setParent(o, value, qName, childParticle, particle);
+                     ParticleHandler pHandler = (ParticleHandler)handler;
+                     if(childParticle.isRepeatable())
+                     {
+                        List list = (List)valueEntry.value;
+                        for(int listInd = 0; listInd < list.size(); ++listInd)
+                        {
+                           pHandler.setParent(o, list.get(listInd), valueEntry.qName, childParticle, particle);
+                        }
+                     }
+                     else
+                     {
+                        pHandler.setParent(o, valueEntry.value, valueEntry.qName, childParticle, particle);
+                     }
                   }
                   else
                   {
-                     ((CharactersHandler)handler).setValue(qName, (ElementBinding)childParticle.getTerm(), o, value);
+                     ((CharactersHandler)handler).setValue(valueEntry.qName, (ElementBinding)childParticle.getTerm(), o, valueEntry.value);
                   }
                }
                else if(binding instanceof AttributeBinding)
@@ -215,12 +225,12 @@ public interface ValueListHandler
                   AttributeHandler handler = attr.getHandler();
                   if(handler != null)
                   {
-                     handler.attribute(qName, attr.getQName(), attr, o, value);
+                     handler.attribute(valueEntry.qName, attr.getQName(), attr, o, valueEntry.value);
                   }
                   else
                   {
                      throw new JBossXBRuntimeException("Attribute binding present but has no handler: element=" +
-                        qName +
+                        valueEntry.qName +
                         ", attrinute=" +
                         attr.getQName()
                      );
@@ -293,15 +303,6 @@ todo support repeatable particles passed in as array or collection args
 
                if(typeInd == types.length)
                {
-/*
-                  java.util.ArrayList args = new java.util.ArrayList(types.length);
-                  for(int j = 0; j < types.length; ++j)
-                  {
-                     Object value = valueList.getValue(j).value;
-                     args.add(value);
-                  }
-*/
-
                   bestMatch = ctor;
                   bestMatchArgsTotal = types.length;
                }

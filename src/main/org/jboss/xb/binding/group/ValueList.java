@@ -21,15 +21,14 @@
   */
 package org.jboss.xb.binding.group;
 
-import java.util.List;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import javax.xml.namespace.QName;
-import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -92,6 +91,47 @@ public class ValueList
       throw new UnsupportedOperationException();
    }
 
+   void setAttributeValue(QName qName, AttributeBinding binding, Object value)
+   {
+      setNonRequiredValue(qName, binding, null, value);
+   }
+
+   void addTextValue(QName qName, ParticleBinding particle, CharactersHandler handler, Object value)
+   {
+      setNonRequiredValue(qName, particle, handler, value);
+   }
+
+   void addTermValue(QName qName, ParticleBinding binding, Object handler, Object value)
+   {
+      if(binding.isRepeatable())
+      {
+         NonRequiredValue last = (NonRequiredValue)(nonRequiredValues.isEmpty() ?
+            null :
+            nonRequiredValues.get(nonRequiredValues.size() - 1)
+            );
+
+         if(last == null || last.binding != binding)
+         {
+            value = Collections.singletonList(value);
+            setNonRequiredValue(qName, binding, handler, value);
+         }
+         else
+         {
+            List list = (List)last.value;
+            if(list.size() == 1)
+            {
+               list = new ArrayList(list);
+               last.value = list;
+            }
+            list.add(value);
+         }
+      }
+      else
+      {
+         setNonRequiredValue(qName, binding, handler, value);
+      }
+   }
+
    void setNonRequiredValue(QName qName, Object binding, Object handler, Object value)
    {
       NonRequiredValue val = new NonRequiredValue(qName, binding, handler, value);
@@ -105,21 +145,6 @@ public class ValueList
          default:
             nonRequiredValues.add(val);
       }
-/*
-      switch(nonRequiredValues.size())
-      {
-         case 0:
-            nonRequiredValues = Collections.singletonMap(qName, value);
-            nonRequiredBindings = new ArrayList();
-            nonRequiredBindings.add(binding);
-            break;
-         case 1:
-            nonRequiredValues = new LinkedHashMap(nonRequiredValues);
-         default:
-            nonRequiredValues.put(qName, value);
-            nonRequiredBindings.add(binding);
-      }
-*/
    }
 
    Object getNonRequiredValue(QName qName)
@@ -176,7 +201,7 @@ public class ValueList
       public final QName qName;
       public final Object binding;
       public final Object handler;
-      public final Object value;
+      public Object value;
 
       public NonRequiredValue(QName qName, Object binding, Object handler, Object value)
       {

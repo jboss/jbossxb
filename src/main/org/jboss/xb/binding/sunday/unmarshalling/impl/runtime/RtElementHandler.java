@@ -679,7 +679,7 @@ public class RtElementHandler
                   log.trace("startElement " + elementName + " new map entry " + cls.getName());
                }
 
-               o = newInstance(cls, elementName);
+               o = newInstance(cls, elementName, term.getSchema().isUseNoArgCtorIfFound());
             }
             else
             {
@@ -850,7 +850,7 @@ public class RtElementHandler
                {
                   log.trace("startElement " + elementName + " new " + cls.getName());
                }
-               o = newInstance(cls, elementName);
+               o = newInstance(cls, elementName, term.getSchema().isUseNoArgCtorIfFound());
             }
          }
       }
@@ -1031,39 +1031,9 @@ public class RtElementHandler
       return mapEntryMetaData;
    }
 
-   private static Object newInstance(Class cls, QName elementName)
+   private static Object newInstance(Class cls, QName elementName, boolean useNoArgCtorIfFound)
    {
       Object o;
-/*
-      try
-      {
-         if(cls.isArray())
-         {
-            o = GenericValueContainer.FACTORY.array(cls.getComponentType());
-         }
-         else
-         {
-            Constructor ctor = cls.getConstructor(null);
-            try
-            {
-               o = ctor.newInstance(null);
-            }
-            catch(Exception e)
-            {
-               throw new JBossXBRuntimeException("Failed to create an instance of " +
-                  cls +
-                  " using default constructor for element " +
-                  elementName + ": " + e.getMessage(), e
-               );
-            }
-         }
-      }
-      catch(NoSuchMethodException e)
-      {
-         o = new ValueListInitializer().newValueList(ValueListHandler.IMMUTABLE, cls);
-      }
-*/
-
       if(cls.isArray())
       {
          o = GenericValueContainer.FACTORY.array(cls.getComponentType());
@@ -1078,7 +1048,6 @@ public class RtElementHandler
             );
          }
 
-         boolean useNoArgCtorIfFound = true;
          if(useNoArgCtorIfFound)
          {
             try

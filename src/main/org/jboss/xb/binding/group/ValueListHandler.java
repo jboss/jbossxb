@@ -22,11 +22,12 @@
 package org.jboss.xb.binding.group;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
@@ -172,24 +173,15 @@ public interface ValueListHandler
          int argsTotal = ctor.getParameterTypes().length;
          if(argsTotal == size)
          {
-            Object[] args = new Object[size];
-            for(int i = 0; i < size; ++i)
-            {
-               args[i] = valueList.getValue(i).value;
-            }
+            Object[] args = getArgs(ctor, valueList);
             o = newInstance(ctor, args);
          }
          else
          {
-            Object[] args = new Object[argsTotal];
-            int i = 0;
-            while(i < argsTotal)
-            {
-               args[i] = valueList.getValue(i++).value;
-            }
-
+            Object[] args = getArgs(ctor, valueList);
             o = newInstance(ctor, args);
 
+            int i = argsTotal;
             while(i < size)
             {
                ValueList.NonRequiredValue valueEntry = valueList.getValue(i++);
@@ -216,7 +208,11 @@ public interface ValueListHandler
                   }
                   else
                   {
-                     ((CharactersHandler)handler).setValue(valueEntry.qName, (ElementBinding)childParticle.getTerm(), o, valueEntry.value);
+                     ((CharactersHandler)handler).setValue(valueEntry.qName,
+                        (ElementBinding)childParticle.getTerm(),
+                        o,
+                        valueEntry.value
+                     );
                   }
                }
                else if(binding instanceof AttributeBinding)
@@ -266,7 +262,6 @@ public interface ValueListHandler
 
             if(bestMatchArgsTotal <= types.length)
             {
-               // todo this doesn't take into account repeatable particles that should be passed as, e.g., a collection
                int typeInd = 0;
                for(int valueInd = 0; typeInd < types.length && valueInd < size; ++typeInd, ++valueInd)
                {
@@ -278,21 +273,18 @@ public interface ValueListHandler
 
                   ValueList.NonRequiredValue valueEntry = valueList.getValue(valueInd);
                   Object value = valueEntry.value;
-                  if(value != null && !type.isAssignableFrom(value.getClass()))
+                  if(value != null &&
+                     !(type.isAssignableFrom(value.getClass()) ||
+                     // if particle is repeatable and the type is array of a specific collection
+                     // then we assume we can convert the arg later at creation time
+                     // todo this code should be smarter
+                     valueEntry.binding instanceof ParticleBinding &&
+                     ((ParticleBinding)valueEntry.binding).isRepeatable() &&
+                     type.isArray()
+                     ))
                   {
                      break;
                   }
-/*
-todo support repeatable particles passed in as array or collection args
-                  else if(valueEntry.binding instanceof ParticleBinding)
-                  {
-                     ParticleBinding childParticle = (ParticleBinding)valueEntry.binding;
-                     if(childParticle.isRepeatable() && !(type.isArray() || Collection.class.isAssignableFrom(type)))
-                     {
-                        break;
-                     }
-                  }
-*/
 
                   if(bestMatchArgsTotal == types.length &&
                      !bestMatch.getParameterTypes()[typeInd].isAssignableFrom(type))
@@ -325,6 +317,33 @@ todo support repeatable particles passed in as array or collection args
                Arrays.asList(args), e
             );
          }
+      }
+
+      private Object[] getArgs(Constructor ctor, ValueList valueList)
+      {
+         Class[] types = ctor.getParameterTypes();
+         Object[] args = new Object[types.length];
+         for(int i = 0; i < types.length; ++i)
+         {
+            ValueList.NonRequiredValue valueEntry = valueList.getValue(i);
+            Object arg = valueEntry.value;
+            if(valueEntry.value != null && !types[i].isAssignableFrom(arg.getClass()))
+            {
+               // if type is array then convert collection to array
+               // todo this part should be smarter about collections
+               if(types[i].isArray() && Collection.class.isAssignableFrom(arg.getClass()))
+               {
+                  Collection col = (Collection)arg;
+                  arg = Array.newInstance(types[i].getComponentType(), col.size());
+                  for(Iterator iter = col.iterator(); iter.hasNext();)
+                  {
+                     Array.set(arg, i, iter.next());
+                  }
+               }
+            }
+            args[i] = arg;
+         }
+         return args;
       }
    };
 

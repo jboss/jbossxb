@@ -335,9 +335,10 @@ public interface ValueListHandler
                {
                   Collection col = (Collection)arg;
                   arg = Array.newInstance(types[i].getComponentType(), col.size());
+                  int arrInd = 0;
                   for(Iterator iter = col.iterator(); iter.hasNext();)
                   {
-                     Array.set(arg, i, iter.next());
+                     Array.set(arg, arrInd++, iter.next());
                   }
                }
             }

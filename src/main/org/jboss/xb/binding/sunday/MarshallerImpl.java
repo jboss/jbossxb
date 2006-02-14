@@ -88,11 +88,23 @@ public class MarshallerImpl
     */
    private boolean supportNil = true;
 
+   private boolean ignoreUnresolvedWildcard;
+
    private QName rootTypeQName;
 
    private SchemaBindingResolver schemaResolver;
 
    private SchemaBinding schema;
+
+   public boolean isIgnoreUnresolvedWildcard()
+   {
+      return ignoreUnresolvedWildcard;
+   }
+
+   public void setIgnoreUnresolvedWildcard(boolean ignoreUnresolvedWildcard)
+   {
+      this.ignoreUnresolvedWildcard = ignoreUnresolvedWildcard;
+   }
 
    public SchemaBindingResolver getSchemaResolver()
    {
@@ -800,12 +812,25 @@ public class MarshallerImpl
          }
          else
          {
-            throw new IllegalStateException("Failed to marshal wildcard. Class mapping not found for " +
-               o.getClass() +
-               "@" +
-               o.hashCode() +
-               ": " + o
-            );
+            if(ignoreUnresolvedWildcard)
+            {
+               log.warn("Failed to marshal wildcard. Class mapping not found for " +
+                  o.getClass() +
+                  "@" +
+                  o.hashCode() +
+                  ": " + o
+               );
+               return true;
+            }
+            else
+            {
+               throw new IllegalStateException("Failed to marshal wildcard. Class mapping not found for " +
+                  o.getClass() +
+                  "@" +
+                  o.hashCode() +
+                  ": " + o
+               );
+            }
          }
       }
 

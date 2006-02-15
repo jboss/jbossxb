@@ -27,13 +27,12 @@ import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.AbstractList;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import org.jboss.logging.Logger;
@@ -44,11 +43,14 @@ import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.Content;
 import org.jboss.xb.binding.ContentWriter;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.MarshallingContext;
+import org.jboss.xb.binding.ObjectLocalMarshaller;
 import org.jboss.xb.binding.ObjectModelProvider;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
+import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ChoiceBinding;
@@ -61,6 +63,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
+import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
@@ -73,13 +76,6 @@ public class MarshallerImpl
    private static final Logger log = Logger.getLogger(MarshallerImpl.class);
 
    private Stack stack = new StackImpl();
-
-   /**
-    * Content the result is written to
-    */
-   private Content content = new Content();
-
-   private final Map prefixByUri = new HashMap();
 
    private Object root;
 
@@ -95,6 +91,40 @@ public class MarshallerImpl
    private SchemaBindingResolver schemaResolver;
 
    private SchemaBinding schema;
+
+   private MarshallingContext ctx = new MarshallingContext()
+   {
+      private ContentHandler ch;
+
+      public FieldBinding getFieldBinding()
+      {
+         throw new UnsupportedOperationException("getFieldBinding is not implemented.");
+      }
+
+      public boolean isAttributeRequired()
+      {
+         throw new UnsupportedOperationException();
+      }
+
+      public boolean isTypeComplex()
+      {
+         throw new UnsupportedOperationException();
+      }
+
+      public String getSimpleContentProperty()
+      {
+         throw new UnsupportedOperationException();
+      }
+
+      public ContentHandler getContentHandler()
+      {
+         if(ch == null)
+         {
+            ch = new ContentHandlerAdaptor();
+         }
+         return ch;
+      }
+   };
 
    public boolean isIgnoreUnresolvedWildcard()
    {
@@ -134,25 +164,6 @@ public class MarshallerImpl
    public void setSupportNil(boolean supportNil)
    {
       this.supportNil = supportNil;
-   }
-
-   /**
-    * Defines a namespace. The namespace declaration will appear in the root element.
-    * <p>If <code>prefix</code> argument is <code>null</code> or is an empty string then
-    * the passed in URI will be used for the default namespace, i.e. <code>xmlns</code>.
-    * Otherwise, the declaration will follow the format <code>xmlns:prefix=uri</code>.
-    * <p>If the namespace with the given prefix was already declared, its value is overwritten.
-    *
-    * @param prefix the prefix for the namespace to declare (can be null or empty string)
-    * @param uri    the URI of the namespace.
-    */
-   public void declareNamespace(String prefix, String uri)
-   {
-      if(prefix == null)
-      {
-         return;
-      }
-      prefixByUri.put(uri, prefix);
    }
 
    /**
@@ -229,16 +240,15 @@ public class MarshallerImpl
             marshalComplexType(rootQName.getNamespaceURI(),
                rootQName.getLocalPart(),
                type,
-               true
+               true,
+               false
             );
             stack.pop();
          }
          else
          {
-            stack.push(root);
             ElementBinding element = new ElementBinding(schema, rootQName, type);
-            marshalElement(element, false, true);
-            stack.pop();
+            marshalElementOccurence(element, root, false, true);
          }
       }
       else if(rootQNames.isEmpty())
@@ -249,17 +259,14 @@ public class MarshallerImpl
             throw new JBossXBRuntimeException("The schema doesn't contain global element declarations.");
          }
 
-         stack.push(root);
          while(elements.hasNext())
          {
             ElementBinding element = (ElementBinding)elements.next();
-            marshalElement(element, true, true);
+            marshalElementOccurence(element, root, true, true);
          }
-         stack.pop();
       }
       else
       {
-         stack.push(root);
          for(int i = 0; i < rootQNames.size(); ++i)
          {
             QName qName = (QName)rootQNames.get(i);
@@ -280,9 +287,8 @@ public class MarshallerImpl
                throw new IllegalStateException("Root element not found: " + qName + " among " + roots);
             }
 
-            marshalElement(element, true, true);
+            marshalElementOccurence(element, root, true, true);
          }
-         stack.pop();
       }
 
       content.endDocument();
@@ -306,7 +312,50 @@ public class MarshallerImpl
       }
    }
 
-   private boolean marshalElement(ElementBinding element, boolean optional, boolean declareNs)
+   private boolean marshalElementOccurence(ElementBinding element,
+                                           Object value,
+                                           boolean optional,
+                                           boolean declareNs)
+   {
+      QName xsiTypeQName = null;
+      TypeBinding xsiType = null;
+      if(value != null)
+      {
+         QName typeQName = element.getType().getQName();
+         xsiTypeQName = (QName)cls2TypeMap.get(value.getClass());
+         // in case xsiTypeQName is not null, typeQName should also be not null
+         if(xsiTypeQName != null &&
+            !(typeQName.getLocalPart().equals(xsiTypeQName.getLocalPart()) &&
+            typeQName.getNamespaceURI().equals(xsiTypeQName.getNamespaceURI())
+            ))
+         {
+            if(log.isTraceEnabled())
+            {
+               log.trace(value.getClass() + " is mapped to xsi:type " + xsiTypeQName);
+            }
+
+            xsiType = schema.getType(xsiTypeQName);
+            if(xsiType == null)
+            {
+               log.warn("Class " +
+                  value.getClass() +
+                  " is mapped to type " +
+                  xsiTypeQName +
+                  " but the type is not found in schema."
+               );
+            }
+            // todo should check derivation also, i.e. if(xsiType.derivedFrom())
+         }
+      }
+
+      stack.push(value);
+      boolean marshalled = marshalElement(element, xsiType, optional, declareNs);
+      stack.pop();
+
+      return marshalled;
+   }
+
+   private boolean marshalElement(ElementBinding element, TypeBinding xsiType, boolean optional, boolean declareNs)
    {
       Object value = stack.peek();
       boolean nillable = element.isNillable();
@@ -322,7 +371,14 @@ public class MarshallerImpl
 
       if(value != null)
       {
-         marshalElementType(elementNs, elementLocal, element.getType(), declareNs, nillable);
+         boolean declareXsiType = xsiType != null;
+         marshalElementType(elementNs,
+            elementLocal,
+            declareXsiType ? xsiType : element.getType(),
+            declareNs,
+            declareXsiType,
+            nillable
+         );
       }
       else if(nillable)
       {
@@ -341,15 +397,16 @@ public class MarshallerImpl
                                    String elementLocal,
                                    TypeBinding type,
                                    boolean declareNs,
+                                   boolean declareXsiType,
                                    boolean nillable)
    {
       if(type.isSimple())
       {
-         marshalSimpleType(elementNs, elementLocal, type, declareNs, nillable);
+         marshalSimpleType(elementNs, elementLocal, type, declareNs, declareXsiType, nillable);
       }
       else
       {
-         marshalComplexType(elementNs, elementLocal, type, declareNs);
+         marshalComplexType(elementNs, elementLocal, type, declareNs, declareXsiType);
       }
    }
 
@@ -357,6 +414,7 @@ public class MarshallerImpl
                                   String elementLocal,
                                   TypeBinding type,
                                   boolean declareNs,
+                                  boolean declareXsiType,
                                   boolean nillable)
    {
       Object value = stack.peek();
@@ -447,13 +505,18 @@ public class MarshallerImpl
          }
 */
 
-         if(declareNs && !prefixByUri.isEmpty())
+         if((declareNs || declareXsiType) && !prefixByUri.isEmpty())
          {
             if(attrs == null)
             {
-               attrs = new AttributesImpl(prefixByUri.size());
+               attrs = new AttributesImpl(prefixByUri.size() + 1);
             }
             declareNs(attrs);
+         }
+
+         if(declareXsiType)
+         {
+            declareXsiType(type.getQName(), attrs);
          }
 
          if(genPrefix)
@@ -481,17 +544,30 @@ public class MarshallerImpl
    private void marshalComplexType(String elementNsUri,
                                    String elementLocalName,
                                    TypeBinding type,
-                                   boolean declareNs)
+                                   boolean declareNs,
+                                   boolean declareXsiType)
    {
       ParticleBinding particle = type.getParticle();
 
       Collection attributeUses = type.getAttributes();
-      int attrsTotal = declareNs ? prefixByUri.size() + attributeUses.size() : attributeUses.size();
+      int attrsTotal = declareNs || declareXsiType ? prefixByUri.size() + attributeUses.size() + 1: attributeUses.size();
       AttributesImpl attrs = attrsTotal > 0 ? new AttributesImpl(attrsTotal) : null;
 
       if(declareNs && !prefixByUri.isEmpty())
       {
          declareNs(attrs);
+      }
+
+      String typeNsWithGeneratedPrefix = null;
+      if(declareXsiType)
+      {
+         String generatedPrefix = declareXsiType(type.getQName(), attrs);
+         if(generatedPrefix != null)
+         {
+            typeNsWithGeneratedPrefix = type.getQName().getNamespaceURI();
+            declareNs(attrs, generatedPrefix, typeNsWithGeneratedPrefix);
+            declareNamespace(generatedPrefix, typeNsWithGeneratedPrefix);
+         }
       }
 
       String prefix = (String)prefixByUri.get(elementNsUri);
@@ -500,7 +576,7 @@ public class MarshallerImpl
       {
          // todo: it's possible that the generated prefix already mapped. this should be fixed
          prefix = "ns_" + elementLocalName;
-         prefixByUri.put(elementNsUri, prefix);
+         declareNamespace(prefix, elementNsUri);
          if(attrs == null)
          {
             attrs = new AttributesImpl(1);
@@ -591,8 +667,8 @@ public class MarshallerImpl
                               itemPrefix = (String)prefixByUri.get(itemNs);
                               if(itemPrefix == null)
                               {
-                                itemPrefix = attrLocal + listInd;
-                                declareNs(attrs, itemPrefix, itemNs);
+                                 itemPrefix = attrLocal + listInd;
+                                 declareNs(attrs, itemPrefix, itemNs);
                               }
                            }
                            item = new QName(item.getNamespaceURI(), item.getLocalPart(), itemPrefix);
@@ -696,7 +772,12 @@ public class MarshallerImpl
 
       if(genPrefix)
       {
-         prefixByUri.remove(elementNsUri);
+         removeNamespace(elementNsUri);
+      }
+
+      if(typeNsWithGeneratedPrefix != null)
+      {
+         removeNamespace(typeNsWithGeneratedPrefix);
       }
    }
 
@@ -750,6 +831,49 @@ public class MarshallerImpl
       else if(term.isWildcard())
       {
          o = stack.peek();
+
+         boolean popWildcardValue = false;
+         ObjectLocalMarshaller marshaller = null;
+         FieldToWildcardMapping mapping = (FieldToWildcardMapping)field2WildcardMap.get(o.getClass());
+         if(mapping != null)
+         {
+            marshaller = mapping.marshaller;
+            if(mapping.getter != null)
+            {
+               try
+               {
+                  o = mapping.getter.invoke(o, null);
+               }
+               catch(Exception e)
+               {
+                  throw new JBossXBRuntimeException("Failed to invoke getter " +
+                     mapping.getter.getName() +
+                     " on " +
+                     o.getClass() +
+                     " to get wildcard value: " + e.getMessage()
+                  );
+               }
+            }
+            else
+            {
+               try
+               {
+                  o = mapping.field.get(o);
+               }
+               catch(Exception e)
+               {
+                  throw new JBossXBRuntimeException("Failed to invoke get on field " +
+                     mapping.field.getName() +
+                     " in " +
+                     o.getClass() +
+                     " to get wildcard value: " + e.getMessage()
+                  );
+               }
+            }
+            stack.push(o);
+            popWildcardValue = true;
+         }
+
          i = o != null && isRepeatable(particle) ? getIterator(o) : null;
          if(i != null)
          {
@@ -757,14 +881,17 @@ public class MarshallerImpl
             while(i.hasNext() && marshalled)
             {
                Object value = i.next();
-               stack.push(value);
-               marshalled = marshalWildcard(particle, declareNs);
-               stack.pop();
+               marshalled = marshalWildcardOccurence(particle, marshaller, value, declareNs);
             }
          }
          else
          {
-            marshalled = marshalWildcard(particle, declareNs);
+            marshalled = marshalWildcardOccurence(particle, marshaller, o, declareNs);
+         }
+
+         if(popWildcardValue)
+         {
+            stack.pop();
          }
       }
       else
@@ -780,17 +907,32 @@ public class MarshallerImpl
             while(i.hasNext() && marshalled)
             {
                Object value = i.next();
-               stack.push(value);
-               marshalled = marshalElement(element, particle.getMinOccurs() == 0, declareNs);
-               stack.pop();
+               marshalled = marshalElementOccurence(element, value, particle.getMinOccurs() == 0, declareNs);
             }
          }
          else
          {
-            stack.push(o);
-            marshalled = marshalElement(element, particle.getMinOccurs() == 0, declareNs);
-            stack.pop();
+            marshalled = marshalElementOccurence(element, o, particle.getMinOccurs() == 0, declareNs);
          }
+      }
+      return marshalled;
+   }
+
+   private boolean marshalWildcardOccurence(ParticleBinding particle,
+                                            ObjectLocalMarshaller marshaller,
+                                            Object value,
+                                            boolean declareNs)
+   {
+      boolean marshalled = true;
+      if(marshaller != null)
+      {
+         marshaller.marshal(ctx, value);
+      }
+      else
+      {
+         stack.push(value);
+         marshalled = marshalWildcard(particle, declareNs);
+         stack.pop();
       }
       return marshalled;
    }
@@ -851,9 +993,7 @@ public class MarshallerImpl
             throw new JBossXBRuntimeException("Element " + mapping.elementName + " is not declared in the schema.");
          }
 
-         stack.push(root);
-         marshalled = marshalElement(elDec, particle.getMinOccurs() == 0, declareNs);
-         stack.pop();
+         marshalled = marshalElementOccurence(elDec, root, particle.getMinOccurs() == 0, declareNs);
       }
       else if(mapping.typeName != null)
       {
@@ -871,10 +1011,8 @@ public class MarshallerImpl
             throw new JBossXBRuntimeException("Expected the wildcard to have a non-null QName.");
          }
 
-         stack.push(root);
          ElementBinding element = new ElementBinding(schema, wildcard.getQName(), typeDef);
-         marshalled = marshalElement(element, particle.getMinOccurs() == 0, declareNs);
-         stack.pop();
+         marshalled = marshalElementOccurence(element, root, particle.getMinOccurs() == 0, declareNs);
       }
       else
       {
@@ -1382,6 +1520,33 @@ public class MarshallerImpl
    private static boolean isRepeatable(ParticleBinding particle)
    {
       return particle.getMaxOccursUnbounded() || particle.getMaxOccurs() > 1 || particle.getMinOccurs() > 1;
+   }
+
+   /**
+    * Adds xsi:type attribute and optionally declares namespaces for xsi and type's namespace.
+    *
+    * @param typeQName the type to declare xsi:type attribute for
+    * @param attrs     the attributes to add xsi:type attribute to
+    * @return prefix for the type's ns if it was generated
+    */
+   private String declareXsiType(QName typeQName, AttributesImpl attrs)
+   {
+      String result = null;
+      if(!prefixByUri.containsKey(Constants.NS_XML_SCHEMA_INSTANCE))
+      {
+         attrs.add(Constants.NS_XML_SCHEMA, "xmlns", "xmlns:xsi", null, Constants.NS_XML_SCHEMA_INSTANCE);
+      }
+
+      String pref = (String)prefixByUri.get(typeQName.getNamespaceURI());
+      if(pref == null)
+      {
+         // the ns is not declared
+         result = pref = typeQName.getLocalPart() + "_ns";
+      }
+
+      String qName = pref == null ? typeQName.getLocalPart() : pref + ':' + typeQName.getLocalPart();
+      attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "type", "xsi:type", null, qName);
+      return result;
    }
 
    private static final List asList(final Object arr)

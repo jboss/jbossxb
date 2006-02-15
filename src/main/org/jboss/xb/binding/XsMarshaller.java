@@ -45,7 +45,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Collection;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Arrays;
 
 
@@ -66,14 +65,6 @@ public class XsMarshaller
     * ObjectModelProvider for this marshaller
     */
    private GenericObjectModelProvider provider;
-   /**
-    * Content the result is written to
-    */
-   private Content content = new Content();
-   /**
-    * Declared namespaces
-    */
-   private final Map prefixByUri = new HashMap();
 
    private Object root;
 
@@ -130,21 +121,6 @@ public class XsMarshaller
          propertyIsTrueOrNotSet(Marshaller.PROP_OUTPUT_INDENTATION)
       );
       content.handleContent(contentWriter);
-   }
-
-   /**
-    * Defines a namespace. The namespace declaration will appear in the root element.
-    * <p>If <code>name</code> argument is <code>null</code> or is an empty string then
-    * the passed in URI will be used for the default namespace, i.e. <code>xmlns</code>.
-    * Otherwise, the declaration will follow the format <code>xmlns:name=uri</code>.
-    * <p>If the namespace with the given name was already declared, its value is overwritten.
-    *
-    * @param prefix the prefix of the namespace to declare
-    * @param uri    the URI of the namespace.
-    */
-   public void declareNamespace(String prefix, String uri)
-   {
-      prefixByUri.put(uri, prefix);
    }
 
    /**

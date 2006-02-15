@@ -25,14 +25,11 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -55,12 +52,9 @@ import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
 import org.jboss.logging.Logger;
-import org.jboss.util.Classes;
 import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
-import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 
 /**
@@ -78,13 +72,6 @@ public class XercesXsMarshaller
     * ObjectModelProvider for this marshaller
     */
    private GenericObjectModelProvider provider;
-
-   /**
-    * Content the result is written to
-    */
-   private Content content = new Content();
-
-   private Map prefixByUri = Collections.EMPTY_MAP;
 
    private Object root;
 
@@ -105,10 +92,6 @@ public class XercesXsMarshaller
    private XSTypeDefinition currentElementType;
 
    private String simpleContentProperty = "value";
-
-   private Map field2WildcardMap = Collections.EMPTY_MAP;
-
-   private Map cls2TypeMap = Collections.EMPTY_MAP;
 
    private MarshallingContext ctx = new MarshallingContext()
    {
@@ -151,41 +134,6 @@ public class XercesXsMarshaller
          return ch;
       }
    };
-
-   public void mapFieldToWildcard(Class cls, String field, ObjectLocalMarshaller marshaller)
-   {
-      FieldToWildcardMapping mapping = new FieldToWildcardMapping(cls, field, marshaller);
-      switch(field2WildcardMap.size())
-      {
-         case 0:
-            field2WildcardMap = Collections.singletonMap(cls, mapping);
-            break;
-         case 1:
-            field2WildcardMap = new HashMap(field2WildcardMap);
-         default:
-            field2WildcardMap.put(cls, mapping);
-      }
-   }
-
-   public void mapClassToXsiType(Class cls, String typeNs, String typeLocalPart)
-   {
-      QName typeQName = new QName(typeNs, typeLocalPart);
-      switch(cls2TypeMap.size())
-      {
-         case 0:
-            cls2TypeMap = Collections.singletonMap(cls, typeQName);
-            break;
-         case 1:
-            cls2TypeMap = new HashMap(cls2TypeMap);
-         default:
-            cls2TypeMap.put(cls, typeQName);
-      }
-
-      if(log.isTraceEnabled())
-      {
-         log.trace("mapped " + cls + " to xsi:type " + typeQName);
-      }
-   }
 
    public String getSimpleContentProperty()
    {
@@ -235,47 +183,6 @@ public class XercesXsMarshaller
    public void setSupportNil(boolean supportNil)
    {
       this.supportNil = supportNil;
-   }
-
-   /**
-    * Defines a namespace. The namespace declaration will appear in the root element.
-    * <p>If <code>prefix</code> argument is <code>null</code> or is an empty string then
-    * the passed in URI will be used for the default namespace, i.e. <code>xmlns</code>.
-    * Otherwise, the declaration will follow the format <code>xmlns:prefix=uri</code>.
-    * <p>If the namespace with the given prefix was already declared, its value is overwritten.
-    *
-    * @param prefix the prefix for the namespace to declare (can be null or empty string)
-    * @param uri    the URI of the namespace.
-    */
-   public void declareNamespace(String prefix, String uri)
-   {
-      if(prefix == null)
-      {
-         return;
-      }
-
-      switch(prefixByUri.size())
-      {
-         case 0:
-            prefixByUri = Collections.singletonMap(uri, prefix);
-            break;
-         case 1:
-            prefixByUri = new HashMap(prefixByUri);
-         default:
-            prefixByUri.put(uri, prefix);
-      }
-   }
-
-   public void removeNamespace(String uri)
-   {
-      if(prefixByUri.size() > 1)
-      {
-         prefixByUri.remove(uri);
-      }
-      else if(prefixByUri.containsKey(uri))
-      {
-         prefixByUri = Collections.EMPTY_MAP;
-      }
    }
 
    /**
@@ -1566,141 +1473,5 @@ public class XercesXsMarshaller
             return Array.getLength(array);
          }
       };
-   }
-
-   private class FieldToWildcardMapping
-   {
-      public final Class cls;
-      public final String fieldName;
-      public final ObjectLocalMarshaller marshaller;
-      public final Method getter;
-      public final Field field;
-
-      public FieldToWildcardMapping(Class cls, String field, ObjectLocalMarshaller marshaller)
-      {
-         this.cls = cls;
-         this.fieldName = field;
-         this.marshaller = marshaller;
-
-         if(log.isTraceEnabled())
-         {
-            log.trace("new FieldToWildcardMapping: [cls=" +
-               cls.getName() +
-               ",field=" +
-               field +
-               "]"
-            );
-         }
-
-         Method localGetter = null;
-         Field localField = null;
-
-         try
-         {
-            localGetter = Classes.getAttributeGetter(cls, field);
-         }
-         catch(NoSuchMethodException e)
-         {
-            try
-            {
-               localField = cls.getField(field);
-            }
-            catch(NoSuchFieldException e1)
-            {
-               throw new JBossXBRuntimeException("Neither getter nor field where found for " + field + " in " + cls);
-            }
-         }
-
-         this.getter = localGetter;
-         this.field = localField;
-      }
-
-      public boolean equals(Object o)
-      {
-         if(this == o)
-         {
-            return true;
-         }
-         if(!(o instanceof FieldToWildcardMapping))
-         {
-            return false;
-         }
-
-         final FieldToWildcardMapping fieldToWildcardMapping = (FieldToWildcardMapping)o;
-
-         if(!cls.equals(fieldToWildcardMapping.cls))
-         {
-            return false;
-         }
-         if(!fieldName.equals(fieldToWildcardMapping.fieldName))
-         {
-            return false;
-         }
-
-         return true;
-      }
-
-      public int hashCode()
-      {
-         int result;
-         result = cls.hashCode();
-         result = 29 * result + fieldName.hashCode();
-         return result;
-      }
-   }
-
-   private class ContentHandlerAdaptor
-      implements ContentHandler
-   {
-      public void setDocumentLocator(Locator locator)
-      {
-      }
-
-      public void startDocument() throws SAXException
-      {
-         // this is used to marshal a fragment of a document so we don't delegate startDocument
-      }
-
-      public void endDocument() throws SAXException
-      {
-         // this is used to marshal a fragment of a document so we don't delegate endDocument
-      }
-
-      public void startPrefixMapping(String prefix, String uri) throws SAXException
-      {
-         content.startPrefixMapping(prefix, uri);
-      }
-
-      public void endPrefixMapping(String prefix) throws SAXException
-      {
-         content.endPrefixMapping(prefix);
-      }
-
-      public void startElement(String uri, String localName, String qName, Attributes atts) throws SAXException
-      {
-         content.startElement(uri, localName, qName, atts);
-      }
-
-      public void endElement(String uri, String localName, String qName) throws SAXException
-      {
-         content.endElement(uri, localName, qName);
-      }
-
-      public void characters(char ch[], int start, int length) throws SAXException
-      {
-         content.characters(ch, start, length);
-      }
-
-      public void ignorableWhitespace(char ch[], int start, int length) throws SAXException
-      {
-      }
-
-      public void processingInstruction(String target, String data) throws SAXException
-      {
-      }
-
-      public void skippedEntity(String name) throws SAXException
-      {
-      }
    }
 }

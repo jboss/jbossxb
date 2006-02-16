@@ -39,18 +39,8 @@ import java.util.WeakHashMap;
  */
 public abstract class WeakClassCache
 {
-   // Constants -----------------------------------------------------
-   
-   // Attributes ----------------------------------------------------
-   
    /** The cache */
    protected Map cache = new WeakHashMap(); 
-
-   // Static --------------------------------------------------------
-   
-   // Constructors --------------------------------------------------
-
-   // Public --------------------------------------------------------
 
    /**
     * Get the information for a class
@@ -60,6 +50,9 @@ public abstract class WeakClassCache
     */
    public Object get(Class clazz)
    {
+      if (clazz == null)
+         throw new IllegalArgumentException("Null class");
+      
       Map classLoaderCache = getClassLoaderCache(clazz.getClassLoader());
 
       WeakReference weak = (WeakReference) classLoaderCache.get(clazz.getName());
@@ -90,13 +83,13 @@ public abstract class WeakClassCache
     */
    public Object get(String name, ClassLoader cl) throws ClassNotFoundException
    {
+      if (name == null)
+         throw new IllegalArgumentException("Null name");
+      if (cl == null)
+         throw new IllegalArgumentException("Null classloader");
       Class clazz = cl.loadClass(name);
       return get(clazz);
    }
-
-   // Package protected ---------------------------------------------
-
-   // Protected -----------------------------------------------------
    
    /**
     * Instantiate for a class
@@ -133,8 +126,4 @@ public abstract class WeakClassCache
          return result;
       }
    }
-   
-   // Private -------------------------------------------------------
-   
-   // Inner classes -------------------------------------------------
 }

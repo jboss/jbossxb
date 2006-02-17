@@ -199,15 +199,20 @@ public class WildcardBinding
          }
          else
          {
-            return null;
+            // todo this stuff could be cached
+            ParticleBinding particle = new ParticleBinding(this);
+            SequenceBinding sequence = new SequenceBinding(schema);
+            sequence.addParticle(particle);
+
+            TypeBinding type = new TypeBinding();
+            type.setParticle(new ParticleBinding(sequence));
+
+            ElementBinding element = new ElementBinding(schema, qName, type);
+            // this is unresolved element we don't care about
+            element.setSkip(Boolean.TRUE);
+            return element;
          }
       }
-
-      // todo "clone" wildcard or pass this?
-      //WildcardBinding wc = new WildcardBinding(schema);
-      //wc.setProcessContents(pc);
-      //wc.setUnresolvedElementHandler(unresolvedElementHandler);
-      //wc.setUnresolvedCharactersHandler(unresolvedCharactersHandler);
 
       // todo this stuff could be cached
       ParticleBinding particle = new ParticleBinding(this);

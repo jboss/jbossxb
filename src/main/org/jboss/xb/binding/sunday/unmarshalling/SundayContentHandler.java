@@ -561,7 +561,9 @@ public class SundayContentHandler
 
             if(charHandler == null)
             {
-               if(!type.isSimple() && schema != null && schema.isStrictSchema())
+               if(!type.isSimple() && schema != null && schema.isStrictSchema()
+                  // todo this isSkip() doesn't look nice here
+                  && !element.isSkip())
                {
                   throw new JBossXBRuntimeException("Element " +
                      endName +

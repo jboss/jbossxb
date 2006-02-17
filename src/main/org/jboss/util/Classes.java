@@ -31,10 +31,7 @@ import java.security.AccessController;
 import java.security.CodeSource;
 import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A collection of <code>Class</code> utilities.
@@ -143,7 +140,7 @@ public final class Classes
             if( returnType.isAssignableFrom(getCp.getReturnType()) )
             {
                Object[] args = {};
-               urls = (URL[]) getCp.invoke(cl, args);               
+               urls = (URL[]) getCp.invoke(cl, args);
             }
          }
       }
@@ -207,7 +204,7 @@ public final class Classes
          buffer.append("}");
       }
    }
-   
+
    /**
     * Get the short name of the specified class by striping off the package
     * name.
@@ -283,7 +280,7 @@ public final class Classes
    {
       if (type == null)
          throw new NullArgumentException("type");
-      
+
       // don't attempt to force primitives to load
       if (type.isPrimitive()) return;
 
@@ -335,7 +332,7 @@ public final class Classes
 
    /** Primitive type name -> class map. */
    private static final Map PRIMITIVE_NAME_TYPE_MAP = new HashMap();
-   
+
    /** Setup the primitives map. */
    static
    {
@@ -404,6 +401,26 @@ public final class Classes
    }
 
    /**
+    * Object a list of all interfaces starting with the argument class c through
+    * all superclasses
+    * 
+    * @param allIfaces - the list to populate for 
+    * @param c - the class to start scanning for interfaces
+    */
+   public static void getAllInterfaces(List allIfaces, Class c)
+   {
+      while( c != null )
+      {
+         Class[] ifaces = c.getInterfaces();
+         for(int n = 0; n < ifaces.length; n ++)
+         {
+            allIfaces.add(ifaces[n]);
+         }
+         c = c.getSuperclass();
+      }
+   }
+
+   /**
     * Check if the given class is a primitive wrapper class.
     *
     * @param type    Class to check.
@@ -441,10 +458,10 @@ public final class Classes
    /** Check type against boolean, byte, char, short, int, long, float, double.
     * @param type  The java type name
     * @return true if this is a primative type name.
-    */ 
+    */
    public static boolean isPrimitive(final String type)
    {
-      return PRIMITIVE_NAME_TYPE_MAP.containsKey(type); 
+      return PRIMITIVE_NAME_TYPE_MAP.containsKey(type);
    }
 
    /**
@@ -531,7 +548,7 @@ public final class Classes
             " is not of the expected class " + expected + " loaded from " + expected.getClassLoader());
       return result;
    }
-   
+
    /////////////////////////////////////////////////////////////////////////
    //                            Class Loading                            //
    /////////////////////////////////////////////////////////////////////////
@@ -605,7 +622,7 @@ public final class Classes
       // Check for the internal vm format: Lclassname;
       if (className.charAt(0) == 'L' && className.charAt(className.length() - 1) == ';')
          return classLoader.loadClass(className.substring(1, className.length() - 1));
-      
+
       // first try - be optimistic
       // this will succeed for all non-array classes and array classes that have already been resolved
       //
@@ -619,17 +636,17 @@ public final class Classes
          if (className.charAt(0) != '[')
             throw e;
       }
-   
+
       // we are now resolving array class for the first time
-      
+
       // count opening braces
       int arrayDimension = 0;
       while (className.charAt(arrayDimension) == '[')
          arrayDimension++;
-            
+
       // resolve component type - use recursion so that we can resolve primitive types also
       Class componentType = loadClass(className.substring(arrayDimension), classLoader);
-      
+
       // construct array class
       return Array.newInstance(componentType, new int[arrayDimension]).getClass();
    }
@@ -647,7 +664,7 @@ public final class Classes
     *         the specified ClassLoader
     */
    public final static Class[] convertToJavaClasses(Iterator it,
-      ClassLoader cl)
+                                                    ClassLoader cl)
       throws ClassNotFoundException
    {
       ArrayList classes = new ArrayList();
@@ -727,7 +744,7 @@ public final class Classes
     *         the specified ClassLoader
     */
    private final static Class convertToJavaClass(String name,
-      ClassLoader cl)
+                                                 ClassLoader cl)
       throws ClassNotFoundException
    {
       int arraySize = 0;
@@ -783,7 +800,7 @@ public final class Classes
          {
             return System.getProperty(name, defaultValue);
          }
-         
+
       });
    }
 }

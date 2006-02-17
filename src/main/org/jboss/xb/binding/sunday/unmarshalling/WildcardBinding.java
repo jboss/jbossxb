@@ -22,9 +22,9 @@
 package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
-import org.jboss.xb.binding.Util;
-import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.logging.Logger;
+import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.Util;
 import org.xml.sax.Attributes;
 
 /**
@@ -136,7 +136,7 @@ public class WildcardBinding
    {
       if(pc == PC_SKIP)
       {
-         return getUnresolvedElement(qName);
+         return getUnresolvedElement(qName, false);
       }
 
       ElementBinding element = null;
@@ -168,7 +168,7 @@ public class WildcardBinding
 
       if(element == null && pc == PC_LAX)
       {
-         element = getUnresolvedElement(qName);
+         element = getUnresolvedElement(qName, pc == PC_STRICT);
       }
 
       return element;
@@ -177,10 +177,11 @@ public class WildcardBinding
    /**
     * todo: this method is called for each unresolved element TWICE currently
     * because getElement() is called TWICE. Look into fixing this!
+    *
     * @param qName
     * @return
     */
-   private ElementBinding getUnresolvedElement(QName qName)
+   private ElementBinding getUnresolvedElement(QName qName, boolean required)
    {
       if(log.isTraceEnabled())
       {
@@ -189,10 +190,17 @@ public class WildcardBinding
 
       if(unresolvedElementHandler == null)
       {
-         throw new JBossXBRuntimeException(
-            "Schema could not be resolved for wildcard content element " + qName +
-            " and particle handler for unresolved wildcard content elements is not initialized."
-         );
+         if(required)
+         {
+            throw new JBossXBRuntimeException("Schema could not be resolved for wildcard content element " +
+               qName +
+               " and particle handler for unresolved wildcard content elements is not initialized."
+            );
+         }
+         else
+         {
+            return null;
+         }
       }
 
       // todo "clone" wildcard or pass this?

@@ -21,19 +21,12 @@
   */
 package org.jboss.xb.binding.metadata.marshalling;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 /**
+ * @deprecated
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
 public interface FieldBinding
-   extends FieldGroupBinding
 {
-   String getFieldName();
-   Field getField();
-   Method getGetter();
-   Class getFieldType();
-   FieldValueBinding getValueBinding();
 }

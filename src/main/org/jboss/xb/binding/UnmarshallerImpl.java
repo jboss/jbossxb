@@ -26,9 +26,6 @@ import java.io.Reader;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.xb.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xb.binding.metadata.unmarshalling.DocumentBinding;
-import org.jboss.xb.binding.metadata.unmarshalling.DocumentBindingFactory;
-import org.jboss.xb.binding.metadata.unmarshalling.DocumentBindingStack;
-import org.jboss.xb.binding.metadata.unmarshalling.impl.RuntimeDocumentBinding;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.xb.binding.parser.sax.SaxJBossXBParser;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -93,13 +90,8 @@ public class UnmarshallerImpl
 
    public Object unmarshal(String xmlFile) throws JBossXBException
    {
-      DocumentBindingStack docBinding = DocumentBindingFactory.newInstance()
-         .newDocumentBindingStack()
-         .push(RuntimeDocumentBinding.class);
-      BindingCursor cursor = BindingCursor.Factory.newCursor(docBinding);
-      builder.init(new MetadataDrivenObjectModelFactory(), null, cursor);
-      parser.parse(xmlFile, builder);
-      return builder.getRoot();
+      // todo
+      throw new UnsupportedOperationException();
    }
 
    public Object unmarshal(String xmlFile, JBossXBParser.ContentHandler handler) throws JBossXBException
@@ -154,19 +146,13 @@ public class UnmarshallerImpl
    public Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata)
       throws JBossXBException
    {
-      BindingCursor cursor = BindingCursor.Factory.newCursor(metadata);
-      builder.init(factory, null, cursor);
-      parser.parse(xmlFile, builder);
-      return builder.getRoot();
+      throw new UnsupportedOperationException();
    }
 
    public Object unmarshal(Reader xmlFile, ObjectModelFactory factory, DocumentBinding metadata)
       throws JBossXBException
    {
-      BindingCursor cursor = BindingCursor.Factory.newCursor(metadata);
-      builder.init(factory, null, cursor);
-      parser.parse(xmlFile, builder);
-      return builder.getRoot();
+      throw new UnsupportedOperationException();
    }
 
    public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException

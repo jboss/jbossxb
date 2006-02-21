@@ -21,10 +21,9 @@
   */
 package org.jboss.xb.binding.metadata.unmarshalling;
 
-import javax.xml.namespace.QName;
-import java.util.LinkedList;
 
 /**
+ * @deprecated
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
@@ -46,50 +45,11 @@ public interface BindingCursor
 
       public static BindingCursor newCursor(DocumentBinding doc)
       {
-         return doc == null ? NoopBindingCursor.INSTANCE : new BindingCursorImpl(doc);
-      }
-
-      private static class BindingCursorImpl
-         implements BindingCursor
-      {
-         private final DocumentBinding docBinding;
-         private final LinkedList stack = new LinkedList();
-
-         public BindingCursorImpl(DocumentBinding docBinding)
+         if(doc != null)
          {
-            this.docBinding = docBinding;
+            throw new IllegalArgumentException("DocumentBinding API is not supported anymore");
          }
-
-         public void startElement(String namespaceURI, String localName)
-         {
-            BasicElementBinding elBinding;
-            if(stack.isEmpty())
-            {
-               NamespaceBinding nsBinding = docBinding.getNamespace(namespaceURI);
-               elBinding = nsBinding.getTopElement(localName);
-            }
-            else
-            {
-               elBinding = (BasicElementBinding)stack.getLast();
-               elBinding = elBinding.getElement(new QName(namespaceURI, localName));
-            }
-            stack.addLast(elBinding);
-         }
-
-         public void endElement(String namespaceURI, String localName)
-         {
-            stack.removeLast();
-         }
-
-         public Object getElementBinding()
-         {
-            return (BasicElementBinding)stack.getLast();
-         }
-
-         public Object getParentElementBinding()
-         {
-            return stack.size() - 2 >= 0 ? (BasicElementBinding)stack.get(stack.size() - 2) : null;
-         }
+         return NoopBindingCursor.INSTANCE;
       }
 
       private static class NoopBindingCursor

@@ -22,10 +22,10 @@
 package org.jboss.xb.binding.metadata.unmarshalling;
 
 /**
+ * @deprecated
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
 public interface DocumentBinding
 {
-   NamespaceBinding getNamespace(String namespaceUri);
 }

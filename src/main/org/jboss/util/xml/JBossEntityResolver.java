@@ -139,6 +139,7 @@ public class JBossEntityResolver implements EntityResolver
    
       //ejb3 + jee5 related
       registerEntity("http://java.sun.com/xml/ns/javaee/ejb-jar_3_0.xsd", "ejb-jar_3_0.xsd");
+      registerEntity("http://java.sun.com/xml/ns/javaee/javaee_web_services_client_1_2.xsd", "javaee_web_services_client_1_2.xsd");
       registerEntity("http://java.sun.com/xml/ns/javaee/javaee_5.xsd", "javaee_5.xsd");
       registerEntity("http://www.jboss.org/j2ee/schema/jboss_5_0.xsd", "jboss_5_0.xsd");
    }

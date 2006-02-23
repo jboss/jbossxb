@@ -58,7 +58,7 @@ public class XsdAnnotation
       {
          return (XsdAnnotation)unmarshaller.unmarshal(new StringReader(annotation),
             XsdObjectModelFactory.INSTANCE,
-            null
+            (Object)null
          );
       }
       catch(JBossXBException e)

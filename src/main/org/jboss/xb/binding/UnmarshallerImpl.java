@@ -143,15 +143,33 @@ public class UnmarshallerImpl
       return cHandler.getRoot();
    }
 
+   /**
+    * @deprecated
+    * NOTE: if the DocumentBinding argument is null,
+    * the call will be delegated to unmarshal(String, ObjectModelFactory, Object)
+    */
    public Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata)
       throws JBossXBException
    {
+      if(metadata == null)
+      {
+         return unmarshal(xmlFile, factory, (Object)null);
+      }
       throw new UnsupportedOperationException();
    }
 
+   /**
+    * @deprecated
+    * NOTE: if the DocumentBinding argument is null,
+    * the call will be delegated to unmarshal(Reader, ObjectModelFactory, Object)
+    */
    public Object unmarshal(Reader xmlFile, ObjectModelFactory factory, DocumentBinding metadata)
       throws JBossXBException
    {
+      if(metadata == null)
+      {
+         return unmarshal(xmlFile, factory, (Object)null);
+      }
       throw new UnsupportedOperationException();
    }
 

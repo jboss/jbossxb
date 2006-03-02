@@ -69,6 +69,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -190,6 +191,11 @@ public class DOMWriter
       if (node == null)
       {
          return;
+      }
+      
+      if (node instanceof Document)
+      {
+         node = ((Document)node).getDocumentElement();
       }
 
       if (wroteXMLDeclaration == false && writeXMLDeclaration == true && canonical == false)

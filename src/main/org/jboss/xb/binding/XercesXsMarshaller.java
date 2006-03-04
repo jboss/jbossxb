@@ -549,11 +549,18 @@ public class XercesXsMarshaller
             String attrPrefix = null;
             if(attrNs != null)
             {
-               attrPrefix = (String)prefixByUri.get(attrNs);
-               if(attrPrefix == null && attrNs != null && attrNs.length() > 0)
+               if (attrNs.equals(Constants.NS_XML_NAMESPACE))
                {
-                  attrPrefix = "ns_" + attrLocal;
-                  attrs.add(null, attrPrefix, "xmlns:" + attrPrefix, null, attrNs);
+                  attrPrefix = "xml";
+               }
+               else
+               {
+                  attrPrefix = (String)prefixByUri.get(attrNs);
+                  if (attrPrefix == null && attrNs != null && attrNs.length() > 0)
+                  {
+                     attrPrefix = "ns_" + attrLocal;
+                     attrs.add(null, attrPrefix, "xmlns:" + attrPrefix, null, attrNs);
+                  }
                }
             }
 

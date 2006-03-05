@@ -31,6 +31,7 @@ import java.util.Map;
 
 import javax.xml.namespace.QName;
 
+import org.jboss.logging.Logger;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ClassMetaData;
@@ -46,6 +47,9 @@ import org.xml.sax.helpers.AttributesImpl;
  */
 public class TypeBinding
 {
+   // provide logging
+   private static final Logger log = Logger.getLogger(TypeBinding.class);
+   
    protected QName qName;
    private ElementBinding arrayItem;
    /** Map<QName, AttributeBinding>  */
@@ -206,7 +210,26 @@ public class TypeBinding
 
    public AttributeBinding getAttribute(QName qName)
    {
-      return (AttributeBinding)attrs.get(qName);
+      AttributeBinding attrBinding = (AttributeBinding)attrs.get(qName);
+      if (attrBinding == null)
+      {
+         // Fall back to compare by localPart
+         // See handling of xml:lang in JBWS-720 
+         Iterator it = attrs.keySet().iterator();
+         while (it.hasNext())
+         {
+            QName key = (QName)it.next();
+            if (key.getLocalPart().equals(qName.getLocalPart()))
+            {
+               if (attrBinding != null)
+               {
+                  log.warn("Ambiguous attribute mapping: " + qName);
+               }
+               attrBinding = (AttributeBinding)attrs.get(key);
+            }
+         }
+      }
+      return attrBinding;
    }
 
    /**

@@ -276,19 +276,14 @@ public class RtElementHandler
          }
          else
          {
-            PropertyMetaData propertyMetaData = null;
-            if(parentTerm != null && !parentTerm.isModelGroup())
+            PropertyMetaData propertyMetaData = term.getPropertyMetaData();
+            if(propertyMetaData == null && parentTerm != null && !parentTerm.isModelGroup())
             {
                // todo: this smells
                ElementBinding parentElement = (ElementBinding)parentTerm;
                TypeBinding parentType = parentElement.getType();
                WildcardBinding wildcard = parentType.getWildcard();
                propertyMetaData = wildcard == null ? null : wildcard.getPropertyMetaData();
-            }
-
-            if(propertyMetaData == null)
-            {
-               propertyMetaData = term.getPropertyMetaData();
             }
 
             /*

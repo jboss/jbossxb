@@ -999,11 +999,16 @@ public class XsdBinder
             parentGroup.addParticle(particle);
          }
 
-         // todo: this is a BAD hack!
+         particle.setMinOccurs(minOccurs);
          if(maxOccursUnbounded)
          {
             particle.setMaxOccursUnbounded(maxOccursUnbounded);
          }
+         else
+         {
+            particle.setMaxOccurs(maxOccurs);
+         }
+
          return particle;
       }
 
@@ -1055,6 +1060,8 @@ public class XsdBinder
             particle.isRepeatable() +
             ", nillable=" +
             element.isNillable() +
+            ", minOccurs=" + minOccurs +
+            ", maxOccurs=" + (maxOccursUnbounded ? "unbounded" : "" + maxOccurs) +
             ", " + (global ? "global scope" : " owner type=" + parentType.getQName())
          );
       }

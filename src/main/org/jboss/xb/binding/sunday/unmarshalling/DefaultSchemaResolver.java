@@ -267,6 +267,11 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
          }
       }
 
+      if(log.isTraceEnabled())
+      {
+         log.trace("resolved schema: " + schema);
+      }
+
       return schema;
    }
 

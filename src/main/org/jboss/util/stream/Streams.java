@@ -27,15 +27,12 @@ import java.io.OutputStream;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 
-import org.jboss.util.ThrowableHandler;
-
 import org.jboss.logging.Logger;
 
 /**
  * A collection of stream related utility methods.
  *
- * <p>Exceptions that are thrown and not explicitly declared are given to
- *    the {@link ThrowableHandler} for further processing.
+ * <p>Exceptions that are thrown and not explicitly declared are ignored.
  *
  * @version <tt>$Revision$</tt>
  * @author  <a href="mailto:jason@planet57.com">Jason Dillon</a>
@@ -68,7 +65,6 @@ public final class Streams
       }
       catch (IOException e) {
          success = false;
-         ThrowableHandler.add(e);
       }
 
       return success;
@@ -94,7 +90,6 @@ public final class Streams
       }
       catch (IOException e) {
          success = false;
-         ThrowableHandler.add(e);
       }
 
       return success;
@@ -241,7 +236,6 @@ public final class Streams
       }
       catch (IOException e) {
          success = false;
-         ThrowableHandler.add(e);
       }
 
       return success;

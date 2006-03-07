@@ -21,9 +21,6 @@
   */
 package org.jboss.util.property;
 
-import org.jboss.util.Objects;
-import org.jboss.util.CoercionException;
-
 /**
  * Reads properties from files specified via a system property.
  *
@@ -50,7 +47,7 @@ public final class DefaultPropertyReader
     * Construct a <tt>DefaultPropertyReader</tt> with a specified property 
     * name.
     *
-    * @param name    Property name.
+    * @param propertyName    Property name.
     */
    public DefaultPropertyReader(final String propertyName) {
       super(getFilenames(propertyName));
@@ -81,14 +78,7 @@ public final class DefaultPropertyReader
       }
       else {
          // if no singleton property exists then look for array props
-         Object[] values = PropertyManager.getArrayProperty(propertyName);
-         try {
-            // return coerced string objects
-            filenames = (String[])Objects.coerce(values, String[].class);
-         }
-         catch (CoercionException e) {
-            throw new PropertyException(e);
-         }
+         filenames = PropertyManager.getArrayProperty(propertyName);
       }
 
       return filenames;

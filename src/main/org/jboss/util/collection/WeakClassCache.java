@@ -19,7 +19,7 @@
   * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
   * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
   */
-package org.jboss.util;
+package org.jboss.util.collection;
 
 import java.lang.ref.WeakReference;
 import java.util.Map;
@@ -103,7 +103,7 @@ public abstract class WeakClassCache
     * Fill in the result
     * 
     * @param clazz the class
-    * @param the result
+    * @param result the result
     */
    protected abstract void generate(Class clazz, Object result);
    

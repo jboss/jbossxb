@@ -24,9 +24,10 @@ package org.jboss.util.property;
 import org.jboss.util.FieldInstance;
 import org.jboss.util.NullArgumentException;
 import org.jboss.util.Classes;
-import org.jboss.util.Objects;
-import org.jboss.util.CoercionException;
 import org.jboss.util.ThrowableHandler;
+import org.jboss.util.propertyeditor.PropertyEditors;
+
+import java.beans.PropertyEditor;
 
 /**
  * Binds property values to class fields.
@@ -130,15 +131,14 @@ public class FieldBoundPropertyListener
 
          // coerce value to field type
          Class type = fieldInstance.getField().getType();
-         Object coerced = Objects.coerce(value, type);
+         PropertyEditor editor = PropertyEditors.findEditor(type);
+         editor.setAsText(value);
+         Object coerced = editor.getValue();
 
          // bind value to field
          fieldInstance.set(coerced);
       }
       catch (IllegalAccessException e) {
-         throw new PropertyException(e);
-      }
-      catch (CoercionException e) {
          throw new PropertyException(e);
       }
    }

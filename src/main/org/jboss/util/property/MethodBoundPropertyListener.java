@@ -21,16 +21,16 @@
   */
 package org.jboss.util.property;
 
-import java.beans.Introspector;
-import java.beans.IntrospectionException;
-import java.beans.PropertyDescriptor;
 import java.beans.BeanInfo;
-
-import java.lang.reflect.Method;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
+import java.beans.PropertyEditor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import org.jboss.util.ThrowableHandler;
-import org.jboss.util.Objects;
+import org.jboss.util.propertyeditor.PropertyEditors;
 
 /**
  * Binds property values to class methods.
@@ -149,7 +149,9 @@ public class MethodBoundPropertyListener
       try {
          // coerce value to field type
          Class type = descriptor.getPropertyType();
-         Object coerced = Objects.coerce(value, type);
+         PropertyEditor editor = PropertyEditors.findEditor(type);
+         editor.setAsText(value);
+         Object coerced = editor.getValue();
          // System.out.println("type: " + type);
          // System.out.println("coerced: " + coerced);
 

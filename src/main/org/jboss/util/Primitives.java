@@ -122,25 +122,4 @@ public final class Primitives
       return true;
    }
 
-   /**
-    * Safely convert a <tt>long</tt> into a <tt>int</tt> value.
-    *
-    * <p>If value is > Integer.MAX_VALUE or < Integer.MIN_VALUE
-    *    then an exception will be thrown, else the value is cast
-    *    down to an <tt>int</tt>.
-    *
-    * @param value   The <tt>long</tt> value to convert.
-    * @return        The converted value.
-    *
-    * @throws DataConversionException  Could not safely convert the value.
-    */
-   public static int toInt(final long value)
-      throws DataConversionException
-   {
-      if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE)
-         throw new DataConversionException
-            ("can not safly convert to int: " + value);
-
-      return (int)value;
-   }
 }

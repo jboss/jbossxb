@@ -21,7 +21,6 @@
   */
 package org.jboss.util.platform;
 
-import org.jboss.util.ThrowableHandler;
 
 /**
  * Provides common access to specifics about the version of <em>Java</em>
@@ -102,9 +101,8 @@ public final class Java
          Class.forName("java.lang.Enum");
          version = VERSION_1_5;
       }
-      catch (ClassNotFoundException e)
+      catch (ClassNotFoundException ignore)
       {
-         ThrowableHandler.add(e);
       }
       VERSION = version;
    }

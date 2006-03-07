@@ -25,8 +25,8 @@ import java.net.InetAddress;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.Arrays;
 
-import org.jboss.util.Primitives;
 import org.jboss.util.HashCode;
 import org.jboss.util.platform.PID;
 
@@ -172,7 +172,7 @@ public class VMID
       if (obj != null && obj.getClass() == getClass()) {
          VMID vmid = (VMID)obj;
          return 
-            Primitives.equals(vmid.address, address) &&
+            Arrays.equals(vmid.address, address) &&
             vmid.pid.equals(pid) &&
             vmid.uid.equals(uid);
       }
@@ -216,7 +216,6 @@ public class VMID
     *
     * @return  Virtual machine identifier.
     *
-    * @throws NestedError  Failed to create VMID instance.
     */
    public synchronized static VMID getInstance() {
       if (instance == null) {

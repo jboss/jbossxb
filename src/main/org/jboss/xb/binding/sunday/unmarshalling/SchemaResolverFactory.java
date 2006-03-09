@@ -19,57 +19,22 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-package org.jboss.util.xml;
+package org.jboss.xb.binding.sunday.unmarshalling;
 
-import java.util.Properties;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 
 /**
- * SchemaResolverConfigMBean.
+ * SchemaResolverFactory.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision$
  */
-public interface SchemaResolverConfigMBean
+public interface SchemaResolverFactory
 {
    /**
-    * Get the schemaInitializers.
+    * Get the schema binding resolver
     * 
-    * @return the schemaInitializers.
+    * @return the schema binding resolver
     */
-   Properties getSchemaInitializers();
-
-   /**
-    * Set the schemaInitializers.
-    * 
-    * @param schemaInitializers the schemaInitializers.
-    */
-   void setSchemaInitializers(Properties schemaInitializers);
-
-   /**
-    * Get the schemaLocations.
-    * 
-    * @return the schemaLocations.
-    */
-   Properties getSchemaLocations();
-
-   /**
-    * Set the schemaLocations.
-    * 
-    * @param schemaLocations the schemaLocations.
-    */
-   void setSchemaLocations(Properties schemaLocations);
-
-   /**
-    * Get the parseAnnotations.
-    * 
-    * @return the parseAnnotations.
-    */
-   Properties getParseAnnotations();
-
-   /**
-    * Set the parseAnnotations.
-    * 
-    * @param parseAnnotations the parseAnnotations.
-    */
-   void setParseAnnotations(Properties parseAnnotations);
+   SchemaBindingResolver getSchemaBindingResolver();
 }

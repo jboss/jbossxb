@@ -19,11 +19,12 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-package org.jboss.util.xml;
+package org.jboss.xb.binding.sunday.unmarshalling;
 
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaResolverFactory;
 
 /**
  * SingletonSchemaResolverFactory.
@@ -35,13 +36,13 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
 {
    /** The log */
    private static final Logger log = Logger.getLogger(SingletonSchemaResolverFactory.class);
-   
+
    /** The factory instance */
    private static final SingletonSchemaResolverFactory singleton = new SingletonSchemaResolverFactory();
-   
+
    /** The resolver */
    private final DefaultSchemaResolver resolver = new DefaultSchemaResolver();
-   
+
    /**
     * Get the factory instance
     * 
@@ -62,7 +63,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
       addSchema("urn:jboss:bean-deployer:2.0", "org.jboss.kernel.plugins.deployment.xml.BeanSchemaInitializer20", Boolean.FALSE);
       addSchema("urn:jboss:javabean:1.0", "org.jboss.kernel.plugins.config.xml.JavaBeanSchemaInitializer", Boolean.FALSE);
    }
-   
+
    public SchemaBindingResolver getSchemaBindingResolver()
    {
       return resolver;

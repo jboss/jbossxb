@@ -26,6 +26,7 @@ import java.io.Reader;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.jboss.logging.Logger;
+import org.jboss.util.JBossStringBuilder;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.xb.binding.JBossXBException;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -50,7 +51,8 @@ public class SaxJBossXBParser
 
    private final SAXParser parser;
    private JBossXBParser.ContentHandler contentHandler;
-
+   private DelegatingContentHandler delegateHandler;
+   
    public SaxJBossXBParser()
       throws JBossXBException
    {
@@ -68,7 +70,8 @@ public class SaxJBossXBParser
       }
 
       XMLReader reader = getXmlReader();
-      reader.setContentHandler(new DelegatingContentHandler());
+      delegateHandler = new DelegatingContentHandler();
+      reader.setContentHandler(delegateHandler);
       reader.setErrorHandler(new MetaDataErrorHandler());
       reader.setEntityResolver(new JBossEntityResolver());
 
@@ -122,7 +125,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         throw new JBossXBException("Failed to parse source: " + systemId, e);
+         throw new JBossXBException("Failed to parse source: " + getLocationAsString(systemId), e);
       }
    }
 
@@ -152,6 +155,25 @@ public class SaxJBossXBParser
       }
    }
 
+   public String getLocationAsString(String fileName)
+   {
+      Locator locator = delegateHandler.getDocumentLocator();
+      if (locator == null)
+         return fileName;
+      else
+      {
+         JBossStringBuilder buffer = new JBossStringBuilder();
+         String id = locator.getSystemId();
+         if (id == null)
+            id = locator.getPublicId();
+         buffer.append(id).append('@');
+         buffer.append(locator.getLineNumber());
+         buffer.append(',');
+         buffer.append(locator.getColumnNumber());
+         return buffer.toString();
+      }
+   }
+   
    private XMLReader getXmlReader()
    {
       try
@@ -171,6 +193,8 @@ public class SaxJBossXBParser
    {
       boolean trace = log.isTraceEnabled();
 
+      Locator locator;
+      
       public void endDocument()
       {
       }
@@ -207,8 +231,14 @@ public class SaxJBossXBParser
       {
       }
 
+      public Locator getDocumentLocator()
+      {
+         return locator;
+      }
+      
       public void setDocumentLocator(Locator locator)
       {
+         this.locator = locator;
       }
 
       public void processingInstruction(String target, String data)

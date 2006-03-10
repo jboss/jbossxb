@@ -21,10 +21,12 @@
   */
 package org.jboss.xb.binding;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.List;
 import javax.xml.namespace.QName;
+import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtUtil;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -36,8 +38,17 @@ public interface GenericValueContainer
    {
       public static GenericValueContainer array(final Class itemClass)
       {
+         return array(null, null, itemClass);
+      }
+
+      public static GenericValueContainer array(final Class wrapperClass,
+                                                final String itemProperty,
+                                                final Class itemClass)
+      {
          return new GenericValueContainer()
          {
+            private final Class wrapperType = wrapperClass;
+            private final String itemProp = itemProperty;
             private final Class itemType = itemClass;
             private final List items = new ArrayList();
 
@@ -57,12 +68,63 @@ public interface GenericValueContainer
                   }
                   catch(IllegalArgumentException e)
                   {
-                     throw new JBossXBRuntimeException(
-                        "Failed to set " + items.get(i) +
-                        " as an item of array " + arr);
+                     throw new JBossXBRuntimeException("Failed to set " +
+                        items.get(i) +
+                        " as an item of array " + arr
+                     );
                   }
                }
-               return arr;
+
+               Object result = arr;
+               // wrap
+               if(wrapperType != null)
+               {
+                  Constructor ctor = null;
+                  try
+                  {
+                     try
+                     {
+                        ctor = wrapperType.getConstructor(null);
+                        result = ctor.newInstance(null);
+                        RtUtil.set(result, arr, itemProp, null, false, null);
+                     }
+                     catch(NoSuchMethodException e)
+                     {
+                        Constructor[] ctors = wrapperType.getConstructors();
+                        for(int i = 0; i < ctors.length; ++i)
+                        {
+                           Class[] types = ctors[i].getParameterTypes();
+                           if(types.length == 1 && types[0].isAssignableFrom(arr.getClass()))
+                           {
+                              ctor = ctors[i];
+                              break;
+                           }
+                        }
+
+                        if(ctor == null)
+                        {
+                           throw new JBossXBRuntimeException("Failed to find an appropriate ctor in " +
+                              wrapperType +
+                              " to wrap " + arr
+                           );
+                        }
+
+                        result = ctor.newInstance(new Object[]{arr});
+                     }
+                  }
+                  catch(JBossXBRuntimeException e)
+                  {
+                     throw e;
+                  }
+                  catch(Exception e)
+                  {
+                     throw new JBossXBRuntimeException(
+                        "Failed to initialize array wrapper " + wrapperType + " for " + arr, e
+                     );
+                  }
+               }
+
+               return result;
             }
 
             public Class getTargetClass()

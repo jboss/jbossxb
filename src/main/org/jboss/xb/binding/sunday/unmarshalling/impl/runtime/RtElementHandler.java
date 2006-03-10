@@ -570,9 +570,10 @@ public class RtElementHandler
          ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());
          arrayItem = modelGroup == null ? null : modelGroup.getArrayItem();
 
-         // todo refactor later
+         // todo refactor later (move it to modelGroup.getArrayItem()?)
          if(arrayItem != null &&
-            (arrayItem.getMapEntryMetaData() != null ||
+            (arrayItem.isSkip() ||
+            arrayItem.getMapEntryMetaData() != null ||
             arrayItem.getPutMethodMetaData() != null ||
             arrayItem.getAddMethodMetaData() != null))
          {
@@ -580,44 +581,73 @@ public class RtElementHandler
          }
       }
 
-      if(classMetaData == null && arrayItem != null)
+      if(arrayItem != null)
       {
-         if(parent == null)
+         Class wrapperType = null;
+         if(classMetaData != null)
          {
-            Class itemCls = classForElement(arrayItem, null);
-            if(itemCls != null)
+            wrapperType = loadClassForTerm(
+               classMetaData.getImpl(), term.getSchema().isIgnoreUnresolvedFieldOrClass(), elementName
+            );
+
+            if(GenericValueContainer.class.isAssignableFrom(wrapperType) ||
+               Collection.class.isAssignableFrom(wrapperType) ||
+               Map.class.isAssignableFrom(wrapperType))
+            {
+               return newInstance(wrapperType, elementName, term.getSchema().isUseNoArgCtorIfFound());
+            }
+         }
+
+         if(wrapperType == null && parent == null)
+         {
+            Class itemType = classForElement(arrayItem, null);
+            if(itemType != null)
             {
                if(trace)
                {
-                  log.trace("startElement " + elementName + " new array " + itemCls.getName());
+                  log.trace("startElement " + elementName + " new array " + itemType.getName());
                }
-               o = GenericValueContainer.FACTORY.array(itemCls);
+               o = GenericValueContainer.FACTORY.array(itemType);
             }
          }
          else
          {
-            PropertyMetaData propertyMetaData = term.getPropertyMetaData();
-            String propName = propertyMetaData == null ?
-               Util.xmlNameToFieldName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
-               propertyMetaData.getName();
+            PropertyMetaData propertyMetaData = wrapperType == null ?
+               term.getPropertyMetaData() : arrayItem.getPropertyMetaData();
+
+            String propName;
+            if(propertyMetaData == null)
+            {
+               propName = Util.xmlNameToFieldName(
+                  wrapperType == null ? elementName.getLocalPart() : arrayItem.getQName().getLocalPart(),
+                  term.getSchema().isIgnoreLowLine()
+               );
+            }
+            else
+            {
+               propName = propertyMetaData.getName();
+            }
 
             if(trace)
             {
                log.trace("startElement " + elementName + " property=" + propName);
             }
 
-            Class parentClass;
-            if(parent instanceof GenericValueContainer)
+            Class parentClass = wrapperType;
+            if(wrapperType == null)
             {
-               parentClass = ((GenericValueContainer)parent).getTargetClass();
-            }
-            else if(parent instanceof ValueList)
-            {
-               parentClass = ((ValueList)parent).getTargetClass();
-            }
-            else
-            {
-               parentClass = parent.getClass();
+               if(parent instanceof GenericValueContainer)
+               {
+                  parentClass = ((GenericValueContainer)parent).getTargetClass();
+               }
+               else if(parent instanceof ValueList)
+               {
+                  parentClass = ((ValueList)parent).getTargetClass();
+               }
+               else
+               {
+                  parentClass = parent.getClass();
+               }
             }
 
             Class fieldType;
@@ -634,7 +664,6 @@ public class RtElementHandler
                }
                catch(NoSuchMethodException e)
                {
-                  String fieldName = null;
                   try
                   {
                      Field field = parentClass.getField(propName);
@@ -642,9 +671,9 @@ public class RtElementHandler
                   }
                   catch(NoSuchFieldException e1)
                   {
-                     throw new JBossXBRuntimeException("Failed to find field " +
-                        fieldName +
-                        " or a getter for it for term " +
+                     throw new JBossXBRuntimeException("Failed to find getter or field for " +
+                        propName +
+                        " for element " +
                         elementName +
                         " in " +
                         parentClass
@@ -660,7 +689,7 @@ public class RtElementHandler
 
             if(fieldType.isArray())
             {
-               o = GenericValueContainer.FACTORY.array(fieldType.getComponentType());
+               o = GenericValueContainer.FACTORY.array(wrapperType, propName, fieldType.getComponentType());
             }
             else if(Collection.class.isAssignableFrom(fieldType))
             {
@@ -674,7 +703,9 @@ public class RtElementHandler
          {
             if(mapEntryMetaData.getImpl() != null)
             {
-               Class cls = loadClassForTerm(mapEntryMetaData.getImpl(), term, elementName);
+               Class cls = loadClassForTerm(
+                  mapEntryMetaData.getImpl(), term.getSchema().isIgnoreUnresolvedFieldOrClass(), elementName
+               );
 
                if(trace)
                {
@@ -822,7 +853,9 @@ public class RtElementHandler
                      "Model groups should be annotated with 'class' annotation to be bound."
                   );
                }
-               cls = loadClassForTerm(classMetaData.getImpl(), term, elementName);
+               cls = loadClassForTerm(classMetaData.getImpl(),
+                  term.getSchema().isIgnoreUnresolvedFieldOrClass(),
+                  elementName);
             }
             else
             {
@@ -1094,7 +1127,7 @@ public class RtElementHandler
    }
 
    private static Class loadClassForTerm(String className,
-                                         TermBinding term,
+                                         boolean ignoreCNFE,
                                          QName elementName)
    {
       if(className == null)
@@ -1109,7 +1142,7 @@ public class RtElementHandler
       }
       catch(ClassNotFoundException e)
       {
-         if(term.getSchema().isIgnoreUnresolvedFieldOrClass())
+         if(ignoreCNFE)
          {
             if(log.isTraceEnabled())
             {
@@ -1466,7 +1499,7 @@ public class RtElementHandler
          }
       }
 
-      return loadClassForTerm(clsName, element, element.getQName());
+      return loadClassForTerm(clsName, element.getSchema().isIgnoreUnresolvedFieldOrClass(), element.getQName());
    }
 
    private String classFromQName(ElementBinding element)

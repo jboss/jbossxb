@@ -276,14 +276,19 @@ public class RtElementHandler
          }
          else
          {
-            PropertyMetaData propertyMetaData = term.getPropertyMetaData();
-            if(propertyMetaData == null && parentTerm != null && !parentTerm.isModelGroup())
+            PropertyMetaData propertyMetaData = null;
+            if(parentTerm != null && !parentTerm.isModelGroup())
             {
                // todo: this smells
                ElementBinding parentElement = (ElementBinding)parentTerm;
                TypeBinding parentType = parentElement.getType();
                WildcardBinding wildcard = parentType.getWildcard();
                propertyMetaData = wildcard == null ? null : wildcard.getPropertyMetaData();
+            }
+
+            if(propertyMetaData == null)
+            {
+               propertyMetaData = term.getPropertyMetaData();
             }
 
             /*
@@ -564,13 +569,22 @@ public class RtElementHandler
          ParticleBinding typeParticle = ((ElementBinding)term).getType().getParticle();
          ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());
          arrayItem = modelGroup == null ? null : modelGroup.getArrayItem();
+
+         // todo refactor later
+         if(arrayItem != null &&
+            (arrayItem.getMapEntryMetaData() != null ||
+            arrayItem.getPutMethodMetaData() != null ||
+            arrayItem.getAddMethodMetaData() != null))
+         {
+            arrayItem = null;
+         }
       }
 
-      if(classMetaData == null && term.getAddMethodMetaData() == null && arrayItem != null)
+      if(classMetaData == null && arrayItem != null)
       {
          if(parent == null)
          {
-            Class itemCls = classForElement(arrayItem, parent == null ? null : parent.getClass());
+            Class itemCls = classForElement(arrayItem, null);
             if(itemCls != null)
             {
                if(trace)
@@ -583,16 +597,14 @@ public class RtElementHandler
          else
          {
             PropertyMetaData propertyMetaData = term.getPropertyMetaData();
-            String propName = propertyMetaData == null ? null : propertyMetaData.getName();
+            String propName = propertyMetaData == null ?
+               Util.xmlNameToFieldName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
+               propertyMetaData.getName();
 
             if(trace)
             {
                log.trace("startElement " + elementName + " property=" + propName);
             }
-
-            String getterName = propName == null ?
-               Util.xmlNameToGetMethodName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
-               "get" + Character.toUpperCase(propName.charAt(0)) + propName.substring(1);
 
             Class parentClass;
             if(parent instanceof GenericValueContainer)
@@ -617,7 +629,7 @@ public class RtElementHandler
             {
                try
                {
-                  Method getter = parentClass.getMethod(getterName, null);
+                  Method getter = Classes.getAttributeGetter(parentClass, propName);
                   fieldType = getter.getReturnType();
                }
                catch(NoSuchMethodException e)
@@ -625,19 +637,14 @@ public class RtElementHandler
                   String fieldName = null;
                   try
                   {
-                     fieldName = propName == null ?
-                        Util.xmlNameToFieldName(elementName.getLocalPart(), term.getSchema().isIgnoreLowLine()) :
-                        propName;
-                     Field field = parentClass.getField(fieldName);
+                     Field field = parentClass.getField(propName);
                      fieldType = field.getType();
                   }
                   catch(NoSuchFieldException e1)
                   {
                      throw new JBossXBRuntimeException("Failed to find field " +
                         fieldName +
-                        " and getter " +
-                        getterName +
-                        " for term " +
+                        " or a getter for it for term " +
                         elementName +
                         " in " +
                         parentClass

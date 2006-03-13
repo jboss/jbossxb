@@ -247,17 +247,7 @@ public class RtElementHandler
             }
          }
 
-/*         if(owner instanceof ValueList)
-         {
-            if(trace)
-            {
-               log.trace("setParent " + qName + " add");
-            }
-            ValueList valueList = (ValueList)owner;
-            ValueListInitializer initializer = valueList.getInitializer();
-            initializer.addElementValue(qName, particle, this, valueList, o);
-         }         
-         else */if(term.getPutMethodMetaData() != null ||
+         if(term.getPutMethodMetaData() != null ||
             term.getMapEntryMetaData() != null && owner instanceof Map)
          {
             if(trace)
@@ -310,112 +300,6 @@ public class RtElementHandler
                }
                ((GenericValueContainer)owner).addChild(qName, o);
             }
-/*
-            else if(owner instanceof ValueList)
-            {
-               if(trace)
-               {
-                  log.trace("setParent " + qName + " add");
-               }
-               ValueList valueList = (ValueList)owner;
-               ValueListInitializer initializer = valueList.getInitializer();
-               if(particle.isRepeatable())
-               {
-                  String propName = propertyMetaData == null ? null : propertyMetaData.getName();
-                  if(propName == null)
-                  {
-                     propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
-                  }
-
-                  Class fieldType;
-                  try
-                  {
-                     fieldType = Classes.getAttributeGetter(valueList.getTargetClass(), propName).getReturnType();
-                  }
-                  catch(NoSuchMethodException e)
-                  {
-                     try
-                     {
-                        fieldType = valueList.getTargetClass().getField(propName).getType();
-                     }
-                     catch(NoSuchFieldException e1)
-                     {
-                        String msg = "Neither getter/setter nor field were found for field " +
-                           propName + " in " + valueList.getTargetClass();
-                        if(term.getSchema().isIgnoreUnresolvedFieldOrClass())
-                        {
-                           log.warn(msg);
-                           return;
-                        }
-                        throw new JBossXBRuntimeException(msg);
-                     }
-                  }
-
-                  if(Collection.class.isAssignableFrom(fieldType))
-                  {
-                     Collection col = (Collection)initializer.getElementValue(qName, valueList);
-                     if(col == null)
-                     {
-                        if((fieldType.getModifiers() & (Modifier.INTERFACE | Modifier.ABSTRACT)) == 0)
-                        {
-                           try
-                           {
-                              col = (Collection)fieldType.newInstance();
-                           }
-                           catch(Exception e)
-                           {
-                              throw new JBossXBRuntimeException("Failed to create an instance of " +
-                                 fieldType +
-                                 " for element " + qName
-                              );
-                           }
-                        }
-                        else if(Set.class.isAssignableFrom(fieldType))
-                        {
-                           col = new HashSet();
-                        }
-                        else
-                        {
-                           col = new ArrayList();
-                        }
-                        // todo: add support for terms
-                        initializer.addElementValue(qName, particle, valueList, col);
-                     }
-                     col.add(o);
-                  }
-                  else if(fieldType.isArray())
-                  {
-                     Object arr = initializer.getElementValue(qName, valueList);
-                     int index = 0;
-                     if(arr == null)
-                     {
-                        arr = Array.newInstance(fieldType.getComponentType(), 1);
-                     }
-                     else
-                     {
-                        Object tmp = arr;
-                        index = Array.getLength(arr);
-                        arr = Array.newInstance(fieldType.getComponentType(), index + 1);
-                        System.arraycopy(tmp, 0, arr, 0, index);
-                     }
-                     Array.set(arr, index, o);
-                     // todo: add support for terms
-                     initializer.addElementValue(qName, particle, valueList, arr);
-                  }
-                  else
-                  {
-                     throw new JBossXBRuntimeException("Failed to recognize collection type of " +
-                        fieldType +
-                        " for element " + qName
-                     );
-                  }
-               }
-               else
-               {
-                  initializer.addElementValue(qName, particle, valueList, o);
-               }
-            }
-*/
             else if(propertyMetaData != null)
             {
                String propName = propertyMetaData.getName();
@@ -517,15 +401,6 @@ public class RtElementHandler
             );
          }
       }
-      /*else if(o instanceof ValueList)
-      {
-         if(trace)
-         {
-            log.trace("endParticle " + elementName + " valueList");
-         }
-         ValueList valueList = (ValueList)o;
-         o = valueList.getHandler().newInstance(particle, valueList);
-      }*/
 
       return o;
    }

@@ -43,6 +43,11 @@ public class Dom2Sax
 {
    public static void dom2sax(Element e, ContentHandler ch) throws SAXException
    {
+      if(e == null)
+      {
+         throw new IllegalArgumentException("The element argument must not be null!");
+      }
+      
       ch.startDocument();
 
       process(e, ch, new NamespaceRegistry());

@@ -279,11 +279,15 @@ public class RtElementHandler
             PropertyMetaData propertyMetaData = null;
             if(parentTerm != null && !parentTerm.isModelGroup())
             {
-               // todo: this smells
                ElementBinding parentElement = (ElementBinding)parentTerm;
                TypeBinding parentType = parentElement.getType();
                WildcardBinding wildcard = parentType.getWildcard();
-               propertyMetaData = wildcard == null ? null : wildcard.getPropertyMetaData();
+               // if parent has a wildcard and the child belongs to the content of the wildcard
+               // todo: there are should be a better way of checking this
+               if(wildcard != null && parentType.getElement(qName) == null)
+               {
+                  propertyMetaData = wildcard.getPropertyMetaData();
+               }
             }
 
             if(propertyMetaData == null)

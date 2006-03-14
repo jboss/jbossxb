@@ -168,7 +168,7 @@ public class WildcardBinding
 
       if(element == null && pc == PC_LAX)
       {
-         element = getUnresolvedElement(qName, pc == PC_STRICT);
+         element = getUnresolvedElement(qName, false);
       }
 
       return element;
@@ -185,7 +185,10 @@ public class WildcardBinding
    {
       if(log.isTraceEnabled())
       {
-         log.trace("getUnresolvedElement for " + qName);
+         log.trace(
+            "getUnresolvedElement for " + qName + ", required=" + required
+            + ", unresolvedElementHandler=" + unresolvedElementHandler
+         );
       }
 
       if(unresolvedElementHandler == null)

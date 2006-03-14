@@ -267,6 +267,16 @@ public abstract class AbstractMarshaller
       }
    }
 
+   public String getPrefix(String ns)
+   {
+      String prefix = (String)prefixByUri.get(ns);
+      if(prefix == null && Constants.NS_XML_NAMESPACE.equals(ns))
+      {
+         prefix = "xml";
+      }
+      return prefix;
+   }
+
    public abstract void addAttribute(String prefix, String localName, String type, String value);
 
    // Protected

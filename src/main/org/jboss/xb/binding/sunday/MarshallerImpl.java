@@ -365,7 +365,7 @@ public class MarshallerImpl
       boolean trace = log.isTraceEnabled() && result;
       if(trace)
       {
-         String prefix = (String)prefixByUri.get(elementNs);
+         String prefix = getPrefix(elementNs);
          log.trace("started element ns=" + elementNs + ", local=" + elementLocal + ", prefix=" + prefix);
       }
 
@@ -420,7 +420,7 @@ public class MarshallerImpl
       Object value = stack.peek();
       if(value != null)
       {
-         String prefix = (String)prefixByUri.get(elementUri);
+         String prefix = getPrefix(elementUri);
          boolean genPrefix = prefix == null && elementUri != null && elementUri.length() > 0;
          if(genPrefix)
          {
@@ -570,7 +570,7 @@ public class MarshallerImpl
          }
       }
 
-      String prefix = (String)prefixByUri.get(elementNsUri);
+      String prefix = getPrefix(elementNsUri);
       boolean genPrefix = prefix == null && elementNsUri != null && elementNsUri.length() > 0;
       if(genPrefix)
       {
@@ -617,7 +617,7 @@ public class MarshallerImpl
             String attrPrefix = null;
             if(attrNs != null)
             {
-               attrPrefix = (String)prefixByUri.get(attrNs);
+               attrPrefix = getPrefix(attrNs);
                if(attrPrefix == null && attrNs != null && attrNs.length() > 0)
                {
                   attrPrefix = "ns_" + attrLocal;
@@ -664,7 +664,7 @@ public class MarshallerImpl
                            }
                            else
                            {
-                              itemPrefix = (String)prefixByUri.get(itemNs);
+                              itemPrefix = getPrefix(itemNs);
                               if(itemPrefix == null)
                               {
                                  itemPrefix = attrLocal + listInd;
@@ -1262,7 +1262,7 @@ public class MarshallerImpl
       }
 
       AttributesImpl attrs;
-      String prefix = (String)prefixByUri.get(elementNs);
+      String prefix = getPrefix(elementNs);
       if(prefix == null && elementNs != null && elementNs.length() > 0)
       {
          prefix = "ns_" + elementLocal;
@@ -1274,7 +1274,7 @@ public class MarshallerImpl
          attrs = new AttributesImpl(1);
       }
 
-      String xsiPrefix = (String)prefixByUri.get(Constants.NS_XML_SCHEMA_INSTANCE);
+      String xsiPrefix = getPrefix(Constants.NS_XML_SCHEMA_INSTANCE);
       if(xsiPrefix == null)
       {
          xsiPrefix = "xsi";
@@ -1537,7 +1537,7 @@ public class MarshallerImpl
          attrs.add(Constants.NS_XML_SCHEMA, "xmlns", "xmlns:xsi", null, Constants.NS_XML_SCHEMA_INSTANCE);
       }
 
-      String pref = (String)prefixByUri.get(typeQName.getNamespaceURI());
+      String pref = getPrefix(typeQName.getNamespaceURI());
       if(pref == null)
       {
          // the ns is not declared

@@ -371,7 +371,7 @@ public class XercesXsMarshaller
       boolean trace = log.isTraceEnabled() && result;
       if(trace)
       {
-         String prefix = (String)prefixByUri.get(elementNs);
+         String prefix = getPrefix(elementNs);
          log.trace("started element ns=" + elementNs + ", local=" + elementLocal + ", prefix=" + prefix);
       }
 
@@ -428,7 +428,7 @@ public class XercesXsMarshaller
       Object value = stack.peek();
       if(value != null)
       {
-         String prefix = (String)prefixByUri.get(elementUri);
+         String prefix = getPrefix(elementUri);
          boolean genPrefix = prefix == null && elementUri != null && elementUri.length() > 0;
          if(genPrefix)
          {
@@ -517,7 +517,7 @@ public class XercesXsMarshaller
          }
       }
 
-      String prefix = (String)prefixByUri.get(elementNsUri);
+      String prefix = getPrefix(elementNsUri);
       boolean genPrefix = prefix == null && elementNsUri != null && elementNsUri.length() > 0;
       if(genPrefix)
       {
@@ -549,18 +549,11 @@ public class XercesXsMarshaller
             String attrPrefix = null;
             if(attrNs != null)
             {
-               if (attrNs.equals(Constants.NS_XML_NAMESPACE))
+               attrPrefix = getPrefix(attrNs);
+               if(attrPrefix == null && attrNs != null && attrNs.length() > 0)
                {
-                  attrPrefix = "xml";
-               }
-               else
-               {
-                  attrPrefix = (String)prefixByUri.get(attrNs);
-                  if (attrPrefix == null && attrNs != null && attrNs.length() > 0)
-                  {
-                     attrPrefix = "ns_" + attrLocal;
-                     attrs.add(null, attrPrefix, "xmlns:" + attrPrefix, null, attrNs);
-                  }
+                  attrPrefix = "ns_" + attrLocal;
+                  attrs.add(null, attrPrefix, "xmlns:" + attrPrefix, null, attrNs);
                }
             }
 
@@ -606,7 +599,7 @@ public class XercesXsMarshaller
                            }
                            else
                            {
-                              itemPrefix = (String)prefixByUri.get(itemNs);
+                              itemPrefix = getPrefix(itemNs);
                               if(itemPrefix == null)
                               {
                                  itemPrefix = attrLocal + listInd;
@@ -1262,7 +1255,7 @@ public class XercesXsMarshaller
          attrs.add(Constants.NS_XML_SCHEMA, "xmlns", "xmlns:xsi", null, Constants.NS_XML_SCHEMA_INSTANCE);
       }
 
-      String pref = (String)prefixByUri.get(type.getNamespace());
+      String pref = getPrefix(type.getNamespace());
       if(pref == null)
       {
          // the ns is not declared
@@ -1350,7 +1343,7 @@ public class XercesXsMarshaller
       }
 
       AttributesImpl attrs;
-      String prefix = (String)prefixByUri.get(elementNs);
+      String prefix = getPrefix(elementNs);
       if(prefix == null && elementNs != null && elementNs.length() > 0)
       {
          prefix = "ns_" + elementLocal;
@@ -1362,7 +1355,7 @@ public class XercesXsMarshaller
          attrs = new AttributesImpl(1);
       }
 
-      String xsiPrefix = (String)prefixByUri.get(Constants.NS_XML_SCHEMA_INSTANCE);
+      String xsiPrefix = getPrefix(Constants.NS_XML_SCHEMA_INSTANCE);
       if(xsiPrefix == null)
       {
          xsiPrefix = "xsi";

@@ -32,6 +32,9 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.metadata.PackageMetaData;
 
 /**
+ * A SchemaBinding is a collection of binding objects (TypeBinding,
+ * ChoiceBinding, ElementBinding, ModelGroupBinding, SequenceBinding, WildcardBinding)
+ * for a single namespace keyed by the QNames of the schema components.
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
@@ -110,16 +113,27 @@ public class SchemaBinding
       SIMPLE_TYPES.put(type.getQName(), type);
    }
 
+   /** Map<QName, TypeBinding> for simple/complex types */
    private Map types = new HashMap(SIMPLE_TYPES);
+   /** Map<QName, ParticleBinding> for */
    private Map elements = new HashMap();
+   /** The default package information */
    private PackageMetaData packageMetaData;
+   /** Schema resolver to use for foreign namespaces */
    private SchemaBindingResolver schemaResolver;
+   /** Must all content have a valid binding */
    private boolean strictSchema = true;
+   /** Should child elements be ignored if they don't map to a parent field */
    private boolean ignoreUnresolvedFieldOrClass = true;
+   /** Should '_' be considered as a word separator or part of Java identifier */
    private boolean ignoreLowLine = true;
+   /** Should ${x} references be replaced with x system property */
    private boolean replacePropertyRefs = true;
+   /** Should list xml types be unmarshalled as arrays */
    private boolean unmarshalListsToArrays;
+   /** Should the default no-arg ctor be used to create the java instance */
    private boolean useNoArgCtorIfFound;
+   /** The default property name to use for simple content bindings */
    private String simpleContentProperty = "value";
 
    public TypeBinding getType(QName qName)
@@ -279,6 +293,10 @@ public class SchemaBinding
       return unmarshalListsToArrays;
    }
 
+   /**
+    * Should list xml types be unmarshalled as arrays 
+    * @param unmarshalListsToArrays
+    */
    public void setUnmarshalListsToArrays(boolean unmarshalListsToArrays)
    {
       this.unmarshalListsToArrays = unmarshalListsToArrays;
@@ -289,6 +307,10 @@ public class SchemaBinding
       return useNoArgCtorIfFound;
    }
 
+   /**
+    * Should the default no-arg ctor be used to create the java instance
+    * @param useNoArgCtorIfFound
+    */
    public void setUseNoArgCtorIfFound(boolean useNoArgCtorIfFound)
    {
       this.useNoArgCtorIfFound = useNoArgCtorIfFound;
@@ -299,6 +321,10 @@ public class SchemaBinding
       return simpleContentProperty;
    }
 
+   /**
+    * Set the default property name to use for simple content bindings
+    * @param simpleContentProperty
+    */
    public void setSimpleContentProperty(String simpleContentProperty)
    {
       this.simpleContentProperty = simpleContentProperty;

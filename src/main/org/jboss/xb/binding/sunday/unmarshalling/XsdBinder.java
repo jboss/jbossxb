@@ -948,28 +948,7 @@ public class XsdBinder
          XSAnnotation annotation = wildcard.getAnnotation();
          if(annotation != null)
          {
-            if (trace)
-            {
-               log.trace(group + " annotation");
-            }
-
-            XsdAnnotation xsdAn = XsdAnnotation.unmarshal(annotation.getAnnotationString());
-            XsdAppInfo appInfo = xsdAn.getAppInfo();
-            if(appInfo != null)
-            {
-               PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
-               if(propertyMetaData != null)
-               {
-                  if (trace)
-                  {
-                     log.trace("wildcard is bound to property: " +
-                        propertyMetaData.getName() +
-                        ", collectionType=" + propertyMetaData.getCollectionType()
-                     );
-                  }
-               }
-               binding.setPropertyMetaData(propertyMetaData);
-            }
+            customizeTerm(annotation, binding);
          }
       }
    }
@@ -1104,9 +1083,20 @@ public class XsdBinder
          {
             if (trace)
             {
-               String msg = term.isModelGroup() ? term + " bound to " : "element: name=" +
-                  ((ElementBinding)term).getQName() +
-                  ", class=";
+               String msg;
+               if(term.isModelGroup())
+               {
+                  msg = term + " bound to ";
+               }
+               else if(term.isWildcard())
+               {
+                  msg = " wildcard bound to ";
+               }
+               else
+               {
+                  msg = "element: name=" + ((ElementBinding)term).getQName() + ", class=";
+               }
+
                msg += classMetaData.getImpl();
                log.trace(msg);
             }
@@ -1119,7 +1109,7 @@ public class XsdBinder
          {
             if (trace)
             {
-               String msg = term.isModelGroup() ? term + " " : "element: name=" +
+               String msg = term.isWildcard() || term.isModelGroup() ? term + " " : "element: name=" +
                   ((ElementBinding)term).getQName() + ", ";
                msg += " property=" +
                   propertyMetaData.getName() +
@@ -1142,7 +1132,7 @@ public class XsdBinder
 
             if (trace)
             {
-               String msg = term.isModelGroup() ? term.toString() : "element name=" +
+               String msg = term.isWildcard() || term.isModelGroup() ? term.toString() : "element name=" +
                   ((ElementBinding)term).getQName();
 
                msg += " is bound to a map entry: impl=" +
@@ -1164,7 +1154,7 @@ public class XsdBinder
             if(classMetaData != null)
             {
                String msg = "Invalid customization: both jbxb:class and jbxb:mapEntry are specified for term " +
-                  (term.isModelGroup() ? term.toString() : ((ElementBinding)term).getQName().toString());
+                  (term.isWildcard() || term.isModelGroup() ? term.toString() : ((ElementBinding)term).getQName().toString());
                throw new JBossXBRuntimeException(msg);
             }
             term.setMapEntryMetaData(mapEntryMetaData);
@@ -1176,7 +1166,7 @@ public class XsdBinder
          {
             if (trace)
             {
-               String msg = term.isModelGroup() ? term.toString() : "element: name=" +
+               String msg = term.isWildcard() || term.isModelGroup() ? term.toString() : "element: name=" +
                   ((ElementBinding)term).getQName() + ",";
 
                msg += " putMethod=" +
@@ -1194,7 +1184,7 @@ public class XsdBinder
          {
             if (trace)
             {
-               String msg = term.isModelGroup() ? term.toString() : "element: name=" +
+               String msg = term.isWildcard() || term.isModelGroup() ? term.toString() : "element: name=" +
                   ((ElementBinding)term).getQName() + ",";
                msg += " addMethod=" +
                   addMethodMetaData.getMethodName() +
@@ -1211,7 +1201,7 @@ public class XsdBinder
          {
             if (trace)
             {
-               String msg = term.isModelGroup() ? term.toString() : "element " +
+               String msg = term.isWildcard() || term.isModelGroup() ? term.toString() : "element " +
                   ((ElementBinding)term).getQName();
                msg += ": unmarshalMethod=" + valueMetaData.getUnmarshalMethod();
                log.trace(msg);
@@ -1224,7 +1214,7 @@ public class XsdBinder
          {
             if (trace)
             {
-               String msg = term.isModelGroup() ? term.toString() : "element name=" +
+               String msg = term.isWildcard() || term.isModelGroup() ? term.toString() : "element name=" +
                   ((ElementBinding)term).getQName();
                msg += ": is bound to a key in a map entry";
                log.trace(msg);
@@ -1238,7 +1228,7 @@ public class XsdBinder
          {
             if (trace)
             {
-               String msg = term.isModelGroup() ? term.toString() : "element name=" +
+               String msg = term.isWildcard() || term.isModelGroup() ? term.toString() : "element name=" +
                   ((ElementBinding)term).getQName();
                msg += ": is bound to a value in a map entry";
                log.trace(msg);
@@ -1256,7 +1246,7 @@ public class XsdBinder
          {
             if (trace)
             {
-               String msg = term.isModelGroup() ? term.toString() : "element name=" +
+               String msg = term.isWildcard() || term.isModelGroup() ? term.toString() : "element name=" +
                   ((ElementBinding)term).getQName();
                msg += ": will be skipped, it's attributes, character content and children will be set on the parent";
                log.trace(msg);

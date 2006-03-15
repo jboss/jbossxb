@@ -247,39 +247,29 @@ public class RtElementHandler
             }
          }
 
-         if(term.getPutMethodMetaData() != null ||
-            term.getMapEntryMetaData() != null && owner instanceof Map)
+         // the wildcard this element is a content of
+         WildcardBinding wildcard = null;
+         if(parentTerm != null && !parentTerm.isModelGroup())
          {
-            if(trace)
+            ElementBinding parentElement = (ElementBinding)parentTerm;
+            TypeBinding parentType = parentElement.getType();
+            wildcard = parentType.getWildcard();
+            // todo: there are should be a better way of checking this
+            if(wildcard != null && parentType.getElement(qName) != null)
             {
-               log.trace("setParent " + qName + " mapPut");
+               wildcard = null;
             }
-            invokePut(qName, term, owner, o);
          }
-         else if(term.getAddMethodMetaData() != null)
+
+         if(tryPut(owner, o, qName, term, trace))
          {
-            if(trace)
-            {
-               log.trace("setParent " + qName + " add");
-            }
-            invokeAdd(qName, term, owner, o);
+         }
+         else if(tryAdd(owner, o, qName, term, wildcard, trace))
+         {
          }
          else
          {
-            PropertyMetaData propertyMetaData = null;
-            if(parentTerm != null && !parentTerm.isModelGroup())
-            {
-               ElementBinding parentElement = (ElementBinding)parentTerm;
-               TypeBinding parentType = parentElement.getType();
-               WildcardBinding wildcard = parentType.getWildcard();
-               // if parent has a wildcard and the child belongs to the content of the wildcard
-               // todo: there are should be a better way of checking this
-               if(wildcard != null && parentType.getElement(qName) == null)
-               {
-                  propertyMetaData = wildcard.getPropertyMetaData();
-               }
-            }
-
+            PropertyMetaData propertyMetaData = wildcard == null ? null : wildcard.getPropertyMetaData();
             if(propertyMetaData == null)
             {
                propertyMetaData = term.getPropertyMetaData();
@@ -454,7 +444,8 @@ public class RtElementHandler
             (arrayItem.isSkip() ||
             arrayItem.getMapEntryMetaData() != null ||
             arrayItem.getPutMethodMetaData() != null ||
-            arrayItem.getAddMethodMetaData() != null))
+            arrayItem.getAddMethodMetaData() != null
+            ))
          {
             arrayItem = null;
          }
@@ -465,8 +456,9 @@ public class RtElementHandler
          Class wrapperType = null;
          if(classMetaData != null)
          {
-            wrapperType = loadClassForTerm(
-               classMetaData.getImpl(), term.getSchema().isIgnoreUnresolvedFieldOrClass(), elementName
+            wrapperType = loadClassForTerm(classMetaData.getImpl(),
+               term.getSchema().isIgnoreUnresolvedFieldOrClass(),
+               elementName
             );
 
             if(GenericValueContainer.class.isAssignableFrom(wrapperType) ||
@@ -582,8 +574,9 @@ public class RtElementHandler
          {
             if(mapEntryMetaData.getImpl() != null)
             {
-               Class cls = loadClassForTerm(
-                  mapEntryMetaData.getImpl(), term.getSchema().isIgnoreUnresolvedFieldOrClass(), elementName
+               Class cls = loadClassForTerm(mapEntryMetaData.getImpl(),
+                  term.getSchema().isIgnoreUnresolvedFieldOrClass(),
+                  elementName
                );
 
                if(trace)
@@ -734,7 +727,8 @@ public class RtElementHandler
                }
                cls = loadClassForTerm(classMetaData.getImpl(),
                   term.getSchema().isIgnoreUnresolvedFieldOrClass(),
-                  elementName);
+                  elementName
+               );
             }
             else
             {
@@ -812,6 +806,47 @@ public class RtElementHandler
             }
          }
       }
+   }
+
+   private boolean tryAdd(Object owner,
+                          Object o,
+                          QName qName,
+                          TermBinding term,
+                          WildcardBinding wildcard,
+                          boolean trace)
+   {
+      AddMethodMetaData addMetaData = wildcard == null ? null : wildcard.getAddMethodMetaData();
+      if(addMetaData == null)
+      {
+         addMetaData = term.getAddMethodMetaData();
+      }
+
+      if(addMetaData == null)
+      {
+         return false;
+      }
+
+      if(trace)
+      {
+         log.trace("setParent " + qName + " add");
+      }
+      invokeAdd(qName, addMetaData, owner, o);
+      return true;
+   }
+
+   private boolean tryPut(Object owner, Object o, QName qName, TermBinding term, boolean trace)
+   {
+      if(term.getPutMethodMetaData() != null ||
+         term.getMapEntryMetaData() != null && owner instanceof Map)
+      {
+         if(trace)
+         {
+            log.trace("setParent " + qName + " mapPut");
+         }
+         invokePut(qName, term, owner, o);
+         return true;
+      }
+      return false;
    }
 
    private Class classForElement(ElementBinding element, Class parentClass)
@@ -1044,9 +1079,8 @@ public class RtElementHandler
       return cls;
    }
 
-   private void invokeAdd(QName qName, TermBinding term, Object owner, Object o)
+   private void invokeAdd(QName qName, AddMethodMetaData addMethodMetaData, Object owner, Object o)
    {
-      AddMethodMetaData addMethodMetaData = term.getAddMethodMetaData();
       Class valueType = Object.class;
       if(addMethodMetaData.getValueType() != null)
       {

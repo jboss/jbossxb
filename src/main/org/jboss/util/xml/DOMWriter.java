@@ -1,8 +1,4 @@
 /*
- * $Header$
- * $Revision$
- * $Date$
- *
  * ====================================================================
  *
  * The Apache Software License, Version 1.1
@@ -56,8 +52,6 @@
  * individuals on behalf of the Apache Software Foundation.  For more
  * information on the Apache Software Foundation, please see
  * <http://www.apache.org/>.
- *
- *
  */ 
 package org.jboss.util.xml;
 
@@ -69,7 +63,6 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 
 import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -93,7 +86,6 @@ public class DOMWriter
    private boolean writeXMLDeclaration;
    // Explicit character set encoding
    private String charsetName;
-
    // indent for the pretty printer
    private int prettyIndent;
    // True, if the XML declaration has been written
@@ -192,11 +184,8 @@ public class DOMWriter
       {
          return;
       }
-      
-      if (node instanceof Document)
-      {
-         node = ((Document)node).getDocumentElement();
-      }
+      // JBAS-2117 - Don't skip the DOCUMENT_NODE
+      // if (node instanceof Document) node = ((Document)node).getDocumentElement();
 
       if (wroteXMLDeclaration == false && writeXMLDeclaration == true && canonical == false)
       {
@@ -391,7 +380,6 @@ public class DOMWriter
             out.print('\n');
          }
       }
-
       out.flush();
    }
 
@@ -443,7 +431,6 @@ public class DOMWriter
             array[index] = temp;
          }
       }
-
       return (array);
    }
 
@@ -496,7 +483,6 @@ public class DOMWriter
             }
          }
       }
-
       return (str.toString());
    }
 }

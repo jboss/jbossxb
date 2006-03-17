@@ -54,11 +54,9 @@ public final class DOMUtils
 {
    private static Logger log = Logger.getLogger(DOMUtils.class);
 
-   // The DocumentBuilder
-   private static DocumentBuilder builder = getDocumentBuilder();
-
-   // All elements created by the same thread belong to the same doc
+   // All elements created by the same thread are created by the same builder and belong to the same doc
    private static InheritableThreadLocal documentThreadLocal = new InheritableThreadLocal();
+   private static InheritableThreadLocal builderThreadLocal = new InheritableThreadLocal();
 
    // Hide the constructor
    private DOMUtils()
@@ -69,6 +67,7 @@ public final class DOMUtils
     */
    public static DocumentBuilder getDocumentBuilder()
    {
+      DocumentBuilder builder = (DocumentBuilder)builderThreadLocal.get();
       if (builder == null)
       {
          try
@@ -108,7 +107,7 @@ public final class DOMUtils
    {
       try
       {
-         Document doc = builder.parse(xmlStream);
+         Document doc = getDocumentBuilder().parse(xmlStream);
          Element root = doc.getDocumentElement();
          return root;
       }
@@ -465,15 +464,9 @@ public final class DOMUtils
       Document doc = (Document)documentThreadLocal.get();
       if (doc == null)
       {
-         doc = builder.newDocument();
+         doc = getDocumentBuilder().newDocument();
          documentThreadLocal.set(doc);
       }
       return doc;
-   }
-
-   /** Set the owner document that is associated with the current thread */
-   public static void setOwnerDocument(Document doc)
-   {
-      documentThreadLocal.set(doc);
    }
 }

@@ -52,8 +52,10 @@
  * individuals on behalf of the Apache Software Foundation.  For more
  * information on the Apache Software Foundation, please see
  * <http://www.apache.org/>.
- */ 
+ */
 package org.jboss.util.xml;
+
+// $Id$
 
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -96,12 +98,12 @@ public class DOMWriter
       this.out = new PrintWriter(w);
    }
 
-   public DOMWriter(OutputStream stream) 
+   public DOMWriter(OutputStream stream)
    {
       this.out = new PrintWriter(new OutputStreamWriter(stream));
    }
 
-   public DOMWriter(OutputStream stream, String charsetName) 
+   public DOMWriter(OutputStream stream, String charsetName)
    {
       try
       {
@@ -184,6 +186,7 @@ public class DOMWriter
       {
          return;
       }
+
       // JBAS-2117 - Don't skip the DOCUMENT_NODE
       // if (node instanceof Document) node = ((Document)node).getDocumentElement();
 
@@ -214,7 +217,7 @@ public class DOMWriter
             break;
          }
 
-         // print element with attributes
+            // print element with attributes
          case Node.ELEMENT_NODE:
          {
             if (prettyprint)
@@ -262,7 +265,7 @@ public class DOMWriter
             break;
          }
 
-         // handle entity reference nodes
+            // handle entity reference nodes
          case Node.ENTITY_REFERENCE_NODE:
          {
             if (canonical)
@@ -286,7 +289,7 @@ public class DOMWriter
             break;
          }
 
-         // print cdata sections
+            // print cdata sections
          case Node.CDATA_SECTION_NODE:
          {
             if (canonical)
@@ -302,7 +305,7 @@ public class DOMWriter
             break;
          }
 
-         // print text
+            // print text
          case Node.TEXT_NODE:
          {
             String text = normalize(node.getNodeValue());
@@ -311,7 +314,7 @@ public class DOMWriter
             break;
          }
 
-         // print processing instruction
+            // print processing instruction
          case Node.PROCESSING_INSTRUCTION_NODE:
          {
             out.print("<?");
@@ -326,7 +329,7 @@ public class DOMWriter
             break;
          }
 
-         // print comment
+            // print comment
          case Node.COMMENT_NODE:
          {
             for (int i = 0; i < prettyIndent; i++)

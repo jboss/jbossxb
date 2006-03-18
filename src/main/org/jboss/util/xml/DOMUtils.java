@@ -77,6 +77,7 @@ public final class DOMUtils
             factory.setNamespaceAware(true);
             builder = factory.newDocumentBuilder();
             builder.setEntityResolver(new JBossEntityResolver());
+            builderThreadLocal.put(builder);
          }
          catch (ParserConfigurationException e)
          {

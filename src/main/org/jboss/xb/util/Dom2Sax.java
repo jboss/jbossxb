@@ -57,12 +57,6 @@ public class Dom2Sax
 
    private static void process(Element e, ContentHandler ch, NamespaceRegistry nsReg) throws SAXException
    {
-      String ns = e.getNamespaceURI();
-      if(ns == null)
-      {
-         ns = "";
-      }
-
       AttributesImpl attrs = new AttributesImpl();
 
       List startedPrefixes = Collections.EMPTY_LIST;
@@ -114,14 +108,14 @@ public class Dom2Sax
 
             if(!isXmlns(attrNs))
             {
-               String prefix = nsReg.getPrefix(ns);
+               String prefix = nsReg.getPrefix(attrNs);
                if(prefix == null)
                {
                   prefix = attrLocal + "_ns";
-                  nsReg.addPrefixMapping(prefix, ns);
-                  ch.startPrefixMapping(prefix, ns);
+                  nsReg.addPrefixMapping(prefix, attrNs);
+                  ch.startPrefixMapping(prefix, attrNs);
                   startedPrefixes = add(startedPrefixes, prefix);
-                  attrs.addAttribute(Constants.NS_XML_SCHEMA, prefix, "xmlns:" + prefix, null, ns);
+                  attrs.addAttribute(Constants.NS_XML_SCHEMA, prefix, "xmlns:" + prefix, null, attrNs);
                }
 
                attrs.addAttribute(attrNs, attrLocal, buildQName(prefix, attrLocal), null, attr.getValue());
@@ -130,8 +124,15 @@ public class Dom2Sax
       }
 
       String localName = e.getLocalName();
+
+      String ns = e.getNamespaceURI();
+      if(ns == null)
+      {
+         ns = "";
+      }
+
       String prefix = nsReg.getPrefix(ns);
-      if(prefix == null)
+      if(prefix == null && ns.length() > 0)
       {
          prefix = localName + "_ns";
          nsReg.addPrefixMapping(prefix, ns);

@@ -1,36 +1,37 @@
 /*
-  * JBoss, Home of Professional Open Source
-  * Copyright 2005, JBoss Inc., and individual contributors as indicated
-  * by the @authors tag. See the copyright.txt in the distribution for a
-  * full listing of individual contributors.
-  *
-  * This is free software; you can redistribute it and/or modify it
-  * under the terms of the GNU Lesser General Public License as
-  * published by the Free Software Foundation; either version 2.1 of
-  * the License, or (at your option) any later version.
-  *
-  * This software is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  * Lesser General Public License for more details.
-  *
-  * You should have received a copy of the GNU Lesser General Public
-  * License along with this software; if not, write to the Free
-  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
-  */
+ * JBoss, Home of Professional Open Source
+ * Copyright 2005, JBoss Inc., and individual contributors as indicated
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.jboss.xb.binding;
 
 import java.io.InputStream;
 import java.io.Reader;
+
 import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.xb.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xb.binding.metadata.unmarshalling.DocumentBinding;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.xb.binding.parser.sax.SaxJBossXBParser;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 
@@ -41,8 +42,7 @@ import org.xml.sax.ErrorHandler;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public class UnmarshallerImpl
-   implements Unmarshaller
+public class UnmarshallerImpl implements Unmarshaller
 {
    private ObjectModelBuilder builder = new ObjectModelBuilder();
    private final JBossXBParser parser;
@@ -52,8 +52,7 @@ public class UnmarshallerImpl
    /**
     * The constructor for DTD and XSD client awareness.
     */
-   public UnmarshallerImpl()
-      throws JBossXBException
+   public UnmarshallerImpl() throws JBossXBException
    {
       parser = new SaxJBossXBParser();
       //parser = new XniJBossXBParser();
@@ -61,14 +60,22 @@ public class UnmarshallerImpl
       parser.setEntityResolver(new JBossEntityResolver());
    }
 
-   public void setValidation(boolean validation)
-      throws JBossXBException
+   public void setValidation(boolean validation) throws JBossXBException
    {
       parser.setFeature(VALIDATION, validation);
    }
 
-   public void setNamespaceAware(boolean namespaces)
-      throws JBossXBException
+   public void setSchemaValidation(boolean validation) throws JBossXBException
+   {
+      parser.setFeature(SCHEMA_VALIDATION, validation);
+   }
+
+   public void setFeature(String feature, boolean value) throws JBossXBException
+   {
+      parser.setFeature(feature, value);
+   }
+
+   public void setNamespaceAware(boolean namespaces) throws JBossXBException
    {
       parser.setFeature(NAMESPACES, namespaces);
    }
@@ -114,8 +121,7 @@ public class UnmarshallerImpl
       return cHandler.getRoot();
    }
 
-   public Object unmarshal(InputStream xmlStream, SchemaBinding schemaBinding)
-      throws JBossXBException
+   public Object unmarshal(InputStream xmlStream, SchemaBinding schemaBinding) throws JBossXBException
    {
       SundayContentHandler cHandler = new SundayContentHandler(schemaBinding);
       parser.parse(xmlStream, cHandler);
@@ -148,10 +154,9 @@ public class UnmarshallerImpl
     * NOTE: if the DocumentBinding argument is null,
     * the call will be delegated to unmarshal(String, ObjectModelFactory, Object)
     */
-   public Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata)
-      throws JBossXBException
+   public Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata) throws JBossXBException
    {
-      if(metadata == null)
+      if (metadata == null)
       {
          return unmarshal(xmlFile, factory, (Object)null);
       }
@@ -163,10 +168,9 @@ public class UnmarshallerImpl
     * NOTE: if the DocumentBinding argument is null,
     * the call will be delegated to unmarshal(Reader, ObjectModelFactory, Object)
     */
-   public Object unmarshal(Reader xmlFile, ObjectModelFactory factory, DocumentBinding metadata)
-      throws JBossXBException
+   public Object unmarshal(Reader xmlFile, ObjectModelFactory factory, DocumentBinding metadata) throws JBossXBException
    {
-      if(metadata == null)
+      if (metadata == null)
       {
          return unmarshal(xmlFile, factory, (Object)null);
       }

@@ -1,24 +1,24 @@
 /*
-  * JBoss, Home of Professional Open Source
-  * Copyright 2005, JBoss Inc., and individual contributors as indicated
-  * by the @authors tag. See the copyright.txt in the distribution for a
-  * full listing of individual contributors.
-  *
-  * This is free software; you can redistribute it and/or modify it
-  * under the terms of the GNU Lesser General Public License as
-  * published by the Free Software Foundation; either version 2.1 of
-  * the License, or (at your option) any later version.
-  *
-  * This software is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  * Lesser General Public License for more details.
-  *
-  * You should have received a copy of the GNU Lesser General Public
-  * License along with this software; if not, write to the Free
-  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
-  */
+ * JBoss, Home of Professional Open Source
+ * Copyright 2005, JBoss Inc., and individual contributors as indicated
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.jboss.xb.binding;
 
 import java.io.InputStream;
@@ -46,11 +46,13 @@ public interface Unmarshaller
    String SCHEMA_VALIDATION = "http://apache.org/xml/features/validation/schema";
    String SCHEMA_FULL_CHECKING = "http://apache.org/xml/features/validation/schema-full-checking";
 
-   void setValidation(boolean validation)
-      throws JBossXBException;
+   void setValidation(boolean validation) throws JBossXBException;
 
-   void setNamespaceAware(boolean namespaces)
-      throws JBossXBException;
+   void setNamespaceAware(boolean namespaces) throws JBossXBException;
+
+   void setSchemaValidation(boolean validation) throws JBossXBException;
+   
+   void setFeature(String feature, boolean value) throws JBossXBException;
 
    void setEntityResolver(EntityResolver entityResolver) throws JBossXBException;
 
@@ -82,9 +84,7 @@ public interface Unmarshaller
 
    Object unmarshal(InputStream is, ObjectModelFactory factory, Object root) throws JBossXBException;
 
-   Object unmarshal(String systemId, ObjectModelFactory factory, Object root)
-      throws JBossXBException;
+   Object unmarshal(String systemId, ObjectModelFactory factory, Object root) throws JBossXBException;
 
-   Object unmarshal(String systemId, BindingCursor cursor, ObjectModelFactory factory)
-      throws JBossXBException;
+   Object unmarshal(String systemId, BindingCursor cursor, ObjectModelFactory factory) throws JBossXBException;
 }

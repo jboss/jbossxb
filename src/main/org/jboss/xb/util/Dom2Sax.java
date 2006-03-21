@@ -109,7 +109,7 @@ public class Dom2Sax
             if(!isXmlns(attrNs))
             {
                String prefix = nsReg.getPrefix(attrNs);
-               if(prefix == null)
+               if(prefix == null && attrNs.length() > 0)
                {
                   prefix = attrLocal + "_ns";
                   nsReg.addPrefixMapping(prefix, attrNs);

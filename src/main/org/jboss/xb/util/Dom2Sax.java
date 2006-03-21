@@ -70,6 +70,10 @@ public class Dom2Sax
             Attr attr = (Attr)domAttrs.item(i);
             String attrNs = attr.getNamespaceURI();
             String attrLocal = attr.getLocalName();
+            if(attrLocal == null)
+            {
+               attrLocal = attr.getNodeName();
+            }
 
             if(attrNs != null && isXmlns(attrNs))
             {
@@ -100,6 +104,10 @@ public class Dom2Sax
             Attr attr = (Attr)domAttrs.item(i);
             String attrNs = attr.getNamespaceURI();
             String attrLocal = attr.getLocalName();
+            if(attrLocal == null)
+            {
+               attrLocal = attr.getNodeName();
+            }
 
             if(attrNs == null)
             {
@@ -124,6 +132,10 @@ public class Dom2Sax
       }
 
       String localName = e.getLocalName();
+      if(localName == null)
+      {
+         localName = e.getNodeName();
+      }
 
       String ns = e.getNamespaceURI();
       if(ns == null)

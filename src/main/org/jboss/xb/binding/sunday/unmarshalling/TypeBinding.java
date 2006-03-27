@@ -230,6 +230,7 @@ public class TypeBinding
       {
          QName name = new QName(attrs.getURI(n), attrs.getLocalName(n));
          attrsNotSeen.remove(name);
+         attrs.getType(n);
       }
 
       Attributes expandedAttrs = attrs;
@@ -246,8 +247,10 @@ public class TypeBinding
             if( constraint != null )
             {
                QName typeName = binding.getType().getQName();
+               // If there is no type, use CDATA?
+               String atype = typeName != null ? typeName.toString() : "CDATA";
                tmp.addAttribute(name.getNamespaceURI(), name.getLocalPart(),
-                  name.toString(), typeName.toString(), constraint);
+                  name.toString(), atype, constraint);
             }
          }
          expandedAttrs = tmp;

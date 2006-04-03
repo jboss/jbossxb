@@ -28,6 +28,8 @@ import java.security.PrivilegedAction;
 import java.util.StringTokenizer;
 
 import javax.xml.XMLConstants;
+import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 
 import org.apache.xerces.xs.XSImplementation;
 import org.apache.xerces.xs.XSLoader;
@@ -66,6 +68,69 @@ public final class Util
    public static final char ARABIC_START_OF_RUB_EL_HIZB = '\u06DE';
 
    private static final Logger log = Logger.getLogger(Util.class);
+
+   /**
+    * Returns a prefixed name for the passed in QName instance.
+    * If the argument has a prefix, the prefix is used. If not then
+    * local part is returned.
+    *
+    * @param qName  an instance of QName to generate prefix name for
+    * @return generated prefixed name or empty string in case the argument is null
+    */
+   public static String getPrefixedName(QName qName)
+   {
+      String result = "";
+      if(qName != null)
+      {
+         String prefix = qName.getPrefix();
+         if(prefix.length() > 0)
+         {
+            result = prefix + ':' + qName.getLocalPart();
+         }
+         else
+         {
+            result = qName.getLocalPart();
+         }
+      }
+      return result;
+   }
+
+   /**
+    * Returns a prefixed name for passed in QName instance.
+    * If the argument has a prefix then its prefix is used.
+    * If not and the argument has namespace URI then namespace context is used
+    * to get the prefix.
+    *
+    * @param qName  an instance of QName to generate prefix name for
+    * @param nc  an instance of the NamespaceContext
+    * @return generated prefixed name or empty string in case the argument is null
+    */
+   public static String getPrefixedName(QName qName, NamespaceContext nc)
+   {
+      String result = "";
+      if(qName != null)
+      {
+         String prefix = qName.getPrefix();
+         if(prefix.length() > 0)
+         {
+            result = prefix + ':' + qName.getLocalPart();
+         }
+         else
+         {
+            String ns = qName.getNamespaceURI();
+            prefix = nc.getPrefix(ns);
+            if(prefix != null && prefix.length() > 0)
+            {
+               result = prefix + ':' + qName.getLocalPart();
+            }
+            else
+            {
+               result = qName.getLocalPart();
+            }
+         }
+      }
+      return result;
+   }
 
    /**
     * Converts XML name to Java class name according to

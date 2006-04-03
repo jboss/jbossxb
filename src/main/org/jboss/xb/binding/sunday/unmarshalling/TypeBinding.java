@@ -230,7 +230,6 @@ public class TypeBinding
       {
          QName name = new QName(attrs.getURI(n), attrs.getLocalName(n));
          attrsNotSeen.remove(name);
-         attrs.getType(n);
       }
 
       Attributes expandedAttrs = attrs;
@@ -246,11 +245,12 @@ public class TypeBinding
             String constraint = binding.getDefaultConstraint();
             if( constraint != null )
             {
-               QName typeName = binding.getType().getQName();
-               // If there is no type, use CDATA?
-               String atype = typeName != null ? typeName.toString() : "CDATA";
+               // the Javadoc for Attributes.getType(i) says:
+               // "The attribute type is one of the strings
+               // "CDATA", "ID", "IDREF", "IDREFS", "NMTOKEN", "NMTOKENS", "ENTITY", "ENTITIES",
+               // or "NOTATION" (always in upper case)."
                tmp.addAttribute(name.getNamespaceURI(), name.getLocalPart(),
-                  name.toString(), atype, constraint);
+                  name.toString(), "CDATA", constraint);
             }
          }
          expandedAttrs = tmp;

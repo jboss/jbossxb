@@ -32,6 +32,7 @@ import org.jboss.util.Strings;
 public class ClassMetaData
 {
    private String impl;
+   private Boolean useNoArgCtor;
 
    public String getImpl()
    {
@@ -43,6 +44,25 @@ public class ClassMetaData
       this.impl = impl;
    }
 
+   /**
+    * Whether no-arg ctor should be used if it declared even if there are
+    * other ctors declared.
+    *
+    * @return  true - no-arg ctor should be used if it declared even if there are
+    * other ctors declared;
+    * false - no-arg ctor should be used only if other ctors could not be;
+    * null - use SchemaBinding's default.
+    */
+   public Boolean isUseNoArgCtor()
+   {
+      return useNoArgCtor;
+   }
+
+   public void setUseNoArgCtor(Boolean useNoArgCtor)
+   {
+      this.useNoArgCtor = useNoArgCtor;
+   }
+   
    public boolean equals(Object o)
    {
       if(this == o)

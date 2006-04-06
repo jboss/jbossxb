@@ -754,11 +754,22 @@ public class RtElementHandler
 
             if(cls != null)
             {
+               boolean noArgCtor;
+               if(classMetaData == null)
+               {
+                  noArgCtor = term.getSchema().isUseNoArgCtorIfFound();
+               }
+               else
+               {
+                  Boolean termUsesNoArgCtor = classMetaData.isUseNoArgCtor();
+                  noArgCtor = termUsesNoArgCtor == null ?
+                     term.getSchema().isUseNoArgCtorIfFound() : termUsesNoArgCtor.booleanValue();               }
+
                if(trace)
                {
-                  log.trace("startElement " + elementName + " new " + cls.getName());
+                  log.trace("startElement " + elementName + " new " + cls.getName() + ", noArgCtor=" + noArgCtor);
                }
-               o = newInstance(cls, elementName, term.getSchema().isUseNoArgCtorIfFound());
+               o = newInstance(cls, elementName, noArgCtor);
             }
          }
       }

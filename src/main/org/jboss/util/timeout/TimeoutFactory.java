@@ -86,7 +86,7 @@ public class TimeoutFactory
    }
 
    /** Lazy constructions of the TimeoutFactory singleton */
-   private synchronized static TimeoutFactory getSingleton()
+   public synchronized static TimeoutFactory getSingleton()
    {
       if (singleton == null)
       {
@@ -343,22 +343,13 @@ public class TimeoutFactory
    private void assertExpr(boolean expr)
    {
       if (!expr)
-      {
-         RuntimeException ex = new RuntimeException("***** assert failed *****");
-         try
-         {
-            Thread.sleep(30000);
-         }
-         catch (Exception e)
-         {
-         }
-      }
+         throw new IllegalStateException("***** assert failed *****");
    }
 
    /**
     *  Check invariants of the queue.
     */
-   private void checkTree()
+   void checkTree()
    {
       assertExpr(size >= 0);
       assertExpr(size < q.length);
@@ -381,7 +372,7 @@ public class TimeoutFactory
    /**
     *  Check invariants of the free list.
     */
-   private void checkFreeList()
+   void checkFreeList()
    {
       TimeoutImpl to = freeList;
       while (to != null)

@@ -100,7 +100,14 @@ public class DOMWriter
 
    public DOMWriter(OutputStream stream)
    {
-      this.out = new PrintWriter(new OutputStreamWriter(stream));
+      try
+      {
+         this.out = new PrintWriter(new OutputStreamWriter(stream, "UTF-8"));
+      }
+      catch (UnsupportedEncodingException e)
+      {
+         // ignore, UTF-8 should be available
+      }
    }
 
    public DOMWriter(OutputStream stream, String charsetName)

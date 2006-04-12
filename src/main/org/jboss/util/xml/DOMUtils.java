@@ -86,7 +86,7 @@ public final class DOMUtils
     {
         try
         {
-            return parse(new ByteArrayInputStream(xmlString.getBytes()));
+            return parse(new ByteArrayInputStream(xmlString.getBytes("UTF-8")));
         }
         catch (IOException e)
         {

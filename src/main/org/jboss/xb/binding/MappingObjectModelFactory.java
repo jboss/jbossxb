@@ -607,7 +607,7 @@ public class MappingObjectModelFactory
                   if(fieldType == null)
                   {
                      throw new JBossXBRuntimeException(
-                        "Failed to discover field's type: niether field nor its getter were found for " +
+                        "Failed to discover field's type: neither field nor its getter were found for " +
                         localName +
                         " in " +
                         oCls

@@ -270,6 +270,8 @@ public class SundayContentHandler
                else
                {
                   cursor = item.cursor;
+                  if (cursor == null)
+                     throw new JBossXBRuntimeException("No cursor for " + startName);
                   int currentOccurence = cursor.getOccurence();
                   List newCursors = cursor.startElement(startName, atts);
                   if(newCursors.isEmpty())

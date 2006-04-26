@@ -66,9 +66,9 @@ public class JBossEntityResolver implements EntityResolver
    static
    {
       registerEntity("http://java.sun.com/xml/ns/j2ee/application_1_4.xsd", "application_1_4.xsd");
-      registerEntity("http://java.sun.com/xml/ns/j2ee/application_5.xsd", "application_5.xsd");
+      registerEntity("http://java.sun.com/xml/ns/javaee/application_5.xsd", "application_5.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/application-client_1_4.xsd", "application-client_1_4.xsd");
-      registerEntity("http://java.sun.com/xml/ns/j2ee/application-client_5.xsd", "application-client_5.xsd");
+      registerEntity("http://java.sun.com/xml/ns/javaee/application-client_5.xsd", "application-client_5.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/connector_1_5.xsd", "connector_1_5.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/ejb-jar_2_1.xsd", "ejb-jar_2_1.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/j2ee_1_4.xsd", "j2ee_1_4.xsd");

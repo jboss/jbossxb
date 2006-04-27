@@ -57,7 +57,7 @@ public class JBossEntityResolver implements EntityResolver
    /** A class flag indicating whether an attempt to resolve a systemID as a
     non-file URL should produce a warning rather than a trace level log msg.
     */
-   private static boolean warnOnNonFileURLs = false;
+   private static boolean warnOnNonFileURLs = new Boolean(System.getProperty("org.jboss.resolver.warning", "false")).booleanValue();
 
    private boolean entityResolved = false;
    /** A local entities map that overrides the class level entities */
@@ -120,7 +120,7 @@ public class JBossEntityResolver implements EntityResolver
       registerEntity("-//JBoss//DTD MBean Service 4.0//EN", "jboss-service_4_0.dtd");
       registerEntity("-//JBoss//DTD JBOSS XMBEAN 1.0//EN", "jboss_xmbean_1_0.dtd");
       registerEntity("-//JBoss//DTD JBOSS XMBEAN 1.1//EN", "jboss_xmbean_1_1.dtd");
-      registerEntity("-//JBoss//DTD JBOSS XMBEAN 1.2//EN", "jboss_xmbean_1_2.dtd");      
+      registerEntity("-//JBoss//DTD JBOSS XMBEAN 1.2//EN", "jboss_xmbean_1_2.dtd");
       registerEntity("-//JBoss//DTD JBOSS Security Config 3.0//EN", "security_config.dtd");
       registerEntity("-//JBoss//DTD JBOSS JCA Config 1.0//EN", "jboss-ds_1_0.dtd");
       registerEntity("-//JBoss//DTD JBOSS JCA Config 1.5//EN", "jboss-ds_1_5.dtd");
@@ -140,7 +140,7 @@ public class JBossEntityResolver implements EntityResolver
       registerEntity("http://www.w3.org/2001/XMLSchema.dtd", "XMLSchema.dtd");
       registerEntity("datatypes", "datatypes.dtd"); // This dtd doesn't have a publicId - see XMLSchema.dtd
       registerEntity("http://www.w3.org/XML/1998/namespace", "xml.xsd");
-   
+
       //ejb3 + jee5 related
       registerEntity("http://java.sun.com/xml/ns/javaee/ejb-jar_3_0.xsd", "ejb-jar_3_0.xsd");
       registerEntity("http://java.sun.com/xml/ns/javaee/javaee_web_services_client_1_2.xsd", "javaee_web_services_client_1_2.xsd");
@@ -241,7 +241,7 @@ public class JBossEntityResolver implements EntityResolver
 
       if( inputSource == null )
       {
-         // Try to resolve the systemID as as a classpath reference under dtd or schema
+         // Try to resolve the systemID as a classpath reference under dtd or schema
          inputSource = resolveClasspathName(systemId, trace);
       }
 
@@ -252,6 +252,10 @@ public class JBossEntityResolver implements EntityResolver
       }
 
       entityResolved = (inputSource != null);
+      
+      if (entityResolved == false)
+         log.debug("Cannot resolve [publicID=" + publicId + ",systemID=" + systemId + "]");
+      
       return inputSource;
    }
 
@@ -291,22 +295,21 @@ public class JBossEntityResolver implements EntityResolver
          filename = (String) localEntities.get(publicId);
       if( filename == null )
          filename = (String) entities.get(publicId);
+
       if( filename != null )
       {
          if (trace)
             log.trace("Found entity from publicId=" + publicId + " fileName=" + filename);
-         try
+
+         InputStream ins = loadClasspathResource(filename, trace);
+         if( ins != null )
          {
-            InputStream inputStream = loadClasspathResource(filename, trace);
-            if( inputStream != null )
-            {
-               inputSource = new InputSource(inputStream);
-               inputSource.setPublicId(publicId);
-            }
+            inputSource = new InputSource(ins);
+            inputSource.setPublicId(publicId);
          }
-         catch(Exception e)
+         else
          {
-            log.debug("Cannot load publicId from resource: " + filename, e);
+            log.warn("Cannot load publicId from resource: " + filename);
          }
       }
 
@@ -339,15 +342,21 @@ public class JBossEntityResolver implements EntityResolver
          filename = (String) localEntities.get(systemId);
       if( filename == null )
          filename = (String) entities.get(systemId);
+
       if ( filename != null )
       {
          if( trace )
             log.trace("Found entity systemId=" + systemId + " fileName=" + filename);
-         InputStream is = loadClasspathResource(filename, trace);
-         if( is != null )
+
+         InputStream ins = loadClasspathResource(filename, trace);
+         if( ins != null )
          {
-            inputSource = new InputSource(is);
+            inputSource = new InputSource(ins);
             inputSource.setSystemId(systemId);
+         }
+         else
+         {
+            log.warn("Cannot load systemId from resource: " + filename);
          }
       }
 
@@ -378,15 +387,24 @@ public class JBossEntityResolver implements EntityResolver
       {
          if (trace)
             log.trace("Trying to resolve systemId as a URL");
+         
          URL url = new URL(systemId);
          if (warnOnNonFileURLs && url.getProtocol().equalsIgnoreCase("file") == false)
          {
             log.warn("Trying to resolve systemId as a non-file URL: " + systemId);
          }
 
-         InputStream is = url.openStream();
-         inputSource = new InputSource(is);
-         inputSource.setSystemId(systemId);
+         InputStream ins = url.openStream();
+         if (ins != null)
+         {
+            inputSource = new InputSource(ins);
+            inputSource.setSystemId(systemId);
+         }         
+         else
+         {
+            log.warn("Cannot load systemId as URL: " + systemId);
+         }
+         
          if (trace)
             log.trace("Resolved systemId as a URL");
       }

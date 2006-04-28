@@ -1,24 +1,24 @@
 /*
-  * JBoss, Home of Professional Open Source
-  * Copyright 2005, JBoss Inc., and individual contributors as indicated
-  * by the @authors tag. See the copyright.txt in the distribution for a
-  * full listing of individual contributors.
-  *
-  * This is free software; you can redistribute it and/or modify it
-  * under the terms of the GNU Lesser General Public License as
-  * published by the Free Software Foundation; either version 2.1 of
-  * the License, or (at your option) any later version.
-  *
-  * This software is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  * Lesser General Public License for more details.
-  *
-  * You should have received a copy of the GNU Lesser General Public
-  * License along with this software; if not, write to the Free
-  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
-  */
+ * JBoss, Home of Professional Open Source
+ * Copyright 2005, JBoss Inc., and individual contributors as indicated
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.jboss.net.protocol.file;
 
 import java.io.File;
@@ -86,9 +86,10 @@ public class FileURLLister extends URLListerBase
     * and possibly recurse into subdris not containing a '.' in their name.
     */
    private void listFiles(final URL baseUrl, final URLFilter filter, boolean scanNonDottedSubDirs, ArrayList resultList)
+      throws IOException
    {      
       // List the files at the current dir level, using the provided filter
-      final File baseDir = new File(baseUrl.getPath());      
+      final File baseDir = new File(baseUrl.getPath());
       String[] filenames = baseDir.list(new FilenameFilter()
       {
          public boolean accept(File dir, String name)
@@ -107,10 +108,11 @@ public class FileURLLister extends URLListerBase
       
       if (filenames == null)
       {
-         // This happens only when baseDir not a directory, or some unknown
-         // IOException happens internally (e.g. run out of file descriptors?)
-         // Unfortunately the File API doesn't provide a way to know.
-         log.warn("Could not list directory '" + baseDir + "', reason unknown");
+         // This happens only when baseDir not a directory (but this is already
+         // checked by the caller) or some unknown IOException happens internally
+         // (e.g. run out of file descriptors?). Unfortunately the File API
+         // doesn't provide a way to know.
+         throw new IOException("Could not list directory '" + baseDir + "', reason unknown");
       }      
       else
       {

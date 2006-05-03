@@ -58,7 +58,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
     */
    private SingletonSchemaResolverFactory()
    {
-      addSchema("urn:jboss:aop-beans:1.0", "org.jboss.aop.microcontainer.prototype.AOPBeansSchemaInitializer", Boolean.FALSE);
+      addSchema("urn:jboss:aop-beans:1.0", "org.jboss.aop.microcontainer.beans.xml.AOPBeansSchemaInitializer", Boolean.FALSE);
       addSchema("urn:jboss:bean-deployer", "org.jboss.kernel.plugins.deployment.xml.BeanSchemaInitializer", Boolean.FALSE);
       addSchema("urn:jboss:bean-deployer:2.0", "org.jboss.kernel.plugins.deployment.xml.BeanSchemaInitializer20", Boolean.FALSE);
       addSchema("urn:jboss:javabean:1.0", "org.jboss.kernel.plugins.config.xml.JavaBeanSchemaInitializer", Boolean.FALSE);

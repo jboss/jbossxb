@@ -27,6 +27,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.Map;
 
@@ -57,7 +59,7 @@ public class JBossEntityResolver implements EntityResolver
    /** A class flag indicating whether an attempt to resolve a systemID as a
     non-file URL should produce a warning rather than a trace level log msg.
     */
-   private static boolean warnOnNonFileURLs = new Boolean(System.getProperty("org.jboss.resolver.warning", "false")).booleanValue();
+   private static boolean warnOnNonFileURLs;
 
    private boolean entityResolved = false;
    /** A local entities map that overrides the class level entities */
@@ -65,6 +67,14 @@ public class JBossEntityResolver implements EntityResolver
 
    static
    {
+      AccessController.doPrivileged(new PrivilegedAction()
+      {
+         public Object run()
+         {
+            warnOnNonFileURLs = new Boolean(System.getProperty("org.jboss.resolver.warning", "false")).booleanValue();
+            return null;
+         }
+      });
       registerEntity("http://java.sun.com/xml/ns/j2ee/application_1_4.xsd", "application_1_4.xsd");
       registerEntity("http://java.sun.com/xml/ns/javaee/application_5.xsd", "application_5.xsd");
       registerEntity("http://java.sun.com/xml/ns/j2ee/application-client_1_4.xsd", "application-client_1_4.xsd");

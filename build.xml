@@ -73,6 +73,7 @@
       <path refid="dom4j.dom4j.classpath"/>
       <path refid="wutka.dtdparser.classpath"/>
       <path refid="oswego.concurrent.classpath"/>
+      <path refid="sun.jaf.classpath"/>
     </path>
 
     <!-- ======= -->

@@ -32,7 +32,9 @@ public interface Constants
    String NS_XML_NAMESPACE = "http://www.w3.org/XML/1998/namespace";
    String NS_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
    String NS_XML_SCHEMA_INSTANCE = "http://www.w3.org/2001/XMLSchema-instance";
-
+   String NS_XML_MIME = "http://www.w3.org/2005/05/xmlmime";
+   String NS_XOP_INCLUDE = "http://www.w3.org/2004/08/xop/include";
+   
    String NS_JAXB = "http://java.sun.com/xml/ns/jaxb";
    String NS_JBXB = "http://www.jboss.org/xml/ns/jbxb";
 
@@ -91,4 +93,5 @@ public interface Constants
    QName QNAME_UNSIGNEDBYTE = new QName(NS_XML_SCHEMA, "unsignedByte");
    QName QNAME_POSITIVEINTEGER = new QName(NS_XML_SCHEMA, "positiveInteger");
 
+   QName QNAME_XMIME_BASE64BINARY = new QName(NS_XML_MIME, "base64Binary");
 }

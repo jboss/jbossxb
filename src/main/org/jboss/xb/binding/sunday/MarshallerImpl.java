@@ -570,12 +570,15 @@ public class MarshallerImpl
       Object o = stack.peek();
 
       String cid = null;
-      if(xopMarshaller != null && xopMarshaller.isXOPPackage() &&
-         Constants.QNAME_XMIME_BASE64BINARY.equals(type.getQName()))
+      if(xopMarshaller != null && Constants.QNAME_XMIME_BASE64BINARY.equals(type.getQName()))
       {
-         // todo: contentType
-         DataSource ds = new JAFDataSource(o, "text/plain");
-         cid = xopMarshaller.addMtomAttachment(new DataHandler(ds), elementNsUri, elementLocalName);
+         if(xopMarshaller.isXOPPackage())
+         {
+            // todo: contentType
+            DataSource ds = new JAFDataSource(o, "text/plain");
+            cid = xopMarshaller.addMtomAttachment(new DataHandler(ds), elementNsUri, elementLocalName);
+         }
+
          if(cid == null)
          {
             TypeBinding base64Binary = schema.getType(Constants.QNAME_BASE64BINARY);

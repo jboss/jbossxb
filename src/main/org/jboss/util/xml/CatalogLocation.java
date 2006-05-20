@@ -76,7 +76,7 @@ public class CatalogLocation
    /**
     * Create a new CatalogLocation.
     * @param url - the location of the catalog xml file
-    * @throws IOException if the catalog files can´t be loaded
+    * @throws IOException if the catalog files cannot be loaded
     */
    public CatalogLocation(URL url) throws IOException
    {
@@ -116,7 +116,7 @@ public class CatalogLocation
       }
       else
       {
-         //resource could´t be resloved
+         //resource couldï¿½t be resloved
          this.isLastEntityResolved = false;
          return null;
       }
@@ -127,7 +127,7 @@ public class CatalogLocation
     * <code>Thread.currentThread().getContextClassLoader()</code>
     * is used for the lookup.
     * @return the url where the <code>jax-ws-catalog.xml</code> is located
-    * @throws IOException if the catalog files can´t be loaded
+    * @throws IOException if the catalog files cannot be loaded
     *
     */
    public static URL lookupCatalogFiles() throws IOException
@@ -167,7 +167,7 @@ public class CatalogLocation
     * 
     * @param resolvedURI - the full qualified URI of the resoved local ressource
     * @return - the inputstram represnting this resource
-    * @throws IOException - if the resource can´t be opened
+    * @throws IOException - if the resource cannot be opened
     */
    private InputStream loadResource(String resolvedURI) throws IOException
    {

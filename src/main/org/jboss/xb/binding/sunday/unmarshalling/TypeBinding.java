@@ -330,6 +330,11 @@ public class TypeBinding
       return baseType;
    }
 
+   public void setBaseType(TypeBinding baseType)
+   {
+      this.baseType = baseType;
+   }
+   
    public boolean isSimple()
    {
       return simple == null ? particle == null && attrs.isEmpty() : simple.booleanValue();

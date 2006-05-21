@@ -570,7 +570,7 @@ public class MarshallerImpl
       Object o = stack.peek();
 
       String cid = null;
-      if(xopMarshaller != null && Constants.QNAME_XMIME_BASE64BINARY.equals(type.getQName()))
+      if(xopMarshaller != null && isXopOptimizable(type))
       {
          if(xopMarshaller.isXOPPackage())
          {
@@ -1625,6 +1625,19 @@ public class MarshallerImpl
             return Array.getLength(array);
          }
       };
+   }
+
+   private static boolean isXopOptimizable(TypeBinding type)
+   {
+      while(type != null)
+      {
+         if(Constants.QNAME_BASE64BINARY.equals(type.getQName()))
+         {
+            return true;
+         }
+         type = type.getBaseType();
+      }
+      return false;
    }
 
    private static class JAFDataSource

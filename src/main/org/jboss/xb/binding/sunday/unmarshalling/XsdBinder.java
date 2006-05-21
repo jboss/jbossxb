@@ -519,14 +519,16 @@ public class XsdBinder
       if (trace)
          log.trace("binding complex type " + typeName);
 
-      //XSTypeDefinition baseTypeDef = type.getBaseType();
+      XSTypeDefinition baseTypeDef = type.getBaseType();
       // anyType is the parent of all the types, even the parent of itself according to xerces :)
-      /*TypeBinding baseType = (baseTypeDef == sharedElements.anyType ?
-         null :
-         bindType(doc, baseTypeDef, sharedElements)
-         );
-         */
+      TypeBinding baseType = null;
+      if(baseTypeDef != null && !Constants.QNAME_ANYTYPE.equals(typeName))
+      {
+         baseType = bindType(schema, baseTypeDef, sharedElements, processAnnotations);
+      }
+
       binding = new TypeBinding(typeName);
+      binding.setBaseType(baseType);
       binding.setStartElementCreatesObject(true);
       binding.setSimple(false);
 

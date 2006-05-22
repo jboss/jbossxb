@@ -525,6 +525,16 @@ public class XsdBinder
       if(baseTypeDef != null && !Constants.QNAME_ANYTYPE.equals(typeName))
       {
          baseType = bindType(schema, baseTypeDef, sharedElements, processAnnotations);
+         // sometimes binding the base type can lead to another request
+         // to bind the type being bound here
+         if(typeName != null)
+         {
+            binding = schema.getType(typeName);
+            if(binding != null)
+            {
+               return binding;
+            }
+         }
       }
 
       binding = new TypeBinding(typeName);

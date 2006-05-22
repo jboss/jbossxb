@@ -95,4 +95,5 @@ public interface Constants
    QName QNAME_POSITIVEINTEGER = new QName(NS_XML_SCHEMA, "positiveInteger");
 
    QName QNAME_XMIME_BASE64BINARY = new QName(NS_XML_MIME, "base64Binary");
+   QName QNAME_XMIME_CONTENTTYPE = new QName(NS_XML_MIME, "contentType");
 }

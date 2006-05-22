@@ -11,5 +11,6 @@
 	<classpathentry kind="lib" path="/thirdparty/dom4j/lib/dom4j.jar"/>
 	<classpathentry kind="lib" path="/thirdparty/apache-httpclient/lib/commons-httpclient.jar"/>
 	<classpathentry kind="lib" path="/thirdparty/apache-slide/lib/webdavlib.jar"/>
+	<classpathentry kind="lib" path="/thirdparty/sun-jaf/lib/activation.jar"/>
 	<classpathentry kind="output" path="output/eclipse-classes"/>
 </classpath>

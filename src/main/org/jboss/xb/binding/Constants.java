@@ -32,6 +32,7 @@ public interface Constants
    String NS_XML_NAMESPACE = "http://www.w3.org/XML/1998/namespace";
    String NS_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
    String NS_XML_SCHEMA_INSTANCE = "http://www.w3.org/2001/XMLSchema-instance";
+   String NS_XML_XMLNS = "http://www.w3.org/2000/xmlns/";
    String NS_XML_MIME = "http://www.w3.org/2005/05/xmlmime";
    String NS_XOP_INCLUDE = "http://www.w3.org/2004/08/xop/include";
    

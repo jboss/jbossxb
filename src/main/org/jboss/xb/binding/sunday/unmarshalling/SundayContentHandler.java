@@ -180,8 +180,11 @@ public class SundayContentHandler
                (ModelGroupBinding)typeParticle.getTerm();
             if(modelGroup == null)
             {
+               QName typeName = element.getType().getQName();
                throw new JBossXBRuntimeException(
-                  "Element " + element.getQName() + " should be of a complex type for " + startName
+                  (typeName == null ? "Anonymous" : typeName.toString()) +
+                  " type of element " + element.getQName() +
+                  " should be complex and contain " + startName + " as a child element."
                );
             }
 

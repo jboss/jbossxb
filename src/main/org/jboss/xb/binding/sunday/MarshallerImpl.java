@@ -101,8 +101,6 @@ public class MarshallerImpl
 
    private SchemaBinding schema;
 
-   private XOPMarshaller xopMarshaller;
-
    private MarshallingContext ctx = new MarshallingContext()
    {
       private ContentHandler ch;
@@ -175,16 +173,6 @@ public class MarshallerImpl
    public void setSupportNil(boolean supportNil)
    {
       this.supportNil = supportNil;
-   }
-
-   public XOPMarshaller getXopMarshaller()
-   {
-      return xopMarshaller;
-   }
-
-   public void setXopMarshaller(XOPMarshaller xopMarshaller)
-   {
-      this.xopMarshaller = xopMarshaller;
    }
 
    /**
@@ -421,6 +409,7 @@ public class MarshallerImpl
                                    boolean declareXsiType,
                                    boolean nillable)
    {
+      XOPMarshaller xopMarshaller = type.getXopMarshaller();
       if(xopMarshaller != null && isXopOptimizable(type))
       {
          String cid = null;

@@ -39,6 +39,7 @@ import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
+import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -77,6 +78,7 @@ public class TypeBinding
    private TypeBinding simpleType;
 
    private XOPUnmarshaller xopUnmarshaller;
+   private XOPMarshaller xopMarshaller;
 
    public TypeBinding()
    {
@@ -536,6 +538,17 @@ public class TypeBinding
    public void setXopUnmarshaller(XOPUnmarshaller xopUnmarshaller)
    {
       this.xopUnmarshaller = xopUnmarshaller;
+   }
+
+   public XOPMarshaller getXopMarshaller()
+   {
+      return xopMarshaller == null ?
+         (schemaBinding == null ? null : schemaBinding.getXopMarshaller()) : xopMarshaller;
+   }
+
+   public void setXopMarshaller(XOPMarshaller xopMarshaller)
+   {
+      this.xopMarshaller = xopMarshaller;
    }
 
    public boolean hasOnlyXmlMimeAttributes()

@@ -51,6 +51,7 @@ import org.jboss.logging.Logger;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.sunday.xop.XOPIncludeHandler;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ClassMetaData;
@@ -739,6 +740,11 @@ public class XsdBinder
          popType();
       }
 
+      if(binding.hasOnlyXmlMimeAttributes())
+      {
+         addXOPInclude(binding, schema);
+      }
+
       return binding;
    }
 
@@ -1080,6 +1086,35 @@ public class XsdBinder
    }
 
    // Private
+
+   private static void addXOPInclude(TypeBinding binding, SchemaBinding schema)
+   {
+      binding.setHandler(DefaultHandlers.XOP_HANDLER);
+      if(binding.getParticle() != null)
+      {
+         throw new JBossXBRuntimeException(
+            "XOP optimizable type has a particle which is unexpected, please, open a JIRA issue!"
+         );
+      }
+
+      TypeBinding anyUriType = schema.getType(Constants.QNAME_ANYURI);
+      if(anyUriType == null)
+      {
+         log.warn("Type " + Constants.QNAME_ANYURI + " not bound.");
+      }
+
+      TypeBinding xopIncludeType = new TypeBinding(new QName(Constants.NS_XOP_INCLUDE, "Include"));
+      xopIncludeType.setSchemaBinding(schema);
+      xopIncludeType.addAttribute(new QName("href"), anyUriType, DefaultHandlers.ATTRIBUTE_HANDLER);
+      xopIncludeType.setHandler(new XOPIncludeHandler(binding));
+
+      ElementBinding xopInclude = new ElementBinding(schema, new QName(Constants.NS_XOP_INCLUDE, "Include"), xopIncludeType);
+
+      ParticleBinding particleBinding = new ParticleBinding(xopInclude);
+      particleBinding.setMinOccurs(0);
+
+      binding.addParticle(particleBinding);
+   }
 
    private static void customizeTerm(XSAnnotation an, TermBinding term)
    {

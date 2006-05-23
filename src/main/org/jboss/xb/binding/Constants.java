@@ -96,4 +96,5 @@ public interface Constants
 
    QName QNAME_XMIME_BASE64BINARY = new QName(NS_XML_MIME, "base64Binary");
    QName QNAME_XMIME_CONTENTTYPE = new QName(NS_XML_MIME, "contentType");
+   QName QNAME_XOP_INCLUDE = new QName(Constants.NS_XOP_INCLUDE, "Include");
 }

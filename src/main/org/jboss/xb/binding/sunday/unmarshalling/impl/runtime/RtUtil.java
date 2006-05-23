@@ -203,13 +203,11 @@ public class RtUtil
          {
             if(ignoreNotFoundField)
             {
-               log.warn("Neither getter/setter nor field were found for field " + prop + " in " + cls);
+               log.warn("Neither field '" + prop + "' nor its getter/setter were found in " + cls);
                return;
             }
 
-            throw new JBossXBRuntimeException(
-               "Neither getter/setter nor field were found for field " + prop + " in " + cls
-            );
+            throw new JBossXBRuntimeException("Neither field '" + prop + "' nor its getter/setter were found in " + cls);
          }
       }
 

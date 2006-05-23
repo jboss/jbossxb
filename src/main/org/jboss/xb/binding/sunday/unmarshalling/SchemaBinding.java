@@ -29,6 +29,7 @@ import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 import org.jboss.xb.binding.metadata.PackageMetaData;
 
 /**
@@ -135,6 +136,9 @@ public class SchemaBinding
    private boolean useNoArgCtorIfFound;
    /** The default property name to use for simple content bindings */
    private String simpleContentProperty = "value";
+
+   /** default XOP unmarshaller */
+   private XOPUnmarshaller xopUnmarshaller;
 
    public TypeBinding getType(QName qName)
    {
@@ -328,6 +332,22 @@ public class SchemaBinding
    public void setSimpleContentProperty(String simpleContentProperty)
    {
       this.simpleContentProperty = simpleContentProperty;
+   }
+
+   /**
+    * @return  schema default XOP unmarshaller
+    */
+   public XOPUnmarshaller getXopUnmarshaller()
+   {
+      return xopUnmarshaller;
+   }
+
+   /**
+    * @param xopUnmarshaller  schema default XOP unmarshaller
+    */
+   public void setXopUnmarshaller(XOPUnmarshaller xopUnmarshaller)
+   {
+      this.xopUnmarshaller = xopUnmarshaller;
    }
 
    void addElementParticle(ParticleBinding particle)

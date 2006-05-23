@@ -32,6 +32,7 @@ import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -45,6 +46,8 @@ public class ElementBinding
    protected QName qName;
    protected TypeBinding typeBinding;
    protected boolean nillable;
+
+   protected XOPUnmarshaller xopUnmarshaller;
 
    public ElementBinding(SchemaBinding schema, QName qName, TypeBinding typeBinding)
    {
@@ -161,6 +164,16 @@ public class ElementBinding
    public boolean isWildcard()
    {
       return false;
+   }
+
+   public XOPUnmarshaller getXopUnmarshaller()
+   {
+      return xopUnmarshaller == null ? typeBinding.getXopUnmarshaller() : xopUnmarshaller;
+   }
+
+   public void setXopUnmarshaller(XOPUnmarshaller xopUnmarshaller)
+   {
+      this.xopUnmarshaller = xopUnmarshaller;
    }
 
    public String toString()

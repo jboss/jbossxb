@@ -26,6 +26,7 @@ import javax.xml.namespace.QName;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtAttributeHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
+import org.jboss.xb.binding.sunday.xop.XOPElementHandler;
 
 /**
  * The DefaultHandlers.
@@ -51,4 +52,6 @@ public class DefaultHandlers
    public static AttributeHandler ATTRIBUTE_HANDLER = RtAttributeHandler.INSTANCE;
 
    public static CharactersHandler CHARACTERS_HANDLER = RtCharactersHandler.INSTANCE;
+
+   public static ParticleHandler XOP_HANDLER = new XOPElementHandler();
 }

@@ -434,19 +434,7 @@ public class MarshallerImpl
          {
             if(!type.isSimple())
             {
-               boolean onlyXmimeAttrs = true;
-               Iterator iter = type.getAttributes().iterator();
-               while(iter.hasNext())
-               {
-                  AttributeBinding attr = (AttributeBinding)iter.next();
-                  if(!Constants.NS_XML_MIME.equals(attr.getQName().getNamespaceURI()))
-                  {
-                     onlyXmimeAttrs = false;
-                     break;
-                  }
-               }
-
-               if(onlyXmimeAttrs)
+               if(type.hasOnlyXmlMimeAttributes())
                {
                   if(log.isTraceEnabled())
                   {

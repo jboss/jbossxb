@@ -37,6 +37,8 @@ import org.jboss.xb.binding.metadata.ClassMetaData;
 import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
+import org.jboss.xb.binding.Constants;
+import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.AttributesImpl;
 
@@ -73,6 +75,8 @@ public class TypeBinding
    private List enumValues;
    private TypeBinding itemType; // the type is a list type with this item type
    private TypeBinding simpleType;
+
+   private XOPUnmarshaller xopUnmarshaller;
 
    public TypeBinding()
    {
@@ -334,7 +338,7 @@ public class TypeBinding
    {
       this.baseType = baseType;
    }
-   
+
    public boolean isSimple()
    {
       return simple == null ? particle == null && attrs.isEmpty() : simple.booleanValue();
@@ -521,6 +525,38 @@ public class TypeBinding
    public TypeBinding getItemType()
    {
       return itemType;
+   }
+
+   public XOPUnmarshaller getXopUnmarshaller()
+   {
+      return xopUnmarshaller == null ?
+         (schemaBinding == null ? null : schemaBinding.getXopUnmarshaller()) : xopUnmarshaller;
+   }
+
+   public void setXopUnmarshaller(XOPUnmarshaller xopUnmarshaller)
+   {
+      this.xopUnmarshaller = xopUnmarshaller;
+   }
+
+   public boolean hasOnlyXmlMimeAttributes()
+   {
+      if(attrs.isEmpty())
+      {
+         return false;
+      }
+      else
+      {
+         Iterator iter = attrs.keySet().iterator();
+         while(iter.hasNext())
+         {
+            QName qName = (QName)iter.next();
+            if(!Constants.NS_XML_MIME.equals(qName.getNamespaceURI()))
+            {
+               return false;
+            }
+         }
+      }
+      return true;
    }
 
    public String toString()

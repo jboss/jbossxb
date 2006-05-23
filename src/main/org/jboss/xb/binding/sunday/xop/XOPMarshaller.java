@@ -19,7 +19,7 @@
   * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
   * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
   */
-package org.jboss.xb.binding.sunday;
+package org.jboss.xb.binding.sunday.xop;
 
 import javax.activation.DataHandler;
 

@@ -71,6 +71,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
+import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 

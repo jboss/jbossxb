@@ -24,12 +24,6 @@ package org.jboss.xb.binding.sunday;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.ObjectInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.ByteArrayInputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -72,6 +66,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
+import org.jboss.xb.binding.sunday.xop.SimpleDataSource;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -415,9 +410,9 @@ public class MarshallerImpl
          String cid = null;
          if(xopMarshaller.isXOPPackage())
          {
-            // todo: contentType
-            DataSource ds = new JAFDataSource(stack.peek(), "text/plain");
-            cid = xopMarshaller.addMtomAttachment(new DataHandler(ds), elementNs, elementLocal);
+            Object o = stack.peek();
+            DataHandler dataHandler = getDataHandler(o);
+            cid = xopMarshaller.addMtomAttachment(dataHandler, elementNs, elementLocal);
          }
 
          if(cid == null)
@@ -1306,7 +1301,35 @@ public class MarshallerImpl
       return marshalled;
    }
 
-   private void declareNs(AttributesImpl attrs, String prefix, String ns)
+   private static DataHandler getDataHandler(Object o)
+   {
+      DataHandler dataHandler;
+      // todo: contentType
+      if(o instanceof java.awt.Image)
+      {
+         dataHandler = new DataHandler(o, "image/jpeg");
+      }
+      else if(o instanceof javax.xml.transform.Source)
+      {
+         dataHandler = new DataHandler(o, "application/xml");
+      }
+      else if(o instanceof String)
+      {
+         dataHandler = new DataHandler(o, "text/xml");
+      }
+      else if(o instanceof DataHandler)
+      {
+         dataHandler = new DataHandler(o, "application/octet-stream");
+      }
+      else
+      {
+         DataSource ds = new SimpleDataSource(o, "application/octet-stream");
+         dataHandler = new DataHandler(ds);
+      }
+      return dataHandler;
+   }
+
+   private static void declareNs(AttributesImpl attrs, String prefix, String ns)
    {
       attrs.add(null,
          prefix,
@@ -1649,70 +1672,5 @@ public class MarshallerImpl
          type = type.getBaseType();
       }
       return false;
-   }
-
-   private static class JAFDataSource
-      implements DataSource
-   {
-      public final byte[] bytes;
-      public final String contentType;
-
-      public JAFDataSource(Object o, String contentType)
-      {
-         if(o instanceof byte[])
-         {
-            bytes = (byte[])o;
-         }
-         else
-         {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = null;
-            try
-            {
-               oos = new ObjectOutputStream(baos);
-               oos.writeObject(o);
-            }
-            catch(IOException e)
-            {
-               throw new JBossXBRuntimeException("XOP failed to serialize object " + o + ": " + e.getMessage());
-            }
-            finally
-            {
-               if(oos != null)
-               {
-                  try
-                  {
-                     oos.close();
-                  }
-                  catch(IOException e)
-                  {
-                  }
-               }
-            }
-            bytes = baos.toByteArray();
-         }
-
-         this.contentType = contentType;
-      }
-
-      public String getContentType()
-      {
-         return contentType;
-      }
-
-      public InputStream getInputStream() throws IOException
-      {
-         return new ObjectInputStream(new ByteArrayInputStream(bytes));
-      }
-
-      public String getName()
-      {
-         throw new UnsupportedOperationException("getName is not implemented.");
-      }
-
-      public OutputStream getOutputStream() throws IOException
-      {
-         throw new UnsupportedOperationException("getOutputStream is not implemented.");
-      }
    }
 }

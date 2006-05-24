@@ -21,8 +21,12 @@
   */
 package org.jboss.xb.binding.sunday.xop;
 
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
+import javax.activation.DataHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
@@ -77,7 +81,40 @@ public class XOPIncludeHandler
          throw new JBossXBRuntimeException(Constants.QNAME_XOP_INCLUDE + " doesn't contain required href attribute");
       }
 
-      return xopUnmarshaller.getAttachmentAsByteArray(cid);
+      DataHandler dataHandler = xopUnmarshaller.getAttachmentAsDataHandler(cid);
+      if(dataHandler == null)
+      {
+         throw new JBossXBRuntimeException("DataHandler is not available for cid '" + cid + "'");
+      }
+
+      Object content = null;
+      try
+      {
+         content = dataHandler.getContent();
+      }
+      catch(IOException e)
+      {
+         throw new JBossXBRuntimeException("Failed to get content from DataHandler: " + e.getMessage(), e);
+      }
+
+      if(content instanceof InputStream)
+      {
+         try
+         {
+            ObjectInputStream ois = new ObjectInputStream((InputStream)content);
+            content = ois.readObject();
+         }
+         catch(IOException e)
+         {
+            throw new JBossXBRuntimeException("Failed to deserialize object: " + e.getMessage());
+         }
+         catch(ClassNotFoundException e)
+         {
+            throw new JBossXBRuntimeException("Failed to load the class to deserialize object: " + e.getMessage());
+         }
+      }
+
+      return content;
    }
 
    public Object endParticle(Object o, QName elementName, ParticleBinding particle)

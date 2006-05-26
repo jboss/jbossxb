@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.Reader;
 
 import org.jboss.util.xml.JBossEntityResolver;
-import org.jboss.xb.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xb.binding.metadata.unmarshalling.DocumentBinding;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.xb.binding.parser.sax.SaxJBossXBParser;
@@ -179,28 +178,21 @@ public class UnmarshallerImpl implements Unmarshaller
 
    public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      builder.init(factory, root, BindingCursor.Factory.newCursor(null));
+      builder.init(factory, root);
       parser.parse(reader, builder);
       return builder.getRoot();
    }
 
    public Object unmarshal(InputStream is, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      builder.init(factory, root, BindingCursor.Factory.newCursor(null));
+      builder.init(factory, root);
       parser.parse(is, builder);
       return builder.getRoot();
    }
 
    public Object unmarshal(String systemId, ObjectModelFactory factory, Object root) throws JBossXBException
    {
-      builder.init(factory, root, BindingCursor.Factory.newCursor(null));
-      parser.parse(systemId, builder);
-      return builder.getRoot();
-   }
-
-   public Object unmarshal(String systemId, BindingCursor cursor, ObjectModelFactory factory) throws JBossXBException
-   {
-      builder.init(factory, null, cursor);
+      builder.init(factory, root);
       parser.parse(systemId, builder);
       return builder.getRoot();
    }

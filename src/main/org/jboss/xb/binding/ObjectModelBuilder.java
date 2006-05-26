@@ -24,7 +24,6 @@ package org.jboss.xb.binding;
 import org.xml.sax.Attributes;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.parser.JBossXBParser;
-import org.jboss.xb.binding.metadata.unmarshalling.BindingCursor;
 import org.apache.xerces.xs.XSTypeDefinition;
 
 import javax.xml.namespace.QName;
@@ -98,8 +97,6 @@ public class ObjectModelBuilder
 
    private XSTypeDefinition currentType;
 
-   private BindingCursor metadataCursor;
-
    private boolean trace = log.isTraceEnabled();
    
    // Public
@@ -113,11 +110,9 @@ public class ObjectModelBuilder
       factoriesToNs.put(namespaceUri, getGenericObjectModelFactory(factory));
    }
 
-   public void init(ObjectModelFactory defaultFactory, Object root, BindingCursor cursor)
+   public void init(ObjectModelFactory defaultFactory, Object root)
    {
       this.defaultFactory = getGenericObjectModelFactory(defaultFactory);
-      this.metadataCursor = cursor;
-
       all.clear();
       accepted.clear();
       this.root = root;
@@ -166,16 +161,6 @@ public class ObjectModelBuilder
    public NamespaceContext getNamespaceContext()
    {
       return nsRegistry;
-   }
-
-   public Object getMetadata()
-   {
-      return metadataCursor.getElementBinding();
-   }
-
-   public Object getParentMetadata()
-   {
-      return metadataCursor.getParentElementBinding();
    }
 
    /**
@@ -310,7 +295,6 @@ public class ObjectModelBuilder
                             XSTypeDefinition type)
    {
       Object parent = accepted.isEmpty() ? root : peekAccepted();
-      metadataCursor.startElement(namespaceURI, localName);
 
       // todo currentType assignment
       currentType = type;
@@ -395,8 +379,6 @@ public class ObjectModelBuilder
             root = curFactory.completeRoot(element.element, this, namespaceURI, localName);
          }
       }
-
-      metadataCursor.endElement(namespaceURI, localName);
    }
 
    public void characters(char[] ch, int start, int length)

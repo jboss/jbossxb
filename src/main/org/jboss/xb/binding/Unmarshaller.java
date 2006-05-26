@@ -24,7 +24,6 @@ package org.jboss.xb.binding;
 import java.io.InputStream;
 import java.io.Reader;
 
-import org.jboss.xb.binding.metadata.unmarshalling.BindingCursor;
 import org.jboss.xb.binding.metadata.unmarshalling.DocumentBinding;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -85,6 +84,4 @@ public interface Unmarshaller
    Object unmarshal(InputStream is, ObjectModelFactory factory, Object root) throws JBossXBException;
 
    Object unmarshal(String systemId, ObjectModelFactory factory, Object root) throws JBossXBException;
-
-   Object unmarshal(String systemId, BindingCursor cursor, ObjectModelFactory factory) throws JBossXBException;
 }

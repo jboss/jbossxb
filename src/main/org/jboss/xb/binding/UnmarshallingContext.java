@@ -51,10 +51,6 @@ public interface UnmarshallingContext
     */
    NamespaceContext getNamespaceContext();
 
-   Object getMetadata();
-
-   Object getParentMetadata();
-
    /**
     * Returns child's content.
     * todo consider deprecating this method

@@ -502,69 +502,6 @@ public class MarshallerImpl
 
          String marshalled = marshalCharacters(elementUri, prefix, type, value, attrs);
 
-/*
-         if(Constants.NS_XML_SCHEMA.equals(type.getQName().getNamespaceURI()))
-         {
-            // todo: pass non-null namespace context
-            String typeName = type.getQName().getLocalPart();
-
-            if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
-               SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
-            {
-               QName qNameValue = (QName)value;
-               String prefixValue = qNameValue.getPrefix();
-               if((elementUri != null && !qNameValue.getNamespaceURI().equals(elementUri) ||
-                  elementUri == null && qNameValue.getNamespaceURI().length() > 0
-                  ) &&
-                  (prefixValue.equals(prefix) || prefixValue.length() == 0 && prefix == null))
-               {
-                  // how to best resolve this conflict?
-                  prefixValue += 'x';
-                  value = new QName(qNameValue.getNamespaceURI(), qNameValue.getLocalPart(), prefixValue);
-               }
-
-               attrs = new AttributesImpl(1);
-               attrs.add(null,
-                  prefixValue,
-                  prefixValue.length() == 0 ? "xmlns" : "xmlns:" + prefixValue,
-                  null,
-                  qNameValue.getNamespaceURI()
-               );
-            }
-
-            try
-            {
-               marshalled = SimpleTypeBindings.marshal(typeName, value, null);
-            }
-            catch(ClassCastException e)
-            {
-               throw new JBossXBRuntimeException(
-                  "ClassCastException marshalling " + new QName(elementUri, elementLocal) + " of type " +
-                  type.getQName() + ": " + e.getMessage()
-               );
-            }
-         }
-         // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
-         else if(type.getLexicalPattern() != null &&
-            type.getBaseType() != null &&
-            Constants.QNAME_BOOLEAN.equals(type.getBaseType().getQName()))
-         {
-            String item = (String)type.getLexicalPattern().get(0);
-            if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
-            {
-               marshalled = ((Boolean)value).booleanValue() ? "1" : "0";
-            }
-            else
-            {
-               marshalled = ((Boolean)value).booleanValue() ? "true" : "false";
-            }
-         }
-         else
-         {
-            marshalled = value.toString();
-         }
-*/
-
          if((declareNs || declareXsiType) && !prefixByUri.isEmpty())
          {
             if(attrs == null)

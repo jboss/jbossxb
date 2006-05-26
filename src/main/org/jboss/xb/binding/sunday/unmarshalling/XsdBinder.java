@@ -398,108 +398,111 @@ public class XsdBinder
 
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
       TypeBinding binding = typeName == null ? null : schema.getType(typeName);
-      if(binding == null)
+      if(binding != null)
       {
-         if (trace)
+         return binding;
+      }
+
+      if(trace)
+      {
+         log.trace("binding simple type " + typeName);
+      }
+
+      XSTypeDefinition baseTypeDef = type.getBaseType();
+      TypeBinding baseType = baseTypeDef == null ? null : bindType(schema, baseTypeDef, null, processAnnotations);
+
+      binding = baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType);
+
+      StringList strList = type.getLexicalPattern();
+      if(strList != null && strList.getLength() > 0)
+      {
+         for(int i = 0; i < strList.getLength(); ++i)
          {
-            log.trace("binding simple type " + typeName);
+            binding.addLexicalPattern(strList.item(i));
          }
+      }
 
-         XSTypeDefinition baseTypeDef = type.getBaseType();
-         TypeBinding baseType = baseTypeDef == null ? null : bindType(schema, baseTypeDef, null, processAnnotations);
-
-         binding = baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType);
-
-         StringList strList = type.getLexicalPattern();
-         if(strList != null && strList.getLength() > 0)
+      strList = type.getLexicalEnumeration();
+      if(strList != null && strList.getLength() > 0)
+      {
+         for(int i = 0; i < strList.getLength(); ++i)
          {
-            for(int i = 0; i < strList.getLength(); ++i)
+            binding.addEnumValue(strList.item(i));
+         }
+      }
+
+      if(type.getItemType() != null)
+      {
+         TypeBinding itemType = bindSimpleType(schema, type.getItemType(), processAnnotations);
+         binding.setItemType(itemType);
+      }
+
+      if(typeName != null)
+      {
+         schema.addType(binding);
+      }
+
+      if(trace)
+      {
+         String msg = typeName == null ? "bound simple anonymous type" : "bound simple type " + typeName;
+         if(baseType != null)
+         {
+            msg += " inherited binding metadata from " + baseType.getQName();
+         }
+         log.trace(msg);
+      }
+
+      // customize binding with annotations
+      if(processAnnotations)
+      {
+         XSObjectList annotations = type.getAnnotations();
+         if(annotations != null)
+         {
+            if(trace)
             {
-               binding.addLexicalPattern(strList.item(i));
+               log.trace(typeName + " annotations " + annotations.getLength());
             }
-         }
-
-         strList = type.getLexicalEnumeration();
-         if(strList != null && strList.getLength() > 0)
-         {
-            for(int i = 0; i < strList.getLength(); ++i)
+            for(int i = 0; i < annotations.getLength(); ++i)
             {
-               binding.addEnumValue(strList.item(i));
-            }
-         }
-
-         if(type.getItemType() != null)
-         {
-            TypeBinding itemType = bindSimpleType(schema, type.getItemType(), processAnnotations);
-            binding.setItemType(itemType);
-         }
-
-         if(typeName != null)
-         {
-            schema.addType(binding);
-         }
-
-         if (trace)
-         {
-            String msg = typeName == null ? "bound simple anonymous type" : "bound simple type " + typeName;
-            if(baseType != null)
-            {
-               msg += " inherited binding metadata from " + baseType.getQName();
-            }
-            log.trace(msg);
-         }
-
-         // customize binding with annotations
-         if (processAnnotations)
-         {
-            XSObjectList annotations = type.getAnnotations();
-            if(annotations != null)
-            {
-               if (trace)
-                  log.trace(typeName + " annotations " + annotations.getLength());
-               for(int i = 0; i < annotations.getLength(); ++i)
+               XSAnnotation an = (XSAnnotation)annotations.item(i);
+               XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
+               XsdAppInfo appInfo = xsdAn.getAppInfo();
+               if(appInfo != null)
                {
-                  XSAnnotation an = (XSAnnotation)annotations.item(i);
-                  XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
-                  XsdAppInfo appInfo = xsdAn.getAppInfo();
-                  if(appInfo != null)
+                  ClassMetaData classMetaData = appInfo.getClassMetaData();
+                  if(classMetaData != null)
                   {
-                     ClassMetaData classMetaData = appInfo.getClassMetaData();
-                     if(classMetaData != null)
+                     if(trace)
                      {
-                        if (trace)
-                        {
-                           log.trace("simple type " +
-                              type.getName() +
-                              ": impl=" +
-                              classMetaData.getImpl()
-                           );
-                        }
-                        binding.setClassMetaData(classMetaData);
+                        log.trace("simple type " +
+                           type.getName() +
+                           ": impl=" +
+                           classMetaData.getImpl());
                      }
+                     binding.setClassMetaData(classMetaData);
+                  }
 
-                     ValueMetaData valueMetaData = appInfo.getValueMetaData();
-                     if(valueMetaData != null)
+                  ValueMetaData valueMetaData = appInfo.getValueMetaData();
+                  if(valueMetaData != null)
+                  {
+                     if(trace)
                      {
-                        if (trace)
-                        {
-                           log.trace("simple type " +
-                              type.getName() +
-                              ": unmarshalMethod=" +
-                              valueMetaData.getUnmarshalMethod() +
-                              ", marshalMethod=" +
-                              valueMetaData.getMarshalMethod()
-                           );
-                        }
-                        binding.setValueMetaData(valueMetaData);
+                        log.trace("simple type " +
+                           type.getName() +
+                           ": unmarshalMethod=" +
+                           valueMetaData.getUnmarshalMethod() +
+                           ", marshalMethod=" +
+                           valueMetaData.getMarshalMethod());
                      }
+                     binding.setValueMetaData(valueMetaData);
                   }
                }
             }
          }
-
-         binding.setSchemaBinding(schema);
       }
+
+      binding.setSchemaBinding(schema);
+
       return binding;
    }
 

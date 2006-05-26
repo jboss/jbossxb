@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.Reader;
 
 import org.jboss.util.xml.JBossEntityResolver;
-import org.jboss.xb.binding.metadata.unmarshalling.DocumentBinding;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.xb.binding.parser.sax.SaxJBossXBParser;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -146,34 +145,6 @@ public class UnmarshallerImpl implements Unmarshaller
       SundayContentHandler cHandler = new SundayContentHandler(schemaResolver);
       parser.parse(xmlStream, cHandler);
       return cHandler.getRoot();
-   }
-
-   /**
-    * @deprecated
-    * NOTE: if the DocumentBinding argument is null,
-    * the call will be delegated to unmarshal(String, ObjectModelFactory, Object)
-    */
-   public Object unmarshal(String xmlFile, ObjectModelFactory factory, DocumentBinding metadata) throws JBossXBException
-   {
-      if (metadata == null)
-      {
-         return unmarshal(xmlFile, factory, (Object)null);
-      }
-      throw new UnsupportedOperationException();
-   }
-
-   /**
-    * @deprecated
-    * NOTE: if the DocumentBinding argument is null,
-    * the call will be delegated to unmarshal(Reader, ObjectModelFactory, Object)
-    */
-   public Object unmarshal(Reader xmlFile, ObjectModelFactory factory, DocumentBinding metadata) throws JBossXBException
-   {
-      if (metadata == null)
-      {
-         return unmarshal(xmlFile, factory, (Object)null);
-      }
-      throw new UnsupportedOperationException();
    }
 
    public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException

@@ -52,7 +52,6 @@ import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -96,11 +95,6 @@ public class XercesXsMarshaller
    private MarshallingContext ctx = new MarshallingContext()
    {
       private ContentHandler ch;
-
-      public FieldBinding getFieldBinding()
-      {
-         throw new UnsupportedOperationException("getFieldBinding is not implemented.");
-      }
 
       public boolean isAttributeRequired()
       {

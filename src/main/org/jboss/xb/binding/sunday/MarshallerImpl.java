@@ -52,7 +52,6 @@ import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
-import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ChoiceBinding;
@@ -99,11 +98,6 @@ public class MarshallerImpl
    private MarshallingContext ctx = new MarshallingContext()
    {
       private ContentHandler ch;
-
-      public FieldBinding getFieldBinding()
-      {
-         throw new UnsupportedOperationException("getFieldBinding is not implemented.");
-      }
 
       public boolean isAttributeRequired()
       {

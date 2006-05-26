@@ -21,7 +21,6 @@
   */
 package org.jboss.xb.binding;
 
-import org.jboss.xb.binding.metadata.marshalling.FieldBinding;
 import org.xml.sax.ContentHandler;
 
 /**
@@ -30,8 +29,6 @@ import org.xml.sax.ContentHandler;
  */
 public interface MarshallingContext
 {
-   FieldBinding getFieldBinding();
-
    /**
     * @return true if current attribute is required, false otherwise
     */

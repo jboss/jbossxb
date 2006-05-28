@@ -28,7 +28,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.AbstractList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -66,6 +65,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.jboss.xb.binding.sunday.xop.SimpleDataSource;
+import org.jboss.xb.binding.sunday.marshalling.AttributeMarshaller;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -95,34 +95,7 @@ public class MarshallerImpl
 
    private SchemaBinding schema;
 
-   private MarshallingContext ctx = new MarshallingContext()
-   {
-      private ContentHandler ch;
-
-      public boolean isAttributeRequired()
-      {
-         throw new UnsupportedOperationException();
-      }
-
-      public boolean isTypeComplex()
-      {
-         throw new UnsupportedOperationException();
-      }
-
-      public String getSimpleContentProperty()
-      {
-         throw new UnsupportedOperationException();
-      }
-
-      public ContentHandler getContentHandler()
-      {
-         if(ch == null)
-         {
-            ch = new ContentHandlerAdaptor();
-         }
-         return ch;
-      }
-   };
+   private MarshallingContextImpl ctx = new MarshallingContextImpl();
 
    public boolean isIgnoreUnresolvedWildcard()
    {
@@ -541,23 +514,23 @@ public class MarshallerImpl
       Object o = stack.peek();
       ParticleBinding particle = type.getParticle();
 
-      Collection attributeUses = type.getAttributes();
-      int attrsTotal = declareNs || declareXsiType ? prefixByUri.size() + attributeUses.size() + 1: attributeUses.size();
-      AttributesImpl attrs = attrsTotal > 0 ? new AttributesImpl(attrsTotal) : null;
+      Collection attrBindings = type.getAttributes();
+      int attrsTotal = declareNs || declareXsiType ? prefixByUri.size() + attrBindings.size() + 1: attrBindings.size();
+      ctx.attrs = attrsTotal > 0 ? new AttributesImpl(attrsTotal) : null;
 
       if(declareNs && !prefixByUri.isEmpty())
       {
-         declareNs(attrs);
+         declareNs(ctx.attrs);
       }
 
       String typeNsWithGeneratedPrefix = null;
       if(declareXsiType)
       {
-         String generatedPrefix = declareXsiType(type.getQName(), attrs);
+         String generatedPrefix = declareXsiType(type.getQName(), ctx.attrs);
          if(generatedPrefix != null)
          {
             typeNsWithGeneratedPrefix = type.getQName().getNamespaceURI();
-            declareNs(attrs, generatedPrefix, typeNsWithGeneratedPrefix);
+            declareNs(ctx.attrs, generatedPrefix, typeNsWithGeneratedPrefix);
             declareNamespace(generatedPrefix, typeNsWithGeneratedPrefix);
          }
       }
@@ -569,151 +542,68 @@ public class MarshallerImpl
          // todo: it's possible that the generated prefix already mapped. this should be fixed
          prefix = "ns_" + elementLocalName;
          declareNamespace(prefix, elementNsUri);
-         if(attrs == null)
+         if(ctx.attrs == null)
          {
-            attrs = new AttributesImpl(1);
+            ctx.attrs = new AttributesImpl(1);
          }
-         attrs.add(null, prefix, "xmlns:" + prefix, null, elementNsUri);
+         ctx.attrs.add(null, prefix, "xmlns:" + prefix, null, elementNsUri);
       }
 
       String characters = null;
       String qName = createQName(prefix, elementLocalName);
 
       boolean ignoreUnresolvedFieldOrClass = type.getSchemaBinding().isIgnoreUnresolvedFieldOrClass();
-      for(Iterator i = attributeUses.iterator(); i.hasNext();)
+      if(!attrBindings.isEmpty())
       {
-         AttributeBinding attrUse = (AttributeBinding)i.next();
-         QName attrQName = attrUse.getQName();
-
-         if(Constants.QNAME_XMIME_CONTENTTYPE.equals(attrQName))
+         for(Iterator i = attrBindings.iterator(); i.hasNext();)
          {
-            continue;
-         }
+            AttributeBinding attrBinding = (AttributeBinding)i.next();
+            QName attrQName = attrBinding.getQName();
 
-         String fieldName = null;
-         PropertyMetaData propertyMetaData = attrUse.getPropertyMetaData();
-         if(propertyMetaData != null)
-         {
-            fieldName = propertyMetaData.getName();
-         }
-
-         if(fieldName == null)
-         {
-            fieldName =
-               Util.xmlNameToFieldName(attrQName.getLocalPart(), type.getSchemaBinding().isIgnoreLowLine());
-         }
-
-         Object attrValue = getJavaValue(attrQName, fieldName, o, false, ignoreUnresolvedFieldOrClass);
-
-         if(attrValue != null)
-         {
-            if(attrs == null)
+            if(Constants.QNAME_XMIME_CONTENTTYPE.equals(attrQName))
             {
-               attrs = new AttributesImpl(5);
+               continue;
             }
 
-            String attrNs = attrQName.getNamespaceURI();
-            String attrLocal = attrQName.getLocalPart();
-            String attrPrefix = null;
-            if(attrNs != null)
+            ctx.attr = attrBinding;
+            AttributeMarshaller marshaller = attrBinding.getMarshaller();
+            String marshalledAttr = marshaller.marshal(ctx);
+
+            if(marshalledAttr != null)
             {
-               attrPrefix = getPrefix(attrNs);
-               if(attrPrefix == null && attrNs != null && attrNs.length() > 0)
+               if(ctx.attrs == null)
                {
-                  attrPrefix = "ns_" + attrLocal;
-                  attrs.add(null, attrPrefix, "xmlns:" + attrPrefix, null, attrNs);
+                  ctx.attrs = new AttributesImpl(5);
                }
-            }
 
-            TypeBinding attrType = attrUse.getType();
-            if(attrType.getItemType() != null)
-            {
-               TypeBinding itemType = attrType.getItemType();
-               if(Constants.NS_XML_SCHEMA.equals(itemType.getQName().getNamespaceURI()))
+               String attrNs = attrQName.getNamespaceURI();
+               String attrLocal = attrQName.getLocalPart();
+               String attrPrefix = null;
+               if(attrNs != null)
                {
-                  List list;
-                  if(attrValue instanceof List)
+                  attrPrefix = getPrefix(attrNs);
+                  if(attrPrefix == null && attrNs != null && attrNs.length() > 0)
                   {
-                     list = (List)attrValue;
+                     attrPrefix = "ns_" + attrLocal;
+                     ctx.attrs.add(null, attrPrefix, "xmlns:" + attrPrefix, null, attrNs);
                   }
-                  else if(attrValue.getClass().isArray())
-                  {
-                     list = Arrays.asList((Object[])attrValue);
-                  }
-                  else
-                  {
-                     throw new JBossXBRuntimeException("Expected value for list type is an array or " +
-                        List.class.getName() +
-                        " but got: " +
-                        attrValue);
-                  }
+               }
 
-                  if(Constants.QNAME_QNAME.getLocalPart().equals(itemType.getQName().getLocalPart()))
-                  {
-                     for(int listInd = 0; listInd < list.size(); ++listInd)
-                     {
-                        QName item = (QName)list.get(listInd);
-                        String itemNs = item.getNamespaceURI();
-                        if(itemNs != null && itemNs.length() > 0)
-                        {
-                           String itemPrefix;
-                           if(itemNs.equals(elementNsUri))
-                           {
-                              itemPrefix = prefix;
-                           }
-                           else
-                           {
-                              itemPrefix = getPrefix(itemNs);
-                              if(itemPrefix == null)
-                              {
-                                 itemPrefix = attrLocal + listInd;
-                                 declareNs(attrs, itemPrefix, itemNs);
-                              }
-                           }
-                           item = new QName(item.getNamespaceURI(), item.getLocalPart(), itemPrefix);
-                           list.set(listInd, item);
-                        }
-                     }
-                  }
+               String prefixedName = attrPrefix == null || attrPrefix.length() == 0 ?
+                  attrLocal :
+                  attrPrefix + ":" + attrLocal;
 
-                  attrValue = SimpleTypeBindings.marshalList(itemType.getQName().getLocalPart(), list, null);
-               }
-               else
-               {
-                  throw new JBossXBRuntimeException("Marshalling of list types with item types not from " +
-                     Constants.NS_XML_SCHEMA + " is not supported.");
-               }
-            }
-            else if(attrType.getLexicalPattern() != null &&
-               attrType.getBaseType() != null &&
-               Constants.QNAME_BOOLEAN.equals(attrType.getBaseType().getQName()))
-            {
-               String item = (String)attrType.getLexicalPattern().get(0);
-               if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
-               {
-                  attrValue = ((Boolean)attrValue).booleanValue() ? "1" : "0";
-               }
-               else
-               {
-                  attrValue = ((Boolean)attrValue).booleanValue() ? "true" : "false";
-               }
-            }
-            else
-            {
-               attrValue = attrValue.toString();
-            }
+               QName typeQName = attrBinding.getType().getQName();
+               String typeName = typeQName == null ? null : typeQName.getLocalPart();
 
-            String prefixedName = attrPrefix == null || attrPrefix.length() == 0 ?
-               attrLocal :
-               attrPrefix + ":" + attrLocal;
-            QName typeQName = attrType.getQName();
-            String typeName = typeQName == null ? null : typeQName.getLocalPart();
-            attrs.add(attrNs,
-               attrLocal,
-               prefixedName,
-               typeName,
-               attrValue.toString());
+               ctx.attrs.add(attrNs,
+                  attrLocal,
+                  prefixedName,
+                  typeName,
+                  marshalledAttr);
+            }
          }
+         ctx.attr = null;
       }
 
       TypeBinding simpleType = type.getSimpleType();
@@ -736,7 +626,7 @@ public class MarshallerImpl
             if(value != null)
             {
                String typeName = simpleType.getQName().getLocalPart();
-               if(attrs == null && (SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
+               if(ctx.attrs == null && (SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
                   SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
                   simpleType.getItemType() != null &&
                   (SimpleTypeBindings.XS_QNAME_NAME.equals(simpleType.getItemType().getQName().getLocalPart()) ||
@@ -745,15 +635,15 @@ public class MarshallerImpl
                   )
                )
                {
-                  attrs = new AttributesImpl(5);
+                  ctx.attrs = new AttributesImpl(5);
                }
 
-               characters = marshalCharacters(elementNsUri, prefix, simpleType, value, attrs);
+               characters = marshalCharacters(elementNsUri, prefix, simpleType, value, ctx.attrs);
             }
          }
       }
 
-      content.startElement(elementNsUri, elementLocalName, qName, attrs);
+      content.startElement(elementNsUri, elementLocalName, qName, ctx.attrs);
 
       if(particle != null)
       {
@@ -765,6 +655,8 @@ public class MarshallerImpl
          content.characters(characters.toCharArray(), 0, characters.length());
       }
       content.endElement(elementNsUri, elementLocalName, qName);
+
+      ctx.attrs = null;
 
       if(genPrefix)
       {
@@ -1603,5 +1495,62 @@ public class MarshallerImpl
          type = type.getBaseType();
       }
       return false;
+   }
+
+   private class MarshallingContextImpl implements MarshallingContext
+   {
+      private ContentHandler ch;
+      private AttributeBinding attr;
+
+      private AttributesImpl attrs;
+
+      public boolean isAttributeRequired()
+      {
+         throw new UnsupportedOperationException();
+      }
+
+      public boolean isTypeComplex()
+      {
+         throw new UnsupportedOperationException();
+      }
+
+      public String getSimpleContentProperty()
+      {
+         throw new UnsupportedOperationException();
+      }
+
+      public ContentHandler getContentHandler()
+      {
+         if(ch == null)
+         {
+            ch = new ContentHandlerAdaptor();
+         }
+         return ch;
+      }
+
+      public SchemaBinding getSchemaBinding()
+      {
+         return schema;
+      }
+
+      public AttributeBinding getAttributeBinding()
+      {
+         return attr;
+      }
+
+      public String getPrefix(String ns)
+      {
+         return MarshallerImpl.this.getPrefix(ns);
+      }
+
+      public void declareNamespace(String prefix, String ns)
+      {
+         declareNs(attrs, prefix, ns);
+      }
+
+      public Object peek()
+      {
+         return stack.isEmpty() ? null : stack.peek();
+      }
    }
 }

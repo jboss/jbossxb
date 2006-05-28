@@ -25,6 +25,8 @@ import javax.xml.namespace.QName;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.marshalling.AttributeMarshaller;
+import org.jboss.xb.binding.sunday.marshalling.DefaultAttributeMarshaller;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -36,6 +38,7 @@ public class AttributeBinding
    private final QName qName;
    private final TypeBinding type;
    private AttributeHandler handler;
+   private AttributeMarshaller marshaller = DefaultAttributeMarshaller.INSTANCE;
    private PropertyMetaData propertyMetaData;
    private ValueMetaData valueMetaData;
    /** The default="value" constraint for the attribute */
@@ -76,6 +79,16 @@ public class AttributeBinding
    public void setHandler(AttributeHandler handler)
    {
       this.handler = handler;
+   }
+
+   public AttributeMarshaller getMarshaller()
+   {
+      return marshaller;
+   }
+
+   public void setMarshaller(AttributeMarshaller marshaller)
+   {
+      this.marshaller = marshaller;
    }
 
    public PropertyMetaData getPropertyMetaData()

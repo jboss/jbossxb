@@ -22,6 +22,8 @@
 package org.jboss.xb.binding;
 
 import org.xml.sax.ContentHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -45,4 +47,32 @@ public interface MarshallingContext
    String getSimpleContentProperty();
 
    ContentHandler getContentHandler();
+
+   /**
+    * @return  schema binding
+    */
+   SchemaBinding getSchemaBinding();
+
+   /**
+    * @return  current attribute binding
+    */
+   AttributeBinding getAttributeBinding();
+
+   /**
+    * @param ns  the namespace to return the prefix for
+    * @return  the prefix for the namespace (can be null if the namespace is not mapped to a prefix
+    *    and the second parameter is false)
+    */
+   String getPrefix(String ns);
+
+   /**
+    * @param prefix  prefix for the namespace being declared
+    * @param ns  the namespace to declare for the current component
+    */
+   void declareNamespace(String prefix, String ns);
+
+   /**
+    * @return  current object on the stack
+    */
+   Object peek();
 }

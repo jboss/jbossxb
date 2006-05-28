@@ -19,7 +19,7 @@
   * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
   * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
   */
-package org.jboss.xb.binding.sunday;
+package org.jboss.xb.binding.sunday.marshalling;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -64,8 +64,6 @@ import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.jboss.xb.binding.sunday.xop.SimpleDataSource;
-import org.jboss.xb.binding.sunday.marshalling.AttributeMarshaller;
-import org.jboss.xb.binding.sunday.marshalling.MarshallingContext;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 

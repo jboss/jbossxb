@@ -30,13 +30,13 @@ import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.MarshallingContext;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>

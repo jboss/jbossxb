@@ -21,22 +21,41 @@
   */
 package org.jboss.xb.binding.sunday.marshalling;
 
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public abstract class AbstractAttributeMarshaller
-   implements AttributeMarshaller
+public interface MarshallingContext
+   extends org.jboss.xb.binding.MarshallingContext
 {
-   public abstract Object getValue(MarshallingContext ctx);
+   /**
+    * @return  schema binding
+    */
+   SchemaBinding getSchemaBinding();
 
-   public abstract String marshalValue(MarshallingContext ctx, Object value);
+   /**
+    * @return  current attribute binding
+    */
+   AttributeBinding getAttributeBinding();
 
-   public String marshal(MarshallingContext ctx)
-   {
-      Object value = getValue(ctx);
-      return marshalValue(ctx, value);
-   }
+   /**
+    * @param ns  the namespace to return the prefix for
+    * @return  the prefix for the namespace (can be null if the namespace is not mapped to a prefix
+    *    and the second parameter is false)
+    */
+   String getPrefix(String ns);
 
+   /**
+    * @param prefix  prefix for the namespace being declared
+    * @param ns  the namespace to declare for the current component
+    */
+   void declareNamespace(String prefix, String ns);
+
+   /**
+    * @return  current object on the stack
+    */
+   Object peek();
 }

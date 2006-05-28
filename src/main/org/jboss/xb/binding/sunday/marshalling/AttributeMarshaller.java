@@ -21,8 +21,6 @@
   */
 package org.jboss.xb.binding.sunday.marshalling;
 
-import org.jboss.xb.binding.MarshallingContext;
-
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>

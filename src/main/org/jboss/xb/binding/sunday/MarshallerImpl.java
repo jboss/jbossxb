@@ -44,7 +44,6 @@ import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.Content;
 import org.jboss.xb.binding.ContentWriter;
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.MarshallingContext;
 import org.jboss.xb.binding.ObjectLocalMarshaller;
 import org.jboss.xb.binding.ObjectModelProvider;
 import org.jboss.xb.binding.SimpleTypeBindings;
@@ -66,6 +65,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.jboss.xb.binding.sunday.xop.SimpleDataSource;
 import org.jboss.xb.binding.sunday.marshalling.AttributeMarshaller;
+import org.jboss.xb.binding.sunday.marshalling.MarshallingContext;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 

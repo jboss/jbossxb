@@ -53,8 +53,6 @@ import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -128,31 +126,6 @@ public class XercesXsMarshaller
             ch = new ContentHandlerAdaptor();
          }
          return ch;
-      }
-
-      public SchemaBinding getSchemaBinding()
-      {
-         throw new UnsupportedOperationException("getSchemaBinding is not implemented.");
-      }
-
-      public AttributeBinding getAttributeBinding()
-      {
-         throw new UnsupportedOperationException("getAttributeBinding is not implemented.");
-      }
-
-      public String getPrefix(String ns)
-      {
-         throw new UnsupportedOperationException("getPrefix is not implemented.");
-      }
-
-      public void declareNamespace(String prefix, String ns)
-      {
-         throw new UnsupportedOperationException("declareNamespace is not implemented.");
-      }
-
-      public Object peek()
-      {
-         throw new UnsupportedOperationException("peek is not implemented.");
       }
    };
 

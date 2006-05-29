@@ -398,7 +398,7 @@ public class MarshallerImpl
             {
                prefix = "ns_" + elementLocal;
                attrs = new AttributesImpl(1);
-               attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
+               declareNs(attrs, prefix, elementNs);
             }
 
             String qName = prefixLocalName(prefix, elementLocal);
@@ -431,6 +431,16 @@ public class MarshallerImpl
                                   boolean declareNs,
                                   boolean declareXsiType)
    {
+      ctx.attrs = null;
+      if((declareNs || declareXsiType) && !prefixByUri.isEmpty())
+      {
+         if(ctx.attrs == null)
+         {
+            ctx.attrs = new AttributesImpl(prefixByUri.size() + 1);
+         }
+         declareNs(ctx.attrs);
+      }
+
       String elementNs = elementQName.getNamespaceURI();
       String elementLocal = elementQName.getLocalPart();
 
@@ -439,11 +449,20 @@ public class MarshallerImpl
       if(genPrefix)
       {
          prefix = "ns_" + elementLocal;
+         if(ctx.attrs == null)
+         {
+            ctx.attrs = new AttributesImpl(1);
+         }
+         declareNs(ctx.attrs, prefix, elementNs);
       }
 
-      ctx.attrs = null;
+      if(declareXsiType)
+      {
+         declareXsiType(type.getQName(), ctx.attrs);
+      }
+
       String typeName = type.getQName().getLocalPart();
-      if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
+      if(ctx.attrs == null && SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
          SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
          type.getItemType() != null &&
          (SimpleTypeBindings.XS_QNAME_NAME.equals(type.getItemType().getQName().getLocalPart()) ||
@@ -457,32 +476,7 @@ public class MarshallerImpl
       Object value = stack.peek();
       String marshalled = marshalCharacters(elementNs, prefix, type, value, ctx.attrs);
 
-      if((declareNs || declareXsiType) && !prefixByUri.isEmpty())
-      {
-         if(ctx.attrs == null)
-         {
-            ctx.attrs = new AttributesImpl(prefixByUri.size() + 1);
-         }
-         declareNs(ctx.attrs);
-      }
-
-      if(declareXsiType)
-      {
-         declareXsiType(type.getQName(), ctx.attrs);
-      }
-
-      if(genPrefix)
-      {
-         if(ctx.attrs == null)
-         {
-            ctx.attrs = new AttributesImpl(1);
-         }
-
-         declareNs(ctx.attrs, prefix, elementNs);
-      }
-
       String qName = prefixLocalName(prefix, elementLocal);
-
       content.startElement(elementNs, elementLocal, qName, ctx.attrs);
       content.characters(marshalled.toCharArray(), 0, marshalled.length());
       content.endElement(elementNs, elementLocal, qName);
@@ -531,7 +525,6 @@ public class MarshallerImpl
          declareNs(ctx.attrs, prefix, elementNs);
       }
 
-      boolean ignoreUnresolvedFieldOrClass = type.getSchemaBinding().isIgnoreUnresolvedFieldOrClass();
       if(!attrBindings.isEmpty())
       {
          for(Iterator i = attrBindings.iterator(); i.hasNext();)
@@ -564,22 +557,12 @@ public class MarshallerImpl
                   if(attrPrefix == null && attrNs != null && attrNs.length() > 0)
                   {
                      attrPrefix = "ns_" + attrLocal;
-                     ctx.attrs.add(null, attrPrefix, "xmlns:" + attrPrefix, null, attrNs);
+                     declareNs(ctx.attrs, attrPrefix, attrNs);
                   }
                }
 
-               String prefixedName = attrPrefix == null || attrPrefix.length() == 0 ?
-                  attrLocal :
-                  attrPrefix + ":" + attrLocal;
-
-               QName typeQName = attrBinding.getType().getQName();
-               String typeName = typeQName == null ? null : typeQName.getLocalPart();
-
-               ctx.attrs.add(attrNs,
-                  attrLocal,
-                  prefixedName,
-                  typeName,
-                  marshalledAttr);
+               String prefixedName = prefixLocalName(attrPrefix, attrLocal);
+               ctx.attrs.add(attrNs, attrLocal, prefixedName, "CDATA", marshalledAttr);
             }
          }
          ctx.attr = null;
@@ -599,6 +582,7 @@ public class MarshallerImpl
 
          if(fieldName != null)
          {
+            boolean ignoreUnresolvedFieldOrClass = type.getSchemaBinding().isIgnoreUnresolvedFieldOrClass();
             Object o = stack.peek();
             Object value = getElementValue(elementQName, o, fieldName, ignoreUnresolvedFieldOrClass);
             if(value != null)

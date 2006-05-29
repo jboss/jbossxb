@@ -401,7 +401,7 @@ public class MarshallerImpl
                attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
             }
 
-            String qName = createQName(prefix, elementLocal);
+            String qName = prefixLocalName(prefix, elementLocal);
             content.startElement(elementNs, elementLocal, qName, attrs);
 
             AttributesImpl xopAttrs = new AttributesImpl(2);
@@ -434,7 +434,6 @@ public class MarshallerImpl
       String elementNs = elementQName.getNamespaceURI();
       String elementLocal = elementQName.getLocalPart();
 
-      Object value = stack.peek();
       String prefix = getPrefix(elementNs);
       boolean genPrefix = prefix == null && elementNs != null && elementNs.length() > 0;
       if(genPrefix)
@@ -442,7 +441,7 @@ public class MarshallerImpl
          prefix = "ns_" + elementLocal;
       }
 
-      AttributesImpl attrs = null;
+      ctx.attrs = null;
       String typeName = type.getQName().getLocalPart();
       if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
          SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
@@ -452,38 +451,39 @@ public class MarshallerImpl
          )
       )
       {
-         attrs = new AttributesImpl(5);
+         ctx.attrs = new AttributesImpl(5);
       }
 
-      String marshalled = marshalCharacters(elementNs, prefix, type, value, attrs);
+      Object value = stack.peek();
+      String marshalled = marshalCharacters(elementNs, prefix, type, value, ctx.attrs);
 
       if((declareNs || declareXsiType) && !prefixByUri.isEmpty())
       {
-         if(attrs == null)
+         if(ctx.attrs == null)
          {
-            attrs = new AttributesImpl(prefixByUri.size() + 1);
+            ctx.attrs = new AttributesImpl(prefixByUri.size() + 1);
          }
-         declareNs(attrs);
+         declareNs(ctx.attrs);
       }
 
       if(declareXsiType)
       {
-         declareXsiType(type.getQName(), attrs);
+         declareXsiType(type.getQName(), ctx.attrs);
       }
 
       if(genPrefix)
       {
-         if(attrs == null)
+         if(ctx.attrs == null)
          {
-            attrs = new AttributesImpl(1);
+            ctx.attrs = new AttributesImpl(1);
          }
 
-         attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
+         declareNs(ctx.attrs, prefix, elementNs);
       }
 
-      String qName = createQName(prefix, elementLocal);
+      String qName = prefixLocalName(prefix, elementLocal);
 
-      content.startElement(elementNs, elementLocal, qName, attrs);
+      content.startElement(elementNs, elementLocal, qName, ctx.attrs);
       content.characters(marshalled.toCharArray(), 0, marshalled.length());
       content.endElement(elementNs, elementLocal, qName);
    }
@@ -528,11 +528,8 @@ public class MarshallerImpl
          {
             ctx.attrs = new AttributesImpl(1);
          }
-         ctx.attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
+         declareNs(ctx.attrs, prefix, elementNs);
       }
-
-      String characters = null;
-      String qName = createQName(prefix, elementLocal);
 
       boolean ignoreUnresolvedFieldOrClass = type.getSchemaBinding().isIgnoreUnresolvedFieldOrClass();
       if(!attrBindings.isEmpty())
@@ -588,6 +585,7 @@ public class MarshallerImpl
          ctx.attr = null;
       }
 
+      String characters = null;
       TypeBinding simpleType = type.getSimpleType();
       if(simpleType != null)
       {
@@ -623,6 +621,7 @@ public class MarshallerImpl
          }
       }
 
+      String qName = prefixLocalName(prefix, elementLocal);
       content.startElement(elementNs, elementLocal, qName, ctx.attrs);
 
       ParticleBinding particle = type.getParticle();
@@ -1133,16 +1132,6 @@ public class MarshallerImpl
       return dataHandler;
    }
 
-   private static void declareNs(AttributesImpl attrs, String prefix, String ns)
-   {
-      attrs.add(null,
-         prefix,
-         prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix,
-         null,
-         ns
-      );
-   }
-
    private void writeNillable(QName elementQName, boolean nillable)
    {
       if(!supportNil)
@@ -1167,7 +1156,7 @@ public class MarshallerImpl
       {
          prefix = "ns_" + elementLocal;
          attrs = new AttributesImpl(2);
-         attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
+         declareNs(attrs, prefix, elementNs);
       }
       else
       {
@@ -1178,18 +1167,13 @@ public class MarshallerImpl
       if(xsiPrefix == null)
       {
          xsiPrefix = "xsi";
-         attrs.add(null,
-            xsiPrefix,
-            "xmlns:xsi",
-            null,
-            Constants.NS_XML_SCHEMA_INSTANCE
-         );
+         declareNs(attrs, "xsi", Constants.NS_XML_SCHEMA_INSTANCE);
       }
 
       String nilQName = xsiPrefix + ":nil";
       attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "nil", nilQName, null, "1");
 
-      String qName = createQName(prefix, elementLocal);
+      String qName = prefixLocalName(prefix, elementLocal);
       content.startElement(elementNs, elementLocal, qName, attrs);
       content.endElement(elementNs, elementLocal, qName);
    }
@@ -1237,16 +1221,16 @@ public class MarshallerImpl
       {
          Map.Entry entry = (Map.Entry)i.next();
          String localName = (String)entry.getValue();
-         attrs.add(null,
-            localName,
-            localName == null || localName.length() == 0 ? "xmlns" : "xmlns:" + localName,
-            null,
-            (String)entry.getKey()
-         );
+         declareNs(attrs, localName, (String)entry.getKey());
       }
    }
 
-   private static String createQName(String prefix, String local)
+   private static void declareNs(AttributesImpl attrs, String prefix, String ns)
+   {
+      attrs.add(null, prefix, prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix, "CDATA", ns);
+   }
+
+   private static String prefixLocalName(String prefix, String local)
    {
       return prefix == null || prefix.length() == 0 ? local : prefix + ':' + local;
    }
@@ -1435,7 +1419,7 @@ public class MarshallerImpl
       String result = null;
       if(!prefixByUri.containsKey(Constants.NS_XML_SCHEMA_INSTANCE))
       {
-         attrs.add(Constants.NS_XML_SCHEMA, "xmlns", "xmlns:xsi", null, Constants.NS_XML_SCHEMA_INSTANCE);
+         declareNs(attrs, "xsi", Constants.NS_XML_SCHEMA_INSTANCE);
       }
 
       String pref = getPrefix(typeQName.getNamespaceURI());
@@ -1445,8 +1429,8 @@ public class MarshallerImpl
          result = pref = typeQName.getLocalPart() + "_ns";
       }
 
-      String qName = pref == null ? typeQName.getLocalPart() : pref + ':' + typeQName.getLocalPart();
-      attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "type", "xsi:type", null, qName);
+      String qName = prefixLocalName(pref, typeQName.getLocalPart());
+      attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "type", "xsi:type", "CDATA", qName);
       return result;
    }
 

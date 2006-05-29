@@ -206,12 +206,7 @@ public class MarshallerImpl
          if(isArrayWrapper(type))
          {
             stack.push(root);
-            marshalComplexType(rootQName.getNamespaceURI(),
-               rootQName.getLocalPart(),
-               type,
-               true,
-               false
-            );
+            marshalComplexType(rootQName, type, true, false);
             stack.pop();
          }
          else
@@ -329,20 +324,16 @@ public class MarshallerImpl
       Object value = stack.peek();
       boolean nillable = element.isNillable();
       boolean result = value != null || value == null && (optional || nillable);
-      String elementNs = element.getQName().getNamespaceURI();
-      String elementLocal = element.getQName().getLocalPart();
       boolean trace = log.isTraceEnabled() && result;
       if(trace)
       {
-         String prefix = getPrefix(elementNs);
-         log.trace("started element ns=" + elementNs + ", local=" + elementLocal + ", prefix=" + prefix);
+         log.trace("started element " + element.getQName());
       }
 
       if(value != null)
       {
          boolean declareXsiType = xsiType != null;
-         marshalElementType(elementNs,
-            elementLocal,
+         marshalElementType(element.getQName(),
             declareXsiType ? xsiType : element.getType(),
             declareNs,
             declareXsiType,
@@ -351,24 +342,26 @@ public class MarshallerImpl
       }
       else if(nillable)
       {
-         writeNillable(elementNs, elementLocal, nillable);
+         writeNillable(element.getQName(), nillable);
       }
 
       if(trace)
       {
-         log.trace("finished element ns=" + elementNs + ", local=" + elementLocal);
+         log.trace("finished element " + element.getQName());
       }
 
       return result;
    }
 
-   private void marshalElementType(String elementNs,
-                                   String elementLocal,
+   private void marshalElementType(QName elementQName,
                                    TypeBinding type,
                                    boolean declareNs,
                                    boolean declareXsiType,
                                    boolean nillable)
    {
+      String elementNs = elementQName.getNamespaceURI();
+      String elementLocal = elementQName.getLocalPart();
+
       XOPMarshaller xopMarshaller = type.getXopMarshaller();
       if(xopMarshaller != null && isXopOptimizable(type))
       {
@@ -427,26 +420,28 @@ public class MarshallerImpl
 
       if(type.isSimple())
       {
-         marshalSimpleType(elementNs, elementLocal, type, declareNs, declareXsiType, nillable);
+         marshalSimpleType(elementQName, type, declareNs, declareXsiType, nillable);
       }
       else
       {
-         marshalComplexType(elementNs, elementLocal, type, declareNs, declareXsiType);
+         marshalComplexType(elementQName, type, declareNs, declareXsiType);
       }
    }
 
-   private void marshalSimpleType(String elementUri,
-                                  String elementLocal,
+   private void marshalSimpleType(QName elementQName,
                                   TypeBinding type,
                                   boolean declareNs,
                                   boolean declareXsiType,
                                   boolean nillable)
    {
+      String elementNs = elementQName.getNamespaceURI();
+      String elementLocal = elementQName.getLocalPart();
+
       Object value = stack.peek();
       if(value != null)
       {
-         String prefix = getPrefix(elementUri);
-         boolean genPrefix = prefix == null && elementUri != null && elementUri.length() > 0;
+         String prefix = getPrefix(elementNs);
+         boolean genPrefix = prefix == null && elementNs != null && elementNs.length() > 0;
          if(genPrefix)
          {
             prefix = "ns_" + elementLocal;
@@ -465,7 +460,7 @@ public class MarshallerImpl
             attrs = new AttributesImpl(5);
          }
 
-         String marshalled = marshalCharacters(elementUri, prefix, type, value, attrs);
+         String marshalled = marshalCharacters(elementNs, prefix, type, value, attrs);
 
          if((declareNs || declareXsiType) && !prefixByUri.isEmpty())
          {
@@ -488,23 +483,22 @@ public class MarshallerImpl
                attrs = new AttributesImpl(1);
             }
 
-            attrs.add(null, prefix, "xmlns:" + prefix, null, (String)elementUri);
+            attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
          }
 
          String qName = createQName(prefix, elementLocal);
 
-         content.startElement(elementUri, elementLocal, qName, attrs);
+         content.startElement(elementNs, elementLocal, qName, attrs);
          content.characters(marshalled.toCharArray(), 0, marshalled.length());
-         content.endElement(elementUri, elementLocal, qName);
+         content.endElement(elementNs, elementLocal, qName);
       }
       else
       {
-         writeNillable(elementUri, elementLocal, nillable);
+         writeNillable(elementQName, nillable);
       }
    }
 
-   private void marshalComplexType(String elementNsUri,
-                                   String elementLocalName,
+   private void marshalComplexType(QName elementQName,
                                    TypeBinding type,
                                    boolean declareNs,
                                    boolean declareXsiType)
@@ -533,22 +527,25 @@ public class MarshallerImpl
          }
       }
 
-      String prefix = getPrefix(elementNsUri);
-      boolean genPrefix = prefix == null && elementNsUri != null && elementNsUri.length() > 0;
+      String elementNs = elementQName.getNamespaceURI();
+      String elementLocal = elementQName.getLocalPart();
+
+      String prefix = getPrefix(elementNs);
+      boolean genPrefix = prefix == null && elementNs != null && elementNs.length() > 0;
       if(genPrefix)
       {
          // todo: it's possible that the generated prefix already mapped. this should be fixed
-         prefix = "ns_" + elementLocalName;
-         declareNamespace(prefix, elementNsUri);
+         prefix = "ns_" + elementLocal;
+         declareNamespace(prefix, elementNs);
          if(ctx.attrs == null)
          {
             ctx.attrs = new AttributesImpl(1);
          }
-         ctx.attrs.add(null, prefix, "xmlns:" + prefix, null, elementNsUri);
+         ctx.attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
       }
 
       String characters = null;
-      String qName = createQName(prefix, elementLocalName);
+      String qName = createQName(prefix, elementLocal);
 
       boolean ignoreUnresolvedFieldOrClass = type.getSchemaBinding().isIgnoreUnresolvedFieldOrClass();
       if(!attrBindings.isEmpty())
@@ -617,10 +614,7 @@ public class MarshallerImpl
 
          if(fieldName != null)
          {
-            Object value = getElementValue(new QName(elementNsUri, elementLocalName),
-               o,
-               fieldName,
-               ignoreUnresolvedFieldOrClass);
+            Object value = getElementValue(elementQName, o, fieldName, ignoreUnresolvedFieldOrClass);
             if(value != null)
             {
                String typeName = simpleType.getQName().getLocalPart();
@@ -636,12 +630,12 @@ public class MarshallerImpl
                   ctx.attrs = new AttributesImpl(5);
                }
 
-               characters = marshalCharacters(elementNsUri, prefix, simpleType, value, ctx.attrs);
+               characters = marshalCharacters(elementNs, prefix, simpleType, value, ctx.attrs);
             }
          }
       }
 
-      content.startElement(elementNsUri, elementLocalName, qName, ctx.attrs);
+      content.startElement(elementNs, elementLocal, qName, ctx.attrs);
 
       if(particle != null)
       {
@@ -652,13 +646,13 @@ public class MarshallerImpl
       {
          content.characters(characters.toCharArray(), 0, characters.length());
       }
-      content.endElement(elementNsUri, elementLocalName, qName);
+      content.endElement(elementNs, elementLocal, qName);
 
       ctx.attrs = null;
 
       if(genPrefix)
       {
-         removeNamespace(elementNsUri);
+         removeNamespace(elementNs);
       }
 
       if(typeNsWithGeneratedPrefix != null)
@@ -1160,7 +1154,7 @@ public class MarshallerImpl
       );
    }
 
-   private void writeNillable(String elementNs, String elementLocal, boolean nillable)
+   private void writeNillable(QName elementQName, boolean nillable)
    {
       if(!supportNil)
       {
@@ -1170,10 +1164,13 @@ public class MarshallerImpl
       if(!nillable)
       {
          throw new JBossXBRuntimeException("Failed to marshal " +
-            new QName(elementNs, elementLocal) +
+            elementQName +
             ": Java value is null but the element is not nillable."
          );
       }
+
+      String elementNs = elementQName.getNamespaceURI();
+      String elementLocal = elementQName.getLocalPart();
 
       AttributesImpl attrs;
       String prefix = getPrefix(elementNs);

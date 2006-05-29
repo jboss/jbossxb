@@ -336,8 +336,7 @@ public class MarshallerImpl
          marshalElementType(element.getQName(),
             declareXsiType ? xsiType : element.getType(),
             declareNs,
-            declareXsiType,
-            nillable
+            declareXsiType
          );
       }
       else if(nillable)
@@ -356,8 +355,7 @@ public class MarshallerImpl
    private void marshalElementType(QName elementQName,
                                    TypeBinding type,
                                    boolean declareNs,
-                                   boolean declareXsiType,
-                                   boolean nillable)
+                                   boolean declareXsiType)
    {
       String elementNs = elementQName.getNamespaceURI();
       String elementLocal = elementQName.getLocalPart();
@@ -420,7 +418,7 @@ public class MarshallerImpl
 
       if(type.isSimple())
       {
-         marshalSimpleType(elementQName, type, declareNs, declareXsiType, nillable);
+         marshalSimpleType(elementQName, type, declareNs, declareXsiType);
       }
       else
       {
@@ -431,71 +429,63 @@ public class MarshallerImpl
    private void marshalSimpleType(QName elementQName,
                                   TypeBinding type,
                                   boolean declareNs,
-                                  boolean declareXsiType,
-                                  boolean nillable)
+                                  boolean declareXsiType)
    {
       String elementNs = elementQName.getNamespaceURI();
       String elementLocal = elementQName.getLocalPart();
 
       Object value = stack.peek();
-      if(value != null)
+      String prefix = getPrefix(elementNs);
+      boolean genPrefix = prefix == null && elementNs != null && elementNs.length() > 0;
+      if(genPrefix)
       {
-         String prefix = getPrefix(elementNs);
-         boolean genPrefix = prefix == null && elementNs != null && elementNs.length() > 0;
-         if(genPrefix)
-         {
-            prefix = "ns_" + elementLocal;
-         }
+         prefix = "ns_" + elementLocal;
+      }
 
-         AttributesImpl attrs = null;
-         String typeName = type.getQName().getLocalPart();
-         if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
-            SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
-            type.getItemType() != null &&
-            (SimpleTypeBindings.XS_QNAME_NAME.equals(type.getItemType().getQName().getLocalPart()) ||
-            SimpleTypeBindings.XS_NOTATION_NAME.equals(type.getItemType().getQName().getLocalPart())
-            )
+      AttributesImpl attrs = null;
+      String typeName = type.getQName().getLocalPart();
+      if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
+         SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
+         type.getItemType() != null &&
+         (SimpleTypeBindings.XS_QNAME_NAME.equals(type.getItemType().getQName().getLocalPart()) ||
+         SimpleTypeBindings.XS_NOTATION_NAME.equals(type.getItemType().getQName().getLocalPart())
          )
-         {
-            attrs = new AttributesImpl(5);
-         }
-
-         String marshalled = marshalCharacters(elementNs, prefix, type, value, attrs);
-
-         if((declareNs || declareXsiType) && !prefixByUri.isEmpty())
-         {
-            if(attrs == null)
-            {
-               attrs = new AttributesImpl(prefixByUri.size() + 1);
-            }
-            declareNs(attrs);
-         }
-
-         if(declareXsiType)
-         {
-            declareXsiType(type.getQName(), attrs);
-         }
-
-         if(genPrefix)
-         {
-            if(attrs == null)
-            {
-               attrs = new AttributesImpl(1);
-            }
-
-            attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
-         }
-
-         String qName = createQName(prefix, elementLocal);
-
-         content.startElement(elementNs, elementLocal, qName, attrs);
-         content.characters(marshalled.toCharArray(), 0, marshalled.length());
-         content.endElement(elementNs, elementLocal, qName);
-      }
-      else
+      )
       {
-         writeNillable(elementQName, nillable);
+         attrs = new AttributesImpl(5);
       }
+
+      String marshalled = marshalCharacters(elementNs, prefix, type, value, attrs);
+
+      if((declareNs || declareXsiType) && !prefixByUri.isEmpty())
+      {
+         if(attrs == null)
+         {
+            attrs = new AttributesImpl(prefixByUri.size() + 1);
+         }
+         declareNs(attrs);
+      }
+
+      if(declareXsiType)
+      {
+         declareXsiType(type.getQName(), attrs);
+      }
+
+      if(genPrefix)
+      {
+         if(attrs == null)
+         {
+            attrs = new AttributesImpl(1);
+         }
+
+         attrs.add(null, prefix, "xmlns:" + prefix, null, elementNs);
+      }
+
+      String qName = createQName(prefix, elementLocal);
+
+      content.startElement(elementNs, elementLocal, qName, attrs);
+      content.characters(marshalled.toCharArray(), 0, marshalled.length());
+      content.endElement(elementNs, elementLocal, qName);
    }
 
    private void marshalComplexType(QName elementQName,
@@ -503,9 +493,6 @@ public class MarshallerImpl
                                    boolean declareNs,
                                    boolean declareXsiType)
    {
-      Object o = stack.peek();
-      ParticleBinding particle = type.getParticle();
-
       Collection attrBindings = type.getAttributes();
       int attrsTotal = declareNs || declareXsiType ? prefixByUri.size() + attrBindings.size() + 1: attrBindings.size();
       ctx.attrs = attrsTotal > 0 ? new AttributesImpl(attrsTotal) : null;
@@ -614,6 +601,7 @@ public class MarshallerImpl
 
          if(fieldName != null)
          {
+            Object o = stack.peek();
             Object value = getElementValue(elementQName, o, fieldName, ignoreUnresolvedFieldOrClass);
             if(value != null)
             {
@@ -637,6 +625,7 @@ public class MarshallerImpl
 
       content.startElement(elementNs, elementLocal, qName, ctx.attrs);
 
+      ParticleBinding particle = type.getParticle();
       if(particle != null)
       {
          marshalParticle(particle, false);

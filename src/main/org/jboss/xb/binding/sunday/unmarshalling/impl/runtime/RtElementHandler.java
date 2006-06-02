@@ -566,6 +566,10 @@ public class RtElementHandler
             {
                o = new ArrayList();
             }
+            else
+            {
+               o = GenericValueContainer.FACTORY.array(wrapperType, propName, fieldType);
+            }
          }
       }
       else

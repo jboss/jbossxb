@@ -223,6 +223,31 @@ public class DefaultAttributeMarshaller
             marshalled = ((Boolean)value).booleanValue() ? "true" : "false";
          }
       }
+      else if(Constants.QNAME_QNAME.equals(attrType.getQName()))
+      {
+         QName qName = (QName)value;
+
+         String prefix;
+         String ns = qName.getNamespaceURI();
+         if(ns != null && ns.length() > 0)
+         {
+            prefix = ctx.getPrefix(qName.getNamespaceURI());
+            if(prefix == null)
+            {
+               prefix = qName.getPrefix();
+            }
+
+            if(prefix == null || prefix.length() == 0)
+            {
+               prefix = "ns_" + qName.getLocalPart();
+            }
+
+            ctx.declareNamespace(prefix, ns);
+            qName = new QName(qName.getNamespaceURI(), qName.getLocalPart(), prefix);
+         }
+
+         marshalled = SimpleTypeBindings.marshalQName(qName, null);
+      }
       else
       {
          marshalled = value.toString();

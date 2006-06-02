@@ -632,6 +632,31 @@ public class XercesXsMarshaller
                   attrValue = ((Boolean)attrValue).booleanValue() ? "true" : "false";
                }
             }
+            else if(Constants.QNAME_QNAME.getNamespaceURI().equals(attrType.getNamespace()) &&
+               Constants.QNAME_QNAME.getLocalPart().equals(attrType.getName()))
+            {
+               QName qNameValue = (QName)attrValue;
+
+               String qNamePrefix;
+               String ns = qNameValue.getNamespaceURI();
+               if(ns != null && ns.length() > 0)
+               {
+                  qNamePrefix = getPrefix(ns);
+                  if(qNamePrefix == null)
+                  {
+                     qNamePrefix = qNameValue.getPrefix();
+                  }
+
+                  if(qNamePrefix == null || qNamePrefix.length() == 0)
+                  {
+                     qNamePrefix = "ns_" + qNameValue.getLocalPart();
+                  }
+
+                  declareNs(attrs, qNamePrefix, ns);
+                  qNameValue = new QName(ns, qNameValue.getLocalPart(), qNamePrefix);
+               }
+               attrValue = SimpleTypeBindings.marshalQName(qNameValue, null);
+            }
             else
             {
                attrValue = attrValue.toString();

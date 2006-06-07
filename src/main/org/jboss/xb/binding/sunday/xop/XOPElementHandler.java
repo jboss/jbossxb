@@ -50,13 +50,13 @@ public class XOPElementHandler
       }
       else
       {
-         return parent;
+         return parent == null ? new XOPElement() : parent;
       }
    }
 
    public Object endParticle(Object o, QName elementName, ParticleBinding particle)
    {
-      return o;
+      return o instanceof XOPElement ? ((XOPElement)o).value : o;
    }
 
    public void setParent(Object parent,
@@ -71,5 +71,10 @@ public class XOPElementHandler
       {
          DefaultHandlers.ELEMENT_HANDLER.setParent(parent, o, elementName, particle, parentParticle);
       }
+   }
+
+   public static class XOPElement
+   {
+      public Object value;
    }
 }

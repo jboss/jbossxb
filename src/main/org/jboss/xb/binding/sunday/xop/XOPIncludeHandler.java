@@ -21,19 +21,19 @@
   */
 package org.jboss.xb.binding.sunday.xop;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
-import javax.xml.namespace.QName;
-import javax.xml.namespace.NamespaceContext;
 import javax.activation.DataHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
-import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import javax.xml.namespace.NamespaceContext;
+import javax.xml.namespace.QName;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
+import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.xml.sax.Attributes;
 
 /**
@@ -128,7 +128,14 @@ public class XOPIncludeHandler
                          ParticleBinding particle,
                          ParticleBinding parentParticle)
    {
-      ElementBinding parentElement = (ElementBinding)parentParticle.getTerm();
-      DefaultHandlers.ELEMENT_HANDLER.setParent(parent, o, parentElement.getQName(), particle, parentParticle);
+      if(parent instanceof XOPElementHandler.XOPElement)
+      {
+         ((XOPElementHandler.XOPElement)parent).value = o;
+      }
+      else
+      {
+         ElementBinding parentElement = (ElementBinding)parentParticle.getTerm();
+         DefaultHandlers.ELEMENT_HANDLER.setParent(parent, o, parentElement.getQName(), particle, parentParticle);
+      }
    }
 }

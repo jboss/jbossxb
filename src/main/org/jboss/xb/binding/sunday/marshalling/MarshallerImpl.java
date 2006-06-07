@@ -1106,7 +1106,7 @@ public class MarshallerImpl
       }
       else if(o instanceof DataHandler)
       {
-         dataHandler = new DataHandler(o, "application/octet-stream");
+         dataHandler = (DataHandler)o;//new DataHandler(o, "application/octet-stream");
       }
       else
       {

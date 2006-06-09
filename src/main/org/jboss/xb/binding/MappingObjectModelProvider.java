@@ -69,8 +69,7 @@ public class MappingObjectModelProvider
                                  TypeBinding converter)
    {
       FieldToElementMapping mapping = new FieldToElementMapping(cls, field, namespaceURI, localName, converter);
-      String mappingKey = cls.getName() + ":" + localName;
-      fieldMappings.put(mappingKey, mapping);
+      mapFieldToElement(mapping);
    }
 
    public boolean isIgnoreLowLine()
@@ -90,7 +89,7 @@ public class MappingObjectModelProvider
       Object children = null;
       if(!writeAsValue(o.getClass()))
       {
-         children = getJavaValue(localName, null, o, true, ignoreNotFoundField);
+         children = getJavaValue(namespaceURI, localName, null, o, true, ignoreNotFoundField);
       }
       return children;
    }
@@ -114,11 +113,11 @@ public class MappingObjectModelProvider
          // this is a hack for soap enc
          try
          {
-            value = getJavaValue(localName, fieldName, o, false, false);
+            value = getJavaValue(namespaceURI, localName, fieldName, o, false, false);
          }
          catch(JBossXBRuntimeException e)
          {
-            value = getJavaValue(localName, null, o, false, ignoreNotFoundField);
+            value = getJavaValue(namespaceURI, localName, null, o, false, ignoreNotFoundField);
          }
       }
       return value;
@@ -127,7 +126,7 @@ public class MappingObjectModelProvider
    public Object getAttributeValue(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
       boolean optional = ctx == null ? ignoreNotFoundField : !ctx.isAttributeRequired() || ignoreNotFoundField;
-      return getJavaValue(localName, null, o, false, optional);
+      return getJavaValue(namespaceURI, localName, null, o, false, optional);
    }
 
    public Object getRoot(Object o, MarshallingContext ctx, String namespaceURI, String localName)
@@ -140,13 +139,48 @@ public class MappingObjectModelProvider
 
    // Private
 
-   private Object getJavaValue(String localName, String fieldName, Object o, boolean forComplexType, boolean optional)
+   private void mapFieldToElement(FieldToElementMapping mapping)
+   {
+      String mappingKey = mapping.cls.getName() + ":" + mapping.localName;
+      fieldMappings.put(mappingKey, mapping);
+   }
+
+   private Object getJavaValue(String namespaceURI, String localName, String fieldName, Object o, boolean forComplexType, boolean optional)
    {
       Method getter = null;
       Field field = null;
 
       String mappingKey = o.getClass().getName() + ":" + localName;
-      final FieldToElementMapping mapping = (FieldToElementMapping)fieldMappings.get(mappingKey);
+      FieldToElementMapping mapping = (FieldToElementMapping)fieldMappings.get(mappingKey);
+      if(mapping == null)
+      {
+         if(fieldName == null)
+         {
+            fieldName = Util.xmlNameToFieldName(localName, ignoreLowLine);
+         }
+
+         // cache the fieldmapping
+         try
+         {
+            mapping = new FieldToElementMapping(o.getClass(), fieldName, namespaceURI, localName, null);
+            mapFieldToElement(mapping);
+         }
+         catch(JBossXBRuntimeException e)
+         {
+            if(optional)
+            {
+               if(log.isTraceEnabled())
+               {
+                  log.trace(e.getMessage());
+               }
+            }
+            else
+            {
+               throw e;
+            }
+         }
+      }
+
       if(mapping != null)
       {
          if(mapping.getter != null)
@@ -156,45 +190,6 @@ public class MappingObjectModelProvider
          else
          {
             field = mapping.field;
-         }
-      }
-      else
-      {
-         if(fieldName == null)
-         {
-            fieldName = Util.xmlNameToFieldName(localName, ignoreLowLine);
-         }
-
-         try
-         {
-            getter = Classes.getAttributeGetter(o.getClass(), fieldName);
-         }
-         catch(NoSuchMethodException e)
-         {
-            try
-            {
-               field = o.getClass().getField(fieldName);
-            }
-            catch(NoSuchFieldException e2)
-            {
-               String msg = "getJavaValue: found neither getter nor field for element " +
-                  localName +
-                  " bound to field " +
-                  fieldName +
-                  " in "
-                  + o.getClass();
-               if(optional)
-               {
-                  if(log.isTraceEnabled())
-                  {
-                     log.trace(msg);
-                  }
-               }
-               else
-               {
-                  throw new JBossXBRuntimeException(msg);
-               }
-            }
          }
       }
 

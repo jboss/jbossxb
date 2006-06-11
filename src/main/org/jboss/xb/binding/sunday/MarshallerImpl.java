@@ -22,6 +22,9 @@
 package org.jboss.xb.binding.sunday;
 
 /**
+ * Please, never use this marshaller. The extended marshaller should be
+ * used instead.
+ *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */

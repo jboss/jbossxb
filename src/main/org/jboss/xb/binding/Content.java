@@ -23,6 +23,7 @@ package org.jboss.xb.binding;
 
 import java.io.StringWriter;
 import java.util.LinkedList;
+import java.util.Iterator;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -101,9 +102,9 @@ public class Content
    {
       handler.startDocument();
 
-      for(int i = 0; i < content.size(); ++i)
+      for(Iterator i = content.iterator(); i.hasNext();)
       {
-         Object item = content.get(i);
+         Object item = i.next();
          if(item instanceof StartElement)
          {
             StartElement start = (StartElement)item;
@@ -229,9 +230,9 @@ public class Content
 
    public void append(Content content)
    {
-      for(int i = 0; i < content.content.size(); ++i)
+      for(Iterator i = content.content.iterator(); i.hasNext();)
       {
-         this.content.addLast(content.content.get(i));
+         this.content.addLast(i.next());
       }
    }
 

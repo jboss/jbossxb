@@ -23,6 +23,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import javax.xml.namespace.QName;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.jboss.logging.Logger;
@@ -684,9 +685,9 @@ public class SundayContentHandler
          ParticleHandler wildcardHandler = null;
 
          ParticleBinding parentParticle = null;
-         for(int j = 0; j < stack.size(); ++j)
+         for(ListIterator iter = stack.prevIterator(); iter.hasPrevious();)
          {
-            StackItem item = (StackItem)stack.peek(j);
+            StackItem item = (StackItem)iter.previous();
             ParticleBinding peeked = item.particle;
             if(peeked != null && peeked.getTerm() instanceof ElementBinding)
             {
@@ -720,9 +721,9 @@ public class SundayContentHandler
             !stack.isEmpty())
          {
             // todo: review this> the parent has anyType, so it gets the value of its child
-            for(int j = 0; j < stack.size(); ++j)
+            for(ListIterator iter = stack.prevIterator(); iter.hasPrevious();)
             {
-               StackItem peeked = (StackItem)stack.peek(j);
+               StackItem peeked = (StackItem)iter.previous();
                peeked.o = o;
                if(peeked.particle != null)
                {
@@ -864,6 +865,11 @@ public class SundayContentHandler
       public Object peek()
       {
          return list.getLast();
+      }
+
+      public ListIterator prevIterator()
+      {
+         return list.listIterator(list.size());
       }
 
       public Object peek(int i)

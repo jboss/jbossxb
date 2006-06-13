@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.ListIterator;
 
 import javax.xml.namespace.QName;
 
@@ -1366,9 +1367,9 @@ public class XsdBinder
    {
       LinkedList stack = getXsdBinding().typeGroupStack;
       TypeBinding binding = null;
-      for(int i = stack.size() - 1; i >= 0; --i)
+      for(ListIterator i = stack.listIterator(stack.size()); i.hasPrevious();)
       {
-         Object o = stack.get(i);
+         Object o = i.previous();
          if(o instanceof TypeBinding)
          {
             binding = (TypeBinding)o;

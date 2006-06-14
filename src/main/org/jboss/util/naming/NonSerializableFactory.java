@@ -1,4 +1,4 @@
-/*
+ /*
   * JBoss, Home of Professional Open Source
   * Copyright 2005, JBoss Inc., and individual contributors as indicated
   * by the @authors tag. See the copyright.txt in the distribution for a
@@ -36,11 +36,12 @@ import javax.naming.RefAddr;
 import javax.naming.StringRefAddr;
 import javax.naming.spi.ObjectFactory;
 
-/** A utility class that allows one to bind a non-serializable object into a
-local JNDI context. The binding will only be valid for the lifetime of the
-VM in which the JNDI InitialContext lives. An example usage code snippet is:
-
-<code>
+/** 
+ * A utility class that allows one to bind a non-serializable object into a
+ * local JNDI context. The binding will only be valid for the lifetime of the
+ * VM in which the JNDI InitialContext lives. An example usage code snippet is:
+ *
+<pre>
     // The non-Serializable object to bind
     Object nonserializable = ...;
     // An arbitrary key to use in the StringRefAddr. The best key is the jndi
@@ -56,11 +57,12 @@ VM in which the JNDI InitialContext lives. An example usage code snippet is:
     StringRefAddr addr = new StringRefAddr("nns", key);
     Reference memoryRef = new Reference(className, addr, factory, null);
     ctx.rebind(key, memoryRef);
-</code>
-
-Or you can use the rebind(Context, String, Object) convience method to simplify
-the number of steps to:
-<code>
+</pre>
+ *
+ * Or you can use the {@link #rebind(Context, String, Object)} convenience
+ * method to simplify the number of steps to:
+ *
+<pre>
     Context ctx = new InitialContext();
     // The non-Serializable object to bind
     Object nonserializable = ...;
@@ -68,20 +70,20 @@ the number of steps to:
     String jndiName = ...;
     // This places nonserializable into the NonSerializableFactory hashmap under key
     NonSerializableFactory.rebind(ctx, jndiName, nonserializable);
-</code>
-
-To unbind the object, use the following code snippet:
-
-<code>
+</pre>
+ * 
+ * To unbind the object, use the following code snippet:
+ * 
+<pre>
 	new InitialContext().unbind(key);
 	NonSerializableFactory.unbind(key);
-</code>
-
-@see javax.naming.spi.ObjectFactory
-@see #rebind(Context, String, Object)
-
-@author <a href="mailto:Scott.Stark@jboss.org">Scott Stark</a>.
-@version $Revision$
+</pre>
+ *
+ * @see javax.naming.spi.ObjectFactory
+ * @see #rebind(Context, String, Object)
+ *
+ * @author <a href="mailto:Scott.Stark@jboss.org">Scott Stark</a>.
+ * @version $Revision$
 */
 public class NonSerializableFactory implements ObjectFactory
 {

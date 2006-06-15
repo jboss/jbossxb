@@ -25,9 +25,10 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.ListIterator;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.xml.namespace.QName;
 
@@ -1331,7 +1332,8 @@ public class XsdBinder
 
    private static void popType()
    {
-      Object o = getXsdBinding().typeGroupStack.removeLast();
+      List stack = getXsdBinding().typeGroupStack;
+      Object o = stack.remove(stack.size() - 1);
       if(!(o instanceof TypeBinding))
       {
          throw new JBossXBRuntimeException("Should have poped type binding but got " + o);
@@ -1340,12 +1342,13 @@ public class XsdBinder
 
    private static void pushType(TypeBinding binding)
    {
-      getXsdBinding().typeGroupStack.addLast(binding);
+      getXsdBinding().typeGroupStack.add(binding);
    }
 
    private static void popModelGroup()
    {
-      Object o = getXsdBinding().typeGroupStack.removeLast();
+      List stack = getXsdBinding().typeGroupStack;
+      Object o = stack.remove(stack.size() - 1);
       if(!(o instanceof ModelGroupBinding))
       {
          throw new JBossXBRuntimeException("Should have poped model group binding but got " + o);
@@ -1354,18 +1357,18 @@ public class XsdBinder
 
    private static void pushModelGroup(ModelGroupBinding binding)
    {
-      getXsdBinding().typeGroupStack.addLast(binding);
+      getXsdBinding().typeGroupStack.add(binding);
    }
 
    private static Object peekTypeOrGroup()
    {
-      LinkedList stack = getXsdBinding().typeGroupStack;
-      return stack.isEmpty() ? null : stack.getLast();
+      List stack = getXsdBinding().typeGroupStack;
+      return stack.isEmpty() ? null : stack.get(stack.size() - 1);
    }
 
    private static TypeBinding peekType()
    {
-      LinkedList stack = getXsdBinding().typeGroupStack;
+      List stack = getXsdBinding().typeGroupStack;
       TypeBinding binding = null;
       for(ListIterator i = stack.listIterator(stack.size()); i.hasPrevious();)
       {
@@ -1426,7 +1429,7 @@ public class XsdBinder
 
    private static final class XsdBinding
    {
-      public final LinkedList typeGroupStack = new LinkedList();
+      public final List typeGroupStack = new ArrayList();
       public final SchemaBinding schemaBinding = new SchemaBinding();
    }
 }

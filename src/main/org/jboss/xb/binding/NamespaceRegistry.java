@@ -28,8 +28,9 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * A simple namespace registry.
@@ -118,14 +119,14 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
          }
          else if (obj instanceof String)
          {
-            LinkedList list = new LinkedList();
+            List list = new ArrayList();
             list.add(obj);
             list.add(nsURI);
             uriByPrefix.put(prefix, list);
          }
-         else if (obj instanceof LinkedList)
+         else if (obj instanceof List)
          {
-            ((LinkedList)obj).add(nsURI);
+            ((List)obj).add(nsURI);
          }
          else
          {
@@ -139,14 +140,14 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
          }
          else if (obj instanceof String)
          {
-            LinkedList list = new LinkedList();
+            List list = new ArrayList();
             list.add(obj);
             list.add(prefix);
             prefixByUri.put(nsURI, list);
          }
-         else if (obj instanceof LinkedList)
+         else if (obj instanceof List)
          {
-            ((LinkedList)obj).add(prefix);
+            ((List)obj).add(prefix);
          }
          else
          {
@@ -171,10 +172,10 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
             uri = (String)obj;
             uriByPrefix.remove(prefix);
          }
-         else if (obj instanceof LinkedList)
+         else if (obj instanceof List)
          {
-            LinkedList list = (LinkedList)obj;
-            uri = (String)list.removeLast();
+            List list = (List)obj;
+            uri = (String)list.remove(list.size() - 1);
             if (list.isEmpty())
             {
                uriByPrefix.remove(prefix);
@@ -196,9 +197,9 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
                }
                prefixByUri.remove(uri);
             }
-            else if (obj instanceof LinkedList)
+            else if (obj instanceof List)
             {
-               LinkedList list = (LinkedList)obj;
+               List list = (ArrayList)obj;
                list.remove(prefix);
                if (list.isEmpty())
                {
@@ -231,9 +232,9 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
             prefixByUri.remove(nsURI);
             removePrefixMappingOnly(prefix, nsURI);
          }
-         else if (obj instanceof LinkedList)
+         else if (obj instanceof List)
          {
-            LinkedList list = (LinkedList)obj;
+            List list = (List)obj;
             for (int i = 0; i < list.size(); ++i)
             {
                removePrefixMappingOnly((String)list.get(i), nsURI);
@@ -284,9 +285,10 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
          {
             prefix = (String)obj;
          }
-         else if (obj instanceof LinkedList)
+         else if (obj instanceof List)
          {
-            prefix = (String)((LinkedList)obj).getLast();
+            List list = (List)obj;
+            prefix = (String)list.get(list.size() - 1);
          }
          else
          {
@@ -316,9 +318,9 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
       {
          result = Collections.singletonList(obj).iterator();
       }
-      else if (obj instanceof LinkedList)
+      else if (obj instanceof List)
       {
-         result = ((LinkedList)obj).iterator();
+         result = ((List)obj).iterator();
       }
       else
       {
@@ -341,9 +343,10 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
          {
             uri = (String)obj;
          }
-         else if (obj instanceof LinkedList)
+         else if (obj instanceof List)
          {
-            uri = (String)((LinkedList)obj).getLast();
+            List list = (List)obj;
+            uri = (String)list.get(list.size() - 1);
          }
          else
          {
@@ -367,9 +370,9 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
          }
          uriByPrefix.remove(prefix);
       }
-      else if (obj instanceof LinkedList)
+      else if (obj instanceof List)
       {
-         LinkedList list = (LinkedList)obj;
+         List list = (List)obj;
          list.remove(prefix);
          if (list.isEmpty())
          {
@@ -380,6 +383,6 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
 
    private void throwUnexpectedEntryException(Object entry)
    {
-      throw new IllegalStateException("Unexpected entry type: expected java.lang.String or java.util.LinkedList but got " + entry.getClass());
+      throw new IllegalStateException("Unexpected entry type: expected java.lang.String or java.util.List but got " + entry.getClass());
    }
 }

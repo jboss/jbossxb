@@ -22,8 +22,9 @@
 package org.jboss.xb.binding;
 
 import java.io.StringWriter;
-import java.util.LinkedList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
@@ -43,7 +44,7 @@ public class Content
 {
    private static Logger log = Logger.getLogger(Content.class);
 
-   private LinkedList content = new LinkedList();
+   private List content = new ArrayList();
 
    // Public
 
@@ -178,19 +179,19 @@ public class Content
    public void startPrefixMapping(String prefix, String uri)
    {
       StartPrefixMapping node = new StartPrefixMapping(prefix, uri);
-      content.addLast(node);
+      content.add(node);
    }
 
    public void endPrefixMapping(String prefix)
    {
       EndPrefixMapping node = new EndPrefixMapping(prefix);
-      content.addLast(node);
+      content.add(node);
    }
 
    public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
    {
       StartElement startElement = new StartElement(namespaceURI, localName, qName, atts);
-      content.addLast(startElement);
+      content.add(startElement);
 
       if(log.isTraceEnabled())
       {
@@ -201,7 +202,7 @@ public class Content
    public void endElement(String namespaceURI, String localName, String qName)
    {
       EndElement endElement = new EndElement(namespaceURI, localName, qName);
-      content.addLast(endElement);
+      content.add(endElement);
 
       if(log.isTraceEnabled())
       {
@@ -215,7 +216,7 @@ public class Content
       // ignore whitespace-only characters
       if(characters.toString().trim().length() > 0)
       {
-         content.addLast(characters);
+         content.add(characters);
 
          if(log.isTraceEnabled())
          {
@@ -232,7 +233,7 @@ public class Content
    {
       for(Iterator i = content.content.iterator(); i.hasNext();)
       {
-         this.content.addLast(i.next());
+         this.content.add(i.next());
       }
    }
 

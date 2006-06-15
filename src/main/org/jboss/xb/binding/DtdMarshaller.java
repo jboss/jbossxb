@@ -44,9 +44,10 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 
 
 /**
@@ -68,7 +69,7 @@ public class DtdMarshaller
    private GenericObjectModelProvider provider;
    private Content content = new Content();
 
-   private final LinkedList elementStack = new LinkedList();
+   private final List elementStack = new ArrayList();
 
    private final Map simpleTypeBindings = new HashMap();
 
@@ -151,7 +152,7 @@ public class DtdMarshaller
    private void handleRootElement(Object o, final DTDElement dtdRoot)
    {
       Element el = new Element(dtdRoot, true);
-      elementStack.addLast(el);
+      elementStack.add(el);
       content.startDocument();
 
       Object root = provider.getRoot(o, null, systemId, dtdRoot.getName());
@@ -168,7 +169,7 @@ public class DtdMarshaller
 
       stack.pop();
       content.endDocument();
-      elementStack.removeLast();
+      elementStack.remove(elementStack.size() - 1);
    }
 
    private final void handleElement(DTD dtd, DTDElement element, Attributes attrs)
@@ -256,7 +257,7 @@ public class DtdMarshaller
          writeSkippedElements();
 
          Element el = new Element(element, true);
-         elementStack.addLast(el);
+         elementStack.add(el);
 
          final boolean singleValued = elementCardinal == DTDCardinal.NONE || elementCardinal == DTDCardinal.OPTIONAL;
          if(singleValued)
@@ -291,7 +292,7 @@ public class DtdMarshaller
             content.endElement(systemId, element.getName(), element.getName());
          }
 
-         elementStack.removeLast();
+         elementStack.remove(elementStack.size() - 1);
       }
       else
       {
@@ -299,7 +300,7 @@ public class DtdMarshaller
          if(!(element.getContent() instanceof DTDMixed || element.getContent() instanceof DTDEmpty))
          {
             Element el = new Element(element);
-            elementStack.addLast(el);
+            elementStack.add(el);
             removeLast = true;
          }
 
@@ -308,7 +309,7 @@ public class DtdMarshaller
 
          if(removeLast)
          {
-            Element el = (Element)elementStack.removeLast();
+            Element el = (Element)elementStack.remove(elementStack.size() - 1);
             if(el.started)
             {
                DTDElement started = el.element;
@@ -339,7 +340,7 @@ public class DtdMarshaller
 
    private void writeSkippedElements()
    {
-      Element el = (Element)elementStack.getLast();
+      Element el = (Element)elementStack.get(elementStack.size() - 1);
       if(!el.started)
       {
          int firstNotStarted = elementStack.size() - 1;

@@ -31,9 +31,10 @@ import javax.xml.namespace.NamespaceContext;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.StringTokenizer;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -527,7 +528,7 @@ public class ObjectModelBuilder
    private static class StackImpl
       implements Stack
    {
-      private LinkedList list = new LinkedList();
+      private List list = new ArrayList();
 
       public void clear()
       {
@@ -536,17 +537,17 @@ public class ObjectModelBuilder
 
       public void push(Object o)
       {
-         list.addLast(o);
+         list.add(o);
       }
 
       public Object pop()
       {
-         return list.removeLast();
+         return list.remove(list.size() - 1);
       }
 
       public Object peek()
       {
-         return list.getLast();
+         return list.get(list.size() - 1);
       }
 
       public boolean isEmpty()

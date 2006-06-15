@@ -21,9 +21,9 @@
   */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.ArrayList;
 import javax.xml.namespace.QName;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.jboss.logging.Logger;
@@ -845,7 +845,7 @@ public class SundayContentHandler
 
    static class StackImpl
    {
-      private LinkedList list = new LinkedList();
+      private List list = new ArrayList();
 
       public void clear()
       {
@@ -854,17 +854,17 @@ public class SundayContentHandler
 
       public void push(Object o)
       {
-         list.addLast(o);
+         list.add(o);
       }
 
       public Object pop()
       {
-         return list.removeLast();
+         return list.remove(list.size() - 1);
       }
 
       public Object peek()
       {
-         return list.getLast();
+         return list.get(list.size() - 1);
       }
 
       public ListIterator prevIterator()

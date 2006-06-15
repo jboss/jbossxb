@@ -32,7 +32,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -608,7 +607,7 @@ public abstract class AbstractMarshaller
    public static class StackImpl
       implements Stack
    {
-      private LinkedList list = new LinkedList();
+      private List list = new ArrayList();
 
       public void clear()
       {
@@ -617,17 +616,17 @@ public abstract class AbstractMarshaller
 
       public void push(Object o)
       {
-         list.addLast(o);
+         list.add(o);
       }
 
       public Object pop()
       {
-         return list.removeLast();
+         return list.remove(list.size() - 1);
       }
 
       public Object peek()
       {
-         return list.getLast();
+         return list.get(list.size() - 1);
       }
 
       public boolean isEmpty()

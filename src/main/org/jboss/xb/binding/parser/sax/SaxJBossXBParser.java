@@ -49,17 +49,22 @@ public class SaxJBossXBParser
 {
    private static final Logger log = Logger.getLogger(SaxJBossXBParser.class);
 
-   private final SAXParser parser;
+   private static final SAXParserFactory saxFactory = SAXParserFactory.newInstance();
+   static
+   {
+      saxFactory.setValidating(true);
+      saxFactory.setNamespaceAware(true);
+   }
+
+   private final XMLReader reader;
    private JBossXBParser.ContentHandler contentHandler;
    private DelegatingContentHandler delegateHandler;
-   
+   private boolean trace;
+
    public SaxJBossXBParser()
       throws JBossXBException
    {
-      SAXParserFactory saxFactory = SAXParserFactory.newInstance();
-      saxFactory.setValidating(true);
-      saxFactory.setNamespaceAware(true);
-
+      SAXParser parser;
       try
       {
          parser = saxFactory.newSAXParser();
@@ -69,10 +74,18 @@ public class SaxJBossXBParser
          throw new JBossXBException("Failed to create a new SAX parser", e);
       }
 
-      XMLReader reader = getXmlReader();
+      try
+      {
+         reader = parser.getXMLReader();
+      }
+      catch(SAXException e1)
+      {
+         throw new JBossXBRuntimeException("Failed to get parser's XMLReader", e1);
+      }
+
       delegateHandler = new DelegatingContentHandler();
       reader.setContentHandler(delegateHandler);
-      reader.setErrorHandler(new MetaDataErrorHandler());
+      reader.setErrorHandler(MetaDataErrorHandler.INSTANCE);
       reader.setEntityResolver(new JBossEntityResolver());
 
 /*
@@ -89,14 +102,14 @@ public class SaxJBossXBParser
    public void setEntityResolver(EntityResolver entityResolver)
       throws JBossXBException
    {
-      getXmlReader().setEntityResolver(entityResolver);
+      reader.setEntityResolver(entityResolver);
    }
 
    public void setProperty(String name, Object value)
    {
       try
       {
-         getXmlReader().setProperty(name, value);
+         reader.setProperty(name, value);
       }
       catch(SAXException e)
       {
@@ -108,7 +121,7 @@ public class SaxJBossXBParser
    {
       try
       {
-         getXmlReader().setFeature(name, value);
+         reader.setFeature(name, value);
       }
       catch(SAXException e)
       {
@@ -119,9 +132,10 @@ public class SaxJBossXBParser
    public void parse(String systemId, ContentHandler handler) throws JBossXBException
    {
       this.contentHandler = handler;
+      trace = log.isTraceEnabled();
       try
       {
-         getXmlReader().parse(systemId);
+         reader.parse(systemId);
       }
       catch(Exception e)
       {
@@ -132,9 +146,10 @@ public class SaxJBossXBParser
    public void parse(InputStream is, ContentHandler handler) throws JBossXBException
    {
       this.contentHandler = handler;
+      trace = log.isTraceEnabled();
       try
       {
-         getXmlReader().parse(new InputSource(is));
+         reader.parse(new InputSource(is));
       }
       catch(Exception e)
       {
@@ -145,9 +160,10 @@ public class SaxJBossXBParser
    public void parse(Reader reader, ContentHandler handler) throws JBossXBException
    {
       this.contentHandler = handler;
+      trace = log.isTraceEnabled();
       try
       {
-         getXmlReader().parse(new InputSource(reader));
+         this.reader.parse(new InputSource(reader));
       }
       catch(Exception e)
       {
@@ -173,26 +189,12 @@ public class SaxJBossXBParser
          return buffer.toString();
       }
    }
-   
-   private XMLReader getXmlReader()
-   {
-      try
-      {
-         return parser.getXMLReader();
-      }
-      catch(SAXException e)
-      {
-         throw new JBossXBRuntimeException("Failed to get parser's XMLReader", e);
-      }
-   }
 
    // Inner
 
    private final class DelegatingContentHandler
       implements org.xml.sax.ContentHandler
    {
-      boolean trace = log.isTraceEnabled();
-
       Locator locator;
       
       public void endDocument()
@@ -311,6 +313,8 @@ public class SaxJBossXBParser
    private static final class MetaDataErrorHandler
       implements ErrorHandler
    {
+      public static final ErrorHandler INSTANCE = new MetaDataErrorHandler();
+
       public void warning(SAXParseException exception)
       {
          log.warn(formatMessage(exception));

@@ -69,6 +69,8 @@ public final class Util
 
    private static final Logger log = Logger.getLogger(Util.class);
 
+   private static XSImplementation xsImpl;
+
    /**
     * Returns a prefixed name for the passed in QName instance.
     * If the argument has a prefix, the prefix is used. If not then
@@ -350,8 +352,12 @@ public final class Util
       if(trace)
          log.trace("loading xsd: " + xsdURL);
 
-      XSImplementation impl = getXSImplementation();
-      XSLoader schemaLoader = impl.createXSLoader(null);
+      if(xsImpl == null)
+      {
+         xsImpl = getXSImplementation();
+      }
+
+      XSLoader schemaLoader = xsImpl.createXSLoader(null);
       if(schemaResolver != null)
       {
          setResourceResolver(schemaLoader, schemaResolver);

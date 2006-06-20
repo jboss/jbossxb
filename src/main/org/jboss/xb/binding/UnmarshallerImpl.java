@@ -24,7 +24,6 @@ package org.jboss.xb.binding;
 import java.io.InputStream;
 import java.io.Reader;
 
-import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.xb.binding.parser.sax.SaxJBossXBParser;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -42,7 +41,7 @@ import org.xml.sax.ErrorHandler;
  */
 public class UnmarshallerImpl implements Unmarshaller
 {
-   private ObjectModelBuilder builder = new ObjectModelBuilder();
+   private ObjectModelBuilder builder;
    private final JBossXBParser parser;
 
    // Constructor
@@ -53,9 +52,6 @@ public class UnmarshallerImpl implements Unmarshaller
    public UnmarshallerImpl() throws JBossXBException
    {
       parser = new SaxJBossXBParser();
-      //parser = new XniJBossXBParser();
-
-      parser.setEntityResolver(new JBossEntityResolver());
    }
 
    public void setValidation(boolean validation) throws JBossXBException
@@ -90,6 +86,10 @@ public class UnmarshallerImpl implements Unmarshaller
 
    public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
    {
+      if(builder == null)
+      {
+         builder = new ObjectModelBuilder();
+      }
       builder.mapFactoryToNamespace(factory, namespaceUri);
    }
 
@@ -149,6 +149,10 @@ public class UnmarshallerImpl implements Unmarshaller
 
    public Object unmarshal(Reader reader, ObjectModelFactory factory, Object root) throws JBossXBException
    {
+      if(builder == null)
+      {
+         builder = new ObjectModelBuilder();
+      }
       builder.init(factory, root);
       parser.parse(reader, builder);
       return builder.getRoot();
@@ -156,6 +160,10 @@ public class UnmarshallerImpl implements Unmarshaller
 
    public Object unmarshal(InputStream is, ObjectModelFactory factory, Object root) throws JBossXBException
    {
+      if(builder == null)
+      {
+         builder = new ObjectModelBuilder();
+      }
       builder.init(factory, root);
       parser.parse(is, builder);
       return builder.getRoot();
@@ -163,6 +171,10 @@ public class UnmarshallerImpl implements Unmarshaller
 
    public Object unmarshal(String systemId, ObjectModelFactory factory, Object root) throws JBossXBException
    {
+      if(builder == null)
+      {
+         builder = new ObjectModelBuilder();
+      }
       builder.init(factory, root);
       parser.parse(systemId, builder);
       return builder.getRoot();
@@ -172,4 +184,5 @@ public class UnmarshallerImpl implements Unmarshaller
    {
       return parser;
    }
+
 }

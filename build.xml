@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE project [
-   <!ENTITY buildmagic SYSTEM "../tools/etc/buildmagic/buildmagic.ent">
-   <!ENTITY libraries SYSTEM "../thirdparty/libraries.ent">
-   <!ENTITY targets SYSTEM "../tools/etc/buildmagic/targets.ent">
+   <!ENTITY buildmagic SYSTEM "tools/etc/buildmagic/buildmagic.ent">
+   <!ENTITY targets SYSTEM "tools/etc/buildmagic/targets.ent">
 ]>
 
 <!-- ====================================================================== -->
@@ -16,7 +15,7 @@
 
 <!-- $Id$ -->
 
-<project default="main" name="JBoss/Common">
+<project default="build" name="JBoss/Common">
 
   <!-- ================================================================== -->
   <!-- Setup                                                              -->
@@ -58,26 +57,7 @@
     <property name="module.Name" value="JBoss/Common"/>
     <property name="module.version" value="DEV"/>
 
-    <!-- ========= -->
-    <!-- Libraries -->
-    <!-- ========= -->
-    &libraries;
-
-    <!-- The combined library classpath -->
-    <path id="library.classpath">
-      <path refid="apache.xerces.classpath"/>
-      <path refid="apache.commons.classpath"/>
-      <path refid="apache.log4j.classpath"/>
-      <path refid="apache.slide.classpath"/>
-      <path refid="dom4j.dom4j.classpath"/>
-      <path refid="wutka.dtdparser.classpath"/>
-      <path refid="oswego.concurrent.classpath"/>
-      <path refid="sun.jaf.classpath"/>
-    </path>
-
-    <!-- ======= -->
-    <!-- Modules -->
-    <!-- ======= -->
+    
 
     <!-- The combined dependent module classpath -->
     <path id="dependentmodule.classpath">
@@ -107,9 +87,11 @@
      | documentation compiles.
    -->
 
-  <target name="compile"
-    description="Compile all source files."
-    depends="_default:compile-classes, _default:compile-etc"/>
+  <target name="compile" depends="_default:compile-etc"
+    description="Compile all source files.">
+    <ant antfile="build-compile.xml" target="compile-classes"/>
+  </target>
+
 
   <!-- ================================================================== -->
   <!-- Archives                                                           -->
@@ -197,5 +179,72 @@
       </fileset>
     </copy>
   </target>
+  
+  <target name="build" depends="createthirdparty, main"/>
+  
+   <!-- create the thirdparty folder from items in the repository -->
+   <!-- then generate a new libraries.ent file and include it in  -->
+   <!-- the build                                                 -->
+   <target name="createthirdparty" unless="inhibit.downloads"
+      depends="check.inhibit.downloads, set.proxy">
+      
+      <ant antfile="build-thirdparty.xml" target="generate-lib-file"/>
+   </target>
+
+   <!-- check if thirdparty libraries are to be downloaded -->
+   <target name="check.inhibit.downloads">
+      <condition property="inhibit.downloads">
+         <or>
+            <uptodate property="dependencies.current"
+ 	      srcfile="build-thirdparty.xml"
+               targetfile="thirdparty/libraries.ent"/>
+            <istrue value="${nodownload}"/>
+         </or>
+      </condition>
+  </target>
+
+  <!-- check if the the user has specied proxy settings -->
+  <target name="check.proxy">
+    <condition property="hasproxy">
+        <and>
+            <isset property="proxy.host"/>
+            <isset property="proxy.port"/>
+            <not>
+                <equals arg1="" arg2="${proxy.host}" trim="true"/>
+            </not>
+            <not>
+                <equals arg1="" arg2="${proxy.port}" trim="true"/>
+            </not>
+        </and>
+    </condition>
+  </target>
+
+  <!-- set proxy settings -->
+  <condition property="hasproxyauth">
+        <and>
+            <isset property="hasproxy"/>
+            <isset property="proxy.username"/>
+            <isset property="proxy.password"/>
+            <not>
+                <equals arg1="" arg2="${proxy.username}" trim="true"/>
+            </not>
+            <not>
+                <equals arg1="" arg2="${proxy.password}" trim="true"/>
+            </not>
+        </and>
+    </condition>
+  <target name="set.proxy" depends="set.proxy.withoutauth, set.proxy.auth"/>
+
+  <!-- set proxy settings without auth -->
+  <target name="set.proxy.withoutauth" if="hasproxy" unless="hasproxyauth" depends="check.proxy">
+    <echo>Proxy is set to ${proxy.host}:${proxy.port}</echo>
+    <setproxy proxyhost="${proxy.host}" proxyport="${proxy.port}"/>
+  </target>
+
+  <!-- set proxy settings using auth -->
+  <target name="set.proxy.auth" if="hasproxyauth" depends="check.proxy">
+    <echo>Auth Proxy is set to ${proxy.host}:${proxy.port} username=[${proxy.username}]</echo>
+    <setproxy proxyhost="${proxy.host}" proxyport="${proxy.port}" proxyuser="${proxy.username}" proxypassword="${proxy.password}"/>
+  </target>  
   
 </project>

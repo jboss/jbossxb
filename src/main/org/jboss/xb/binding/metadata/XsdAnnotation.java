@@ -110,17 +110,7 @@ public class XsdAnnotation
          return root;
       }
 
-      protected void setAttributes(XsdElement element, Attributes attrs)
-      {
-         if(element != null)
-         {
-            for(int i = 0; i < attrs.getLength(); ++i)
-            {
-               element.addAttribute(new QName(attrs.getURI(i), attrs.getLocalName(i)), attrs.getValue(i));
-            }
-         }
       }
-   }
 
    private static final class XsdObjectModelFactory
       extends AbstractGOMF
@@ -137,10 +127,11 @@ public class XsdAnnotation
          if("appinfo".equals(localName))
          {
             element = new XsdAppInfo();
+            for(int i = 0; i < attrs.getLength(); ++i)
+            {
+               element.addAttribute(new QName(attrs.getURI(i), attrs.getLocalName(i)), attrs.getValue(i));
+            }
          }
-
-         setAttributes(element, attrs);
-
          return element;
       }
 

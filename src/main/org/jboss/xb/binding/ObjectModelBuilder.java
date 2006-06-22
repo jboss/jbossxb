@@ -99,7 +99,7 @@ public class ObjectModelBuilder
    private XSTypeDefinition currentType;
 
    private boolean trace = log.isTraceEnabled();
-   
+
    // Public
 
    public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
@@ -198,7 +198,7 @@ public class ObjectModelBuilder
    {
       return currentType;
    }
-   
+
    // Public
 
    public void startPrefixMapping(String prefix, String uri)
@@ -350,10 +350,9 @@ public class ObjectModelBuilder
       if(!accepted.isEmpty())
       {
          Object acceptedElement = peekAccepted();
-         String characters = element.characters;
-         if(characters != null)
+         if(element.characters != null && element.characters.length() > 0)
          {
-            characters = characters.trim();
+            String characters = element.characters.toString().trim();
             if(characters.length() > 0)
             {
                curFactory.setValue(acceptedElement, this, namespaceURI, localName, characters);
@@ -390,11 +389,11 @@ public class ObjectModelBuilder
          AllElement allElement = peekAll();
          if(allElement.characters == null)
          {
-            allElement.characters = str;
+            allElement.characters = new StringBuffer(str);
          }
          else
          {
-            allElement.characters += str;
+            allElement.characters.append(str);
          }
       }
    }
@@ -504,7 +503,7 @@ public class ObjectModelBuilder
    private static final class AllElement
    {
       public final Object element;
-      public String characters;
+      public StringBuffer characters;
 
       public AllElement(Object element)
       {

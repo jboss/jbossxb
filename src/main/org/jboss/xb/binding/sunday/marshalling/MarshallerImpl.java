@@ -364,10 +364,12 @@ public class MarshallerImpl
       if(xopMarshaller != null && isXopOptimizable(type))
       {
          String cid = null;
+         String contentType = null;
          if(xopMarshaller.isXOPPackage())
          {
             Object o = stack.peek();
             DataHandler dataHandler = getDataHandler(o);
+            contentType = dataHandler.getContentType();
             cid = xopMarshaller.addMtomAttachment(dataHandler, elementNs, elementLocal);
          }
 
@@ -391,14 +393,18 @@ public class MarshallerImpl
          }
          else
          {
-            AttributesImpl attrs = null;
+            AttributesImpl attrs = new AttributesImpl(3);
             String prefix = getPrefix(elementNs);
             boolean genPrefix = prefix == null && elementNs != null && elementNs.length() > 0;
             if(genPrefix)
             {
                prefix = "ns_" + elementLocal;
-               attrs = new AttributesImpl(1);
                declareNs(attrs, prefix, elementNs);
+            }
+            if(contentType!=null)
+            {
+               attrs.add(Constants.NS_XML_SCHEMA, "xmime", "xmlns:xmime", "CDATA", "http://www.w3.org/2005/05/xmlmime");
+               attrs.add(null, "contentType", "xmime:contentType", "CDATA", contentType);
             }
 
             String qName = prefixLocalName(prefix, elementLocal);

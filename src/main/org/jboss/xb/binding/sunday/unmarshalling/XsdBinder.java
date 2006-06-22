@@ -74,19 +74,6 @@ public class XsdBinder
 {
    static final Logger log = Logger.getLogger(XsdBinder.class);
 
-   private static final ThreadLocal xsdBinding = new ThreadLocal();
-
-   private static XsdBinding getXsdBinding()
-   {
-      XsdBinding local = (XsdBinding)xsdBinding.get();
-      if(local == null)
-      {
-         local = new XsdBinding();
-         xsdBinding.set(local);
-      }
-      return local;
-   }
-
    private XsdBinder()
    {
    }
@@ -248,16 +235,16 @@ public class XsdBinder
 
    public static SchemaBinding bind(XSModel model, SchemaBindingResolver resolver, boolean processAnnotations)
    {
-      boolean trace = log.isTraceEnabled();
-      
-      SchemaBinding schema = getXsdBinding().schemaBinding;
+      Context ctx = new Context();
+      ctx.processAnnotations = processAnnotations;
+      SchemaBinding schema = ctx.schema;
       schema.setSchemaResolver(resolver);
 
       // read annotations. for now just log the ones that are going to be used
-      if (processAnnotations)
+      if (ctx.processAnnotations)
       {
          XSObjectList annotations = model.getAnnotations();
-         if (trace)
+         if (ctx.trace)
          {
             log.trace("started binding schema " + schema);
             log.trace("Schema annotations: " + annotations.getLength());
@@ -281,7 +268,7 @@ public class XsdBinder
                   PackageMetaData packageMetaData = schemaBindings.getPackage();
                   if(packageMetaData != null)
                   {
-                     if (trace)
+                     if (ctx.trace)
                         log.trace("schema default package: " + packageMetaData.getName());
                      schema.setPackageMetaData(packageMetaData);
                   }
@@ -290,44 +277,41 @@ public class XsdBinder
          }
       }
 
-      SharedElements sharedElements = new SharedElements();
-
       XSNamedMap groups = model.getComponents(XSConstants.MODEL_GROUP_DEFINITION);
-      if (trace)
+      if (ctx.trace)
          log.trace("Model groups: " + groups.getLength());
       for(int i = 0; i < groups.getLength(); ++i)
       {
          XSModelGroupDefinition groupDef = (XSModelGroupDefinition)groups.item(i);
-         bindGlobalGroup(groupDef.getModelGroup(), sharedElements);
+         bindGlobalGroup(groupDef.getModelGroup(), ctx.sharedElements);
       }
 
       XSNamedMap types = model.getComponents(XSConstants.TYPE_DEFINITION);
-      if (trace)
+      if (ctx.trace)
          log.trace("Model types: " + types.getLength());
       for(int i = 0; i < types.getLength(); ++i)
       {
          XSTypeDefinition type = (XSTypeDefinition)types.item(i);
          if(!Constants.NS_XML_SCHEMA.equals(type.getNamespace()))
          {
-            bindType(schema, type, sharedElements, processAnnotations);
+            bindType(ctx, type);
          }
       }
 
       XSNamedMap elements = model.getComponents(XSConstants.ELEMENT_DECLARATION);
-      if (trace)
+      if (ctx.trace)
          log.trace("Model elements: " + types.getLength());
       for(int i = 0; i < elements.getLength(); ++i)
       {
          XSElementDeclaration element = (XSElementDeclaration)elements.item(i);
-         bindElement(schema, element, sharedElements, 1, 0, false, processAnnotations);
+         bindElement(ctx, element, 1, 0, false);
       }
 
-      if (trace)
+      if (ctx.trace)
       {
          log.trace("finished binding schema " + schema);
       }
 
-      xsdBinding.set(null);
       return schema;
    }
 
@@ -342,7 +326,7 @@ public class XsdBinder
     */
    public static void bindType(SchemaBinding schema, XSTypeDefinition type)
    {
-      TypeBinding typeBinding = bindType(schema, type, new SharedElements(), true);
+      TypeBinding typeBinding = bindType(new Context(schema), type);
       schema.addType(typeBinding);
    }
 
@@ -364,29 +348,27 @@ public class XsdBinder
                                   int maxOccurs,
                                   boolean maxOccursUnbounded)
    {
-      ParticleBinding particle = bindElement(schema,
+      ParticleBinding particle = bindElement(new Context(schema),
          element,
-         new SharedElements(),
          minOccurs,
          maxOccurs,
-         maxOccursUnbounded,
-         true
+         maxOccursUnbounded
       );
       schema.addElementParticle(particle);
    }
-   
+
    // Private
 
-   private static TypeBinding bindType(SchemaBinding doc, XSTypeDefinition type, SharedElements sharedElements, boolean processAnnotations)
+   private static TypeBinding bindType(Context ctx, XSTypeDefinition type)
    {
       TypeBinding binding;
       switch(type.getTypeCategory())
       {
          case XSTypeDefinition.SIMPLE_TYPE:
-            binding = bindSimpleType(doc, (XSSimpleTypeDefinition)type, processAnnotations);
+            binding = bindSimpleType(ctx, (XSSimpleTypeDefinition)type);
             break;
          case XSTypeDefinition.COMPLEX_TYPE:
-            binding = bindComplexType(doc, (XSComplexTypeDefinition)type, sharedElements, processAnnotations);
+            binding = bindComplexType(ctx, (XSComplexTypeDefinition)type);
             break;
          default:
             throw new JBossXBRuntimeException("Unexpected type category: " + type.getTypeCategory());
@@ -394,24 +376,22 @@ public class XsdBinder
       return binding;
    }
 
-   private static TypeBinding bindSimpleType(SchemaBinding schema, XSSimpleTypeDefinition type, boolean processAnnotations)
+   private static TypeBinding bindSimpleType(Context ctx, XSSimpleTypeDefinition type)
    {
-      boolean trace = log.isTraceEnabled();
-
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
-      TypeBinding binding = typeName == null ? null : schema.getType(typeName);
+      TypeBinding binding = typeName == null ? null : ctx.schema.getType(typeName);
       if(binding != null)
       {
          return binding;
       }
 
-      if(trace)
+      if(ctx.trace)
       {
          log.trace("binding simple type " + typeName);
       }
 
       XSTypeDefinition baseTypeDef = type.getBaseType();
-      TypeBinding baseType = baseTypeDef == null ? null : bindType(schema, baseTypeDef, null, processAnnotations);
+      TypeBinding baseType = baseTypeDef == null ? null : bindType(ctx, baseTypeDef);
 
       binding = baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType);
 
@@ -435,16 +415,16 @@ public class XsdBinder
 
       if(type.getItemType() != null)
       {
-         TypeBinding itemType = bindSimpleType(schema, type.getItemType(), processAnnotations);
+         TypeBinding itemType = bindSimpleType(ctx, type.getItemType());
          binding.setItemType(itemType);
       }
 
       if(typeName != null)
       {
-         schema.addType(binding);
+         ctx.schema.addType(binding);
       }
 
-      if(trace)
+      if(ctx.trace)
       {
          String msg = typeName == null ? "bound simple anonymous type" : "bound simple type " + typeName;
          if(baseType != null)
@@ -455,12 +435,12 @@ public class XsdBinder
       }
 
       // customize binding with annotations
-      if(processAnnotations)
+      if(ctx.processAnnotations)
       {
          XSObjectList annotations = type.getAnnotations();
          if(annotations != null)
          {
-            if(trace)
+            if(ctx.trace)
             {
                log.trace(typeName + " annotations " + annotations.getLength());
             }
@@ -474,7 +454,7 @@ public class XsdBinder
                   ClassMetaData classMetaData = appInfo.getClassMetaData();
                   if(classMetaData != null)
                   {
-                     if(trace)
+                     if(ctx.trace)
                      {
                         log.trace("simple type " +
                            type.getName() +
@@ -487,7 +467,7 @@ public class XsdBinder
                   ValueMetaData valueMetaData = appInfo.getValueMetaData();
                   if(valueMetaData != null)
                   {
-                     if(trace)
+                     if(ctx.trace)
                      {
                         log.trace("simple type " +
                            type.getName() +
@@ -503,26 +483,21 @@ public class XsdBinder
          }
       }
 
-      binding.setSchemaBinding(schema);
+      binding.setSchemaBinding(ctx.schema);
 
       return binding;
    }
 
-   private static TypeBinding bindComplexType(SchemaBinding schema,
-                                              XSComplexTypeDefinition type,
-                                              SharedElements sharedElements,
-                                              boolean processAnnotations)
+   private static TypeBinding bindComplexType(Context ctx, XSComplexTypeDefinition type)
    {
-      boolean trace = log.isTraceEnabled();
-
       QName typeName = type.getName() == null ? null : new QName(type.getNamespace(), type.getName());
-      TypeBinding binding = typeName == null ? null : schema.getType(typeName);
+      TypeBinding binding = typeName == null ? null : ctx.schema.getType(typeName);
       if(binding != null)
       {
          return binding;
       }
 
-      if (trace)
+      if (ctx.trace)
          log.trace("binding complex type " + typeName);
 
       XSTypeDefinition baseTypeDef = type.getBaseType();
@@ -530,12 +505,12 @@ public class XsdBinder
       TypeBinding baseType = null;
       if(baseTypeDef != null && !Constants.QNAME_ANYTYPE.equals(typeName))
       {
-         baseType = bindType(schema, baseTypeDef, sharedElements, processAnnotations);
+         baseType = bindType(ctx, baseTypeDef);
          // sometimes binding the base type can lead to another request
          // to bind the type being bound here
          if(typeName != null)
          {
-            binding = schema.getType(typeName);
+            binding = ctx.schema.getType(typeName);
             if(binding != null)
             {
                return binding;
@@ -550,12 +525,12 @@ public class XsdBinder
 
       if(type.getSimpleType() != null)
       {
-         TypeBinding simpleType = bindSimpleType(schema, type.getSimpleType(), processAnnotations);
+         TypeBinding simpleType = bindSimpleType(ctx, type.getSimpleType());
          binding.setSimpleType(simpleType);
       }
       else if(type.getContentType() == XSComplexTypeDefinition.CONTENTTYPE_MIXED)
       {
-         TypeBinding stringType = schema.getType(Constants.QNAME_STRING);
+         TypeBinding stringType = ctx.schema.getType(Constants.QNAME_STRING);
          if(stringType == null)
          {
             throw new JBossXBRuntimeException("xsd:string has not been bound yet!");
@@ -565,33 +540,33 @@ public class XsdBinder
 
       if(typeName != null)
       {
-         schema.addType(binding);
+         ctx.schema.addType(binding);
       }
 
-      if (trace)
+      if (ctx.trace)
       {
          String msg = typeName == null ? "bound complex anonymous type" : "bound complex type " + typeName;
          log.trace(msg);
       }
 
-      binding.setSchemaBinding(schema);
+      binding.setSchemaBinding(ctx.schema);
 
       XSObjectList attrs = type.getAttributeUses();
-      if (trace)
+      if (ctx.trace)
          log.trace(typeName + " attributes " + attrs.getLength());
       for(int i = 0; i < attrs.getLength(); ++i)
       {
          XSAttributeUse attr = (XSAttributeUse)attrs.item(i);
-         bindAttributes(schema, binding, attr, processAnnotations);
+         bindAttributes(ctx, binding, attr);
       }
 
       // customize binding with xsd annotations
-      if (processAnnotations)
+      if (ctx.processAnnotations)
       {
          XSObjectList annotations = type.getAnnotations();
          if(annotations != null)
          {
-            if (trace)
+            if (ctx.trace)
                log.trace(typeName + " annotations " + annotations.getLength());
             for(int i = 0; i < annotations.getLength(); ++i)
             {
@@ -603,7 +578,7 @@ public class XsdBinder
                   ClassMetaData classMetaData = appInfo.getClassMetaData();
                   if(classMetaData != null)
                   {
-                     if (trace)
+                     if (ctx.trace)
                      {
                         log.trace("complex type " +
                            type.getName() +
@@ -617,7 +592,7 @@ public class XsdBinder
                   CharactersMetaData charactersMetaData = appInfo.getCharactersMetaData();
                   if(charactersMetaData != null)
                   {
-                     if (trace)
+                     if (ctx.trace)
                      {
                         PropertyMetaData propertyMetaData = charactersMetaData.getProperty();
                         if(propertyMetaData != null)
@@ -663,7 +638,7 @@ public class XsdBinder
                   MapEntryMetaData mapEntryMetaData = appInfo.getMapEntryMetaData();
                   if(mapEntryMetaData != null)
                   {
-                     if (trace)
+                     if (ctx.trace)
                      {
                         log.trace("complex type " +
                            type.getName() +
@@ -695,7 +670,7 @@ public class XsdBinder
                   boolean skip = appInfo.isSkip();
                   if(skip)
                   {
-                     if (trace)
+                     if (ctx.trace)
                      {
                         log.trace("complex type " +
                            type.getName() +
@@ -709,7 +684,7 @@ public class XsdBinder
                   PropertyMetaData propertyMetaData = appInfo.getPropertyMetaData();
                   if(propertyMetaData != null)
                   {
-                     if (trace)
+                     if (ctx.trace)
                      {
                         log.trace("complex type " +
                            type.getName() +
@@ -722,7 +697,7 @@ public class XsdBinder
                   AddMethodMetaData addMethodMetaData = appInfo.getAddMethodMetaData();
                   if(addMethodMetaData != null)
                   {
-                     if (trace)
+                     if (ctx.trace)
                      {
                         log.trace("complex type " +
                            type.getName() +
@@ -740,36 +715,31 @@ public class XsdBinder
       XSParticle particle = type.getParticle();
       if(particle != null)
       {
-         pushType(binding);
-         bindParticle(schema, particle, sharedElements, processAnnotations);
-         popType();
+         ctx.pushType(binding);
+         bindParticle(ctx, particle);
+         ctx.popType();
       }
 
       if(binding.hasOnlyXmlMimeAttributes())
       {
-         addXOPInclude(binding, schema);
+         addXOPInclude(binding, ctx.schema);
       }
 
       return binding;
    }
 
-   private static void bindAttributes(SchemaBinding doc,
-                                      TypeBinding type,
-                                      XSAttributeUse attrUse,
-                                      boolean processAnnotations)
+   private static void bindAttributes(Context ctx, TypeBinding type, XSAttributeUse attrUse)
    {
-      boolean trace = log.isTraceEnabled();
-      
       XSAttributeDeclaration attr = attrUse.getAttrDeclaration();
       QName attrName = new QName(attr.getNamespace(), attr.getName());
 
-      if (trace)
+      if (ctx.trace)
       {
          log.trace("binding attribute " + attrName + " for " + type.getQName() + ", required=" + attrUse.getRequired());
       }
 
       XSSimpleTypeDefinition attrType = attr.getTypeDefinition();
-      TypeBinding typeBinding = bindSimpleType(doc, attrType, processAnnotations);
+      TypeBinding typeBinding = bindSimpleType(ctx, attrType);
       AttributeBinding binding = type.addAttribute(attrName, typeBinding, DefaultHandlers.ATTRIBUTE_HANDLER);
       binding.setRequired(attrUse.getRequired());
       if(attrUse.getConstraintType() == XSConstants.VC_DEFAULT)
@@ -778,12 +748,12 @@ public class XsdBinder
          binding.setDefaultConstraint(attrUse.getConstraintValue());
       }
 
-      if (processAnnotations)
+      if (ctx.processAnnotations)
       {
          XSAnnotation an = attr.getAnnotation();
          if(an != null)
          {
-            if (trace)
+            if (ctx.trace)
             {
                log.trace(attrName + " attribute annotation");
             }
@@ -812,9 +782,9 @@ public class XsdBinder
             }
          }
       }
-      
 
-      if (trace)
+
+      if (ctx.trace)
       {
          String msg = "bound attribute " + attrName;
 
@@ -846,10 +816,8 @@ public class XsdBinder
       }
    }
 
-   private static void bindParticle(SchemaBinding schema, XSParticle particle, SharedElements sharedElements, boolean processAnnotations)
+   private static void bindParticle(Context ctx, XSParticle particle)
    {
-      boolean trace = log.isTraceEnabled();
-      
       XSTerm term = particle.getTerm();
       switch(term.getType())
       {
@@ -862,13 +830,13 @@ public class XsdBinder
                switch(modelGroup.getCompositor())
                {
                   case XSModelGroup.COMPOSITOR_ALL:
-                     groupBinding = new AllBinding(schema);
+                     groupBinding = new AllBinding(ctx.schema);
                      break;
                   case XSModelGroup.COMPOSITOR_CHOICE:
-                     groupBinding = new ChoiceBinding(schema);
+                     groupBinding = new ChoiceBinding(ctx.schema);
                      break;
                   case XSModelGroup.COMPOSITOR_SEQUENCE:
-                     groupBinding = new SequenceBinding(schema);
+                     groupBinding = new SequenceBinding(ctx.schema);
                      break;
                   default:
                      throw new JBossXBRuntimeException("Unexpected model group: " + modelGroup.getCompositor());
@@ -879,26 +847,26 @@ public class XsdBinder
                particleBinding.setMinOccurs(particle.getMinOccurs());
                particleBinding.setMaxOccurs(particle.getMaxOccurs());
 
-               if (trace)
+               if (ctx.trace)
                {
                   log.trace("created model group " + groupBinding);
                }
 
-               if (processAnnotations)
+               if (ctx.processAnnotations)
                {
                   XSAnnotation annotation = modelGroup.getAnnotation();
                   if(annotation != null)
                   {
-                     customizeTerm(annotation, groupBinding);
+                     customizeTerm(annotation, groupBinding, ctx.trace);
                   }
                }
 
-               Object o = peekTypeOrGroup();
+               Object o = ctx.peekTypeOrGroup();
                if(o instanceof ModelGroupBinding)
                {
                   ModelGroupBinding parentGroup = (ModelGroupBinding)o;
                   parentGroup.addParticle(particleBinding);
-                  if (trace)
+                  if (ctx.trace)
                   {
                      log.trace("added " + groupBinding + " to " + parentGroup);
                   }
@@ -907,28 +875,26 @@ public class XsdBinder
                {
                   TypeBinding typeBinding = (TypeBinding)o;
                   typeBinding.setParticle(particleBinding);
-                  if (trace)
+                  if (ctx.trace)
                   {
                      log.trace("added " + groupBinding + " to type " + typeBinding.getQName());
                   }
                }
 
-               pushModelGroup(groupBinding);
-               bindModelGroup(schema, modelGroup, sharedElements, processAnnotations);
-               popModelGroup();
+               ctx.pushModelGroup(groupBinding);
+               bindModelGroup(ctx, modelGroup);
+               ctx.popModelGroup();
             }
             break;
          case XSConstants.WILDCARD:
-            bindWildcard(schema, particle, processAnnotations);
+            bindWildcard(ctx, particle);
             break;
          case XSConstants.ELEMENT_DECLARATION:
-            bindElement(schema,
+            bindElement(ctx,
                (XSElementDeclaration)term,
-               sharedElements,
                particle.getMinOccurs(),
                particle.getMaxOccurs(),
-               particle.getMaxOccursUnbounded(),
-               processAnnotations
+               particle.getMaxOccursUnbounded()
             );
             break;
          default:
@@ -936,23 +902,21 @@ public class XsdBinder
       }
    }
 
-   private static void bindWildcard(SchemaBinding schema, XSParticle particle, boolean processAnnotations)
+   private static void bindWildcard(Context ctx, XSParticle particle)
    {
-      boolean trace = log.isTraceEnabled();
+      WildcardBinding binding = new WildcardBinding(ctx.schema);
 
-      WildcardBinding binding = new WildcardBinding(schema);
-
-      ModelGroupBinding group = (ModelGroupBinding)peekTypeOrGroup();
+      ModelGroupBinding group = (ModelGroupBinding)ctx.peekTypeOrGroup();
       ParticleBinding particleBinding = new ParticleBinding(binding);
       particleBinding.setMaxOccurs(particle.getMaxOccurs());
       particleBinding.setMaxOccursUnbounded(particle.getMaxOccursUnbounded());
       particleBinding.setMinOccurs(particle.getMinOccurs());
       group.addParticle(particleBinding);
 
-      TypeBinding type = peekType();
+      TypeBinding type = ctx.peekType();
       type.setWildcard(binding);
 
-      if (trace)
+      if (ctx.trace)
       {
          log.trace("added wildcard to " + group);
          log.trace("added wildcard to type " + type.getQName());
@@ -966,32 +930,28 @@ public class XsdBinder
 
       binding.setProcessContents(wildcard.getProcessContents());
 
-      if (processAnnotations)
+      if (ctx.processAnnotations)
       {
          XSAnnotation annotation = wildcard.getAnnotation();
          if(annotation != null)
          {
-            customizeTerm(annotation, binding);
+            customizeTerm(annotation, binding, ctx.trace);
          }
       }
    }
 
-   private static ParticleBinding bindElement(SchemaBinding schema,
+   private static ParticleBinding bindElement(Context ctx,
                                               XSElementDeclaration elementDec,
-                                              SharedElements sharedElements,
                                               int minOccurs,
                                               int maxOccurs,
-                                              boolean maxOccursUnbounded,
-                                              boolean processAnnotations)
+                                              boolean maxOccursUnbounded)
    {
-      boolean trace = log.isTraceEnabled();
-      
       QName qName = new QName(elementDec.getNamespace(), elementDec.getName());
 
-      ModelGroupBinding parentGroup = (ModelGroupBinding)peekTypeOrGroup();
+      ModelGroupBinding parentGroup = (ModelGroupBinding)ctx.peekTypeOrGroup();
 
       boolean global = elementDec.getScope() == XSConstants.SCOPE_GLOBAL;
-      ElementBinding element = schema.getElement(qName);
+      ElementBinding element = ctx.schema.getElement(qName);
       ParticleBinding particle;
       if(global && element != null)
       {
@@ -1016,22 +976,22 @@ public class XsdBinder
 
       TypeBinding type = null;
 
-      boolean shared = sharedElements.isShared(elementDec);
+      boolean shared = ctx.sharedElements.isShared(elementDec);
       if(shared)
       {
-         type = sharedElements.getTypeBinding(elementDec);
+         type = ctx.sharedElements.getTypeBinding(elementDec);
       }
 
       if(type == null)
       {
-         type = bindType(schema, elementDec.getTypeDefinition(), sharedElements, processAnnotations);
+         type = bindType(ctx, elementDec.getTypeDefinition());
          if(shared)
          {
-            sharedElements.setTypeBinding(elementDec, type);
+            ctx.sharedElements.setTypeBinding(elementDec, type);
          }
       }
 
-      element = new ElementBinding(schema, qName, type);
+      element = new ElementBinding(ctx.schema, qName, type);
       element.setNillable(elementDec.getNillable());
       particle = new ParticleBinding(element);
       particle.setMinOccurs(minOccurs);
@@ -1039,21 +999,21 @@ public class XsdBinder
       particle.setMaxOccursUnbounded(maxOccursUnbounded);
       if(global)
       {
-         schema.addElementParticle(particle);
+         ctx.schema.addElementParticle(particle);
       }
 
       if(parentGroup != null)
       {
          parentGroup.addParticle(particle);
-         if (trace)
+         if (ctx.trace)
          {
             log.trace("Element " + element.getQName() + " added to " + parentGroup);
          }
       }
 
-      if (trace)
+      if (ctx.trace)
       {
-         TypeBinding parentType = peekType();
+         TypeBinding parentType = ctx.peekType();
          log.trace("element: name=" +
             qName +
             ", type=" +
@@ -1069,24 +1029,24 @@ public class XsdBinder
       }
 
       // customize element with annotations
-      if (processAnnotations)
+      if (ctx.processAnnotations)
       {
          XSAnnotation an = elementDec.getAnnotation();
          if(an != null)
          {
-            customizeTerm(an, element);
+            customizeTerm(an, element, ctx.trace);
          }
       }
       return particle;
    }
 
-   private static void bindModelGroup(SchemaBinding doc, XSModelGroup modelGroup, SharedElements sharedElements, boolean processAnnotations)
+   private static void bindModelGroup(Context ctx, XSModelGroup modelGroup)
    {
       XSObjectList particles = modelGroup.getParticles();
       for(int i = 0; i < particles.getLength(); ++i)
       {
          XSParticle particle = (XSParticle)particles.item(i);
-         bindParticle(doc, particle, sharedElements, processAnnotations);
+         bindParticle(ctx, particle);
       }
    }
 
@@ -1121,13 +1081,12 @@ public class XsdBinder
       binding.addParticle(particleBinding);
    }
 
-   private static void customizeTerm(XSAnnotation an, TermBinding term)
+   private static void customizeTerm(XSAnnotation an, TermBinding term, boolean trace)
    {
       XsdAnnotation xsdAn = XsdAnnotation.unmarshal(an.getAnnotationString());
       XsdAppInfo appInfo = xsdAn.getAppInfo();
       if(appInfo != null)
       {
-         boolean trace = log.isTraceEnabled();
          Boolean skip = null;
 
          ClassMetaData classMetaData = appInfo.getClassMetaData();
@@ -1330,57 +1289,6 @@ public class XsdBinder
       }
    }
 
-   private static void popType()
-   {
-      List stack = getXsdBinding().typeGroupStack;
-      Object o = stack.remove(stack.size() - 1);
-      if(!(o instanceof TypeBinding))
-      {
-         throw new JBossXBRuntimeException("Should have poped type binding but got " + o);
-      }
-   }
-
-   private static void pushType(TypeBinding binding)
-   {
-      getXsdBinding().typeGroupStack.add(binding);
-   }
-
-   private static void popModelGroup()
-   {
-      List stack = getXsdBinding().typeGroupStack;
-      Object o = stack.remove(stack.size() - 1);
-      if(!(o instanceof ModelGroupBinding))
-      {
-         throw new JBossXBRuntimeException("Should have poped model group binding but got " + o);
-      }
-   }
-
-   private static void pushModelGroup(ModelGroupBinding binding)
-   {
-      getXsdBinding().typeGroupStack.add(binding);
-   }
-
-   private static Object peekTypeOrGroup()
-   {
-      List stack = getXsdBinding().typeGroupStack;
-      return stack.isEmpty() ? null : stack.get(stack.size() - 1);
-   }
-
-   private static TypeBinding peekType()
-   {
-      List stack = getXsdBinding().typeGroupStack;
-      TypeBinding binding = null;
-      for(ListIterator i = stack.listIterator(stack.size()); i.hasPrevious();)
-      {
-         Object o = i.previous();
-         if(o instanceof TypeBinding)
-         {
-            binding = (TypeBinding)o;
-            break;
-         }
-      }
-      return binding;
-   }
 
    // Inner
 
@@ -1427,9 +1335,70 @@ public class XsdBinder
       }
    }
 
-   private static final class XsdBinding
+   private static final class Context
    {
-      public final List typeGroupStack = new ArrayList();
-      public final SchemaBinding schemaBinding = new SchemaBinding();
+      public final SchemaBinding schema;
+      public SharedElements sharedElements = new SharedElements();
+      public boolean processAnnotations = true;
+      public boolean trace = log.isTraceEnabled();
+      private final List typeGroupStack = new ArrayList();
+
+      public Context()
+      {
+         this(new SchemaBinding());
+      }
+
+      public Context(SchemaBinding schema)
+      {
+         this.schema = schema;
+      }
+
+      public void popType()
+      {
+         Object o = typeGroupStack.remove(typeGroupStack.size() - 1);
+         if(!(o instanceof TypeBinding))
+         {
+            throw new JBossXBRuntimeException("Should have poped type binding but got " + o);
+         }
+      }
+
+      public void pushType(TypeBinding binding)
+      {
+         typeGroupStack.add(binding);
+      }
+
+      public void popModelGroup()
+      {
+         Object o = typeGroupStack.remove(typeGroupStack.size() - 1);
+         if(!(o instanceof ModelGroupBinding))
+   {
+            throw new JBossXBRuntimeException("Should have poped model group binding but got " + o);
+         }
+      }
+
+      public void pushModelGroup(ModelGroupBinding binding)
+      {
+         typeGroupStack.add(binding);
+      }
+
+      public Object peekTypeOrGroup()
+      {
+         return typeGroupStack.isEmpty() ? null : typeGroupStack.get(typeGroupStack.size() - 1);
+      }
+
+      public TypeBinding peekType()
+      {
+         TypeBinding binding = null;
+         for(ListIterator i = typeGroupStack.listIterator(typeGroupStack.size()); i.hasPrevious();)
+         {
+            Object o = i.previous();
+            if(o instanceof TypeBinding)
+            {
+               binding = (TypeBinding)o;
+               break;
+            }
+         }
+         return binding;
+      }
    }
 }

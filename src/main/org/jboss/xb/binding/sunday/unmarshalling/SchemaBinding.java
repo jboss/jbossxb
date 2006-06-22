@@ -45,6 +45,7 @@ public class SchemaBinding
    private static final Map SIMPLE_TYPES = new HashMap();
 
    // populate SIMPLE_TYPES
+   static
    {
       ValueAdapter dateAdapter = new ValueAdapter()
       {
@@ -109,7 +110,7 @@ public class SchemaBinding
    {
       return (TypeBinding) SIMPLE_TYPES.get(name);
    }
-   
+
    private static void addSimpleType(TypeBinding type)
    {
       SIMPLE_TYPES.put(type.getQName(), type);
@@ -273,9 +274,9 @@ public class SchemaBinding
       return replacePropertyRefs;
    }
    /**
-    * 
+    *
     * @param flag
-    */ 
+    */
    public void setReplacePropertyRefs(boolean flag)
    {
       this.replacePropertyRefs = flag;
@@ -301,7 +302,7 @@ public class SchemaBinding
    }
 
    /**
-    * Should list xml types be unmarshalled as arrays 
+    * Should list xml types be unmarshalled as arrays
     * @param unmarshalListsToArrays
     */
    public void setUnmarshalListsToArrays(boolean unmarshalListsToArrays)

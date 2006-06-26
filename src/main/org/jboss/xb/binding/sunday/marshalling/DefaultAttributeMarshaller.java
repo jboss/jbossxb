@@ -21,17 +21,14 @@
   */
 package org.jboss.xb.binding.sunday.marshalling;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 import javax.xml.namespace.QName;
-import org.jboss.logging.Logger;
-import org.jboss.util.Classes;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.introspection.FieldInfo;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -45,8 +42,6 @@ import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 public class DefaultAttributeMarshaller
    extends AbstractAttributeMarshaller
 {
-   private final Logger log = Logger.getLogger(AttributeMarshaller.class);
-
    public static final DefaultAttributeMarshaller INSTANCE = new DefaultAttributeMarshaller();
    
    public Object getValue(MarshallingContext ctx)
@@ -69,75 +64,11 @@ public class DefaultAttributeMarshaller
             Util.xmlNameToFieldName(qName.getLocalPart(), schema.isIgnoreLowLine());
       }
 
-      Method getter = null;
-      Field field = null;
-      Class fieldType = null;
-
-      try
-      {
-         getter = Classes.getAttributeGetter(owner.getClass(), fieldName);
-         fieldType = getter.getReturnType();
-      }
-      catch(NoSuchMethodException e)
-      {
-         try
-         {
-            field = owner.getClass().getField(fieldName);
-            fieldType = field.getType();
-         }
-         catch(NoSuchFieldException e3)
-         {
-            if(schema.isIgnoreUnresolvedFieldOrClass())
-            {
-               if(log.isTraceEnabled())
-               {
-                  log.trace("Found neither field " +
-                     fieldName +
-                     " nor its getter in " +
-                     owner.getClass() +
-                     " for element/attribute " + qName
-                  );
-               }
-            }
-            else
-            {
-               throw new JBossXBRuntimeException("Found neither field " +
-                  fieldName +
-                  " nor its getter in " +
-                  owner.getClass() +
-                  " for element/attribute " + qName
-               );
-            }
-         }
-      }
-
+      FieldInfo fieldInfo = FieldInfo.getFieldInfo(owner.getClass(), fieldName, !schema.isIgnoreUnresolvedFieldOrClass());
       Object value = null;
-      if(fieldType != null)
+      if(fieldInfo != null)
       {
-         if(getter != null)
-         {
-            try
-            {
-               value = getter.invoke(owner, null);
-            }
-            catch(Exception e)
-            {
-               log.error("Failed to invoke getter '" + getter + "' on object: " + owner);
-               throw new JBossXBRuntimeException("Failed to provide value for " + qName + " from " + owner, e);
-            }
-         }
-         else
-         {
-            try
-            {
-               value = field.get(owner);
-            }
-            catch(Exception e)
-            {
-               log.error("Failed to invoke get on field '" + field + "' on object: " + owner);
-               throw new JBossXBRuntimeException("Failed to provide value for " + qName + " from " + owner, e);
-            }
-         }
+         value = fieldInfo.getValue(owner);
       }
 
       return value;

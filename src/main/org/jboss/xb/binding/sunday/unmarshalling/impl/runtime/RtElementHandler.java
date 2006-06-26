@@ -23,7 +23,6 @@ package org.jboss.xb.binding.sunday.unmarshalling.impl.runtime;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -38,6 +37,7 @@ import org.jboss.xb.binding.GenericValueContainer;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.introspection.FieldInfo;
 import org.jboss.xb.binding.group.ValueList;
 import org.jboss.xb.binding.group.ValueListHandler;
 import org.jboss.xb.binding.group.ValueListInitializer;
@@ -528,30 +528,7 @@ public class RtElementHandler
             }
             else
             {
-               try
-               {
-                  Method getter = Classes.getAttributeGetter(parentClass, propName);
-                  fieldType = getter.getReturnType();
-               }
-               catch(NoSuchMethodException e)
-               {
-                  try
-                  {
-                     Field field = parentClass.getField(propName);
-                     fieldType = field.getType();
-                  }
-                  catch(NoSuchFieldException e1)
-                  {
-                     throw new JBossXBRuntimeException("Failed to find getter or field for " +
-                        propName +
-                        " for element " +
-                        elementName +
-                        " in " +
-                        parentClass
-                     );
-                  }
-               }
-
+               fieldType = FieldInfo.getFieldInfo(parentClass, propName, true).getType();
                if(particle.isRepeatable() && fieldType.isArray())
                {
                   fieldType = fieldType.getComponentType();
@@ -1394,22 +1371,8 @@ public class RtElementHandler
 
             if(propName != null)
             {
-               Class fieldType;
-               try
-               {
-                  fieldType = Classes.getAttributeGetter(parentClass, propName).getReturnType();
-               }
-               catch(NoSuchMethodException e)
-               {
-                  try
-                  {
-                     fieldType = parentClass.getField(propName).getType();
-                  }
-                  catch(NoSuchFieldException e1)
-                  {
-                     fieldType = null;
-                  }
-               }
+               FieldInfo fieldInfo = FieldInfo.getFieldInfo(parentClass, propName, false);
+               Class fieldType = fieldInfo == null ? null : fieldInfo.getType();
 
                if(fieldType == null ||
                   Modifier.isAbstract(fieldType.getModifiers()) ||

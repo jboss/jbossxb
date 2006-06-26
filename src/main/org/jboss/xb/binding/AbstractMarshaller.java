@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
 import java.lang.reflect.Method;
-import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -38,7 +37,7 @@ import java.util.Properties;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import org.jboss.logging.Logger;
-import org.jboss.util.Classes;
+import org.jboss.xb.binding.introspection.FieldInfo;
 import org.xml.sax.SAXException;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.Locator;
@@ -513,17 +512,11 @@ public abstract class AbstractMarshaller
    protected class FieldToWildcardMapping
    {
       public final Class cls;
-      public final String fieldName;
       public final ObjectLocalMarshaller marshaller;
-      public final Method getter;
-      public final Field field;
+      public final FieldInfo fieldInfo;
 
       public FieldToWildcardMapping(Class cls, String field, ObjectLocalMarshaller marshaller)
       {
-         this.cls = cls;
-         this.fieldName = field;
-         this.marshaller = marshaller;
-
          if(log.isTraceEnabled())
          {
             log.trace("new FieldToWildcardMapping: [cls=" +
@@ -534,27 +527,9 @@ public abstract class AbstractMarshaller
             );
          }
 
-         Method localGetter = null;
-         Field localField = null;
-
-         try
-         {
-            localGetter = Classes.getAttributeGetter(cls, field);
-         }
-         catch(NoSuchMethodException e)
-         {
-            try
-            {
-               localField = cls.getField(field);
-            }
-            catch(NoSuchFieldException e1)
-            {
-               throw new JBossXBRuntimeException("Neither getter nor field where found for " + field + " in " + cls);
-            }
-         }
-
-         this.getter = localGetter;
-         this.field = localField;
+         this.cls = cls;
+         this.marshaller = marshaller;
+         this.fieldInfo = FieldInfo.getFieldInfo(cls, field, true);
       }
 
       public boolean equals(Object o)
@@ -574,7 +549,7 @@ public abstract class AbstractMarshaller
          {
             return false;
          }
-         if(!fieldName.equals(fieldToWildcardMapping.fieldName))
+         if(!fieldInfo.getName().equals(fieldToWildcardMapping.fieldInfo.getName()))
          {
             return false;
          }
@@ -586,7 +561,7 @@ public abstract class AbstractMarshaller
       {
          int result;
          result = cls.hashCode();
-         result = 29 * result + fieldName.hashCode();
+         result = 29 * result + fieldInfo.getName().hashCode();
          return result;
       }
    }

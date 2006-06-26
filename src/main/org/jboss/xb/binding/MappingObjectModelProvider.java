@@ -21,13 +21,12 @@
   */
 package org.jboss.xb.binding;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import javax.xml.namespace.QName;
 import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
+import org.jboss.xb.binding.introspection.FieldInfo;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -147,9 +146,6 @@ public class MappingObjectModelProvider
 
    private Object getJavaValue(String namespaceURI, String localName, String fieldName, Object o, boolean forComplexType, boolean optional)
    {
-      Method getter = null;
-      Field field = null;
-
       String mappingKey = o.getClass().getName() + ":" + localName;
       FieldToElementMapping mapping = (FieldToElementMapping)fieldMappings.get(mappingKey);
       if(mapping == null)
@@ -181,44 +177,16 @@ public class MappingObjectModelProvider
          }
       }
 
+      FieldInfo fieldInfo = null;
       if(mapping != null)
       {
-         if(mapping.getter != null)
-         {
-            getter = mapping.getter;
-         }
-         else
-         {
-            field = mapping.field;
-         }
+         fieldInfo = mapping.fieldInfo;
       }
 
       Object value = null;
-      if(getter != null && (!forComplexType || forComplexType && !writeAsValue(getter.getReturnType())))
+      if(fieldInfo != null && (!forComplexType || forComplexType && !writeAsValue(fieldInfo.getType())))
       {
-         try
-         {
-            value = getter.invoke(o, null);
-         }
-         catch(Exception e)
-         {
-            throw new JBossXBRuntimeException(
-               "Failed to provide value for element " + localName + " bound to field " + fieldName + " in " + o, e
-            );
-         }
-      }
-      else if(field != null && (!forComplexType || forComplexType && !writeAsValue(field.getType())))
-      {
-         try
-         {
-            value = field.get(o);
-         }
-         catch(Exception e)
-         {
-            throw new JBossXBRuntimeException(
-               "Failed to provide value for element " + localName + " bound to field " + fieldName + " in " + o, e
-            );
-         }
+         value = fieldInfo.getValue(o);
       }
 
       if(value != null && mapping != null && mapping.converter != null)
@@ -314,12 +282,10 @@ public class MappingObjectModelProvider
    private class FieldToElementMapping
    {
       public final Class cls;
-      public final String fieldName;
       public final String namespaceURI;
       public final String localName;
       public final TypeBinding converter;
-      public final Method getter;
-      public final Field field;
+      public final FieldInfo fieldInfo;
 
       public FieldToElementMapping(Class cls,
                                    String field,
@@ -328,7 +294,6 @@ public class MappingObjectModelProvider
                                    TypeBinding converter)
       {
          this.cls = cls;
-         this.fieldName = field;
          this.namespaceURI = namespaceURI;
          this.localName = localName;
          this.converter = converter;
@@ -345,27 +310,7 @@ public class MappingObjectModelProvider
             );
          }
 
-         Method localGetter = null;
-         Field localField = null;
-
-         try
-         {
-            localGetter = Classes.getAttributeGetter(cls, field);
-         }
-         catch(NoSuchMethodException e)
-         {
-            try
-            {
-               localField = cls.getField(field);
-            }
-            catch(NoSuchFieldException e1)
-            {
-               throw new JBossXBRuntimeException("Neither getter nor field where found for " + field + " in " + cls);
-            }
-         }
-
-         this.getter = localGetter;
-         this.field = localField;
+         fieldInfo = FieldInfo.getFieldInfo(cls, field, true);
       }
 
       public boolean equals(Object o)
@@ -385,9 +330,7 @@ public class MappingObjectModelProvider
          {
             return false;
          }
-         if(fieldName != null ?
-            !fieldName.equals(fieldToElementMapping.fieldName) :
-            fieldToElementMapping.fieldName != null)
+         if(!fieldInfo.getName().equals(fieldToElementMapping.fieldInfo.getName()))
          {
             return false;
          }
@@ -411,7 +354,7 @@ public class MappingObjectModelProvider
       {
          int result;
          result = (cls != null ? cls.hashCode() : 0);
-         result = 29 * result + (fieldName != null ? fieldName.hashCode() : 0);
+         result = 29 * result + fieldInfo.getName().hashCode();
          result = 29 * result + (namespaceURI != null ? namespaceURI.hashCode() : 0);
          result = 29 * result + (localName != null ? localName.hashCode() : 0);
          return result;

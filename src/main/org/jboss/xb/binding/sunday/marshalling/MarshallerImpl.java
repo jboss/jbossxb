@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.AbstractList;
 import java.util.Collection;
@@ -48,6 +47,7 @@ import org.jboss.xb.binding.ObjectLocalMarshaller;
 import org.jboss.xb.binding.ObjectModelProvider;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.introspection.FieldInfo;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
@@ -364,12 +364,10 @@ public class MarshallerImpl
       if(xopMarshaller != null && isXopOptimizable(type))
       {
          String cid = null;
-         String contentType = null;
          if(xopMarshaller.isXOPPackage())
          {
             Object o = stack.peek();
             DataHandler dataHandler = getDataHandler(o);
-            contentType = dataHandler.getContentType();
             cid = xopMarshaller.addMtomAttachment(dataHandler, elementNs, elementLocal);
          }
 
@@ -393,18 +391,14 @@ public class MarshallerImpl
          }
          else
          {
-            AttributesImpl attrs = new AttributesImpl(3);
+            AttributesImpl attrs = null;
             String prefix = getPrefix(elementNs);
             boolean genPrefix = prefix == null && elementNs != null && elementNs.length() > 0;
             if(genPrefix)
             {
                prefix = "ns_" + elementLocal;
+               attrs = new AttributesImpl(1);
                declareNs(attrs, prefix, elementNs);
-            }
-            if(contentType!=null)
-            {
-               attrs.add(Constants.NS_XML_SCHEMA, "xmime", "xmlns:xmime", "CDATA", "http://www.w3.org/2005/05/xmlmime");
-               attrs.add(null, "contentType", "xmime:contentType", "CDATA", contentType);
             }
 
             String qName = prefixLocalName(prefix, elementLocal);
@@ -590,7 +584,7 @@ public class MarshallerImpl
          {
             boolean ignoreUnresolvedFieldOrClass = type.getSchemaBinding().isIgnoreUnresolvedFieldOrClass();
             Object o = stack.peek();
-            Object value = getElementValue(elementQName, o, fieldName, ignoreUnresolvedFieldOrClass);
+            Object value = getElementValue(o, fieldName, ignoreUnresolvedFieldOrClass);
             if(value != null)
             {
                String typeName = simpleType.getQName().getLocalPart();
@@ -662,7 +656,7 @@ public class MarshallerImpl
                );
             }
 
-            o = getChildren(null, stack.peek(), propertyMetaData.getName(),
+            o = getChildren(stack.peek(), propertyMetaData.getName(),
                modelGroup.getSchema().isIgnoreUnresolvedFieldOrClass()
             );
 
@@ -696,38 +690,7 @@ public class MarshallerImpl
          if(mapping != null)
          {
             marshaller = mapping.marshaller;
-            if(mapping.getter != null)
-            {
-               try
-               {
-                  o = mapping.getter.invoke(o, null);
-               }
-               catch(Exception e)
-               {
-                  throw new JBossXBRuntimeException("Failed to invoke getter " +
-                     mapping.getter.getName() +
-                     " on " +
-                     o.getClass() +
-                     " to get wildcard value: " + e.getMessage()
-                  );
-               }
-            }
-            else
-            {
-               try
-               {
-                  o = mapping.field.get(o);
-               }
-               catch(Exception e)
-               {
-                  throw new JBossXBRuntimeException("Failed to invoke get on field " +
-                     mapping.field.getName() +
-                     " in " +
-                     o.getClass() +
-                     " to get wildcard value: " + e.getMessage()
-                  );
-               }
-            }
+            o = mapping.fieldInfo.getValue(o);
             stack.push(o);
             popWildcardValue = true;
          }
@@ -1196,10 +1159,10 @@ public class MarshallerImpl
             fieldName = Util.xmlNameToFieldName(element.getQName().getLocalPart(), ignoreLowLine);
          }
 
-         value = getChildren(element.getQName(), peeked, fieldName, ignoreNotFoundField);
+         value = getChildren(peeked, fieldName, ignoreNotFoundField);
          if(value == null)
          {
-            value = getElementValue(element.getQName(), peeked, fieldName, ignoreNotFoundField);
+            value = getElementValue(peeked, fieldName, ignoreNotFoundField);
          }
       }
       return value;
@@ -1281,95 +1244,31 @@ public class MarshallerImpl
       return i;
    }
 
-   private static Object getChildren(QName qName, Object o,
-                                     String fieldName,
-                                     boolean ignoreNotFoundField)
+   private static Object getChildren(Object o, String fieldName, boolean ignoreNotFoundField)
    {
       Object children = null;
       if(!writeAsValue(o.getClass()))
       {
-         children = getJavaValue(qName, fieldName, o, true, ignoreNotFoundField);
+         children = getJavaValue(fieldName, o, true, ignoreNotFoundField);
       }
       return children;
    }
 
-   private static Object getJavaValue(QName qName, String fieldName,
+   private static Object getJavaValue(String fieldName,
                                       Object o,
                                       boolean forComplexType,
                                       boolean ignoreNotFoundField)
    {
-      Method getter = null;
-      Field field = null;
-      Class fieldType = null;
-
-      try
-      {
-         getter = Classes.getAttributeGetter(o.getClass(), fieldName);
-         fieldType = getter.getReturnType();
-      }
-      catch(NoSuchMethodException e)
-      {
-         try
-         {
-            field = o.getClass().getField(fieldName);
-            fieldType = field.getType();
-         }
-         catch(NoSuchFieldException e3)
-         {
-            if(ignoreNotFoundField)
-            {
-               if(log.isTraceEnabled())
-               {
-                  log.trace(
-                     "Found neither field " + fieldName + " nor its getter in " + o.getClass() +
-                     " for element/attribute " + qName);
-               }
-            }
-            else
-            {
-               throw new JBossXBRuntimeException(
-                  "Found neither field " + fieldName + " nor its getter in " + o.getClass() +
-                  " for element/attribute " + qName
-               );
-            }
-         }
-      }
-
+      FieldInfo fieldInfo = FieldInfo.getFieldInfo(o.getClass(), fieldName, !ignoreNotFoundField);
       Object value = null;
-      if(fieldType != null && (!forComplexType || forComplexType && !writeAsValue(fieldType)))
+      if(fieldInfo != null && (!forComplexType || forComplexType && !writeAsValue(fieldInfo.getType())))
       {
-         if(getter != null)
-         {
-            try
-            {
-               value = getter.invoke(o, null);
-            }
-            catch(Exception e)
-            {
-               log.error("Failed to invoke getter '" + getter + "' on object: " + o);
-               throw new JBossXBRuntimeException("Failed to provide value for " + qName + " from " + o, e);
-            }
-         }
-         else
-         {
-            try
-            {
-               value = field.get(o);
-            }
-            catch(Exception e)
-            {
-               log.error("Failed to invoke get on field '" + field + "' on object: " + o);
-               throw new JBossXBRuntimeException("Failed to provide value for " + qName + " from " + o, e);
-            }
-         }
+         value = fieldInfo.getValue(o);
       }
-
       return value;
    }
 
-   private static Object getElementValue(QName qName, Object o,
-                                         String fieldName,
-                                         boolean ignoreNotFoundField)
+   private static Object getElementValue(Object o, String fieldName, boolean ignoreNotFoundField)
    {
       Object value;
       if(writeAsValue(o.getClass()))
@@ -1378,7 +1277,7 @@ public class MarshallerImpl
       }
       else
       {
-         value = getJavaValue(qName, fieldName, o, false, ignoreNotFoundField);
+         value = getJavaValue(fieldName, o, false, ignoreNotFoundField);
       }
       return value;
    }

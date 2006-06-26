@@ -757,38 +757,7 @@ public class XercesXsMarshaller
             if(mapping != null)
             {
                marshaller = mapping.marshaller;
-               if(mapping.getter != null)
-               {
-                  try
-                  {
-                     o = mapping.getter.invoke(o, null);
-                  }
-                  catch(Exception e)
-                  {
-                     throw new JBossXBRuntimeException("Failed to invoke getter " +
-                        mapping.getter.getName() +
-                        " on " +
-                        o.getClass() +
-                        " to get wildcard value: " + e.getMessage()
-                     );
-                  }
-               }
-               else
-               {
-                  try
-                  {
-                     o = mapping.field.get(o);
-                  }
-                  catch(Exception e)
-                  {
-                     throw new JBossXBRuntimeException("Failed to invoke get on field " +
-                        mapping.field.getName() +
-                        " in " +
-                        o.getClass() +
-                        " to get wildcard value: " + e.getMessage()
-                     );
-                  }
-               }
+               o = mapping.fieldInfo.getValue(o);
                stack.push(o);
                popWildcardValue = true;
             }

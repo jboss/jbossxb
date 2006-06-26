@@ -22,17 +22,16 @@
 package org.jboss.xb.binding.sunday.unmarshalling.impl.runtime;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
-import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.introspection.FieldInfo;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 
@@ -42,8 +41,6 @@ import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
  */
 public class RtUtil
 {
-   private static final Logger log = Logger.getLogger(RtUtil.class);
-
    private RtUtil()
    {
    }
@@ -55,47 +52,13 @@ public class RtUtil
                           boolean ignoreNotFoundField,
                           ValueAdapter valueAdapter)
    {
-      Class cls = o.getClass();
-      Method getter = null;
-      Method setter = null;
-      Field field = null;
-      Class fieldType;
-      try
+      FieldInfo fieldInfo = FieldInfo.getFieldInfo(o.getClass(), prop, !ignoreNotFoundField);
+      if(fieldInfo == null)
       {
-         String methodBase = Character.toUpperCase(prop.charAt(0)) + prop.substring(1);
-         try
-         {
-            getter = cls.getMethod("get" + methodBase, null);
-         }
-         catch(NoSuchMethodException e)
-         {
-            getter = cls.getMethod("is" + methodBase, null);
-         }
-
-         fieldType = getter.getReturnType();
-         setter = cls.getMethod("set" + methodBase, new Class[]{fieldType});
-      }
-      catch(NoSuchMethodException e)
-      {
-         try
-         {
-            field = cls.getField(prop);
-            fieldType = field.getType();
-         }
-         catch(NoSuchFieldException e1)
-         {
-            if(ignoreNotFoundField)
-            {
-               log.warn("Neither getter/setter nor field were found for field " + prop + " in " + cls);
-               return;
-            }
-
-            throw new JBossXBRuntimeException(
-               "Neither getter/setter nor field were found for field " + prop + " in " + cls
-            );
-         }
+         return;
       }
 
+      Class fieldType = fieldInfo.getType();
       boolean arrType;
       if(fieldType.isArray())
       {
@@ -108,7 +71,7 @@ public class RtUtil
       else
       {
          throw new JBossXBRuntimeException(
-            "Expected type for " + prop + " in " + cls + " is an array or java.util.Collection but was " + fieldType
+            "Expected type for " + prop + " in " + o.getClass() + " is an array or java.util.Collection but was " + fieldType
          );
       }
 
@@ -120,7 +83,7 @@ public class RtUtil
 
       if(!arrType || colType != null)
       {
-         Collection col = (Collection)get(o, getter, field);
+         Collection col = (Collection)fieldInfo.getValue(o);
          if(col == null)
          {
             if(colType == null)
@@ -149,14 +112,14 @@ public class RtUtil
                }
             }
 
-            set(o, col, setter, field);
+            fieldInfo.setValue(o, col);
          }
 
          col.add(value);
       }
       else
       {
-         Object arr = get(o, getter, field);
+         Object arr = fieldInfo.getValue(o);
          int length = 0;
          if(arr == null)
          {
@@ -170,7 +133,7 @@ public class RtUtil
             System.arraycopy(tmp, 0, arr, 0, length);
          }
          Array.set(arr, length, value);
-         set(o, arr, setter, field);
+         fieldInfo.setValue(o, arr);
       }
    }
 
@@ -181,35 +144,13 @@ public class RtUtil
                           boolean ignoreNotFoundField,
                           ValueAdapter valueAdapter)
    {
-      Class cls = o.getClass();
-      Method getter = null;
-      Method setter = null;
-      Field field = null;
-      Class fieldType;
-      try
+      FieldInfo fieldInfo = FieldInfo.getFieldInfo(o.getClass(), prop, !ignoreNotFoundField);
+      if(fieldInfo == null)
       {
-         getter = Classes.getAttributeGetter(cls, prop);
-         fieldType = getter.getReturnType();
-         setter = Classes.getAttributeSetter(cls, prop, fieldType);
+         return;
       }
-      catch(NoSuchMethodException e)
-      {
-         try
-         {
-            field = cls.getField(prop);
-            fieldType = field.getType();
-         }
-         catch(NoSuchFieldException e1)
-         {
-            if(ignoreNotFoundField)
-            {
-               log.warn("Neither field '" + prop + "' nor its getter/setter were found in " + cls);
-               return;
-            }
 
-            throw new JBossXBRuntimeException("Neither field '" + prop + "' nor its getter/setter were found in " + cls);
-         }
-      }
+      Class fieldType = fieldInfo.getType();
 
       if(valueAdapter != null)
       {
@@ -221,7 +162,7 @@ public class RtUtil
          Collection.class.isAssignableFrom(fieldType) &&
          !Collection.class.isAssignableFrom(value.getClass()))
       {
-         Collection col = (Collection)get(o, getter, field);
+         Collection col = (Collection)fieldInfo.getValue(o);
          if(col == null)
          {
             if(colType == null)
@@ -250,7 +191,7 @@ public class RtUtil
                }
             }
 
-            set(o, col, setter, field);
+            fieldInfo.setValue(o, col);
          }
 
          col.add(value);
@@ -262,7 +203,7 @@ public class RtUtil
          Classes.getPrimitiveWrapper(fieldType.getComponentType()) == value.getClass()
          ))
       {
-         Object arr = get(o, getter, field);
+         Object arr = fieldInfo.getValue(o);
          int length = 0;
          if(arr == null)
          {
@@ -276,7 +217,7 @@ public class RtUtil
             System.arraycopy(tmp, 0, arr, 0, length);
          }
          Array.set(arr, length, value);
-         set(o, arr, setter, field);
+         fieldInfo.setValue(o, arr);
       }
       else
       {
@@ -315,7 +256,7 @@ public class RtUtil
             // else hopefully it's a primitive/wrapper case
          }
 
-         set(o, value, setter, field);
+         fieldInfo.setValue(o, value);
       }
    }
 
@@ -327,110 +268,10 @@ public class RtUtil
       }
       else
       {
-         Class cls = o.getClass();
-         String methodBase = Util.xmlNameToClassName(elementName.getLocalPart(), ignoreLowLine);
-         Method setter = null;
-         Field field = null;
-         try
-         {
-            Method getter = cls.getMethod("get" + methodBase, null);
-            setter = cls.getMethod("set" + methodBase, new Class[]{getter.getReturnType()});
-         }
-         catch(NoSuchMethodException e)
-         {
-            try
-            {
-               field = cls.getField(Util.xmlNameToFieldName(elementName.getLocalPart(), ignoreLowLine));
-            }
-            catch(NoSuchFieldException e1)
-            {
-               throw new JBossXBRuntimeException(
-                  "Neither getter/setter nor field were found for " + elementName + " in " + cls
-               );
-            }
-         }
-
-         set(o, value, setter, field);
+         String fieldName = Util.xmlNameToFieldName(elementName.getLocalPart(), ignoreLowLine);
+         FieldInfo fieldInfo = FieldInfo.getFieldInfo(o.getClass(), fieldName, true);
+         fieldInfo.setValue(o, value);
       }
-   }
-
-   private static void set(Object o, Object value, Method setter, Field field)
-   {
-      try
-      {
-         if(setter != null)
-         {
-            setter.invoke(o, new Object[]{value});
-         }
-         else if(field != null)
-         {
-            field.set(o, value);
-         }
-         else
-         {
-            throw new JBossXBRuntimeException("Neither setter nor field is available!");
-         }
-      }
-      catch(JBossXBRuntimeException e)
-      {
-         throw e;
-      }
-      catch(Exception e)
-      {
-         throw new JBossXBRuntimeException("Failed to set value " +
-            (value == null ? "null" : value.getClass().getName() + '@' + value.hashCode() + "[" + value + "]")
-            +
-            (field == null ?
-            (setter == null ? "" : " using setter " + setter.getName()) :
-            " using field " + field.getName()
-            ) +
-            " on " +
-            (o == null ? "null" : o.getClass().getName() + '@' + o.hashCode() + " (toString=" + o + ")") +
-            " : " +
-            e.getMessage(),
-            e
-         );
-      }
-   }
-
-   private static Object get(Object o, Method getter, Field field)
-   {
-      Object result;
-      try
-      {
-         if(getter != null)
-         {
-            result = getter.invoke(o, null);
-         }
-         else if(field != null)
-         {
-            result = field.get(o);
-         }
-         else
-         {
-            throw new JBossXBRuntimeException("Neither getter nor field is available!");
-         }
-      }
-      catch(JBossXBRuntimeException e)
-      {
-         throw e;
-      }
-      catch(Exception e)
-      {
-         throw new JBossXBRuntimeException("Failed to get value " +
-            (field == null ?
-            (getter == null ? "" : " using getter " + getter.getName()) :
-            " using field " + field.getName()
-            ) +
-            " on " +
-            (o == null ? "null" : o.getClass().getName() + '@' + o.hashCode() + "[" + o + "]") +
-            " : " +
-            e.getMessage(),
-            e
-         );
-      }
-
-      return result;
    }
 
    public static Class loadClass(String clsName, boolean failIfNotFound)

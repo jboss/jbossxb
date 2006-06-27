@@ -2,14 +2,14 @@
 <classpath>
 	<classpathentry kind="src" path="src/main"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/thirdparty/apache-log4j/lib/log4j.jar"/>
-	<classpathentry kind="lib" path="/thirdparty/oswego-concurrent/lib/concurrent.jar"/>
-	<classpathentry kind="lib" path="/thirdparty/apache-xerces/lib/resolver.jar"/>
-	<classpathentry kind="lib" path="/thirdparty/apache-xerces/lib/xercesImpl.jar"/>
-	<classpathentry kind="lib" path="/thirdparty/wutka-dtdparser/lib/dtdparser121.jar"/>
-	<classpathentry kind="lib" path="/thirdparty/dom4j/lib/dom4j.jar"/>
-	<classpathentry kind="lib" path="/thirdparty/apache-httpclient/lib/commons-httpclient.jar"/>
-	<classpathentry kind="lib" path="/thirdparty/apache-slide/lib/webdavlib.jar"/>
-	<classpathentry kind="lib" path="/thirdparty/sun-jaf/lib/activation.jar"/>
+	<classpathentry kind="lib" path="/common/thirdparty/apache-log4j/lib/log4j.jar"/>
+	<classpathentry kind="lib" path="/common/thirdparty/oswego-concurrent/lib/concurrent.jar"/>
+	<classpathentry kind="lib" path="/common/thirdparty/apache-xerces/lib/resolver.jar"/>
+	<classpathentry kind="lib" path="/common/thirdparty/apache-xerces/lib/xercesImpl.jar"/>
+	<classpathentry kind="lib" path="/common/thirdparty/wutka-dtdparser/lib/dtdparser121.jar"/>
+	<classpathentry kind="lib" path="/common/thirdparty/dom4j/lib/dom4j.jar"/>
+	<classpathentry kind="lib" path="/common/thirdparty/apache-httpclient/lib/commons-httpclient.jar"/>
+	<classpathentry kind="lib" path="/common/thirdparty/apache-slide/lib/webdavlib.jar"/>
+	<classpathentry kind="lib" path="/common/thirdparty/sun-jaf/lib/activation.jar"/>
 	<classpathentry kind="output" path="output/eclipse-classes"/>
 </classpath>

@@ -33,8 +33,6 @@ import java.util.List;
 import java.util.Map;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
 import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.AbstractMarshaller;
@@ -63,7 +61,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
-import org.jboss.xb.binding.sunday.xop.SimpleDataSource;
+import org.jboss.xb.binding.sunday.xop.XOPObject;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -367,8 +365,7 @@ public class MarshallerImpl
          if(xopMarshaller.isXOPPackage())
          {
             Object o = stack.peek();
-            DataHandler dataHandler = getDataHandler(o);
-            cid = xopMarshaller.addMtomAttachment(dataHandler, elementNs, elementLocal);
+            cid = xopMarshaller.addMtomAttachment(new XOPObject(o), elementNs, elementLocal);
          }
 
          if(cid == null)
@@ -1055,34 +1052,6 @@ public class MarshallerImpl
          );
       }
       return marshalled;
-   }
-
-   private static DataHandler getDataHandler(Object o)
-   {
-      DataHandler dataHandler;
-      // todo: contentType
-      if(o instanceof java.awt.Image)
-      {
-         dataHandler = new DataHandler(o, "image/jpeg");
-      }
-      else if(o instanceof javax.xml.transform.Source)
-      {
-         dataHandler = new DataHandler(o, "application/xml");
-      }
-      else if(o instanceof String)
-      {
-         dataHandler = new DataHandler(o, "text/xml");
-      }
-      else if(o instanceof DataHandler)
-      {
-         dataHandler = (DataHandler)o;//new DataHandler(o, "application/octet-stream");
-      }
-      else
-      {
-         DataSource ds = new SimpleDataSource(o, "application/octet-stream");
-         dataHandler = new DataHandler(ds);
-      }
-      return dataHandler;
    }
 
    private void writeNillable(QName elementQName, boolean nillable)

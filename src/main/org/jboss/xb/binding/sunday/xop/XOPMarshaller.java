@@ -21,19 +21,18 @@
   */
 package org.jboss.xb.binding.sunday.xop;
 
-import javax.activation.DataHandler;
 
 /**
  * This interface is a copy of AttachmentMarshaller from JAXB2.0.
  * It's added to avoid circular module dependecy in the build system.
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @author <a href="mailto:heiko.braun@jboss.org">Heiko Braun</a>
  * @version <tt>$Revision$</tt>
  */
 public interface XOPMarshaller
 {
    boolean isXOPPackage();
-   String addMtomAttachment(DataHandler dataHandler, String elementNamespace, String elementName);
+   String addMtomAttachment(XOPObject obj, String elementNamespace, String elementName);
    String addMtomAttachment(byte[] data, String elementNamespace, String elementName);
-   String addSwaRefAttachment(DataHandler dataHandler);
 }

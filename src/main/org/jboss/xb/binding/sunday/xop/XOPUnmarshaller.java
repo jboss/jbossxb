@@ -21,18 +21,18 @@
   */
 package org.jboss.xb.binding.sunday.xop;
 
-import javax.activation.DataHandler;
 
 /**
  * This interface is a copy of AttachmentUnmarshaller from JAXB2.0.
  * It's added to avoid circular module dependecy in the build system.
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @author <a href="mailto:heiko.braun@jboss.org">Heiko Braun</a>
  * @version <tt>$Revision$</tt>
  */
 public interface XOPUnmarshaller
 {
    boolean isXOPPackage();
-   DataHandler getAttachmentAsDataHandler(String cid);
+   XOPObject getAttachmentAsDataHandler(String cid);
    byte[] getAttachmentAsByteArray(String cid);
 }

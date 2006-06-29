@@ -24,7 +24,6 @@ package org.jboss.xb.binding.sunday.xop;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
-import javax.activation.DataHandler;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.Constants;
@@ -81,20 +80,11 @@ public class XOPIncludeHandler
          throw new JBossXBRuntimeException(Constants.QNAME_XOP_INCLUDE + " doesn't contain required href attribute");
       }
 
-      DataHandler dataHandler = xopUnmarshaller.getAttachmentAsDataHandler(cid);
-      if(dataHandler == null)
+      XOPObject xopObject = xopUnmarshaller.getAttachmentAsDataHandler(cid);
+      Object content = xopObject.getContent();
+      if(content == null)
       {
-         throw new JBossXBRuntimeException("DataHandler is not available for cid '" + cid + "'");
-      }
-
-      Object content = null;
-      try
-      {
-         content = dataHandler.getContent();
-      }
-      catch(IOException e)
-      {
-         throw new JBossXBRuntimeException("Failed to get content from DataHandler: " + e.getMessage(), e);
+         throw new JBossXBRuntimeException("Content is not available for cid '" + cid + "'");
       }
 
       if(content instanceof InputStream)

@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.ParserConfigurationException;
 import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
@@ -1323,6 +1324,11 @@ public class MarshallerImpl
       public void declareNamespace(String prefix, String ns)
       {
          declareNs(attrs, prefix, ns);
+      }
+
+      public NamespaceContext getNamespaceContext()
+      {
+         return nsRegistry;
       }
 
       public Object peek()

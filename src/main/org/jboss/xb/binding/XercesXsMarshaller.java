@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.xerces.xs.StringList;
 import org.apache.xerces.xs.XSAttributeDeclaration;
@@ -125,6 +126,11 @@ public class XercesXsMarshaller
             ch = new ContentHandlerAdaptor();
          }
          return ch;
+      }
+
+      public NamespaceContext getNamespaceContext()
+      {
+         return nsRegistry;
       }
    };
 
@@ -654,7 +660,7 @@ public class XercesXsMarshaller
                   declareNs(attrs, qNamePrefix, ns);
                   qNameValue = new QName(ns, qNameValue.getLocalPart(), qNamePrefix);
                }
-               attrValue = SimpleTypeBindings.marshalQName(qNameValue, null);
+               attrValue = SimpleTypeBindings.marshalQName(qNameValue, nsRegistry);
             }
             else
             {

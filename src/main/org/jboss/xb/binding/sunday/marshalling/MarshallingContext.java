@@ -21,6 +21,7 @@
   */
 package org.jboss.xb.binding.sunday.marshalling;
 
+import javax.xml.namespace.NamespaceContext;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 

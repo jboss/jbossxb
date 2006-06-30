@@ -177,7 +177,7 @@ public class DefaultAttributeMarshaller
             qName = new QName(qName.getNamespaceURI(), qName.getLocalPart(), prefix);
          }
 
-         marshalled = SimpleTypeBindings.marshalQName(qName, null);
+         marshalled = SimpleTypeBindings.marshalQName(qName, ctx.getNamespaceContext());
       }
       else
       {

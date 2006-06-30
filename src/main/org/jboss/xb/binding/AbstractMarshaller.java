@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Iterator;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import org.jboss.logging.Logger;
@@ -56,7 +57,7 @@ public abstract class AbstractMarshaller
    protected String encoding = ENCODING;
    protected List rootQNames = new ArrayList();
 
-   protected Map prefixByUri = Collections.EMPTY_MAP;
+   protected NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
    private Map classMappings = Collections.EMPTY_MAP;
    protected Map field2WildcardMap = Collections.EMPTY_MAP;
@@ -241,38 +242,71 @@ public abstract class AbstractMarshaller
          return;
       }
 
-      switch(prefixByUri.size())
-      {
-         case 0:
-            prefixByUri = Collections.singletonMap(uri, prefix);
-            break;
-         case 1:
-            prefixByUri = new HashMap(prefixByUri);
-         default:
-            prefixByUri.put(uri, prefix);
-      }
+      nsRegistry.addPrefixMapping(prefix, uri);
    }
 
-   public void removeNamespace(String uri)
+   public void removePrefixMapping(String prefix)
    {
-      if(prefixByUri.size() > 1)
-      {
-         prefixByUri.remove(uri);
-      }
-      else if(prefixByUri.containsKey(uri))
-      {
-         prefixByUri = Collections.EMPTY_MAP;
-      }
+      nsRegistry.removePrefixMapping(prefix);
    }
 
    public String getPrefix(String ns)
    {
-      String prefix = (String)prefixByUri.get(ns);
+      String prefix = nsRegistry.getPrefix(ns);
       if(prefix == null && Constants.NS_XML_NAMESPACE.equals(ns))
       {
          prefix = "xml";
       }
       return prefix;
+   }
+
+   protected void declareNs(AttributesImpl attrs)
+   {
+      for(Iterator i = nsRegistry.getRegisteredURIs(); i.hasNext();)
+      {
+         String uri = (String)i.next();
+         String prefix = nsRegistry.getPrefix(uri);
+         declareNs(attrs, prefix, uri);
+      }
+   }
+
+   protected static void declareNs(AttributesImpl attrs, String prefix, String ns)
+   {
+      attrs.add(null, prefix, prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix, "CDATA", ns);
+   }
+
+   /**
+    * Adds xsi:type attribute and optionally declares namespaces for xsi and type's namespace.
+    *
+    * @param typeQName the type to declare xsi:type attribute for
+    * @param attrs     the attributes to add xsi:type attribute to
+    * @return prefix for the type's ns if it was generated
+    */
+   protected String declareXsiType(QName typeQName, AttributesImpl attrs)
+   {
+      String result = null;
+      String xsiPrefix = nsRegistry.getPrefix(Constants.NS_XML_SCHEMA_INSTANCE);
+      if(xsiPrefix == null)
+      {
+         declareNs(attrs, "xsi", Constants.NS_XML_SCHEMA_INSTANCE);
+         xsiPrefix = "xsi";
+      }
+
+      String pref = getPrefix(typeQName.getNamespaceURI());
+      if(pref == null)
+      {
+         // the ns is not declared
+         result = pref = typeQName.getLocalPart() + "_ns";
+      }
+
+      String qName = prefixLocalName(pref, typeQName.getLocalPart());
+      attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "type", xsiPrefix + ":type", "CDATA", qName);
+      return result;
+   }
+
+   protected static String prefixLocalName(String prefix, String local)
+   {
+      return prefix == null || prefix.length() == 0 ? local : prefix + ':' + local;
    }
 
    public abstract void addAttribute(String prefix, String localName, String type, String value);

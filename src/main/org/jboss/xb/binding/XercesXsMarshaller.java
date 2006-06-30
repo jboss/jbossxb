@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.xerces.xs.StringList;
@@ -444,11 +443,11 @@ public class XercesXsMarshaller
 
          String marshalled = marshalCharacters(elementUri, prefix, type, value, attrs);
 
-         if((declareNs || declareXsiType) && !prefixByUri.isEmpty())
+         if((declareNs || declareXsiType) && nsRegistry.size() > 0)
          {
             if(attrs == null)
             {
-               attrs = new AttributesImpl(prefixByUri.size() + 1);
+               attrs = new AttributesImpl(nsRegistry.size() + 1);
             }
             declareNs(attrs);
          }
@@ -467,7 +466,7 @@ public class XercesXsMarshaller
             attrs.add(null, prefix, "xmlns:" + prefix, null, (String)elementUri);
          }
 
-         String qName = createQName(prefix, elementLocal);
+         String qName = prefixLocalName(prefix, elementLocal);
 
          content.startElement(elementUri, elementLocal, qName, attrs);
          content.characters(marshalled.toCharArray(), 0, marshalled.length());
@@ -490,22 +489,22 @@ public class XercesXsMarshaller
 
       XSObjectList attributeUses = type.getAttributeUses();
       int attrsTotal = declareNs || declareXsiType ?
-         prefixByUri.size() + attributeUses.getLength() + 1 :
+         nsRegistry.size() + attributeUses.getLength() + 1 :
          attributeUses.getLength();
       AttributesImpl attrs = attrsTotal > 0 ? new AttributesImpl(attrsTotal) : null;
 
-      if(declareNs && !prefixByUri.isEmpty())
+      if(declareNs && nsRegistry.size() > 0)
       {
          declareNs(attrs);
       }
 
-      String typeNsWithGeneratedPrefix = null;
+      String generatedPrefix = null;
       if(declareXsiType)
       {
-         String generatedPrefix = declareXsiType(type, attrs);
+         generatedPrefix = declareXsiType(type, attrs);
          if(generatedPrefix != null)
          {
-            typeNsWithGeneratedPrefix = type.getNamespace();
+            String typeNsWithGeneratedPrefix = type.getNamespace();
             declareNs(attrs, generatedPrefix, typeNsWithGeneratedPrefix);
             declareNamespace(generatedPrefix, typeNsWithGeneratedPrefix);
          }
@@ -696,7 +695,7 @@ public class XercesXsMarshaller
          }
       }
 
-      String qName = createQName(prefix, elementLocalName);
+      String qName = prefixLocalName(prefix, elementLocalName);
       content.startElement(elementNsUri, elementLocalName, qName, attrs);
 
       if(particle != null)
@@ -712,12 +711,12 @@ public class XercesXsMarshaller
 
       if(genPrefix)
       {
-         removeNamespace(elementNsUri);
+         removePrefixMapping(prefix);
       }
 
-      if(typeNsWithGeneratedPrefix != null)
+      if(generatedPrefix != null)
       {
-         removeNamespace(typeNsWithGeneratedPrefix);
+         removePrefixMapping(generatedPrefix);
       }
    }
 
@@ -1132,7 +1131,6 @@ public class XercesXsMarshaller
       }
       else if(Constants.NS_XML_SCHEMA.equals(type.getNamespace()))
       {
-         // todo: pass non-null namespace context
          String typeName = type.getName();
 
          if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
@@ -1154,7 +1152,7 @@ public class XercesXsMarshaller
             value = qName;
          }
 
-         marshalled = SimpleTypeBindings.marshal(typeName, value, null);
+         marshalled = SimpleTypeBindings.marshal(typeName, value, nsRegistry);
       }
       // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
       else if(type.getLexicalPattern().item(0) != null
@@ -1238,9 +1236,11 @@ public class XercesXsMarshaller
    private String declareXsiType(XSTypeDefinition type, AttributesImpl attrs)
    {
       String result = null;
-      if(!prefixByUri.containsKey(Constants.NS_XML_SCHEMA_INSTANCE))
+      String xsiPrefix = nsRegistry.getPrefix(Constants.NS_XML_SCHEMA_INSTANCE);
+      if(xsiPrefix == null)
       {
          attrs.add(Constants.NS_XML_SCHEMA, "xmlns", "xmlns:xsi", null, Constants.NS_XML_SCHEMA_INSTANCE);
+         xsiPrefix = "xsi";
       }
 
       String pref = getPrefix(type.getNamespace());
@@ -1251,21 +1251,8 @@ public class XercesXsMarshaller
       }
 
       String typeQName = pref == null ? type.getName() : pref + ':' + type.getName();
-      attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "type", "xsi:type", null, typeQName);
+      attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "type", xsiPrefix + ":type", null, typeQName);
       return result;
-   }
-
-   private void declareNs(AttributesImpl attrs, String prefix, String ns)
-   {
-      String prefixStr = prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix;
-      if(attrs != null)
-      {
-         attrs.add(null, prefix, prefixStr, null, ns);
-      }
-      else
-      {
-         log.warn("Cannot add namespace declaration: " + prefixStr + "='" + ns + "'");
-      }
    }
 
    private Object getElementValue(String elementNs, String elementLocal, XSTypeDefinition type)
@@ -1358,29 +1345,9 @@ public class XercesXsMarshaller
       String nilQName = xsiPrefix + ":nil";
       attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "nil", nilQName, null, "1");
 
-      String qName = createQName(prefix, elementLocal);
+      String qName = prefixLocalName(prefix, elementLocal);
       content.startElement(elementNs, elementLocal, qName, attrs);
       content.endElement(elementNs, elementLocal, qName);
-   }
-
-   private void declareNs(AttributesImpl attrs)
-   {
-      for(Iterator i = prefixByUri.entrySet().iterator(); i.hasNext();)
-      {
-         Map.Entry entry = (Map.Entry)i.next();
-         String localName = (String)entry.getValue();
-         attrs.add(null,
-            localName,
-            localName == null || localName.length() == 0 ? "xmlns" : "xmlns:" + localName,
-            null,
-            (String)entry.getKey()
-         );
-      }
-   }
-
-   private static String createQName(String prefix, String local)
-   {
-      return prefix == null || prefix.length() == 0 ? local : prefix + ':' + local;
    }
 
    private static boolean isArrayWrapper(XSTypeDefinition type)

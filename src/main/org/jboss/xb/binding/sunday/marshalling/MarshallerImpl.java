@@ -30,7 +30,6 @@ import java.util.AbstractList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 import org.jboss.logging.Logger;
@@ -429,11 +428,11 @@ public class MarshallerImpl
                                   boolean declareXsiType)
    {
       ctx.attrs = null;
-      if((declareNs || declareXsiType) && !prefixByUri.isEmpty())
+      if((declareNs || declareXsiType) && nsRegistry.size() > 0)
       {
          if(ctx.attrs == null)
          {
-            ctx.attrs = new AttributesImpl(prefixByUri.size() + 1);
+            ctx.attrs = new AttributesImpl(nsRegistry.size() + 1);
          }
          declareNs(ctx.attrs);
       }
@@ -485,21 +484,21 @@ public class MarshallerImpl
                                    boolean declareXsiType)
    {
       Collection attrBindings = type.getAttributes();
-      int attrsTotal = declareNs || declareXsiType ? prefixByUri.size() + attrBindings.size() + 1: attrBindings.size();
+      int attrsTotal = declareNs || declareXsiType ? nsRegistry.size() + attrBindings.size() + 1: attrBindings.size();
       ctx.attrs = attrsTotal > 0 ? new AttributesImpl(attrsTotal) : null;
 
-      if(declareNs && !prefixByUri.isEmpty())
+      if(declareNs && nsRegistry.size() > 0)
       {
          declareNs(ctx.attrs);
       }
 
-      String typeNsWithGeneratedPrefix = null;
+      String generatedPrefix = null;
       if(declareXsiType)
       {
-         String generatedPrefix = declareXsiType(type.getQName(), ctx.attrs);
+         generatedPrefix = declareXsiType(type.getQName(), ctx.attrs);
          if(generatedPrefix != null)
          {
-            typeNsWithGeneratedPrefix = type.getQName().getNamespaceURI();
+            String typeNsWithGeneratedPrefix = type.getQName().getNamespaceURI();
             declareNs(ctx.attrs, generatedPrefix, typeNsWithGeneratedPrefix);
             declareNamespace(generatedPrefix, typeNsWithGeneratedPrefix);
          }
@@ -621,12 +620,12 @@ public class MarshallerImpl
 
       if(genPrefix)
       {
-         removeNamespace(elementNs);
+         removePrefixMapping(prefix);
       }
 
-      if(typeNsWithGeneratedPrefix != null)
+      if(generatedPrefix != null)
       {
-         removeNamespace(typeNsWithGeneratedPrefix);
+         removePrefixMapping(generatedPrefix);
       }
    }
 
@@ -970,7 +969,6 @@ public class MarshallerImpl
       }
       else if(Constants.NS_XML_SCHEMA.equals(simpleType.getQName().getNamespaceURI()))
       {
-         // todo: pass non-null namespace context
          String typeName = simpleType.getQName().getLocalPart();
 
          if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
@@ -992,7 +990,7 @@ public class MarshallerImpl
             declareNs(attrs, prefixValue, qNameValue.getNamespaceURI());
          }
 
-         marshalled = SimpleTypeBindings.marshal(typeName, value, null);
+         marshalled = SimpleTypeBindings.marshal(typeName, value, nsRegistry);
       }
       // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
       else if(simpleType.getLexicalPattern() != null &&
@@ -1137,26 +1135,6 @@ public class MarshallerImpl
       return value;
    }
 
-   private void declareNs(AttributesImpl attrs)
-   {
-      for(Iterator i = prefixByUri.entrySet().iterator(); i.hasNext();)
-      {
-         Map.Entry entry = (Map.Entry)i.next();
-         String localName = (String)entry.getValue();
-         declareNs(attrs, localName, (String)entry.getKey());
-      }
-   }
-
-   private static void declareNs(AttributesImpl attrs, String prefix, String ns)
-   {
-      attrs.add(null, prefix, prefix.length() == 0 ? "xmlns" : "xmlns:" + prefix, "CDATA", ns);
-   }
-
-   private static String prefixLocalName(String prefix, String local)
-   {
-      return prefix == null || prefix.length() == 0 ? local : prefix + ':' + local;
-   }
-
    private static boolean isArrayWrapper(TypeBinding type)
    {
       boolean is = false;
@@ -1263,33 +1241,6 @@ public class MarshallerImpl
    private static boolean isRepeatable(ParticleBinding particle)
    {
       return particle.getMaxOccursUnbounded() || particle.getMaxOccurs() > 1 || particle.getMinOccurs() > 1;
-   }
-
-   /**
-    * Adds xsi:type attribute and optionally declares namespaces for xsi and type's namespace.
-    *
-    * @param typeQName the type to declare xsi:type attribute for
-    * @param attrs     the attributes to add xsi:type attribute to
-    * @return prefix for the type's ns if it was generated
-    */
-   private String declareXsiType(QName typeQName, AttributesImpl attrs)
-   {
-      String result = null;
-      if(!prefixByUri.containsKey(Constants.NS_XML_SCHEMA_INSTANCE))
-      {
-         declareNs(attrs, "xsi", Constants.NS_XML_SCHEMA_INSTANCE);
-      }
-
-      String pref = getPrefix(typeQName.getNamespaceURI());
-      if(pref == null)
-      {
-         // the ns is not declared
-         result = pref = typeQName.getLocalPart() + "_ns";
-      }
-
-      String qName = prefixLocalName(pref, typeQName.getLocalPart());
-      attrs.add(Constants.NS_XML_SCHEMA_INSTANCE, "type", "xsi:type", "CDATA", qName);
-      return result;
    }
 
    private static final List asList(final Object arr)

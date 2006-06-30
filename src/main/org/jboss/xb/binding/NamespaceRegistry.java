@@ -269,6 +269,14 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
       return uriByPrefix.keySet().iterator();
    }
 
+   /**
+    * @return  the number of registered URIs
+    */
+   public int size()
+   {
+      return prefixByUri.size();
+   }
+
    // NamespaceContext implementation
 
    /**

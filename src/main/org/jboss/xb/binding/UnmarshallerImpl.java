@@ -24,13 +24,11 @@ package org.jboss.xb.binding;
 import java.io.InputStream;
 import java.io.Reader;
 
-import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.xb.binding.parser.sax.SaxJBossXBParser;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler;
-import org.jboss.xb.binding.metadata.unmarshalling.DocumentBinding;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 
@@ -181,28 +179,4 @@ public class UnmarshallerImpl implements Unmarshaller
       parser.parse(systemId, builder);
       return builder.getRoot();
    }
-
-   public Object unmarshal(String systemId, ObjectModelFactory factory, DocumentBinding binding)
-      throws JBossXBException
-   {
-      if(binding != null)
-      {
-         throw new IllegalStateException("DocumentBinding API is not supported anymore!");
-      }
-      return unmarshal(systemId, factory, (Object)null);
-   }
-
-   public Object unmarshal(Reader reader, ObjectModelFactory factory, DocumentBinding binding) throws JBossXBException
-   {
-      if(binding != null)
-      {
-         throw new IllegalStateException("DocumentBinding API is not supported anymore!");
-      }
-      return unmarshal(reader, factory, (Object)null);
-   }
-   public JBossXBParser getParser()
-   {
-      return parser;
-   }
-
 }

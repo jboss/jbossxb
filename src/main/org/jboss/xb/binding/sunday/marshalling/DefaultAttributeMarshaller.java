@@ -163,9 +163,11 @@ public class DefaultAttributeMarshaller
          if(ns != null && ns.length() > 0)
          {
             prefix = ctx.getPrefix(qName.getNamespaceURI());
+            boolean declarePrefix = false;
             if(prefix == null)
             {
                prefix = qName.getPrefix();
+               declarePrefix = true;
             }
 
             if(prefix == null || prefix.length() == 0)
@@ -173,7 +175,10 @@ public class DefaultAttributeMarshaller
                prefix = "ns_" + qName.getLocalPart();
             }
 
-            ctx.declareNamespace(prefix, ns);
+            if(declarePrefix)
+            {
+               ctx.declareNamespace(prefix, ns);
+            }
             qName = new QName(qName.getNamespaceURI(), qName.getLocalPart(), prefix);
          }
 

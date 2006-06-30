@@ -647,9 +647,11 @@ public class XercesXsMarshaller
                if(ns != null && ns.length() > 0)
                {
                   qNamePrefix = getPrefix(ns);
+                  boolean declarePrefix = false;
                   if(qNamePrefix == null)
                   {
                      qNamePrefix = qNameValue.getPrefix();
+                     declarePrefix = true;
                   }
 
                   if(qNamePrefix == null || qNamePrefix.length() == 0)
@@ -657,7 +659,10 @@ public class XercesXsMarshaller
                      qNamePrefix = "ns_" + qNameValue.getLocalPart();
                   }
 
-                  declareNs(attrs, qNamePrefix, ns);
+                  if(declarePrefix)
+                  {
+                     declareNs(attrs, qNamePrefix, ns);
+                  }
                   qNameValue = new QName(ns, qNameValue.getLocalPart(), qNamePrefix);
                }
                attrValue = SimpleTypeBindings.marshalQName(qNameValue, nsRegistry);

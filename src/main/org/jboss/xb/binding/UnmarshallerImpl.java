@@ -179,4 +179,9 @@ public class UnmarshallerImpl implements Unmarshaller
       parser.parse(systemId, builder);
       return builder.getRoot();
    }
+
+   JBossXBParser getParser()
+   {
+      return parser;
+   }
 }

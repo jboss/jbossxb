@@ -23,6 +23,7 @@ package org.jboss.xb.binding.introspection;
 
 import java.util.Map;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.util.NoopMap;
 import EDU.oswego.cs.dl.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -33,6 +34,51 @@ public class ClassInfos
 {
    private static Map classInfos = new ConcurrentHashMap();
    private static final Object CLASS_INFO_NA = new Object();
+
+   /**
+    * Disables caching of ClassInfo's. Already cached ClassInfo's will be lost after
+    * the method returns.
+    */
+   public static synchronized void disableCache()
+   {
+      classInfos = NoopMap.INSTANCE;
+   }
+
+   /**
+    * Enables caching of ClassInfo's unless caching is already enabled.
+    */
+   public static synchronized void enableCache()
+   {
+      if(!isCacheEnabled())
+      {
+         classInfos = new ConcurrentHashMap();
+      }
+   }
+
+   /**
+    * @return true if caching is enabled, false otherwise.
+    */
+   public static synchronized boolean isCacheEnabled()
+   {
+      return classInfos != NoopMap.INSTANCE;
+   }
+
+   /**
+    * Flushes all the cached ClassInfo's.
+    */
+   public static void flushCache()
+   {
+      classInfos.clear();
+   }
+
+   /**
+    * Evicts ClassInfo for a specific class.
+    * @param cls  fully qualified class name of the class
+    */
+   public static void flushCache(String cls)
+   {
+      classInfos.remove(cls);
+   }
 
    public static ClassInfo getClassInfo(Class cls)
    {

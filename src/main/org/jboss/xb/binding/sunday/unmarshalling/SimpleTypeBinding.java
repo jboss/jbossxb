@@ -24,6 +24,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.metadata.ClassMetaData;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -69,5 +70,9 @@ public class SimpleTypeBinding
    public void addElement(QName qName, ElementBinding binding)
    {
       throw new JBossXBRuntimeException("Simple types can't have child elements.");
+   }
+
+   public void setClassMetaData(ClassMetaData classMetaData) {
+      throw new JBossXBRuntimeException("Simple types cannot be associated with classMetaData");
    }
 }

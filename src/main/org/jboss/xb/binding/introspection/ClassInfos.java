@@ -22,9 +22,10 @@
 package org.jboss.xb.binding.introspection;
 
 import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.Collections;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.util.NoopMap;
-import EDU.oswego.cs.dl.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -32,7 +33,7 @@ import EDU.oswego.cs.dl.util.concurrent.ConcurrentHashMap;
  */
 public class ClassInfos
 {
-   private static Map classInfos = new ConcurrentHashMap();
+   private static Map classInfos = Collections.synchronizedMap(new WeakHashMap());
    private static final Object CLASS_INFO_NA = new Object();
 
    /**
@@ -51,7 +52,7 @@ public class ClassInfos
    {
       if(!isCacheEnabled())
       {
-         classInfos = new ConcurrentHashMap();
+         classInfos = Collections.synchronizedMap(new WeakHashMap());
       }
    }
 

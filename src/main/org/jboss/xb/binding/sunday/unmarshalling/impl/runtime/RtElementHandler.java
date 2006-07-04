@@ -435,19 +435,23 @@ public class RtElementHandler
       ElementBinding arrayItem = null;
       if(!term.isModelGroup())
       {
-         ParticleBinding typeParticle = ((ElementBinding)term).getType().getParticle();
-         ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());
-         arrayItem = modelGroup == null ? null : modelGroup.getArrayItem();
-
-         // todo refactor later (move it to modelGroup.getArrayItem()?)
-         if(arrayItem != null &&
-            (arrayItem.isSkip() ||
-            arrayItem.getMapEntryMetaData() != null ||
-            arrayItem.getPutMethodMetaData() != null ||
-            arrayItem.getAddMethodMetaData() != null
-            ))
+         TypeBinding type = ((ElementBinding)term).getType();
+         if(type.getAttributes().isEmpty())
          {
-            arrayItem = null;
+            ParticleBinding typeParticle = type.getParticle();
+            ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());
+            arrayItem = modelGroup == null ? null : modelGroup.getArrayItem();
+
+            // todo refactor later (move it to modelGroup.getArrayItem()?)
+            if(arrayItem != null &&
+               (arrayItem.isSkip() ||
+               arrayItem.getMapEntryMetaData() != null ||
+               arrayItem.getPutMethodMetaData() != null ||
+               arrayItem.getAddMethodMetaData() != null
+               ))
+            {
+               arrayItem = null;
+            }
          }
       }
 
@@ -853,7 +857,7 @@ public class RtElementHandler
       else
       {
          ElementBinding arrayItem = null;
-         if(!type.isSimple())
+         if(!type.isSimple() && type.getAttributes().isEmpty())
          {
             ParticleBinding typeParticle = type.getParticle();
             ModelGroupBinding modelGroup = (ModelGroupBinding)(typeParticle == null ? null : typeParticle.getTerm());

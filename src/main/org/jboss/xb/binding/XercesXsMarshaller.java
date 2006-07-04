@@ -33,7 +33,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
-import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.ParserConfigurationException;
 import org.apache.xerces.xs.StringList;
 import org.apache.xerces.xs.XSAttributeDeclaration;
@@ -128,7 +127,7 @@ public class XercesXsMarshaller
          return ch;
       }
 
-      public NamespaceContext getNamespaceContext()
+      public NamespaceRegistry getNamespaceContext()
       {
          return nsRegistry;
       }
@@ -642,30 +641,31 @@ public class XercesXsMarshaller
             {
                QName qNameValue = (QName)attrValue;
 
-               String qNamePrefix;
+               String qNamePrefix = null;
+               boolean declarePrefix = false;
                String ns = qNameValue.getNamespaceURI();
                if(ns != null && ns.length() > 0)
                {
                   qNamePrefix = getPrefix(ns);
-                  boolean declarePrefix = false;
                   if(qNamePrefix == null)
                   {
                      qNamePrefix = qNameValue.getPrefix();
+                     if(qNamePrefix == null || qNamePrefix.length() == 0)
+                     {
+                        qNamePrefix = "ns_" + qNameValue.getLocalPart();
+                     }
+                     declareNs(attrs, qNamePrefix, ns);
+                     nsRegistry.addPrefixMapping(qNamePrefix, ns);
                      declarePrefix = true;
                   }
-
-                  if(qNamePrefix == null || qNamePrefix.length() == 0)
-                  {
-                     qNamePrefix = "ns_" + qNameValue.getLocalPart();
-                  }
-
-                  if(declarePrefix)
-                  {
-                     declareNs(attrs, qNamePrefix, ns);
-                  }
-                  qNameValue = new QName(ns, qNameValue.getLocalPart(), qNamePrefix);
                }
+
                attrValue = SimpleTypeBindings.marshalQName(qNameValue, nsRegistry);
+
+               if(declarePrefix)
+               {
+                  nsRegistry.removePrefixMapping(qNamePrefix);
+               }
             }
             else
             {
@@ -1144,26 +1144,35 @@ public class XercesXsMarshaller
       {
          String typeName = type.getName();
 
+         String prefix = null;
+         boolean removePrefix = false;
          if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
             SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
          {
             QName qName = (QName)value;
-            String prefixValue = qName.getPrefix();
-            if((elementUri != null && !qName.getNamespaceURI().equals(elementUri) ||
-               elementUri == null && qName.getNamespaceURI().length() > 0
-               ) &&
-               (prefixValue.equals(elementPrefix) || prefixValue.length() == 0 && elementPrefix == null))
+            if(qName.getNamespaceURI() != null && qName.getNamespaceURI().length() > 0)
             {
-               // how to best resolve this conflict?
-               prefixValue += 'x';
-               qName = new QName(qName.getNamespaceURI(), qName.getLocalPart(), prefixValue);
+               prefix = nsRegistry.getPrefix(qName.getNamespaceURI());
+               if(prefix == null)
+               {
+                  prefix = qName.getPrefix();
+                  if(prefix == null || prefix.length() == 0)
+                  {
+                     prefix = qName.getLocalPart() + "_ns";
+                  }
+                  nsRegistry.addPrefixMapping(prefix, qName.getNamespaceURI());
+                  declareNs(attrs, prefix, qName.getNamespaceURI());
+
+                  removePrefix = true;
+               }
             }
-
-            declareNs(attrs, prefixValue, qName.getNamespaceURI());
-            value = qName;
          }
-
          marshalled = SimpleTypeBindings.marshal(typeName, value, nsRegistry);
+
+         if(removePrefix)
+         {
+            nsRegistry.removePrefixMapping(prefix);
+         }
       }
       // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
       else if(type.getLexicalPattern().item(0) != null

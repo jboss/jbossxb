@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
-import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.ParserConfigurationException;
 import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
@@ -45,6 +44,7 @@ import org.jboss.xb.binding.ObjectLocalMarshaller;
 import org.jboss.xb.binding.ObjectModelProvider;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.NamespaceRegistry;
 import org.jboss.xb.binding.introspection.FieldInfo;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
@@ -471,7 +471,7 @@ public class MarshallerImpl
       }
 
       Object value = stack.peek();
-      String marshalled = marshalCharacters(elementNs, prefix, type, value, ctx.attrs);
+      String marshalled = marshalCharacters(elementNs, prefix, type, value);
 
       String qName = prefixLocalName(prefix, elementLocal);
       content.startElement(elementNs, elementLocal, qName, ctx.attrs);
@@ -597,7 +597,7 @@ public class MarshallerImpl
                   ctx.attrs = new AttributesImpl(5);
                }
 
-               characters = marshalCharacters(elementNs, prefix, simpleType, value, ctx.attrs);
+               characters = marshalCharacters(elementNs, prefix, simpleType, value);
             }
          }
       }
@@ -933,8 +933,7 @@ public class MarshallerImpl
    private String marshalCharacters(String elementUri,
                                     String elementPrefix,
                                     TypeBinding simpleType,
-                                    Object value,
-                                    AttributesImpl attrs)
+                                    Object value)
    {
       String marshalled;
       if(simpleType.getItemType() != null)
@@ -972,26 +971,36 @@ public class MarshallerImpl
       {
          String typeName = simpleType.getQName().getLocalPart();
 
+         String prefix = null;
+         boolean removePrefix = false;
          if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
             SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
          {
             QName qNameValue = (QName)value;
-            String prefixValue = qNameValue.getPrefix();
-            if((elementUri != null && !qNameValue.getNamespaceURI().equals(elementUri) ||
-               elementUri == null && qNameValue.getNamespaceURI().length() > 0
-               ) &&
-               (prefixValue.equals(elementPrefix) || prefixValue.length() == 0 && elementPrefix == null))
+            if(qNameValue.getNamespaceURI() != null && qNameValue.getNamespaceURI().length() > 0)
             {
-               // how to best resolve this conflict?
-               prefixValue += 'x';
-               value = new QName(qNameValue.getNamespaceURI(), qNameValue.getLocalPart(), prefixValue);
-            }
+               prefix = nsRegistry.getPrefix(qNameValue.getNamespaceURI());
+               if(prefix == null)
+               {
+                  prefix = qNameValue.getPrefix();
+                  if(prefix == null || prefix.length() == 0)
+                  {
+                     prefix = qNameValue.getLocalPart() + "_ns";
+                  }
+                  nsRegistry.addPrefixMapping(prefix, qNameValue.getNamespaceURI());
+                  ctx.declareNamespace(prefix, qNameValue.getNamespaceURI());
 
-            attrs = new AttributesImpl(1);
-            declareNs(attrs, prefixValue, qNameValue.getNamespaceURI());
+                  removePrefix = true;
+               }
+            }
          }
 
          marshalled = SimpleTypeBindings.marshal(typeName, value, nsRegistry);
+
+         if(removePrefix)
+         {
+            nsRegistry.removePrefixMapping(prefix);
+         }
       }
       // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
       else if(simpleType.getLexicalPattern() != null &&
@@ -1047,7 +1056,7 @@ public class MarshallerImpl
          marshalled = marshalCharacters(elementUri,
             elementPrefix,
             simpleType.getBaseType(),
-            value, attrs
+            value
          );
       }
       return marshalled;
@@ -1324,9 +1333,10 @@ public class MarshallerImpl
       public void declareNamespace(String prefix, String ns)
       {
          declareNs(attrs, prefix, ns);
+         nsRegistry.addPrefixMapping(prefix, ns);
       }
 
-      public NamespaceContext getNamespaceContext()
+      public NamespaceRegistry getNamespaceContext()
       {
          return nsRegistry;
       }

@@ -21,7 +21,6 @@
   */
 package org.jboss.xb.binding;
 
-import javax.xml.namespace.NamespaceContext;
 import org.xml.sax.ContentHandler;
 
 /**
@@ -50,5 +49,5 @@ public interface MarshallingContext
    /**
     * @return  the namespace context
     */
-   NamespaceContext getNamespaceContext();   
+   NamespaceRegistry getNamespaceContext();
 }

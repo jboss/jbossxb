@@ -121,12 +121,19 @@ public class DefaultAttributeMarshaller
                      String itemPrefix = ctx.getPrefix(itemNs);
                      if(itemPrefix == null)
                      {
-                        itemPrefix = attrLocal + listInd;
+                        itemPrefix = item.getPrefix();
+                        if(itemPrefix == null || itemPrefix.length() == 0)
+                        {
+                           itemPrefix = attrLocal + listInd;
+                        }
                         ctx.declareNamespace(itemPrefix, itemNs);
                      }
 
-                     item = new QName(item.getNamespaceURI(), item.getLocalPart(), itemPrefix);
-                     list.set(listInd, item);
+                     if(!itemPrefix.equals(item.getPrefix()))
+                     {
+                        item = new QName(item.getNamespaceURI(), item.getLocalPart(), itemPrefix);
+                        list.set(listInd, item);
+                     }
                   }
                }
             }
@@ -156,33 +163,31 @@ public class DefaultAttributeMarshaller
       }
       else if(Constants.QNAME_QNAME.equals(attrType.getQName()))
       {
-         QName qName = (QName)value;
-
-         String prefix;
-         String ns = qName.getNamespaceURI();
+         boolean removePrefix = false;
+         String prefix = null;
+         String ns = ((QName)value).getNamespaceURI();
          if(ns != null && ns.length() > 0)
          {
-            prefix = ctx.getPrefix(qName.getNamespaceURI());
-            boolean declarePrefix = false;
+            prefix = ctx.getPrefix(ns);
             if(prefix == null)
             {
-               prefix = qName.getPrefix();
-               declarePrefix = true;
-            }
-
-            if(prefix == null || prefix.length() == 0)
-            {
-               prefix = "ns_" + qName.getLocalPart();
-            }
-
-            if(declarePrefix)
-            {
+               prefix = ((QName)value).getPrefix();
+               if(prefix == null || prefix.length() == 0)
+               {
+                  prefix = "ns_" + ((QName)value).getLocalPart();
+               }
                ctx.declareNamespace(prefix, ns);
             }
-            qName = new QName(qName.getNamespaceURI(), qName.getLocalPart(), prefix);
+            ctx.getNamespaceContext().addPrefixMapping(prefix, ns);
+            removePrefix = true;
          }
 
-         marshalled = SimpleTypeBindings.marshalQName(qName, ctx.getNamespaceContext());
+         marshalled = SimpleTypeBindings.marshalQName((QName)value, ctx.getNamespaceContext());
+
+         if(removePrefix)
+         {
+            ctx.getNamespaceContext().removePrefixMapping(prefix);
+         }
       }
       else
       {
@@ -191,4 +196,5 @@ public class DefaultAttributeMarshaller
 
       return marshalled;
    }
+
 }

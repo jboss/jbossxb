@@ -1996,18 +1996,22 @@ public final class SimpleTypeBindings
    public static String marshalQName(QName value, NamespaceContext nsRegistry)
    {
       String nsURI = value.getNamespaceURI();
-      if(value.getPrefix().length() > 0)
+      if(nsURI.length() > 0)
       {
-         return value.getPrefix() + ":" + value.getLocalPart();
-      }
-      else if(nsURI.length() > 0 && nsRegistry != null)
-      {
-         String prefix = nsRegistry.getPrefix(nsURI);
-         if(prefix == null)
+         String prefix;
+         if(nsRegistry != null)
          {
-            throw new IllegalStateException("Namespace URI not registered: " + nsURI);
+            prefix = nsRegistry.getPrefix(nsURI);
+            if(prefix == null)
+            {
+               throw new IllegalStateException("Namespace URI not registered: " + nsURI);
+            }
          }
-
+         else
+         {
+            // WARN
+            prefix = value.getPrefix();
+         }
          return prefix.length() > 0 ? prefix + ":" + value.getLocalPart() : value.getLocalPart();
       }
       else

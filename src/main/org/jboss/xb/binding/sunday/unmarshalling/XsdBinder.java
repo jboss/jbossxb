@@ -497,9 +497,6 @@ public class XsdBinder
          return binding;
       }
 
-      if (ctx.trace)
-         log.trace("binding complex type " + typeName);
-
       XSTypeDefinition baseTypeDef = type.getBaseType();
       // anyType is the parent of all the types, even the parent of itself according to xerces :)
       TypeBinding baseType = null;
@@ -517,6 +514,9 @@ public class XsdBinder
             }
          }
       }
+
+      if (ctx.trace)
+         log.trace("binding complex " + (typeName == null ? "anonymous type" : "type " + typeName));
 
       binding = new TypeBinding(typeName);
       binding.setBaseType(baseType);
@@ -541,12 +541,6 @@ public class XsdBinder
       if(typeName != null)
       {
          ctx.schema.addType(binding);
-      }
-
-      if (ctx.trace)
-      {
-         String msg = typeName == null ? "bound complex anonymous type" : "bound complex type " + typeName;
-         log.trace(msg);
       }
 
       binding.setSchemaBinding(ctx.schema);
@@ -723,6 +717,11 @@ public class XsdBinder
       if(binding.hasOnlyXmlMimeAttributes())
       {
          addXOPInclude(binding, ctx.schema);
+      }
+
+      if(ctx.trace)
+      {
+         log.trace(typeName == null ? "bound complex anonymous type" : "bound complex type " + typeName);
       }
 
       return binding;

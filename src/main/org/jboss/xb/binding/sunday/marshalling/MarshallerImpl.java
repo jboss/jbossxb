@@ -569,7 +569,7 @@ public class MarshallerImpl
       TypeBinding simpleType = type.getSimpleType();
       if(simpleType != null)
       {
-         String fieldName = "value";
+         String fieldName = ctx.getSimpleContentProperty();
          CharactersMetaData charactersMetaData = type.getCharactersMetaData();
          PropertyMetaData propertyMetaData = charactersMetaData == null ? null : charactersMetaData.getProperty();
          if(propertyMetaData != null)
@@ -1303,7 +1303,7 @@ public class MarshallerImpl
 
       public String getSimpleContentProperty()
       {
-         throw new UnsupportedOperationException();
+         return MarshallerImpl.this.getSimpleContentProperty();
       }
 
       public ContentHandler getContentHandler()

@@ -89,8 +89,6 @@ public class XercesXsMarshaller
    private XSAttributeUse currentAttribute;
    private XSTypeDefinition currentElementType;
 
-   private String simpleContentProperty = "value";
-
    private MarshallingContext ctx = new MarshallingContext()
    {
       private ContentHandler ch;
@@ -115,7 +113,7 @@ public class XercesXsMarshaller
 
       public String getSimpleContentProperty()
       {
-         return simpleContentProperty;
+         return XercesXsMarshaller.this.getSimpleContentProperty();
       }
 
       public ContentHandler getContentHandler()
@@ -132,16 +130,6 @@ public class XercesXsMarshaller
          return nsRegistry;
       }
    };
-
-   public String getSimpleContentProperty()
-   {
-      return simpleContentProperty;
-   }
-
-   public void setSimpleContentProperty(String simpleContentProperty)
-   {
-      this.simpleContentProperty = simpleContentProperty;
-   }
 
    public boolean isIgnoreUnresolvedWildcard()
    {

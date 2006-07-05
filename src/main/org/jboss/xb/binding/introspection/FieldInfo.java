@@ -144,10 +144,6 @@ public class FieldInfo
    {
       this.owner = owner;
       this.name = name;
-      if(getter == null)
-      {
-         System.out.println("no read method for " + name + " in " + owner);
-      }
       this.type = getter.getReturnType();
       this.getter = GetValueAccessFactory.methodAccess(getter);
       this.setter = SetValueAccessFactory.methodAccess(setter);

@@ -70,8 +70,6 @@ public abstract class AbstractMarshaller
 
    private Properties props;
 
-   private String simpleContentProperty = "value";
-
    // Marshaller implementation
 
    public void marshal(String schemaUri, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
@@ -262,16 +260,6 @@ public abstract class AbstractMarshaller
       return prefix;
    }
 
-   public String getSimpleContentProperty()
-   {
-      return simpleContentProperty;
-   }
-
-   public void setSimpleContentProperty(String simpleContentProperty)
-   {
-      this.simpleContentProperty = simpleContentProperty;
-   }
-   
    protected void declareNs(AttributesImpl attrs)
    {
       for(Iterator i = nsRegistry.getRegisteredURIs(); i.hasNext();)

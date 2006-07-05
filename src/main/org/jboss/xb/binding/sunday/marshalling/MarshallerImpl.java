@@ -1303,7 +1303,7 @@ public class MarshallerImpl
 
       public String getSimpleContentProperty()
       {
-         return MarshallerImpl.this.getSimpleContentProperty();
+         return schema.getSimpleContentProperty();
       }
 
       public ContentHandler getContentHandler()

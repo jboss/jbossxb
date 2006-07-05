@@ -50,7 +50,6 @@ import org.xml.sax.helpers.AttributesImpl;
 public class TypeBinding
 {
    protected QName qName;
-   private ElementBinding arrayItem;
    /** Map<QName, AttributeBinding>  */
    private Map attrs = Collections.EMPTY_MAP;
    private ParticleHandler handler;//todo default handler is now in SundayContentHandler.
@@ -112,7 +111,6 @@ public class TypeBinding
          this.particle = baseType.particle;
       }
 
-      this.arrayItem = baseType.arrayItem;
       this.attrs = new HashMap(baseType.attrs);
       this.classMetaData = baseType.classMetaData;
       this.valueMetaData = baseType.valueMetaData;
@@ -160,16 +158,10 @@ public class TypeBinding
       {
          modelGroup = new AllBinding(schemaBinding);
          this.particle = new ParticleBinding(modelGroup);
-
-         if(particle.isRepeatable() && particle.getTerm() instanceof ElementBinding)
-         {
-            arrayItem = (ElementBinding)particle.getTerm();
-         }
       }
       else
       {
          modelGroup = (ModelGroupBinding)this.particle.getTerm();
-         arrayItem = null;
       }
       modelGroup.addParticle(particle);
    }

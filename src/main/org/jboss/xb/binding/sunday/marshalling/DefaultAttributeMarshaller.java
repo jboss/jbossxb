@@ -64,7 +64,9 @@ public class DefaultAttributeMarshaller
             Util.xmlNameToFieldName(qName.getLocalPart(), schema.isIgnoreLowLine());
       }
 
-      FieldInfo fieldInfo = FieldInfo.getFieldInfo(owner.getClass(), fieldName, !schema.isIgnoreUnresolvedFieldOrClass());
+      FieldInfo fieldInfo = FieldInfo.getFieldInfo(
+         owner.getClass(), fieldName, binding.getRequired() && !schema.isIgnoreUnresolvedFieldOrClass()
+      );
       Object value = null;
       if(fieldInfo != null)
       {

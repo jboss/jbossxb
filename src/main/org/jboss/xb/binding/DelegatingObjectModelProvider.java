@@ -21,6 +21,9 @@
   */
 package org.jboss.xb.binding;
 
+import java.lang.reflect.Method;
+import org.jboss.logging.Logger;
+
 /**
  * todo come up with a nicer class name
  * 
@@ -30,7 +33,10 @@ package org.jboss.xb.binding;
 public class DelegatingObjectModelProvider
    implements GenericObjectModelProvider
 {
+   private static final Logger log = Logger.getLogger(DelegatingObjectModelProvider.class);
+
    private final ObjectModelProvider provider;
+   private final boolean trace = log.isTraceEnabled();
 
    public DelegatingObjectModelProvider(ObjectModelProvider provider)
    {
@@ -39,21 +45,134 @@ public class DelegatingObjectModelProvider
 
    public Object getChildren(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
-      return AbstractMarshaller.provideChildren(provider, o, namespaceURI, localName);
+      return provideChildren(provider, o, namespaceURI, localName);
    }
 
    public Object getElementValue(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
-      return AbstractMarshaller.provideValue(provider, o, namespaceURI, localName);
+      return provideValue(provider, o, namespaceURI, localName);
    }
 
    public Object getAttributeValue(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
-      return AbstractMarshaller.provideAttributeValue(provider, o, namespaceURI, localName);
+      return provideAttributeValue(provider, o, namespaceURI, localName);
    }
 
    public Object getRoot(Object o, MarshallingContext ctx, String namespaceURI, String localName)
    {
       return provider.getRoot(o, null, namespaceURI, localName);
+   }
+
+   // private
+
+   Object provideChildren(ObjectModelProvider provider,
+                          Object parent,
+                          String namespaceUri,
+                          String name)
+   {
+      Class providerClass = provider.getClass();
+      Class parentClass = parent.getClass();
+      String methodName = "getChildren";
+
+      Object container = null;
+      Method method = getProviderMethod(providerClass,
+         methodName,
+         new Class[]{parentClass, String.class, String.class}
+      );
+      if(method != null)
+      {
+         try
+         {
+            container = method.invoke(provider, new Object[]{parent, namespaceUri, name});
+         }
+         catch(Exception e)
+         {
+            log.error("Failed to invoke method " + methodName, e);
+            throw new IllegalStateException("Failed to invoke method " + methodName);
+         }
+      }
+      else if(trace)
+      {
+         log.trace("No " + methodName + " for " + name);
+      }
+      return container;
+   }
+
+   Object provideValue(ObjectModelProvider provider,
+                       Object parent,
+                       String namespaceUri,
+                       String name)
+   {
+      Class providerClass = provider.getClass();
+      Class parentClass = parent.getClass();
+      String methodName = "getElementValue";
+
+      Object value = null;
+      Method method = getProviderMethod(providerClass,
+         methodName,
+         new Class[]{parentClass, String.class, String.class}
+      );
+      if(method != null)
+      {
+         try
+         {
+            value = method.invoke(provider, new Object[]{parent, namespaceUri, name});
+         }
+         catch(Exception e)
+         {
+            throw new IllegalStateException("Failed to invoke method " + methodName);
+         }
+      }
+      else if(trace)
+      {
+         log.trace("No " + methodName + " for " + name);
+      }
+      return value;
+   }
+
+   Object provideAttributeValue(ObjectModelProvider provider,
+                                Object object,
+                                String namespaceUri,
+                                String name)
+   {
+      Class providerClass = provider.getClass();
+      Class objectClass = object.getClass();
+      String methodName = "getAttributeValue";
+
+      Object value = null;
+      Method method = getProviderMethod(providerClass,
+         methodName,
+         new Class[]{objectClass, String.class, String.class}
+      );
+      if(method != null)
+      {
+         try
+         {
+            value = method.invoke(provider, new Object[]{object, namespaceUri, name});
+         }
+         catch(Exception e)
+         {
+            throw new IllegalStateException("Failed to invoke method " + methodName);
+         }
+      }
+      else if(trace)
+      {
+         log.trace("No " + methodName + " for " + name);
+      }
+      return value;
+   }
+
+   private static Method getProviderMethod(Class providerClass, String methodName, Class[] args)
+   {
+      Method method = null;
+      try
+      {
+         method = providerClass.getMethod(methodName, args);
+      }
+      catch(NoSuchMethodException e)
+      {
+         // no method
+      }
+      return method;
    }
 }

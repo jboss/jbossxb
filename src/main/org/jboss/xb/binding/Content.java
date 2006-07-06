@@ -45,6 +45,7 @@ public class Content
    private static Logger log = Logger.getLogger(Content.class);
 
    private List content = new ArrayList();
+   private final boolean trace = log.isTraceEnabled();
 
    // Public
 
@@ -124,7 +125,7 @@ public class Content
          else if(item instanceof StartPrefixMapping)
          {
 /*
-            if(log.isTraceEnabled())
+            if(trace)
             {
                StartPrefixMapping startPrefix = (StartPrefixMapping)item;
                log.trace("start prefix mapping: " + startPrefix.prefix + "=" + startPrefix.uri);
@@ -134,7 +135,7 @@ public class Content
          else if(item instanceof EndPrefixMapping)
          {
 /*
-            if(log.isTraceEnabled())
+            if(trace)
             {
                EndPrefixMapping endPrefix = (EndPrefixMapping)item;
                log.trace("end prefix mapping: " + endPrefix.prefix);
@@ -193,7 +194,7 @@ public class Content
       StartElement startElement = new StartElement(namespaceURI, localName, qName, atts);
       content.add(startElement);
 
-      if(log.isTraceEnabled())
+      if(trace)
       {
          log.trace("startElement> uri=" + namespaceURI + ", local=" + localName + ", qn=" + qName + ", attrs=" + atts);
       }
@@ -204,7 +205,7 @@ public class Content
       EndElement endElement = new EndElement(namespaceURI, localName, qName);
       content.add(endElement);
 
-      if(log.isTraceEnabled())
+      if(trace)
       {
          log.trace("endElement> uri=" + namespaceURI + ", local=" + localName + ", qn=" + qName);
       }
@@ -218,7 +219,7 @@ public class Content
       {
          content.add(characters);
 
-         if(log.isTraceEnabled())
+         if(trace)
          {
             log.trace("characters> " + characters);
          }

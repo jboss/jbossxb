@@ -120,7 +120,7 @@ public class SequenceBinding
                );
             }
 
-            if(log.isTraceEnabled())
+            if(trace)
             {
                log.trace("endElement " + qName + " in " + getModelGroup());
             }
@@ -133,7 +133,7 @@ public class SequenceBinding
 
          protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
          {
-            if(log.isTraceEnabled())
+            if(trace)
             {
                StringBuffer sb = new StringBuffer();
                sb.append("startElement " + qName + " in " + getModelGroup() + ", " + sequence.size() + ": ");
@@ -200,7 +200,7 @@ public class SequenceBinding
                      groupStack = addItem(groupStack, this);
                      this.element = element;
 
-                     if(log.isTraceEnabled())
+                     if(trace)
                      {
                         log.trace("found " + qName + " in " + getModelGroup());
                      }
@@ -324,7 +324,7 @@ public class SequenceBinding
                }
             }
 
-            if(log.isTraceEnabled() && i == sequence.size())
+            if(trace && i == sequence.size())
             {
                log.trace(qName + " not found in " + getModelGroup());
             }

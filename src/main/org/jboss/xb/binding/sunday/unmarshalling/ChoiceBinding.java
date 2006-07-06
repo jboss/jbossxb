@@ -111,7 +111,7 @@ public class ChoiceBinding
                );
             }
 
-            if(log.isTraceEnabled())
+            if(trace)
             {
                log.trace("endElement " + qName + " in " + getModelGroup());
             }
@@ -124,7 +124,7 @@ public class ChoiceBinding
 
          protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
          {
-            if(log.isTraceEnabled())
+            if(trace)
             {
                StringBuffer sb = new StringBuffer();
                sb.append("startElement " + qName + " in " + getModelGroup() + ", " + choices.size() + ": ");
@@ -191,7 +191,7 @@ public class ChoiceBinding
                      groupStack = addItem(groupStack, this);
                      this.element = element;
 
-                     if(log.isTraceEnabled())
+                     if(trace)
                      {
                         log.trace("found " + qName + " in " + getModelGroup());
                      }
@@ -257,7 +257,7 @@ public class ChoiceBinding
                }
             }
 
-            if(log.isTraceEnabled())
+            if(trace)
             {
                if(i == choices.size())
                {

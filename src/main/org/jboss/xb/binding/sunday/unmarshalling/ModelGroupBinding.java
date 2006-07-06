@@ -42,7 +42,7 @@ public abstract class ModelGroupBinding
    extends TermBinding
    implements Cloneable
 {
-   protected static final Logger log = Logger.getLogger(ModelGroupBinding.class);
+   protected final Logger log = Logger.getLogger(getClass());
 
    protected boolean requiredParticle;
    protected ParticleHandler handler = DefaultHandlers.ELEMENT_HANDLER;
@@ -123,9 +123,10 @@ public abstract class ModelGroupBinding
 
    // Inner
 
-   public static abstract class Cursor
+   public abstract class Cursor
    {
       protected final ParticleBinding particle;
+      protected final boolean trace = log.isTraceEnabled();
 
       protected Cursor(ParticleBinding particle)
       {

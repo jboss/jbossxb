@@ -39,6 +39,8 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -48,6 +50,9 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.net.URL;
+import java.net.MalformedURLException;
+import javax.xml.parsers.ParserConfigurationException;
 
 
 /**
@@ -92,6 +97,41 @@ public class DtdMarshaller
    public void addAttribute(String prefix, String localName, String type, String value)
    {
       throw new UnsupportedOperationException("addAttribute is not implemented.");
+   }
+
+   public void marshal(String schemaUri, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
+         ParserConfigurationException,
+      SAXException
+   {
+      URL url;
+      try
+      {
+         url = new URL(schemaUri);
+      }
+      catch(MalformedURLException e)
+      {
+         throw new IllegalArgumentException("Malformed schema URI " + schemaUri + ": " + e.getMessage());
+      }
+
+      InputStream is;
+      try
+      {
+         is = url.openStream();
+      }
+      catch(IOException e)
+      {
+         throw new IllegalStateException("Failed to open input stream for schema " + schemaUri + ": " + e.getMessage());
+      }
+
+      try
+      {
+         InputStreamReader reader = new InputStreamReader(is);
+         marshal(reader, provider, root, writer);
+      }
+      finally
+      {
+         is.close();
+      }
    }
 
    public void marshal(Reader dtdReader, ObjectModelProvider provider, Object document, Writer writer)

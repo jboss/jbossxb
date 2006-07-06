@@ -50,7 +50,6 @@ import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
-import org.jboss.logging.Logger;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -62,8 +61,6 @@ import org.xml.sax.SAXException;
 public class XercesXsMarshaller
    extends AbstractMarshaller
 {
-   private static final Logger log = Logger.getLogger(XercesXsMarshaller.class);
-
    private Stack stack = new StackImpl();
 
    /**

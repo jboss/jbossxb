@@ -32,7 +32,6 @@ import java.util.Iterator;
 import java.util.List;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
-import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.AbstractMarshaller;
 import org.jboss.xb.binding.AttributesImpl;
@@ -72,8 +71,6 @@ import org.xml.sax.SAXException;
 public class MarshallerImpl
    extends AbstractMarshaller
 {
-   private static final Logger log = Logger.getLogger(MarshallerImpl.class);
-
    private Stack stack = new StackImpl();
 
    private Object root;

@@ -22,12 +22,7 @@
 package org.jboss.xb.binding;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Writer;
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,7 +31,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Iterator;
 import javax.xml.namespace.QName;
-import javax.xml.parsers.ParserConfigurationException;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.introspection.FieldInfo;
 import org.xml.sax.SAXException;
@@ -51,7 +45,7 @@ import org.xml.sax.Attributes;
 public abstract class AbstractMarshaller
    implements Marshaller
 {
-   protected static final Logger log = Logger.getLogger(AbstractMarshaller.class);
+   protected final Logger log = Logger.getLogger(getClass());
 
    protected String version = VERSION;
    protected String encoding = ENCODING;
@@ -71,41 +65,6 @@ public abstract class AbstractMarshaller
    private Properties props;
 
    // Marshaller implementation
-
-   public void marshal(String schemaUri, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
-      ParserConfigurationException,
-      SAXException
-   {
-      URL url;
-      try
-      {
-         url = new URL(schemaUri);
-      }
-      catch(MalformedURLException e)
-      {
-         throw new IllegalArgumentException("Malformed schema URI " + schemaUri + ": " + e.getMessage());
-      }
-
-      InputStream is;
-      try
-      {
-         is = url.openStream();
-      }
-      catch(IOException e)
-      {
-         throw new IllegalStateException("Failed to open input stream for schema " + schemaUri + ": " + e.getMessage());
-      }
-
-      try
-      {
-         InputStreamReader reader = new InputStreamReader(is);
-         marshal(reader, provider, root, writer);
-      }
-      finally
-      {
-         is.close();
-      }
-   }
 
    public void mapClassToGlobalElement(Class cls,
                                        String localName,
@@ -344,117 +303,6 @@ public abstract class AbstractMarshaller
          classMappings = new HashMap();
       }
       classMappings.put(mapping.cls, mapping);
-   }
-
-   static Object provideChildren(ObjectModelProvider provider,
-                                 Object parent,
-                                 String namespaceUri,
-                                 String name)
-   {
-      Class providerClass = provider.getClass();
-      Class parentClass = parent.getClass();
-      String methodName = "getChildren";
-
-      Object container = null;
-      Method method = getProviderMethod(providerClass,
-         methodName,
-         new Class[]{parentClass, String.class, String.class}
-      );
-      if(method != null)
-      {
-         try
-         {
-            container = method.invoke(provider, new Object[]{parent, namespaceUri, name});
-         }
-         catch(Exception e)
-         {
-            log.error("Failed to invoke method " + methodName, e);
-            throw new IllegalStateException("Failed to invoke method " + methodName);
-         }
-      }
-      else if(log.isTraceEnabled())
-      {
-         log.trace("No " + methodName + " for " + name);
-      }
-      return container;
-   }
-
-   static Object provideValue(ObjectModelProvider provider,
-                              Object parent,
-                              String namespaceUri,
-                              String name)
-   {
-      Class providerClass = provider.getClass();
-      Class parentClass = parent.getClass();
-      String methodName = "getElementValue";
-
-      Object value = null;
-      Method method = getProviderMethod(providerClass,
-         methodName,
-         new Class[]{parentClass, String.class, String.class}
-      );
-      if(method != null)
-      {
-         try
-         {
-            value = method.invoke(provider, new Object[]{parent, namespaceUri, name});
-         }
-         catch(Exception e)
-         {
-            throw new IllegalStateException("Failed to invoke method " + methodName);
-         }
-      }
-      else if(log.isTraceEnabled())
-      {
-         log.trace("No " + methodName + " for " + name);
-      }
-      return value;
-   }
-
-   static Object provideAttributeValue(ObjectModelProvider provider,
-                                       Object object,
-                                       String namespaceUri,
-                                       String name)
-   {
-      Class providerClass = provider.getClass();
-      Class objectClass = object.getClass();
-      String methodName = "getAttributeValue";
-
-      Object value = null;
-      Method method = getProviderMethod(providerClass,
-         methodName,
-         new Class[]{objectClass, String.class, String.class}
-      );
-      if(method != null)
-      {
-         try
-         {
-            value = method.invoke(provider, new Object[]{object, namespaceUri, name});
-         }
-         catch(Exception e)
-         {
-            throw new IllegalStateException("Failed to invoke method " + methodName);
-         }
-      }
-      else if(log.isTraceEnabled())
-      {
-         log.trace("No " + methodName + " for " + name);
-      }
-      return value;
-   }
-
-   private static Method getProviderMethod(Class providerClass, String methodName, Class[] args)
-   {
-      Method method = null;
-      try
-      {
-         method = providerClass.getMethod(methodName, args);
-      }
-      catch(NoSuchMethodException e)
-      {
-         // no method
-      }
-      return method;
    }
 
    // Inner

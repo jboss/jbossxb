@@ -62,6 +62,8 @@ public class SundayContentHandler
 
    private ParticleHandler defParticleHandler = DefaultHandlers.ELEMENT_HANDLER;
 
+   private final boolean trace = log.isTraceEnabled();
+
    public SundayContentHandler(SchemaBinding schema)
    {
       this.schema = schema;
@@ -350,7 +352,7 @@ public class SundayContentHandler
          String xsiType = atts.getValue("xsi:type");
          if(xsiType != null)
          {
-            if(log.isTraceEnabled())
+            if(trace)
             {
                log.trace(element.getQName() + " uses xsi:type " + xsiType);
             }
@@ -441,7 +443,7 @@ public class SundayContentHandler
          {
             throw new JBossXBRuntimeException(msg);
          }
-         else if(log.isTraceEnabled())
+         else if(trace)
          {
             log.trace(msg);
          }
@@ -462,7 +464,7 @@ public class SundayContentHandler
       Object o;
       if(item.o instanceof ValueList && !modelGroupParticle.getTerm().isSkip())
       {
-         if(log.isTraceEnabled())
+         if(trace)
          {
             log.trace("endParticle " + qName + " valueList");
          }
@@ -655,7 +657,7 @@ public class SundayContentHandler
 
       if(o instanceof ValueList && !particle.getTerm().isSkip())
       {
-         if(log.isTraceEnabled())
+         if(trace)
          {
             log.trace("endParticle " + endName + " valueList");
          }
@@ -731,7 +733,7 @@ public class SundayContentHandler
                }
             }
 
-            if(log.isTraceEnabled())
+            if(trace)
             {
                log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
             }
@@ -776,7 +778,7 @@ public class SundayContentHandler
    {
       StackItem item = new StackItem(particle, o);
       stack.push(item);
-      if(log.isTraceEnabled())
+      if(trace)
       {
          Object binding = null;
          if(particle != null)
@@ -791,7 +793,7 @@ public class SundayContentHandler
    {
       StackItem item = new StackItem(cursor, o);
       stack.push(item);
-      if(log.isTraceEnabled())
+      if(trace)
       {
          log.trace("pushed cursor " + cursor);
       }
@@ -801,7 +803,7 @@ public class SundayContentHandler
    private StackItem pop()
    {
       StackItem item = (StackItem)stack.pop();
-      if(log.isTraceEnabled())
+      if(trace)
       {
          if(item.particle != null)
          {

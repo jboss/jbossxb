@@ -32,6 +32,14 @@ public class ParticleBinding
    private int maxOccurs = -1;
    private boolean maxOccursUnbounded;
 
+   public ParticleBinding(TermBinding term, int minOccurs, int maxOccurs, boolean maxOccursUnbounded)
+   {
+      this.term = term;
+      this.minOccurs = minOccurs;
+      this.maxOccurs = maxOccurs;
+      this.maxOccursUnbounded = maxOccursUnbounded;
+   }
+
    public ParticleBinding(TermBinding term)
    {
       this.term = term;

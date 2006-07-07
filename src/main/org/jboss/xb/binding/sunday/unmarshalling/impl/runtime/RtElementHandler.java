@@ -290,9 +290,24 @@ public class RtElementHandler
                }
                ((GenericValueContainer)owner).addChild(qName, o);
             }
-            else if(propertyMetaData != null)
+            else if(owner instanceof Collection)
             {
-               String propName = propertyMetaData.getName();
+               if(trace)
+               {
+                  log.trace("setParent " + qName + " collection.add()");
+               }
+               ((Collection)owner).add(o);
+            }
+            else
+            {
+               String propName = null;
+               String colType = null;
+               if(propertyMetaData != null)
+               {
+                  propName = propertyMetaData.getName();
+                  colType = propertyMetaData.getCollectionType();
+               }
+
                if(propName == null)
                {
                   propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
@@ -305,47 +320,14 @@ public class RtElementHandler
 
                if(particle.isRepeatable())
                {
-                  RtUtil.add(owner, o, propName, propertyMetaData.getCollectionType(),
+                  RtUtil.add(owner, o, propName, colType,
                      term.getSchema().isIgnoreUnresolvedFieldOrClass(),
                      term.getValueAdapter()
                   );
                }
                else
                {
-                  RtUtil.set(owner, o, propName, propertyMetaData.getCollectionType(),
-                     term.getSchema().isIgnoreUnresolvedFieldOrClass(),
-                     term.getValueAdapter()
-                  );
-               }
-            }
-            else if(owner instanceof Collection)
-            {
-               if(trace)
-               {
-                  log.trace("setParent " + qName + " collection.add()");
-               }
-               ((Collection)owner).add(o);
-            }
-            else
-            {
-               // no metadata available
-               String propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
-
-               if(trace)
-               {
-                  log.trace("setParent " + qName + " no metadata set " + propName);
-               }
-
-               if(particle.isRepeatable())
-               {
-                  RtUtil.add(owner, o, propName, null,
-                     term.getSchema().isIgnoreUnresolvedFieldOrClass(),
-                     term.getValueAdapter()
-                  );
-               }
-               else
-               {
-                  RtUtil.set(owner, o, propName, null,
+                  RtUtil.set(owner, o, propName, colType,
                      term.getSchema().isIgnoreUnresolvedFieldOrClass(),
                      term.getValueAdapter()
                   );

@@ -343,7 +343,8 @@ public class SundayContentHandler
                   startName + " for wildcard."
                );
             }
-            particle = new ParticleBinding(element);
+
+            particle = new ParticleBinding(element, particle.getMinOccurs(), particle.getMaxOccurs(), particle.getMaxOccursUnbounded());
          }
 
          ElementBinding element = (ElementBinding)particle.getTerm();
@@ -384,7 +385,7 @@ public class SundayContentHandler
             }
 
             element = new ElementBinding(schemaBinding, startName, xsiTypeBinding);
-            particle = new ParticleBinding(element);
+            particle = new ParticleBinding(element, particle.getMinOccurs(), particle.getMaxOccurs(), particle.getMaxOccursUnbounded());
          }
 
          TypeBinding type = element.getType();

@@ -84,11 +84,17 @@ public class ClassInfos
    public static ClassInfo getClassInfo(Class cls)
    {
       ClassInfo clsInfo = (ClassInfo)classInfos.get(cls.getName());
-      if(clsInfo == null)
+
+      // a classinfo is reusable when it exists and the class has
+      // been loaded from the same classloader
+      boolean reusableInfo = (clsInfo != null && clsInfo.getType().equals(cls));
+
+      if( !reusableInfo )
       {
          clsInfo = new ClassInfo(cls);
          classInfos.put(cls.getName(), clsInfo);
       }
+
       return clsInfo;
    }
 
@@ -100,9 +106,7 @@ public class ClassInfos
          try
          {
             Class cls = Thread.currentThread().getContextClassLoader().loadClass(name);
-            ClassInfo clsInfo = new ClassInfo(cls);
-            classInfos.put(name, clsInfo);
-            return clsInfo;
+            return getClassInfo(cls);            
          }
          catch(ClassNotFoundException e)
          {

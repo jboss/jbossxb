@@ -23,9 +23,10 @@ package org.jboss.xb.binding.introspection;
 
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.Collections;
+import java.lang.ref.WeakReference;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.util.NoopMap;
+import EDU.oswego.cs.dl.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -33,35 +34,43 @@ import org.jboss.xb.util.NoopMap;
  */
 public class ClassInfos
 {
-   private static Map classInfos = Collections.synchronizedMap(new WeakHashMap());
-   private static final Object CLASS_INFO_NA = new Object();
+   private static Map classloaderCache = new WeakHashMap();
 
    /**
     * Disables caching of ClassInfo's. Already cached ClassInfo's will be lost after
     * the method returns.
     */
-   public static synchronized void disableCache()
+   public static void disableCache()
    {
-      classInfos = NoopMap.INSTANCE;
+      synchronized(classloaderCache)
+      {
+         classloaderCache = NoopMap.INSTANCE;
+      }
    }
 
    /**
     * Enables caching of ClassInfo's unless caching is already enabled.
     */
-   public static synchronized void enableCache()
+   public static void enableCache()
    {
-      if(!isCacheEnabled())
+      synchronized(classloaderCache)
       {
-         classInfos = Collections.synchronizedMap(new WeakHashMap());
+         if(!isCacheEnabled())
+         {
+            classloaderCache = new WeakHashMap();
+         }
       }
    }
 
    /**
     * @return true if caching is enabled, false otherwise.
     */
-   public static synchronized boolean isCacheEnabled()
+   public static boolean isCacheEnabled()
    {
-      return classInfos != NoopMap.INSTANCE;
+      synchronized(classloaderCache)
+      {
+         return classloaderCache != NoopMap.INSTANCE;
+      }
    }
 
    /**
@@ -69,7 +78,10 @@ public class ClassInfos
     */
    public static void flushCache()
    {
-      classInfos.clear();
+      synchronized(classloaderCache)
+      {
+         classloaderCache.clear();
+      }
    }
 
    /**
@@ -78,56 +90,85 @@ public class ClassInfos
     */
    public static void flushCache(String cls)
    {
-      classInfos.remove(cls);
+      ClassLoader cl = Thread.currentThread().getContextClassLoader();
+      Map classLoaderCache = getClassLoaderCache(cl);
+      classLoaderCache.remove(cls);
+   }
+
+   /**
+    * Evicts ClassInfo for a specific class.
+    * @param cls  the class to remove the ClassInfo for
+    */
+   public static void flushCache(Class cls)
+   {
+      Map classLoaderCache = getClassLoaderCache(cls.getClassLoader());
+      classLoaderCache.remove(cls.getName());
    }
 
    public static ClassInfo getClassInfo(Class cls)
    {
-      ClassInfo clsInfo = (ClassInfo)classInfos.get(cls.getName());
+      Map classLoaderCache = getClassLoaderCache(cls.getClassLoader());
 
-      // a classinfo is reusable when it exists and the class has
-      // been loaded from the same classloader
-      boolean reusableInfo = (clsInfo != null && clsInfo.getType().equals(cls));
-
-      if( !reusableInfo )
+      WeakReference weak = (WeakReference)classLoaderCache.get(cls.getName());
+      if(weak != null)
       {
-         clsInfo = new ClassInfo(cls);
-         classInfos.put(cls.getName(), clsInfo);
+         Object result = weak.get();
+         if(result != null)
+         {
+            return (ClassInfo)result;
+         }
       }
 
+      ClassInfo clsInfo = new ClassInfo(cls);
+      weak = new WeakReference(clsInfo);
+      classLoaderCache.put(cls.getName(), weak);
       return clsInfo;
    }
 
    public static ClassInfo getClassInfo(String name, boolean required)
    {
-      Object o = classInfos.get(name);
-      if(o == null)
-      {
-         try
-         {
-            Class cls = Thread.currentThread().getContextClassLoader().loadClass(name);
-            return getClassInfo(cls);            
-         }
-         catch(ClassNotFoundException e)
-         {
-            if(required)
-            {
-               throw new JBossXBRuntimeException("Failed to load class " + name);
-            }
+      ClassLoader cl = Thread.currentThread().getContextClassLoader();
+      Map classLoaderCache = getClassLoaderCache(cl);
 
-            classInfos.put(name, CLASS_INFO_NA);
+      WeakReference weak = (WeakReference)classLoaderCache.get(name);
+      if(weak != null)
+      {
+         Object result = weak.get();
+         if(result != null)
+         {
+            return (ClassInfo)result;
          }
       }
-      else if(o != CLASS_INFO_NA)
+
+      try
       {
-         return (ClassInfo)o;
+         ClassInfo clsInfo = new ClassInfo(cl.loadClass(name));
+         weak = new WeakReference(clsInfo);
+         classLoaderCache.put(name, weak);
+         return clsInfo;
+      }
+      catch(ClassNotFoundException e)
+      {
+         if(required)
+         {
+            throw new JBossXBRuntimeException("Failed to load class " + name);
+         }
       }
 
-      if(required)
-      {
-         throw new JBossXBRuntimeException("Failed to load class " + name);
-      }
+      return null;
+   }
 
-      return  null;
+   private static Map getClassLoaderCache(ClassLoader cl)
+   {
+      synchronized(classloaderCache)
+      {
+         Map result = (Map) classloaderCache.get(cl);
+         if (result == null)
+         {
+            result = new ConcurrentHashMap();
+            classloaderCache.put(cl, result);
+         }
+         return result;
+      }
    }
 }

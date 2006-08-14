@@ -12,21 +12,13 @@
   &targets;
    <!-- The combined library classpath -->
       <path id="library.classpath">
-         <path refid="jboss.logging.spi.classpath"/>
-        <path refid="wutka.dtdparser.classpath"/> 
-        <path refid="apache.slide.classpath"/>
-        <path refid="sun.jaf.classpath"/>
+         <path refid="jboss/common.logging.spi.classpath"/>
+         <path refid="wutka.dtdparser.classpath"/> 
+         <path refid="apache.slide.classpath"/>
+         <path refid="sun.jaf.classpath"/>
          <path refid="apache.xerces.classpath"/>
-         <path refid="jboss.common.core.classpath"/>
-                 <path refid="oswego.concurrent.classpath"/>
-<!--      
-        <path refid="apache.commons.classpath"/>
-        <path refid="apache.log4j.classpath"/>
-        
-        <path refid="dom4j.dom4j.classpath"/>
-        
-
-         -->
+         <path refid="jboss/common.core.classpath"/>
+         <path refid="oswego.concurrent.classpath"/>
       </path>
 
         <!-- The combined dependent module classpath -->

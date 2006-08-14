@@ -95,16 +95,4 @@
   <pathelement path="${apache.ant.lib}/ant.jar"/>
 </path>
   
-  
-  
- <!--delete this junk -->  
-    
-  <property name="jboss.logging.spi" value="${project.thirdparty}/jboss/common-logging-spi"/>
-  <path id="jboss.logging.spi.classpath">
-     <pathelement path="${jboss.logging.spi}/jboss-logging-spi-1.0.2.jar"/>
-</path>   
-
-  <property name="jboss.common.core" value="${project.thirdparty}/jboss/common-core"/>
-  <path id="jboss.common.core.classpath">
-     <pathelement path="${jboss.common.core}/jboss-common-core-1.0.2.jar"/>
-</path>       
+ 

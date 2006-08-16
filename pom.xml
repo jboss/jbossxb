@@ -92,12 +92,12 @@
     <dependency>
       <groupId>jboss.logging</groupId>
       <artifactId>jboss-logging-spi</artifactId>
-      <version>1.0.1.TEST</version>
+      <version>1.0</version>
     </dependency>
     <dependency>
       <groupId>jboss.common.core</groupId>
       <artifactId>jboss-common-core</artifactId>
-      <version>1.0.1.TEST</version>
+      <version>1.0</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

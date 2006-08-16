@@ -12,12 +12,12 @@
   &targets;
    <!-- The combined library classpath -->
       <path id="library.classpath">
-         <path refid="jboss/common.logging.spi.classpath"/>
+         <path refid="jboss.common.logging.spi.classpath"/>
          <path refid="wutka.dtdparser.classpath"/> 
          <path refid="apache.slide.classpath"/>
          <path refid="sun.jaf.classpath"/>
          <path refid="apache.xerces.classpath"/>
-         <path refid="jboss/common.core.classpath"/>
+         <path refid="jboss.common.core.classpath"/>
          <path refid="oswego.concurrent.classpath"/>
       </path>
 

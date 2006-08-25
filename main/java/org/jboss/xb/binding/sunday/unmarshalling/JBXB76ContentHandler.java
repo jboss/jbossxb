@@ -77,7 +77,7 @@ public class JBXB76ContentHandler
    public void characters(char[] ch, int start, int length)
    {
       StackItem stackItem = stack.peek();
-      if(stackItem.particle != null)
+      if(stackItem.cursor == null)
       {
          if(stackItem.textContent == null)
          {
@@ -95,7 +95,7 @@ public class JBXB76ContentHandler
       while(true)
       {
          item = stack.peek();
-         if(item.particle != null)
+         if(item.cursor == null)
          {
             if(item.ended)
             {
@@ -115,9 +115,9 @@ public class JBXB76ContentHandler
          else
          {
             endParticle(item, endName, 1);
-            if(item.cursor.getParticle().isRepeatable())
+            if(item.particle.isRepeatable())
             {
-               endRepeatableParticle(item.cursor.getParticle());
+               endRepeatableParticle(item.particle);
             }
             pop();
          }
@@ -177,7 +177,7 @@ public class JBXB76ContentHandler
          while(!stack.isEmpty())
          {
             item = stack.peek();
-            if(item.particle != null)
+            if(item.cursor == null)
             {
                TermBinding term = item.particle.getTerm();
                ElementBinding element = (ElementBinding)term;
@@ -490,7 +490,7 @@ public class JBXB76ContentHandler
             );
          }
 
-         parentParticle = parentItem.cursor.getParticle();
+         parentParticle = parentItem.particle;
          if(parentParticle.isRepeatable())
          {
             break;
@@ -504,7 +504,7 @@ public class JBXB76ContentHandler
          StringBuffer msg = new StringBuffer();
 
          StackItem item = stack.peek();
-         ParticleBinding currentParticle = item.particle == null ? item.cursor.getParticle() : item.particle;
+         ParticleBinding currentParticle = item.particle;
          msg.append("Failed to start ").append(startName).append(": ")
             .append(currentParticle.getTerm())
             .append(" is not repeatable.")
@@ -516,7 +516,7 @@ public class JBXB76ContentHandler
          for(int i = stack.size() - 1; i >= 0; --i)
          {
             item = stack.peek(i);
-            ParticleBinding particle = item.particle == null ? item.cursor.getParticle() : item.particle;
+            ParticleBinding particle = item.particle;
             TermBinding term = particle.getTerm();
             if(term.isModelGroup())
             {
@@ -554,10 +554,9 @@ public class JBXB76ContentHandler
       while(parentPos > 0)
       {
          StackItem item = stack.peek(parentPos--);
-         ParticleBinding itemParticle = item.cursor.getParticle();
-         ParticleHandler handler = getHandler(itemParticle);
+         ParticleHandler handler = getHandler(item.particle);
          item.reset();
-         item.o = handler.startParticle(parentItem.o, startName, itemParticle, null, nsRegistry);
+         item.o = handler.startParticle(parentItem.o, startName, item.particle, null, nsRegistry);
          parentItem = item;
       }
    }
@@ -576,13 +575,10 @@ public class JBXB76ContentHandler
    {
       if(item.ended)
       {
-         throw new JBossXBRuntimeException(
-            (item.particle == null ? item.cursor.getParticle().getTerm() : item.particle.getTerm()) +
-            " has already been ended."
-         );
+         throw new JBossXBRuntimeException(item.particle.getTerm() + " has already been ended.");
       }
 
-      ParticleBinding modelGroupParticle = item.cursor.getParticle();
+      ParticleBinding modelGroupParticle = item.particle;
       ParticleHandler handler = getHandler(modelGroupParticle);
 
       Object o;
@@ -609,7 +605,7 @@ public class JBXB76ContentHandler
          ParticleBinding parentParticle = item.particle;
          if(parentParticle == null)
          {
-            parentParticle = item.cursor.getParticle();
+            parentParticle = item.particle;
          }
          setParent(handler, item.o, o, qName, modelGroupParticle, parentParticle);
       }
@@ -854,7 +850,7 @@ public class JBXB76ContentHandler
             {
                StackItem peeked = (StackItem)iter.previous();
                peeked.o = o;
-               if(peeked.particle != null)
+               if(peeked.cursor == null)
                {
                   break;
                }
@@ -932,17 +928,13 @@ public class JBXB76ContentHandler
       StackItem item = stack.pop();
       if(trace)
       {
-         if(item.particle != null)
+         if(item.cursor == null)
          {
             log.trace("poped " + ((ElementBinding)item.particle.getTerm()).getQName() + "=" + item.particle);
          }
-         else if(item.cursor != null)
-         {
-            log.trace("poped " + item.cursor.getCurrentParticle().getTerm());
-         }
          else
          {
-            log.trace("poped null");
+            log.trace("poped " + item.cursor.getCurrentParticle().getTerm());
          }
       }
       return item;
@@ -960,13 +952,15 @@ public class JBXB76ContentHandler
 
       public StackItem(ModelGroupBinding.Cursor cursor, Object o)
       {
+         // this is modelgroup particle
          this.cursor = cursor;
-         this.particle = null;
+         this.particle = cursor.getParticle();
          this.o = o;
       }
 
       public StackItem(ParticleBinding particle, Object o)
       {
+         // this is element particle
          this.cursor = null;
          this.particle = particle;
          this.o = o;
@@ -976,8 +970,9 @@ public class JBXB76ContentHandler
       {
          if(!ended)
          {
-            throw new JBossXBRuntimeException("Attempt to reset a particle that has already been reset: " +
-               (particle == null ? cursor.getParticle().getTerm() : particle.getTerm()));
+            throw new JBossXBRuntimeException(
+               "Attempt to reset a particle that has already been reset: " + particle.getTerm()
+            );
          }
 
          ended = false;

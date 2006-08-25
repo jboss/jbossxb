@@ -101,6 +101,11 @@ public class AllBinding
             return (ElementBinding)getCurrentParticle().getTerm();
          }
 
+         public boolean isPositioned()
+         {
+            return curParticle != null;
+         }
+
          public void endElement(QName qName)
          {
             if(curParticle == null || !getElement().getQName().equals(qName))

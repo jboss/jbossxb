@@ -111,6 +111,11 @@ public class SequenceBinding
             return element;
          }
 
+         public boolean isPositioned()
+         {
+            return pos != -1;
+         }
+
          public void endElement(QName qName)
          {
             if(element == null || !element.getQName().equals(qName))

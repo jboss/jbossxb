@@ -147,6 +147,8 @@ public abstract class ModelGroupBinding
 
       public abstract ElementBinding getElement();
 
+      public abstract boolean isPositioned();
+
       public List startElement(QName qName, Attributes attrs)
       {
          return startElement(qName, attrs, Collections.EMPTY_SET, Collections.EMPTY_LIST, true);

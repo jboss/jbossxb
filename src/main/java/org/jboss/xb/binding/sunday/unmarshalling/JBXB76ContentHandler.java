@@ -94,7 +94,7 @@ public class JBXB76ContentHandler
       StackItem item;
       while(true)
       {
-         item =  stack.peek();
+         item = stack.peek();
          if(item.particle != null)
          {
             if(item.ended)
@@ -133,14 +133,6 @@ public class JBXB76ContentHandler
       }
 
       endElement(item.o, item.particle, item.textContent == null ? "" : item.textContent.toString());
-
-      // if parent group is choice, it should also be finished
-      StackItem parent = stack.size() < 2 ? null : (StackItem)stack.peek(1);
-      if(parent != null && parent.cursor != null &&
-         parent.cursor.getParticle().getTerm() instanceof ChoiceBinding)
-      {
-         parent.ended = true;
-      }
    }
 
    public void startElement(String namespaceURI,
@@ -195,7 +187,7 @@ public class JBXB76ContentHandler
 
                      if(!particle.isRepeatable())
                      {
-                        endRepeatbleParent(startName);
+                        endRepeatableParent(startName);
                      }
                   }
                   else
@@ -259,6 +251,14 @@ public class JBXB76ContentHandler
                   throw new JBossXBRuntimeException("No cursor for " + startName);
                }
 
+               // todo review
+               if(cursor.isPositioned() && cursor.getParticle().getTerm() instanceof ChoiceBinding)
+               {
+                  endParticle(item, startName, 1);
+                  pop();
+                  continue;
+               }
+
                int currentOccurence = cursor.getOccurence();
                List newCursors = cursor.startElement(startName, atts);
                if(newCursors.isEmpty())
@@ -268,11 +268,6 @@ public class JBXB76ContentHandler
                }
                else
                {
-                  if(item.ended && !item.cursor.getParticle().isRepeatable())
-                  {
-                     endRepeatbleParent(startName);
-                  }
-
                   if(cursor.getOccurence() - currentOccurence > 0 || item.ended)
                   {
                      endParticle(item, startName, 1);
@@ -281,15 +276,8 @@ public class JBXB76ContentHandler
                      ParticleHandler handler = getHandler(modelGroupParticle);
                      Object o = handler.startParticle(stack.peek(1).o, startName, modelGroupParticle, atts, nsRegistry);
 
-                     if(item.ended)
-                     {
-                        item.reset();
-                        item.o = o;
-                     }
-                     else
-                     {
-                        item = push(cursor, o);
-                     }
+                     item.reset();
+                     item.o = o;
                   }
 
                   // push all except the last one
@@ -467,20 +455,29 @@ public class JBXB76ContentHandler
       return handler == null ? defParticleHandler : handler;
    }
 
-   private void endRepeatbleParent(QName startName)
+   private void endRepeatableParent(QName startName)
    {
       int parentPos = 1;
-      StackItem parentItem = stack.peek(parentPos);
-      ParticleBinding parentParticle =
-         parentItem.cursor == null ? parentItem.particle : parentItem.cursor.getParticle();
-      StackItem nonRepeatableChoiceItem = null;
-      if(!parentParticle.isRepeatable() && parentParticle.getTerm() instanceof ChoiceBinding)
+      StackItem parentItem;
+      ParticleBinding parentParticle = null;
+      while(true)
       {
-         endParticle(parentItem, startName, ++parentPos);
-         nonRepeatableChoiceItem = parentItem;
-         nonRepeatableChoiceItem.reset();
          parentItem = stack.peek(parentPos);
-         parentParticle = parentItem.cursor == null ? parentItem.particle : parentItem.cursor.getParticle();
+         if(parentItem.cursor == null)
+         {
+            throw new JBossXBRuntimeException(
+               "Repeatable parent expected to be a model group but got element: " +
+               ((ElementBinding)parentItem.particle.getTerm()).getQName()
+            );
+         }
+
+         parentParticle = parentItem.cursor.getParticle();
+         if(parentParticle.isRepeatable())
+         {
+            break;
+         }
+
+         endParticle(parentItem, startName, ++parentPos);
       }
 
       if(!parentParticle.isRepeatable())
@@ -493,16 +490,10 @@ public class JBXB76ContentHandler
             .append(currentParticle.getTerm())
             .append(" is not repeatable.")
             .append(" Its parent ")
-            .append(parentParticle.getTerm());
+            .append(parentParticle.getTerm())
+            .append(" expected to be repeatable!")
+            .append("\ncurrent stack: ");
 
-         if(nonRepeatableChoiceItem != null)
-         {
-            msg.append(" or the choice it contains ");
-         }
-
-         msg.append(" expected to be repeatable!");
-
-         msg.append("\ncurrent stack: ");
          for(int i = stack.size() - 1; i >= 0; --i)
          {
             item = stack.peek(i);
@@ -538,21 +529,17 @@ public class JBXB76ContentHandler
       }
 
       // todo startName is wrong here
-      endParticle(parentItem, startName, ++parentPos);
-      parentItem.reset();
+      endParticle(parentItem, startName, parentPos + 1);
 
-      StackItem granItem = stack.peek(parentPos);
-
-      ParticleHandler handler = getHandler(parentParticle);
-      parentItem.o = handler.startParticle(granItem.o, startName, parentParticle, null, nsRegistry);
-
-      if(nonRepeatableChoiceItem != null)
+      parentItem = stack.peek(parentPos + 1);
+      while(parentPos > 0)
       {
-         ParticleBinding choiceParticle = nonRepeatableChoiceItem.cursor.getParticle();
-         handler = getHandler(choiceParticle);
-         nonRepeatableChoiceItem.o = handler.startParticle(
-            parentItem.o, startName, choiceParticle, null, nsRegistry
-         );
+         StackItem item = stack.peek(parentPos--);
+         ParticleBinding itemParticle = item.cursor.getParticle();
+         ParticleHandler handler = getHandler(itemParticle);
+         item.reset();
+         item.o = handler.startParticle(parentItem.o, startName, itemParticle, null, nsRegistry);
+         parentItem = item;
       }
    }
 
@@ -566,8 +553,16 @@ public class JBXB76ContentHandler
       //System.out.println("end repeatable particle: " + particle.getTerm());
    }
 
-   private StackItem endParticle(StackItem item, QName qName, int parentStackPos)
+   private void endParticle(StackItem item, QName qName, int parentStackPos)
    {
+      if(item.ended)
+      {
+         throw new JBossXBRuntimeException(
+            (item.particle == null ? item.cursor.getParticle().getTerm() : item.particle.getTerm()) +
+            " has already been ended."
+         );
+      }
+
       ParticleBinding modelGroupParticle = item.cursor.getParticle();
       ParticleHandler handler = getHandler(modelGroupParticle);
 
@@ -586,6 +581,8 @@ public class JBXB76ContentHandler
          o = handler.endParticle(item.o, qName, modelGroupParticle);
       }
 
+      item.ended = true;
+
       // model group should always have parent particle
       item = (StackItem)stack.peek(parentStackPos);
       if(item.o != null)
@@ -597,13 +594,6 @@ public class JBXB76ContentHandler
          }
          setParent(handler, item.o, o, qName, modelGroupParticle, parentParticle);
       }
-
-      if(item.cursor != null && item.cursor.getParticle().getTerm() instanceof ChoiceBinding)
-      {
-         item.ended = true;
-      }
-
-      return item;
    }
 
    public void startPrefixMapping(String prefix, String uri)
@@ -916,6 +906,7 @@ public class JBXB76ContentHandler
       {
          log.trace("pushed cursor " + cursor + ", o=" + o);
       }
+
       return item;
    }
 
@@ -937,6 +928,7 @@ public class JBXB76ContentHandler
             log.trace("poped null");
          }
       }
+
       return item;
    }
 
@@ -966,6 +958,12 @@ public class JBXB76ContentHandler
 
       void reset()
       {
+         if(!ended)
+         {
+            throw new JBossXBRuntimeException("Attempt to reset a particle that has already been reset: " +
+               (particle == null ? cursor.getParticle().getTerm() : particle.getTerm()));
+         }
+
          ended = false;
          o = null;
          if(textContent != null)

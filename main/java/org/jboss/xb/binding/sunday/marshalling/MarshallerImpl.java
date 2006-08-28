@@ -455,7 +455,7 @@ public class MarshallerImpl
          declareXsiType(type.getQName(), ctx.attrs);
       }
 
-      String typeName = type.getQName().getLocalPart();
+      String typeName = type.getQName() == null ? null : type.getQName().getLocalPart();
       if(ctx.attrs == null && SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
          SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
          type.getItemType() != null &&
@@ -933,6 +933,7 @@ public class MarshallerImpl
                                     Object value)
    {
       String marshalled;
+      QName simpleTypeQName = simpleType.getQName();
       if(simpleType.getItemType() != null)
       {
          TypeBinding itemType = simpleType.getItemType();
@@ -964,9 +965,9 @@ public class MarshallerImpl
             );
          }
       }
-      else if(Constants.NS_XML_SCHEMA.equals(simpleType.getQName().getNamespaceURI()))
+      else if(simpleTypeQName != null && Constants.NS_XML_SCHEMA.equals(simpleTypeQName.getNamespaceURI()))
       {
-         String typeName = simpleType.getQName().getLocalPart();
+         String typeName = simpleTypeQName.getLocalPart();
 
          String prefix = null;
          boolean removePrefix = false;
@@ -1033,7 +1034,7 @@ public class MarshallerImpl
                {
                   throw new JBossXBRuntimeException("Failed to find neither value() nor getValue() in " +
                      value.getClass() +
-                     " which is bound to enumeration type " + simpleType.getQName()
+                     " which is bound to enumeration type " + simpleTypeQName
                   );
                }
             }

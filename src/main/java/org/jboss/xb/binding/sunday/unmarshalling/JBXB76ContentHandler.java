@@ -99,11 +99,11 @@ public class JBXB76ContentHandler
          {
             if(item.ended)
             {
+               pop();
                if(item.particle.isRepeatable())
                {
                   endRepeatableParticle(item.particle);
                }
-               pop();
             }
             else
             {
@@ -115,11 +115,11 @@ public class JBXB76ContentHandler
          else
          {
             endParticle(item, endName, 1);
+            pop();
             if(item.particle.isRepeatable())
             {
                endRepeatableParticle(item.particle);
             }
-            pop();
          }
       }
 
@@ -196,11 +196,11 @@ public class JBXB76ContentHandler
                   }
                   else
                   {
+                     pop();
                      if(item.particle.isRepeatable())
                      {
                         endRepeatableParticle(item.particle);
                      }
-                     pop();
                      continue;
                   }
                }
@@ -238,6 +238,11 @@ public class JBXB76ContentHandler
                         cursor = (ModelGroupBinding.Cursor)newCursors.get(i);
 
                         ParticleBinding modelGroupParticle = cursor.getParticle();
+                        if(modelGroupParticle.isRepeatable())
+                        {
+                           startRepeatableParticle(startName, modelGroupParticle);
+                        }
+
                         ParticleHandler handler = getHandler(modelGroupParticle);
                         o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
                         push(cursor, o);
@@ -263,7 +268,7 @@ public class JBXB76ContentHandler
                   continue;
                }
 
-               int prevOccurence = cursor.getOccurence();
+               //int prevOccurence = cursor.getOccurence();
                ParticleBinding prevParticle = cursor.isPositioned() ? cursor.getCurrentParticle() : null;
                List newCursors = cursor.startElement(startName, atts);
                if(newCursors.isEmpty())
@@ -283,10 +288,11 @@ public class JBXB76ContentHandler
 
                      if(curParticle.isRepeatable())
                      {
-                        startRepeatableParticle(curParticle);
+                        startRepeatableParticle(startName, curParticle);
                      }
                   }
 
+/*
                   if(cursor.getOccurence() - prevOccurence > 0 || item.ended)
                   {
                      endParticle(item, startName, 1);
@@ -298,6 +304,7 @@ public class JBXB76ContentHandler
                      item.reset();
                      item.o = o;
                   }
+*/
 
                   // push all except the last one
                   Object o = item.o;
@@ -393,7 +400,7 @@ public class JBXB76ContentHandler
 
          if(!repeated && particle.isRepeatable())
          {
-            startRepeatableParticle(particle);
+            startRepeatableParticle(startName, particle);
          }
 
          TypeBinding type = element.getType();
@@ -561,14 +568,50 @@ public class JBXB76ContentHandler
       }
    }
 
-   private void startRepeatableParticle(ParticleBinding particle)
+   private void startRepeatableParticle(QName startName, ParticleBinding particle)
    {
       //System.out.println(" start repeatable particle: " + particle.getTerm());
+/*
+      StackItem item = stack.peek();
+
+      item.tmp = item.o;
+      item.o = new ArrayList();
+      item.repeatbleParticleName = startName;
+      //System.out.println("   parent: " + item);
+*/
    }
 
    private void endRepeatableParticle(ParticleBinding particle)
    {
       //System.out.println(" end repeatable particle: " + particle.getTerm());
+/*
+      StackItem item = stack.peek();
+      System.out.println("   " + item.o);
+      System.out.println("   " + item.tmp);
+
+      TermBinding term = particle.getTerm();
+      ParticleHandler handler = null;
+      if(term.isModelGroup())
+      {
+         handler = getHandler(particle);
+      }
+      else
+      {
+         ElementBinding el = (ElementBinding)term;
+         handler = el.getType().getHandler();
+         if(handler == null)
+         {
+            handler = defParticleHandler;
+         }
+
+      }
+
+      setParent(handler, item.tmp, item.o, item.repeatbleParticleName, particle, item.particle);
+
+      item.o = item.tmp;
+      item.tmp = null;
+      item.repeatbleParticleName = null;
+*/
    }
 
    private void endParticle(StackItem item, QName qName, int parentStackPos)
@@ -947,6 +990,8 @@ public class JBXB76ContentHandler
       final ModelGroupBinding.Cursor cursor;
       final ParticleBinding particle;
       Object o;
+      //Object tmp;
+      //QName repeatbleParticleName;
       StringBuffer textContent;
       boolean ended;
 

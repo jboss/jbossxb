@@ -314,7 +314,7 @@ public class DtdMarshaller
             AttributesImpl attrs = (element.attributes.isEmpty() ? null : provideAttributes(element, child));
             if(!singleValued)
             {
-               content.startElement("", element.getName(), element.getName(), null);
+               content.startElement("", element.getName(), element.getName(), attrs);
             }
 
             handleElement(dtd, element, attrs);

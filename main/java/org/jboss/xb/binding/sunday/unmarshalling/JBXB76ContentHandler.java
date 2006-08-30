@@ -286,7 +286,7 @@ public class JBXB76ContentHandler
                         endRepeatableParticle(prevParticle);
                      }
 
-                     if(curParticle.isRepeatable())
+                     if(newCursors.size() > 1 && curParticle.isRepeatable())
                      {
                         startRepeatableParticle(startName, curParticle);
                      }
@@ -574,20 +574,48 @@ public class JBXB76ContentHandler
 /*
       StackItem item = stack.peek();
 
+      TermBinding parentTerm = item.particle.getTerm();
+      WildcardBinding wc = null;
+      if(parentTerm.isWildcard())
+      {
+         wc = (WildcardBinding)parentTerm;
+      }
+      else if(!parentTerm.isModelGroup())
+      {
+         ElementBinding el = (ElementBinding)parentTerm;
+         wc = el.getType().getWildcard();
+         if(wc != null && el.getType().getElement(startName) != null)
+         {
+            wc = null;
+         }
+      }
+
+      TermBinding term = particle.getTerm();
+      if(term.getAddMethodMetaData() != null ||
+         wc != null && wc.getAddMethodMetaData() != null ||
+         term.getPutMethodMetaData() != null ||
+         term.getMapEntryMetaData() != null)
+      {
+         return;
+      }
+
       item.tmp = item.o;
       item.o = new ArrayList();
       item.repeatbleParticleName = startName;
-      //System.out.println("   parent: " + item);
+
 */
    }
 
    private void endRepeatableParticle(ParticleBinding particle)
    {
       //System.out.println(" end repeatable particle: " + particle.getTerm());
+
 /*
       StackItem item = stack.peek();
-      System.out.println("   " + item.o);
-      System.out.println("   " + item.tmp);
+      if(item.repeatbleParticleName == null)
+      {
+         return;
+      }
 
       TermBinding term = particle.getTerm();
       ParticleHandler handler = null;

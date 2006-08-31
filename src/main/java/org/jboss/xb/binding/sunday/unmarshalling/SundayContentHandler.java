@@ -38,7 +38,7 @@ import org.jboss.xb.binding.parser.JBossXBParser;
 import org.xml.sax.Attributes;
 
 /**
- * ContentHandler that is used as a sandbox for JBXB-76
+ * The default content handler.
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>

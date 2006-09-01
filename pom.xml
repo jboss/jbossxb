@@ -85,6 +85,24 @@
         </execution>
       </executions>
       </plugin>     
+      
+      <!-- describe the jarring process -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+           <execution>
+              <goals>
+                 <goal>jar</goal>
+              </goals>
+           </execution>
+        </executions>
+        <configuration>
+           <jarName>jboss-xml-binding</jarName>
+        </configuration>
+     </plugin>
+
+
     
     </plugins>
   </build>

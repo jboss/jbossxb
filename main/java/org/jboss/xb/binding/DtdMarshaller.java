@@ -217,7 +217,7 @@ public class DtdMarshaller
       DTDItem item = element.content;
       if(item instanceof DTDMixed)
       {
-         handleMixedElement((DTDMixed)item, element.getName(), attrs);
+         handleMixedElement(element, attrs);
       }
       else if(item instanceof DTDEmpty)
       {
@@ -239,8 +239,17 @@ public class DtdMarshaller
       }
    }
 
-   private final void handleMixedElement(DTDMixed mixed, String elementName, Attributes attrs)
+   private final void handleMixedElement(DTDElement element, Attributes attrs)
    {
+      boolean startElement = false;
+      if(!elementStack.isEmpty())
+      {
+         Element e = (Element) elementStack.get(elementStack.size() - 1);
+         startElement = element != e.element;
+      }
+      
+      DTDMixed mixed = (DTDMixed) element.content;
+      String elementName = element.getName();
       Object parent = stack.peek();
       DTDItem[] items = mixed.getItems();
       for(int i = 0; i < items.length; ++i)
@@ -265,9 +274,17 @@ public class DtdMarshaller
                }
 
                char[] ch = marshalled.toCharArray();
-               content.startElement("", elementName, elementName, attrs);
+               if(startElement)
+               {
+                  content.startElement("", elementName, elementName, attrs);
+               }
+               
                content.characters(ch, 0, ch.length);
-               content.endElement("", elementName, elementName);
+
+               if(startElement)
+               {
+                  content.endElement("", elementName, elementName);
+               }
             }
          }
       }

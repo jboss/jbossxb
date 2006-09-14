@@ -131,6 +131,7 @@ public class RtUtil
             length = Array.getLength(arr);
             arr = Array.newInstance(fieldType.getComponentType(), length + 1);
             System.arraycopy(tmp, 0, arr, 0, length);
+            //System.out.println("copied array (1)");
          }
          Array.set(arr, length, value);
          fieldInfo.setValue(o, arr);
@@ -157,9 +158,7 @@ public class RtUtil
          value = valueAdapter.cast(value, fieldType);
       }
 
-      if(colType != null ||
-         // todo collections of collections
-         Collection.class.isAssignableFrom(fieldType) &&
+      if(Collection.class.isAssignableFrom(fieldType) &&
          !Collection.class.isAssignableFrom(value.getClass()))
       {
          Collection col = (Collection)fieldInfo.getValue(o);
@@ -194,6 +193,7 @@ public class RtUtil
             fieldInfo.setValue(o, col);
          }
 
+         //System.out.println("col.add(value): " + prop + "=" + value);
          col.add(value);
       }
       else if(fieldType.isArray() &&
@@ -215,6 +215,7 @@ public class RtUtil
             length = Array.getLength(arr);
             arr = Array.newInstance(fieldType.getComponentType(), length + 1);
             System.arraycopy(tmp, 0, arr, 0, length);
+            throw new JBossXBRuntimeException("copied array (2)");
          }
          Array.set(arr, length, value);
          fieldInfo.setValue(o, arr);
@@ -223,37 +224,23 @@ public class RtUtil
       {
          // todo: unmarshalling should produce the right type instead
          Class valueClass = value == null ? null : value.getClass();
-         if(valueClass != null && !fieldType.isAssignableFrom(valueClass))
+         if (valueClass != null && fieldType.isArray() && Collection.class.isAssignableFrom(valueClass))
          {
-            if(fieldType.isArray() && Collection.class.isAssignableFrom(valueClass))
+            Collection col = (Collection) value;
+            Class compType = fieldType.getComponentType();
+            value = Array.newInstance(compType, col.size());
+            if (compType.isPrimitive())
             {
-               Collection col = (Collection)value;
-               Class compType = fieldType.getComponentType();
-               value = Array.newInstance(compType, col.size());
-               if(compType.isPrimitive())
+               int i = 0;
+               for (Iterator iter = col.iterator(); iter.hasNext();)
                {
-                  int i = 0;
-                  for(Iterator iter = col.iterator(); iter.hasNext();)
-                  {
-                     Array.set(value, i++, iter.next());
-                  }
-               }
-               else
-               {
-                  value = col.toArray((Object[])value);
+                  Array.set(value, i++, iter.next());
                }
             }
-            else if(Collection.class.isAssignableFrom(fieldType) && valueClass.isArray())
+            else
             {
-               int length = Array.getLength(value);
-               Collection col = new ArrayList(length);
-               for(int i = 0; i < length; ++i)
-               {
-                  col.add(Array.get(value, i));
-               }
-               value = col;
+               value = col.toArray((Object[]) value);
             }
-            // else hopefully it's a primitive/wrapper case
          }
 
          fieldInfo.setValue(o, value);

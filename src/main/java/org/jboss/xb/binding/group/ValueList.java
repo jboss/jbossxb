@@ -93,15 +93,15 @@ public class ValueList
 
    void setAttributeValue(QName qName, AttributeBinding binding, Object value)
    {
-      setNonRequiredValue(qName, binding, null, value);
+      setNonRequiredValue(qName, binding, null, value, null);
    }
 
    void addTextValue(QName qName, ParticleBinding particle, CharactersHandler handler, Object value)
    {
-      setNonRequiredValue(qName, particle, handler, value);
+      setNonRequiredValue(qName, particle, handler, value, null);
    }
 
-   void addTermValue(QName qName, ParticleBinding binding, Object handler, Object value)
+   void addTermValue(QName qName, ParticleBinding binding, Object handler, Object value, ParticleBinding parentParticle)
    {
       if(binding.isRepeatable())
       {
@@ -113,7 +113,7 @@ public class ValueList
          if(last == null || last.binding != binding)
          {
             value = Collections.singletonList(value);
-            setNonRequiredValue(qName, binding, handler, value);
+            setNonRequiredValue(qName, binding, handler, value, parentParticle);
          }
          else
          {
@@ -128,13 +128,13 @@ public class ValueList
       }
       else
       {
-         setNonRequiredValue(qName, binding, handler, value);
+         setNonRequiredValue(qName, binding, handler, value, parentParticle);
       }
    }
 
-   void setNonRequiredValue(QName qName, Object binding, Object handler, Object value)
+   void setNonRequiredValue(QName qName, Object binding, Object handler, Object value, ParticleBinding parentParticle)
    {
-      NonRequiredValue val = new NonRequiredValue(qName, binding, handler, value);
+      NonRequiredValue val = new NonRequiredValue(qName, binding, handler, value, parentParticle);
       switch(nonRequiredValues.size())
       {
          case 0:
@@ -202,13 +202,15 @@ public class ValueList
       public final Object binding;
       public final Object handler;
       public Object value;
+      public ParticleBinding parentParticle;
 
-      public NonRequiredValue(QName qName, Object binding, Object handler, Object value)
+      public NonRequiredValue(QName qName, Object binding, Object handler, Object value, ParticleBinding parentParticle)
       {
          this.qName = qName;
          this.binding = binding;
          this.handler = handler;
          this.value = value;
+         this.parentParticle = parentParticle;
       }
    }
 }

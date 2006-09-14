@@ -41,6 +41,30 @@ public interface GenericValueContainer
          return array(null, null, itemClass);
       }
 
+      public static GenericValueContainer child(final Class childClass)
+      {
+         return new GenericValueContainer()
+         {
+            private Object child;
+            
+            public void addChild(QName name, Object value)
+            {
+               this.child = value;
+            }
+
+            public Class getTargetClass()
+            {
+               return childClass;
+            }
+
+            public Object instantiate()
+            {
+               return child;
+            }
+            
+         };
+      }
+      
       public static GenericValueContainer array(final Class wrapperClass,
                                                 final String itemProperty,
                                                 final Class itemClass)
@@ -59,6 +83,41 @@ public interface GenericValueContainer
 
             public Object instantiate()
             {
+/* for collected repeatable particles  
+               Object arr;
+               if(items.isEmpty())
+               {
+                  arr = Array.newInstance(itemType, 0);
+               }
+               else
+               {
+                  java.util.Collection col = (java.util.Collection)items.get(0);
+                  arr = Array.newInstance(itemType, col.size());
+                  if(itemType.isPrimitive())
+                  {
+                     int i = 0;
+                     for(java.util.Iterator iter = col.iterator(); iter.hasNext();)
+                     {
+                        Object item = iter.next();
+                        try
+                        {
+                           Array.set(arr, i++, item);
+                        }
+                        catch(IllegalArgumentException e)
+                        {
+                           throw new JBossXBRuntimeException("Failed to set " +
+                              item +
+                              " as an item of array " + arr
+                           );
+                        }
+                     }
+                  }
+                  else
+                  {
+                     col.toArray((Object[])arr);
+                  }
+               }             
+*/
                Object arr = Array.newInstance(itemType, items.size());
                for(int i = 0; i < items.size(); ++i)
                {
@@ -123,7 +182,6 @@ public interface GenericValueContainer
                      );
                   }
                }
-
                return result;
             }
 
@@ -132,6 +190,11 @@ public interface GenericValueContainer
                // this method should only be called for multidimansional arrays
                // todo: what's the best way to get a class for array having the item class?
                return Array.newInstance(itemType, 0).getClass();
+            }
+            
+            public String toString()
+            {
+               return super.toString() + "array";
             }
          };
       }

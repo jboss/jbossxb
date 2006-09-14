@@ -23,7 +23,6 @@ package org.jboss.xb.binding.group;
 
 import java.util.Map;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import javax.xml.namespace.QName;
@@ -31,7 +30,6 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 
 /**
@@ -116,12 +114,12 @@ public class ValueListInitializer
       valueList.addTextValue(qName, particle, handler, value);
    }
 
-   public void addTermValue(QName qName, ParticleBinding binding, Object handler, ValueList valueList, Object value)
+   public void addTermValue(QName qName, ParticleBinding binding, Object handler, ValueList valueList, Object value, ParticleBinding parentParticle)
    {
       Integer index = (Integer)elemIndex.get(qName);
       if(index == null)
       {
-         valueList.addTermValue(qName, binding, handler, value);
+         valueList.addTermValue(qName, binding, handler, value, parentParticle);
       }
       else
       {

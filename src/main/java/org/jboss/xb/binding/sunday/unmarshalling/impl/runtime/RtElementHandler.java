@@ -527,6 +527,8 @@ public class RtElementHandler
             }
             else if(Collection.class.isAssignableFrom(fieldType))
             {
+               //System.out.println("GeenericValueContainer.child: " + elementName);
+               //o = GenericValueContainer.FACTORY.child(fieldType);
                o = new ArrayList();
             }
             else
@@ -701,7 +703,6 @@ public class RtElementHandler
             {
                ElementBinding element = (ElementBinding)term;
                cls = classForNonArrayItem(element, parentClass);
-
                if(cls != null)
                {
                   // todo: before that, the type should be checked for required attributes and elements
@@ -740,7 +741,6 @@ public class RtElementHandler
             }
          }
       }
-
       return o;
    }
 

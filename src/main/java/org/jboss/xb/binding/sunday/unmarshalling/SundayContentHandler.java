@@ -805,7 +805,8 @@ public class SundayContentHandler
                            particle,
                            charHandler,
                            valueList,
-                           unmarshalled
+                           unmarshalled,
+                           null
                         );
                      }
                      else
@@ -961,7 +962,7 @@ public class SundayContentHandler
       if(parent instanceof ValueList && !particle.getTerm().isSkip())
       {
          ValueList valueList = (ValueList)parent;
-         valueList.getInitializer().addTermValue(endName, particle, handler, valueList, o);
+         valueList.getInitializer().addTermValue(endName, particle, handler, valueList, o, parentParticle);
       }
       else
       {

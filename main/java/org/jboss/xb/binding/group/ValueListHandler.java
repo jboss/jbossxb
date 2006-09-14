@@ -348,5 +348,119 @@ public interface ValueListHandler
       }
    };
 
+   class FACTORY
+   {
+      /**
+       * Collects children and adds them all at the time of newInstance is called.
+       * 
+       * @param parent  the parent object
+       * @return the parent object
+       */
+      public static ValueListHandler lazy(final Object parent)
+      {
+         return new ValueListHandler()
+         {
+            private final ValueList parentValueList = parent instanceof ValueList ? (ValueList)parent : null;
+            
+            public Object newInstance(ParticleBinding particle, ValueList valueList)
+            {
+               for(int i = 0; i < valueList.size(); ++i)
+               {
+                  ValueList.NonRequiredValue valueEntry = valueList.getValue(i);
+                  Object binding = valueEntry.binding;
+                  if(binding instanceof ParticleBinding)
+                  {
+                     Object handler = valueEntry.handler;
+                     ParticleBinding childParticle = (ParticleBinding)binding;
+                     if(handler instanceof ParticleHandler)
+                     {
+                        ParticleHandler pHandler = (ParticleHandler)handler;
+                        if(childParticle.isRepeatable())
+                        {
+                           List list = (List)valueEntry.value;
+                           //System.out.println("newInstance: " + childParticle.getTerm() + "=" + list);
+                           for(int listInd = 0; listInd < list.size(); ++listInd)
+                           {
+                              if(parentValueList != null)
+                              {
+                                 parentValueList.addTermValue(valueEntry.qName, childParticle, pHandler, list.get(listInd), null);
+                              }
+                              else
+                              {
+                                 pHandler.setParent(parent, list.get(listInd), valueEntry.qName, childParticle, valueEntry.parentParticle);
+                              }
+                           }
+
+/*                           if(parentValueList != null)
+                           {
+                              parentValueList.addTermValue(valueEntry.qName, childParticle, pHandler, list, null);
+                           }
+                           else
+                           {
+                              pHandler.setParent(parent, list, valueEntry.qName, childParticle, valueEntry.parentParticle);
+                           }
+*/                           
+                        }
+                        else
+                        {
+                           if(parentValueList != null)
+                           {
+                              parentValueList.addTermValue(valueEntry.qName, childParticle, pHandler, valueEntry.value, valueEntry.parentParticle);
+                           }
+                           else
+                           {
+                              pHandler.setParent(parent, valueEntry.value, valueEntry.qName, childParticle, valueEntry.parentParticle);
+                           }
+                        }
+                     }
+                     else
+                     {
+                        CharactersHandler cHandler = (CharactersHandler)handler;
+                        if(parentValueList != null)
+                        {
+                           parentValueList.addTextValue(valueEntry.qName, childParticle, cHandler, valueEntry.value);
+                        }
+                        else
+                        {
+                           cHandler.setValue(valueEntry.qName, (ElementBinding) childParticle.getTerm(), parent, valueEntry.value);
+                        }
+                     }
+                  }
+                  else if(binding instanceof AttributeBinding)
+                  {
+                     AttributeBinding attr = (AttributeBinding)binding;
+                     AttributeHandler handler = attr.getHandler();
+                     if(handler != null)
+                     {
+                        if(parentValueList != null)
+                        {
+                           parentValueList.setAttributeValue(attr.getQName(), attr, valueEntry.value);
+                        }
+                        else
+                        {
+                           handler.attribute(valueEntry.qName, attr.getQName(), attr, parent, valueEntry.value);
+                        }
+                     }
+                     else
+                     {
+                        throw new JBossXBRuntimeException("Attribute binding present but has no handler: element=" +
+                           valueEntry.qName +
+                           ", attrinute=" +
+                           attr.getQName()
+                        );
+                     }
+                  }
+                  else
+                  {
+                     throw new JBossXBRuntimeException("Unexpected binding type: " + binding);
+                  }
+               }
+
+               return parent;
+            }
+         };
+      }
+   };
+   
    Object newInstance(ParticleBinding particle, ValueList valueList);
 }

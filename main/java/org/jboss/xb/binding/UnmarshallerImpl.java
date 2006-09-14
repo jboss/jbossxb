@@ -29,6 +29,7 @@ import org.jboss.xb.binding.parser.sax.SaxJBossXBParser;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler;
+//import org.jboss.xb.binding.sunday.unmarshalling.JBXB76ContentHandler;
 import org.jboss.xb.binding.metadata.unmarshalling.DocumentBinding;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -108,42 +109,42 @@ public class UnmarshallerImpl implements Unmarshaller
 
    public Object unmarshal(String xml, SchemaBinding schemaBinding) throws JBossXBException
    {
-      SundayContentHandler cHandler = new SundayContentHandler(schemaBinding);
+      JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaBinding);
       parser.parse(xml, cHandler);
       return cHandler.getRoot();
    }
 
    public Object unmarshal(Reader xmlReader, SchemaBinding schemaBinding) throws JBossXBException
    {
-      SundayContentHandler cHandler = new SundayContentHandler(schemaBinding);
+      JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaBinding);
       parser.parse(xmlReader, cHandler);
       return cHandler.getRoot();
    }
 
    public Object unmarshal(InputStream xmlStream, SchemaBinding schemaBinding) throws JBossXBException
    {
-      SundayContentHandler cHandler = new SundayContentHandler(schemaBinding);
+      JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaBinding);
       parser.parse(xmlStream, cHandler);
       return cHandler.getRoot();
    }
 
    public Object unmarshal(String xml, SchemaBindingResolver schemaResolver) throws JBossXBException
    {
-      SundayContentHandler cHandler = new SundayContentHandler(schemaResolver);
+      JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaResolver);
       parser.parse(xml, cHandler);
       return cHandler.getRoot();
    }
 
    public Object unmarshal(Reader xmlReader, SchemaBindingResolver schemaResolver) throws JBossXBException
    {
-      SundayContentHandler cHandler = new SundayContentHandler(schemaResolver);
+      JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaResolver);
       parser.parse(xmlReader, cHandler);
       return cHandler.getRoot();
    }
 
    public Object unmarshal(InputStream xmlStream, SchemaBindingResolver schemaResolver) throws JBossXBException
    {
-      SundayContentHandler cHandler = new SundayContentHandler(schemaResolver);
+      JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaResolver);
       parser.parse(xmlStream, cHandler);
       return cHandler.getRoot();
    }

@@ -28,10 +28,13 @@ import javax.xml.namespace.QName;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.jboss.logging.Logger;
 import org.jboss.util.StringPropertyReplacer;
+import org.jboss.xb.binding.GenericValueContainer;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.NamespaceRegistry;
 import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.group.ValueList;
+import org.jboss.xb.binding.group.ValueListHandler;
+import org.jboss.xb.binding.group.ValueListInitializer;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.parser.JBossXBParser;
@@ -196,7 +199,7 @@ public class JBXB76ContentHandler
                   }
                   else
                   {
-                     pop();
+                     pop();                     
                      if(item.particle.isRepeatable())
                      {
                         endRepeatableParticle(item.particle);
@@ -291,20 +294,6 @@ public class JBXB76ContentHandler
                         startRepeatableParticle(startName, curParticle);
                      }
                   }
-
-/*
-                  if(cursor.getOccurence() - prevOccurence > 0 || item.ended)
-                  {
-                     endParticle(item, startName, 1);
-
-                     ParticleBinding modelGroupParticle = cursor.getParticle();
-                     ParticleHandler handler = getHandler(modelGroupParticle);
-                     Object o = handler.startParticle(stack.peek(1).o, startName, modelGroupParticle, atts, nsRegistry);
-
-                     item.reset();
-                     item.o = o;
-                  }
-*/
 
                   // push all except the last one
                   Object o = item.o;
@@ -410,12 +399,26 @@ public class JBXB76ContentHandler
          }
 
          List interceptors = element.getInterceptors();
-         for(int i = 0; i < interceptors.size(); ++i)
+         if(!interceptors.isEmpty())
          {
-            ElementInterceptor interceptor = (ElementInterceptor)interceptors.get(i);
-            parent = interceptor.startElement(parent, startName, type);
-            push(startName, particle, parent);
-            interceptor.attributes(parent, startName, type, atts, nsRegistry);
+            if (repeated)
+            {
+               pop();
+            }
+
+            for (int i = 0; i < interceptors.size(); ++i)
+            {
+               ElementInterceptor interceptor = (ElementInterceptor) interceptors.get(i);
+               parent = interceptor.startElement(parent, startName, type);
+               push(startName, particle, parent);
+               interceptor.attributes(parent, startName, type, atts, nsRegistry);
+            }
+
+            if (repeated)
+            {
+               // to have correct endRepeatableParticle calls
+               stack.push(item);
+            }
          }
 
          ParticleHandler handler = type.getHandler();
@@ -492,7 +495,8 @@ public class JBXB76ContentHandler
          if(parentItem.cursor == null)
          {
             throw new JBossXBRuntimeException(
-               "Repeatable parent expected to be a model group but got element: " +
+               "Failed to start " + startName +
+               ": the element is not repeatable, repeatable parent expected to be a model group but got element " +
                ((ElementBinding)parentItem.particle.getTerm()).getQName()
             );
          }
@@ -571,75 +575,37 @@ public class JBXB76ContentHandler
    private void startRepeatableParticle(QName startName, ParticleBinding particle)
    {
       //System.out.println(" start repeatable particle: " + particle.getTerm());
-/*
-      StackItem item = stack.peek();
-
-      TermBinding parentTerm = item.particle.getTerm();
-      WildcardBinding wc = null;
-      if(parentTerm.isWildcard())
-      {
-         wc = (WildcardBinding)parentTerm;
-      }
-      else if(!parentTerm.isModelGroup())
-      {
-         ElementBinding el = (ElementBinding)parentTerm;
-         wc = el.getType().getWildcard();
-         if(wc != null && el.getType().getElement(startName) != null)
-         {
-            wc = null;
-         }
-      }
-
+      
       TermBinding term = particle.getTerm();
-      if(term.getAddMethodMetaData() != null ||
-         wc != null && wc.getAddMethodMetaData() != null ||
-         term.getPutMethodMetaData() != null ||
-         term.getMapEntryMetaData() != null)
+      if(term.isSkip())
       {
          return;
       }
-
-      item.tmp = item.o;
-      item.o = new ArrayList();
-      item.repeatbleParticleName = startName;
-
-*/
+      
+      StackItem item = stack.peek();
+      if(item.o != null &&
+            !(item.o instanceof GenericValueContainer) &&
+            term.getAddMethodMetaData() == null &&
+            term.getMapEntryMetaData() == null &&
+            term.getPutMethodMetaData() == null)
+      {
+         ValueListHandler handler = ValueListHandler.FACTORY.lazy(item.o);
+         Class cls = item.o.getClass();
+         item.repeatableParticleValue = new ValueListInitializer().newValueList(handler, cls);
+      }
    }
 
    private void endRepeatableParticle(ParticleBinding particle)
    {
       //System.out.println(" end repeatable particle: " + particle.getTerm());
 
-/*
       StackItem item = stack.peek();
-      if(item.repeatbleParticleName == null)
+      ValueList valueList = item.repeatableParticleValue;
+      if(valueList != null)
       {
-         return;
+         valueList.getHandler().newInstance(particle, valueList);
+         item.repeatableParticleValue = null;
       }
-
-      TermBinding term = particle.getTerm();
-      ParticleHandler handler = null;
-      if(term.isModelGroup())
-      {
-         handler = getHandler(particle);
-      }
-      else
-      {
-         ElementBinding el = (ElementBinding)term;
-         handler = el.getType().getHandler();
-         if(handler == null)
-         {
-            handler = defParticleHandler;
-         }
-
-      }
-
-      setParent(handler, item.tmp, item.o, item.repeatbleParticleName, particle, item.particle);
-
-      item.o = item.tmp;
-      item.tmp = null;
-      item.repeatbleParticleName = null;
-*/
    }
 
    private void endParticle(StackItem item, QName qName, int parentStackPos)
@@ -678,7 +644,9 @@ public class JBXB76ContentHandler
          {
             parentParticle = item.particle;
          }
-         setParent(handler, item.o, o, qName, modelGroupParticle, parentParticle);
+         setParent(handler,
+               item.repeatableParticleValue == null ? item.o : item.repeatableParticleValue,
+               o, qName, modelGroupParticle, parentParticle);
       }
    }
 
@@ -805,7 +773,8 @@ public class JBXB76ContentHandler
                            particle,
                            charHandler,
                            valueList,
-                           unmarshalled
+                           unmarshalled,
+                           null
                         );
                      }
                      else
@@ -843,7 +812,8 @@ public class JBXB76ContentHandler
       // endElement
       //
 
-      Object parent = stack.size() == 1 ? null : ((StackItem)stack.peek(1)).o;
+      StackItem parentItem = stack.size() == 1 ? null : stack.peek(1);
+      Object parent = parentItem == null ? null : parentItem.o;
       ParticleHandler handler = type.getHandler();
       if(handler == null)
       {
@@ -904,11 +874,15 @@ public class JBXB76ContentHandler
             } */
             if(wildcardHandler != null)
             {
-               setParent(wildcardHandler, parent, o, endName, particle, parentParticle);
+               setParent(wildcardHandler,
+                     parentItem.repeatableParticleValue == null ? parent : parentItem.repeatableParticleValue,
+                     o, endName, particle, parentParticle);
             }
             else
             {
-               setParent(handler, parent, o, endName, particle, parentParticle);
+               setParent(handler,
+                     parentItem.repeatableParticleValue == null ? parent : parentItem.repeatableParticleValue,
+                     o, endName, particle, parentParticle);
             }
          }
          else if(parentParticle != null &&
@@ -935,7 +909,7 @@ public class JBXB76ContentHandler
       }
       else
       {
-         pop();
+         StackItem popped = pop();
          for(int i = interceptorsTotal - 1; i >= 0; --i)
          {
             ElementInterceptor interceptor = (ElementInterceptor)interceptors.get(i);
@@ -943,6 +917,8 @@ public class JBXB76ContentHandler
             interceptor.add(parent, o, endName);
             o = parent;
          }
+         // need to have correst endRepeatableParticle events
+         stack.push(popped);
       }
 
       if(stack.size() == 1)
@@ -958,10 +934,10 @@ public class JBXB76ContentHandler
                           ParticleBinding particle,
                           ParticleBinding parentParticle)
    {
-      if(parent instanceof ValueList && !particle.getTerm().isSkip())
+      if(parent instanceof ValueList /*&& !particle.getTerm().isSkip()*/)
       {
          ValueList valueList = (ValueList)parent;
-         valueList.getInitializer().addTermValue(endName, particle, handler, valueList, o);
+         valueList.getInitializer().addTermValue(endName, particle, handler, valueList, o, parentParticle);
       }
       else
       {
@@ -1018,8 +994,7 @@ public class JBXB76ContentHandler
       final ModelGroupBinding.Cursor cursor;
       final ParticleBinding particle;
       Object o;
-      //Object tmp;
-      //QName repeatbleParticleName;
+      ValueList repeatableParticleValue;
       StringBuffer textContent;
       boolean ended;
 

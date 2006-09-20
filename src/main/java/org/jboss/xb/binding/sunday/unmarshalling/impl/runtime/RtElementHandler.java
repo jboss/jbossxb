@@ -25,7 +25,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import javax.xml.namespace.NamespaceContext;
@@ -254,7 +253,7 @@ public class RtElementHandler
             ElementBinding parentElement = (ElementBinding)parentTerm;
             TypeBinding parentType = parentElement.getType();
             wildcard = parentType.getWildcard();
-            // todo: there are should be a better way of checking this
+            // there should be a better way of checking this
             if(wildcard != null && parentType.getElement(qName) != null)
             {
                wildcard = null;
@@ -318,7 +317,7 @@ public class RtElementHandler
                   log.trace("setParent " + qName + " metadata set " + propName);
                }
 
-               if(particle.isRepeatable())
+/*               if(particle.isRepeatable())
                {
                   RtUtil.add(owner, o, propName, colType,
                      term.getSchema().isIgnoreUnresolvedFieldOrClass(),
@@ -327,11 +326,11 @@ public class RtElementHandler
                }
                else
                {
-                  RtUtil.set(owner, o, propName, colType,
+*/                  RtUtil.set(owner, o, propName, colType,
                      term.getSchema().isIgnoreUnresolvedFieldOrClass(),
                      term.getValueAdapter()
                   );
-               }
+//               }
             }
          }
       }
@@ -528,8 +527,8 @@ public class RtElementHandler
             else if(Collection.class.isAssignableFrom(fieldType))
             {
                //System.out.println("GeenericValueContainer.child: " + elementName);
-               //o = GenericValueContainer.FACTORY.child(fieldType);
-               o = new ArrayList();
+               o = new ValueListInitializer().newValueList(ValueListHandler.FACTORY.child(), Collection.class);
+               //o = new ArrayList();
             }
             else
             {

@@ -119,7 +119,14 @@ public class ValueListInitializer
       Integer index = (Integer)elemIndex.get(qName);
       if(index == null)
       {
-         valueList.addTermValue(qName, binding, handler, value, parentParticle);
+         if(binding.isRepeatable())
+         {
+            valueList.addRepeatableTermValue(qName, binding, handler, value, parentParticle);
+         }
+         else
+         {
+            valueList.addTermValue(qName, binding, handler, value, parentParticle);
+         }
       }
       else
       {

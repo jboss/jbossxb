@@ -26,9 +26,10 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+
 import org.jboss.util.Classes;
+import org.jboss.xb.binding.GenericValueContainer;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeHandler;
@@ -36,6 +37,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -195,10 +197,21 @@ public interface ValueListHandler
                      ParticleHandler pHandler = (ParticleHandler)handler;
                      if(childParticle.isRepeatable())
                      {
-                        List list = (List)valueEntry.value;
-                        for(int listInd = 0; listInd < list.size(); ++listInd)
+                        TermBinding term = childParticle.getTerm();
+                        if(!(o instanceof GenericValueContainer) &&
+                              term.getAddMethodMetaData() == null &&
+                              term.getMapEntryMetaData() == null &&
+                              term.getPutMethodMetaData() == null)
                         {
-                           pHandler.setParent(o, list.get(listInd), valueEntry.qName, childParticle, particle);
+                           pHandler.setParent(o, valueEntry.value, valueEntry.qName, childParticle, particle);
+                        }
+                        else
+                        {
+                           Collection col = (Collection)valueEntry.value;
+                           for(Iterator iter = col.iterator(); iter.hasNext();)
+                           {
+                              pHandler.setParent(o, iter.next(), valueEntry.qName, childParticle, particle);
+                           }
                         }
                      }
                      else
@@ -351,7 +364,7 @@ public interface ValueListHandler
    class FACTORY
    {
       /**
-       * Collects children and adds them all at the time of newInstance is called.
+       * Collects children and adds them all at the time the newInstance is called.
        * 
        * @param parent  the parent object
        * @return the parent object
@@ -377,29 +390,23 @@ public interface ValueListHandler
                         ParticleHandler pHandler = (ParticleHandler)handler;
                         if(childParticle.isRepeatable())
                         {
-                           List list = (List)valueEntry.value;
-                           //System.out.println("newInstance: " + childParticle.getTerm() + "=" + list);
-                           for(int listInd = 0; listInd < list.size(); ++listInd)
+                           if(parentValueList != null)
                            {
-                              if(parentValueList != null)
-                              {
-                                 parentValueList.addTermValue(valueEntry.qName, childParticle, pHandler, list.get(listInd), null);
-                              }
-                              else
-                              {
-                                 pHandler.setParent(parent, list.get(listInd), valueEntry.qName, childParticle, valueEntry.parentParticle);
-                              }
-                           }
-
-/*                           if(parentValueList != null)
-                           {
-                              parentValueList.addTermValue(valueEntry.qName, childParticle, pHandler, list, null);
+                              parentValueList.addTermValue(valueEntry.qName, childParticle, pHandler, valueEntry.value, null);
                            }
                            else
                            {
-                              pHandler.setParent(parent, list, valueEntry.qName, childParticle, valueEntry.parentParticle);
+                              Collection col = (Collection) valueEntry.value;
+                              //System.out.println("newInstance: " + childParticle.getTerm() + "=" + col);
+                              pHandler.setParent(parent, col, valueEntry.qName, childParticle, valueEntry.parentParticle);
+
+/*                              for (Iterator iter = col.iterator(); iter.hasNext();)
+                              {
+                                 pHandler.setParent(parent, iter.next(), valueEntry.qName, childParticle,
+                                       valueEntry.parentParticle);
+                              }                              
+*/
                            }
-*/                           
                         }
                         else
                         {
@@ -460,7 +467,30 @@ public interface ValueListHandler
             }
          };
       }
+      
+      public static ValueListHandler child()
+      {
+         return new ValueListHandler()
+         {
+            public Object newInstance(ParticleBinding particle, ValueList valueList)
+            {
+               if(valueList.size() > 1)
+               {
+                  String msg = "Expected only one child for " + particle.getTerm() + " but got:";
+                  for(int i = 0; i < valueList.size(); ++i)
+                  {
+                     ValueList.NonRequiredValue valueEntry = valueList.getValue(0);
+                     msg += " " + valueEntry.value + ";";
+                  }
+                  throw new JBossXBRuntimeException(msg);
+               }
+               
+               ValueList.NonRequiredValue valueEntry = valueList.getValue(0);
+               return valueEntry.value;
+            }            
+         };
+      }
    };
-   
+      
    Object newInstance(ParticleBinding particle, ValueList valueList);
 }

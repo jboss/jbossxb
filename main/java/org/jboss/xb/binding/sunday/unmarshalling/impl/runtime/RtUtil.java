@@ -196,6 +196,7 @@ public class RtUtil
          //System.out.println("col.add(value): " + prop + "=" + value);
          col.add(value);
       }
+/*
       else if(fieldType.isArray() &&
          value != null &&
          (fieldType.getComponentType().isAssignableFrom(value.getClass()) ||
@@ -220,6 +221,7 @@ public class RtUtil
          Array.set(arr, length, value);
          fieldInfo.setValue(o, arr);
       }
+*/      
       else
       {
          // todo: unmarshalling should produce the right type instead

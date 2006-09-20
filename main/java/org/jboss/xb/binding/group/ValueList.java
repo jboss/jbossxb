@@ -22,13 +22,18 @@
 package org.jboss.xb.binding.group;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.xml.namespace.QName;
+
+import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtUtil;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -103,32 +108,40 @@ public class ValueList
 
    void addTermValue(QName qName, ParticleBinding binding, Object handler, Object value, ParticleBinding parentParticle)
    {
-      if(binding.isRepeatable())
-      {
-         NonRequiredValue last = (NonRequiredValue)(nonRequiredValues.isEmpty() ?
-            null :
-            nonRequiredValues.get(nonRequiredValues.size() - 1)
-            );
+      setNonRequiredValue(qName, binding, handler, value, parentParticle);
+   }
 
-         if(last == null || last.binding != binding)
+   void addRepeatableTermValue(QName qName, ParticleBinding binding, Object handler, Object value, ParticleBinding parentParticle)
+   {
+      NonRequiredValue last = (NonRequiredValue) (nonRequiredValues.isEmpty() ? null : nonRequiredValues.get(nonRequiredValues.size() - 1));
+      if (last == null || last.binding != binding)
+      {
+         Collection col;
+         PropertyMetaData propMetaData = binding.getTerm().getPropertyMetaData();
+         if(propMetaData != null && propMetaData.getCollectionType() != null)
          {
-            value = Collections.singletonList(value);
-            setNonRequiredValue(qName, binding, handler, value, parentParticle);
+            Class colCls = RtUtil.loadClass(propMetaData.getCollectionType(), true);
+            try
+            {
+               col = (Collection) colCls.newInstance();
+            }
+            catch (Exception e)
+            {
+               throw new JBossXBRuntimeException("Failed to create an instance of " + colCls.getName() + " for property " + propMetaData.getName());
+            }
          }
          else
          {
-            List list = (List)last.value;
-            if(list.size() == 1)
-            {
-               list = new ArrayList(list);
-               last.value = list;
-            }
-            list.add(value);
+            col = new ArrayList();
          }
+         
+         col.add(value);
+         setNonRequiredValue(qName, binding, handler, col, parentParticle);
       }
       else
       {
-         setNonRequiredValue(qName, binding, handler, value, parentParticle);
+         Collection col = (Collection) last.value;
+         col.add(value);
       }
    }
 

@@ -40,30 +40,6 @@ public interface GenericValueContainer
       {
          return array(null, null, itemClass);
       }
-
-      public static GenericValueContainer child(final Class childClass)
-      {
-         return new GenericValueContainer()
-         {
-            private Object child;
-            
-            public void addChild(QName name, Object value)
-            {
-               this.child = value;
-            }
-
-            public Class getTargetClass()
-            {
-               return childClass;
-            }
-
-            public Object instantiate()
-            {
-               return child;
-            }
-            
-         };
-      }
       
       public static GenericValueContainer array(final Class wrapperClass,
                                                 final String itemProperty,

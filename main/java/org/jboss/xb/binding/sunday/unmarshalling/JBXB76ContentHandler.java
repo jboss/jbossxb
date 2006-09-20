@@ -22,6 +22,7 @@
 package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
 import javax.xml.namespace.QName;
@@ -117,7 +118,18 @@ public class JBXB76ContentHandler
          }
          else
          {
-            endParticle(item, endName, 1);
+            if(!item.ended) // could be ended if it's a choice
+            {
+               endParticle(item, endName, 1);
+            }
+
+            ParticleBinding currentParticle = item.cursor.getCurrentParticle();
+            TermBinding term = currentParticle.getTerm();
+            if(term.isWildcard() && currentParticle.isRepeatable())
+            {
+               endRepeatableParticle(currentParticle);
+            }
+
             pop();
             if(item.particle.isRepeatable())
             {
@@ -151,6 +163,7 @@ public class JBXB76ContentHandler
       QName startName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
       ParticleBinding particle = null;
       boolean repeated = false;
+      boolean repeatedParticle = false;
       StackItem item = null;
       ModelGroupBinding.Cursor cursor = null; // used only when particle is a wildcard
       SchemaBinding schemaBinding = schema;
@@ -264,10 +277,13 @@ public class JBXB76ContentHandler
                }
 
                // todo review
-               if(cursor.isPositioned() && cursor.getParticle().getTerm() instanceof ChoiceBinding)
+               if(!item.ended && cursor.isPositioned() && cursor.getParticle().getTerm() instanceof ChoiceBinding)
                {
                   endParticle(item, startName, 1);
-                  pop();
+                  if(!item.particle.isRepeatable()) // this is for repeatable choices that should stay on the stack
+                  {
+                     pop();
+                  }
                   continue;
                }
 
@@ -276,11 +292,26 @@ public class JBXB76ContentHandler
                List newCursors = cursor.startElement(startName, atts);
                if(newCursors.isEmpty())
                {
-                  endParticle(item, startName, 1);
+                  if(!item.ended) // this is for choices
+                  {
+                     endParticle(item, startName, 1);
+                  }
                   pop();
                }
                else
                {
+                  if(item.ended) // for repeatable choices
+                  {
+                     if(!item.particle.isRepeatable())
+                     {
+                        throw new JBossXBRuntimeException("The particle expected to be repeatable but it's not: " + item.particle.getTerm());
+                     }
+                     item.reset();
+                     
+                     ParticleHandler handler = getHandler(item.particle);
+                     item.o = handler.startParticle(stack.peek(1).o, startName, item.particle, atts, nsRegistry);
+                  }
+                  
                   ParticleBinding curParticle = cursor.getCurrentParticle();
                   if(curParticle != prevParticle)
                   {
@@ -293,6 +324,10 @@ public class JBXB76ContentHandler
                      {
                         startRepeatableParticle(startName, curParticle);
                      }
+                  }
+                  else
+                  {
+                     repeatedParticle = true;
                   }
 
                   // push all except the last one
@@ -333,12 +368,11 @@ public class JBXB76ContentHandler
                );
             }
 
-            particle =
-               new ParticleBinding(element,
-                  particle.getMinOccurs(),
-                  particle.getMaxOccurs(),
-                  particle.getMaxOccursUnbounded()
-               );
+            if(!repeatedParticle && particle.isRepeatable())
+            {
+               startRepeatableParticle(startName, particle);
+            }
+            particle = new ParticleBinding(element/*, particle.getMinOccurs(), particle.getMaxOccurs(), particle.getMaxOccursUnbounded()*/);
          }
 
          ElementBinding element = (ElementBinding)particle.getTerm();
@@ -574,7 +608,7 @@ public class JBXB76ContentHandler
 
    private void startRepeatableParticle(QName startName, ParticleBinding particle)
    {
-      //System.out.println(" start repeatable particle: " + particle.getTerm());
+      //System.out.println(" start repeatable (" + stack.size() + "): " + particle.getTerm());
       
       TermBinding term = particle.getTerm();
       if(term.isSkip())
@@ -597,14 +631,40 @@ public class JBXB76ContentHandler
 
    private void endRepeatableParticle(ParticleBinding particle)
    {
-      //System.out.println(" end repeatable particle: " + particle.getTerm());
+      //System.out.println(" end repeatable (" + stack.size() + "): " + particle.getTerm());
 
       StackItem item = stack.peek();
       ValueList valueList = item.repeatableParticleValue;
       if(valueList != null)
       {
-         valueList.getHandler().newInstance(particle, valueList);
          item.repeatableParticleValue = null;
+         if(valueList.size() == 0)
+         {
+            return;
+         }
+            
+         if(particle.getTerm().isWildcard())
+         {
+            ParticleHandler handler = ((WildcardBinding)particle.getTerm()).getWildcardHandler();
+            if(handler == null)
+            {
+               handler = defParticleHandler;
+            }
+
+            // that's not good. some elements can be handled as "unresolved" and some as "resolved"
+            QName qName = valueList.getValue(0).qName;
+            Collection col = new ArrayList();
+            for(int i = 0; i < valueList.size(); ++i)
+            {
+               col.add(valueList.getValue(i).value);
+            }
+            StackItem parentItem = stack.peek(1);
+            handler.setParent(parentItem.o, col, qName, particle, parentItem.particle);
+         }
+         else
+         {
+            valueList.getHandler().newInstance(particle, valueList);
+         }
       }
    }
 
@@ -924,6 +984,7 @@ public class JBXB76ContentHandler
       if(stack.size() == 1)
       {
          root = o;
+         stack.clear();
       }
    }
 
@@ -936,6 +997,10 @@ public class JBXB76ContentHandler
    {
       if(parent instanceof ValueList /*&& !particle.getTerm().isSkip()*/)
       {
+         if(parent == o)
+         {            
+            return;
+         }
          ValueList valueList = (ValueList)parent;
          valueList.getInitializer().addTermValue(endName, particle, handler, valueList, o, parentParticle);
       }

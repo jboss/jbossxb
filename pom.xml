@@ -113,6 +113,11 @@
       <version>1.0</version>
     </dependency>
     <dependency>
+      <groupId>jboss.logging.log4j</groupId>
+      <artifactId>jboss-logging-log4j</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
       <groupId>jboss.common.core</groupId>
       <artifactId>jboss-common-core</artifactId>
       <version>1.0</version>
@@ -148,6 +153,18 @@
       <version>1.2.1</version>
       <scope>compile</scope>
     </dependency>         
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>jboss.jboss-test</groupId>
+      <artifactId>jboss-test</artifactId>
+      <version>1.0.0.CR1</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>  
 
 </project>

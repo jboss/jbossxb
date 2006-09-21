@@ -24,7 +24,10 @@
 
         <xs:element name="awtImage" type="xmime:base64Binary" minOccurs="0"/>
         <xs:element name="source" type="xmime:base64Binary" minOccurs="0"/>
-        <xs:element name="string" type="xmime:base64Binary" minOccurs="0"/>        
+        <xs:element name="string" type="xmime:base64Binary" minOccurs="0"/>
+
+        <xs:element name="octets" type="xs:base64Binary" minOccurs="0"/>
+
       </xs:sequence>
     </xs:complexType>
   </xs:element>

@@ -205,7 +205,7 @@ public class XOPUnitTestCase
             {
                throw new IllegalStateException(e.getMessage());
 
-            }           
+            }
          }
 
          return xopObject;
@@ -534,5 +534,6 @@ public class XOPUnitTestCase
       public Image awtImage;
       public Source source;
       public String string;
+      public byte[] octets;
    }
 }

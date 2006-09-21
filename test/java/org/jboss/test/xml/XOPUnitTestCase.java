@@ -193,6 +193,11 @@ public class XOPUnitTestCase
             xopObject = new XOPObject("string");
             xopObject.setContentType("text/xml");
          }
+         else if(cid.endsWith("octets"))
+         {
+            xopObject = new XOPObject("octets".getBytes());
+            xopObject.setContentType("application/octet-stream");
+         }
          else
          {
             try
@@ -424,6 +429,37 @@ public class XOPUnitTestCase
       e.string = "string";
       String marshalled = marshal(XOP_ENABLED_MARSH, e);
       assertXmlEqual(getOptimizedXml("string"), marshalled);
+   }
+
+   /**
+    * Test a simple xsd:base64Binary declaration
+    */
+   public void testMarshalOctets() throws Exception
+   {
+      E e = new E();
+      e.octets = "octets".getBytes();
+      String marshalled = marshal(XOP_ENABLED_MARSH, e);
+      assertXmlEqual(getOptimizedXml("octets"), marshalled);
+   }
+
+    /**
+    * Test unmarshalling of a simple xsd:base64Binary declaration
+    */
+    public void testUnmarshalOctets() throws Exception
+   {
+      SCHEMA.setXopUnmarshaller(XOP_ENABLED_UNMARSH);
+
+      String xml = getOptimizedXml("octets");
+
+      Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
+      Object o = unmarshaller.unmarshal(new StringReader(xml), SCHEMA);
+
+      assertNotNull(o);
+      assertTrue(o instanceof E);
+
+      E e = (E)o;
+      assertNotNull(e.octets);
+      assertEquals("octets", new String(e.octets));
    }
 
    public void testUnmarshalString() throws Exception

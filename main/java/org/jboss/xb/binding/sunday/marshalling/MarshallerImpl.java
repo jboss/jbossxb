@@ -355,7 +355,12 @@ public class MarshallerImpl
       String elementNs = elementQName.getNamespaceURI();
       String elementLocal = elementQName.getLocalPart();
 
-      XOPMarshaller xopMarshaller = type.getXopMarshaller();
+      XOPMarshaller xopMarshaller = schema.getXopMarshaller();
+      if(xopMarshaller == null)
+      {
+         xopMarshaller = type.getXopMarshaller();
+      }
+      
       if(xopMarshaller != null && isXopOptimizable(type))
       {
          String cid = null;

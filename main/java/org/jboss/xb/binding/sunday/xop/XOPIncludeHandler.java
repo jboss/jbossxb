@@ -46,10 +46,17 @@ public class XOPIncludeHandler
 {
    // type that can be XOP-optimized (should actually be the element)
    private final TypeBinding type;
+   private XOPUnmarshaller xopUnmarshaller;
 
    public XOPIncludeHandler(TypeBinding type)
    {
       this.type = type;
+   }
+   
+   public XOPIncludeHandler(TypeBinding type, XOPUnmarshaller xopUnmarshaller)
+   {
+      this.type = type;
+      this.xopUnmarshaller = xopUnmarshaller;
    }
 
    public Object startParticle(Object parent,
@@ -66,7 +73,7 @@ public class XOPIncludeHandler
          );
       }
 
-      XOPUnmarshaller xopUnmarshaller = type.getXopUnmarshaller();
+      XOPUnmarshaller xopUnmarshaller = this.xopUnmarshaller == null ? type.getXopUnmarshaller() : this.xopUnmarshaller;
       if(xopUnmarshaller == null)
       {
          throw new JBossXBRuntimeException(
@@ -103,7 +110,6 @@ public class XOPIncludeHandler
             throw new JBossXBRuntimeException("Failed to load the class to deserialize object: " + e.getMessage());
          }
       }
-
       return content;
    }
 

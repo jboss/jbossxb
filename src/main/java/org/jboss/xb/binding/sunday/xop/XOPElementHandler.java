@@ -65,12 +65,12 @@ public class XOPElementHandler
                          ParticleBinding particle,
                          ParticleBinding parentParticle)
    {
-      ElementBinding element = (ElementBinding)particle.getTerm();
-      XOPUnmarshaller xopUnmarshaller = element.getXopUnmarshaller();
-      if(xopUnmarshaller == null || !xopUnmarshaller.isXOPPackage())
+      if(parent == o)
       {
-         DefaultHandlers.ELEMENT_HANDLER.setParent(parent, o, elementName, particle, parentParticle);
+         return;
       }
+      
+      DefaultHandlers.ELEMENT_HANDLER.setParent(parent, o, elementName, particle, parentParticle);
    }
 
    public static class XOPElement

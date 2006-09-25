@@ -29,6 +29,7 @@ import javax.xml.namespace.QName;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.jboss.logging.Logger;
 import org.jboss.util.StringPropertyReplacer;
+import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.GenericValueContainer;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.NamespaceRegistry;
@@ -39,6 +40,7 @@ import org.jboss.xb.binding.group.ValueListInitializer;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.parser.JBossXBParser;
+import org.jboss.xb.binding.sunday.xop.XOPIncludeHandler;
 import org.xml.sax.Attributes;
 
 /**
@@ -151,7 +153,7 @@ public class JBXB76ContentHandler
          );
       }
 
-      endElement(item.o, item.particle, item.textContent == null ? "" : item.textContent.toString());
+      endElement();
    }
 
    public void startElement(String namespaceURI,
@@ -162,6 +164,7 @@ public class JBXB76ContentHandler
    {
       QName startName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
       ParticleBinding particle = null;
+      ParticleHandler handler = null;
       boolean repeated = false;
       boolean repeatedParticle = false;
       StackItem item = null;
@@ -228,6 +231,32 @@ public class JBXB76ContentHandler
                      (ModelGroupBinding)typeParticle.getTerm();
                   if(modelGroup == null)
                   {
+                     if(startName.equals(Constants.QNAME_XOP_INCLUDE))
+                     {
+                        TypeBinding anyUriType = schema.getType(Constants.QNAME_ANYURI);
+                        if(anyUriType == null)
+                        {
+                           log.warn("Type " + Constants.QNAME_ANYURI + " not bound.");
+                        }
+
+                        TypeBinding xopIncludeType = new TypeBinding(new QName(Constants.NS_XOP_INCLUDE, "Include"));
+                        xopIncludeType.setSchemaBinding(schema);
+                        xopIncludeType.addAttribute(new QName("href"), anyUriType, DefaultHandlers.ATTRIBUTE_HANDLER);
+                        xopIncludeType.setHandler(new XOPIncludeHandler(element.getType(), schema.getXopUnmarshaller()));
+
+                        ElementBinding xopInclude = new ElementBinding(schema, Constants.QNAME_XOP_INCLUDE, xopIncludeType);
+
+                        particle = new ParticleBinding(xopInclude);
+                        
+                        ElementBinding parentElement = (ElementBinding) stack.peek().particle.getTerm();
+                        parentElement.setXopUnmarshaller(schema.getXopUnmarshaller());
+                        
+                        item.handler = DefaultHandlers.XOP_HANDLER;
+                        item.cHandler = CharactersHandler.NOOP;
+                        item.o = item.handler.startParticle(stack.peek().o, startName, stack.peek().particle, null, nsRegistry);
+                        break;
+                     }
+
                      QName typeName = element.getType().getQName();
                      throw new JBossXBRuntimeException((typeName == null ? "Anonymous" : typeName.toString()) +
                         " type of element " +
@@ -259,9 +288,9 @@ public class JBXB76ContentHandler
                            startRepeatableParticle(startName, modelGroupParticle);
                         }
 
-                        ParticleHandler handler = getHandler(modelGroupParticle);
+                        handler = getHandler(modelGroupParticle);
                         o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
-                        push(cursor, o);
+                        push(cursor, o, handler);
                      }
                      particle = cursor.getCurrentParticle();
                   }
@@ -308,7 +337,7 @@ public class JBXB76ContentHandler
                      }
                      item.reset();
                      
-                     ParticleHandler handler = getHandler(item.particle);
+                     handler = getHandler(item.particle);
                      item.o = handler.startParticle(stack.peek(1).o, startName, item.particle, atts, nsRegistry);
                   }
                   
@@ -337,9 +366,9 @@ public class JBXB76ContentHandler
                      cursor = (ModelGroupBinding.Cursor)newCursors.get(i);
 
                      ParticleBinding modelGroupParticle = cursor.getParticle();
-                     ParticleHandler handler = getHandler(modelGroupParticle);
+                     handler = getHandler(modelGroupParticle);
                      o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
-                     push(cursor, o);
+                     push(cursor, o, handler);
                   }
                   cursor = (ModelGroupBinding.Cursor)newCursors.get(0);
                   particle = cursor.getCurrentParticle();
@@ -432,6 +461,12 @@ public class JBXB76ContentHandler
             throw new JBossXBRuntimeException("No type for element " + element);
          }
 
+         handler = type.getHandler();
+         if(handler == null)
+         {
+            handler = defParticleHandler;
+         }
+
          List interceptors = element.getInterceptors();
          if(!interceptors.isEmpty())
          {
@@ -444,7 +479,7 @@ public class JBXB76ContentHandler
             {
                ElementInterceptor interceptor = (ElementInterceptor) interceptors.get(i);
                parent = interceptor.startElement(parent, startName, type);
-               push(startName, particle, parent);
+               push(startName, particle, parent, handler);
                interceptor.attributes(parent, startName, type, atts, nsRegistry);
             }
 
@@ -453,12 +488,6 @@ public class JBXB76ContentHandler
                // to have correct endRepeatableParticle calls
                stack.push(item);
             }
-         }
-
-         ParticleHandler handler = type.getHandler();
-         if(handler == null)
-         {
-            handler = defParticleHandler;
          }
 
          String nil = atts.getValue("xsi:nil");
@@ -508,7 +537,7 @@ public class JBXB76ContentHandler
       }
       else
       {
-         push(startName, particle, o);
+         push(startName, particle, o, handler);
       }
    }
 
@@ -676,7 +705,7 @@ public class JBXB76ContentHandler
       }
 
       ParticleBinding modelGroupParticle = item.particle;
-      ParticleHandler handler = getHandler(modelGroupParticle);
+      ParticleHandler handler = item.handler;//getHandler(modelGroupParticle);
 
       Object o;
       if(item.o instanceof ValueList && !modelGroupParticle.getTerm().isSkip())
@@ -731,8 +760,12 @@ public class JBXB76ContentHandler
 
    // Private
 
-   private void endElement(Object o, ParticleBinding particle, String textContent)
+   private void endElement()
    {
+      StackItem item = stack.peek();
+      Object o = item.o;
+      ParticleBinding particle = item.particle;
+      
       ElementBinding element = (ElementBinding)particle.getTerm();
       QName endName = element.getQName();
       TypeBinding type = element.getType();
@@ -751,7 +784,7 @@ public class JBXB76ContentHandler
             charType = type;
          }
 
-         CharactersHandler charHandler = charType.getCharactersHandler();
+         CharactersHandler charHandler = item.cHandler == null ? charType.getCharactersHandler() : item.cHandler;
 
          /**
           * If there is text content then unmarshal it and set.
@@ -761,6 +794,7 @@ public class JBXB76ContentHandler
           * of the empty text content is assumed to be null
           * (in case of simple types that's not always true and depends on nillable attribute).
           */
+         String textContent = item.textContent == null ? "" : item.textContent.toString();
          if(textContent.length() > 0 || charHandler != null && type.isSimple())
          {
             String dataContent;
@@ -874,12 +908,8 @@ public class JBXB76ContentHandler
 
       StackItem parentItem = stack.size() == 1 ? null : stack.peek(1);
       Object parent = parentItem == null ? null : parentItem.o;
-      ParticleHandler handler = type.getHandler();
-      if(handler == null)
-      {
-         handler = defParticleHandler;
-      }
-
+      ParticleHandler handler = stack.peek().handler;
+      
       if(o instanceof ValueList && !particle.getTerm().isSkip())
       {
          if(trace)
@@ -912,8 +942,8 @@ public class JBXB76ContentHandler
          ListIterator iter = stack.prevIterator();
          while(iter.hasPrevious())
          {
-            StackItem item = (StackItem)iter.previous();
-            ParticleBinding peeked = item.particle;
+            StackItem prev = (StackItem)iter.previous();
+            ParticleBinding peeked = prev.particle;
             if(peeked != null && peeked.getTerm() instanceof ElementBinding)
             {
                parentParticle = peeked;
@@ -1010,9 +1040,9 @@ public class JBXB76ContentHandler
       }
    }
 
-   private void push(QName qName, ParticleBinding particle, Object o)
+   private void push(QName qName, ParticleBinding particle, Object o, ParticleHandler handler)
    {
-      StackItem item = new StackItem(particle, o);
+      StackItem item = new StackItem(particle, o, handler);
       stack.push(item);
       if(trace)
       {
@@ -1025,9 +1055,9 @@ public class JBXB76ContentHandler
       }
    }
 
-   private void push(ModelGroupBinding.Cursor cursor, Object o)
+   private void push(ModelGroupBinding.Cursor cursor, Object o, ParticleHandler handler)
    {
-      StackItem item = new StackItem(cursor, o);
+      StackItem item = new StackItem(cursor, o, handler);
       stack.push(item);
       if(trace)
       {
@@ -1058,25 +1088,29 @@ public class JBXB76ContentHandler
    {
       final ModelGroupBinding.Cursor cursor;
       final ParticleBinding particle;
+      ParticleHandler handler;
+      CharactersHandler cHandler;
       Object o;
       ValueList repeatableParticleValue;
       StringBuffer textContent;
       boolean ended;
 
-      public StackItem(ModelGroupBinding.Cursor cursor, Object o)
+      public StackItem(ModelGroupBinding.Cursor cursor, Object o, ParticleHandler handler)
       {
          // this is modelgroup particle
          this.cursor = cursor;
          this.particle = cursor.getParticle();
          this.o = o;
+         this.handler = handler;
       }
 
-      public StackItem(ParticleBinding particle, Object o)
+      public StackItem(ParticleBinding particle, Object o, ParticleHandler handler)
       {
          // this is element particle
          this.cursor = null;
          this.particle = particle;
          this.o = o;
+         this.handler = handler;
       }
 
       void reset()

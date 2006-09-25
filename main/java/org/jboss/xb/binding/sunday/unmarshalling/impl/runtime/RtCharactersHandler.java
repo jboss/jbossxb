@@ -126,87 +126,79 @@ public class RtCharactersHandler
    {
       //todo: assert if type is not null it must simple...
 
-      if(owner != null) // todo: owner should never be null
+      if(owner == null) // todo: owner should never be null
       {
-         if(owner instanceof MapEntry)
+         return;
+      }
+      
+      if (owner instanceof MapEntry)
+      {
+         TypeBinding type = element.getType();
+         CharactersMetaData characters = type.getCharactersMetaData();
+         if (characters != null)
          {
-            TypeBinding type = element.getType();
-            CharactersMetaData characters = type.getCharactersMetaData();
-            if(characters != null)
+            if (characters.isMapEntryKey())
             {
-               if(characters.isMapEntryKey())
-               {
-                  ((MapEntry)owner).setKey(value);
-               }
-               else if(characters.isMapEntryValue())
-               {
-                  ((MapEntry)owner).setValue(value);
-               }
-               else
-               {
-                  throw new JBossXBRuntimeException("Parent object is a map entry but characters of element " +
-                     qName +
-                     " of type " +
-                     type.getQName() +
-                     " were bound to niether key nor value in a map entry."
-                  );
-               }
+               ((MapEntry) owner).setKey(value);
+            }
+            else if (characters.isMapEntryValue())
+            {
+               ((MapEntry) owner).setValue(value);
             }
             else
             {
-               throw new JBossXBRuntimeException("Parent object is a map entry but characters of element " +
-                  qName +
-                  " of type " +
-                  type.getQName() +
-                  " were bound to niether key nor value in a map entry."
-               );
+               throw new JBossXBRuntimeException("Parent object is a map entry but characters of element " + qName
+                     + " of type " + type.getQName() + " were bound to niether key nor value in a map entry.");
             }
          }
          else
          {
-            String propName = null;
-            String colType = null;
-            TypeBinding type = element.getType();
-            if(type != null && !type.isSimple()/* && type.hasSimpleContent()*/)
-            {
-               PropertyMetaData propertyMetaData = type.getPropertyMetaData();
-               if(propertyMetaData == null)
-               {
-                  CharactersMetaData charactersMetaData = type.getCharactersMetaData();
-                  propertyMetaData = charactersMetaData == null ? null : charactersMetaData.getProperty();
-               }
-
-               if(propertyMetaData != null)
-               {
-                  propName = propertyMetaData.getName();
-                  colType = propertyMetaData.getCollectionType();
-               }
-
-               if(propName == null)
-               {
-                  propName = type.getSchemaBinding().getSimpleContentProperty();
-               }
-            }
-            else
-            {
-               PropertyMetaData PropertyMetaData = element.getPropertyMetaData();
-               if(PropertyMetaData != null)
-               {
-                  propName = PropertyMetaData.getName();
-                  colType = PropertyMetaData.getCollectionType();
-               }
-
-               if(propName == null)
-               {
-                  propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getSchema().isIgnoreLowLine());
-               }
-            }
-
-            RtUtil.set(owner, value, propName, colType,
-               element.getSchema().isIgnoreUnresolvedFieldOrClass(),
-               element.getValueAdapter()
-            );
+            throw new JBossXBRuntimeException("Parent object is a map entry but characters of element " + qName
+                  + " of type " + type.getQName() + " were bound to niether key nor value in a map entry.");
          }
+      }
+      else
+      {
+         String propName = null;
+         String colType = null;
+         TypeBinding type = element.getType();
+         if (type != null && !type.isSimple()/* && type.hasSimpleContent()*/)
+         {
+            PropertyMetaData propertyMetaData = type.getPropertyMetaData();
+            if (propertyMetaData == null)
+            {
+               CharactersMetaData charactersMetaData = type.getCharactersMetaData();
+               propertyMetaData = charactersMetaData == null ? null : charactersMetaData.getProperty();
+            }
+
+            if (propertyMetaData != null)
+            {
+               propName = propertyMetaData.getName();
+               colType = propertyMetaData.getCollectionType();
+            }
+
+            if (propName == null)
+            {
+               propName = type.getSchemaBinding().getSimpleContentProperty();
+            }
+         }
+         else
+         {
+            PropertyMetaData PropertyMetaData = element.getPropertyMetaData();
+            if (PropertyMetaData != null)
+            {
+               propName = PropertyMetaData.getName();
+               colType = PropertyMetaData.getCollectionType();
+            }
+
+            if (propName == null)
+            {
+               propName = Util.xmlNameToFieldName(qName.getLocalPart(), element.getSchema().isIgnoreLowLine());
+            }
+         }
+
+         RtUtil.set(owner, value, propName, colType, element.getSchema().isIgnoreUnresolvedFieldOrClass(), element
+               .getValueAdapter());
       }
    }
 }

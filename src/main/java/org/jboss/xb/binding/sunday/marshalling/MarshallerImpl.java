@@ -47,18 +47,7 @@ import org.jboss.xb.binding.NamespaceRegistry;
 import org.jboss.xb.binding.introspection.FieldInfo;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
-import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ChoiceBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
+import org.jboss.xb.binding.sunday.unmarshalling.*;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.jboss.xb.binding.sunday.xop.XOPObject;
 import org.xml.sax.ContentHandler;
@@ -69,7 +58,7 @@ import org.xml.sax.SAXException;
  * @version <tt>$Revision$</tt>
  */
 public class MarshallerImpl
-   extends AbstractMarshaller
+    extends AbstractMarshaller
 {
    private Stack stack = new StackImpl();
 
@@ -148,28 +137,28 @@ public class MarshallerImpl
    // AbstractMarshaller implementation
 
    public void marshal(Reader xsdReader, ObjectModelProvider provider, Object root, Writer writer)
-      throws IOException, SAXException, ParserConfigurationException
+       throws IOException, SAXException, ParserConfigurationException
    {
       SchemaBinding model = XsdBinder.bind(xsdReader, null, schemaResolver);
       marshallInternal(root, model, writer);
    }
 
    public void marshal(String xsdURL, ObjectModelProvider provider, Object root, Writer writer) throws IOException,
-      SAXException
+       SAXException
    {
       SchemaBinding model = XsdBinder.bind(xsdURL, schemaResolver);
       marshallInternal(root, model, writer);
    }
 
    public void marshal(SchemaBinding model, ObjectModelProvider provider, Object root, Writer writer)
-      throws IOException,
-      SAXException
+       throws IOException,
+       SAXException
    {
       marshallInternal(root, model, writer);
    }
 
    private void marshallInternal(Object root, SchemaBinding schema, Writer writer)
-      throws IOException, SAXException
+       throws IOException, SAXException
    {
       if(schema == null)
       {
@@ -186,8 +175,8 @@ public class MarshallerImpl
          if(rootQNames.isEmpty())
          {
             throw new JBossXBRuntimeException("If type name (" +
-               rootTypeQName +
-               ") for the root element is specified then the name for the root element is required!"
+                rootTypeQName +
+                ") for the root element is specified then the name for the root element is required!"
             );
          }
          QName rootQName = (QName)rootQNames.get(0);
@@ -256,7 +245,7 @@ public class MarshallerImpl
       writeXmlVersion(writer);
 
       ContentWriter contentWriter = new ContentWriter(writer,
-         propertyIsTrueOrNotSet(org.jboss.xb.binding.Marshaller.PROP_OUTPUT_INDENTATION)
+          propertyIsTrueOrNotSet(org.jboss.xb.binding.Marshaller.PROP_OUTPUT_INDENTATION)
       );
       content.handleContent(contentWriter);
 
@@ -264,7 +253,7 @@ public class MarshallerImpl
       {
          java.io.StringWriter traceWriter = new java.io.StringWriter();
          contentWriter = new ContentWriter(traceWriter,
-            propertyIsTrueOrNotSet(org.jboss.xb.binding.Marshaller.PROP_OUTPUT_INDENTATION)
+             propertyIsTrueOrNotSet(org.jboss.xb.binding.Marshaller.PROP_OUTPUT_INDENTATION)
          );
          content.handleContent(contentWriter);
          log.trace("marshalled:\n" + traceWriter.getBuffer().toString());
@@ -284,9 +273,9 @@ public class MarshallerImpl
          xsiTypeQName = (QName)cls2TypeMap.get(value.getClass());
          // in case xsiTypeQName is not null, typeQName should also be not null
          if(xsiTypeQName != null &&
-            !(typeQName.getLocalPart().equals(xsiTypeQName.getLocalPart()) &&
-            typeQName.getNamespaceURI().equals(xsiTypeQName.getNamespaceURI())
-            ))
+             !(typeQName.getLocalPart().equals(xsiTypeQName.getLocalPart()) &&
+                 typeQName.getNamespaceURI().equals(xsiTypeQName.getNamespaceURI())
+             ))
          {
             if(log.isTraceEnabled())
             {
@@ -297,10 +286,10 @@ public class MarshallerImpl
             if(xsiType == null)
             {
                log.warn("Class " +
-                  value.getClass() +
-                  " is mapped to type " +
-                  xsiTypeQName +
-                  " but the type is not found in schema."
+                   value.getClass() +
+                   " is mapped to type " +
+                   xsiTypeQName +
+                   " but the type is not found in schema."
                );
             }
             // todo should check derivation also, i.e. if(xsiType.derivedFrom())
@@ -329,9 +318,9 @@ public class MarshallerImpl
       {
          boolean declareXsiType = xsiType != null;
          marshalElementType(element.getQName(),
-            declareXsiType ? xsiType : element.getType(),
-            declareNs,
-            declareXsiType
+             declareXsiType ? xsiType : element.getType(),
+             declareNs,
+             declareXsiType
          );
       }
       else if(nillable)
@@ -363,33 +352,14 @@ public class MarshallerImpl
       
       if(xopMarshaller != null && isXopOptimizable(type))
       {
-         String cid = null;
+
          if(xopMarshaller.isXOPPackage())
          {
+            // XOPMarshaller callback will create the attachment part
             Object o = stack.peek();
-            cid = xopMarshaller.addMtomAttachment(new XOPObject(o), elementNs, elementLocal);
-         }
+            String cid = xopMarshaller.addMtomAttachment(new XOPObject(o), elementNs, elementLocal);
 
-         if(cid == null)
-         {
-            if(!type.isSimple())
-            {
-               if(type.hasOnlyXmlMimeAttributes())
-               {
-                  if(log.isTraceEnabled())
-                  {
-                     log.trace(
-                        "XML MIME attributes of type " + type.getQName() +
-                        " are ignored, the value is marshalled as " + type.getSimpleType().getQName()
-                     );
-                  }
-
-                  type = type.getSimpleType();
-               }
-            }
-         }
-         else
-         {
+            // Create the xopInclude element from CID and exit
             AttributesImpl attrs = null;
             String prefix = getPrefix(elementNs);
             boolean genPrefix = prefix == null && elementNs != null && elementNs.length() > 0;
@@ -411,9 +381,36 @@ public class MarshallerImpl
             content.endElement(Constants.NS_XOP_INCLUDE, "Include", "xop:Include");
 
             content.endElement(elementNs, elementLocal, qName);
+
+            // Skip further processing
             return;
+
          }
+         else
+         {
+            // XOPMarshaller did not process the object
+            // In this case we try to marshall the corresponding simple type
+            if(!type.isSimple())
+            {
+               if(type.hasOnlyXmlMimeAttributes()) // TODO: what's the purpose of this? It's xopOptimizable anyway...
+               {
+                  if(log.isTraceEnabled())
+                  {
+                     log.trace(
+                         "XML MIME attributes of type " + type.getQName() +
+                             " are ignored, the value is marshalled as " + type.getSimpleType().getQName()
+                     );
+                  }
+
+                  type = type.getSimpleType();
+               }
+            }          
+         }
+
       }
+
+      // If we reach this point then either it wasn't a XOP element at all
+      // or the XOPMarshaller did not process it.
 
       if(type.isSimple())
       {
@@ -462,12 +459,12 @@ public class MarshallerImpl
 
       String typeName = type.getQName() == null ? null : type.getQName().getLocalPart();
       if(ctx.attrs == null && SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
-         SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
-         type.getItemType() != null &&
-         (SimpleTypeBindings.XS_QNAME_NAME.equals(type.getItemType().getQName().getLocalPart()) ||
-         SimpleTypeBindings.XS_NOTATION_NAME.equals(type.getItemType().getQName().getLocalPart())
-         )
-      )
+          SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
+          type.getItemType() != null &&
+              (SimpleTypeBindings.XS_QNAME_NAME.equals(type.getItemType().getQName().getLocalPart()) ||
+                  SimpleTypeBindings.XS_NOTATION_NAME.equals(type.getItemType().getQName().getLocalPart())
+              )
+          )
       {
          ctx.attrs = new AttributesImpl(5);
       }
@@ -588,13 +585,13 @@ public class MarshallerImpl
             {
                String typeName = simpleType.getQName().getLocalPart();
                if(ctx.attrs == null && (SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
-                  SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
-                  simpleType.getItemType() != null &&
-                  (SimpleTypeBindings.XS_QNAME_NAME.equals(simpleType.getItemType().getQName().getLocalPart()) ||
-                  SimpleTypeBindings.XS_NOTATION_NAME.equals(simpleType.getItemType().getQName().getLocalPart())
-                  )
-                  )
+                   SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName) ||
+                   simpleType.getItemType() != null &&
+                       (SimpleTypeBindings.XS_QNAME_NAME.equals(simpleType.getItemType().getQName().getLocalPart()) ||
+                           SimpleTypeBindings.XS_NOTATION_NAME.equals(simpleType.getItemType().getQName().getLocalPart())
+                       )
                )
+                   )
                {
                   ctx.attrs = new AttributesImpl(5);
                }
@@ -651,12 +648,12 @@ public class MarshallerImpl
             if(propertyMetaData == null)
             {
                throw new JBossXBRuntimeException(
-                  "Currently, property binding metadata must be available for a model group to be marshalled!"
+                   "Currently, property binding metadata must be available for a model group to be marshalled!"
                );
             }
 
             o = getChildren(stack.peek(), propertyMetaData.getName(),
-               modelGroup.getSchema().isIgnoreUnresolvedFieldOrClass()
+                modelGroup.getSchema().isIgnoreUnresolvedFieldOrClass()
             );
 
             i = o != null && isRepeatable(particle) ? getIterator(o) : null;
@@ -777,20 +774,20 @@ public class MarshallerImpl
             if(ignoreUnresolvedWildcard)
             {
                log.warn("Failed to marshal wildcard. Class mapping not found for " +
-                  o.getClass() +
-                  "@" +
-                  o.hashCode() +
-                  ": " + o
+                   o.getClass() +
+                   "@" +
+                   o.hashCode() +
+                   ": " + o
                );
                return true;
             }
             else
             {
                throw new IllegalStateException("Failed to marshal wildcard. Class mapping not found for " +
-                  o.getClass() +
-                  "@" +
-                  o.hashCode() +
-                  ": " + o
+                   o.getClass() +
+                   "@" +
+                   o.hashCode() +
+                   ": " + o
                );
             }
          }
@@ -821,8 +818,8 @@ public class MarshallerImpl
          if(typeDef == null)
          {
             throw new JBossXBRuntimeException("Type " +
-               mapping.typeName +
-               " is not defined in the schema."
+                mapping.typeName +
+                " is not defined in the schema."
             );
          }
 
@@ -837,8 +834,8 @@ public class MarshallerImpl
       else
       {
          throw new JBossXBRuntimeException("Class mapping for " +
-            mapping.cls +
-            " is associated with neither global element name nor global type name."
+             mapping.cls +
+             " is associated with neither global element name nor global type name."
          );
       }
 
@@ -957,7 +954,7 @@ public class MarshallerImpl
             {
                // todo: qname are also not yet supported
                throw new JBossXBRuntimeException(
-                  "Expected value for list type is an array or " + List.class.getName() + " but got: " + value
+                   "Expected value for list type is an array or " + List.class.getName() + " but got: " + value
                );
             }
 
@@ -966,7 +963,7 @@ public class MarshallerImpl
          else
          {
             throw new JBossXBRuntimeException("Marshalling of list types with item types not from " +
-               Constants.NS_XML_SCHEMA + " is not supported."
+                Constants.NS_XML_SCHEMA + " is not supported."
             );
          }
       }
@@ -977,7 +974,7 @@ public class MarshallerImpl
          String prefix = null;
          boolean removePrefix = false;
          if(SimpleTypeBindings.XS_QNAME_NAME.equals(typeName) ||
-            SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
+             SimpleTypeBindings.XS_NOTATION_NAME.equals(typeName))
          {
             QName qNameValue = (QName)value;
             if(qNameValue.getNamespaceURI() != null && qNameValue.getNamespaceURI().length() > 0)
@@ -1007,8 +1004,8 @@ public class MarshallerImpl
       }
       // todo: this is a quick fix for boolean pattern (0|1 or true|false) should be refactored
       else if(simpleType.getLexicalPattern() != null &&
-         simpleType.getBaseType() != null &&
-         Constants.QNAME_BOOLEAN.equals(simpleType.getBaseType().getQName()))
+          simpleType.getBaseType() != null &&
+          Constants.QNAME_BOOLEAN.equals(simpleType.getBaseType().getQName()))
       {
          String item = (String)simpleType.getLexicalPattern().get(0);
          if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
@@ -1038,8 +1035,8 @@ public class MarshallerImpl
                catch(NoSuchMethodException e1)
                {
                   throw new JBossXBRuntimeException("Failed to find neither value() nor getValue() in " +
-                     value.getClass() +
-                     " which is bound to enumeration type " + simpleTypeQName
+                      value.getClass() +
+                      " which is bound to enumeration type " + simpleTypeQName
                   );
                }
             }
@@ -1051,15 +1048,15 @@ public class MarshallerImpl
             catch(Exception e)
             {
                throw new JBossXBRuntimeException(
-                  "Failed to invoke getValue() on " + value + " to get the enumeration value", e
+                   "Failed to invoke getValue() on " + value + " to get the enumeration value", e
                );
             }
          }
 
          marshalled = marshalCharacters(elementUri,
-            elementPrefix,
-            simpleType.getBaseType(),
-            value
+             elementPrefix,
+             simpleType.getBaseType(),
+             value
          );
       }
       return marshalled;
@@ -1075,8 +1072,8 @@ public class MarshallerImpl
       if(!nillable)
       {
          throw new JBossXBRuntimeException("Failed to marshal " +
-            elementQName +
-            ": Java value is null but the element is not nillable."
+             elementQName +
+             ": Java value is null but the element is not nillable."
          );
       }
 
@@ -1239,16 +1236,17 @@ public class MarshallerImpl
       {
          value = getJavaValue(fieldName, o, false, ignoreNotFoundField);
       }
+
       return value;
    }
 
    private static boolean writeAsValue(final Class type)
    {
       return Classes.isPrimitive(type) ||
-         type == String.class ||
-         type == java.util.Date.class ||
-         type == java.math.BigDecimal.class ||
-         type == java.math.BigInteger.class;
+          type == String.class ||
+          type == java.util.Date.class ||
+          type == java.math.BigDecimal.class ||
+          type == java.math.BigInteger.class;
    }
 
    private static boolean isRepeatable(ParticleBinding particle)

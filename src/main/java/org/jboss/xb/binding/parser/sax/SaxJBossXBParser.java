@@ -23,6 +23,8 @@ package org.jboss.xb.binding.parser.sax;
 
 import java.io.InputStream;
 import java.io.Reader;
+import java.lang.reflect.Method;
+
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.jboss.logging.Logger;
@@ -54,6 +56,7 @@ public class SaxJBossXBParser
    {
       saxFactory.setValidating(true);
       saxFactory.setNamespaceAware(true);
+      enableXInclude();
    }
 
    private final XMLReader reader;
@@ -61,6 +64,25 @@ public class SaxJBossXBParser
    private DelegatingContentHandler delegateHandler;
    private boolean trace;
 
+   /**
+    * Enables XInclude if the saxFactory supports it.<p>
+    * 
+    * NOTE: Checks the real factory class, not the JAXP interface.
+    */
+   private static void enableXInclude()
+   {
+      try
+      {
+         Class clazz = saxFactory.getClass();
+         Method method = clazz.getMethod("setXIncludeAware", new Class[] { Boolean.TYPE });
+         method.invoke(saxFactory, new Object[] { Boolean.TRUE });
+      }
+      catch (Exception e)
+      {
+         log.trace("Not setting XIncludeAware", e);
+      }
+   }
+   
    public SaxJBossXBParser()
       throws JBossXBException
    {

@@ -22,11 +22,6 @@
 package org.jboss.test.xml;
 
 import java.util.Arrays;
-import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
-import org.jboss.xb.binding.Unmarshaller;
-import org.jboss.xb.binding.UnmarshallerFactory;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -99,16 +94,6 @@ public class RepeatableTermsUnitTestCase
       
       assertEquals("item1", top.item1);
       assertEquals("item2", top.item2);
-   }
-   
-   private Object unmarshal() throws Exception
-   {
-      String testXsd = findXML(rootName + "_" + getName() + ".xsd");
-      SchemaBinding schema = XsdBinder.bind(testXsd, (SchemaBindingResolver)null);
-      schema.setIgnoreUnresolvedFieldOrClass(false);
-
-      Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
-      return unmarshaller.unmarshal(findXML(rootName + "_" + getName() + ".xml"), schema);
    }
 
    // Inner

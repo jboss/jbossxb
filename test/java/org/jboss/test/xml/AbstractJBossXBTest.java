@@ -26,7 +26,11 @@ import java.net.URL;
 import org.jboss.test.AbstractTestCaseWithSetup;
 import org.jboss.test.AbstractTestDelegate;
 import org.jboss.util.Classes;
+import org.jboss.xb.binding.Unmarshaller;
+import org.jboss.xb.binding.UnmarshallerFactory;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 
 /**
  * AbstractJBossXBTest.
@@ -110,6 +114,7 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
     * Unmarshal some xml
     * 
     * @param name the name
+    * @param resolver the resolver
     * @return the unmarshalled object
     * @throws Exception for any error
     */
@@ -119,6 +124,26 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
       return getJBossXBDelegate().unmarshal(url, resolver);
    }
    
+   /**
+    * Unmarshall some xml<p>
+    * 
+    * The xsd name is UnitTestClass_testName.xsd<p>
+    * 
+    * The xml name is UnitTestClass_testName.xml
+    * 
+    * @return the object
+    * @throws Exception for any problem
+    */
+   protected Object unmarshal() throws Exception
+   {
+      String testXsd = findXML(rootName + "_" + getName() + ".xsd");
+      SchemaBinding schema = XsdBinder.bind(testXsd, (SchemaBindingResolver)null);
+      schema.setIgnoreUnresolvedFieldOrClass(false);
+
+      Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
+      return unmarshaller.unmarshal(findXML(rootName + "_" + getName() + ".xml"), schema);
+   }
+
    /**
     * Find the xml
     * 

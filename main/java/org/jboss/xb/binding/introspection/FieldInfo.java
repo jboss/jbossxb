@@ -24,6 +24,8 @@ package org.jboss.xb.binding.introspection;
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 
@@ -89,7 +91,35 @@ public class FieldInfo
          {
             public void set(Object owner, Object value) throws IllegalAccessException, InvocationTargetException
             {
-               m.invoke(owner, new Object[]{value});
+               Object[] arguments = new Object[] { value };
+               try
+               {
+                  m.invoke(owner, new Object[]{value});
+               }
+               catch (IllegalArgumentException e)
+               {
+                  if (owner == null)
+                     throw new IllegalArgumentException("Null target for " + m.getName());
+                  ArrayList expected = new ArrayList();
+                  Class[] parameters = m.getParameterTypes();
+                  if (parameters != null)
+                  {
+                     for (int i = 0; i < parameters.length; ++i)
+                        expected.add(parameters[i].getName());
+                  }
+                  ArrayList actual = new ArrayList();
+                  if (arguments != null)
+                  {
+                     for (int i = 0; i < arguments.length; ++i)
+                     {
+                        if (arguments[i] == null)
+                           actual.add(null);
+                        else
+                           actual.add(arguments[i].getClass().getName());
+                     }
+                  }
+                  throw new IllegalArgumentException("Wrong arguments. " + m.getName() + " for target " + owner + " expected=" + expected + " actual=" + actual);
+               }
             }
          };
       }
@@ -198,7 +228,7 @@ public class FieldInfo
       catch(Exception e)
       {
          throw new JBossXBRuntimeException(
-            "Failed to get value of the property '" + name + "' defined in " + owner + " from instance " + owner
+            "Failed to get value of the property '" + name + "' defined in " + owner + " from instance " + owner, e
          );
       }
    }
@@ -220,7 +250,7 @@ public class FieldInfo
       {
          throw new JBossXBRuntimeException(
             "Failed to set value '" + value + "' for property '" + name + "' defined in " +
-            owner + " on instance " + owner
+            owner + " on instance " + owner, e
          );
       }
    }

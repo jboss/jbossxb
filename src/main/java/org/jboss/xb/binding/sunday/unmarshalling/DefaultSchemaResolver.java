@@ -21,16 +21,15 @@
  */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
-import java.io.InputStream;
 import java.net.URL;
-import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
-import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.logging.Logger;
-import org.xml.sax.InputSource;
+import org.jboss.util.xml.JBossEntityResolver;
 import org.w3c.dom.ls.LSInput;
+import org.xml.sax.InputSource;
 
 /**
  * A default SchemaBindingResolver that uses a JBossEntityResolver to locate
@@ -298,68 +297,56 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
 
       if( trace )
          log.trace("getInputSource, nsURI="+nsURI+", baseURI="+baseURI+", schemaLocation="+schemaLocation);
-      // First try to resolve the namespace as a systemID
+
+      // First try what is requested
       try
       {
-         is = resolver.resolveEntity(null, nsURI);
+         is = resolver.resolveEntity(nsURI, schemaLocation);
+         if (trace)
+            log.trace("Resolved schema using namespace as publicId and schemaLocation as systemId");
       }
       catch (Exception e)
       {
          if (trace)
-            log.trace("Failed to use nsUri as systemID", e);
+            log.trace("Failed to use nsUri/schemaLocation", e);
       }
 
-      if (is == null && schemaLocation != null)
+      // Next, try to use the baseURI to resolve the schema location
+      if (is == null &&  baseURI != null && schemaLocation != null)
       {
-         // Next try the schemaLocation as a systemID
          try
          {
-            is = resolver.resolveEntity(null, schemaLocation);
-            if( trace && is != null )
-               log.trace("Resolved schemaLocation as systemID");
+            URL url = new URL(baseURI);
+            url = new URL(url, schemaLocation);
+            String resolvedSchemaLocation = url.toString();
+            // No point if the schema location was already absolute
+            if (schemaLocation.equals(resolvedSchemaLocation) == false)
+            {
+               is = resolver.resolveEntity(null, url.toString());
+               if( trace && is != null )
+                  log.trace("Resolved schema location using baseURI");
+            }
          }
          catch (Exception e)
          {
             if (trace)
-               log.trace("Failed to use schemaLocation as systemID", e);
+               log.trace("Failed to use schema location with baseURI", e);
          }
+      }
 
-         if (is == null)
+      // Finally, just try the namespace as the system id
+      if (is == null &&  nsURI != null)
+      {
+         try
          {
-            // Just try resolving the schemaLocation against the baseURI
-            try
-            {
-               if (baseURI == null)
-               {
-                  baseURI = this.baseURI;
-                  if( trace )
-                     log.trace("Using resolver baseURI="+baseURI);
-               }
-
-               URL schemaURL = null;
-               if (baseURI != null)
-               {
-                  URL baseURL = new URL(baseURI);
-                  schemaURL = new URL(baseURL, schemaLocation);
-               }
-               else
-               {
-                  schemaURL = new URL(schemaLocation);
-               }
-
-               if (schemaURL != null)
-               {
-                  InputStream is2 = schemaURL.openStream();
-                  is = new InputSource(is2);
-                  if( trace )
-                     log.trace("Using resolver schemaURL="+schemaURL);
-               }
-            }
-            catch (Exception e)
-            {
-               if (trace)
-                  log.trace("Failed to use schemaLocation as URL", e);
-            }
+            is = resolver.resolveEntity(null, nsURI);
+            if( trace && is != null )
+               log.trace("Resolved namespace as system id");
+         }
+         catch (Exception e)
+         {
+            if (trace)
+               log.trace("Failed to use namespace as system id", e);
          }
       }
       if( trace )

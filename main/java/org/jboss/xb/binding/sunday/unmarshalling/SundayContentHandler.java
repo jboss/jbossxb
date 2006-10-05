@@ -185,6 +185,10 @@ public class SundayContentHandler
             {
                particle = schemaBinding.getElementParticle(startName);
             }
+            else
+            {
+               throw new JBossXBRuntimeException("Failed to resolve schema nsURI=" + namespaceURI + " location=" + schemaLocation);
+            }
          }
          else
          {
@@ -1097,6 +1101,8 @@ public class SundayContentHandler
 
       public StackItem(ModelGroupBinding.Cursor cursor, Object o, ParticleHandler handler)
       {
+         if (cursor == null)
+            throw new IllegalArgumentException("Null cursor");
          // this is modelgroup particle
          this.cursor = cursor;
          this.particle = cursor.getParticle();
@@ -1106,6 +1112,8 @@ public class SundayContentHandler
 
       public StackItem(ParticleBinding particle, Object o, ParticleHandler handler)
       {
+         if (particle == null)
+            throw new IllegalArgumentException("Null particle");
          // this is element particle
          this.cursor = null;
          this.particle = particle;

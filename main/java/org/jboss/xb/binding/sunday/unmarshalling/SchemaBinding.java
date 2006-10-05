@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
+
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.Constants;
@@ -116,6 +118,8 @@ public class SchemaBinding
       SIMPLE_TYPES.put(type.getQName(), type);
    }
 
+   /** The namespaces Set<String> */
+   private Set namespaces = Collections.emptySet();
    /** Map<QName, TypeBinding> for simple/complex types */
    private Map types = new HashMap(SIMPLE_TYPES);
    /** Map<QName, ParticleBinding> for */
@@ -143,6 +147,29 @@ public class SchemaBinding
    private XOPUnmarshaller xopUnmarshaller;
    /** default XOP marshaller */
    private XOPMarshaller xopMarshaller;
+
+   /**
+    * Get the namespaces.
+    * 
+    * @return the namespaces.
+    */
+   public Set getNamespaces()
+   {
+      return namespaces;
+   }
+
+   /**
+    * Set the namespaces.
+    * 
+    * @param namespaces the namespaces.
+    * @throws IllegalArgumentException for null spaces
+    */
+   public void setNamespaces(Set namespaces)
+   {
+      if (namespaces == null)
+         throw new IllegalArgumentException("Null namespaces");
+      this.namespaces = namespaces;
+   }
 
    public TypeBinding getType(QName qName)
    {

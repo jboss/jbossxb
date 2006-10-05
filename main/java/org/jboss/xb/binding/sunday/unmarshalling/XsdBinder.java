@@ -25,10 +25,12 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.ListIterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 
 import javax.xml.namespace.QName;
 
@@ -277,6 +279,12 @@ public class XsdBinder
          }
       }
 
+      StringList namespaceList = model.getNamespaces();
+      Set namespaces = new LinkedHashSet(namespaceList.getLength());
+      for (int i = 0; i < namespaceList.getLength(); ++i)
+         namespaces.add(namespaceList.item(i));
+      schema.setNamespaces(namespaces);
+      
       XSNamedMap groups = model.getComponents(XSConstants.MODEL_GROUP_DEFINITION);
       if (ctx.trace)
          log.trace("Model groups: " + groups.getLength());

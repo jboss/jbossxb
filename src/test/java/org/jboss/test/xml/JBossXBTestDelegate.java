@@ -29,7 +29,9 @@ import org.jboss.test.AbstractTestDelegate;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 
 /**
  * JBossXBTestDelegate.
@@ -124,5 +126,44 @@ public class JBossXBTestDelegate extends AbstractTestDelegate
          log.debug("Error during parsing: " + url, e);
          throw e;
       }
+   }
+   
+   /**
+    * Unmarshal an object
+    * 
+    * @param url the url
+    * @param schema the schema
+    * @return the object
+    * @throws Exception for any error
+    */
+   public Object unmarshal(String url, SchemaBinding schema) throws Exception
+   {
+      long start = System.currentTimeMillis();
+      Unmarshaller unmarshaller = unmarshallerFactory.newUnmarshaller();
+      log.debug("Initialized parsing in " + (System.currentTimeMillis() - start) + "ms");
+      try
+      {
+         Object result = unmarshaller.unmarshal(url, schema);
+         log.debug("Total parse for " + url + " took " + (System.currentTimeMillis() - start) + "ms");
+         return result;
+      }
+      catch (Exception e)
+      {
+         log.debug("Error during parsing: " + url, e);
+         throw e;
+      }
+   }
+   
+   /**
+    * Bind a schema
+    * 
+    * @param url the url
+    * @param resolver the resolver
+    * @return the object
+    * @throws Exception for any error
+    */
+   public SchemaBinding bind(String url, SchemaBindingResolver resolver) throws Exception
+   {
+      return XsdBinder.bind(url, resolver);
    }
 }

@@ -23,6 +23,8 @@ package org.jboss.test.xml;
 
 import java.util.Arrays;
 
+import junit.framework.TestSuite;
+
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision: $</tt>
@@ -33,6 +35,11 @@ public class RepeatableTermsUnitTestCase
    public RepeatableTermsUnitTestCase(String name)
    {
       super(name);
+   }
+   
+   public static final TestSuite suite()
+   {
+      return new TestSuite(RepeatableTermsUnitTestCase.class);
    }
 
    protected void configureLogging()

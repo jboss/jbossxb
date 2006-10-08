@@ -21,6 +21,8 @@
   */
 package org.jboss.test.xml;
 
+import junit.framework.TestSuite;
+
 /***
  * XIncludeUnitTestCase.
  * 
@@ -29,6 +31,11 @@ package org.jboss.test.xml;
  */
 public class XIncludeUnitTestCase extends AbstractJBossXBTest
 {  
+   public static final TestSuite suite()
+   {
+      return new TestSuite(XIncludeUnitTestCase.class);
+   }
+
    public XIncludeUnitTestCase(String name)
    {
       super(name);

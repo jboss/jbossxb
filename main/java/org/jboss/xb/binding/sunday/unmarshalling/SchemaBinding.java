@@ -124,6 +124,8 @@ public class SchemaBinding
    private Map types = new HashMap(SIMPLE_TYPES);
    /** Map<QName, ParticleBinding> for */
    private Map elements = new HashMap();
+   /** Map<QName, ModelGroupBinding> for */
+   private Map groups = new HashMap();
    /** The default package information */
    private PackageMetaData packageMetaData;
    /** Schema resolver to use for foreign namespaces */
@@ -243,6 +245,21 @@ public class SchemaBinding
    public Iterator getTypes()
    {
       return Collections.unmodifiableCollection(types.values()).iterator();
+   }
+
+   public ModelGroupBinding getGroup(QName name)
+   {
+      return (ModelGroupBinding) groups.get(name);
+   }
+
+   public void addGroup(QName name, ModelGroupBinding group)
+   {
+      groups.put(name, group);
+   }
+
+   public Iterator getGroups()
+   {
+      return groups.values().iterator();
    }
 
    public PackageMetaData getPackageMetaData()

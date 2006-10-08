@@ -44,6 +44,8 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Arrays;
 
+import junit.framework.TestSuite;
+
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -51,7 +53,12 @@ import java.util.Arrays;
  */
 public class XOPUnitTestCase
     extends AbstractJBossXBTest
-{
+{   
+   public static final TestSuite suite()
+   {
+      return new TestSuite(XOPUnitTestCase.class);
+   }
+
    public XOPUnitTestCase(String name)
    {
       super(name);

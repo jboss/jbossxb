@@ -119,7 +119,7 @@ public class SchemaBinding
    }
 
    /** The namespaces Set<String> */
-   private Set namespaces = Collections.emptySet();
+   private Set namespaces = Collections.EMPTY_SET;
    /** Map<QName, TypeBinding> for simple/complex types */
    private Map types = new HashMap(SIMPLE_TYPES);
    /** Map<QName, ParticleBinding> for */

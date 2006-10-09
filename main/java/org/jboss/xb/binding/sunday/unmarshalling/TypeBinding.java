@@ -444,19 +444,21 @@ public class TypeBinding
       this.startElementCreatesObject = startElementCreatesObject ? Boolean.TRUE : Boolean.FALSE;
    }
 
-   public void setWildcard(WildcardBinding wildcard)
-   {
-      this.wildcard = wildcard;
-   }
-
+   private boolean initializedWildcard;
    public WildcardBinding getWildcard()
    {
+      if(initializedWildcard)
+      {
+         return wildcard;
+      }
+      
+      if(particle != null)
+      {
+         wildcard = getWildcard(particle.getTerm());
+         initializedWildcard = true;
+      }
+      
       return wildcard;
-   }
-
-   public boolean hasWildcard()
-   {
-      return wildcard != null;
    }
 
    public ParticleBinding getParticle()
@@ -567,5 +569,32 @@ public class TypeBinding
    public String toString()
    {
       return super.toString() + "[" + qName + "]";
+   }
+
+   private static WildcardBinding getWildcard(TermBinding term)
+   {
+      if(term.isWildcard())
+      {
+         return (WildcardBinding) term;
+      }     
+      
+      if(term.isModelGroup())
+      {
+         ModelGroupBinding group = (ModelGroupBinding) term;
+         for(Iterator i = group.getParticles().iterator(); i.hasNext();)
+         {
+            term = ((ParticleBinding)i.next()).getTerm();
+            if(term.isWildcard())
+            {
+               return (WildcardBinding)term;
+            }
+            else if(term.isModelGroup())
+            {
+               return getWildcard(term);
+            }
+         }
+      }
+      
+      return null;
    }
 }

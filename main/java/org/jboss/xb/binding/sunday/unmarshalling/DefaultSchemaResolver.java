@@ -312,6 +312,11 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       }
 
       // Next, try to use the baseURI to resolve the schema location
+      if(baseURI == null)
+      {
+         baseURI = this.baseURI;
+      }
+      
       if (is == null &&  baseURI != null && schemaLocation != null)
       {
          try

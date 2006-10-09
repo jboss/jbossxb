@@ -980,7 +980,7 @@ public class SundayContentHandler
             }
          }
          else if(parentParticle != null &&
-            ((ElementBinding)parentParticle.getTerm()).getType().hasWildcard() &&
+            ((ElementBinding)parentParticle.getTerm()).getType().getWildcard() != null &&
             stack.size() > 1)
          {
             // the parent has anyType, so it gets the value of its child
@@ -1148,7 +1148,7 @@ public class SundayContentHandler
          list.clear();
       }
 
-      public void push(Object o)
+      public void push(StackItem o)
       {
          list.add(o);
       }

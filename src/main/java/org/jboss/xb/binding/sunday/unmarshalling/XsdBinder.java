@@ -933,15 +933,6 @@ public class XsdBinder
       particleBinding.setMinOccurs(particle.getMinOccurs());
       group.addParticle(particleBinding);
 
-      TypeBinding type = ctx.peekType();
-      type.setWildcard(binding);
-
-      if (ctx.trace)
-      {
-         log.trace("added wildcard to " + group);
-         log.trace("added wildcard to type " + type.getQName());
-      }
-
       XSWildcard wildcard = (XSWildcard)particle.getTerm();
       if(wildcard.getName() != null)
       {

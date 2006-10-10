@@ -652,6 +652,7 @@ public class SundayContentHandler
       StackItem item = stack.peek();
       if(item.o != null &&
             !(item.o instanceof GenericValueContainer) &&
+            (item.o instanceof Collection == false) &&
             term.getAddMethodMetaData() == null &&
             term.getMapEntryMetaData() == null &&
             term.getPutMethodMetaData() == null)

@@ -867,9 +867,12 @@ public class XsdBinder
                   }
                }
 
-               ctx.pushModelGroup(groupBinding);
-               bindModelGroupParticles(ctx, modelGroup);
-               ctx.popModelGroup();
+               if (groupBinding.getParticles().isEmpty())
+               {
+                  ctx.pushModelGroup(groupBinding);
+                  bindModelGroupParticles(ctx, modelGroup);
+                  ctx.popModelGroup();
+               }
             }
             break;
          case XSConstants.WILDCARD:
@@ -1025,6 +1028,9 @@ public class XsdBinder
       if (ctx.trace)
       {
          TypeBinding parentType = ctx.peekType();
+         QName parentQName = null;
+         if (parentType != null)
+            parentQName = parentType.getQName();
          log.trace("element: name=" +
             qName +
             ", type=" +
@@ -1035,7 +1041,7 @@ public class XsdBinder
             element.isNillable() +
             ", minOccurs=" + minOccurs +
             ", maxOccurs=" + (maxOccursUnbounded ? "unbounded" : "" + maxOccurs) +
-            ", " + (global ? "global scope" : " owner type=" + parentType.getQName())
+            ", " + (global ? "global scope" : " owner type=" + parentQName)
          );
       }
 
@@ -1291,9 +1297,12 @@ public class XsdBinder
    private static void bindGlobalGroupParticles(XSModelGroup group, Context ctx)
    {
       ModelGroupBinding groupBinding = ctx.sharedElements.getGlobalGroup(group);
-      ctx.pushModelGroup(groupBinding);
-      bindModelGroupParticles(ctx, group);
-      ctx.popModelGroup();
+      if (groupBinding.getParticles().isEmpty())
+      {
+         ctx.pushModelGroup(groupBinding);
+         bindModelGroupParticles(ctx, group);
+         ctx.popModelGroup();
+      }
    }
 
 

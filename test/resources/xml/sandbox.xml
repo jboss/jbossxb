@@ -1,0 +1,32 @@
+<sb:root
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.jboss.org/test/xml/sandbox sandbox.xsd"
+   xmlns:sb="http://www.jboss.org/test/xml/sandbox">
+
+   <sb:choiceCollection1>
+      <sb:a>choice1_a</sb:a>
+   </sb:choiceCollection1>
+   <sb:choiceCollection1>
+      <sb:b>choice1_b</sb:b>
+   </sb:choiceCollection1>
+
+   <sb:choice2>
+      <sb:c>choice2_c</sb:c>
+      <sb:d>choice2_d</sb:d>
+   </sb:choice2>
+   <sb:choice2>
+      <sb:e>choice2_e</sb:e>
+      <sb:d>choice2_d</sb:d>
+   </sb:choice2>
+
+   <sb:choice3>
+      <sb:listOfIntegers>1</sb:listOfIntegers>
+      <sb:listOfIntegers>2</sb:listOfIntegers>
+      <sb:listOfIntegers>3</sb:listOfIntegers>
+   </sb:choice3>
+   <sb:choice3>
+      <sb:listOfStrings>1</sb:listOfStrings>
+      <sb:listOfStrings>2</sb:listOfStrings>
+      <sb:listOfStrings>3</sb:listOfStrings>
+   </sb:choice3>
+</sb:root>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="urn:jboss:bean-deployer bean-deployer_1_0.xsd"
+   xmlns="urn:jboss:bean-deployer">
+   <bean name="SimpleBean1"
+      class="org.jboss.test.xml.pojoserver.SimpleBeanImpl">
+      <property name="aList">
+         <list class="java.util.LinkedList">
+            <value>value0</value>
+            <value>value1</value>
+         </list>
+      </property>
+      <property name="aSet">
+         <set class="java.util.HashSet">
+            <value>value0</value>
+            <value>value1</value>
+         </set>
+      </property>
+      <property name="aMap">
+         <map class="testMapClass" keyClass="testKeyClass" valueClass="testValueClass">
+            <entry>
+               <key>other</key>
+               <value><inject bean="SimpleBean2"/></value>
+            </entry>
+            <entry>
+               <key>nullKey</key>
+               <value><null/></value>
+            </entry>
+         </map>
+      </property>
+      <property name="props">
+         <map class="java.util.Properties" keyClass="java.lang.String" valueClass="java.lang.String">
+            <entry>
+               <key>prop0</key>
+               <value>value0</value>
+            </entry>
+            <entry>
+               <key>prop1</key>
+               <value>value1</value>
+            </entry>
+         </map>
+      </property>
+   </bean>
+</deployment>

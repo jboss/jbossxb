@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="urn:jboss:bean-deployer bean-deployer_1_0.xsd"
+   xmlns="urn:jboss:bean-deployer">
+   <bean name="SimpleBean1"
+      class="org.jboss.test.kernel.xml.support.SimpleBeanImpl">
+      <property name="other">
+         <inject bean="SimpleBean2"/>
+      </property>
+   </bean>
+   <bean name="SimpleBean2"
+      class="org.jboss.test.kernel.xml.support.SimpleBeanImpl">
+      <constructor>
+         <parameter class="java.lang.String">Bean2</parameter>
+      </constructor>
+   </bean>
+</deployment>

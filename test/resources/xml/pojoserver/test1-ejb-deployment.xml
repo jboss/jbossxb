@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<deployment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="urn:jboss:bean-deployer bean-deployer_1_0.xsd
+   urn:jboss:testejb-ns1 ejb-config_1_0.xsd
+   urn:jboss:ejb-cache ejb-cache_1_0.xsd"
+   xmlns="urn:jboss:bean-deployer"
+   xmlns:ejb="urn:jboss:testejb-ns1"
+   xmlns:cache="urn:jboss:ejb-cache"
+   >
+   <bean name="EJBContainerConfig" class="org.jboss.ejb.Container">
+      <property name="Config">
+         <ejb:ejb-container>
+            <ejb:invoker-proxy-bindings>
+               <ejb:invoker-proxy-binding name="stateless-rmi-invoker">
+                  <ejb:invoker-mbean>jboss:service=invoker,type=jrmp</ejb:invoker-mbean>
+                  <ejb:proxy-factory>org.jboss.proxy.ejb.ProxyFactory</ejb:proxy-factory>
+                  <ejb:proxy-factory-config>
+                     <ejb:client-interceptors>
+                        <ejb:home>
+                           <ejb:interceptor>org.jboss.proxy.ejb.HomeInterceptor</ejb:interceptor>
+                           <ejb:interceptor>org.jboss.proxy.SecurityInterceptor</ejb:interceptor>
+                           <ejb:interceptor>org.jboss.proxy.TransactionInterceptor</ejb:interceptor>
+                              <ejb:interceptor callByValue="false">org.jboss.invocation.InvokerInterceptor</ejb:interceptor>
+                              <ejb:interceptor callByValue="true">org.jboss.invocation.MarshallingInvokerInterceptor</ejb:interceptor>
+                        </ejb:home>
+                        <ejb:bean>
+                           <ejb:interceptor>org.jboss.proxy.ejb.StatelessSessionInterceptor</ejb:interceptor>
+                           <ejb:interceptor>org.jboss.proxy.SecurityInterceptor</ejb:interceptor>
+                           <ejb:interceptor>org.jboss.proxy.TransactionInterceptor</ejb:interceptor>
+                           <ejb:interceptor callByValue="false">org.jboss.invocation.InvokerInterceptor</ejb:interceptor>
+                           <ejb:interceptor callByValue="true">org.jboss.invocation.MarshallingInvokerInterceptor</ejb:interceptor>
+                        </ejb:bean>
+                     </ejb:client-interceptors>
+                  </ejb:proxy-factory-config>
+               </ejb:invoker-proxy-binding>
+            </ejb:invoker-proxy-bindings>
+
+            <ejb:instance-cache class="org.jboss.ejb.plugins.StatefulSessionInstanceCache">
+               <cache:container-cache-conf>
+                  <cache:cache-policy>org.jboss.ejb.plugins.LRUStatefulContextCachePolicy</cache:cache-policy>
+                  <cache:cache-policy-conf>
+                     <cache:min-capacity>50</cache:min-capacity>
+                     <cache:max-capacity>1000000</cache:max-capacity>
+                     <cache:remover-period>1800</cache:remover-period>
+                     <cache:max-bean-life>1800</cache:max-bean-life>
+                     <cache:overager-period>300</cache:overager-period>
+                     <cache:max-bean-age>600</cache:max-bean-age>
+                     <cache:resizer-period>400</cache:resizer-period>
+                     <cache:max-cache-miss-period>60</cache:max-cache-miss-period>
+                     <cache:min-cache-miss-period>1</cache:min-cache-miss-period>
+                     <cache:cache-load-factor>0.75</cache:cache-load-factor>
+                  </cache:cache-policy-conf>
+               </cache:container-cache-conf>
+            </ejb:instance-cache>
+         </ejb:ejb-container>
+      </property>
+   </bean>
+</deployment>

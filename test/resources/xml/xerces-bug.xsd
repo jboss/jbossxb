@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="urn:xerces:bug"
+            xmlns="urn:xerces:bug"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified"
+            version="1.0"
+>
+
+   <xsd:complexType name="derivedType3" mixed="true">
+      <xsd:annotation>
+         <xsd:documentation>
+           <![CDATA[
+           derivedType3
+           ]]>
+         </xsd:documentation>
+      </xsd:annotation>
+      <xsd:complexContent>
+         <xsd:extension base="derivedType2"/>
+      </xsd:complexContent>
+   </xsd:complexType>
+
+   <xsd:complexType name="baseType" mixed="true">
+      <xsd:annotation>
+         <xsd:documentation>
+           <![CDATA[
+           baseType
+           ]]>
+         </xsd:documentation>
+      </xsd:annotation>
+   </xsd:complexType>
+
+   <xsd:complexType name="derivedType" mixed="true">
+      <xsd:annotation>
+         <xsd:documentation>
+           <![CDATA[
+           derivedType
+           ]]>
+         </xsd:documentation>
+      </xsd:annotation>
+      <xsd:complexContent>
+         <xsd:extension base="baseType"/>
+      </xsd:complexContent>
+   </xsd:complexType>
+
+   <xsd:complexType name="derivedType2" mixed="true">
+      <xsd:annotation>
+         <xsd:documentation>
+           <![CDATA[
+           derivedType2
+           ]]>
+         </xsd:documentation>
+      </xsd:annotation>
+      <xsd:complexContent>
+         <xsd:extension base="derivedType"/>
+      </xsd:complexContent>
+   </xsd:complexType>
+
+</xsd:schema>

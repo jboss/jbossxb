@@ -514,8 +514,7 @@ public final class Util
             }
             catch(Exception e)
             {
-               log.error("Failed to create schema loader.", e);
-               throw new IllegalStateException("Failed to create schema loader: " + e.getMessage());
+               throw new IllegalStateException("Failed to create schema loader: " + e.getClass().getName() + " " + e.getMessage());
             }
             return impl;
          }

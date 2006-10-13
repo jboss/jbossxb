@@ -27,6 +27,7 @@ import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 
 import org.jboss.xb.binding.Constants;
+import org.jboss.xb.binding.JBossXBException;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.metadata.ValueMetaData;
@@ -108,7 +109,14 @@ public abstract class CharactersHandler
       }
       else if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))
       {
-         o = SimpleTypeBindings.unmarshal(typeQName.getLocalPart(), value, nsCtx);
+         try
+         {
+            o = SimpleTypeBindings.unmarshal(typeQName.getLocalPart(), value, nsCtx);
+         }
+         catch (IllegalStateException e)
+         {
+            throw new JBossXBRuntimeException("Characters are not allowed here", e);
+         }
       }
       else
       {

@@ -1,0 +1,44 @@
+<config>
+  <attribute>default value</attribute>
+  <attribute>
+     <value1>
+        <property>value1</property>
+     </value1>
+  </attribute>
+  <attribute>
+     <value2>value2</value2>
+  </attribute>
+
+  <beans>
+    <bean>
+       <name>A</name>
+    </bean>
+    <bean>
+       <name>B</name>
+    </bean>
+  </beans>
+
+  <list>
+    <value type="some.type">foo</value>
+    <depends value="SomeBean"/>
+    <list>
+      <value type="another.type">bar</value>
+      <depends value="AnotherBean"/>
+    </list>
+  </list>
+
+  <map>
+    <entry1>
+       <key1>key1</key1>
+       <value1>value1</value1>
+    </entry1>
+    <entry2 key2="key2">
+       <value2>value2</value2>
+    </entry2>
+    <entry3 key3="key3" value3="value3"/>
+    <entry4 key4="key4">value4</entry4>
+    <map key="submap">
+       <entry3 key3="submapKey3" value3="submapValue3"/>
+    </map>
+  </map>
+</config>

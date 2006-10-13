@@ -107,6 +107,11 @@
          <configuration>
             <printSummary>true</printSummary>
             <disableXmlReport>false</disableXmlReport>
+            <testFailureIgnore>true</testFailureIgnore>
+            <includes>
+               <include>**/**TestCase.java</include>
+            </includes>
+            <forkMode>pertest</forkMode> <!-- required to correctly run the PojoServer tests -->
          </configuration>
       </plugin>    
       <plugin>

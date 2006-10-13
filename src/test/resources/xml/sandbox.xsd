@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<xsd:schema
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   xmlns:sb="http://www.jboss.org/test/xml/sandbox"
+   targetNamespace="http://www.jboss.org/test/xml/sandbox"
+   elementFormDefault="qualified">
+
+  <xsd:element name="root">
+    <xsd:complexType>
+      <xsd:sequence>
+
+        <xsd:element name="choiceCollection1" type="sb:choice1" maxOccurs="3"/>
+
+        <xsd:element name="choice2" maxOccurs="2">
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:sequence>
+                <xsd:element name="c" type="xsd:string"/>
+                <xsd:element name="d" type="xsd:string"/>
+              </xsd:sequence>
+              <xsd:sequence>
+                <xsd:element name="e" type="xsd:string"/>
+                <xsd:element name="d" type="xsd:string"/>
+              </xsd:sequence>
+            </xsd:choice>
+          </xsd:complexType>
+        </xsd:element>
+
+        <xsd:element name="choice3" maxOccurs="2">
+          <xsd:complexType>
+            <xsd:choice>
+              <xsd:element name="listOfIntegers" type="xsd:int" maxOccurs="unbounded"/>
+              <xsd:element name="listOfStrings" type="xsd:string" maxOccurs="unbounded"/>
+            </xsd:choice>
+          </xsd:complexType>
+        </xsd:element>
+
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:complexType name="choice1">
+     <xsd:choice>
+        <xsd:element name="a" type="xsd:string"/>
+        <xsd:element name="b" type="xsd:string"/>
+     </xsd:choice>
+  </xsd:complexType>
+
+</xsd:schema>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<containerLax 
+xmlns="dummy://www.jboss.org/container"
+>
+   <simple:test 
+   xmlns:simple="dummy://www.jboss.org/simple" 
+   >ContainerLax</simple:test>
+</containerLax>

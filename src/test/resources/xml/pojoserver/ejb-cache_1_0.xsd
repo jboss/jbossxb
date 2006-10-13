@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   targetNamespace="urn:jboss:ejb-cache"
+   xmlns="urn:jboss:ejb-cache"
+   elementFormDefault="qualified"
+   attributeFormDefault="unqualified"
+   version="1.0">
+
+   <xs:element name="container-cache-conf" type="CacheConfigType">
+   </xs:element>
+
+   <xs:complexType name="CacheConfigType">
+      <xs:sequence>
+         <xs:element name="cache-policy" type="xs:token"
+            minOccurs="0" maxOccurs="1"/>
+         <xs:element name="cache-policy-conf" type="PolicyConfType"
+            minOccurs="0" maxOccurs="1"/>
+      </xs:sequence>
+      <xs:attribute name="name" />
+   </xs:complexType>
+
+   <xs:complexType name="PolicyConfType">
+      <xs:sequence>
+         <xs:element name="min-capacity" type="xs:int" default="50" />
+         <xs:element name="max-capacity" type="xs:int" default="1000000" />
+         <xs:element name="remover-period" type="xs:int" default="1800" />
+         <xs:element name="max-bean-life" type="xs:long" default="1800" />
+         <xs:element name="overager-period" type="xs:int" default="300" />
+         <xs:element name="max-bean-age" type="xs:int" default="600" />
+         <xs:element name="resizer-period" type="xs:int" default="400" />
+         <xs:element name="max-cache-miss-period" type="xs:int" default="60" />
+         <xs:element name="min-cache-miss-period" type="xs:int" default="1" />
+         <xs:element name="cache-load-factor" type="xs:double" default="0.75" />
+      </xs:sequence>
+   </xs:complexType>
+   
+</xs:schema>

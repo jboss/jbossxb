@@ -21,7 +21,7 @@
   */
 package org.jboss.xb.binding.sunday.marshalling;
 
-import javax.xml.namespace.NamespaceContext;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 
@@ -42,6 +42,11 @@ public interface MarshallingContext
     */
    AttributeBinding getAttributeBinding();
 
+   /**
+    * @return  current particle
+    */
+   ParticleBinding getParticleBinding();
+   
    /**
     * @param ns  the namespace to return the prefix for
     * @return  the prefix for the namespace (can be null if the namespace is not mapped to a prefix

@@ -66,6 +66,8 @@ public class SundayContentHandler
 
    private ParticleHandler defParticleHandler = DefaultHandlers.ELEMENT_HANDLER;
 
+   private UnmarshallingContextImpl ctx = new UnmarshallingContextImpl();
+
    private final boolean trace = log.isTraceEnabled();
 
    public SundayContentHandler(SchemaBinding schema)
@@ -724,6 +726,14 @@ public class SundayContentHandler
       else
       {
          o = handler.endParticle(item.o, qName, modelGroupParticle);
+
+         TermAfterUnmarshallingHandler unmHandler = modelGroupParticle.getTerm().getAfterUnmarshallingHandler();
+         if(unmHandler != null)
+         {
+            ctx.particle = modelGroupParticle;
+            o = unmHandler.afterUnmarshalling(o, ctx);
+            ctx.particle = null;
+         }
       }
 
       item.ended = true;
@@ -926,6 +936,14 @@ public class SundayContentHandler
       else
       {
          o = handler.endParticle(o, endName, particle);
+
+         TermAfterUnmarshallingHandler unmHandler = particle.getTerm().getAfterUnmarshallingHandler();
+         if(unmHandler != null)
+         {
+            ctx.particle = particle;
+            o = unmHandler.afterUnmarshalling(o, ctx);
+            ctx.particle = null;
+         }
       }
 
       for(int i = interceptorsTotal - 1; i >= 0; --i)
@@ -1181,6 +1199,16 @@ public class SundayContentHandler
       public int size()
       {
          return list.size();
+      }
+   }
+
+   private class UnmarshallingContextImpl implements UnmarshallingContext
+   {
+      ParticleBinding particle;
+      
+      public ParticleBinding getParticle()
+      {
+         return particle;
       }
    }
 }

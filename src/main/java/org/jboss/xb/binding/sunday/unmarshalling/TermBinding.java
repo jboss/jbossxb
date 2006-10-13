@@ -27,6 +27,7 @@ import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
+import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingHandler;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -46,6 +47,8 @@ public abstract class TermBinding
    protected boolean mapEntryValue;
    protected Boolean skip;
    protected ValueAdapter valueAdapter;
+   protected TermBeforeMarshallingHandler beforeMarshallingHandler;
+   protected TermAfterUnmarshallingHandler afterUnmarshallingHandler;
 
    protected TermBinding(SchemaBinding schema)
    {
@@ -161,4 +164,24 @@ public abstract class TermBinding
    public abstract boolean isModelGroup();
 
    public abstract boolean isWildcard();
+
+   public void setBeforeMarshallingHandler(TermBeforeMarshallingHandler marshallingHandler)
+   {
+      this.beforeMarshallingHandler = marshallingHandler;
+   }
+
+   public TermBeforeMarshallingHandler getBeforeMarshallingHandler()
+   {
+      return beforeMarshallingHandler;
+   }
+
+   public void setAfterUnmarshallingHandler(TermAfterUnmarshallingHandler unmarshallingHandler)
+   {
+      this.afterUnmarshallingHandler = unmarshallingHandler;
+   }
+
+   public TermAfterUnmarshallingHandler getAfterUnmarshallingHandler()
+   {
+      return afterUnmarshallingHandler;
+   }
 }

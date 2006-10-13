@@ -38,6 +38,7 @@ import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.Constants;
+import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingHandler;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.xml.sax.Attributes;
@@ -65,6 +66,9 @@ public class TypeBinding
    private CharactersMetaData charMetaData;
    private AddMethodMetaData addMethodMetaData;
    private ValueAdapter valueAdapter = ValueAdapter.NOOP;
+   private TermBeforeMarshallingHandler marshallingHandler;
+   private TermAfterUnmarshallingHandler unmarshallingHandler;
+   
    private Boolean startElementCreatesObject;
    private Boolean simple;
 
@@ -564,6 +568,26 @@ public class TypeBinding
          }
       }
       return true;
+   }
+
+   public void setBeforeMarshallingHandler(TermBeforeMarshallingHandler marshallingHandler)
+   {
+      this.marshallingHandler = marshallingHandler;
+   }
+
+   public TermBeforeMarshallingHandler getBeforeMarshallingHandler()
+   {
+      return marshallingHandler;
+   }
+
+   public void setAfterUnmarshallingHandler(TermAfterUnmarshallingHandler unmarshallingHandler)
+   {
+      this.unmarshallingHandler = unmarshallingHandler;
+   }
+
+   public TermAfterUnmarshallingHandler getAfterUnmarshallingHandler()
+   {
+      return unmarshallingHandler;
    }
 
    public String toString()

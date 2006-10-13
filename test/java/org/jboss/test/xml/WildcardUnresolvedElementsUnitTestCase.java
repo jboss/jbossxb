@@ -109,7 +109,7 @@ public class WildcardUnresolvedElementsUnitTestCase
 
    static
    {
-      Validator.assertValidXml(XSD, XML);
+      //Validator.assertValidXml(XSD, XML);
    }
 
    public WildcardUnresolvedElementsUnitTestCase(String name)

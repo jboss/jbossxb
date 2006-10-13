@@ -32,6 +32,7 @@ import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingHandler;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 
 /**
@@ -144,6 +145,16 @@ public class ElementBinding
    public ValueAdapter getValueAdapter()
    {
       return valueAdapter == null ? typeBinding.getValueAdapter() : valueAdapter;
+   }
+
+   public TermBeforeMarshallingHandler getBeforeMarshallingHandler()
+   {
+      return beforeMarshallingHandler == null ? typeBinding.getBeforeMarshallingHandler() : beforeMarshallingHandler;
+   }
+
+   public TermAfterUnmarshallingHandler getAfterUnmarshallingHandler()
+   {
+      return afterUnmarshallingHandler == null ? typeBinding.getAfterUnmarshallingHandler() : afterUnmarshallingHandler;
    }
 
    public boolean isNillable()

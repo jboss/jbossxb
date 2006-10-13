@@ -196,12 +196,13 @@ public class MarshallerImpl
          else
          {
             ElementBinding element = new ElementBinding(schema, rootQName, type);
+            ctx.particle = new ParticleBinding(element);
             marshalElementOccurence(element, root, false, true);
          }
       }
       else if(rootQNames.isEmpty())
       {
-         Iterator elements = schema.getElements();
+         Iterator elements = schema.getElementParticles();
          if(!elements.hasNext())
          {
             throw new JBossXBRuntimeException("The schema doesn't contain global element declarations.");
@@ -209,8 +210,9 @@ public class MarshallerImpl
 
          while(elements.hasNext())
          {
-            ElementBinding element = (ElementBinding)elements.next();
-            marshalElementOccurence(element, root, true, true);
+            ParticleBinding element = (ParticleBinding)elements.next();
+            ctx.particle = element;
+            marshalElementOccurence((ElementBinding) element.getTerm(), root, true, true);
          }
       }
       else
@@ -218,7 +220,7 @@ public class MarshallerImpl
          for(int i = 0; i < rootQNames.size(); ++i)
          {
             QName qName = (QName)rootQNames.get(i);
-            ElementBinding element = schema.getElement(qName);
+            ParticleBinding element = schema.getElementParticle(qName);
             if(element == null)
             {
                Iterator components = schema.getElements();
@@ -235,7 +237,8 @@ public class MarshallerImpl
                throw new IllegalStateException("Root element not found: " + qName + " among " + roots);
             }
 
-            marshalElementOccurence(element, root, true, true);
+            ctx.particle = element;
+            marshalElementOccurence((ElementBinding) element.getTerm(), root, true, true);
          }
       }
 
@@ -296,6 +299,12 @@ public class MarshallerImpl
          }
       }
 
+      TermBeforeMarshallingHandler marshallingHandler = element.getBeforeMarshallingHandler();
+      if(marshallingHandler != null)
+      {
+         value = marshallingHandler.beforeMarshalling(value, ctx);
+      }
+      
       stack.push(value);
       boolean marshalled = marshalElement(element, xsiType, optional, declareNs);
       stack.pop();
@@ -635,6 +644,10 @@ public class MarshallerImpl
       TermBinding term = particle.getTerm();
       Object o;
       Iterator i;
+      
+      ParticleBinding ctxParticle = ctx.particle;
+      ctx.particle = particle;
+      
       if(term.isModelGroup())
       {
          ModelGroupBinding modelGroup = (ModelGroupBinding)term;
@@ -656,6 +669,8 @@ public class MarshallerImpl
                 modelGroup.getSchema().isIgnoreUnresolvedFieldOrClass()
             );
 
+            TermBeforeMarshallingHandler marshallingHandler = modelGroup.getBeforeMarshallingHandler();
+
             i = o != null && isRepeatable(particle) ? getIterator(o) : null;
             if(i != null)
             {
@@ -663,6 +678,12 @@ public class MarshallerImpl
                while(i.hasNext() && marshalled)
                {
                   Object value = i.next();
+
+                  if(marshallingHandler != null)
+                  {
+                     value = marshallingHandler.beforeMarshalling(value, ctx);
+                  }
+
                   stack.push(value);
                   marshalled = marshalModelGroup(modelGroup, declareNs);
                   stack.pop();
@@ -670,6 +691,11 @@ public class MarshallerImpl
             }
             else
             {
+               if(marshallingHandler != null)
+               {
+                  o = marshallingHandler.beforeMarshalling(o, ctx);
+               }
+
                stack.push(o);
                marshalled = marshalModelGroup(modelGroup, declareNs);
                stack.pop();
@@ -691,6 +717,8 @@ public class MarshallerImpl
             popWildcardValue = true;
          }
 
+         TermBeforeMarshallingHandler marshallingHandler = term.getBeforeMarshallingHandler();
+         
          i = o != null && isRepeatable(particle) ? getIterator(o) : null;
          if(i != null)
          {
@@ -698,11 +726,22 @@ public class MarshallerImpl
             while(i.hasNext() && marshalled)
             {
                Object value = i.next();
+
+               if(marshallingHandler != null)
+               {
+                  value = marshallingHandler.beforeMarshalling(value, ctx);
+               }
+
                marshalled = marshalWildcardOccurence(particle, marshaller, value, declareNs);
             }
          }
          else
          {
+            if(marshallingHandler != null)
+            {
+               o = marshallingHandler.beforeMarshalling(o, ctx);
+            }
+
             marshalled = marshalWildcardOccurence(particle, marshaller, o, declareNs);
          }
 
@@ -732,6 +771,8 @@ public class MarshallerImpl
             marshalled = marshalElementOccurence(element, o, particle.getMinOccurs() == 0, declareNs);
          }
       }
+      
+      ctx.particle = ctxParticle;
       return marshalled;
    }
 
@@ -745,7 +786,7 @@ public class MarshallerImpl
       {
          marshaller.marshal(ctx, value);
       }
-      else
+      else if(value != null)
       {
          stack.push(value);
          marshalled = marshalWildcard(particle, declareNs);
@@ -799,18 +840,21 @@ public class MarshallerImpl
 
       this.root = o;
       this.stack = new StackImpl();
-      this.schema = XsdBinder.bind(mapping.schemaUrl, schemaResolver);
+      this.schema = mapping.schemaUrl == null ? this.schema : XsdBinder.bind(mapping.schemaUrl, schemaResolver);
 
       boolean marshalled;
       if(mapping.elementName != null)
       {
-         ElementBinding elDec = schema.getElement(mapping.elementName);
-         if(elDec == null)
+         ParticleBinding element = schema.getElementParticle(mapping.elementName);
+         if(element == null)
          {
             throw new JBossXBRuntimeException("Element " + mapping.elementName + " is not declared in the schema.");
          }
 
-         marshalled = marshalElementOccurence(elDec, root, particle.getMinOccurs() == 0, declareNs);
+         ParticleBinding ctxParticle = ctx.particle;
+         ctx.particle = element;
+         marshalled = marshalElementOccurence((ElementBinding) element.getTerm(), root, particle.getMinOccurs() == 0, declareNs);
+         ctx.particle = ctxParticle;
       }
       else if(mapping.typeName != null)
       {
@@ -829,7 +873,10 @@ public class MarshallerImpl
          }
 
          ElementBinding element = new ElementBinding(schema, wildcard.getQName(), typeDef);
+         ParticleBinding ctxParticle = ctx.particle;
+         ctx.particle = new ParticleBinding(element);
          marshalled = marshalElementOccurence(element, root, particle.getMinOccurs() == 0, declareNs);
+         ctx.particle = ctxParticle;
       }
       else
       {
@@ -1289,6 +1336,7 @@ public class MarshallerImpl
    {
       private ContentHandler ch;
       private AttributeBinding attr;
+      private ParticleBinding particle;
 
       private AttributesImpl attrs;
 
@@ -1345,6 +1393,11 @@ public class MarshallerImpl
       public Object peek()
       {
          return stack.isEmpty() ? null : stack.peek();
+      }
+
+      public ParticleBinding getParticleBinding()
+      {
+         return particle;
       }
    }
 }

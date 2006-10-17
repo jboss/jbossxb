@@ -44,84 +44,22 @@ import org.jboss.xb.binding.metadata.PackageMetaData;
  */
 public class SchemaBinding
 {
-   private static final Map SIMPLE_TYPES = new HashMap();
-
-   // populate SIMPLE_TYPES
-   static
+   private static final ValueAdapter DATE_ADAPTER = new ValueAdapter()
    {
-      ValueAdapter dateAdapter = new ValueAdapter()
+      public Object cast(Object o, Class c)
       {
-         public Object cast(Object o, Class c)
+         if (o != null && java.util.Date.class.isAssignableFrom(c))
          {
-            if(o != null && java.util.Date.class.isAssignableFrom(c))
-            {
-               o = ((java.util.Calendar)o).getTime();
-            }
-            return o;
+            o = ((java.util.Calendar) o).getTime();
          }
-      };
-
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_ANYSIMPLETYPE));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_STRING));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_BOOLEAN));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_DECIMAL));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_FLOAT));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_DOUBLE));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_DURATION));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_DATETIME, dateAdapter));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_TIME, dateAdapter));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_DATE, dateAdapter));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_GYEARMONTH));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_GYEAR));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_GMONTHDAY));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_GDAY));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_GMONTH));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_HEXBINARY));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_BASE64BINARY));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_ANYURI));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_QNAME));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_NOTATION));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_NORMALIZEDSTRING));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_TOKEN));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_LANGUAGE));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_NMTOKEN));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_NMTOKENS));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_NAME));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_NCNAME));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_ID));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_IDREF));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_IDREFS));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_ENTITY));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_ENTITIES));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_INTEGER));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_NONPOSITIVEINTEGER));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_NEGATIVEINTEGER));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_LONG));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_INT));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_SHORT));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_BYTE));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_NONNEGATIVEINTEGER));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDLONG));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDINT));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDSHORT));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDBYTE));
-      addSimpleType(new SimpleTypeBinding(Constants.QNAME_POSITIVEINTEGER));
-   }
-
-   protected static TypeBinding getSimpleType(QName name)
-   {
-      return (TypeBinding) SIMPLE_TYPES.get(name);
-   }
-
-   private static void addSimpleType(TypeBinding type)
-   {
-      SIMPLE_TYPES.put(type.getQName(), type);
-   }
+         return o;
+      }
+   };
 
    /** The namespaces Set<String> */
    private Set namespaces = Collections.EMPTY_SET;
    /** Map<QName, TypeBinding> for simple/complex types */
-   private Map types = new HashMap(SIMPLE_TYPES);
+   private Map types = new HashMap();
    /** Map<QName, ParticleBinding> for */
    private Map elements = new HashMap();
    /** The default package information */
@@ -147,6 +85,55 @@ public class SchemaBinding
    private XOPUnmarshaller xopUnmarshaller;
    /** default XOP marshaller */
    private XOPMarshaller xopMarshaller;
+
+   public SchemaBinding()
+   {
+      addType(new SimpleTypeBinding(Constants.QNAME_ANYSIMPLETYPE));
+      addType(new SimpleTypeBinding(Constants.QNAME_STRING));
+      addType(new SimpleTypeBinding(Constants.QNAME_BOOLEAN));
+      addType(new SimpleTypeBinding(Constants.QNAME_DECIMAL));
+      addType(new SimpleTypeBinding(Constants.QNAME_FLOAT));
+      addType(new SimpleTypeBinding(Constants.QNAME_DOUBLE));
+      addType(new SimpleTypeBinding(Constants.QNAME_DURATION));
+      addType(new SimpleTypeBinding(Constants.QNAME_DATETIME, DATE_ADAPTER));
+      addType(new SimpleTypeBinding(Constants.QNAME_TIME, DATE_ADAPTER));
+      addType(new SimpleTypeBinding(Constants.QNAME_DATE, DATE_ADAPTER));
+      addType(new SimpleTypeBinding(Constants.QNAME_GYEARMONTH));
+      addType(new SimpleTypeBinding(Constants.QNAME_GYEAR));
+      addType(new SimpleTypeBinding(Constants.QNAME_GMONTHDAY));
+      addType(new SimpleTypeBinding(Constants.QNAME_GDAY));
+      addType(new SimpleTypeBinding(Constants.QNAME_GMONTH));
+      addType(new SimpleTypeBinding(Constants.QNAME_HEXBINARY));
+      addType(new SimpleTypeBinding(Constants.QNAME_BASE64BINARY));
+      addType(new SimpleTypeBinding(Constants.QNAME_ANYURI));
+      addType(new SimpleTypeBinding(Constants.QNAME_QNAME));
+      addType(new SimpleTypeBinding(Constants.QNAME_NOTATION));
+      addType(new SimpleTypeBinding(Constants.QNAME_NORMALIZEDSTRING));
+      addType(new SimpleTypeBinding(Constants.QNAME_TOKEN));
+      addType(new SimpleTypeBinding(Constants.QNAME_LANGUAGE));
+      addType(new SimpleTypeBinding(Constants.QNAME_NMTOKEN));
+      addType(new SimpleTypeBinding(Constants.QNAME_NMTOKENS));
+      addType(new SimpleTypeBinding(Constants.QNAME_NAME));
+      addType(new SimpleTypeBinding(Constants.QNAME_NCNAME));
+      addType(new SimpleTypeBinding(Constants.QNAME_ID));
+      addType(new SimpleTypeBinding(Constants.QNAME_IDREF));
+      addType(new SimpleTypeBinding(Constants.QNAME_IDREFS));
+      addType(new SimpleTypeBinding(Constants.QNAME_ENTITY));
+      addType(new SimpleTypeBinding(Constants.QNAME_ENTITIES));
+      addType(new SimpleTypeBinding(Constants.QNAME_INTEGER));
+      addType(new SimpleTypeBinding(Constants.QNAME_NONPOSITIVEINTEGER));
+      addType(new SimpleTypeBinding(Constants.QNAME_NEGATIVEINTEGER));
+      addType(new SimpleTypeBinding(Constants.QNAME_LONG));
+      addType(new SimpleTypeBinding(Constants.QNAME_INT));
+      addType(new SimpleTypeBinding(Constants.QNAME_SHORT));
+      addType(new SimpleTypeBinding(Constants.QNAME_BYTE));
+      addType(new SimpleTypeBinding(Constants.QNAME_NONNEGATIVEINTEGER));
+      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDLONG));
+      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDINT));
+      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDSHORT));
+      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDBYTE));
+      addType(new SimpleTypeBinding(Constants.QNAME_POSITIVEINTEGER));
+   }
 
    /**
     * Get the namespaces.

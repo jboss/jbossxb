@@ -266,72 +266,61 @@ public class RtElementHandler
          else if(tryAdd(owner, o, qName, term, wildcard, trace))
          {
          }
+         else if (owner instanceof GenericValueContainer)
+         {
+            if (trace)
+            {
+               log.trace("setParent " + qName + " addChild");
+            }
+            ((GenericValueContainer) owner).addChild(qName, o);
+         }
+         else if (owner instanceof Collection)
+         {
+            if (trace)
+            {
+               log.trace("setParent " + qName + " collection.add()");
+            }
+            ((Collection) owner).add(o);
+         }
          else
          {
             PropertyMetaData propertyMetaData = wildcard == null ? null : wildcard.getPropertyMetaData();
-            if(propertyMetaData == null)
+            if (propertyMetaData == null)
             {
                propertyMetaData = term.getPropertyMetaData();
             }
 
-            /*
-            if(propertyMetaData == null)
+            String propName = null;
+            String colType = null;
+            if (propertyMetaData != null)
             {
-               propertyMetaData = element.getType().getPropertyMetaData();
+               propName = propertyMetaData.getName();
+               colType = propertyMetaData.getCollectionType();
             }
-            */
 
-            if(owner instanceof GenericValueContainer)
+            if (propName == null)
             {
-               if(trace)
-               {
-                  log.trace("setParent " + qName + " addChild");
-               }
-               ((GenericValueContainer)owner).addChild(qName, o);
+               propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
             }
-            else if(owner instanceof Collection)
+
+            if (trace)
             {
-               if(trace)
-               {
-                  log.trace("setParent " + qName + " collection.add()");
-               }
-               ((Collection)owner).add(o);
+               log.trace("setParent " + qName + " metadata set " + propName);
+            }
+
+            /*if(particle.isRepeatable())
+            {
+               RtUtil.add(owner, o, propName, colType,
+                  term.getSchema().isIgnoreUnresolvedFieldOrClass(),
+                  term.getValueAdapter()
+               );
             }
             else
-            {
-               String propName = null;
-               String colType = null;
-               if(propertyMetaData != null)
-               {
-                  propName = propertyMetaData.getName();
-                  colType = propertyMetaData.getCollectionType();
-               }
-
-               if(propName == null)
-               {
-                  propName = Util.xmlNameToFieldName(qName.getLocalPart(), term.getSchema().isIgnoreLowLine());
-               }
-
-               if(trace)
-               {
-                  log.trace("setParent " + qName + " metadata set " + propName);
-               }
-
-/*               if(particle.isRepeatable())
-               {
-                  RtUtil.add(owner, o, propName, colType,
+            {*/
+               RtUtil.set(owner, o, propName, colType,
                      term.getSchema().isIgnoreUnresolvedFieldOrClass(),
-                     term.getValueAdapter()
-                  );
-               }
-               else
-               {
-*/                  RtUtil.set(owner, o, propName, colType,
-                     term.getSchema().isIgnoreUnresolvedFieldOrClass(),
-                     term.getValueAdapter()
-                  );
-//               }
-            }
+                     term.getValueAdapter());
+            //}
          }
       }
    }

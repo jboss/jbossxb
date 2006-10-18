@@ -268,19 +268,6 @@ public class RtElementHandler
          }
          else
          {
-            PropertyMetaData propertyMetaData = wildcard == null ? null : wildcard.getPropertyMetaData();
-            if(propertyMetaData == null)
-            {
-               propertyMetaData = term.getPropertyMetaData();
-            }
-
-            /*
-            if(propertyMetaData == null)
-            {
-               propertyMetaData = element.getType().getPropertyMetaData();
-            }
-            */
-
             if(owner instanceof GenericValueContainer)
             {
                if(trace)
@@ -299,6 +286,12 @@ public class RtElementHandler
             }
             else
             {
+               PropertyMetaData propertyMetaData = wildcard == null ? null : wildcard.getPropertyMetaData();
+               if(propertyMetaData == null)
+               {
+                  propertyMetaData = term.getPropertyMetaData();
+               }
+
                String propName = null;
                String colType = null;
                if(propertyMetaData != null)

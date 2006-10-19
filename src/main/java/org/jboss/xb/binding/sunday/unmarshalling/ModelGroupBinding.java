@@ -121,6 +121,11 @@ public abstract class ModelGroupBinding
       return false;
    }
 
+   public boolean isElement()
+   {
+      return false;
+   }
+
    // Inner
 
    public abstract class Cursor
@@ -179,8 +184,8 @@ public abstract class ModelGroupBinding
          for(int i = 0; i < group.size(); ++i)
          {
             ParticleBinding nextParticle = (ParticleBinding)group.get(i);
-            Object item = nextParticle.getTerm();
-            if(item instanceof ElementBinding)
+            TermBinding item = nextParticle.getTerm();
+            if(item.isElement())
             {
                ElementBinding choice = (ElementBinding)item;
                if(qName.equals(choice.getQName()))
@@ -189,7 +194,7 @@ public abstract class ModelGroupBinding
                   break;
                }
             }
-            else if(item instanceof ModelGroupBinding)
+            else if(item.isModelGroup())
             {
                ModelGroupBinding modelGroup = (ModelGroupBinding)item;
                if(!passedGroups.contains(modelGroup))
@@ -219,7 +224,7 @@ public abstract class ModelGroupBinding
                   }
                }
             }
-            else if(item instanceof WildcardBinding && !ignoreWildcards)
+            else if(!ignoreWildcards)
             {
                WildcardBinding wildcard = (WildcardBinding)item;
                ElementBinding e = wildcard.getElement(qName, atts);

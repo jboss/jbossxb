@@ -33,12 +33,13 @@ import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
 import org.jboss.xb.binding.sunday.marshalling.MarshallingContext;
-import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingHandler;
+import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.TermAfterUnmarshallingHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
+import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.UnmarshallingContext;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
@@ -194,21 +195,60 @@ public class BeforeMarshalAfterUnmarshalHandlerTestCase
          TypeBinding stringType = SCHEMA.getType(Constants.QNAME_STRING);
 
          // stringType
-         stringType.setBeforeMarshallingHandler(new TermBeforeMarshallingHandler()
+         stringType.setBeforeMarshallingCallback(new TermBeforeMarshallingCallback()
          {
             public Object beforeMarshalling(Object o, MarshallingContext ctx)
             {
                if(o != null)
                {
+                  ParticleBinding particle = ctx.getParticleBinding();
+                  assertNotNull(particle);
+                  TermBinding term = particle.getTerm();
+                  assertTrue(term.isElement());
+                  ElementBinding element = (ElementBinding) term;
+                  String localPart = element.getQName().getLocalPart();
+                  assertTrue("stringType".endsWith(localPart) || "item".equals(localPart));
+                  TypeBinding type = element.getType();
+                  assertEquals(Constants.QNAME_STRING, type.getQName());
+                  
                   o = ((GlobalElement.StringType)o).data;
                }
                return o;
             }
          });         
-         stringType.setAfterUnmarshallingHandler(new TermAfterUnmarshallingHandler()
+         stringType.setBeforeSetParentCallback(new TermBeforeSetParentCallback()
          {
-            public Object afterUnmarshalling(Object o, UnmarshallingContext ctx)
+            public Object beforeSetParent(Object o, UnmarshallingContext ctx)
             {
+               ParticleBinding particle = ctx.getParticle();
+               assertNotNull(particle);
+               assertTrue(particle.getTerm().isElement());
+               ElementBinding element = (ElementBinding) particle.getTerm();
+               
+               String eName = element.getQName().getLocalPart();
+               if(eName.equals("stringType"))
+               {
+                  assertTrue(ctx.getParentValue() instanceof GlobalElement);
+                  TermBinding parentTerm = ctx.getParentParticle().getTerm();
+                  assertTrue(parentTerm.isElement());
+                  assertEquals("global", ((ElementBinding)parentTerm).getQName().getLocalPart());
+
+                  assertEquals("stringType", ctx.resolvePropertyName());
+                  assertEquals(StringType.class, ctx.resolvePropertyType());
+               }
+               else if(eName.equals("item"))
+               {
+                  assertTrue(ctx.getParentValue() instanceof GlobalElement.Sequence);
+                  TermBinding parentTerm = ctx.getParentParticle().getTerm();
+                  assertTrue(parentTerm instanceof SequenceBinding);
+                  
+                  assertEquals("item", ctx.resolvePropertyName());
+                  assertEquals(StringType.class, ctx.resolvePropertyType());
+               }
+               else
+               {
+                  fail("Expected stringType or item but got " + eName);
+               }
                return o == null ? null : new GlobalElement.StringType((String)o);
             }
          });
@@ -219,33 +259,46 @@ public class BeforeMarshalAfterUnmarshalHandlerTestCase
          Iterator iter = sequence.getParticles().iterator();
          iter.next(); // stringType element
          ElementBinding stringElement = (ElementBinding) ((ParticleBinding)iter.next()).getTerm();
-         stringElement.setBeforeMarshallingHandler(new TermBeforeMarshallingHandler()
+         stringElement.setBeforeMarshallingCallback(new TermBeforeMarshallingCallback()
          {
             public Object beforeMarshalling(Object o, MarshallingContext ctx)
             {
                ParticleBinding particle = ctx.getParticleBinding();
                assertNotNull(particle);
-               assertTrue(particle.getTerm() instanceof ElementBinding);
+               assertTrue(particle.getTerm().isElement());
                ElementBinding element = (ElementBinding) particle.getTerm();
                assertEquals(new QName("http://jboss.org/ns/test", "stringElement"), element.getQName());
+               
+               TypeBinding type = element.getType();
+               assertEquals(Constants.QNAME_STRING, type.getQName());
                
                return o == null ? null : (String)o;
             }
          });         
-         stringElement.setAfterUnmarshallingHandler(new TermAfterUnmarshallingHandler()
+         stringElement.setBeforeSetParentCallback(new TermBeforeSetParentCallback()
          {
-            public Object afterUnmarshalling(Object o, UnmarshallingContext ctx)
+            public Object beforeSetParent(Object o, UnmarshallingContext ctx)
             {
                ParticleBinding particle = ctx.getParticle();
+               assertNotNull(particle);
+               assertTrue(particle.getTerm().isElement());
                ElementBinding element = (ElementBinding) particle.getTerm();
                assertEquals(new QName("http://jboss.org/ns/test", "stringElement"), element.getQName());
+               
+               assertTrue(ctx.getParentValue() instanceof GlobalElement);
+               TermBinding parentTerm = ctx.getParentParticle().getTerm();
+               assertTrue(parentTerm.isElement());
+               assertEquals("global", ((ElementBinding)parentTerm).getQName().getLocalPart());
+
+               assertEquals(String.class, ctx.resolvePropertyType());
+
                return o == null ? null : (String)o;
             }
          });
          
          // sequence
          sequence = (SequenceBinding) ((ParticleBinding)iter.next()).getTerm();
-         sequence.setBeforeMarshallingHandler(new TermBeforeMarshallingHandler()
+         sequence.setBeforeMarshallingCallback(new TermBeforeMarshallingCallback()
          {
             public Object beforeMarshalling(Object o, MarshallingContext ctx)
             {
@@ -262,12 +315,23 @@ public class BeforeMarshalAfterUnmarshalHandlerTestCase
                return o;
             }
          });
-         sequence.setAfterUnmarshallingHandler(new TermAfterUnmarshallingHandler()
+         sequence.setBeforeSetParentCallback(new TermBeforeSetParentCallback()
          {
-            public Object afterUnmarshalling(Object o, UnmarshallingContext ctx)
+            public Object beforeSetParent(Object o, UnmarshallingContext ctx)
             {
                ParticleBinding particle = ctx.getParticle();
                assertTrue(particle.getTerm() instanceof SequenceBinding);
+
+               assertTrue(ctx.getParentValue() instanceof GlobalElement);
+               TermBinding parentTerm = ctx.getParentParticle().getTerm();
+               assertTrue(parentTerm.isElement());
+               assertEquals("global", ((ElementBinding)parentTerm).getQName().getLocalPart());
+
+               String prop = ctx.resolvePropertyName();
+               assertEquals("sequenceItem", prop);
+
+               assertEquals(StringType.class, ctx.resolvePropertyType());
+
                return o == null ? null : ((GlobalElement.Sequence)o).item;
             }
          });

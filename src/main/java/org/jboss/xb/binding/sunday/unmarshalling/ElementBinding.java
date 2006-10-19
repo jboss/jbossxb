@@ -32,7 +32,7 @@ import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingHandler;
+import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 
 /**
@@ -147,14 +147,14 @@ public class ElementBinding
       return valueAdapter == null ? typeBinding.getValueAdapter() : valueAdapter;
    }
 
-   public TermBeforeMarshallingHandler getBeforeMarshallingHandler()
+   public TermBeforeMarshallingCallback getBeforeMarshallingCallback()
    {
-      return beforeMarshallingHandler == null ? typeBinding.getBeforeMarshallingHandler() : beforeMarshallingHandler;
+      return beforeMarshallingCallback == null ? typeBinding.getBeforeMarshallingCallback() : beforeMarshallingCallback;
    }
 
-   public TermAfterUnmarshallingHandler getAfterUnmarshallingHandler()
+   public TermBeforeSetParentCallback getBeforeSetParentCallback()
    {
-      return afterUnmarshallingHandler == null ? typeBinding.getAfterUnmarshallingHandler() : afterUnmarshallingHandler;
+      return beforeSetParentCallback == null ? typeBinding.getBeforeSetParentCallback() : beforeSetParentCallback;
    }
 
    public boolean isNillable()
@@ -175,6 +175,11 @@ public class ElementBinding
    public boolean isWildcard()
    {
       return false;
+   }
+
+   public boolean isElement()
+   {
+      return true;
    }
 
    public XOPUnmarshaller getXopUnmarshaller()

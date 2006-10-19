@@ -299,7 +299,7 @@ public class MarshallerImpl
          }
       }
 
-      TermBeforeMarshallingHandler marshallingHandler = element.getBeforeMarshallingHandler();
+      TermBeforeMarshallingCallback marshallingHandler = element.getBeforeMarshallingCallback();
       if(marshallingHandler != null)
       {
          value = marshallingHandler.beforeMarshalling(value, ctx);
@@ -669,7 +669,7 @@ public class MarshallerImpl
                 modelGroup.getSchema().isIgnoreUnresolvedFieldOrClass()
             );
 
-            TermBeforeMarshallingHandler marshallingHandler = modelGroup.getBeforeMarshallingHandler();
+            TermBeforeMarshallingCallback marshallingHandler = modelGroup.getBeforeMarshallingCallback();
 
             i = o != null && isRepeatable(particle) ? getIterator(o) : null;
             if(i != null)
@@ -717,7 +717,7 @@ public class MarshallerImpl
             popWildcardValue = true;
          }
 
-         TermBeforeMarshallingHandler marshallingHandler = term.getBeforeMarshallingHandler();
+         TermBeforeMarshallingCallback marshallingHandler = term.getBeforeMarshallingCallback();
          
          i = o != null && isRepeatable(particle) ? getIterator(o) : null;
          if(i != null)

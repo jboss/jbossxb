@@ -37,7 +37,9 @@ import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.group.ValueList;
 import org.jboss.xb.binding.group.ValueListHandler;
 import org.jboss.xb.binding.group.ValueListInitializer;
+import org.jboss.xb.binding.introspection.FieldInfo;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
+import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.xb.binding.sunday.xop.XOPIncludeHandler;
@@ -726,14 +728,6 @@ public class SundayContentHandler
       else
       {
          o = handler.endParticle(item.o, qName, modelGroupParticle);
-
-         TermAfterUnmarshallingHandler unmHandler = modelGroupParticle.getTerm().getAfterUnmarshallingHandler();
-         if(unmHandler != null)
-         {
-            ctx.particle = modelGroupParticle;
-            o = unmHandler.afterUnmarshalling(o, ctx);
-            ctx.particle = null;
-         }
       }
 
       item.ended = true;
@@ -742,7 +736,7 @@ public class SundayContentHandler
       item = (StackItem)stack.peek(parentStackPos);
       if(item.o != null)
       {
-         ParticleBinding parentParticle = item.particle;
+         ParticleBinding parentParticle = getParentParticle();//item.particle;
          if(parentParticle == null)
          {
             parentParticle = item.particle;
@@ -773,6 +767,23 @@ public class SundayContentHandler
    }
 
    // Private
+
+   private ParticleBinding getParentParticle()
+   {
+      ListIterator iter = stack.prevIterator();
+      while(iter.hasPrevious())
+      {
+         StackItem prev = (StackItem)iter.previous();
+         ParticleBinding peeked = prev.particle;
+
+         TermBinding term = peeked.getTerm();
+         if(!term.isSkip())
+         {
+            return peeked;
+         }
+      }
+      return null;
+   }
 
    private void endElement()
    {
@@ -872,6 +883,16 @@ public class SundayContentHandler
                }
                else if(charHandler != null)
                {
+                  TermBeforeSetParentCallback beforeSetParent = element.getBeforeSetParentCallback();
+                  if(beforeSetParent != null)
+                  {
+                     ctx.parent = o;
+                     ctx.particle = particle;
+                     ctx.parentParticle = getParentParticle();
+                     unmarshalled = beforeSetParent.beforeSetParent(unmarshalled, ctx);
+                     ctx.clear();
+                  }
+
                   if(o instanceof ValueList)
                   {
                      ValueList valueList = (ValueList)o;
@@ -936,14 +957,6 @@ public class SundayContentHandler
       else
       {
          o = handler.endParticle(o, endName, particle);
-
-         TermAfterUnmarshallingHandler unmHandler = particle.getTerm().getAfterUnmarshallingHandler();
-         if(unmHandler != null)
-         {
-            ctx.particle = particle;
-            o = unmHandler.afterUnmarshalling(o, ctx);
-            ctx.particle = null;
-         }
       }
 
       for(int i = interceptorsTotal - 1; i >= 0; --i)
@@ -958,23 +971,17 @@ public class SundayContentHandler
 
       if(interceptorsTotal == 0)
       {
+         ParticleBinding parentParticle = getParentParticle();
+         boolean hasWildcard = false;
          ParticleHandler wildcardHandler = null;
 
-         ParticleBinding parentParticle = null;
-         ListIterator iter = stack.prevIterator();
-         while(iter.hasPrevious())
+         if (parentParticle != null && parentParticle.getTerm().isElement())
          {
-            StackItem prev = (StackItem)iter.previous();
-            ParticleBinding peeked = prev.particle;
-            if(peeked != null && peeked.getTerm() instanceof ElementBinding)
+            WildcardBinding wildcard = ((ElementBinding) parentParticle.getTerm()).getType().getWildcard();
+            if (wildcard != null)
             {
-               parentParticle = peeked;
-               WildcardBinding wildcard = ((ElementBinding)parentParticle.getTerm()).getType().getWildcard();
-               if(wildcard != null)
-               {
-                  wildcardHandler = wildcard.getWildcardHandler();
-               }
-               break;
+               hasWildcard = true;
+               wildcardHandler = wildcard.getWildcardHandler();
             }
          }
 
@@ -997,12 +1004,10 @@ public class SundayContentHandler
                      o, endName, particle, parentParticle);
             }
          }
-         else if(parentParticle != null &&
-            ((ElementBinding)parentParticle.getTerm()).getType().hasWildcard() &&
-            stack.size() > 1)
+         else if(parentParticle != null && hasWildcard && stack.size() > 1)
          {
             // the parent has anyType, so it gets the value of its child
-            iter = stack.prevIterator();
+            ListIterator iter = stack.prevIterator();
             while(iter.hasPrevious())
             {
                StackItem peeked = (StackItem)iter.previous();
@@ -1047,6 +1052,16 @@ public class SundayContentHandler
                           ParticleBinding particle,
                           ParticleBinding parentParticle)
    {
+      TermBeforeSetParentCallback beforeSetParent = particle.getTerm().getBeforeSetParentCallback();
+      if(beforeSetParent != null)
+      {
+         ctx.parent = parent;
+         ctx.particle = particle;
+         ctx.parentParticle = parentParticle;
+         o = beforeSetParent.beforeSetParent(o, ctx);
+         ctx.clear();
+      }
+
       if(parent instanceof ValueList /*&& !particle.getTerm().isSkip()*/)
       {
          if(parent == o)
@@ -1204,11 +1219,71 @@ public class SundayContentHandler
 
    private class UnmarshallingContextImpl implements UnmarshallingContext
    {
+      Object parent;
       ParticleBinding particle;
+      ParticleBinding parentParticle;
+      
+      public Object getParentValue()
+      {
+         return parent;
+      }
       
       public ParticleBinding getParticle()
       {
          return particle;
+      }
+      
+      public ParticleBinding getParentParticle()
+      {
+         return parentParticle;
+      }
+      
+      public String resolvePropertyName()
+      {
+         TermBinding term = particle.getTerm();
+         PropertyMetaData propertyMetaData = term.getPropertyMetaData();
+         String prop = propertyMetaData == null ? null : propertyMetaData.getName();
+         
+         if(prop != null)
+         {
+            return prop;
+         }
+         
+         if(term.isElement())
+         {
+            QName name = ((ElementBinding)term).getQName();
+            prop = Util.xmlNameToFieldName(name.getLocalPart(), term.getSchema().isIgnoreLowLine());
+         }
+         
+         return prop;
+      }
+
+      public Class resolvePropertyType()
+      {
+         if(parent == null)
+         {
+            return null;
+         }
+         
+         String prop = resolvePropertyName();
+         if(prop != null)
+         {      
+            FieldInfo fieldInfo = FieldInfo.getFieldInfo(parent.getClass(), prop, false);
+            if (fieldInfo != null)
+            {
+               return fieldInfo.getType();
+            }
+         }
+         return null;
+      }
+      
+      // private
+      
+      void clear()
+      {
+         ctx.parent = null;
+         ctx.particle = null;
+         ctx.parentParticle = null;
       }
    }
 }

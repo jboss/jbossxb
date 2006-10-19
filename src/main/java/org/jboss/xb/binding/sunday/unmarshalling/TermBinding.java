@@ -27,7 +27,7 @@ import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
-import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingHandler;
+import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -47,8 +47,8 @@ public abstract class TermBinding
    protected boolean mapEntryValue;
    protected Boolean skip;
    protected ValueAdapter valueAdapter;
-   protected TermBeforeMarshallingHandler beforeMarshallingHandler;
-   protected TermAfterUnmarshallingHandler afterUnmarshallingHandler;
+   protected TermBeforeMarshallingCallback beforeMarshallingCallback;
+   protected TermBeforeSetParentCallback beforeSetParentCallback;
 
    protected TermBinding(SchemaBinding schema)
    {
@@ -165,23 +165,25 @@ public abstract class TermBinding
 
    public abstract boolean isWildcard();
 
-   public void setBeforeMarshallingHandler(TermBeforeMarshallingHandler marshallingHandler)
+   public abstract boolean isElement();
+
+   public void setBeforeMarshallingCallback(TermBeforeMarshallingCallback marshallingHandler)
    {
-      this.beforeMarshallingHandler = marshallingHandler;
+      this.beforeMarshallingCallback = marshallingHandler;
    }
 
-   public TermBeforeMarshallingHandler getBeforeMarshallingHandler()
+   public TermBeforeMarshallingCallback getBeforeMarshallingCallback()
    {
-      return beforeMarshallingHandler;
+      return beforeMarshallingCallback;
    }
 
-   public void setAfterUnmarshallingHandler(TermAfterUnmarshallingHandler unmarshallingHandler)
+   public void setBeforeSetParentCallback(TermBeforeSetParentCallback beforeSetParent)
    {
-      this.afterUnmarshallingHandler = unmarshallingHandler;
+      this.beforeSetParentCallback = beforeSetParent;
    }
 
-   public TermAfterUnmarshallingHandler getAfterUnmarshallingHandler()
+   public TermBeforeSetParentCallback getBeforeSetParentCallback()
    {
-      return afterUnmarshallingHandler;
+      return beforeSetParentCallback;
    }
 }

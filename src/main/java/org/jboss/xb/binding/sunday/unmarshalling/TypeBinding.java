@@ -38,7 +38,7 @@ import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.Constants;
-import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingHandler;
+import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.xml.sax.Attributes;
@@ -66,8 +66,8 @@ public class TypeBinding
    private CharactersMetaData charMetaData;
    private AddMethodMetaData addMethodMetaData;
    private ValueAdapter valueAdapter = ValueAdapter.NOOP;
-   private TermBeforeMarshallingHandler marshallingHandler;
-   private TermAfterUnmarshallingHandler unmarshallingHandler;
+   private TermBeforeMarshallingCallback beforeMarshallingCallback;
+   private TermBeforeSetParentCallback beforeSetParentCallback;
    private Boolean startElementCreatesObject;
    private Boolean simple;
 
@@ -567,24 +567,24 @@ public class TypeBinding
       return true;
    }
 
-   public void setBeforeMarshallingHandler(TermBeforeMarshallingHandler marshallingHandler)
+   public void setBeforeMarshallingCallback(TermBeforeMarshallingCallback marshallingHandler)
    {
-      this.marshallingHandler = marshallingHandler;
+      this.beforeMarshallingCallback = marshallingHandler;
    }
 
-   public TermBeforeMarshallingHandler getBeforeMarshallingHandler()
+   public TermBeforeMarshallingCallback getBeforeMarshallingCallback()
    {
-      return marshallingHandler;
+      return beforeMarshallingCallback;
    }
 
-   public void setAfterUnmarshallingHandler(TermAfterUnmarshallingHandler unmarshallingHandler)
+   public void setBeforeSetParentCallback(TermBeforeSetParentCallback beforeSetParent)
    {
-      this.unmarshallingHandler = unmarshallingHandler;
+      this.beforeSetParentCallback = beforeSetParent;
    }
 
-   public TermAfterUnmarshallingHandler getAfterUnmarshallingHandler()
+   public TermBeforeSetParentCallback getBeforeSetParentCallback()
    {
-      return unmarshallingHandler;
+      return beforeSetParentCallback;
    }
 
    public String toString()

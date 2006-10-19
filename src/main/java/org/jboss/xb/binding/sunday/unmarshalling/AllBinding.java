@@ -56,7 +56,7 @@ public class AllBinding
 
    public void addParticle(ParticleBinding particle)
    {
-      if(!(particle.getTerm() instanceof ElementBinding))
+      if(!particle.getTerm().isElement())
       {
          throw new JBossXBRuntimeException("Model group all may contain only elements!");
       }

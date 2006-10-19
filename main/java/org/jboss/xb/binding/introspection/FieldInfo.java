@@ -250,7 +250,7 @@ public class FieldInfo
       {
          throw new JBossXBRuntimeException(
             "Failed to set value '" + value + "' for property '" + name + "' defined in " +
-            owner + " on instance " + owner, e
+            owner.getClass().getName() + " on instance " + owner, e
          );
       }
    }

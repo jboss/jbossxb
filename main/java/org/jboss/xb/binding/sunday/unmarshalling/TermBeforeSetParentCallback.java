@@ -26,7 +26,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision: 2045 $</tt>
  */
-public interface TermAfterUnmarshallingHandler
+public interface TermBeforeSetParentCallback
 {
-   Object afterUnmarshalling(Object o, UnmarshallingContext ctx);
+   Object beforeSetParent(Object o, UnmarshallingContext ctx);
 }

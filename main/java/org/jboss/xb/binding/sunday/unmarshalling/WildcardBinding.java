@@ -244,4 +244,9 @@ public class WildcardBinding
    {
       return true;
    }
+
+   public boolean isElement()
+   {
+      return false;
+   }
 }

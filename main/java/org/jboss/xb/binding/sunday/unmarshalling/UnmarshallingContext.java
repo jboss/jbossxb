@@ -27,5 +27,13 @@ package org.jboss.xb.binding.sunday.unmarshalling;
  */
 public interface UnmarshallingContext
 {
+   Object getParentValue();
+   
    ParticleBinding getParticle();
+   
+   ParticleBinding getParentParticle();
+   
+   String resolvePropertyName();
+   
+   Class resolvePropertyType();
 }

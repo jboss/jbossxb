@@ -58,7 +58,7 @@ public class SequenceBinding
       {
          case 0:
             sequence = Collections.singletonList(particle);
-            if(particle.isRepeatable() && particle.getTerm() instanceof ElementBinding)
+            if(particle.isRepeatable() && particle.getTerm().isElement())
             {
                ElementBinding element = (ElementBinding)particle.getTerm();
                if(particle.isRepeatable())

@@ -25,7 +25,7 @@ package org.jboss.xb.binding.sunday.marshalling;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision: 2096 $</tt>
  */
-public interface TermBeforeMarshallingHandler
+public interface TermBeforeMarshallingCallback
 {
    Object beforeMarshalling(Object o, MarshallingContext ctx);
 }

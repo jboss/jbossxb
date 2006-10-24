@@ -25,7 +25,12 @@ import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
+import org.jboss.xb.binding.sunday.unmarshalling.UnmarshallingContext;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.jboss.xb.binding.sunday.xop.XOPObject;
@@ -43,6 +48,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import junit.framework.TestSuite;
 
@@ -241,6 +247,51 @@ public class XOPUnitTestCase
 
          SCHEMA = XsdBinder.bind(testXsd, resolver);
          SCHEMA.setIgnoreUnresolvedFieldOrClass(false);
+
+         TermBeforeSetParentCallback callback = new TermBeforeSetParentCallback()
+         {
+            public Object beforeSetParent(Object o, UnmarshallingContext ctx)
+            {
+               ElementBinding e = (ElementBinding) ctx.getParticle().getTerm();
+               Class propType = ctx.resolvePropertyType();
+               
+               String localPart = e.getQName().getLocalPart();
+               if("image".equals(localPart) ||
+                     "sig".equals(localPart) ||
+                     "imageWithContentType".equals(localPart) ||
+                     "octets".equals(localPart) ||
+                     "jpeg".equals(localPart))
+               {
+                  assertEquals("expected " + byte[].class + " for " + localPart, byte[].class, propType);
+               }
+               else if("awtImage".equals(localPart))
+               {
+                  assertEquals(java.awt.Image.class, propType);
+               }
+               else if("string".equals(localPart))
+               {
+                  assertEquals(String.class, propType);
+               }
+               else if("source".equals(localPart))
+               {
+                  assertEquals(javax.xml.transform.Source.class, propType);
+               }
+               else
+               {
+                  fail("unexpected element: " + e.getQName());
+               }
+               return o;
+            }
+         };
+
+         ElementBinding e = SCHEMA.getElement(new javax.xml.namespace.QName("http://www.jboss.org/xml/test/xop", "e"));
+         SequenceBinding seq = (SequenceBinding) e.getType().getParticle().getTerm();
+         for(Iterator i = seq.getParticles().iterator(); i.hasNext();)
+         {
+            ParticleBinding particle = (ParticleBinding) i.next();
+            ElementBinding child = (ElementBinding) particle.getTerm();
+            child.setBeforeSetParentCallback(callback);
+         }
       }
 
       if(NON_OPT_XML == null)

@@ -256,11 +256,11 @@ public class SundayContentHandler
 
                         particle = new ParticleBinding(xopInclude);
                         
-                        ElementBinding parentElement = (ElementBinding) stack.peek().particle.getTerm();
+                        ElementBinding parentElement = (ElementBinding) item.particle.getTerm();
                         parentElement.setXopUnmarshaller(schema.getXopUnmarshaller());
-                        
+         
                         item.handler = DefaultHandlers.XOP_HANDLER;
-                        item.cHandler = CharactersHandler.NOOP;
+                        item.ignoreCharacters = true;
                         item.o = item.handler.startParticle(stack.peek().o, startName, stack.peek().particle, null, nsRegistry);
                         break;
                      }
@@ -810,7 +810,7 @@ public class SundayContentHandler
             charType = type;
          }
 
-         CharactersHandler charHandler = item.cHandler == null ? charType.getCharactersHandler() : item.cHandler;
+         CharactersHandler charHandler = item.ignoreCharacters ? null : charType.getCharactersHandler();
 
          /**
           * If there is text content then unmarshal it and set.
@@ -884,7 +884,7 @@ public class SundayContentHandler
                }
                else if(charHandler != null)
                {
-                  TermBeforeSetParentCallback beforeSetParent = element.getBeforeSetParentCallback();
+                  TermBeforeSetParentCallback beforeSetParent = charType.getBeforeSetParentCallback();
                   if(beforeSetParent != null)
                   {
                      ctx.parent = o;
@@ -1126,7 +1126,7 @@ public class SundayContentHandler
       final ModelGroupBinding.Cursor cursor;
       final ParticleBinding particle;
       ParticleHandler handler;
-      CharactersHandler cHandler;
+      boolean ignoreCharacters;
       Object o;
       ValueList repeatableParticleValue;
       StringBuffer textContent;

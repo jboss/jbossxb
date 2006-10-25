@@ -24,14 +24,7 @@ package org.jboss.test.xml;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
-import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
-import org.jboss.xb.binding.sunday.unmarshalling.UnmarshallingContext;
-import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
+import org.jboss.xb.binding.sunday.unmarshalling.*;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.jboss.xb.binding.sunday.xop.XOPObject;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
@@ -39,6 +32,7 @@ import org.jboss.xb.binding.sunday.xop.SimpleDataSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.Source;
+import javax.xml.namespace.QName;
 import javax.activation.DataSource;
 import java.awt.*;
 import java.awt.image.ImageObserver;
@@ -59,7 +53,8 @@ import junit.framework.TestSuite;
  */
 public class XOPUnitTestCase
     extends AbstractJBossXBTest
-{   
+{
+
    public static final TestSuite suite()
    {
       return new TestSuite(XOPUnitTestCase.class);
@@ -188,6 +183,13 @@ public class XOPUnitTestCase
             xopObject = new XOPObject("octets".getBytes());
             xopObject.setContentType("application/octet-stream");
          }
+         else if(cid.endsWith("xopContent"))
+         {
+            // The XOPUnmarshaller returns an object
+            // that doesn't match that actual java property
+            xopObject = new XOPObject("xopContent".getBytes());
+            xopObject.setContentType("application/octet-stream");
+         }
          else
          {
             try
@@ -254,13 +256,13 @@ public class XOPUnitTestCase
             {
                ElementBinding e = (ElementBinding) ctx.getParticle().getTerm();
                Class propType = ctx.resolvePropertyType();
-               
+
                String localPart = e.getQName().getLocalPart();
                if("image".equals(localPart) ||
-                     "sig".equals(localPart) ||
-                     "imageWithContentType".equals(localPart) ||
-                     "octets".equals(localPart) ||
-                     "jpeg".equals(localPart))
+                   "sig".equals(localPart) ||
+                   "imageWithContentType".equals(localPart) ||
+                   "octets".equals(localPart) ||
+                   "jpeg".equals(localPart))
                {
                   assertEquals("expected " + byte[].class + " for " + localPart, byte[].class, propType);
                }
@@ -290,7 +292,64 @@ public class XOPUnitTestCase
          {
             ParticleBinding particle = (ParticleBinding) i.next();
             ElementBinding child = (ElementBinding) particle.getTerm();
-            child.setBeforeSetParentCallback(callback);
+            if(! "xopContent".equals( child.getQName().getLocalPart()))
+               child.setBeforeSetParentCallback(callback);
+         }
+
+         // ---------------------------------------------------
+
+         TermBeforeSetParentCallback interceptXOPUnmarshallerResults = new TermBeforeSetParentCallback()
+         {
+            public Object beforeSetParent(Object o, UnmarshallingContext ctx)
+            {
+
+               ElementBinding e = (ElementBinding) ctx.getParticle().getTerm();
+               Class propType = ctx.resolvePropertyType();
+
+               assertNotNull("Failed to resolve property type for "+e.getQName(), propType);
+
+               String localPart = e.getQName().getLocalPart();
+               if("xopContent".equals(localPart))
+               {
+                  System.out.println("! xopContent handle on "+ e.getQName());
+                  assertEquals(String.class, propType);
+               }
+               else if("Include".equals(localPart))
+               {
+                  System.out.println("! include handle on "+ e.getQName());
+                  assertEquals(String.class, propType);
+
+                  assertTrue( (o instanceof byte[]));
+                  
+                  // Type conversion required
+                  if(propType.equals(String.class))
+                     o = new String( (byte[])o);
+               }
+
+               return o;
+            }
+         };
+
+         // xmime complex types
+         TypeBinding xmimeBase64Type = SCHEMA.getType(new QName("http://www.w3.org/2005/05/xmlmime", "base64Binary"));
+         if(xmimeBase64Type!=null)
+         {
+            xmimeBase64Type.setBeforeSetParentCallback( interceptXOPUnmarshallerResults );
+
+            // xop:Include
+            // Uncomment the following lines in order to intercept the
+            // XOPUnmarshaller result _before_ the actual setter is invoked
+
+            /*
+            ModelGroupBinding modelGroup = (ModelGroupBinding)xmimeBase64Type.getParticle().getTerm();
+            ParticleBinding particle = (ParticleBinding)modelGroup.getParticles().iterator().next();
+            ElementBinding xopInclude = (ElementBinding)particle.getTerm();
+
+            if(! xopInclude.getQName().equals(new QName("http://www.w3.org/2004/08/xop/include", "Include")))
+               throw new RuntimeException("Looks like the JBossXB XOP implementation has changed, please open a JIRA issue");
+
+            xopInclude.setBeforeSetParentCallback(interceptXOPUnmarshallerResults);
+            */
          }
       }
 
@@ -509,6 +568,23 @@ public class XOPUnitTestCase
       assertEquals("string", e.string);
    }
 
+   public void testUnmarshalStringWithTypeConversion() throws Exception
+   {
+      SCHEMA.setXopUnmarshaller(XOP_ENABLED_UNMARSH);
+
+      String xml = getOptimizedXml("xopContent");
+
+      Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
+      Object o = unmarshaller.unmarshal(new StringReader(xml), SCHEMA);
+
+      assertNotNull(o);
+      assertTrue(o instanceof E);
+
+      E e = (E)o;
+      assertNotNull(e.xopContent);
+      assertEquals("xopContent", e.xopContent);
+   }
+
    public void testTopLevelUnmarshalling() throws Exception
    {
       String xsd =
@@ -601,5 +677,8 @@ public class XOPUnitTestCase
       public Source source;
       public String string;
       public byte[] octets;
+
+      public String xopContent;
    }
+
 }

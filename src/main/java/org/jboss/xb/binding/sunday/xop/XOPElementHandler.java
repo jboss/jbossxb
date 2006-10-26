@@ -50,7 +50,7 @@ public class XOPElementHandler
       }
       else
       {
-         return parent == null ? new XOPElement() : parent;
+         return new XOPElement();
       }
    }
 
@@ -69,7 +69,8 @@ public class XOPElementHandler
       {
          return;
       }
-      
+
+      // should actually use the handler that would normally be used by the SundayContentHandler
       DefaultHandlers.ELEMENT_HANDLER.setParent(parent, o, elementName, particle, parentParticle);
    }
 

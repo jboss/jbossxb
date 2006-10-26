@@ -56,7 +56,7 @@ public class XOPElementHandler
 
    public Object endParticle(Object o, QName elementName, ParticleBinding particle)
    {
-      return o == null ? null : ((XOPElement)o).value;
+      return o instanceof XOPElement ? ((XOPElement)o).value : o;
    }
 
    public void setParent(Object parent,

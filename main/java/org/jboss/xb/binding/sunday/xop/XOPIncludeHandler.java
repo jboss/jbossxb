@@ -28,7 +28,6 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
@@ -130,8 +129,7 @@ public class XOPIncludeHandler
       }
       else
       {
-         ElementBinding parentElement = (ElementBinding)parentParticle.getTerm();
-         DefaultHandlers.ELEMENT_HANDLER.setParent(parent, o, parentElement.getQName(), particle, parentParticle);
+         throw new JBossXBRuntimeException("Expected XOPElement as a parent but got " + parent + " for element " + elementName);
       }
    }
 }

@@ -50,13 +50,13 @@ public class XOPElementHandler
       }
       else
       {
-         return parent == null ? new XOPElement() : parent;
+         return new XOPElement();
       }
    }
 
    public Object endParticle(Object o, QName elementName, ParticleBinding particle)
    {
-      return o instanceof XOPElement ? ((XOPElement)o).value : o;
+      return o == null ? null : ((XOPElement)o).value;
    }
 
    public void setParent(Object parent,
@@ -69,7 +69,8 @@ public class XOPElementHandler
       {
          return;
       }
-      
+
+      // should actually use the handler that would normally be used by the SundayContentHandler
       DefaultHandlers.ELEMENT_HANDLER.setParent(parent, o, elementName, particle, parentParticle);
    }
 

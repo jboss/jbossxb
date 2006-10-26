@@ -24,7 +24,15 @@ package org.jboss.test.xml;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
-import org.jboss.xb.binding.sunday.unmarshalling.*;
+import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
+import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.UnmarshallingContext;
+import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.jboss.xb.binding.sunday.xop.XOPObject;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
@@ -34,7 +42,9 @@ import org.xml.sax.SAXException;
 import javax.xml.transform.Source;
 import javax.xml.namespace.QName;
 import javax.activation.DataSource;
-import java.awt.*;
+
+import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.image.ImageObserver;
 import java.awt.image.ImageProducer;
 import java.io.FileInputStream;
@@ -296,13 +306,10 @@ public class XOPUnitTestCase
                child.setBeforeSetParentCallback(callback);
          }
 
-         // ---------------------------------------------------
-
-         TermBeforeSetParentCallback interceptXOPUnmarshallerResults = new TermBeforeSetParentCallback()
+         TermBeforeSetParentCallback xmimeBase64Callback = new TermBeforeSetParentCallback()
          {
             public Object beforeSetParent(Object o, UnmarshallingContext ctx)
             {
-
                ElementBinding e = (ElementBinding) ctx.getParticle().getTerm();
                Class propType = ctx.resolvePropertyType();
 
@@ -311,21 +318,23 @@ public class XOPUnitTestCase
                String localPart = e.getQName().getLocalPart();
                if("xopContent".equals(localPart))
                {
-                  System.out.println("! xopContent handle on "+ e.getQName());
                   assertEquals(String.class, propType);
+                  if(propType.equals(String.class))
+                  {
+                     o = new String( (byte[])o);
+                  }
                }
+/* alexey: this is never the case
                else if("Include".equals(localPart))
                {
-                  System.out.println("! include handle on "+ e.getQName());
                   assertEquals(String.class, propType);
-
                   assertTrue( (o instanceof byte[]));
                   
                   // Type conversion required
                   if(propType.equals(String.class))
                      o = new String( (byte[])o);
                }
-
+*/
                return o;
             }
          };
@@ -334,8 +343,12 @@ public class XOPUnitTestCase
          TypeBinding xmimeBase64Type = SCHEMA.getType(new QName("http://www.w3.org/2005/05/xmlmime", "base64Binary"));
          if(xmimeBase64Type!=null)
          {
-            xmimeBase64Type.setBeforeSetParentCallback( interceptXOPUnmarshallerResults );
+            xmimeBase64Type.setBeforeSetParentCallback( xmimeBase64Callback );
 
+            // alexey: the following shouldn't be used.
+            // callbacks should be set on the types and/or elements
+            // that can have xop:Include as their content
+            
             // xop:Include
             // Uncomment the following lines in order to intercept the
             // XOPUnmarshaller result _before_ the actual setter is invoked

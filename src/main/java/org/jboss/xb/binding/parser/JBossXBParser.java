@@ -23,6 +23,7 @@ package org.jboss.xb.binding.parser;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.EntityResolver;
+import org.xml.sax.SAXException;
 import org.jboss.xb.binding.JBossXBException;
 import org.apache.xerces.xs.XSTypeDefinition;
 
@@ -50,6 +51,14 @@ public interface JBossXBParser
       void processingInstruction(String target, String data);
 
       Object getRoot();
+   }
+   /**
+    * Extended to support key SAX2 LexicalHandler events
+    */
+   interface DtdAwareContentHandler extends ContentHandler
+   {
+      public void startDTD(String name, String publicId, String systemId);
+      public void endDTD();
    }
 
    void setEntityResolver(EntityResolver entityResolver) throws JBossXBException;

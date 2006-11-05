@@ -61,6 +61,21 @@ public class DelegatingObjectModelFactory
       }
    }
 
+   public void startDTD(String name, String publicId, String systemId)
+   {
+      try
+      {
+         Class[] sig = {String.class, String.class, String.class};
+         Method startDTD = typedFactory.getClass().getMethod("startDTD", sig);
+         Object[] args = {name, publicId, systemId};
+         startDTD.invoke(typedFactory, args);
+      }
+      catch(Exception e)
+      {
+         // Ignore
+      }
+   }
+
    public Object newRoot(Object root,
                          UnmarshallingContext navigator,
                          String namespaceURI,

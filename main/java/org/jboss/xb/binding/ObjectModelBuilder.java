@@ -47,7 +47,7 @@ import java.lang.reflect.Method;
  * @version <tt>$Revision$</tt>
  */
 public class ObjectModelBuilder
-   implements UnmarshallingContext, JBossXBParser.ContentHandler
+   implements UnmarshallingContext, JBossXBParser.DtdAwareContentHandler
 {
    /**
     * logger
@@ -287,6 +287,35 @@ public class ObjectModelBuilder
          popAccepted();
       }
       return root;
+   }
+
+   public void startDTD(String name, String publicId, String systemId)
+   {
+      try
+      {
+         Class[] sig = {String.class, String.class, String.class};
+         Method startDTD = defaultFactory.getClass().getMethod("startDTD", sig);
+         Object[] args = {name, publicId, systemId};
+         startDTD.invoke(defaultFactory, args);
+      }
+      catch(Exception e)
+      {
+         log.debug("No startDTD found on factory: "+defaultFactory);
+      }
+   }
+   public void endDTD()
+   {
+      try
+      {
+         Class[] sig = {};
+         Method endDTD = defaultFactory.getClass().getMethod("endDTD", sig);
+         Object[] args = {};
+         endDTD.invoke(defaultFactory, args);
+      }
+      catch(Exception e)
+      {
+         log.debug("No endDTD found on factory: "+defaultFactory);
+      }      
    }
 
    public void startElement(String namespaceURI,

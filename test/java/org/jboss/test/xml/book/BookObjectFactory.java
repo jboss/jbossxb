@@ -37,6 +37,10 @@ public class BookObjectFactory
 {
    // ObjectModelFactory implementation
 
+   public void startDTD(String name, String publicId, String systemId)
+   {
+      System.err.print("startDTD, name="+name+", publicId="+publicId+", systemId="+systemId);
+   }
    /**
     * Return the root.
     */

@@ -291,20 +291,24 @@ public class ObjectModelBuilder
 
    public void startDTD(String name, String publicId, String systemId)
    {
+      GenericObjectModelFactory factory = getFactory(systemId);
+
       try
       {
          Class[] sig = {String.class, String.class, String.class};
-         Method startDTD = defaultFactory.getClass().getMethod("startDTD", sig);
+         Method startDTD = factory.getClass().getMethod("startDTD", sig);
          Object[] args = {name, publicId, systemId};
-         startDTD.invoke(defaultFactory, args);
+         startDTD.invoke(factory, args);
       }
       catch(Exception e)
       {
-         log.debug("No startDTD found on factory: "+defaultFactory);
+         log.debug("No startDTD found on factory: " + factory);
       }
    }
+   
    public void endDTD()
    {
+      // TODO: should use the factory it called in the startDTD
       try
       {
          Class[] sig = {};

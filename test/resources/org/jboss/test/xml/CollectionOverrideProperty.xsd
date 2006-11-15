@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.jboss.org/test/xml/collectionOverrideProperty"
+            xmlns="http://www.jboss.org/test/xml/collectionOverrideProperty"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified"
+            version="1.0">
+
+   <xsd:element name="parent" type="parent-type"/>
+
+   <xsd:element name="child" type="child-type"/>
+
+   <xsd:complexType name="parent-type">
+      <xsd:sequence>
+         <xsd:element ref="child" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+   </xsd:complexType>
+
+   <xsd:complexType name="child-type">
+      <xsd:simpleContent>
+         <xsd:extension base="xsd:string"/>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   
+</xsd:schema>

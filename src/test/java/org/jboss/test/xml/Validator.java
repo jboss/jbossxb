@@ -1,27 +1,29 @@
 /*
-  * JBoss, Home of Professional Open Source
-  * Copyright 2005, JBoss Inc., and individual contributors as indicated
-  * by the @authors tag. See the copyright.txt in the distribution for a
-  * full listing of individual contributors.
-  *
-  * This is free software; you can redistribute it and/or modify it
-  * under the terms of the GNU Lesser General Public License as
-  * published by the Free Software Foundation; either version 2.1 of
-  * the License, or (at your option) any later version.
-  *
-  * This software is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-  * Lesser General Public License for more details.
-  *
-  * You should have received a copy of the GNU Lesser General Public
-  * License along with this software; if not, write to the Free
-  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
-  */
+ * JBoss, Home of Professional Open Source
+ * Copyright 2005, JBoss Inc., and individual contributors as indicated
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.jboss.test.xml;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.SAXParser;
@@ -48,7 +50,18 @@ public class Validator
       assertValidXml(null, xml, resolver);
    }
 
+   public static void assertValidXml(InputStream xml, final EntityResolver resolver)
+   {
+      parse(xml, null, resolver);
+   }
+
    private static void assertValidXml(final String xsd, String xml, final EntityResolver resolver)
+   {
+      ByteArrayInputStream xmlIs = new ByteArrayInputStream(xml.getBytes());
+      parse(xmlIs, xsd, resolver);
+   }
+
+   private static void parse(InputStream xmlIs, final String xsd, final EntityResolver resolver)
    {
       SAXParserFactory factory = SAXParserFactory.newInstance();
       factory.setValidating(true);
@@ -58,7 +71,7 @@ public class Validator
       {
          parser = factory.newSAXParser();
       }
-      catch(Exception e)
+      catch (Exception e)
       {
          throw new IllegalStateException("Failed to instantiate a SAX parser: " + e.getMessage());
       }
@@ -67,52 +80,59 @@ public class Validator
       {
          parser.getXMLReader().setFeature("http://apache.org/xml/features/validation/schema", true);
       }
-      catch(SAXException e)
+      catch (SAXException e)
       {
          throw new IllegalStateException("Schema validation feature is not supported by the parser: " + e.getMessage());
       }
 
       try
       {
-         parser.parse(new ByteArrayInputStream(xml.getBytes()),
-            new DefaultHandler()
+         parser.parse(xmlIs, new DefaultHandler()
+         {
+            public void warning(SAXParseException e)
             {
-               public void warning(SAXParseException e)
-               {
-               }
+            }
 
-               public void error(SAXParseException e)
-               {
-                  throw new JBossXBRuntimeException("Error", e);
-               }
+            public void error(SAXParseException e)
+            {
+               throw new JBossXBRuntimeException("Error", e);
+            }
 
-               public void fatalError(SAXParseException e)
-               {
-                  throw new JBossXBRuntimeException("Fatal error", e);
-               }
+            public void fatalError(SAXParseException e)
+            {
+               throw new JBossXBRuntimeException("Fatal error", e);
+            }
 
-               public InputSource resolveEntity(String publicId, String systemId)
+            public InputSource resolveEntity(String publicId, String systemId)
+            {
+               if (resolver != null)
                {
-                  if(resolver != null)
+                  try
                   {
-                     try
-                     {
-                        return resolver.resolveEntity(publicId, systemId);
-                     }
-                     catch(Exception e)
-                     {
-                        throw new IllegalStateException("Failed to resolveEntity " + systemId + ": " + systemId);
-                     }
+                     InputSource resolveEntity = resolver.resolveEntity(publicId, systemId);
+                     return resolveEntity;
                   }
-                  else
+                  catch (Exception e)
                   {
-                     return new InputSource(new StringReader(xsd));
+                     throw new IllegalStateException("Failed to resolveEntity " + systemId + ": " + systemId);
                   }
+               }
+               else
+               {
+                  return new InputSource(new StringReader(xsd));
                }
             }
-         );
+         });
       }
-      catch(Exception e)
+      catch(JBossXBRuntimeException e)
+      {
+         throw e;
+      }
+      catch (SAXException e)
+      {
+         throw new JBossXBRuntimeException("Parsing failed.", e);
+      }
+      catch (IOException e)
       {
          throw new JBossXBRuntimeException("Parsing failed.", e);
       }

@@ -28,6 +28,7 @@ import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
@@ -1953,7 +1954,18 @@ public final class SimpleTypeBindings
     */
    public static byte[] unmarshalBase64(String value)
    {
-      return Base64.decode(value);
+      byte[] valueBytes;
+
+      try
+      {
+         valueBytes = value.getBytes("UTF-8");
+      }
+      catch (UnsupportedEncodingException e)
+      {
+         valueBytes = value.getBytes();
+      }
+
+      return Base64.decode(valueBytes, 0, valueBytes.length);
    }
 
    /**

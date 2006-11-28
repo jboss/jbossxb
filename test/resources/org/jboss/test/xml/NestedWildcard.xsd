@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.jboss.org/test/xml/nestedWildcard"
+            xmlns="http://www.jboss.org/test/xml/nestedWildcard"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified"
+            version="1.0">
+
+   <xsd:complexType name="nested-wildcard" mixed="true">
+      <xsd:sequence>
+         <xsd:element name="e1" type="xsd:string"/>
+         <xsd:choice minOccurs="0">
+            <xsd:sequence>        
+               <xsd:element name="e2" type="xsd:string" minOccurs="0"/>
+               <xsd:element name="e3" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:element name="e4" type="xsd:string"/>
+            <xsd:any namespace="##other" processContents="strict"/>
+         </xsd:choice>
+      </xsd:sequence>
+   </xsd:complexType>
+   
+</xsd:schema>

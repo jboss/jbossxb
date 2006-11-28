@@ -614,7 +614,9 @@ public class TypeBinding
             }
             else if(term.isModelGroup())
             {
-               return getWildcard(term);
+               WildcardBinding wc = getWildcard(term);
+               if (wc != null)
+                  return wc;
             }
          }
       }

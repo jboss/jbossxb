@@ -37,6 +37,7 @@ import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.group.ValueList;
 import org.jboss.xb.binding.group.ValueListHandler;
 import org.jboss.xb.binding.group.ValueListInitializer;
+import org.jboss.xb.binding.group.ValueList.NonRequiredValue;
 import org.jboss.xb.binding.introspection.FieldInfo;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
@@ -683,19 +684,36 @@ public class SundayContentHandler
             
          if(particle.getTerm().isWildcard())
          {
-            ParticleHandler handler = ((WildcardBinding)particle.getTerm()).getWildcardHandler();
-            if(handler == null)
+            ParticleHandler handler = null;
+/*
+            handler = ((WildcardBinding) particle.getTerm()).getWildcardHandler();
+            if (handler == null)
             {
                handler = defParticleHandler;
             }
-
+ */
+            
             // that's not good. some elements can be handled as "unresolved" and some as "resolved"
             QName qName = valueList.getValue(0).qName;
             Collection col = new ArrayList();
             for(int i = 0; i < valueList.size(); ++i)
             {
-               col.add(valueList.getValue(i).value);
+               NonRequiredValue value = valueList.getValue(i);
+               col.add(value.value);
+
+               if(handler != value.handler)
+               {
+                  if(handler == null && i == 0)
+                  {
+                     handler = (ParticleHandler) value.handler;
+                  }
+                  else
+                  {
+                     throw new JBossXBRuntimeException("Handlers in the list are supposed to be the same.");
+                  }
+               }
             }
+
             StackItem parentItem = stack.peek(1);
             handler.setParent(parentItem.o, col, qName, particle, parentItem.particle);
          }

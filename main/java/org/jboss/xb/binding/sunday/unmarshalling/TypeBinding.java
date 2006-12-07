@@ -260,21 +260,26 @@ public class TypeBinding
 
       return expandedAttrs;
    }
-
+   
    public AttributeBinding addAttribute(QName name, TypeBinding type, AttributeHandler handler)
    {
       AttributeBinding attr = new AttributeBinding(schemaBinding, name, type, handler);
+      addAttribute(attr);
+      return attr;
+   }
+
+   public void addAttribute(AttributeBinding attr)
+   {
       switch(attrs.size())
       {
          case 0:
-            attrs = Collections.singletonMap(name, attr);
+            attrs = Collections.singletonMap(attr.getQName(), attr);
             break;
          case 1:
             attrs = new HashMap(attrs);
          default:
-            attrs.put(name, attr);
+            attrs.put(attr.getQName(), attr);
       }
-      return attr;
    }
 
    public Collection getAttributes()
@@ -339,6 +344,9 @@ public class TypeBinding
 
    public boolean isSimple()
    {
+      // actually, a type can be complex when the particle is null and
+      // there are no attributes. But the XsdBinder will set the value of simple
+      // to false. This check is for schema bindings created programmatically
       return simple == null ? particle == null && attrs.isEmpty() : simple.booleanValue();
    }
 
@@ -437,12 +445,30 @@ public class TypeBinding
       this.valueAdapter = valueAdapter;
    }
 
+   /**
+    * Whether the ParticleHandler should return a non-null object from its
+    * startParticle method.
+    * This should be true for any type that has child elements and/or attributes,
+    * i.e. complex types. If the type is simple or it's a complex type that should
+    * be treated as a simple type then this value should be false.
+    * 
+    * @return
+    */
    public boolean isStartElementCreatesObject()
    {
       return startElementCreatesObject == null ?
          particle != null || !attrs.isEmpty() : startElementCreatesObject.booleanValue();
    }
 
+   /**
+    * Whether the ParticleHandler should return a non-null object from its
+    * startParticle method.
+    * This should be true for any type that has child elements and/or attributes,
+    * i.e. complex types. If the type is simple or it's a complex type that should
+    * be treated as a simple type then this value should be false.
+    * 
+    * @param startElementCreatesObject
+    */
    public void setStartElementCreatesObject(boolean startElementCreatesObject)
    {
       this.startElementCreatesObject = startElementCreatesObject ? Boolean.TRUE : Boolean.FALSE;

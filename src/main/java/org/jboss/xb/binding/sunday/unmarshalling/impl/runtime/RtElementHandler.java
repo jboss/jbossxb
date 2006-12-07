@@ -495,36 +495,57 @@ public class RtElementHandler
                }
             }
 
-            Class fieldType;
+            Class fieldType = null;
             if(parentClass.isArray())
             {
                fieldType = parentClass.getComponentType();
             }
             else
             {
-               fieldType = FieldInfo.getFieldInfo(parentClass, propName, true).getType();
-               if(particle.isRepeatable() && fieldType.isArray())
+               //fieldType = FieldInfo.getFieldInfo(parentClass, propName, true).getType();
+               // this was changed to false because allow overriding of handler.setParent()
+               // with an interceptor.add(). See CollectionOverridePropertyUnitTestCase
+               // In other words, don't treat it as an array wrapper.
+               FieldInfo fieldInfo = FieldInfo.getFieldInfo(parentClass, propName, false);
+               if(fieldInfo != null)
                {
-                  fieldType = fieldType.getComponentType();
+                  fieldType = fieldInfo.getType();
+                  if (particle.isRepeatable() && fieldType.isArray())
+                  {
+                     fieldType = fieldType.getComponentType();
+                  }
+               }
+               else if(arrayItem.getInterceptors().isEmpty())
+               {
+                  QName typeName = ((ElementBinding)term).getType().getQName();
+                  throw new JBossXBRuntimeException(
+                        "Couldn't apply 'array wrapper' pattern for element " +
+                        elementName + " of type " +
+                        (typeName == null ? "anonymous" : typeName.toString()) +
+                        ": failed to resolve property " + propName +
+                        " and no interceptors applied to override handler.setParent(...)");
                }
             }
 
-            // TODO: review the logic for cases when wrapperType == null
-            if(fieldType.isArray())
+            if(fieldType != null)
             {
-               return GenericValueContainer.FACTORY.array(wrapperType, propName, fieldType.getComponentType());
-            }
-            else if(Collection.class.isAssignableFrom(fieldType))
-            {
-               if(wrapperType == null)
+               // TODO: review the logic for cases when wrapperType == null
+               if (fieldType.isArray())
                {
-                  return new ValueListInitializer().newValueList(ValueListHandler.FACTORY.child(), Collection.class);
-                  //o = new ArrayList();
-               }         
-            }
-            else
-            {
-               return GenericValueContainer.FACTORY.array(wrapperType, propName, fieldType);
+                  return GenericValueContainer.FACTORY.array(wrapperType, propName, fieldType.getComponentType());
+               }
+               else if (Collection.class.isAssignableFrom(fieldType))
+               {
+                  if (wrapperType == null)
+                  {
+                     return new ValueListInitializer().newValueList(ValueListHandler.FACTORY.child(), Collection.class);
+                     //o = new ArrayList();
+                  }
+               }
+               else
+               {
+                  return GenericValueContainer.FACTORY.array(wrapperType, propName, fieldType);
+               }
             }
          }
       }

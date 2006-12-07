@@ -28,12 +28,10 @@ import javax.xml.namespace.QName;
 
 import junit.framework.TestSuite;
 
-import org.jboss.test.xml.CollectionOverridePropertyUnitTestCase.Parent;
 import org.jboss.xb.binding.metadata.ClassMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultElementInterceptor;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 
 /**
  * SimpleContentUnitTestCase.
@@ -57,7 +55,7 @@ public class SimpleContentUnitTestCase extends AbstractJBossXBTest
 
    public void testCollectionOverrideProperty() throws Exception
    {
-      enableTrace("org.jboss.xb");
+      //enableTrace("org.jboss.xb");
 
       SchemaBinding schema = bind("SimpleContent.xsd");
       schema.setIgnoreUnresolvedFieldOrClass(false);

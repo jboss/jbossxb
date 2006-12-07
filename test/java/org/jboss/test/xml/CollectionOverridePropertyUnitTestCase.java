@@ -57,8 +57,6 @@ public class CollectionOverridePropertyUnitTestCase extends AbstractJBossXBTest
 
    public void testCollectionOverrideProperty() throws Exception
    {
-      enableTrace("org.jboss.xb");
-
       SchemaBinding schema = bind("CollectionOverrideProperty.xsd");
       schema.setIgnoreUnresolvedFieldOrClass(false);
 
@@ -85,26 +83,7 @@ public class CollectionOverridePropertyUnitTestCase extends AbstractJBossXBTest
       type = schema.getType(new QName(NS, "child-type"));
       assertNotNull(type);
       type.setClassMetaData(classMetaData);
-/*
-      type.setHandler(new ParticleHandler()
-      {
-         public Object endParticle(Object o, QName elementName, ParticleBinding particle)
-         {
-            return DefaultHandlers.ELEMENT_HANDLER.endParticle(o, elementName, particle);
-         }
 
-         public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle,
-               ParticleBinding parentParticle)
-         {
-         }
-
-         public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs,
-               NamespaceContext nsCtx)
-         {
-            return DefaultHandlers.ELEMENT_HANDLER.startParticle(parent, elementName, particle, attrs, nsCtx);
-         }
-      });
-*/      
       Parent parent = (Parent) unmarshal("CollectionOverrideProperty.xml", schema, Parent.class);
       List list = parent.list;
       assertNotNull(list);

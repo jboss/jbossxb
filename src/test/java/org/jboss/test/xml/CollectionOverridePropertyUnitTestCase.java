@@ -29,9 +29,11 @@ import javax.xml.namespace.QName;
 import junit.framework.TestSuite;
 
 import org.jboss.xb.binding.metadata.ClassMetaData;
+import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultElementInterceptor;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+
 
 /**
  * CollectionOverridePropertyUnitTestCase.
@@ -83,6 +85,53 @@ public class CollectionOverridePropertyUnitTestCase extends AbstractJBossXBTest
       type = schema.getType(new QName(NS, "child-type"));
       assertNotNull(type);
       type.setClassMetaData(classMetaData);
+/*
+      type.setHandler(new ParticleHandler()
+      {
+         public Object endParticle(Object o, QName elementName, ParticleBinding particle)
+         {
+            return DefaultHandlers.ELEMENT_HANDLER.endParticle(o, elementName, particle);
+         }
+
+         public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle,
+               ParticleBinding parentParticle)
+         {
+         }
+
+         public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs,
+               NamespaceContext nsCtx)
+         {
+            return DefaultHandlers.ELEMENT_HANDLER.startParticle(parent, elementName, particle, attrs, nsCtx);
+         }
+      });
+*/      
+      Parent parent = (Parent) unmarshal("CollectionOverrideProperty.xml", schema, Parent.class);
+      List list = parent.list;
+      assertNotNull(list);
+      assertEquals("one", ((Child) list.get(0)).getValue());
+      assertEquals("two", ((Child) list.get(1)).getValue());
+   }
+
+   public void testWithPropertyMetaData() throws Exception
+   {
+      SchemaBinding schema = bind("CollectionOverrideProperty.xsd");
+      schema.setIgnoreUnresolvedFieldOrClass(false);
+
+      ClassMetaData classMetaData = new ClassMetaData();
+      classMetaData.setImpl(Parent.class.getName());
+      TypeBinding type = schema.getType(new QName(NS, "parent-type"));
+      assertNotNull(type);
+      type.setClassMetaData(classMetaData);
+
+      PropertyMetaData prop = new PropertyMetaData();
+      prop.setName("list");
+      type.getElement(new QName(NS, "child")).setPropertyMetaData(prop);
+      
+      classMetaData = new ClassMetaData();
+      classMetaData.setImpl(Child.class.getName());
+      type = schema.getType(new QName(NS, "child-type"));
+      assertNotNull(type);
+      type.setClassMetaData(classMetaData);
 
       Parent parent = (Parent) unmarshal("CollectionOverrideProperty.xml", schema, Parent.class);
       List list = parent.list;
@@ -90,7 +139,7 @@ public class CollectionOverridePropertyUnitTestCase extends AbstractJBossXBTest
       assertEquals("one", ((Child) list.get(0)).getValue());
       assertEquals("two", ((Child) list.get(1)).getValue());
    }
-   
+
    public static class Parent
    {
       private List list;

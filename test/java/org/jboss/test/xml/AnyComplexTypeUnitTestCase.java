@@ -34,6 +34,7 @@ import org.jboss.xb.binding.metadata.ClassMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultElementInterceptor;
+import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
@@ -155,15 +156,24 @@ public class AnyComplexTypeUnitTestCase extends AbstractJBossXBTest
       
       DOMUnresolvedHandler unresolved = new DOMUnresolvedHandler();
       TypeBinding type = schema.getType(new QName(NS, "any-complexType"));
-      type.setStartElementCreatesObject(false);
+      //type.setStartElementCreatesObject(false);
+      type.setHandler(new DOMUnresolvedHandler()
+      {
+         public void setParent(Object parent, Object o, QName qName, ParticleBinding particle,
+               ParticleBinding parentParticle)
+         {
+            DefaultHandlers.ELEMENT_HANDLER.setParent(parent, o, qName, particle, parentParticle);
+         }
+      }
+      );
       WildcardBinding wild = type.getWildcard();
       assertNotNull(wild);
       wild.setUnresolvedElementHandler(unresolved);
       wild.setUnresolvedCharactersHandler(unresolved);
       
-      DOMInterceptor interceptor = new DOMInterceptor();
-      element = schema.getElement(new QName(NS, "element"));
-      element.pushInterceptor(interceptor);
+      //DOMInterceptor interceptor = new DOMInterceptor();
+      //element = schema.getElement(new QName(NS, "element"));
+      //element.pushInterceptor(interceptor);
 
       Top top = (Top) unmarshal("AnyComplexTypeFromMultipleWildCardAndElement.xml", schema, Top.class);
       Element dom = top.element;

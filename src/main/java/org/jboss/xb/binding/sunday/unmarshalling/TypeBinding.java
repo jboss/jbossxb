@@ -54,7 +54,6 @@ public class TypeBinding
    /** Map<QName, AttributeBinding>  */
    private Map attrs = Collections.EMPTY_MAP;
    private ParticleHandler handler;//todo default handler is now in SundayContentHandler.
-   //private ParticleHandler handler = DefaultHandlers.ELEMENT_HANDLER;
    private CharactersHandler charactersHandler;
    private ClassMetaData classMetaData;
    private ValueMetaData valueMetaData;
@@ -83,6 +82,11 @@ public class TypeBinding
    private XOPUnmarshaller xopUnmarshaller;
    private XOPMarshaller xopMarshaller;
 
+   /** Map<QName, List<ElementInterceptor>>
+    * these are local element interceptors that are "added" to the interceptor stack
+    * defined in the element binding */
+   private Map interceptors = Collections.EMPTY_MAP;
+   
    public TypeBinding()
    {
       this.qName = null;
@@ -322,6 +326,19 @@ public class TypeBinding
       return handler;
    }
 
+   /**
+    * Pushes a new interceptor for the specified element.
+    * If the element has a global scope in the schema,
+    * this interceptor will invoked only when the element is found to be a child
+    * of this type. This is the difference between the local interceptors
+    * added with this method and the interceptors added directly to the
+    * element binding.
+    * When element is started, local interceptors are invoked before the interceptors
+    * from the element binding. In the endElement the order is reversed.
+    * 
+    * @param qName
+    * @param interceptor
+    */
    public void pushInterceptor(QName qName, ElementInterceptor interceptor)
    {
       ElementBinding el = getElement(qName);
@@ -329,9 +346,48 @@ public class TypeBinding
       {
          el = addElement(qName, new TypeBinding());
       }
-      el.pushInterceptor(interceptor);
+      //el.pushInterceptor(interceptor);
+      
+      List intList = (List) interceptors.get(qName);
+      if(intList == null)
+      {
+         intList = Collections.singletonList(interceptor);
+         switch(interceptors.size())
+         {
+            case 0:
+               interceptors = Collections.singletonMap(qName, intList);
+               break;
+            case 1:
+               interceptors = new HashMap(interceptors);
+            default:
+               interceptors.put(qName, intList);
+         }
+      }
+      else
+      {
+         if(intList.size() == 1)
+         {
+            intList = new ArrayList(intList);
+            interceptors.put(qName, intList);
+         }
+         intList.add(interceptor);
+      }
    }
 
+   /**
+    * Returns a list of local interceptors for the element.
+    * If there are no local interceptors for the element then
+    * an empty list is returned.
+    * 
+    * @param qName
+    * @return
+    */
+   public List getInterceptors(QName qName)
+   {
+      List list = (List) interceptors.get(qName);
+      return list == null ? Collections.EMPTY_LIST : list;
+   }
+   
    public TypeBinding getBaseType()
    {
       return baseType;

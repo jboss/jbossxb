@@ -515,7 +515,8 @@ public class RtElementHandler
                      fieldType = fieldType.getComponentType();
                   }
                }
-               else if(arrayItem.getInterceptors().isEmpty())
+               else if(((ElementBinding)term).getType().getInterceptors(arrayItem.getQName()).isEmpty() &&
+                     arrayItem.getInterceptors().isEmpty())
                {
                   QName typeName = ((ElementBinding)term).getType().getQName();
                   throw new JBossXBRuntimeException(

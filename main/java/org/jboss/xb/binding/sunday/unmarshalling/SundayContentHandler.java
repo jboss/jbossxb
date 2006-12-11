@@ -23,6 +23,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
 import javax.xml.namespace.QName;
@@ -170,6 +171,7 @@ public class SundayContentHandler
       QName startName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
       ParticleBinding particle = null;
       ParticleHandler handler = null;
+      TypeBinding parentType = null;
       boolean repeated = false;
       boolean repeatedParticle = false;
       StackItem item = null;
@@ -214,6 +216,7 @@ public class SundayContentHandler
                   if(element.getQName().equals(startName))
                   {
                      particle = item.particle;
+                     parentType = item.parentType;
                      repeated = true;
                      item.reset();
 
@@ -234,10 +237,9 @@ public class SundayContentHandler
                }
                else
                {
-                  ParticleBinding typeParticle = element.getType().getParticle();
-                  ModelGroupBinding modelGroup = typeParticle == null ?
-                     null :
-                     (ModelGroupBinding)typeParticle.getTerm();
+                  parentType = element.getType();
+                  ParticleBinding typeParticle = parentType.getParticle();
+                  ModelGroupBinding modelGroup = typeParticle == null ? null : (ModelGroupBinding)typeParticle.getTerm();
                   if(modelGroup == null)
                   {
                      if(startName.equals(Constants.QNAME_XOP_INCLUDE))
@@ -251,7 +253,7 @@ public class SundayContentHandler
                         TypeBinding xopIncludeType = new TypeBinding(new QName(Constants.NS_XOP_INCLUDE, "Include"));
                         xopIncludeType.setSchemaBinding(schema);
                         xopIncludeType.addAttribute(new QName("href"), anyUriType, DefaultHandlers.ATTRIBUTE_HANDLER);
-                        xopIncludeType.setHandler(new XOPIncludeHandler(element.getType(), schema.getXopUnmarshaller()));
+                        xopIncludeType.setHandler(new XOPIncludeHandler(parentType, schema.getXopUnmarshaller()));
 
                         ElementBinding xopInclude = new ElementBinding(schema, Constants.QNAME_XOP_INCLUDE, xopIncludeType);
 
@@ -266,7 +268,7 @@ public class SundayContentHandler
                         break;
                      }
 
-                     QName typeName = element.getType().getQName();
+                     QName typeName = parentType.getQName();
                      throw new JBossXBRuntimeException((typeName == null ? "Anonymous" : typeName.toString()) +
                         " type of element " +
                         element.getQName() +
@@ -299,7 +301,7 @@ public class SundayContentHandler
 
                         handler = getHandler(modelGroupParticle);
                         o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
-                        push(cursor, o, handler);
+                        push(cursor, o, handler, parentType);
                      }
                      particle = cursor.getCurrentParticle();
                   }
@@ -369,6 +371,7 @@ public class SundayContentHandler
                   }
 
                   // push all except the last one
+                  parentType = item.parentType;
                   Object o = item.o;
                   for(int i = newCursors.size() - 2; i >= 0; --i)
                   {
@@ -377,7 +380,7 @@ public class SundayContentHandler
                      ParticleBinding modelGroupParticle = cursor.getParticle();
                      handler = getHandler(modelGroupParticle);
                      o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
-                     push(cursor, o, handler);
+                     push(cursor, o, handler, parentType);
                   }
                   cursor = (ModelGroupBinding.Cursor)newCursors.get(0);
                   particle = cursor.getCurrentParticle();
@@ -476,19 +479,28 @@ public class SundayContentHandler
             handler = defParticleHandler;
          }
 
+         List localInterceptors = parentType == null ? Collections.EMPTY_LIST : parentType.getInterceptors(startName);         
          List interceptors = element.getInterceptors();
-         if(!interceptors.isEmpty())
+         if(interceptors.size() + localInterceptors.size() > 0)
          {
             if (repeated)
             {
                pop();
             }
 
+            for (int i = 0; i < localInterceptors.size(); ++i)
+            {
+               ElementInterceptor interceptor = (ElementInterceptor) localInterceptors.get(i);
+               parent = interceptor.startElement(parent, startName, type);
+               push(particle, parent, handler, parentType);
+               interceptor.attributes(parent, startName, type, atts, nsRegistry);
+            }
+
             for (int i = 0; i < interceptors.size(); ++i)
             {
                ElementInterceptor interceptor = (ElementInterceptor) interceptors.get(i);
                parent = interceptor.startElement(parent, startName, type);
-               push(startName, particle, parent, handler);
+               push(particle, parent, handler, parentType);
                interceptor.attributes(parent, startName, type, atts, nsRegistry);
             }
 
@@ -546,7 +558,7 @@ public class SundayContentHandler
       }
       else
       {
-         push(startName, particle, o, handler);
+         push(particle, o, handler, parentType);
       }
    }
 
@@ -816,6 +828,9 @@ public class SundayContentHandler
       List interceptors = element.getInterceptors();
       int interceptorsTotal = interceptors.size();
 
+      List localInterceptors = item.parentType == null ? Collections.EMPTY_LIST : item.parentType.getInterceptors(endName);
+      int localInterceptorsTotal = localInterceptors.size();
+
       if(o != NIL)
       {
          //
@@ -945,7 +960,15 @@ public class SundayContentHandler
             for(int i = interceptorsTotal - 1; i >= 0; --i)
             {
                ElementInterceptor interceptor = (ElementInterceptor)interceptors.get(i);
-               interceptor.characters(((StackItem)stack.peek(interceptorsTotal - i)).o,
+               interceptor.characters(((StackItem)stack.peek(interceptorsTotal + localInterceptorsTotal - i)).o,
+                  endName, type, nsRegistry, dataContent
+               );
+            }
+
+            for(int i = localInterceptorsTotal - 1; i >= 0; --i)
+            {
+               ElementInterceptor interceptor = (ElementInterceptor)localInterceptors.get(i);
+               interceptor.characters(((StackItem)stack.peek(localInterceptorsTotal - i)).o,
                   endName, type, nsRegistry, dataContent
                );
             }
@@ -988,7 +1011,7 @@ public class SundayContentHandler
       // setParent
       //
 
-      if(interceptorsTotal == 0)
+      if(localInterceptorsTotal + interceptorsTotal == 0)
       {
          ParticleBinding parentParticle = getParentParticle();
          boolean hasWildcard = false;
@@ -1045,6 +1068,7 @@ public class SundayContentHandler
       else
       {
          StackItem popped = pop();
+
          for(int i = interceptorsTotal - 1; i >= 0; --i)
          {
             ElementInterceptor interceptor = (ElementInterceptor)interceptors.get(i);
@@ -1052,6 +1076,15 @@ public class SundayContentHandler
             interceptor.add(parent, o, endName);
             o = parent;
          }
+
+         for(int i = localInterceptorsTotal - 1; i >= 0; --i)
+         {
+            ElementInterceptor interceptor = (ElementInterceptor)localInterceptors.get(i);
+            parent = pop().o;
+            interceptor.add(parent, o, endName);
+            o = parent;
+         }
+
          // need to have correst endRepeatableParticle events
          stack.push(popped);
       }
@@ -1095,9 +1128,12 @@ public class SundayContentHandler
       }
    }
 
-   private void push(QName qName, ParticleBinding particle, Object o, ParticleHandler handler)
+   private void push(ParticleBinding particle, Object o, ParticleHandler handler, TypeBinding parentType)
    {
-      StackItem item = new StackItem(particle, o, handler);
+      StackItem item = new StackItem(particle);
+      item.o = o;
+      item.handler = handler;
+      item.parentType = parentType;      
       stack.push(item);
       if(trace)
       {
@@ -1106,13 +1142,16 @@ public class SundayContentHandler
          {
             binding = particle.getTerm();
          }
-         log.trace("pushed " + qName + "=" + o + ", binding=" + binding);
+         log.trace("pushed " + ((ElementBinding)particle.getTerm()).getQName() + "=" + o + ", binding=" + binding);
       }
    }
 
-   private void push(ModelGroupBinding.Cursor cursor, Object o, ParticleHandler handler)
+   private void push(ModelGroupBinding.Cursor cursor, Object o, ParticleHandler handler, TypeBinding parentType)
    {
-      StackItem item = new StackItem(cursor, o, handler);
+      StackItem item = new StackItem(cursor);
+      item.o = o;
+      item.handler = handler;
+      item.parentType = parentType;
       stack.push(item);
       if(trace)
       {
@@ -1144,32 +1183,29 @@ public class SundayContentHandler
       final ModelGroupBinding.Cursor cursor;
       final ParticleBinding particle;
       ParticleHandler handler;
+      TypeBinding parentType;
       boolean ignoreCharacters;
       Object o;
       ValueList repeatableParticleValue;
       StringBuffer textContent;
       boolean ended;
 
-      public StackItem(ModelGroupBinding.Cursor cursor, Object o, ParticleHandler handler)
+      public StackItem(ModelGroupBinding.Cursor cursor)
       {
          if (cursor == null)
             throw new IllegalArgumentException("Null cursor");
          // this is modelgroup particle
          this.cursor = cursor;
          this.particle = cursor.getParticle();
-         this.o = o;
-         this.handler = handler;
       }
 
-      public StackItem(ParticleBinding particle, Object o, ParticleHandler handler)
+      public StackItem(ParticleBinding particle)
       {
          if (particle == null)
             throw new IllegalArgumentException("Null particle");
          // this is element particle
          this.cursor = null;
          this.particle = particle;
-         this.o = o;
-         this.handler = handler;
       }
 
       void reset()

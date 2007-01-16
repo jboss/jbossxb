@@ -1140,7 +1140,7 @@ public final class SimpleTypeBindings
       else if(typeCode == XS_DATETIME)
       {
          Calendar c;
-         if(value.getClass() == java.util.Date.class)
+         if(java.util.Date.class.isAssignableFrom(value.getClass()))
          {
             c = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
             c.clear();

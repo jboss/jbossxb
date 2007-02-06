@@ -1091,6 +1091,7 @@ public class SundayContentHandler
 
       if(stack.size() == 1)
       {
+         o = type.getValueAdapter().cast(o, Object.class);
          root = o;
          stack.clear();
       }

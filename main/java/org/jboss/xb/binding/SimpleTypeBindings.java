@@ -1409,31 +1409,31 @@ public final class SimpleTypeBindings
       }
 
       QName result = null;
-      if(Integer.class == cls)
+      if(Integer.class == cls || Integer.TYPE == cls)
       {
          result = Constants.QNAME_INT;
       }
-      else if(cls == Long.class)
+      else if(cls == Long.class || Long.TYPE == cls)
       {
          result = Constants.QNAME_LONG;
       }
-      else if(cls == Short.class)
+      else if(cls == Short.class || Short.TYPE == cls)
       {
          result = Constants.QNAME_SHORT;
       }
-      else if(cls == Byte.class)
+      else if(cls == Byte.class || Byte.TYPE == cls)
       {
          result = Constants.QNAME_BYTE;
       }
-      else if(cls == Float.class)
+      else if(cls == Float.class || Float.TYPE == cls)
       {
          result = Constants.QNAME_FLOAT;
       }
-      else if(cls == Double.class)
+      else if(cls == Double.class || Double.TYPE == cls)
       {
          result = Constants.QNAME_DOUBLE;
       }
-      else if(cls == Boolean.class)
+      else if(cls == Boolean.class || Boolean.TYPE == cls)
       {
          result = Constants.QNAME_BOOLEAN;
       }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.jboss.org/test/xml/topLevelValueAdapter"
+            xmlns="http://www.jboss.org/test/xml/topLevelValueAdapter"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified"
+            version="1.0">
+
+   <xsd:element name="top">
+      <xsd:complexType>
+         <xsd:simpleContent>
+            <xsd:extension base="xsd:string"/>
+         </xsd:simpleContent>
+      </xsd:complexType>
+   </xsd:element>
+   
+</xsd:schema>

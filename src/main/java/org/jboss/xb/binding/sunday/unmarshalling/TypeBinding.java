@@ -296,6 +296,11 @@ public class TypeBinding
       return charactersHandler;
    }
 
+   public void setCharactersHandler(CharactersHandler charactersHandler)
+   {
+      this.charactersHandler = charactersHandler;
+   }
+   
    /**
     * This method will create a new simple type binding with the passed in characters handler
     * and set this simple type as the simple type of the complex type the method was invoked on.

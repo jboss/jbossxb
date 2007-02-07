@@ -61,6 +61,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
       addSchema("urn:jboss:javabean:1.0", "org.jboss.javabean.plugins.xml.JavaBeanSchemaInitializer", Boolean.FALSE);
       addSchema("urn:jboss:javabean:2.0", "org.jboss.javabean.plugins.xml.JavaBeanSchemaInitializer20", Boolean.FALSE);
       addSchema("urn:jboss:spring-beans:2.0", "org.jboss.spring.deployment.xml.SpringSchemaInitializer", Boolean.FALSE);
+      addSchema("urn:jboss:policy:1.0", "org.jboss.kernel.plugins.deployment.xml.PolicySchemaInitializer", Boolean.FALSE);
    }
 
    public SchemaBindingResolver getSchemaBindingResolver()

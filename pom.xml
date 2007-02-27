@@ -133,9 +133,9 @@
       <version>1.0</version>
     </dependency>
     <dependency>
-      <groupId>jboss.common.core</groupId>
-      <artifactId>jboss-common-core</artifactId>
-      <version>1.0</version>
+      <groupId>jboss</groupId>
+      <artifactId>jboss-common</artifactId>
+      <version>1.0.4.GA</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

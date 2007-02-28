@@ -113,16 +113,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>jboss.logging</groupId>
-      <artifactId>jboss-logging-spi</artifactId>
-      <version>1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>jboss.logging.log4j</groupId>
-      <artifactId>jboss-logging-log4j</artifactId>
-      <version>1.0</version>
-    </dependency>
-    <dependency>
       <groupId>jboss</groupId>
       <artifactId>jboss-common</artifactId>
       <version>1.0.4.GA</version>

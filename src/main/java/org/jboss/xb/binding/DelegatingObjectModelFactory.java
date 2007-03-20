@@ -21,6 +21,7 @@
   */
 package org.jboss.xb.binding;
 
+import org.jboss.util.StringPropertyReplacer;
 import org.xml.sax.Attributes;
 
 import java.lang.reflect.Method;
@@ -28,9 +29,11 @@ import java.util.Map;
 import java.util.HashMap;
 
 /**
- * todo come up with a nicer class name
+ * GenericObjectModelFactory that delegates to a ObjectModelFactory
+ * using reflection.
  *
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @author Scott.Stark@jboss.org
  * @version <tt>$Revision$</tt>
  */
 public class DelegatingObjectModelFactory
@@ -38,10 +41,12 @@ public class DelegatingObjectModelFactory
 {
    private final ObjectModelFactory typedFactory;
    private final Map addMethodsByParent = new HashMap();
+   private boolean replaceProps;
 
    public DelegatingObjectModelFactory(ObjectModelFactory typedFactory)
    {
       this.typedFactory = typedFactory;
+      replaceProps = isReplacePropertyRefs(typedFactory);
 
       Method[] methods = typedFactory.getClass().getMethods();
       for(int i = 0; i < methods.length; ++i)
@@ -165,6 +170,9 @@ public class DelegatingObjectModelFactory
       // invoke the setValue method
       if (method != null)
       {
+         // property replacement
+         if( replaceProps )
+            value = StringPropertyReplacer.replaceProperties(value);
          Object[] objects = new Object[] { o, navigator, namespaceURI, localName, value };
          ObjectModelBuilder.invokeFactory(typedFactory, method, objects);
       }
@@ -173,6 +181,33 @@ public class DelegatingObjectModelFactory
    public Object completeRoot(Object root, UnmarshallingContext navigator, String namespaceURI, String localName)
    {
       return root;
+   }
+
+   /**
+    * Check whether gactory supports a boolean isReplacePropertyRefs()
+    * method that determins if property replacement is done.
+    * @return isReplacePropertyRefs value if found, true otherwise to
+    * default replacement to true.
+    */
+   static boolean isReplacePropertyRefs(ObjectModelFactory factory)
+   {
+      boolean replace = true;
+      try
+      {
+         Class[] sig = {};
+         Method isReplace = factory.getClass().getMethod("isReplacePropertyRefs", sig);
+         if( Boolean.class.isAssignableFrom(isReplace.getReturnType()))
+         {
+            Object[] args = {};
+            Boolean flag = (Boolean) isReplace.invoke(factory, args);
+            replace = flag.booleanValue();
+         }
+      }
+      catch(Exception e)
+      {
+         // Ignore
+      }
+      return replace;
    }
 
    // Inner
@@ -213,7 +248,8 @@ public class DelegatingObjectModelFactory
             {
                return method;
             }
-            else if(param.isAssignableFrom(child) && (closestParam == null || closestParam.isAssignableFrom(param)))
+            else if(param.isAssignableFrom(child)
+                  && (closestParam == null || closestParam.isAssignableFrom(param)))
             {
                closestParam = param;
                closestMethod = method;

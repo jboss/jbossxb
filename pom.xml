@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
     <groupId>jboss</groupId>
     <artifactId>jboss-parent</artifactId>
@@ -8,10 +7,13 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>jbossxb</artifactId>
   <packaging>jar</packaging>
-  <version>2.0.0.CR2</version>
+  <version>2.0.0.CR3</version>
   <name>JBoss XML Binding</name>
   <url>http://www.jboss.org</url>
   <description>JBoss XML Binding</description>
+  <scm>
+    <connection>scm:svn:https://svn.jboss.org/repos/common/jbossxb/tags/2.0.0.CR3</connection>
+  </scm>
   <repositories>
     <repository>
       <id>jboss</id>
@@ -40,13 +42,21 @@
         </configuration>
       </plugin>  
       <plugin>
+        <artifactId>maven-release-plugin</artifactId>
+        <configuration>
+          <!-- The tagBase property is needed during the release process so that the maven release plugin
+            will create the release tag in the appropriate location. -->
+          <tagBase>https://svn.jboss.org/repos/common/jbossxb/tags</tagBase>
+        </configuration>
+      </plugin>
+      <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <printSummary>true</printSummary>
           <disableXmlReport>false</disableXmlReport>
           <testFailureIgnore>true</testFailureIgnore>
           <includes>
-            <include>**/**TestCase.java</include>
+            <include>**/*TestCase.java</include>
           </includes>
           <forkMode>pertest</forkMode> <!-- required to correctly run the PojoServer tests -->
         </configuration>
@@ -60,20 +70,20 @@
   <dependencies>
     <dependency>
       <groupId>jboss</groupId>
-      <artifactId>jboss-logging-spi</artifactId>
-      <version>2.0.2.GA</version>
+      <artifactId>jboss-common-logging-spi</artifactId>
+      <version>2.0.4.GA</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>jboss</groupId>
-      <artifactId>jboss-logging-log4j</artifactId>
-      <version>2.0.2.GA</version>
+      <artifactId>jboss-common-logging-log4j</artifactId>
+      <version>2.0.4.GA</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>jboss</groupId>
       <artifactId>jboss-common-core</artifactId>
-      <version>2.0.2.GA</version>
+      <version>2.0.4.GA</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

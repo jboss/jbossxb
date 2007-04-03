@@ -1,5 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>jboss</groupId>
+    <artifactId>jboss-parent</artifactId>
+    <version>1</version>
+  </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>jboss.jbossxb</groupId>
   <artifactId>jbossxb</artifactId>
@@ -30,93 +35,38 @@
       </snapshots>
     </repository>
   </repositories>
-
-  <pluginRepositories>
-     <pluginRepository>
-        <id>jbosspluginrepo</id>
-        <name>jboss plugin repository</name>
-        <url>http://repository.jboss.com/maven2</url>
-        <layout>default</layout>
-        <snapshots>
-           <enabled>false</enabled>
-           <updatePolicy>never</updatePolicy>
-        </snapshots>
-     </pluginRepository>
-      <pluginRepository>
-        <id>central</id>
-        <name>LSU maven2 mirror</name>
-        <url>http://ibiblio.lsu.edu/main/pub/packages/maven2</url>
-        <layout>default</layout>
-        <snapshots>
-           <enabled>false</enabled>
-           <updatePolicy>never</updatePolicy>
-        </snapshots>
-     </pluginRepository>
-  </pluginRepositories>
-
   
   <build>
-     <sourceDirectory>src/main/java</sourceDirectory>
-  <plugins>
-  
+    <finalName>jboss-xml-binding</finalName>
+    <plugins>
       <!-- define how we want compilation to take place
-           here, we accept most of the defaults but say that we want the
-           optimization flag set, and define the source and target to be 1.4,
-           these setting will be inherited by child projects -->
+        here, we accept most of the defaults but say that we want the
+        optimization flag set, and define the source and target to be 1.4,
+        these setting will be inherited by child projects -->
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>2.0</version>
-          <configuration>
-              <optimize>true</optimize>
-              <source>1.4</source>
-              <target>1.4</target>
-          </configuration>
-      </plugin>  
-
-      <!-- define that we wish to create src jars -->
-      <plugin>
-        <artifactId>maven-source-plugin</artifactId>
-        <inherited>true</inherited>
-       <executions>
-        <execution>
-          <goals>
-            <goal>jar</goal>
-          </goals>
-        </execution>
-      </executions>
-      </plugin>     
-      
-      <!-- describe the jarring process -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <executions>
-           <execution>
-              <goals>
-                 <goal>jar</goal>
-              </goals>
-           </execution>
-        </executions>
         <configuration>
-           <jarName>jboss-xml-binding</jarName>
+          <optimize>true</optimize>
+          <source>1.4</source>
+          <target>1.4</target>
         </configuration>
-     </plugin>
-
+      </plugin>  
       <plugin>
-         <artifactId>maven-surefire-plugin</artifactId>
-         <configuration>
-            <printSummary>true</printSummary>
-            <disableXmlReport>false</disableXmlReport>
-            <testFailureIgnore>true</testFailureIgnore>
-            <includes>
-               <include>**/**TestCase.java</include>
-            </includes>
-            <forkMode>pertest</forkMode> <!-- required to correctly run the PojoServer tests -->
-         </configuration>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <printSummary>true</printSummary>
+          <disableXmlReport>false</disableXmlReport>
+          <testFailureIgnore>true</testFailureIgnore>
+          <includes>
+            <include>**/**TestCase.java</include>
+          </includes>
+          <forkMode>pertest</forkMode> <!-- required to correctly run the PojoServer tests -->
+        </configuration>
       </plugin>    
       <plugin>
-         <groupId>org.apache.maven.plugins</groupId>
-         <artifactId>maven-surefire-report-plugin</artifactId>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-report-plugin</artifactId>
       </plugin>    
     </plugins>
   </build>
@@ -181,6 +131,12 @@
       <scope>test</scope>
     </dependency>
   </dependencies>  
-
+  <distributionManagement>
+    <repository>
+      <id>cvs-file-repository</id>
+      <!-- Set maven.cvs.root in your settings.xml -->
+      <url>file://${maven.cvs.root}</url>
+    </repository>
+  </distributionManagement>
 </project>
 

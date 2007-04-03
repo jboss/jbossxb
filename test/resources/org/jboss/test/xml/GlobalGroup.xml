@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<parent xmlns='http://www.jboss.org/test/xml/globalGroup'>
-   <child>Hello</child>
-   <child>Goodbye</child>
-</parent>

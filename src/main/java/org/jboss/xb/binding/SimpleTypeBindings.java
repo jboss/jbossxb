@@ -1723,7 +1723,7 @@ public final class SimpleTypeBindings
     */
    public static String marshalDate(Calendar value)
    {
-      String result = String.valueOf(value.get(Calendar.YEAR));
+      String result = marshalInt(value.get(Calendar.YEAR), 4);
       result += '-';
       result += marshalInt(value.get(Calendar.MONTH) + 1, 2);
       result += '-';

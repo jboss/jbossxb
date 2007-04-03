@@ -28,10 +28,12 @@ import org.jboss.xb.binding.SimpleTypeBindings;
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.Collections;
 import java.util.List;
 import java.util.Arrays;
+import java.util.TimeZone;
 import java.math.BigInteger;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -393,6 +395,14 @@ public class SimpleTypeBindingUnitTestCase
       assertEquals(0, cal.get(Calendar.MILLISECOND));
    }
 
+   public void testDateMarshalling() throws Exception
+   {
+      Calendar c = new GregorianCalendar(6,5,1,10,0,0);
+      c.setTimeZone(TimeZone.getTimeZone("GMT"));
+      String marshalled = SimpleTypeBindings.marshalDate(c);
+      assertEquals("0006-06-01Z", marshalled);
+   }
+   
    public void testHexBinary() throws Exception
    {
       String s = "kloop";

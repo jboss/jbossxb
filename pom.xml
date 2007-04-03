@@ -9,7 +9,7 @@
   <groupId>jboss.jbossxb</groupId>
   <artifactId>jbossxb</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.0.CR10</version>
+  <version>1.0.0.SNAPSHOT</version>
   <name>JBoss XML Binding</name>
   <url>http://www.jboss.org</url>
   <description>JBoss XML Binding</description>

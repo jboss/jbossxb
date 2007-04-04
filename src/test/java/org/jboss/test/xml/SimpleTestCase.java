@@ -76,6 +76,28 @@ public class SimpleTestCase
       unmarshalBook("book-dtd.xml", factory);
    }
 
+   public void testUnmarshalBooks2Dtd() throws Exception
+   {
+      // create an object model factory
+      String xmlSource = "books2-dtd.xml";
+      ObjectModelFactory factory = new BookObjectFactory();
+      log.debug("<test-unmarshal-" + xmlSource + '>');
+
+      // get the XML stream
+      URL xmlUrl = getResourceUrl("xml/book/" + xmlSource);
+
+      // create unmarshaller
+      Unmarshaller unmarshaller = getBookUnmarshaller();
+      unmarshaller.setValidation(false);
+
+      // let the object model factory to create an instance of Book and populate it with data from XML
+      Book book = (Book)unmarshaller.unmarshal(xmlUrl.openStream(), factory, null);
+
+      checkUnmarshalledBook(book);
+
+      log.debug("</test-unmarshal-" + xmlSource + '>');
+   }
+
    public void testUnmarshalBookXs() throws Exception
    {
       // create an object model factory
@@ -296,6 +318,10 @@ public class SimpleTestCase
                   if(systemId.endsWith("books.dtd"))
                   {
                      return new InputSource(getResource("xml/book/books.dtd"));
+                  }
+                  if(systemId.endsWith("books2.dtd"))
+                  {
+                     return new InputSource(getResource("xml/book/books2.dtd"));
                   }
                   return null;
                }

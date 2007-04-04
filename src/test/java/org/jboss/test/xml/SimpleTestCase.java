@@ -30,6 +30,10 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Iterator;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
 import org.jboss.logging.Logger;
 import org.jboss.test.xml.book.Book;
 import org.jboss.test.xml.book.BookCharacter;
@@ -52,15 +56,17 @@ import org.jboss.xb.binding.XercesXsMarshaller;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import junit.framework.TestCase;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
+ * @author Scott.Stark@jboss.org
  * @version <tt>$Revision: 43309 $</tt>
  */
 public class SimpleTestCase
-   extends TestCase
+   extends AbstractJBossXBTest
 {
    private static final Logger log = Logger.getLogger(SimpleTestCase.class);
 
@@ -76,6 +82,54 @@ public class SimpleTestCase
       unmarshalBook("book-dtd.xml", factory);
    }
 
+   /**
+    * Test that parser validation can be disabled to parse a non-conforming doc
+    * @throws Exception
+    */
+   public void testParserValidationFeature()
+      throws Exception
+   {
+      SAXParserFactory saxFactory = SAXParserFactory.newInstance();
+      saxFactory.setValidating(true);
+      saxFactory.setNamespaceAware(true);
+      saxFactory.setXIncludeAware(true);
+      //
+      SAXParser parser = saxFactory.newSAXParser();
+      log.debug("Created parser: "+parser
+            + ", isNamespaceAware: "+parser.isNamespaceAware()
+            + ", isValidating: "+parser.isValidating()
+            + ", isXIncludeAware: "+parser.isXIncludeAware()
+            );
+      XMLReader reader = parser.getXMLReader();
+      // Both these features need to be false
+      reader.setFeature(Unmarshaller.VALIDATION, false);
+      reader.setFeature(Unmarshaller.DYNAMIC_VALIDATION, false);
+      reader.setEntityResolver(new BooksEntityResolver());
+      assertFalse(parser.isValidating());
+      URL xmlUrl = getResource("/xml/book/books2-dtd.xml");
+      log.debug("parsing: "+xmlUrl);
+      parser.parse(xmlUrl.openStream(), new DefaultHandler()
+         {
+            @Override
+            public void error(SAXParseException e) throws SAXException
+            {
+               throw e;
+            }
+   
+            @Override
+            public void fatalError(SAXParseException e) throws SAXException
+            {
+               throw e;
+            }
+         }
+      );
+   }
+
+   /**
+    * Test that one can disable validation to parse a doc that does not
+    * conform to its dtd
+    * @throws Exception
+    */
    public void testUnmarshalBooks2Dtd() throws Exception
    {
       // create an object model factory
@@ -84,7 +138,7 @@ public class SimpleTestCase
       log.debug("<test-unmarshal-" + xmlSource + '>');
 
       // get the XML stream
-      URL xmlUrl = getResourceUrl("xml/book/" + xmlSource);
+      URL xmlUrl = getResource("/xml/book/" + xmlSource);
 
       // create unmarshaller
       Unmarshaller unmarshaller = getBookUnmarshaller();
@@ -123,7 +177,8 @@ public class SimpleTestCase
       StringWriter xmlOutput = new StringWriter();
 
       // get the DTD source
-      InputStream is = getResource("xml/book/books.dtd");
+      URL dtdURL = getResource("/xml/book/books.dtd");
+      InputStream is = dtdURL.openStream();
       Reader dtdReader = new InputStreamReader(is);
 
       // create an instance of DTD marshaller
@@ -178,7 +233,8 @@ public class SimpleTestCase
       StringWriter xmlOutput = new StringWriter();
 
       // get the DTD source
-      InputStream is = getResource("xml/book/books.dtd");
+      URL dtdURL = getResource("/xml/book/books.dtd");
+      InputStream is = dtdURL.openStream();
       Reader dtdReader = new InputStreamReader(is);
 
       // create an instance of DTD marshaller
@@ -236,7 +292,7 @@ public class SimpleTestCase
       ObjectModelProvider provider = new BookObjectProvider();
 
       // marshall Book instance passing it as an argument instead of using the one that is returned by the BookObjectProvider
-      marshaller.marshal(getResourceUrl("xml/book/books.xsd").toString(), provider, book, xmlOutput);
+      marshaller.marshal(getResource("/xml/book/books.xsd").toString(), provider, book, xmlOutput);
 
       String xml = xmlOutput.getBuffer().toString();
       if(log.isTraceEnabled())
@@ -251,7 +307,7 @@ public class SimpleTestCase
       log.debug("<test-unmarshal-" + xmlSource + '>');
 
       // get the XML stream
-      URL xmlUrl = getResourceUrl("xml/book/" + xmlSource);
+      URL xmlUrl = getResource("/xml/book/" + xmlSource);
 
       // create unmarshaller
       Unmarshaller unmarshaller = getBookUnmarshaller();
@@ -310,23 +366,7 @@ public class SimpleTestCase
    private static Unmarshaller getBookUnmarshaller() throws JBossXBException
    {
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
-      unmarshaller.setEntityResolver(
-            new EntityResolver()
-            {
-               public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException
-               {
-                  if(systemId.endsWith("books.dtd"))
-                  {
-                     return new InputSource(getResource("xml/book/books.dtd"));
-                  }
-                  if(systemId.endsWith("books2.dtd"))
-                  {
-                     return new InputSource(getResource("xml/book/books2.dtd"));
-                  }
-                  return null;
-               }
-            }
-         );
+      unmarshaller.setEntityResolver(new BooksEntityResolver());
       return unmarshaller;
    }
 
@@ -353,23 +393,27 @@ public class SimpleTestCase
       return book;
    }
 
-   private static InputStream getResource(String name)
+   private static InputStream getResourceStream(String name)
+      throws IOException
    {
-      InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(name);
-      if(is == null)
-      {
-         throw new IllegalStateException("Resource not found: " + name);
-      }
-      return is;
+      URL resURL = findResource(SimpleTestCase.class, name);
+      return resURL.openStream();
    }
-
-   private static URL getResourceUrl(String name)
+   private static class BooksEntityResolver implements EntityResolver
    {
-      URL url = Thread.currentThread().getContextClassLoader().getResource(name);
-      if(url == null)
+      public InputSource resolveEntity(String publicId, String systemId)
+         throws SAXException, IOException
       {
-         throw new IllegalStateException("Resource not found: " + name);
-      }
-      return url;
+         log.debug("resolveEntity, publicId: "+publicId+", systemId: "+systemId);
+         if(systemId.endsWith("books.dtd"))
+         {
+            return new InputSource(getResourceStream("/xml/book/books.dtd"));
+         }
+         if(systemId.endsWith("books2.dtd"))
+         {
+            return new InputSource(getResourceStream("/xml/book/books2.dtd"));
+         }
+         return null;
+      }      
    }
 }

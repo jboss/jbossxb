@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE book PUBLIC "-//DTD Books//EN" "resources/xml/book/books.dtd">
+<!DOCTYPE book PUBLIC "-//DTD Books//EN" "target/test-classes/xml/book/books.dtd">
 
 <book isbn="0836217462">
    <title>Being a Dog Is a Full-Time Job</title>

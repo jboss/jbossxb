@@ -4,7 +4,7 @@
    isbn="0836217462"
    xmlns="http://example.org/ns/books/"
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://example.org/ns/books/ resources/xml/book/books.xsd">
+   xsi:schemaLocation="http://example.org/ns/books/ target/test-classes/xml/book/book/books.xsd">
 
    <title>Being a Dog Is a Full-Time Job</title>
    <author>Charles M. Schulz</author>

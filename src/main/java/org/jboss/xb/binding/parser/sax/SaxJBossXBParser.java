@@ -59,6 +59,7 @@ public class SaxJBossXBParser
       enableXInclude();
    }
 
+   private final SAXParser parser;
    private final XMLReader reader;
    private JBossXBParser.ContentHandler contentHandler;
    private DelegatingContentHandler delegateHandler;
@@ -86,10 +87,14 @@ public class SaxJBossXBParser
    public SaxJBossXBParser()
       throws JBossXBException
    {
-      SAXParser parser;
       try
       {
          parser = saxFactory.newSAXParser();
+         log.debug("Created parser: "+parser
+               + ", isNamespaceAware: "+parser.isNamespaceAware()
+               + ", isValidating: "+parser.isValidating()
+               + ", isXIncludeAware: "+parser.isXIncludeAware()
+               );
       }
       catch(Exception e)
       {
@@ -153,6 +158,7 @@ public class SaxJBossXBParser
       try
       {
          reader.setFeature(name, value);
+         log.debug(name+" set to: "+reader.getFeature(name));
       }
       catch(SAXException e)
       {
@@ -166,6 +172,11 @@ public class SaxJBossXBParser
       trace = log.isTraceEnabled();
       try
       {
+         log.debug("Using parser: "+parser
+               + ", isNamespaceAware: "+parser.isValidating()
+               + ", isValidating: "+parser.isValidating()
+               + ", isXIncludeAware: "+parser.isXIncludeAware()
+               );
          reader.parse(systemId);
       }
       catch(Exception e)
@@ -180,6 +191,11 @@ public class SaxJBossXBParser
       trace = log.isTraceEnabled();
       try
       {
+         log.debug("Using parser: "+parser
+               + ", isNamespaceAware: "+parser.isValidating()
+               + ", isValidating: "+parser.isValidating()
+               + ", isXIncludeAware: "+parser.isXIncludeAware()
+               );
          reader.parse(new InputSource(is));
       }
       catch(Exception e)
@@ -194,6 +210,11 @@ public class SaxJBossXBParser
       trace = log.isTraceEnabled();
       try
       {
+         log.debug("Using parser: "+parser
+               + ", isNamespaceAware: "+parser.isValidating()
+               + ", isValidating: "+parser.isValidating()
+               + ", isXIncludeAware: "+parser.isXIncludeAware()
+               );
          this.reader.parse(new InputSource(reader));
       }
       catch(Exception e)

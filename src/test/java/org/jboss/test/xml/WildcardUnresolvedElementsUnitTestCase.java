@@ -58,17 +58,18 @@ import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
-import org.jboss.xb.util.Dom2Sax;
+import org.jboss.xb.util.DomCharactersHandler;
+import org.jboss.xb.util.DomLocalMarshaller;
+import org.jboss.xb.util.DomParticleHandler;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
 import org.w3c.dom.ls.LSInput;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
+
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -190,25 +191,7 @@ public class WildcardUnresolvedElementsUnitTestCase
    private void setupDomMarshaller(AbstractMarshaller marshaller)
    {
       marshaller.mapClassToGlobalElement(ArrayOfAny.class, "e", "http://org.jboss.ws/jbws434/types", null, null);
-      marshaller.mapFieldToWildcard(ArrayOfAny.class, "_any",
-         new ObjectLocalMarshaller()
-         {
-            public void marshal(MarshallingContext ctx, Object o)
-            {
-               Element e = (Element)o;
-               
-               ContentHandler ch = ctx.getContentHandler();
-               try
-               {
-                  Dom2Sax.dom2sax(e, ch);
-               }
-               catch (SAXException e1)
-               {
-                  throw new JBossXBRuntimeException("Failed to SAX the DOM");
-               }
-            }
-         }
-      );
+      marshaller.mapFieldToWildcard(ArrayOfAny.class, "_any", DomLocalMarshaller.INSTANCE);
    }
 
    private void setupGeMarshaller(AbstractMarshaller marshaller)
@@ -291,8 +274,8 @@ public class WildcardUnresolvedElementsUnitTestCase
       }
       else
       {
-         unresolvedElementHandler = new DomElementHandler();
-         unresolvedCharactersHandler = new DomCharactersHandler();
+         unresolvedElementHandler = DomParticleHandler.INSTANCE;
+         unresolvedCharactersHandler = DomCharactersHandler.INSTANCE;
       }
 
       wildcard.setUnresolvedElementHandler(unresolvedElementHandler);
@@ -924,101 +907,6 @@ public class WildcardUnresolvedElementsUnitTestCase
          {
             super.setParent(parent, o, elementName, particle, parentParticle);
          }
-      }
-   }
-
-   public static class DomCharactersHandler
-      extends CharactersHandler
-   {
-      public Object unmarshalEmpty(QName qName,
-                                   TypeBinding typeBinding,
-                                   NamespaceContext nsCtx,
-                                   ValueMetaData valueMetaData)
-      {
-         return "";
-      }
-
-      public Object unmarshal(QName qName,
-                              TypeBinding typeBinding,
-                              NamespaceContext nsCtx,
-                              ValueMetaData valueMetaData,
-                              String value)
-      {
-         return value;
-      }
-
-      public void setValue(QName qName, ElementBinding element, Object owner, Object value)
-      {
-         Element e = (Element)owner;
-         Text textNode = e.getOwnerDocument().createTextNode((String)value);
-         e.appendChild(textNode);
-      }
-   }
-
-   public static class DomElementHandler
-      extends RtElementHandler
-      implements ParticleHandler
-   {
-      private Document doc;
-
-      public Object startParticle(Object parent,
-                                  QName elementName,
-                                  ParticleBinding particle,
-                                  Attributes attrs,
-                                  NamespaceContext nsCtx)
-      {
-         Document doc = getDocument();
-         Element element = doc.createElementNS(elementName.getNamespaceURI(), elementName.getLocalPart());
-
-         if(attrs != null)
-         {
-            for(int i = 0; i < attrs.getLength(); ++i)
-            {
-               element.setAttribute(attrs.getLocalName(i), attrs.getValue(i));
-            }
-         }
-         
-         return element;
-      }
-
-      public Object endParticle(Object o, QName elementName, ParticleBinding particle)
-      {
-         return o;
-      }
-
-      public void setParent(Object parent,
-                            Object o,
-                            QName elementName,
-                            ParticleBinding particle,
-                            ParticleBinding parentParticle)
-      {
-         if(parent instanceof Element)
-         {
-            ((Element)parent).appendChild((Element)o);
-         }
-         else
-         {
-            super.setParent(parent, o, elementName, particle, parentParticle);
-         }
-      }
-
-      private Document getDocument()
-      {
-         if(doc == null)
-         {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder domBuilder = null;
-            try
-            {
-               domBuilder = factory.newDocumentBuilder();
-            }
-            catch(ParserConfigurationException e)
-            {
-               throw new JBossXBRuntimeException("Failed to create document builder instance", e);
-            }
-            doc = domBuilder.newDocument();
-         }
-         return doc;
       }
    }
 }

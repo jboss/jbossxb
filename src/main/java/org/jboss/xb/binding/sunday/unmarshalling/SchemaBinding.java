@@ -34,6 +34,10 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.jboss.xb.binding.metadata.PackageMetaData;
+import org.jboss.xb.util.DomCharactersHandler;
+import org.jboss.xb.util.DomLocalMarshaller;
+import org.jboss.xb.util.DomParticleHandler;
+
 
 /**
  * A SchemaBinding is a collection of binding objects (TypeBinding,
@@ -382,6 +386,47 @@ public class SchemaBinding
    public void setXopMarshaller(XOPMarshaller xopMarshaller)
    {
       this.xopMarshaller = xopMarshaller;
+   }
+
+   public void setUnresolvedContentBoundToDOM(boolean toDom)
+   {
+      TypeBinding type = getType(Constants.QNAME_ANYTYPE);
+      if(type == null)
+      {
+         // ignore, there is no use of the anyType in the schema
+         return;
+         //throw new JBossXBRuntimeException("anyType is not bound.");
+      }
+
+      WildcardBinding wildcard = type.getWildcard();
+      if(toDom)
+      {
+         wildcard.setUnresolvedCharactersHandler(DomCharactersHandler.INSTANCE);
+         wildcard.setUnresolvedElementHandler(DomParticleHandler.INSTANCE);
+         wildcard.setUnresolvedMarshaller(DomLocalMarshaller.INSTANCE);
+      }
+      else
+      {
+         wildcard.setUnresolvedCharactersHandler(null);
+         wildcard.setUnresolvedElementHandler(null);
+         wildcard.setUnresolvedMarshaller(null);
+      }
+   }
+   
+   public boolean isUnresolvedContentBoundToDOM()
+   {
+      TypeBinding type = getType(Constants.QNAME_ANYTYPE);
+      if(type == null)
+      {
+         // there is no use of the anyType in the schema
+         return false;
+         //throw new JBossXBRuntimeException("anyType is not bound.");
+      }
+
+      WildcardBinding wildcard = type.getWildcard();
+      return wildcard.getUnresolvedCharactersHandler() instanceof DomCharactersHandler
+      && wildcard.getUnresolvedElementHandler() instanceof DomParticleHandler
+      && wildcard.getUnresolvedMarshaller() instanceof DomLocalMarshaller;
    }
 
    void addElementParticle(ParticleBinding particle)

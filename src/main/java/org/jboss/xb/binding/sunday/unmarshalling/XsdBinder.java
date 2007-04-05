@@ -76,8 +76,15 @@ public class XsdBinder
 {
    static final Logger log = Logger.getLogger(XsdBinder.class);
 
-   private XsdBinder()
+   /**
+    * Creates a new instance of the binder the user can use to tune
+    * configuration before parsing the XSD.
+    * 
+    * @return  a new instance of the XsdBinder
+    */
+   public static XsdBinder newInstance()
    {
+     return new XsdBinder();
    }
 
    /**
@@ -237,6 +244,160 @@ public class XsdBinder
 
    public static SchemaBinding bind(XSModel model, SchemaBindingResolver resolver, boolean processAnnotations)
    {
+      XsdBinder binder = new XsdBinder();
+      binder.setProcessAnnotations(processAnnotations);
+      binder.setSchemaResolver(resolver);
+      return binder.parse(model);
+   }
+
+   /**
+    * @param schema schema binding the type should be added to
+    * @param type   type definition to be bound
+    * @deprecated <i>This method is added temporary to get anonymous type binding working in JBossWS.
+    *             It will be removed when anonymous type binding in JBossWS is implemented properly.
+    *             No one else should use this method.</i>
+    *
+    *             <p>This method binds a type definition and adds it as a global type to the passed in schema binding.
+    */
+   public static void bindType(SchemaBinding schema, XSTypeDefinition type)
+   {
+      TypeBinding typeBinding = bindType(new Context(schema), type);
+      schema.addType(typeBinding);
+   }
+
+   /**
+    * @param schema             schema binding the type should be added to
+    * @param element            element declaration to be bound
+    * @param minOccurs
+    * @param maxOccurs
+    * @param maxOccursUnbounded
+    * @deprecated <i>This method is added temporary to get anonymous type binding working in JBossWS.
+    *             It will be removed when anonymous type binding in JBossWS is implemented properly.
+    *             No one else should use this method.</i>
+    *
+    *             <p>This method binds an element declaration and adds it as a global element to the passed in schema binding.
+    */
+   public static void bindElement(SchemaBinding schema,
+                                  XSElementDeclaration element,
+                                  int minOccurs,
+                                  int maxOccurs,
+                                  boolean maxOccursUnbounded)
+   {
+      ParticleBinding particle = bindElement(new Context(schema),
+         element,
+         minOccurs,
+         maxOccurs,
+         maxOccursUnbounded
+      );
+      schema.addElementParticle(particle);
+   }
+
+   // Exposed attributes
+   
+   private boolean processAnnotations = true;
+   private SchemaBindingResolver resolver;
+   private boolean simpleContentWithIdAsSimpleType = true;
+   private boolean unresolvedContentBoundToDOM = true;
+   
+   // Internal attributes
+   
+   private boolean trace = log.isTraceEnabled();
+   private final SchemaBinding schema;
+   private SharedElements sharedElements = new SharedElements();
+   private final List typeGroupStack = new ArrayList();
+
+   // Ctors
+   
+   private XsdBinder()
+   {
+      this(new SchemaBinding());
+   }
+
+   private XsdBinder(SchemaBinding schema)
+   {
+      this.schema = schema;
+   }
+
+   // Public
+   
+   public void setProcessAnnotations(boolean processAnnotations)
+   {
+      this.processAnnotations = processAnnotations;
+   }
+
+   public boolean isProcessAnnotations()
+   {
+      return processAnnotations;
+   }
+
+   public void setSchemaResolver(SchemaBindingResolver resolver)
+   {
+      this.resolver = resolver;
+   }
+
+   public SchemaBindingResolver getSchemaResolver()
+   {
+      return resolver;
+   }
+
+   public void setSimpleContentWithIdAsSimpleType(boolean simpleContentWithIdAsSimpleType)
+   {
+      this.simpleContentWithIdAsSimpleType = simpleContentWithIdAsSimpleType;
+   }
+
+   public boolean isSimpleContentWithIdAsSimpleType()
+   {
+      return simpleContentWithIdAsSimpleType;
+   }
+
+   public void setUnresolvedContentBoundToDOM(boolean toDOM)
+   {
+      this.unresolvedContentBoundToDOM = toDOM;      
+   }
+   
+   public boolean isUnresolvedContentBoundToDOM()
+   {
+      return this.unresolvedContentBoundToDOM;
+   }
+   
+   public SchemaBinding parse(String xsdUrl)
+   {
+      if(resolver == null)
+      {
+         resolver = new DefaultSchemaResolver();
+      }
+
+      XSModel model = Util.loadSchema(xsdUrl, resolver);
+      return parse(model);
+   }
+   
+   public SchemaBinding parse(InputStream xsdStream, String encoding)
+   {
+      if(resolver == null)
+      {
+         resolver = new DefaultSchemaResolver();
+      }
+
+      XSModel model = Util.loadSchema(xsdStream, encoding, resolver);
+      return parse(model);
+   }
+   
+   public SchemaBinding parse(Reader xsdReader, String encoding)
+   {
+      if(resolver == null)
+      {
+         resolver = new DefaultSchemaResolver();
+      }
+  
+      XSModel model = Util.loadSchema(xsdReader, encoding, resolver);
+      return parse(model);
+   }
+
+
+   // Private
+
+   public SchemaBinding parse(XSModel model)
+   {
       Context ctx = new Context();
       ctx.processAnnotations = processAnnotations;
       SchemaBinding schema = ctx.schema;
@@ -315,6 +476,8 @@ public class XsdBinder
          bindElement(ctx, element, 1, 0, false);
       }
 
+      schema.setUnresolvedContentBoundToDOM(true);
+
       if (ctx.trace)
       {
          log.trace("finished binding schema " + schema);
@@ -322,50 +485,6 @@ public class XsdBinder
 
       return schema;
    }
-
-   /**
-    * @param schema schema binding the type should be added to
-    * @param type   type definition to be bound
-    * @deprecated <i>This method is added temporary to get anonymous type binding working in JBossWS.
-    *             It will be removed when anonymous type binding in JBossWS is implemented properly.
-    *             No one else should use this method.</i>
-    *
-    *             <p>This method binds a type definition and adds it as a global type to the passed in schema binding.
-    */
-   public static void bindType(SchemaBinding schema, XSTypeDefinition type)
-   {
-      TypeBinding typeBinding = bindType(new Context(schema), type);
-      schema.addType(typeBinding);
-   }
-
-   /**
-    * @param schema             schema binding the type should be added to
-    * @param element            element declaration to be bound
-    * @param minOccurs
-    * @param maxOccurs
-    * @param maxOccursUnbounded
-    * @deprecated <i>This method is added temporary to get anonymous type binding working in JBossWS.
-    *             It will be removed when anonymous type binding in JBossWS is implemented properly.
-    *             No one else should use this method.</i>
-    *
-    *             <p>This method binds an element declaration and adds it as a global element to the passed in schema binding.
-    */
-   public static void bindElement(SchemaBinding schema,
-                                  XSElementDeclaration element,
-                                  int minOccurs,
-                                  int maxOccurs,
-                                  boolean maxOccursUnbounded)
-   {
-      ParticleBinding particle = bindElement(new Context(schema),
-         element,
-         minOccurs,
-         maxOccurs,
-         maxOccursUnbounded
-      );
-      schema.addElementParticle(particle);
-   }
-
-   // Private
 
    private static TypeBinding bindType(Context ctx, XSTypeDefinition type)
    {
@@ -919,15 +1038,6 @@ public class XsdBinder
       particleBinding.setMaxOccursUnbounded(particle.getMaxOccursUnbounded());
       particleBinding.setMinOccurs(particle.getMinOccurs());
       group.addParticle(particleBinding);
-
-      TypeBinding type = ctx.peekType();
-      type.setWildcard(binding);
-
-      if (ctx.trace)
-      {
-         log.trace("added wildcard to " + group);
-         log.trace("added wildcard to type " + type.getQName());
-      }
 
       XSWildcard wildcard = (XSWildcard)particle.getTerm();
       if(wildcard.getName() != null)

@@ -26,11 +26,8 @@ import java.net.URL;
 import org.jboss.test.AbstractTestCaseWithSetup;
 import org.jboss.test.AbstractTestDelegate;
 import org.jboss.util.Classes;
-import org.jboss.xb.binding.Unmarshaller;
-import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
-import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 
 /**
  * AbstractJBossXBTest.
@@ -54,6 +51,58 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
       super(name);
    }
 
+   /**
+    * Validates XML content passed in the second argument
+    * against the XML content in the file.
+    * 
+    * @param xmlFileName  the name of the XML file
+    * @param content  the content to validate
+    */
+   public void assertXmlFileContent(String xmlFileName, String content)
+   {
+      URL expectedUrl = getResource(xmlFileName);
+      if(expectedUrl == null)
+      {
+         fail("File not found: " + xmlFileName);
+      }
+      
+      java.io.InputStream is = null;
+      String expectedContent = null;
+      try
+      {
+         is = expectedUrl.openStream();
+         byte[] bytes = new byte[is.available()];
+         is.read(bytes);
+         expectedContent = new String(bytes);
+      }
+      catch(java.io.IOException e)
+      {
+         fail("Failed to read file " + xmlFileName + ": " + e.getMessage());
+      }
+      finally
+      {
+         if(is != null)
+         {
+            try
+            {
+               is.close();
+            }
+            catch(Exception ignore)
+            {
+            }
+         }
+      }
+
+      assertXmlEqual(expectedContent, content);
+   }
+
+   /**
+    * Validates XML content passed in the second argument
+    * against the expected XML content passed in the first argument.
+    * 
+    * @param expected  expected content
+    * @param was  the content to validate
+    */
    public void assertXmlEqual(String expected, String was)
    {
       String diff = DIFF.diff(expected, was);
@@ -136,12 +185,90 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
     */
    protected Object unmarshal() throws Exception
    {
-      String testXsd = findXML(rootName + "_" + getName() + ".xsd");
-      SchemaBinding schema = XsdBinder.bind(testXsd, (SchemaBindingResolver)null);
+      String testXsd = rootName + "_" + getName() + ".xsd";
+      SchemaBinding schema = bind(testXsd);
       schema.setIgnoreUnresolvedFieldOrClass(false);
 
-      Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
-      return unmarshaller.unmarshal(findXML(rootName + "_" + getName() + ".xml"), schema);
+      String name = rootName + "_" + getName() + ".xml";
+      return unmarshal(name, schema);
+   }
+   
+   /**
+    * Unmarshall some xml<p>
+    * 
+    * The xsd name is UnitTestClass_testName.xsd<p>
+    * 
+    * The xml name is UnitTestClass_testName.xml
+    * 
+    * @param expected the expected class
+    * @return the object
+    * @throws Exception for any problem
+    */
+   protected Object unmarshal(Class expected) throws Exception
+   {
+      Object object = unmarshal();
+      if (object == null)
+         fail("No object");
+      assertTrue("Object '" + object + "' cannot be assigned to " + expected.getName(), expected.isAssignableFrom(object.getClass()));
+      return object;
+   }
+   
+   /**
+    * Unmarshal some xml
+    * 
+    * @param name the name
+    * @param schema the schema
+    * @return the unmarshalled object
+    * @throws Exception for any error
+    */
+   protected Object unmarshal(String name, SchemaBinding schema) throws Exception
+   {
+      String url = findXML(name);
+      return getJBossXBDelegate().unmarshal(url, schema);
+   }
+   
+   /**
+    * Unmarshal some xml
+    * 
+    * @param name the name
+    * @param schema the schema
+    * @param expected the expected class
+    * @return the unmarshalled object
+    * @throws Exception for any error
+    */
+   protected Object unmarshal(String name, SchemaBinding schema, Class expected) throws Exception
+   {
+      Object object = unmarshal(name, schema);
+      if (object == null)
+         fail("No object for " + name);
+      assertTrue("Object '" + object + "' cannot be assigned to " + expected.getName(), expected.isAssignableFrom(object.getClass()));
+      return object;
+   }
+   
+   /**
+    * Bind a schema
+    * 
+    * @param name the name
+    * @return the object
+    * @throws Exception for any error
+    */
+   public SchemaBinding bind(String name) throws Exception
+   {
+      return bind(name, null);
+   }
+   
+   /**
+    * Bind a schema
+    * 
+    * @param name the name
+    * @param resolver the resolver
+    * @return the object
+    * @throws Exception for any error
+    */
+   public SchemaBinding bind(String name, SchemaBindingResolver resolver) throws Exception
+   {
+      String url = findXML(name);
+      return getJBossXBDelegate().bind(url, resolver);
    }
 
    /**

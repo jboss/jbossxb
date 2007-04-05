@@ -246,7 +246,7 @@ public class XsdBinder
    {
       XsdBinder binder = new XsdBinder();
       binder.setProcessAnnotations(processAnnotations);
-      binder.setSchemaResolver(resolver);      
+      binder.setSchemaResolver(resolver);
       return binder.parse(model);
    }
 
@@ -298,6 +298,7 @@ public class XsdBinder
    private boolean processAnnotations = true;
    private SchemaBindingResolver resolver;
    private boolean simpleContentWithIdAsSimpleType = true;
+   private boolean unresolvedContentBoundToDOM = true;
    
    // Internal attributes
    
@@ -350,6 +351,16 @@ public class XsdBinder
       return simpleContentWithIdAsSimpleType;
    }
 
+   public void setUnresolvedContentBoundToDOM(boolean toDOM)
+   {
+      this.unresolvedContentBoundToDOM = toDOM;      
+   }
+   
+   public boolean isUnresolvedContentBoundToDOM()
+   {
+      return this.unresolvedContentBoundToDOM;
+   }
+   
    public SchemaBinding parse(String xsdUrl)
    {
       if(resolver == null)
@@ -470,6 +481,11 @@ public class XsdBinder
          bindElement(element, 1, 0, false);
       }
 
+      if(unresolvedContentBoundToDOM)
+      {
+         schema.setUnresolvedContentBoundToDOM(unresolvedContentBoundToDOM);
+      }
+      
       if (trace)
       {
          log.trace("finished binding schema " + schema);

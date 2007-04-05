@@ -51,6 +51,58 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
       super(name);
    }
 
+   /**
+    * Validates XML content passed in the second argument
+    * against the XML content in the file.
+    * 
+    * @param xmlFileName  the name of the XML file
+    * @param content  the content to validate
+    */
+   public void assertXmlFileContent(String xmlFileName, String content)
+   {
+      URL expectedUrl = getResource(xmlFileName);
+      if(expectedUrl == null)
+      {
+         fail("File not found: " + xmlFileName);
+      }
+      
+      java.io.InputStream is = null;
+      String expectedContent = null;
+      try
+      {
+         is = expectedUrl.openStream();
+         byte[] bytes = new byte[is.available()];
+         is.read(bytes);
+         expectedContent = new String(bytes);
+      }
+      catch(java.io.IOException e)
+      {
+         fail("Failed to read file " + xmlFileName + ": " + e.getMessage());
+      }
+      finally
+      {
+         if(is != null)
+         {
+            try
+            {
+               is.close();
+            }
+            catch(Exception ignore)
+            {
+            }
+         }
+      }
+
+      assertXmlEqual(expectedContent, content);
+   }
+
+   /**
+    * Validates XML content passed in the second argument
+    * against the expected XML content passed in the first argument.
+    * 
+    * @param expected  expected content
+    * @param was  the content to validate
+    */
    public void assertXmlEqual(String expected, String was)
    {
       String diff = DIFF.diff(expected, was);

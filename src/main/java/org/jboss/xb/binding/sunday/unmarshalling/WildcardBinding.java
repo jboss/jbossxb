@@ -24,6 +24,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 import javax.xml.namespace.QName;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.ObjectLocalMarshaller;
 import org.jboss.xb.binding.Util;
 import org.xml.sax.Attributes;
 
@@ -46,7 +47,9 @@ public class WildcardBinding
 
    private ParticleHandler unresolvedElementHandler;
    private CharactersHandler unresolvedCharactersHandler;
+   private ObjectLocalMarshaller unresolvedMarshaller;
    private ParticleHandler wildcardHandler;
+
 
    public WildcardBinding(SchemaBinding schema)
    {
@@ -132,6 +135,16 @@ public class WildcardBinding
       this.unresolvedCharactersHandler = unresolvedCharactersHandler;
    }
 
+   public ObjectLocalMarshaller getUnresolvedMarshaller()
+   {
+      return unresolvedMarshaller;
+   }
+   
+   public void setUnresolvedMarshaller(ObjectLocalMarshaller marshaller)
+   {
+      this.unresolvedMarshaller = marshaller;
+   }
+   
    public ElementBinding getElement(QName qName, Attributes attrs)
    {
       if(pc == PC_SKIP)

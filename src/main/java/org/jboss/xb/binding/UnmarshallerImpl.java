@@ -24,7 +24,6 @@ package org.jboss.xb.binding;
 import java.io.InputStream;
 import java.io.Reader;
 
-import org.jboss.logging.Logger;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.xb.binding.parser.sax.SaxJBossXBParser;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -59,7 +58,12 @@ public class UnmarshallerImpl implements Unmarshaller
    public void setValidation(boolean validation) throws JBossXBException
    {
       parser.setFeature(VALIDATION, validation);
-      parser.setFeature(DYNAMIC_VALIDATION, false);
+      /* Only set DYNAMIC_VALIDATION to false. Setting this to true
+         if its not already requires a document to have a DOCTYPE declaring
+         the root element
+      */
+      if( validation == false )
+         parser.setFeature(DYNAMIC_VALIDATION, false);
    }
 
    public void setSchemaValidation(boolean validation) throws JBossXBException

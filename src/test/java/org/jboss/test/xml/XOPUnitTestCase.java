@@ -23,7 +23,10 @@ package org.jboss.test.xml;
 
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
+import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
+import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
+import org.jboss.xb.binding.sunday.marshalling.MarshallingContext;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
@@ -62,7 +65,7 @@ import junit.framework.TestSuite;
  * @version <tt>$Revision$</tt>
  */
 public class XOPUnitTestCase
-    extends AbstractJBossXBTest
+      extends AbstractJBossXBTest
 {
 
    public static final TestSuite suite()
@@ -269,10 +272,10 @@ public class XOPUnitTestCase
 
                String localPart = e.getQName().getLocalPart();
                if("image".equals(localPart) ||
-                   "sig".equals(localPart) ||
-                   "imageWithContentType".equals(localPart) ||
-                   "octets".equals(localPart) ||
-                   "jpeg".equals(localPart))
+                     "sig".equals(localPart) ||
+                     "imageWithContentType".equals(localPart) ||
+                     "octets".equals(localPart) ||
+                     "jpeg".equals(localPart))
                {
                   assertEquals("expected " + byte[].class + " for " + localPart, byte[].class, propType);
                }
@@ -348,7 +351,7 @@ public class XOPUnitTestCase
             // alexey: the following shouldn't be used.
             // callbacks should be set on the types and/or elements
             // that can have xop:Include as their content
-            
+
             // xop:Include
             // Uncomment the following lines in order to intercept the
             // XOPUnmarshaller result _before_ the actual setter is invoked
@@ -601,13 +604,13 @@ public class XOPUnitTestCase
    public void testTopLevelUnmarshalling() throws Exception
    {
       String xsd =
-          "<schema" +
-              "  xmlns='http://www.w3.org/2001/XMLSchema'" +
-              "  xmlns:xmime='http://www.w3.org/2005/05/xmlmime'" +
-              "  targetNamespace='http://www.jboss.org/xml/test/xop'>" +
-              "  <import namespace='http://www.w3.org/2005/05/xmlmime' schemaLocation='xmlmime.xsd'/>" +
-              "  <element name='applxml' xmime:expectedContentTypes='application/xml' type='xmime:base64Binary'/>" +
-              "</schema>";
+            "<schema" +
+                  "  xmlns='http://www.w3.org/2001/XMLSchema'" +
+                  "  xmlns:xmime='http://www.w3.org/2005/05/xmlmime'" +
+                  "  targetNamespace='http://www.jboss.org/xml/test/xop'>" +
+                  "  <import namespace='http://www.w3.org/2005/05/xmlmime' schemaLocation='xmlmime.xsd'/>" +
+                  "  <element name='applxml' xmime:expectedContentTypes='application/xml' type='xmime:base64Binary'/>" +
+                  "</schema>";
 
       DefaultSchemaResolver resolver = new DefaultSchemaResolver();
       String xmimeXsd = getSchemaLocation(getClass(), "xmlmime.xsd");
@@ -618,9 +621,9 @@ public class XOPUnitTestCase
       schema.setXopUnmarshaller(XOP_ENABLED_UNMARSH);
 
       String xml =
-          "<applxml xmlns='http://www.jboss.org/xml/test/xop'>" +
-              "  <xop:Include href='cid:applxml' xmlns:xop='http://www.w3.org/2004/08/xop/include'/>" +
-              "</applxml>";
+            "<applxml xmlns='http://www.jboss.org/xml/test/xop'>" +
+                  "  <xop:Include href='cid:applxml' xmlns:xop='http://www.w3.org/2004/08/xop/include'/>" +
+                  "</applxml>";
 
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
       Object o = unmarshaller.unmarshal(new StringReader(xml), schema);
@@ -629,10 +632,71 @@ public class XOPUnitTestCase
       assertTrue(Arrays.equals("applxml".getBytes(), (byte[])o));
    }
 
+   /**
+    * Test JBWS-1604
+    * 
+    * @throws Exception
+    */
+   public void testContentAdaptor() throws Exception
+   {      
+      String xsd =
+            "<schema" +
+                  "  xmlns='http://www.w3.org/2001/XMLSchema'" +
+                  "  xmlns:xmime='http://www.w3.org/2005/05/xmlmime'" +
+                  "  targetNamespace='http://www.jboss.org/xml/test/xop'>" +
+                  "  <import namespace='http://www.w3.org/2005/05/xmlmime' schemaLocation='xmlmime.xsd'/>" +
+                  "  <element name='applxml' xmime:expectedContentTypes='application/xml' type='xmime:base64Binary'/>" +
+                  "</schema>";
+
+      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      String xmimeXsd = getSchemaLocation(getClass(), "xmlmime.xsd");
+      resolver.addSchemaLocation("http://www.w3.org/2005/05/xmlmime", xmimeXsd);
+
+      SchemaBinding schema = XsdBinder.bind(new StringReader(xsd), null, resolver);
+      schema.setIgnoreUnresolvedFieldOrClass(false);
+      schema.setXopUnmarshaller(XOP_ENABLED_UNMARSH);
+
+      // interesting part for JBWS-1604
+      registerContentAdapter(schema);
+
+      // has to be an inlined request that causes the exception
+      String xml =
+            "<applxml xmlns='http://www.jboss.org/xml/test/xop'>" +
+                  "/9j/4AAQSkZJRgABAgAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0a\n" +
+                  "HBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIy\n" +
+                  "MjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCADLAfIDASIA\n" +
+                  "AhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQA\n" +
+                  "AAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3\n" +
+                  "ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWm\n" +
+                  "p6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEA\n" +
+                  "AwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSEx\n" +
+                  "BhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElK\n" +
+                  "U1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3\n" +
+                  "uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwCvRRR0\n" +
+                  "FCY7MKKKOgoQWYUUUUILMKKKIXcTspGdWtt80ckTokcAldzu+Xl8EI2c3mcEcE5OYuRjiPsVk9q9\n" +
+                  "2t7Cw/vy3SyAmEeVvC5EhabBYLu2KmNuTupYz/eEsNhuuJYkdWthWZJqVwpkljtY3tUlEQczEO53\n" +
+                  "BThduPvZXkgcZyBzUg1a3EkqyblVXKhgrMMDgs2B8g3BhlsD5SelAcrL9c3pvh+0vNKs7qe51UzT\n" +
+                  "QJJIUuFCgBiMDI6Vn/8AfB+f/nn/AJ/yBz6OWg2s9f62FH/6tv8Aon/oNH/MB2tRt/yP+XXBpNv/\n" +
+                  "ANf/AD/8RRyhyt9DRjluCkwV5mXA/sbPUc//AKqrhHSNZQB/ZmCM+lKUdkdhsCBug7/+y/5/Nxmm\n" +
+                  "aJULEIKj0K9i1engIPtWX5x9xfil6L4x2xoTFJkMBgkjnHfH+f4akeRXMhkAVjzkHrTAMOygKwbg\n" +
+                  "8/8AxvFO2Ix6quSeMcf/ABNaX0u31/hakqgoKNTFPTRqrHXe1Wzgn/iesezsQY/yOaSpZI3Vv7Lu\n" +
+                  "vEFpLdXb+VeIclBz3bHOKgNH3SDkb1FpM/8A1/8AP/6+5pf9XQopBZh5v7/6f8fv+eaKK8/2t6H8\n" +
+                  "qaBpiUUu1vQ/lRtb0P5VRNmJRS7W9D+VG1vQ/lQFmJRS7W9D+VG1vQ/lQFmJRS7W9D+VG1vQ/lQF" +
+                  "</applxml>";
+
+      Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
+      Object o = unmarshaller.unmarshal(new StringReader(xml), schema);
+      assertNotNull(o);
+      assertTrue(o instanceof byte[]);
+      assertTrue(Arrays.equals("applxml".getBytes(), (byte[])o));
+            
+   }
+
+
    // Private
 
    private String readXml(String name)
-       throws IOException
+         throws IOException
    {
       String testXml = getResource(name).getFile();
       FileInputStream fis = new FileInputStream(testXml);
@@ -643,7 +707,7 @@ public class XOPUnitTestCase
    }
 
    private static String marshal(XOPMarshaller xopMarshaller)
-       throws IOException, SAXException
+         throws IOException, SAXException
    {
       E e = new E();
       e.image = "image".getBytes();
@@ -652,7 +716,7 @@ public class XOPUnitTestCase
    }
 
    private static String marshal(XOPMarshaller xopMarshaller, E e)
-       throws IOException, SAXException
+         throws IOException, SAXException
    {
       SCHEMA.setXopMarshaller(xopMarshaller);
       StringWriter writer = new StringWriter();
@@ -664,17 +728,17 @@ public class XOPUnitTestCase
    private static String getOptimizedXml(String elementName)
    {
       return
-          "<e xmlns='http://www.jboss.org/xml/test/xop'>" +
-              "  <" +
-              elementName +
-              ">" +
-              "    <xop:Include xmlns:xop='http://www.w3.org/2004/08/xop/include' href='cid:" +
-              elementName +
-              "'/>" +
-              "  </" +
-              elementName +
-              ">" +
-              "</e>";
+            "<e xmlns='http://www.jboss.org/xml/test/xop'>" +
+                  "  <" +
+                  elementName +
+                  ">" +
+                  "    <xop:Include xmlns:xop='http://www.w3.org/2004/08/xop/include' href='cid:" +
+                  elementName +
+                  "'/>" +
+                  "  </" +
+                  elementName +
+                  ">" +
+                  "</e>";
    }
 
    // Inner
@@ -692,6 +756,60 @@ public class XOPUnitTestCase
       public byte[] octets;
 
       public String xopContent;
+   }
+
+   private static final QName XMIME_BASE_64 = new QName(Constants.NS_XML_MIME, "base64Binary");
+   
+   public static void registerContentAdapter(SchemaBinding schemaBinding)
+   {
+      TestContentAdapter contentAdapter = new TestContentAdapter();
+
+      // base64 simple types
+      TypeBinding base64Type = schemaBinding.getType(org.jboss.xb.binding.Constants.QNAME_BASE64BINARY);
+      base64Type.setBeforeMarshallingCallback( contentAdapter );
+      base64Type.setBeforeSetParentCallback( contentAdapter );
+
+      // xmime complex types
+      TypeBinding xmimeBase64Type = schemaBinding.getType(XMIME_BASE_64);
+      if(xmimeBase64Type!=null)
+      {
+         System.out.println("Register with " + xmimeBase64Type);
+         xmimeBase64Type.setBeforeMarshallingCallback( contentAdapter );
+         xmimeBase64Type.setBeforeSetParentCallback( contentAdapter );
+      }
+      else
+      {
+         System.out.println("XMIME_BASE_64 not registered");  
+      }
+   }
+
+   /**
+    * Example content adapter
+    */
+   static class TestContentAdapter implements TermBeforeSetParentCallback, TermBeforeMarshallingCallback
+   {
+      public Object beforeSetParent(Object object, UnmarshallingContext ctx)
+      {
+         System.out.println("beforeSetParent " + object);
+         
+         if(null==object)
+            return object;
+         
+         // FIXME: may be null when it's actually an encoded request ?!
+         Class targetClass = ctx.resolvePropertyType();
+
+         if(null==targetClass) {
+            throw new IllegalStateException("Failed to resolve target property type on "+ ctx.getParticle());
+         }
+
+         return object;
+      }
+
+      public Object beforeMarshalling(Object object, MarshallingContext ctx)
+      {
+         System.out.println("beforeMarshalling " + object);
+         return object;
+      }
    }
 
 }

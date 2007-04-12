@@ -110,13 +110,11 @@ public class SimpleTestCase
       log.debug("parsing: "+xmlUrl);
       parser.parse(xmlUrl.openStream(), new DefaultHandler()
          {
-            @Override
             public void error(SAXParseException e) throws SAXException
             {
                throw e;
             }
    
-            @Override
             public void fatalError(SAXParseException e) throws SAXException
             {
                throw e;

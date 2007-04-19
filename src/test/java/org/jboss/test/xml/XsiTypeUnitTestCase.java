@@ -107,7 +107,7 @@ public class XsiTypeUnitTestCase
       "  </complexType>" +
       "  <element name='purchaseOrder' type='ipo:PurchaseOrderType'/>" +
       "</schema>";
-
+   
    private static final String PO_XML =
       "<ipo:purchaseOrder" +
       "  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'" +
@@ -126,6 +126,44 @@ public class XsiTypeUnitTestCase
       "    <zip>95819</zip>" +
       "  </billTo>" +
       "</ipo:purchaseOrder>";
+
+   private static final String COLLECTION_XSD =
+      "<schema targetNamespace='" + PO_NS + "'" +
+      "  xmlns='http://www.w3.org/2001/XMLSchema'" +
+      "  xmlns:jbxb='" + Constants.NS_JBXB + "'" +
+      "  xmlns:ipo='" + PO_NS + "'>" +
+      "  <include schemaLocation='http://www.example.com/schemas/address.xsd'/>" +
+      "  <complexType name='AddressCollection'>" +
+      "    <annotation>" +
+      "      <appinfo>" +
+      "        <jbxb:class impl='" + PurchaseOrder.class.getName() + "'/>" +
+      "      </appinfo>" +
+      "    </annotation>" +
+      "    <sequence>" +
+      "      <element name='address' type='ipo:Address' maxOccurs='unbounded'/>" +
+      "    </sequence>" +
+      "  </complexType>" +
+      "  <element name='addresses' type='ipo:AddressCollection'/>" +
+      "</schema>";
+
+   private static final String COLLECTION_XML =
+      "<ipo:addresses" +
+      "  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'" +
+      "  xmlns:ipo='" + PO_NS + "'>" +
+      "  <address xsi:type='ipo:USAddress'>" +
+      "    <name>Robert Smith</name>" +
+      "    <street>8 Oak Avenue</street>" +
+      "    <city>Old Town</city>" +
+      "    <state>PA</state>" +
+      "    <zip>95819</zip>" +
+      "  </address>" +
+      "  <address exportCode='1' xsi:type='ipo:UKAddress'>" +
+      "    <name>Helen Zoe</name>" +
+      "    <street>47 Eden Street</street>" +
+      "    <city>Cambridge</city>" +
+      "    <postcode>CB1 1JR</postcode>" +
+      "  </address>" +
+      "</ipo:addresses>";
 
    private static final SchemaBindingResolver SCHEMA_RESOLVER = new SchemaBindingResolver()
    {
@@ -154,8 +192,6 @@ public class XsiTypeUnitTestCase
       }
    };
 
-   private static SchemaBinding SCHEMA;
-
    public XsiTypeUnitTestCase(String name)
    {
       super(name);
@@ -163,16 +199,13 @@ public class XsiTypeUnitTestCase
 
    protected void configureLogging()
    {
-      if(SCHEMA == null)
-      {
-         SCHEMA = XsdBinder.bind(new StringReader(PO_XSD), null, SCHEMA_RESOLVER);
-      }
    }
 
    public void testUnmarshalling() throws Exception
    {
+      SchemaBinding schema = XsdBinder.bind(new StringReader(PO_XSD), null, SCHEMA_RESOLVER);
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
-      Object o = unmarshaller.unmarshal(new StringReader(PO_XML), SCHEMA);
+      Object o = unmarshaller.unmarshal(new StringReader(PO_XML), schema);
       assertEquals(PurchaseOrder.INSTANCE, o);
    }
 
@@ -192,6 +225,8 @@ public class XsiTypeUnitTestCase
 
    public void testMarshallingSunday() throws Exception
    {
+      SchemaBinding schema = XsdBinder.bind(new StringReader(PO_XSD), null, SCHEMA_RESOLVER);
+
       MarshallerImpl marshaller = new MarshallerImpl();
       marshaller.setSchemaResolver(SCHEMA_RESOLVER);
       marshaller.mapClassToXsiType(UKAddress.class, PO_NS, "UKAddress");
@@ -199,8 +234,53 @@ public class XsiTypeUnitTestCase
 
       StringWriter writer = new StringWriter();
 
-      marshaller.marshal(SCHEMA, null, PurchaseOrder.INSTANCE, writer);
+      marshaller.marshal(schema, null, PurchaseOrder.INSTANCE, writer);
       assertXmlEqual(PO_XML, writer.getBuffer().toString());
+   }
+
+   public void testUnmarshalCollection() throws Exception
+   {
+      SchemaBinding schema = XsdBinder.bind(new StringReader(COLLECTION_XSD), null, SCHEMA_RESOLVER);
+      Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
+      Object o = unmarshaller.unmarshal(new StringReader(COLLECTION_XML), schema);
+      
+      assertNotNull(o);
+      assertTrue(o instanceof PurchaseOrder);
+      
+      PurchaseOrder po = (PurchaseOrder) o;
+      assertNotNull(po.address);
+      assertEquals(2, po.address.length);
+      
+      if(po.address[0] instanceof UKAddress)
+      {
+         assertEquals(PurchaseOrder.INSTANCE.shipTo, po.address[0]);
+         assertEquals(PurchaseOrder.INSTANCE.billTo, po.address[1]);
+      }
+      else
+      {
+         assertEquals(PurchaseOrder.INSTANCE.shipTo, po.address[1]);
+         assertEquals(PurchaseOrder.INSTANCE.billTo, po.address[0]);
+      }
+   }
+
+   public void testMarshalCollectionSunday() throws Exception
+   {
+      SchemaBinding schema = XsdBinder.bind(new StringReader(COLLECTION_XSD), null, SCHEMA_RESOLVER);
+
+      MarshallerImpl marshaller = new MarshallerImpl();
+      marshaller.setSchemaResolver(SCHEMA_RESOLVER);
+      marshaller.mapClassToXsiType(UKAddress.class, PO_NS, "UKAddress");
+      marshaller.mapClassToXsiType(USAddress.class, PO_NS, "USAddress");
+
+      StringWriter writer = new StringWriter();
+
+      PurchaseOrder po = new PurchaseOrder();
+      po.address = new Address[2];
+      po.address[0] = PurchaseOrder.INSTANCE.billTo;
+      po.address[1] = PurchaseOrder.INSTANCE.shipTo;
+      
+      marshaller.marshal(schema, null, po, writer);
+      assertXmlEqual(COLLECTION_XML, writer.getBuffer().toString());
    }
 
    // Inner
@@ -230,6 +310,7 @@ public class XsiTypeUnitTestCase
 
       public Address shipTo;
       public Address billTo;
+      public Address[] address; //for collection test
 
       public String toString()
       {

@@ -555,6 +555,8 @@ public class SundayContentHandler
       if(repeated)
       {
          item.o = o;
+         // in case of collection of abstract types
+         item.particle = particle;
       }
       else
       {
@@ -1182,7 +1184,7 @@ public class SundayContentHandler
    private static class StackItem
    {
       final ModelGroupBinding.Cursor cursor;
-      final ParticleBinding particle;
+      ParticleBinding particle;
       ParticleHandler handler;
       TypeBinding parentType;
       boolean ignoreCharacters;

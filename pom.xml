@@ -9,7 +9,7 @@
   <groupId>jboss.jbossxb</groupId>
   <artifactId>jbossxb</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.0.CR10</version>
+  <version>1.0.0.GA</version>
   <name>JBoss XML Binding</name>
   <url>http://www.jboss.org</url>
   <description>JBoss XML Binding</description>
@@ -73,31 +73,15 @@
 
   <dependencies>
     <dependency>
-      <groupId>jboss.logging</groupId>
-      <artifactId>jboss-logging-spi</artifactId>
-      <version>1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>jboss.logging.log4j</groupId>
-      <artifactId>jboss-logging-log4j</artifactId>
-      <version>1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>jboss.common.core</groupId>
-      <artifactId>jboss-common-core</artifactId>
-      <version>1.0</version>
+      <groupId>jboss</groupId>
+      <artifactId>jboss-common</artifactId>
+      <version>1.2.0.GA</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>oswego-concurrent</groupId>
       <artifactId>concurrent</artifactId>
       <version>1.3.4</version>
-      <scope>compile</scope>
-    </dependency> 
-    <dependency>
-      <groupId>apache-slide</groupId>
-      <artifactId>webdavlib</artifactId>
-      <version>2.0</version>
       <scope>compile</scope>
     </dependency> 
     <dependency>
@@ -118,6 +102,12 @@
       <version>1.2.1</version>
       <scope>compile</scope>
     </dependency>         
+    <dependency>
+      <groupId>apache-log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.14</version>
+      <scope>test</scope>
+    </dependency> 
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <parent>
-    <groupId>jboss</groupId>
+    <groupId>org.jboss</groupId>
     <artifactId>jboss-parent</artifactId>
-    <version>1</version>
+    <version>3</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>jbossxb</artifactId>
@@ -14,17 +14,6 @@
   <scm>
     <connection>scm:svn:https://svn.jboss.org/repos/common/jbossxb/trunk</connection>
   </scm>
-  <repositories>
-    <repository>
-      <id>jboss</id>
-      <name>JBoss Inc. Repository</name>
-      <layout>default</layout>
-      <url>http://repository.jboss.com/maven2/</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
   <build>
     <finalName>jboss-xml-binding</finalName>
     <plugins>
@@ -52,8 +41,6 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <printSummary>true</printSummary>
-          <disableXmlReport>false</disableXmlReport>
           <testFailureIgnore>true</testFailureIgnore>
           <includes>
             <include>**/*TestCase.java</include>
@@ -61,12 +48,31 @@
           <forkMode>pertest</forkMode> <!-- required to correctly run the PojoServer tests -->
         </configuration>
       </plugin>    
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-report-plugin</artifactId>
-      </plugin>    
     </plugins>
   </build>  
+  <repositories>
+    <repository>
+      <id>repository.jboss.org</id>
+      <name>JBoss Repository</name>
+      <layout>default</layout>
+      <url>http://repository.jboss.org/maven2/</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>snapshots.jboss.org</id>
+      <name>JBoss Snapshot Repository</name>
+      <layout>default</layout>
+      <url>http://snapshots.jboss.org/maven2/</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
   <dependencies>
     <dependency>
       <groupId>jboss</groupId>
@@ -117,17 +123,10 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>sun-jaf</groupId>
+      <groupId>javax.activation</groupId>
       <artifactId>activation</artifactId>
       <version>1.0.2</version>
       <scope>compile</scope>
     </dependency> 
   </dependencies>
-  <distributionManagement>
-    <repository>
-      <id>cvs-file-repository</id>
-      <!-- Set maven.cvs.root in your settings.xml -->
-      <url>file://${maven.cvs.root}</url>
-    </repository>
-  </distributionManagement>
 </project>

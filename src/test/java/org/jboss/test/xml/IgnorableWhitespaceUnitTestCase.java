@@ -93,8 +93,10 @@ public class IgnorableWhitespaceUnitTestCase extends AbstractJBossXBTest
       
       Top top = (Top) unmarshal("IgnorableWhitespaceContent.xml", schema, Top.class);
       assertNotNull(top.string);
-      assertEquals(1, top.string.size());
+      assertEquals(2, top.string.size());
       assertEquals(" ", top.string.get(0));
+
+      assertEquals("\n      newline, 6 spaces, newline, 3 spaces\n   ", top.string.get(1));
    }
    
    public static class Top

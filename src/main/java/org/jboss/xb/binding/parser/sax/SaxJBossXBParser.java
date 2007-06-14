@@ -310,15 +310,15 @@ public class SaxJBossXBParser
       {
          // todo look at this later
          // do not notify content handler if these are just whitespaces
-         int i = start;
-         while(i < start + length)
-         {
-            if(!Character.isWhitespace(ch[i++]))
-            {
+         //int i = start;
+         //while(i < start + length)
+         //{
+         //   if(!Character.isWhitespace(ch[i++]))
+         //   {
                contentHandler.characters(ch, start, length);
-               break;
-            }
-         }
+         //      break;
+         //   }
+         //}
       }
 
       public void ignorableWhitespace(char ch[], int start, int length)

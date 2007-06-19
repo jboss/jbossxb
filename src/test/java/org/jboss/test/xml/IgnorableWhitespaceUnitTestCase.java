@@ -22,16 +22,22 @@
 package org.jboss.test.xml;
 
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.namespace.QName;
 
 import junit.framework.TestSuite;
 
+import org.jboss.xb.binding.ObjectModelFactory;
+import org.jboss.xb.binding.Unmarshaller;
+import org.jboss.xb.binding.UnmarshallerFactory;
+import org.jboss.xb.binding.UnmarshallingContext;
 import org.jboss.xb.binding.metadata.ClassMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
+import org.xml.sax.Attributes;
 
 
 /**
@@ -95,10 +101,53 @@ public class IgnorableWhitespaceUnitTestCase extends AbstractJBossXBTest
       assertNotNull(top.string);
       assertEquals(2, top.string.size());
       assertEquals(" ", top.string.get(0));
-
       assertEquals("\n      newline, 6 spaces, newline, 3 spaces\n   ", top.string.get(1));
    }
+
+   public void testObjectModelFactory() throws Exception
+   {
+      String url = findXML("IgnorableWhitespaceContent.xml");
+      
+      ObjectModelFactory omf = new OMF();
+      
+      Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
+      Object o = unmarshaller.unmarshal(url, omf, null);
+      
+      assertNotNull(o);
+      assertTrue(o instanceof Top);
+      Top top = (Top) o;
+      assertEquals(2, top.string.size());
+      assertEquals(" ", top.string.get(0));
+      assertEquals("\n      newline, 6 spaces, newline, 3 spaces\n   ", top.string.get(1));
+
+   }
    
+   public static final class OMF implements ObjectModelFactory
+   {
+      public Object completeRoot(Object root, UnmarshallingContext ctx, String namespaceURI, String localName)
+      {
+         return root;
+      }
+
+      public Object newRoot(Object root, UnmarshallingContext ctx, String namespaceURI, String localName, Attributes attrs)
+      {
+         ctx.setTrimTextContent(false);
+         return new Top();
+      }
+
+      public void setValue(Top top, UnmarshallingContext ctx, String ns, String name, String value)
+      {
+         if(name.equals("string"))
+         {
+            if(top.string == null)
+            {
+               top.string = new ArrayList();
+            }
+            top.string.add(value);
+         }
+      }
+   }
+
    public static class Top
    {
       public List string;

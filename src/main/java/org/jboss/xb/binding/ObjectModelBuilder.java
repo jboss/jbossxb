@@ -96,8 +96,9 @@ public class ObjectModelBuilder
     */
    private final NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
-   private XSTypeDefinition currentType;
-
+   // whether text content should be trimmed before it is set
+   private boolean trimTextContent = true; //  for backwards compatibility
+   
    private boolean trace = log.isTraceEnabled();
 
    // Public
@@ -164,6 +165,16 @@ public class ObjectModelBuilder
       return nsRegistry;
    }
 
+   public boolean isTrimTextContent()
+   {
+      return trimTextContent;
+   }
+   
+   public void setTrimTextContent(boolean trimTextContent)
+   {
+      this.trimTextContent = trimTextContent;
+   }   
+
    /**
     * Construct a QName from a value
     *
@@ -196,7 +207,7 @@ public class ObjectModelBuilder
 
    public XSTypeDefinition getType()
    {
-      return currentType;
+      return null;
    }
 
    // Public
@@ -330,9 +341,6 @@ public class ObjectModelBuilder
    {
       Object parent = accepted.isEmpty() ? root : peekAccepted();
 
-      // todo currentType assignment
-      currentType = type;
-
       Object element;
       if(!namespaceURI.equals(curNsSwitchingFactory))
       {
@@ -385,10 +393,17 @@ public class ObjectModelBuilder
          Object acceptedElement = peekAccepted();
          if(element.characters != null && element.characters.length() > 0)
          {
-            String characters = element.characters.toString().trim();
-            if(characters.length() > 0)
+            if(trimTextContent)
             {
-               curFactory.setValue(acceptedElement, this, namespaceURI, localName, characters);
+               String characters = element.characters.toString().trim();
+               if (characters.length() > 0)
+               {
+                  curFactory.setValue(acceptedElement, this, namespaceURI, localName, characters);
+               }
+            }
+            else
+            {
+               curFactory.setValue(acceptedElement, this, namespaceURI, localName, element.characters.toString());
             }
          }
       }

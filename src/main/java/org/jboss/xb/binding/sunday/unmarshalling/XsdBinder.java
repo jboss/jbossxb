@@ -400,6 +400,7 @@ public class XsdBinder
    {
       Context ctx = new Context();
       ctx.processAnnotations = processAnnotations;
+      ctx.simpleContentWithIdAsSimpleType = simpleContentWithIdAsSimpleType;
       SchemaBinding schema = ctx.schema;
       schema.setSchemaResolver(resolver);
 
@@ -675,10 +676,16 @@ public class XsdBinder
       XSObjectList attrs = type.getAttributeUses();
       if (ctx.trace)
          log.trace(typeName + " attributes " + attrs.getLength());
+
+      boolean hasOnlyIdAttrs = true;
       for(int i = 0; i < attrs.getLength(); ++i)
       {
          XSAttributeUse attr = (XSAttributeUse)attrs.item(i);
-         bindAttributes(ctx, binding, attr);
+         AttributeBinding attrBinding = bindAttributes(ctx, binding, attr);
+         if(hasOnlyIdAttrs && !Constants.QNAME_ID.equals(attrBinding.getType().getQName()))
+         {
+            hasOnlyIdAttrs = false;
+         }
       }
 
       // customize binding with xsd annotations
@@ -841,6 +848,17 @@ public class XsdBinder
          ctx.popType();
       }
 
+      if(binding.getClassMetaData() == null &&
+            ctx.simpleContentWithIdAsSimpleType &&
+            particle == null && hasOnlyIdAttrs)
+      {
+         binding.setStartElementCreatesObject(false);System.out.println("no object for " + binding.getQName());
+      }
+      else
+      {
+         binding.setStartElementCreatesObject(true);
+      }
+
       if(binding.hasOnlyXmlMimeAttributes())
       {
          addXOPInclude(binding, ctx.schema);
@@ -854,7 +872,7 @@ public class XsdBinder
       return binding;
    }
 
-   private static void bindAttributes(Context ctx, TypeBinding type, XSAttributeUse attrUse)
+   private static AttributeBinding bindAttributes(Context ctx, TypeBinding type, XSAttributeUse attrUse)
    {
       XSAttributeDeclaration attr = attrUse.getAttrDeclaration();
       QName attrName = new QName(attr.getNamespace(), attr.getName());
@@ -940,6 +958,8 @@ public class XsdBinder
 
          log.trace(msg);
       }
+
+      return binding;
    }
 
    private static void bindParticle(Context ctx, XSParticle particle)
@@ -1457,6 +1477,7 @@ public class XsdBinder
       public final SchemaBinding schema;
       public SharedElements sharedElements = new SharedElements();
       public boolean processAnnotations = true;
+      public boolean simpleContentWithIdAsSimpleType = true;
       public boolean trace = log.isTraceEnabled();
       private final List typeGroupStack = new ArrayList();
 

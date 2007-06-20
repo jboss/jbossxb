@@ -85,6 +85,11 @@ public class SchemaBinding
    /** The default property name to use for simple content bindings */
    private String simpleContentProperty = "value";
 
+   /** if all the characters in the mixed content are whitespaces
+    *  should they be considered indentation and ignored?
+    *  the default is true for the backwards compatibility */
+   private boolean ignoreWhitespacesInMixedContent = true;
+
    /** default XOP unmarshaller */
    private XOPUnmarshaller xopUnmarshaller;
    /** default XOP marshaller */
@@ -427,6 +432,16 @@ public class SchemaBinding
       return wildcard.getUnresolvedCharactersHandler() instanceof DomCharactersHandler
       && wildcard.getUnresolvedElementHandler() instanceof DomParticleHandler
       && wildcard.getUnresolvedMarshaller() instanceof DomLocalMarshaller;
+   }
+
+   public boolean isIgnoreWhitespacesInMixedContent()
+   {
+      return ignoreWhitespacesInMixedContent;
+   }
+   
+   public void setIgnoreWhitespacesInMixedContent(boolean value)
+   {
+      this.ignoreWhitespacesInMixedContent = value;
    }
 
    void addElementParticle(ParticleBinding particle)

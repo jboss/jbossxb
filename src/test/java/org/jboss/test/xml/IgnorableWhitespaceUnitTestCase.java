@@ -22,6 +22,7 @@
 package org.jboss.test.xml;
 
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +35,7 @@ import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.UnmarshallingContext;
 import org.jboss.xb.binding.metadata.ClassMetaData;
+import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
@@ -84,7 +86,7 @@ public class IgnorableWhitespaceUnitTestCase extends AbstractJBossXBTest
       super(name);
    }
 
-   public void testCollectionOverrideProperty() throws Exception
+   public void testWhitespaceUnmarshalling() throws Exception
    {
       SchemaBinding schema = XsdBinder.bind(new StringReader(XSD), null);
 
@@ -102,6 +104,37 @@ public class IgnorableWhitespaceUnitTestCase extends AbstractJBossXBTest
       assertEquals(2, top.string.size());
       assertEquals(" ", top.string.get(0));
       assertEquals("\n      newline, 6 spaces, newline, 3 spaces\n   ", top.string.get(1));
+   }
+
+   public void testWhitespaceMarshalling() throws Exception
+   {
+      SchemaBinding schema = XsdBinder.bind(new StringReader(XSD), null);
+
+      schema.setIgnoreUnresolvedFieldOrClass(false);
+      schema.setIgnoreWhitespacesInMixedContent(false);
+
+      ClassMetaData classMetaData = new ClassMetaData();
+      classMetaData.setImpl(Top.class.getName());
+      ElementBinding element = schema.getElement(new QName(NS, "top"));
+      assertNotNull(element);
+      element.setClassMetaData(classMetaData);
+      
+      Top top = new Top();
+      top.string = new ArrayList();
+      top.string.add(" ");
+      top.string.add("\n      newline, 6 spaces, newline, 3 spaces\n   ");
+      MarshallerImpl marshaller = new MarshallerImpl();
+      StringWriter writer = new StringWriter();
+      marshaller.marshal(schema, null, top, writer);
+      
+      // TODO: the xml diff trims whitespaces...
+      //assertXmlFileContent("IgnorableWhitespaceContent.xml", writer.getBuffer().toString());
+      //System.out.println(writer.getBuffer().toString());
+      
+      Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
+      Object o = unmarshaller.unmarshal(new StringReader(writer.getBuffer().toString()), schema);
+      
+      assertEquals(top, o);
    }
 
    public void testObjectModelFactory() throws Exception
@@ -151,5 +184,37 @@ public class IgnorableWhitespaceUnitTestCase extends AbstractJBossXBTest
    public static class Top
    {
       public List string;
+
+      public int hashCode()
+      {
+         final int PRIME = 31;
+         int result = 1;
+         result = PRIME * result + ((string == null) ? 0 : string.hashCode());
+         return result;
+      }
+
+      public boolean equals(Object obj)
+      {
+         if (this == obj)
+            return true;
+         if (obj == null)
+            return false;
+         if (getClass() != obj.getClass())
+            return false;
+         final Top other = (Top) obj;
+         if (string == null)
+         {
+            if (other.string != null)
+               return false;
+         }
+         else if (!string.equals(other.string))
+            return false;
+         return true;
+      }
+      
+      public String toString()
+      {
+         return "[top: string=" + string + "]";
+      }
    }
 }

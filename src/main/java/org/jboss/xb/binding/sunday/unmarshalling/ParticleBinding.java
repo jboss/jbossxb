@@ -29,7 +29,7 @@ public class ParticleBinding
 {
    private TermBinding term;
    private int minOccurs = 1;
-   private int maxOccurs = -1;
+   private int maxOccurs = 1;
    private boolean maxOccursUnbounded;
 
    public ParticleBinding(TermBinding term, int minOccurs, int maxOccurs, boolean maxOccursUnbounded)
@@ -102,6 +102,7 @@ public class ParticleBinding
    
    public String toString()
    {
-      return term.toString();
+      return "[" + term.toString() + ", minOccurs=" + minOccurs +
+      ", maxOccurs=" + (maxOccursUnbounded ? "unbounded" : String.valueOf(maxOccurs)) + "]";
    }
 }

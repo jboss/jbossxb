@@ -58,7 +58,7 @@ public class AttributeRefUnitTestCase extends AbstractJBossXBTest
       "</xsd:schema>";
                     
    private static final String XML =
-      "<top xmlns='http://www.jboss.org/test/xml/attrRef' attr='attr' attrRef='attrRef'/>";
+      "<ns:top xmlns:ns='http://www.jboss.org/test/xml/attrRef' attr='attr' ns:attrRef='attrRef'/>";
 
    public AttributeRefUnitTestCase(String name)
    {
@@ -67,6 +67,7 @@ public class AttributeRefUnitTestCase extends AbstractJBossXBTest
 
    public void testMain() throws Exception
    {
+      enableTrace("org.jboss.xb.binding.sunday.unmarshalling.XsdBinder");
       SchemaBinding schema = XsdBinder.bind(new StringReader(XSD), null);      
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
       Object o = unmarshaller.unmarshal(new StringReader(XML), schema);

@@ -743,6 +743,7 @@ public class RtElementHandler
       {
          QName attrName = new QName(attrs.getURI(i), attrs.getLocalName(i));
          AttributeBinding binding = type.getAttribute(attrName);
+         System.out.println(attrName + " - " + binding);
          if(binding != null)
          {
             AttributeHandler handler = binding.getHandler();

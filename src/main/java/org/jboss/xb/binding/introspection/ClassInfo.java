@@ -26,8 +26,9 @@ import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import EDU.oswego.cs.dl.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>

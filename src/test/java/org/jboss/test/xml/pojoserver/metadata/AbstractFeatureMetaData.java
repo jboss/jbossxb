@@ -23,8 +23,8 @@ package org.jboss.test.xml.pojoserver.metadata;
 
 import java.util.Map;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 
-import EDU.oswego.cs.dl.util.concurrent.ConcurrentReaderHashMap;
 
 /**
  * @author Scott.Stark@jboss.org
@@ -71,7 +71,7 @@ public class AbstractFeatureMetaData
    public void setValue(String key, Object value)
    {
       if (values == null)
-         values = new ConcurrentReaderHashMap();
+         values = new ConcurrentHashMap();
       values.put(key, value);
    }
 

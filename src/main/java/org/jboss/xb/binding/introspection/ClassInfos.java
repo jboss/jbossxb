@@ -23,10 +23,11 @@ package org.jboss.xb.binding.introspection;
 
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.lang.ref.WeakReference;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.util.NoopMap;
-import EDU.oswego.cs.dl.util.concurrent.ConcurrentHashMap;
+
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>

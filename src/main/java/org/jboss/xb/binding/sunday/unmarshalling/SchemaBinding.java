@@ -61,6 +61,8 @@ public class SchemaBinding
    
    /** The namespaces Set<String> */
    private Set namespaces = Collections.EMPTY_SET;
+   /** namespace to prefix map, used in xb builder during binding */
+   private Map nsByPrefix = Collections.EMPTY_MAP;
    /** Map<QName, TypeBinding> for simple/complex types */
    private Map types = new HashMap();
    /** Map<QName, ParticleBinding> for */
@@ -143,6 +145,27 @@ public class SchemaBinding
       addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDSHORT));
       addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDBYTE));
       addType(new SimpleTypeBinding(Constants.QNAME_POSITIVEINTEGER));
+   }
+   
+   public void addPrefixMapping(String prefix, String ns)
+   {
+      if(nsByPrefix == Collections.EMPTY_MAP)
+      {
+         nsByPrefix = Collections.singletonMap(prefix, ns);
+      }
+      else
+      {
+         if(nsByPrefix.size() == 1)
+         {
+            nsByPrefix = new HashMap(nsByPrefix);
+         }
+         nsByPrefix.put(prefix, ns);
+      }
+   }
+   
+   public String getNamespace(String prefix)
+   {
+      return (String) nsByPrefix.get(prefix);
    }
    
    /**

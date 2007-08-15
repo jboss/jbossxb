@@ -87,9 +87,95 @@ public class SundayContentHandler
    public void characters(char[] ch, int start, int length)
    {
       StackItem stackItem = stack.peek();
-      if(stackItem.cursor == null)
+      if(stackItem.cursor != null)
       {
-         if(stackItem.textContent == null)
+         return;
+      }
+
+      ElementBinding e = (ElementBinding) stackItem.particle.getTerm();
+/*      if(!stackItem.ended && e.getType().isTextContentAllowed())
+      {
+         int i = start;
+         while (i < start + length)
+         {
+            if(ch[i] == 0x0a)
+            {
+               stackItem.indentation = true;
+            }
+            else
+            {
+               if (ch[i] == ' ' || ch[i] == 0x0d)
+               {
+               }
+               else
+               {
+                  stackItem.indentation = false;
+                  break;
+               }
+            }
+            ++i;
+         }
+
+         if(!stackItem.indentation)
+         {
+            if (stackItem.textContent == null)
+            {
+               stackItem.textContent = new StringBuffer();
+            }
+            stackItem.textContent.append(ch, start, length);
+         }
+      }
+*/
+      // if current is ended the characters belong to its parent
+      if(stackItem.ended)
+      {
+         int i = 0;
+         do
+         {
+            stackItem = stack.peek(++i);
+         }
+         while(stackItem.cursor != null && i < stack.size());
+         
+         e = (ElementBinding) stackItem.particle.getTerm();
+      }
+
+      // collect characters only if they are allowed content
+      if(e.getType().isTextContentAllowed())
+      {
+         if(stackItem.indentation != Boolean.FALSE)
+         {
+            if(e.getType().isSimple())
+            {
+               // simple content is not analyzed
+               stackItem.indentation = Boolean.FALSE;
+               stackItem.ignorableCharacters = false;
+            }
+            else if(e.getSchema() != null && !e.getSchema().isIgnoreWhitespacesInMixedContent())
+            {
+               stackItem.indentation = Boolean.FALSE;
+               stackItem.ignorableCharacters = false;
+            }
+            else
+            {
+               // the indentation is currently defined as whitespaces with next line characters
+               // this should probably be externalized in the form of a filter or something
+               for (int i = start; i < start + length; ++i)
+               {
+                  if(ch[i] == 0x0a)
+                  {
+                     stackItem.indentation = Boolean.TRUE;
+                  }
+                  else if (!Character.isWhitespace(ch[i]))
+                  {
+                     stackItem.indentation = Boolean.FALSE;
+                     stackItem.ignorableCharacters = false;
+                     break;
+                  }
+               }
+            }
+         }
+         
+         if (stackItem.textContent == null)
          {
             stackItem.textContent = new StringBuffer();
          }
@@ -259,6 +345,7 @@ public class SundayContentHandler
                         ElementBinding parentElement = (ElementBinding) item.particle.getTerm();
                         parentElement.setXopUnmarshaller(schema.getXopUnmarshaller());
 
+                        flushIgnorableCharacters();
                         item.handler = DefaultHandlers.XOP_HANDLER;
                         item.ignoreCharacters = true;
                         item.o = item.handler.startParticle(stack.peek().o, startName, stack.peek().particle, null, nsRegistry);
@@ -284,6 +371,8 @@ public class SundayContentHandler
                   }
                   else
                   {
+                     flushIgnorableCharacters();
+
                      Object o = item.o;
                      // push all except the last one
                      for(int i = newCursors.size() - 1; i >= 0; --i)
@@ -770,6 +859,26 @@ public class SundayContentHandler
 
    // Private
 
+   private void flushIgnorableCharacters()
+   {
+      StackItem stackItem = stack.peek();
+      if(stackItem.cursor != null || stackItem.textContent == null)
+      {
+         return;
+      }
+
+      if(stackItem.indentation == Boolean.TRUE || stackItem.ignorableCharacters)
+      {
+         if(log.isTraceEnabled())
+         {
+            log.trace("ignored characters: " + ((ElementBinding) stackItem.particle.getTerm()).getQName() + " '"
+               + stackItem.textContent + "'");
+         }
+         stackItem.textContent = null;
+         stackItem.indentation = null;
+      }
+   }
+
    private ParticleBinding getParentParticle()
    {
       ListIterator iter = stack.prevIterator();
@@ -804,6 +913,8 @@ public class SundayContentHandler
          //
          // characters
          //
+
+         flushIgnorableCharacters();
 
          TypeBinding charType = type.getSimpleType();
          if(charType == null)
@@ -1132,6 +1243,8 @@ public class SundayContentHandler
       Object o;
       ValueList repeatableParticleValue;
       StringBuffer textContent;
+      Boolean indentation;
+      boolean ignorableCharacters = true;
       boolean ended;
 
       public StackItem(ModelGroupBinding.Cursor cursor, Object o, ParticleHandler handler)
@@ -1171,6 +1284,9 @@ public class SundayContentHandler
          {
             textContent.delete(0, textContent.length());
          }
+
+         indentation = null;
+         ignorableCharacters = true;
       }
    }
 

@@ -214,16 +214,16 @@ public class Content
    public void characters(char[] ch, int start, int length)
    {
       Characters characters = new Characters(ch, start, length);
-      // ignore whitespace-only characters
-      if(characters.toString().trim().length() > 0)
-      {
+      // DON'T ignore whitespace-only characters
+      //if(characters.toString().trim().length() > 0)
+      //{
          content.add(characters);
 
          if(trace)
          {
             log.trace("characters> " + characters);
          }
-      }
+      //}
    }
 
    // Methods that navigate through the content

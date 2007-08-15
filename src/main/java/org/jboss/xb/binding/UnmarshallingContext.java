@@ -51,6 +51,18 @@ public interface UnmarshallingContext
     */
    NamespaceContext getNamespaceContext();
 
+   /** 
+    * @return true if the text content passed to the setValue(...) method
+    * is automatically trimmed (the default).
+    */
+   boolean isTrimTextContent();
+   
+   /**
+    * Should the text content be automatically trimmed before setValue(...) is called.
+    * @param trimTextContent
+    */
+   void setTrimTextContent(boolean trimTextContent);
+
    /**
     * Returns child's content.
     * todo consider deprecating this method

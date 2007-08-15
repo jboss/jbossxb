@@ -161,6 +161,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
+e.printStackTrace();
          throw new JBossXBException("Failed to parse source: " + getLocationAsString(systemId), e);
       }
    }
@@ -231,15 +232,15 @@ public class SaxJBossXBParser
       {
          // todo look at this later
          // do not notify content handler if these are just whitespaces
-         int i = start;
-         while(i < start + length)
-         {
-            if(!Character.isWhitespace(ch[i++]))
-            {
+         //int i = start;
+         //while(i < start + length)
+         //{
+         //   if(!Character.isWhitespace(ch[i++]))
+         //   {
                contentHandler.characters(ch, start, length);
-               break;
-            }
-         }
+         //      break;
+         //   }
+         //}
       }
 
       public void ignorableWhitespace(char ch[], int start, int length)

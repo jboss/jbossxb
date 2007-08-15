@@ -351,6 +351,11 @@ public class TypeBinding
       this.simple = simple ? Boolean.TRUE : Boolean.FALSE;
    }
 
+   public boolean isTextContentAllowed()
+   {
+      return simpleType != null || isSimple();
+   }
+
    public ClassMetaData getClassMetaData()
    {
       return classMetaData;

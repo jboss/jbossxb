@@ -96,6 +96,9 @@ public class ObjectModelBuilder
     */
    private final NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
+   // whether text content should be trimmed before it is set
+   private boolean trimTextContent = true; //  for backwards compatibility
+
    private XSTypeDefinition currentType;
 
    private boolean trace = log.isTraceEnabled();
@@ -163,6 +166,16 @@ public class ObjectModelBuilder
    {
       return nsRegistry;
    }
+
+   public boolean isTrimTextContent()
+   {
+      return trimTextContent;
+   }
+   
+   public void setTrimTextContent(boolean trimTextContent)
+   {
+      this.trimTextContent = trimTextContent;
+   }   
 
    /**
     * Construct a QName from a value
@@ -352,10 +365,17 @@ public class ObjectModelBuilder
          Object acceptedElement = peekAccepted();
          if(element.characters != null && element.characters.length() > 0)
          {
-            String characters = element.characters.toString().trim();
-            if(characters.length() > 0)
+            if(trimTextContent)
             {
-               curFactory.setValue(acceptedElement, this, namespaceURI, localName, characters);
+               String characters = element.characters.toString().trim();
+               if (characters.length() > 0)
+               {
+                  curFactory.setValue(acceptedElement, this, namespaceURI, localName, characters);
+               }
+            }
+            else
+            {
+               curFactory.setValue(acceptedElement, this, namespaceURI, localName, element.characters.toString());
             }
          }
       }

@@ -387,8 +387,10 @@ public class RtElementHandler
       if(!term.isModelGroup())
       {
          TypeBinding type = ((ElementBinding)term).getType();
-         if(!type.isStartElementCreatesObject() ||
-            classMetaData == null && mapEntryMetaData == null && Constants.QNAME_ANYTYPE.equals(type.getQName()))
+         if(type.isSimple() ||
+               classMetaData == null && mapEntryMetaData == null &&
+               (!type.isStartElementCreatesObject() ||
+                     Constants.QNAME_ANYTYPE.equals(type.getQName())))
          {
             if(trace)
             {
@@ -397,8 +399,6 @@ public class RtElementHandler
             return null;
          }
       }
-
-      Object o = null;
 
       // if addMethod is specified, it's probably some collection field
       // but should not be set as a property. Instead, items are added to it using the addMethod
@@ -452,7 +452,7 @@ public class RtElementHandler
                {
                   log.trace("startElement " + elementName + " new array " + itemType.getName());
                }
-               o = GenericValueContainer.FACTORY.array(itemType);
+               return GenericValueContainer.FACTORY.array(itemType);
             }
          }
          else
@@ -495,38 +495,58 @@ public class RtElementHandler
                }
             }
 
-            Class fieldType;
+            Class fieldType = null;
             if(parentClass.isArray())
             {
                fieldType = parentClass.getComponentType();
             }
             else
             {
-               fieldType = FieldInfo.getFieldInfo(parentClass, propName, true).getType();
-               if(particle.isRepeatable() && fieldType.isArray())
+               //fieldType = FieldInfo.getFieldInfo(parentClass, propName, true).getType();
+               // this was changed to false because allow overriding of handler.setParent()
+               // with an interceptor.add(). See CollectionOverridePropertyUnitTestCase
+               // In other words, don't treat it as an array wrapper.
+               FieldInfo fieldInfo = FieldInfo.getFieldInfo(parentClass, propName, false);
+               if(fieldInfo != null)
                {
-                  fieldType = fieldType.getComponentType();
+                  fieldType = fieldInfo.getType();
+                  if (particle.isRepeatable() && fieldType.isArray())
+                  {
+                     fieldType = fieldType.getComponentType();
+                  }
+               }
+               else if(arrayItem.getInterceptors().isEmpty())
+               {
+                  QName typeName = ((ElementBinding)term).getType().getQName();
+                  throw new JBossXBRuntimeException(
+                        "Couldn't apply 'array wrapper' pattern for element " +
+                        elementName + " of type " +
+                        (typeName == null ? "anonymous" : typeName.toString()) +
+                        ": failed to resolve property " + propName +
+                        " and no interceptors applied to override handler.setParent(...)");
                }
             }
 
             if(fieldType.isArray())
             {
-               o = GenericValueContainer.FACTORY.array(wrapperType, propName, fieldType.getComponentType());
+               return GenericValueContainer.FACTORY.array(wrapperType, propName, fieldType.getComponentType());
             }
             else if(Collection.class.isAssignableFrom(fieldType))
             {
-               //System.out.println("GeenericValueContainer.child: " + elementName);
-               o = new ValueListInitializer().newValueList(ValueListHandler.FACTORY.child(), Collection.class);
-               //o = new ArrayList();
+               if (wrapperType == null)
+               {
+                  return new ValueListInitializer().newValueList(ValueListHandler.FACTORY.child(), Collection.class);
+                  //o = ArrayList();
+               }
             }
             else
             {
-               o = GenericValueContainer.FACTORY.array(wrapperType, propName, fieldType);
+               return GenericValueContainer.FACTORY.array(wrapperType, propName, fieldType);
             }
          }
       }
-      else
-      {
+
+      Object o = null;
          if(mapEntryMetaData != null)
          {
             if(mapEntryMetaData.getImpl() != null)
@@ -728,7 +748,7 @@ public class RtElementHandler
                o = newInstance(cls, elementName, noArgCtor);
             }
          }
-      }
+
       return o;
    }
 

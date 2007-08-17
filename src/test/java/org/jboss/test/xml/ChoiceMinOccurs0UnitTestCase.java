@@ -28,59 +28,69 @@ import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 
-
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision: 45337 $</tt>
  */
-public class AttributeRefUnitTestCase extends AbstractJBossXBTest
+public class ChoiceMinOccurs0UnitTestCase extends AbstractJBossXBTest
 {
    private static final String XSD =
       "<xsd:schema xmlns:xsd='http://www.w3.org/2001/XMLSchema'" +
-      "  targetNamespace='http://www.jboss.org/test/xml/attrRef'" +
-      "  xmlns='http://www.jboss.org/test/xml/attrRef'" +
+      "  targetNamespace='http://www.jboss.org/test/xml'" +
+      "  xmlns:ns='http://www.jboss.org/test/xml'" +
       "  xmlns:jbxb='http://www.jboss.org/xml/ns/jbxb'" +
       "  elementFormDefault='qualified'" +
       "  attributeFormDefault='unqualified'" +
       "  version='1.0'>" +
-      "  <xsd:attribute name='attrRef' type='xsd:string'/>" +
-      "  <xsd:element name='top' type='someType'>" +
+      "  <xsd:element name='top' type='ns:someType'>" +
       "    <xsd:annotation>" +
       "      <xsd:appinfo>" +
       "        <jbxb:class impl='" + Top.class.getName() + "'/>" +
       "      </xsd:appinfo>" +
       "    </xsd:annotation>" +
       "  </xsd:element>" +
+      "  <xsd:element name='e1' type='xsd:string'/>" +
+      "  <xsd:element name='e2' type='xsd:string'/>" +
+      "  <xsd:element name='e3' type='xsd:string'/>" +
       "  <xsd:complexType name='someType'>" +
-      "    <xsd:attribute name='attr' type='xsd:string' use='required'/>" +
-      "    <xsd:attribute ref='attrRef' use='required'/>" +
+      "    <xsd:sequence>" +
+      "      <xsd:choice minOccurs='0'>" +
+      "        <xsd:element ref='ns:e1'/>" +
+      "        <xsd:element ref='ns:e2'/>" +
+      "      </xsd:choice>" +
+      "      <xsd:element ref='ns:e3'/>" +
+      "    </xsd:sequence>" +
       "  </xsd:complexType>" +
       "</xsd:schema>";
                     
    private static final String XML =
-      "<ns:top xmlns:ns='http://www.jboss.org/test/xml/attrRef' attr='attr' ns:attrRef='attrRef'/>";
+      "<top xmlns='http://www.jboss.org/test/xml'>" +
+      "  <e3>value3</e3>" +
+      "</top>";
 
-   public AttributeRefUnitTestCase(String name)
+   public ChoiceMinOccurs0UnitTestCase(String name)
    {
       super(name);
    }
 
    public void testMain() throws Exception
    {
-      //enableTrace("org.jboss.xb.binding.sunday.unmarshalling.XsdBinder");
+      enableTrace("org.jboss.xb.binding.sunday.unmarshalling.XsdBinder");
       SchemaBinding schema = XsdBinder.bind(new StringReader(XSD), null);      
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
       Object o = unmarshaller.unmarshal(new StringReader(XML), schema);
       assertNotNull(o);
       assertTrue(o instanceof Top);
       Top top = (Top) o;
-      assertEquals("attr", top.attr);
-      assertEquals("attrRef", top.attrRef);
+      assertNull(top.e1);
+      assertNull(top.e2);
+      assertEquals("value3", top.e3);
    }
    
    public static class Top
    {
-      public String attr;
-      public String attrRef;
+      public String e1;
+      public String e2;
+      public String e3;
    }
 }

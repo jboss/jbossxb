@@ -22,6 +22,9 @@
 package org.jboss.ejb.metadata.jboss;
 
 import org.jboss.javaee.metadata.support.NamedMetaDataWithDescriptions;
+import org.w3c.dom.Element;
+
+import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -44,7 +47,7 @@ public class InvokerProxyBindingMetaData extends NamedMetaDataWithDescriptions
    private String proxyFactory;
    
    /** The proxy factory config */
-   // TODO DOM private Element proxyFactoryConfig;
+   private Element proxyFactoryConfig;
    
    /**
     * Get the invokerProxyBindingName.
@@ -112,5 +115,16 @@ public class InvokerProxyBindingMetaData extends NamedMetaDataWithDescriptions
       if (proxyFactory == null)
          throw new IllegalArgumentException("Null proxyFactory");
       this.proxyFactory = proxyFactory;
+   }
+
+   public Element getProxyFactoryConfig()
+   {
+      return proxyFactoryConfig;
+   }
+
+   @XmlAnyElement(lax=true)
+   public void setProxyFactoryConfig(Element proxyFactoryConfig)
+   {
+      this.proxyFactoryConfig = proxyFactoryConfig;
    }
 }

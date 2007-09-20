@@ -2701,6 +2701,31 @@
          <invoker-proxy-binding-name>invokerProxyBinding2Name</invoker-proxy-binding-name>
          <invoker-mbean>invokerProxyBinding2InvokerMBean</invoker-mbean>
          <proxy-factory>invokerProxyBinding2ProxyFactory</proxy-factory>
+         <proxy-factory-config>
+            <client-interceptors>
+               <home>
+                  <interceptor>org.jboss.proxy.ejb.HomeInterceptor</interceptor>
+                  <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+                  <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+                  <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
+                  <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+               </home>
+               <bean>
+                  <interceptor>org.jboss.proxy.ejb.EntityInterceptor</interceptor>
+                  <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+                  <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+                  <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
+                  <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+               </bean>
+               <list-entity>
+                  <interceptor>org.jboss.proxy.ejb.ListEntityInterceptor</interceptor>
+                  <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
+                  <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
+                  <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
+                  <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+               </list-entity>
+            </client-interceptors>
+         </proxy-factory-config>         
       </invoker-proxy-binding>
    </invoker-proxy-bindings>
    

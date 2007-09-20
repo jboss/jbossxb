@@ -496,4 +496,10 @@ public class JBossMetaData extends IdMetaDataImplWithDescriptionGroupWithOverrid
          throw new IllegalArgumentException("Null assemblyDescriptor");
       this.assemblyDescriptor = assemblyDescriptor;
    }
+
+   // TODO
+   public void mergeMetaDataDefaults(JBossMetaData defaults)
+   {
+      
+   }
 }

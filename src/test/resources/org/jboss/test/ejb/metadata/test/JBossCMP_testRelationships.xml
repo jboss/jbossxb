@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jbosscmp-jdbc xmlns="http://www.jboss.com/xml/ns/javaee/cmp2x"
+       xmlns:jee="http://java.sun.com/xml/ns/javaee"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.jboss.com/xml/ns/javaee/cmp2x http://www.jboss.org/j2ee/schema/jbosscmp-jdbc_5_0.xsd">
+
+   <relationships>
+      <ejb-relation>
+         <ejb-relation-name>empty</ejb-relation-name>
+      </ejb-relation>
+
+      <ejb-relation>
+         <ejb-relation-name>read-only</ejb-relation-name>
+         <read-only>true</read-only>
+         <read-time-out>111</read-time-out>
+      </ejb-relation>
+
+      <ejb-relation>
+         <ejb-relation-name>foreign-key-mapping</ejb-relation-name>
+         <foreign-key-mapping/>
+      </ejb-relation>
+
+      <ejb-relation>
+         <ejb-relation-name>relation-table-mapping</ejb-relation-name>
+         <relation-table-mapping>
+            <table-name>relation_table</table-name>
+            <datasource>java:/DefaultDS</datasource>
+            <datasource-mapping>Hypersonic SQL</datasource-mapping>
+            <create-table>true</create-table>
+            <remove-table>true</remove-table>
+            <post-table-create>
+               <sql-statement>sql1</sql-statement>
+               <sql-statement>sql2</sql-statement>
+               <sql-statement>sql3</sql-statement>
+            </post-table-create>
+            <row-locking>true</row-locking>
+            <pk-constraint>true</pk-constraint>
+         </relation-table-mapping>
+      </ejb-relation>
+
+      <ejb-relation>
+         <ejb-relation-name>A-B</ejb-relation-name>
+         <ejb-relationship-role>
+            <ejb-relationship-role-name>A-has-B</ejb-relationship-role-name>
+            <key-fields>
+               <key-field>
+                  <field-name>id</field-name>
+                  <column-name>a_id</column-name>
+               </key-field>
+            </key-fields>
+         </ejb-relationship-role>
+         <ejb-relationship-role>
+            <ejb-relationship-role-name>B-belongsto-A</ejb-relationship-role-name>
+            <key-fields/>
+         </ejb-relationship-role>
+      </ejb-relation>
+
+      <ejb-relation>
+         <ejb-relation-name>A-C</ejb-relation-name>
+         <ejb-relationship-role>
+            <ejb-relationship-role-name>A-has-C</ejb-relationship-role-name>
+            <key-fields>
+               <key-field>
+                  <field-name>id1</field-name>
+                  <column-name>a_id1</column-name>
+                  <jdbc-type>INTEGER</jdbc-type>
+                  <sql-type>NUMERIC</sql-type>
+               </key-field>
+               <key-field>
+                  <field-name>id2</field-name>
+                  <column-name>a_id2</column-name>
+                  <dbindex/>
+               </key-field>
+            </key-fields>
+         </ejb-relationship-role>
+         <ejb-relationship-role>
+            <ejb-relationship-role-name>C-belongsto-A</ejb-relationship-role-name>
+            <fk-constraint>true</fk-constraint>
+            <key-fields/>
+            <batch-cascade-delete/>
+            <read-ahead>
+               <strategy>on-find</strategy>
+               <page-size>4</page-size>
+               <eager-load-group>quick info</eager-load-group>
+            </read-ahead>
+         </ejb-relationship-role>
+      </ejb-relation>
+
+      <ejb-relation>
+         <ejb-relation-name>A-D</ejb-relation-name>
+         <ejb-relationship-role>
+            <ejb-relationship-role-name>A-has-D</ejb-relationship-role-name>
+            <key-fields>
+               <key-field>
+                  <field-name>id</field-name>
+                  <property>
+                     <property-name>id1</property-name>
+                  </property>
+                  <property>
+                     <property-name>id2</property-name>
+                     <column-name>ID2</column-name>
+                     <not-null>true</not-null>
+                     <jdbc-type>VARCHAR</jdbc-type>
+                     <sql-type>VARCHAR(11)</sql-type>
+                  </property>
+               </key-field>
+            </key-fields>
+         </ejb-relationship-role>
+         <ejb-relationship-role>
+            <ejb-relationship-role-name>D-belongsto-A</ejb-relationship-role-name>
+            <key-fields/>
+         </ejb-relationship-role>
+      </ejb-relation>
+   </relationships>
+
+</jbosscmp-jdbc>

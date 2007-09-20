@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jbosscmp-jdbc xmlns="http://www.jboss.com/xml/ns/javaee/cmp2x"
+       xmlns:jee="http://java.sun.com/xml/ns/javaee"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.jboss.com/xml/ns/javaee/cmp2x http://www.jboss.org/j2ee/schema/jbosscmp-jdbc_5_0.xsd">
+
+   <dependent-value-classes>
+      <dependent-value-class>
+         <description>DVC description</description>
+         <class>dependent.ValueClass</class>
+         <property>
+            <property-name>prop1</property-name>
+            <column-name>PROP1</column-name>
+         </property>
+         <property>
+            <property-name>prop2</property-name>
+            <not-null>true</not-null>
+            <jdbc-type>VARCHAR</jdbc-type>
+            <sql-type>VARCHAR(111)</sql-type>
+         </property>
+      </dependent-value-class>
+      <dependent-value-class>
+         <class>DependentValueClass</class>
+         <property>
+            <property-name>prop1</property-name>
+            <column-name>PROP1</column-name>
+            <not-null>true</not-null>
+            <jdbc-type>INTEGER</jdbc-type>
+            <sql-type>INTEGER</sql-type>
+         </property>
+      </dependent-value-class>
+   </dependent-value-classes>
+
+</jbosscmp-jdbc>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jbosscmp-jdbc xmlns="http://www.jboss.com/xml/ns/javaee/cmp2x"
+       xmlns:jee="http://java.sun.com/xml/ns/javaee"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.jboss.com/xml/ns/javaee/cmp2x http://www.jboss.org/j2ee/schema/jbosscmp-jdbc_5_0.xsd">
+
+   <enterprise-beans>
+      <entity>
+         <ejb-name>entity1EjbName</ejb-name>
+      </entity>
+
+      <entity>
+         <ejb-name>entity2EjbName</ejb-name>
+         <datasource>java:/DefaultDS</datasource>
+         <datasource-mapping>Hypersonic SQL</datasource-mapping>
+         <create-table>true</create-table>
+         <remove-table>true</remove-table>
+
+         <table-name>entity2Table</table-name>
+         <cmp-field>
+            <field-name>entity2CmpField2</field-name>
+            <read-only>true</read-only>
+            <read-time-out>1111</read-time-out>
+            <column-name>name_column</column-name>
+            <not-null>true</not-null>
+            <jdbc-type>VARCHAR</jdbc-type>
+            <sql-type>VARCHAR(111)</sql-type>
+            <auto-increment/>
+            <dbindex/>
+            <check-dirty-after-get>true</check-dirty-after-get>
+            <state-factory>entity2.StateFactory</state-factory>
+         </cmp-field>
+
+         <query>
+            <description>overriden entity2Query1QueryMethod</description>
+            <query-method>
+               <method-name>entity2Query1QueryMethod</method-name>
+               <method-params>
+                  <method-param>entity2Query1QueryMethodParam1</method-param>
+                  <method-param>entity2Query1QueryMethodParam2</method-param>
+               </method-params>
+            </query-method>
+            <jboss-ql>select object(o) from entity2</jboss-ql>
+            <read-ahead>
+               <strategy>on-load</strategy>
+               <page-size>22</page-size>
+               <eager-load-group>eager-group</eager-load-group>
+            </read-ahead>
+            <ql-compiler>entity.QLCompiler</ql-compiler>
+            <lazy-resultset-loading>true</lazy-resultset-loading>
+         </query>
+      </entity>
+   </enterprise-beans>
+
+   <relationships>
+      <ejb-relation>
+         <ejb-relation-name>relation2Name</ejb-relation-name>
+         <ejb-relationship-role>
+            <ejb-relationship-role-name>relation2Role1Name</ejb-relationship-role-name>
+            <key-fields>
+               <key-field>
+                  <field-name>id1</field-name>
+                  <column-name>a_id1</column-name>
+                  <jdbc-type>INTEGER</jdbc-type>
+                  <sql-type>NUMERIC</sql-type>
+               </key-field>
+               <key-field>
+                  <field-name>id2</field-name>
+                  <column-name>a_id2</column-name>
+                  <dbindex/>
+               </key-field>
+            </key-fields>
+         </ejb-relationship-role>
+         <ejb-relationship-role>
+            <ejb-relationship-role-name>relation2Role2Name</ejb-relationship-role-name>
+            <key-fields/>
+            <batch-cascade-delete/>
+         </ejb-relationship-role>
+      </ejb-relation>
+   </relationships>
+
+</jbosscmp-jdbc>

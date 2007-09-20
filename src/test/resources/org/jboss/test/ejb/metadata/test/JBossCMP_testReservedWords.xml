@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jbosscmp-jdbc xmlns="http://www.jboss.com/xml/ns/javaee/cmp2x"
+       xmlns:jee="http://java.sun.com/xml/ns/javaee"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.jboss.com/xml/ns/javaee/cmp2x http://www.jboss.org/j2ee/schema/jbosscmp-jdbc_5_0.xsd">
+
+   <reserved-words>
+      	<word>word1</word>   	
+      	<word>word2</word>
+      	<word>word3</word>
+   </reserved-words>
+
+</jbosscmp-jdbc>

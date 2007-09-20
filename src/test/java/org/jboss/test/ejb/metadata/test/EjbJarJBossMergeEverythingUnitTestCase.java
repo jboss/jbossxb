@@ -31,10 +31,9 @@ import org.jboss.ejb.metadata.spec.EjbJar3xMetaData;
 import org.jboss.ejb.metadata.spec.SessionBeanMetaData;
 import org.jboss.javaee.metadata.spec.JavaEEMetaDataConstants;
 import org.jboss.test.ejb.AbstractEJBEverythingTest;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
-import org.jboss.xb.builder.JBossXBBuilder;
-import org.w3c.dom.ls.LSInput;
+import org.jboss.xb.binding.sunday.unmarshalling.SingletonSchemaResolverFactory;
 
 /**
  * 
@@ -51,46 +50,14 @@ public class EjbJarJBossMergeEverythingUnitTestCase
 
    public static SchemaBindingResolver initResolver()
    {
-      return new SchemaBindingResolver()
-      {
-         public String getBaseURI()
-         {
-            return null;
-         }
-
-         public SchemaBinding resolve(String nsUri, String baseURI, String schemaLocation)
-         {
-            SchemaBinding schema;
-            if(JavaEEMetaDataConstants.JAVAEE_NS.equals(nsUri))
-            {
-               schema = JBossXBBuilder.build(EjbJar30MetaData.class);
-            }
-            else if(JavaEEMetaDataConstants.J2EE_NS.equals(nsUri))
-            {
-               schema = JBossXBBuilder.build(EjbJar21MetaData.class);
-            }
-            else if(JavaEEMetaDataConstants.JBOSS_NS.equals(nsUri))
-            {
-               schema = JBossXBBuilder.build(JBoss50MetaData.class);
-            }
-            else
-            {
-               throw new IllegalStateException("Unexpected namespace: " + nsUri);
-            }
-            return schema;
-         }
-
-         public LSInput resolveAsLSInput(String nsUri, String baseUri, String schemaLocation)
-         {
-            return null;
-         }
-
-         public void setBaseURI(String baseURI)
-         {
-         }
-      };
+      SingletonSchemaResolverFactory factory = SingletonSchemaResolverFactory.getInstance();
+      DefaultSchemaResolver resolver = (DefaultSchemaResolver) factory.getSchemaBindingResolver();
+      resolver.addClassBinding(JavaEEMetaDataConstants.JAVAEE_NS, EjbJar30MetaData.class);
+      resolver.addClassBinding(JavaEEMetaDataConstants.J2EE_NS, EjbJar21MetaData.class);
+      resolver.addClassBinding(JavaEEMetaDataConstants.JBOSS_NS, JBoss50MetaData.class);
+      return resolver;
    }
-   
+
    public EjbJarJBossMergeEverythingUnitTestCase(String name)
    {
       super(name);

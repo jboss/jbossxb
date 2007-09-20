@@ -72,4 +72,18 @@ public interface SchemaResolverConfigMBean
     * @param parseAnnotations the parseAnnotations.
     */
    void setParseAnnotations(Properties parseAnnotations);
+
+   /**
+    * Get the JBossXBBuilder namespace to Class mappings.
+    * 
+    * @return bindingClasses
+    */
+   public Properties getBindingClasses();
+
+   /**
+    * Set the JBossXBBuilder namespace to Class mappings.
+    * 
+    * @param bindingClasses
+    */
+   public void setBindingClasses(Properties bindingClasses);
 }

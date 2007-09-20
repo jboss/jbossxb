@@ -25,9 +25,11 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import org.jboss.logging.Logger;
 import org.jboss.util.xml.JBossEntityResolver;
+import org.jboss.xb.builder.JBossXBBuilder;
 import org.w3c.dom.ls.LSInput;
 import org.xml.sax.InputSource;
 
@@ -45,9 +47,11 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    private String baseURI;
    private JBossEntityResolver resolver;
    private boolean cacheResolvedSchemas = true;
-   private Map schemasByUri = Collections.EMPTY_MAP;
-   private Map schemaInitByUri = Collections.EMPTY_MAP;
-   private Map schemaParseAnnotationsByUri = Collections.EMPTY_MAP;
+   private Map<String, SchemaBinding> schemasByUri = Collections.emptyMap();
+   /** Namespace to JBossXBBuilder binding class */
+   private WeakHashMap<String, Class> uriToClass = new WeakHashMap<String, Class>();
+   private Map<String, SchemaBindingInitializer> schemaInitByUri = Collections.emptyMap();
+   private Map<String, Boolean> schemaParseAnnotationsByUri = Collections.emptyMap();
 
    public DefaultSchemaResolver()
    {
@@ -79,7 +83,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       this.cacheResolvedSchemas = cacheResolvedSchemas;
       if(!cacheResolvedSchemas)
       {
-         schemasByUri = Collections.EMPTY_MAP;
+         schemasByUri = Collections.emptyMap();
       }
    }
 
@@ -126,7 +130,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
             schemaParseAnnotationsByUri = Collections.singletonMap(nsUri, value);
             break;
          case 1:
-            schemaParseAnnotationsByUri = new HashMap(schemaParseAnnotationsByUri);
+            schemaParseAnnotationsByUri = new HashMap<String, Boolean>(schemaParseAnnotationsByUri);
          default:
             schemaParseAnnotationsByUri.put(nsUri, value);
       }
@@ -142,9 +146,9 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    {
       if (nsUri == null)
          throw new IllegalArgumentException("Null namespace uri");
-      return (Boolean) schemaParseAnnotationsByUri.remove(nsUri);
+      return schemaParseAnnotationsByUri.remove(nsUri);
    }
-   
+
    /**
     * Registers a SchemaBindingInitializer for the namespace URI.
     * When the schema binding that corresponds to the namespace URI
@@ -190,7 +194,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
             schemaInitByUri = Collections.singletonMap(nsUri, sbi);
             break;
          case 1:
-            schemaInitByUri = new HashMap(schemaInitByUri);
+            schemaInitByUri = new HashMap<String, SchemaBindingInitializer>(schemaInitByUri);
          default:
             schemaInitByUri.put(nsUri, sbi);
       }
@@ -206,7 +210,16 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    {
       if (nsUri == null)
          throw new IllegalArgumentException("Null namespace uri");
-      return (SchemaBindingInitializer)schemaInitByUri.remove(nsUri);
+      return schemaInitByUri.remove(nsUri);
+   }
+
+   public void addClassBinding(String nsUri, Class clazz)
+   {
+      uriToClass.put(nsUri, clazz);
+   }
+   public Class removeClassBinding(String nsUri)
+   {
+      return uriToClass.remove(nsUri);      
    }
 
    public String getBaseURI()
@@ -229,28 +242,40 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
     */
    public SchemaBinding resolve(String nsURI, String baseURI, String schemaLocation)
    {
-      SchemaBinding schema = (SchemaBinding)schemasByUri.get(nsURI);
+      SchemaBinding schema = schemasByUri.get(nsURI);
       if(schema != null)
       {
          return schema;
       }
 
-      InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
-      
-      if (is != null)
+      // Look for a class 
+      Class bindingClass = uriToClass.get(nsURI);
+      if (bindingClass != null)
       {
-         if( baseURI == null )
-            baseURI = this.baseURI;
-
-         Boolean processAnnotationsBoolean = (Boolean) schemaParseAnnotationsByUri.get(nsURI);
-         boolean processAnnotations = (processAnnotationsBoolean == null) ? true : processAnnotationsBoolean.booleanValue();
-         schema = XsdBinder.bind(is.getByteStream(), null, baseURI, processAnnotations);
+         if( log.isTraceEnabled() )
+            log.trace("resolve, nsURI="+nsURI+", baseURI="+baseURI+", class="+bindingClass);
+         schema = JBossXBBuilder.build(bindingClass);
+      }
+      else
+      {
+         // Parse the schema
+         InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
+         
+         if (is != null)
+         {
+            if( baseURI == null )
+               baseURI = this.baseURI;
+   
+            Boolean processAnnotationsBoolean = schemaParseAnnotationsByUri.get(nsURI);
+            boolean processAnnotations = (processAnnotationsBoolean == null) ? true : processAnnotationsBoolean.booleanValue();
+            schema = XsdBinder.bind(is.getByteStream(), null, baseURI, processAnnotations);
+         }
       }
 
       if(schema != null)
       {
          schema.setSchemaResolver(this);
-         SchemaBindingInitializer sbi = (SchemaBindingInitializer)schemaInitByUri.get(nsURI);
+         SchemaBindingInitializer sbi = schemaInitByUri.get(nsURI);
          if(sbi != null)
          {
             schema = sbi.init(schema);
@@ -260,7 +285,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
          {
             if(schemasByUri == Collections.EMPTY_MAP)
             {
-               schemasByUri = new HashMap();
+               schemasByUri = new HashMap<String, SchemaBinding>();
             }
             schemasByUri.put(nsURI, schema);
          }

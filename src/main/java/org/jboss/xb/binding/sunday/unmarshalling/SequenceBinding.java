@@ -88,6 +88,7 @@ public class SequenceBinding
          private int pos = -1;
          private ElementBinding element;
          private int occurence;
+         private boolean wildcardContent;
 
          public ParticleBinding getCurrentParticle()
          {
@@ -136,6 +137,11 @@ public class SequenceBinding
             return occurence;
          }
 
+         public boolean isWildcardContent()
+         {
+            return wildcardContent;
+         }
+         
          protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
          {
             if(trace)
@@ -170,6 +176,7 @@ public class SequenceBinding
                log.trace(sb.toString());
             }
 
+            wildcardContent = false;
             int i = pos;
             if(pos >= 0)
             {
@@ -310,6 +317,7 @@ public class SequenceBinding
                         ++occurence;
                      }
                      groupStack = addItem(groupStack, this);
+                     wildcardContent = true;
                      break;
                   }
 

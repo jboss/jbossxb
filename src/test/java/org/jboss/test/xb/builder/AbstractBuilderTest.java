@@ -35,6 +35,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
+import org.jboss.xb.builder.runtime.BuilderParticleHandler;
 
 /**
  * AbstractBuilderTest.
@@ -51,6 +52,7 @@ public class AbstractBuilderTest extends AbstractTestCaseWithSetup
       // Uncomment this to make sure we aren't using the RtElementHandler anywhere
       DefaultHandlers.ELEMENT_HANDLER = new DebugElementHandler();
       DefaultHandlers.SIMPLE_HANDLER = DefaultHandlers.ELEMENT_HANDLER;
+      DefaultHandlers.MODEL_GROUP_HANDLER = BuilderParticleHandler.INSTANCE;
    }
 
    public AbstractBuilderTest(String name)

@@ -121,6 +121,11 @@ public class AllBinding
             return occurence;
          }
 
+         public boolean isWildcardContent()
+         {
+            return false;
+         }
+         
          protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
          {
             ParticleBinding particle = (ParticleBinding)elements.get(qName);

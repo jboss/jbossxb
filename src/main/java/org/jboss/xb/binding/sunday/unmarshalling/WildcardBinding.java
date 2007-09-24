@@ -231,14 +231,23 @@ public class WildcardBinding
       }
 
       // todo this stuff could be cached
-      ParticleBinding particle = new ParticleBinding(this);
+      // the 'this' wildcard could be reused
+      // the reason it is overriden is to eliminate its wildcardHandler
+      // which is not initialized in the new one
+      WildcardBinding unresolvedWildcard = new WildcardBinding(schema);
+      unresolvedWildcard.pc = PC_LAX;
+      unresolvedWildcard.schemaResolver = schemaResolver;
+      unresolvedWildcard.unresolvedCharactersHandler = unresolvedCharactersHandler;
+      unresolvedWildcard.unresolvedElementHandler = unresolvedElementHandler;
+      
+      ParticleBinding particle = new ParticleBinding(unresolvedWildcard);
       SequenceBinding sequence = new SequenceBinding(schema);
       sequence.addParticle(particle);
 
       TypeBinding type = new TypeBinding();
       type.setHandler(unresolvedElementHandler);
       type.setSimpleType(unresolvedCharactersHandler);
-      type.setParticle(new ParticleBinding(sequence));
+      type.setParticle(new ParticleBinding(sequence, 1, 0, true));
 
       return new ElementBinding(schema, qName, type);
    }

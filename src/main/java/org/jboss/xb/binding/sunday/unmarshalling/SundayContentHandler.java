@@ -562,7 +562,7 @@ public class SundayContentHandler
             throw new JBossXBRuntimeException("No type for element " + element);
          }
 
-         handler = type.getHandler();
+         handler = type.getHandler();         
          if(handler == null)
          {
             handler = defParticleHandler;
@@ -1135,7 +1135,10 @@ public class SundayContentHandler
             if (wildcard != null)
             {
                hasWildcard = true;
-               wildcardHandler = wildcard.getWildcardHandler();
+               if(parentItem.cursor.isWildcardContent())
+               {
+                  wildcardHandler = wildcard.getWildcardHandler();
+               }
             }
          }
 

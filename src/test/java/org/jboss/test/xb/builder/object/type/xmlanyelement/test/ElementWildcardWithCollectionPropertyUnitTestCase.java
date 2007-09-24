@@ -44,6 +44,7 @@ import org.jboss.xb.builder.JBossXBBuilder;
 import org.jboss.xb.builder.runtime.DOMHandler;
 import org.jboss.xb.builder.runtime.PropertyWildcardHandler;
 import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  * ElementWildcardUnitTestCase.
@@ -74,6 +75,11 @@ public class ElementWildcardWithCollectionPropertyUnitTestCase extends AbstractB
       Element element = result.getWildcard();
       assertNotNull(element);
       assertEquals("test-element", element.getNodeName());
+      NodeList childNodes = element.getChildNodes();
+      assertNotNull(childNodes);
+      assertEquals(1, childNodes.getLength());
+      element = (Element) childNodes.item(0);
+      assertEquals("test-child-element", element.getNodeName());
    }
 
    // TODO Fix this
@@ -92,6 +98,7 @@ public class ElementWildcardWithCollectionPropertyUnitTestCase extends AbstractB
       TermBinding term = particle.getTerm();
       assertNotNull(term);
       assertTrue(term instanceof SequenceBinding);
+      // i don't think the following assertion is wrong
       term = assertSingleSequence(term);
       assertTrue(term instanceof WildcardBinding);
       WildcardBinding wildcardBinding = type.getWildcard();

@@ -48,7 +48,7 @@ public abstract class ModelGroupBinding
    protected QName qName;
 
    protected boolean requiredParticle;
-   protected ParticleHandler handler = DefaultHandlers.ELEMENT_HANDLER;
+   protected ParticleHandler handler = DefaultHandlers.MODEL_GROUP_HANDLER;
 
    protected ModelGroupBinding(SchemaBinding schema)
    {
@@ -194,6 +194,8 @@ public abstract class ModelGroupBinding
 
       public abstract int getOccurence();
 
+      public abstract boolean isWildcardContent();
+      
       // Protected
 
       protected abstract List startElement(QName qName,

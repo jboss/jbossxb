@@ -1407,8 +1407,8 @@ public class JBossXBNoSchemaBuilder
 
                      // TODO yes, this is another hack with collections
                      JBossXmlChild xmlChild = ((ClassInfo) propertyType).getUnderlyingAnnotation(JBossXmlChild.class);
-                     if (xmlChild == null)
-                     {
+                     if (xmlChild == null && localPropertyType.equals(propertyType))
+                     { // the localPropertyType was not overriden previously so use the collection parameter type
                         localPropertyType = typeArg;
                      }
                   }

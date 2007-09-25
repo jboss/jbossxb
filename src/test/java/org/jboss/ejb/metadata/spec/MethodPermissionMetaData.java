@@ -103,7 +103,7 @@ public class MethodPermissionMetaData extends IdMetaDataImplWithDescriptions
     * 
     * @param roles the roles.
     */
-   @XmlElement(name="role-name", type=NonNullLinkedHashSet.class)
+   @XmlElement(name="role-name"/*, type=NonNullLinkedHashSet.class*/)
    public void setRoles(Set<String> roles)
    {
       this.roles = roles;

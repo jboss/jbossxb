@@ -24,7 +24,6 @@ package org.jboss.ejb.metadata.jboss;
 import java.util.Set;
 
 import org.jboss.javaee.metadata.support.NamedMetaDataWithDescriptions;
-import org.jboss.javaee.metadata.support.NonNullLinkedHashSet;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -506,7 +505,7 @@ public class ContainerConfigurationMetaData extends NamedMetaDataWithDescription
     * @param depends the depends.
     * @throws IllegalArgumentException for a null depends
     */
-   @XmlElement(type=NonNullLinkedHashSet.class)
+   //@XmlElement(type=NonNullLinkedHashSet.class)
    public void setDepends(Set<String> depends)
    {
       if (depends == null)
@@ -530,7 +529,7 @@ public class ContainerConfigurationMetaData extends NamedMetaDataWithDescription
     * @param invokerProxyBindingNames the invokerProxyBindingNames.
     * @throws IllegalArgumentException for a null invokerProxyBindingNames
     */
-   @XmlElement(name="invoker-proxy-binding-name", type=NonNullLinkedHashSet.class)
+   @XmlElement(name="invoker-proxy-binding-name"/*, type=NonNullLinkedHashSet.class*/)
    public void setInvokerProxyBindingNames(Set<String> invokerProxyBindingNames)
    {
       if (invokerProxyBindingNames == null)

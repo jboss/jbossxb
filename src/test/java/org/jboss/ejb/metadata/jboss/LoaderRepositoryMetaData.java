@@ -24,10 +24,8 @@ package org.jboss.ejb.metadata.jboss;
 import java.util.Set;
 
 import org.jboss.javaee.metadata.support.IdMetaDataImpl;
-import org.jboss.javaee.metadata.support.NonNullLinkedHashSet;
 
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
@@ -100,7 +98,7 @@ public class LoaderRepositoryMetaData extends IdMetaDataImpl
     * @param loaderRepositoryConfig the loaderRepositoryConfig.
     * @throws IllegalArgumentException for a null loaderRepositoryConfig
     */
-   @XmlElement(type=NonNullLinkedHashSet.class)
+   //@XmlElement(type=NonNullLinkedHashSet.class)
    public void setLoaderRepositoryConfig(Set<LoaderRepositoryConfigMetaData> loaderRepositoryConfig)
    {
       if (loaderRepositoryConfig == null)

@@ -61,7 +61,7 @@ public class IgnoreDependencyMetaData extends IdMetaDataImplWithDescriptions
     * @param injectionTargets the injectionTargets.
     * @throws IllegalArgumentException for a null injectionTargets
     */
-   @XmlElement(name="injection-target", type=NonNullLinkedHashSet.class)
+   @XmlElement(name="injection-target"/*, type=NonNullLinkedHashSet.class*/)
    public void setInjectionTargets(Set<ResourceInjectionTargetMetaData> injectionTargets)
    {
       if (injectionTargets == null)

@@ -38,7 +38,9 @@ import javax.xml.bind.annotation.XmlType;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-@XmlType(name="container-configurationType", propOrder={"containerName", "extendsName", "callLogging", "invokerProxyBindingNames",
+@XmlType(name="container-configurationType",
+      propOrder={"descriptions", "containerName", "extendsName",
+      "callLogging", "invokerProxyBindingNames",
       "syncOnCommitOnly", "insertAfterEjbPostCreate",
       "ejbStoreOnClean", "storeNotFlushed", "instancePool",
       "instanceCache", "persistenceManager",

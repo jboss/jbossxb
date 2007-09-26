@@ -24,25 +24,11 @@ package org.jboss.test.xb.builder.object.type.xmlanyelement.test;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import javax.xml.XMLConstants;
-import javax.xml.namespace.QName;
 
 import junit.framework.Test;
 
 import org.jboss.test.xb.builder.AbstractBuilderTest;
-import org.jboss.test.xb.builder.object.type.xmlanyelement.support.ElementWildcard;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.support.ElementWildcardWithCollectionProperty;
-import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
-import org.jboss.xb.builder.JBossXBBuilder;
-import org.jboss.xb.builder.runtime.DOMHandler;
-import org.jboss.xb.builder.runtime.PropertyWildcardHandler;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -82,6 +68,25 @@ public class ElementWildcardWithCollectionPropertyUnitTestCase extends AbstractB
       assertEquals("test-child-element", element.getNodeName());
    }
 
+   public void testUnmarshalResolvedWildcard() throws Exception
+   {
+      ElementWildcardWithCollectionProperty result = unmarshalObject(ElementWildcardWithCollectionProperty.class);
+      Collection<String> properties = result.getProperties();
+      ArrayList<String> expected = new ArrayList<String>();
+      expected.add("1");
+      expected.add("2");
+      assertEquals(expected, properties);
+      Element element = result.getWildcard();
+      assertNotNull(element);
+      assertEquals("wildcard", element.getNodeName());
+      NodeList childNodes = element.getChildNodes();
+      assertNotNull(childNodes);
+      assertEquals(1, childNodes.getLength());
+      element = (Element) childNodes.item(0);
+      assertEquals("test-child-element", element.getNodeName());
+   }
+
+   /*
    // TODO Fix this
    public void testWildcardWithPropertiesBinding() throws Exception
    {
@@ -111,4 +116,5 @@ public class ElementWildcardWithCollectionPropertyUnitTestCase extends AbstractB
       assertNotNull(particleHandler);
       assertTrue(particleHandler instanceof PropertyWildcardHandler);
    }
+   */
 }

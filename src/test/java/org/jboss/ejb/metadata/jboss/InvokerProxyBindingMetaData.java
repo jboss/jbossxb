@@ -33,7 +33,8 @@ import javax.xml.bind.annotation.XmlType;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-@XmlType(name="invoker-proxy-bindingType", propOrder={"descriptions", "name", "invokerProxyBindingName", "invokerMBean", "proxyFactory", "proxyFactoryConfig"})
+@XmlType(name="invoker-proxy-bindingType", propOrder={"descriptions", "name", "invokerProxyBindingName", "invokerMBean", "proxyFactory",
+      "proxyFactoryConfig", "wildcard"})
 public class InvokerProxyBindingMetaData extends NamedMetaDataWithDescriptions
 {
    /** The serialVersionUID */
@@ -47,7 +48,9 @@ public class InvokerProxyBindingMetaData extends NamedMetaDataWithDescriptions
    
    /** The proxy factory config */
    private Element proxyFactoryConfig;
-   
+   /** A duplicate dom wildcard property */
+   private Element wildcard;
+
    /**
     * Get the invokerProxyBindingName.
     * 
@@ -124,5 +127,15 @@ public class InvokerProxyBindingMetaData extends NamedMetaDataWithDescriptions
    public void setProxyFactoryConfig(Element proxyFactoryConfig)
    {
       this.proxyFactoryConfig = proxyFactoryConfig;
+   }
+
+   public Element getWildcard()
+   {
+      return wildcard;
+   }
+
+   public void setWildcard(Element wildcard)
+   {
+      this.wildcard = wildcard;
    }
 }

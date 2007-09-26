@@ -24,6 +24,8 @@ package org.jboss.ejb.metadata.jboss;
 import java.util.Set;
 
 import org.jboss.javaee.metadata.support.NamedMetaDataWithDescriptions;
+import org.jboss.javaee.metadata.support.NonNullLinkedHashSet;
+import org.w3c.dom.Element;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -36,7 +38,15 @@ import javax.xml.bind.annotation.XmlType;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-@XmlType(name="container-configurationType")
+@XmlType(name="container-configurationType", propOrder={"containerName", "extendsName", "callLogging", "invokerProxyBindingNames",
+      "syncOnCommitOnly", "insertAfterEjbPostCreate",
+      "ejbStoreOnClean", "storeNotFlushed", "instancePool",
+      "instanceCache", "persistenceManager",
+      "webClassLoader", "lockingPolicy",
+      "commitOption", "securityDomain",
+      "clusterConfig", "depends",
+      "containerPoolConf", "containerCacheConf", "containerInterceptors"}
+)
 public class ContainerConfigurationMetaData extends NamedMetaDataWithDescriptions
 {
    /** The standard CMP2 configuration */
@@ -116,15 +126,18 @@ public class ContainerConfigurationMetaData extends NamedMetaDataWithDescription
    /** The locking policy */
    private String lockingPolicy;
    
-   // TODO DOM container cache conf
-   
-   // TODO DOM container pool conf
-   
+   /** The InstancePool configuration */
+   private Element containerPoolConf;
+   /** The InstanceCache configuration */
+   private Element containerCacheConf;
+   /** The ejb container interceptor stack configuration */
+   private Element containerInterceptorsConf;
+
    /** The commit option */
    private CommitOption commitOption = CommitOption.A;
    
    /** The option d refresh rate in milliseconds */
-   private long optionDRefreshRateMillis = 30000;
+   private long optiondRefreshRateMillis = 30000;
    
    /** The security domain */
    private String securityDomain;
@@ -255,6 +268,7 @@ public class ContainerConfigurationMetaData extends NamedMetaDataWithDescription
     * 
     * @param ejbStoreOnClean the ejbStoreOnClean.
     */
+   @XmlElement(name="call-ejb-store-on-clean")
    public void setEjbStoreOnClean(boolean ejbStoreOnClean)
    {
       this.ejbStoreOnClean = ejbStoreOnClean;
@@ -443,27 +457,27 @@ public class ContainerConfigurationMetaData extends NamedMetaDataWithDescription
    }
 
    /**
-    * Get the optionDRefreshRateMillis.
+    * Get the optiondRefreshRateMillis.
     * 
-    * @return the optionDRefreshRateMillis.
+    * @return the optiondRefreshRateMillis.
     */
    public long getOptiondRefreshRateMillis()
    {
-      return optionDRefreshRateMillis;
+      return optiondRefreshRateMillis;
    }
 
    /**
-    * Set the optionDRefreshRateMillis.
+    * Set the optiondRefreshRateMillis.
     * 
-    * @param optionDRefreshRateMillis the optionDRefreshRateMillis.
+    * @param optiondRefreshRateMillis the optiondRefreshRateMillis.
     * @throws IllegalArgumentException if the refresh rate is not positive
     */
    @XmlTransient
-   public void setOptiondRefreshRateMillis(long optionDRefreshRateMillis)
+   public void setOptiondRefreshRateMillis(long optiondRefreshRateMillis)
    {
-      if (optionDRefreshRateMillis <= 0)
-         throw new IllegalArgumentException("optionD-refresh-rate must be positive got " + optionDRefreshRateMillis);
-      this.optionDRefreshRateMillis = optionDRefreshRateMillis;
+      if (optiondRefreshRateMillis <= 0)
+         throw new IllegalArgumentException("optionD-refresh-rate must be positive got " + optiondRefreshRateMillis);
+      this.optiondRefreshRateMillis = optiondRefreshRateMillis;
    }
 
    /**
@@ -473,11 +487,11 @@ public class ContainerConfigurationMetaData extends NamedMetaDataWithDescription
     */
    public int getOptiondRefreshRate()
    {
-      return (int) optionDRefreshRateMillis / 1000;
+      return (int) optiondRefreshRateMillis / 1000;
    }
    
    /**
-    * Set the optionDRefreshRateMillis in seconds.
+    * Set the optiondRefreshRateMillis in seconds.
     * 
     * @param optionDRefreshRateSeconds the optionDRefreshRate in seconds
     * @throws IllegalArgumentException if the refresh rate is not positive
@@ -487,6 +501,37 @@ public class ContainerConfigurationMetaData extends NamedMetaDataWithDescription
       if (optionDRefreshRateSeconds <= 0)
          throw new IllegalArgumentException("optionD-refresh-rate must be positive got " + optionDRefreshRateSeconds);
       setOptiondRefreshRateMillis(optionDRefreshRateSeconds * 1000);
+   }
+
+   
+   public Element getContainerPoolConf()
+   {
+      return containerPoolConf;
+   }
+
+   public void setContainerPoolConf(Element containerPoolConf)
+   {
+      this.containerPoolConf = containerPoolConf;
+   }
+
+   public Element getContainerCacheConf()
+   {
+      return containerCacheConf;
+   }
+
+   public void setContainerCacheConf(Element containerCacheConf)
+   {
+      this.containerCacheConf = containerCacheConf;
+   }
+
+   public Element getContainerInterceptors()
+   {
+      return containerInterceptorsConf;
+   }
+
+   public void setContainerInterceptors(Element containerInterceptorsConf)
+   {
+      this.containerInterceptorsConf = containerInterceptorsConf;
    }
 
    /**

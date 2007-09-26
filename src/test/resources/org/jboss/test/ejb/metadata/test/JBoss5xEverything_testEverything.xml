@@ -2704,25 +2704,22 @@
          <proxy-factory-config>
             <client-interceptors>
                <home>
-                  <interceptor>org.jboss.proxy.ejb.HomeInterceptor</interceptor>
-                  <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
-                  <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
-                  <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
-                  <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+                  <interceptor>org.jboss.proxy.ejb.HomeInterceptor1.2</interceptor>
+                  <interceptor>org.jboss.proxy.ejb.HomeInterceptor2.2</interceptor>
+                  <interceptor call-by-value="false">org.jboss.proxy.ejb.HomeInterceptorcbvf3.2</interceptor>
+                  <interceptor call-by-value="true">org.jboss.proxy.ejb.HomeInterceptorcbvt4.2</interceptor>
                </home>
                <bean>
-                  <interceptor>org.jboss.proxy.ejb.EntityInterceptor</interceptor>
-                  <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
-                  <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
-                  <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
-                  <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+                  <interceptor>org.jboss.proxy.ejb.BeanInterceptor1.2</interceptor>
+                  <interceptor>org.jboss.proxy.ejb.BeanInterceptor2.2</interceptor>
+                  <interceptor call-by-value="false">org.jboss.proxy.ejb.BeanInterceptorcbvf3.2</interceptor>
+                  <interceptor call-by-value="true">org.jboss.proxy.ejb.BeanInterceptorcbvt4.2</interceptor>
                </bean>
                <list-entity>
-                  <interceptor>org.jboss.proxy.ejb.ListEntityInterceptor</interceptor>
-                  <interceptor>org.jboss.proxy.SecurityInterceptor</interceptor>
-                  <interceptor>org.jboss.proxy.TransactionInterceptor</interceptor>
-                  <interceptor call-by-value="false">org.jboss.invocation.InvokerInterceptor</interceptor>
-                  <interceptor call-by-value="true">org.jboss.invocation.MarshallingInvokerInterceptor</interceptor>
+                  <interceptor>org.jboss.proxy.ejb.EntityInterceptor1.2</interceptor>
+                  <interceptor>org.jboss.proxy.ejb.EntityInterceptor2.2</interceptor>
+                  <interceptor call-by-value="false">org.jboss.proxy.ejb.EntityInterceptorcbvf3.2</interceptor>
+                  <interceptor call-by-value="true">org.jboss.proxy.ejb.EntityInterceptorcbvt4.2</interceptor>
                </list-entity>
             </client-interceptors>
          </proxy-factory-config>         

@@ -75,6 +75,8 @@ import org.jboss.javaee.metadata.spec.SecurityRoleMetaData;
 //import org.jboss.metadata.SessionMetaData;
 import org.jboss.test.ejb.AbstractEJBEverythingTest;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 
 /**
@@ -133,7 +135,8 @@ public class JBoss5xEverythingUnitTestCase extends AbstractEJBEverythingTest
       assertResourceManager("resourceManager2", false, jbossMetaData.getResourceManager("resourceManager2Name"));
       assertInvokerProxyBindings(jbossMetaData.getInvokerProxyBindings());
       assertInvokerProxyBinding("invokerProxyBinding1", 1, jbossMetaData.getInvokerProxyBinding("invokerProxyBinding1Name"));
-      assertInvokerProxyBinding("invokerProxyBinding2", 2, jbossMetaData.getInvokerProxyBinding("invokerProxyBinding2Name"));
+      InvokerProxyBindingMetaData ipbmd2 = jbossMetaData.getInvokerProxyBinding("invokerProxyBinding2Name");
+      assertInvokerProxyBinding("invokerProxyBinding2", 2, ipbmd2);
       fixUpContainerConfigurations(jbossMetaData);
       assertContainerConfigurations(jbossMetaData);
       
@@ -151,7 +154,6 @@ public class JBoss5xEverythingUnitTestCase extends AbstractEJBEverythingTest
       //assertAssemblyDescriptor(application);
       //assertEquals("resourceManager1JndiName", application.getResourceByName("resourceManager1Name"));
       //assertEquals("resourceManager2URL", application.getResourceByName("resourceManager2Name"));
-      //assertInvokerProxyBindings(application.getInvokerProxyBindings());
       //assertInvokerProxyBinding("invokerProxyBinding1", application.getInvokerProxyBindingMetaDataByName("invokerProxyBinding1Name"));
       //assertInvokerProxyBinding("invokerProxyBinding2", application.getInvokerProxyBindingMetaDataByName("invokerProxyBinding2Name"));
       //assertContainerConfigurations(application);
@@ -1169,9 +1171,52 @@ public class JBoss5xEverythingUnitTestCase extends AbstractEJBEverythingTest
       assertEquals(prefix + "Name", binding.getInvokerProxyBindingName());
       assertEquals(prefix + "InvokerMBean", binding.getInvokerMBean());
       assertEquals(prefix + "ProxyFactory", binding.getProxyFactory());
-      // TODO DOM invoker-proxy-config
+      // The DOM invoker-proxy-config
+      Element config = binding.getProxyFactoryConfig();
+      if (config == null)
+         return;
+      if (config.getElementsByTagName("client-interceptors").getLength() > 0)
+         assertInvokerProxyBindingPFCClientInterceptor(prefix, count, config);
    }
-   
+   private void assertInvokerProxyBindingPFCClientInterceptor(String prefix, int count, Element config)
+   {
+      NodeList ci = config.getElementsByTagName("client-interceptors");
+      assertEquals("client-interceptors count is 1", 1, ci.getLength());
+      Element cis = (Element) ci.item(0);
+      NodeList home = cis.getElementsByTagName("home");
+      Element homeE = (Element) home.item(0);
+      NodeList homeInterceptors = homeE.getElementsByTagName("interceptor");
+      assertEquals("home count is 4", 4, homeInterceptors.getLength());
+      for(int n = 0; n < homeInterceptors.getLength(); n ++)
+      {
+         Element interceptor = (Element) homeInterceptors.item(n);
+         String callByValue = interceptor.getAttribute("call-by-value");
+         String text = interceptor.getTextContent();
+         String expected;
+         if (callByValue.length() == 0)
+            expected = "org.jboss.proxy.ejb.HomeInterceptor"+(n+1)+"."+count;
+         else
+            expected = "org.jboss.proxy.ejb.HomeInterceptor"+(Boolean.valueOf(callByValue)?"cbvt" : "cbvf")+(n+1)+"."+count;
+         assertEquals(expected, text);
+      }
+      NodeList bean = cis.getElementsByTagName("bean");
+      Element beanE = (Element) bean.item(0);
+      NodeList beanInterceptors = beanE.getElementsByTagName("interceptor");
+      assertEquals("bean count is 4", 4, beanInterceptors.getLength());
+      for(int n = 0; n < beanInterceptors.getLength(); n ++)
+      {
+         Element interceptor = (Element) beanInterceptors.item(n);
+         String callByValue = interceptor.getAttribute("call-by-value");
+         String text = interceptor.getTextContent();
+         String expected;
+         if (callByValue.length() == 0)
+            expected = "org.jboss.proxy.ejb.BeanInterceptor"+(n+1)+"."+count;
+         else
+            expected = "org.jboss.proxy.ejb.BeanInterceptor"+(Boolean.valueOf(callByValue)?"cbvt" : "cbvf")+(n+1)+"."+count;
+         assertEquals(expected, text);
+      }
+   }
+
 /*   private void assertInvokerProxyBindings(Iterator<org.jboss.metadata.InvokerProxyBindingMetaData> bindings)
    {
       assertNotNull(bindings);

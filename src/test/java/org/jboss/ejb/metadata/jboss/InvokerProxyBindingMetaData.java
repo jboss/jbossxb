@@ -24,9 +24,7 @@ package org.jboss.ejb.metadata.jboss;
 import org.jboss.javaee.metadata.support.NamedMetaDataWithDescriptions;
 import org.w3c.dom.Element;
 
-import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 /**
@@ -35,7 +33,7 @@ import javax.xml.bind.annotation.XmlType;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-@XmlType(name="invoker-proxy-bindingType", propOrder={"descriptions", "name", "invokerProxyBindingName", "invokerMBean", "proxyFactory", "wildcard"})
+@XmlType(name="invoker-proxy-bindingType", propOrder={"descriptions", "name", "invokerProxyBindingName", "invokerMBean", "proxyFactory", "proxyFactoryConfig"})
 public class InvokerProxyBindingMetaData extends NamedMetaDataWithDescriptions
 {
    /** The serialVersionUID */
@@ -123,24 +121,8 @@ public class InvokerProxyBindingMetaData extends NamedMetaDataWithDescriptions
       return proxyFactoryConfig;
    }
 
-   @XmlTransient
    public void setProxyFactoryConfig(Element proxyFactoryConfig)
    {
       this.proxyFactoryConfig = proxyFactoryConfig;
-   }
-   
-   public Element getWildcard()
-   {
-      return getProxyFactoryConfig();
-   }
-
-   /**
-    * This is a hack to make proxy-factory-config parsed as
-    * unresolved element of a wildcard
-    */
-   @XmlAnyElement(lax=true)
-   public void setWildcard(Element e)
-   {
-      setProxyFactoryConfig(e);
    }
 }

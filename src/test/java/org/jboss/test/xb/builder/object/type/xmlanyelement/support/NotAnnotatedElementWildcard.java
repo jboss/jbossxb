@@ -21,46 +21,26 @@
 */
 package org.jboss.test.xb.builder.object.type.xmlanyelement.support;
 
-import java.util.Collection;
-
-import javax.xml.bind.annotation.XmlAnyElement;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import org.w3c.dom.Element;
 
 /**
  * ElementWildcard.
  * 
- * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-@XmlType(propOrder={"properties", "wildcard"})
-public class ElementWildcardWithCollectionProperty
+public class NotAnnotatedElementWildcard
 {
-   private Element wildcard;
+   private Element element;
 
-   private Collection<String> properties;
-   
-   public Collection<String> getProperties()
+   public Element getElement()
    {
-      return properties;
+      return element;
    }
 
-   @XmlElement(name="property")
-   public void setProperties(Collection<String> properties)
+   public void setElement(Element element)
    {
-      this.properties = properties;
-   }
-
-   public Element getWildcard()
-   {
-      return wildcard;
-   }
-
-   @XmlAnyElement(lax=true)
-   public void setWildcard(Element wildcard)
-   {
-      this.wildcard = wildcard;
+      this.element = element;
    }
 }

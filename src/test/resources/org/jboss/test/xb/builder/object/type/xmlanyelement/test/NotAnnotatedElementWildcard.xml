@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<not-annotated-element-wildcard>
+   <element>
+      <test-child-element/>
+   </element>
+</not-annotated-element-wildcard>

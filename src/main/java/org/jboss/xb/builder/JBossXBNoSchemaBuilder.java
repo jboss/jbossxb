@@ -791,6 +791,7 @@ public class JBossXBNoSchemaBuilder
       Set<PropertyInfo> properties = beanInfo.getProperties();
       if (properties != null && properties.isEmpty() == false)
       {
+         boolean seenXmlAnyElement = false;
          for (PropertyInfo property : properties)
          {
             push(typeInfo, property.getName());
@@ -815,6 +816,15 @@ public class JBossXBNoSchemaBuilder
             {
                if (trace)
                   log.trace("Seen @XmlAnyElement for type=" + beanInfo.getName() + " property=" + property.getName());
+               if (wildcardProperty != null && seenXmlAnyElement)
+                  throw new RuntimeException("@XmlAnyElement seen on two properties: " + property.getName() + " and " + wildcardProperty.getName());
+               wildcardProperty = property;
+               seenXmlAnyElement = true;
+            }
+            else if (!seenXmlAnyElement && wildcardProperty == null && property.getType().getName().equals(org.w3c.dom.Element.class.getName()))
+            {
+               if (trace)
+                  log.trace("Using type=" + beanInfo.getName() + " property=" + property.getName() + " as the base wildcard");
                if (wildcardProperty != null)
                   throw new RuntimeException("@XmlAnyElement seen on two properties: " + property.getName() + " and " + wildcardProperty.getName());
                wildcardProperty = property;
@@ -1500,27 +1510,34 @@ public class JBossXBNoSchemaBuilder
                               + property.getName() + " handler=" + propertyHandler + " wrapper=" + qName);
                   }
                }
+               // else if it's not a DOM element which is going to be treated as wildcard
                else
                {
-                  XBValueAdapter valueAdapter = null;
-                  XmlJavaTypeAdapter xmlTypeAdapter = property.getUnderlyingAnnotation(XmlJavaTypeAdapter.class);
-                  if (xmlTypeAdapter != null)
+                  // DOM elements are going to be treated as unresolved
+                  // however having the property registered
+                  if(!Element.class.getName().equals(propertyType.getName()))
                   {
-                     valueAdapter = new XBValueAdapter(xmlTypeAdapter.value(), propertyType.getTypeInfoFactory());
-                     localPropertyType = valueAdapter.getAdaptedType();
+                     XBValueAdapter valueAdapter = null;
+                     XmlJavaTypeAdapter xmlTypeAdapter = property.getUnderlyingAnnotation(XmlJavaTypeAdapter.class);
+                     if (xmlTypeAdapter != null)
+                     {
+                        valueAdapter = new XBValueAdapter(xmlTypeAdapter.value(), propertyType.getTypeInfoFactory());
+                        localPropertyType = valueAdapter.getAdaptedType();
+                     }
+
+                     TypeBinding elementTypeBinding = resolveTypeBinding(localPropertyType);
+                     ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, qName,
+                           false);
+                     elementBinding.setNillable(nillable);
+                     elementBinding.setValueAdapter(valueAdapter);
+
+                     // Bind it to the model
+                     particle = new ParticleBinding(elementBinding, 1, 1, isCol);
+                     if (required == false)
+                        particle.setMinOccurs(0);
+
+                     targetGroup.addParticle(particle);
                   }
-
-                  TypeBinding elementTypeBinding = resolveTypeBinding(localPropertyType);
-                  ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, qName, false);
-                  elementBinding.setNillable(nillable);
-                  elementBinding.setValueAdapter(valueAdapter);
-
-                  // Bind it to the model
-                  particle = new ParticleBinding(elementBinding, 1, 1, isCol);
-                  if (required == false)
-                     particle.setMinOccurs(0);
-
-                  targetGroup.addParticle(particle);
 
                   beanAdapterFactory.addProperty(qName, propertyHandler);
                   if (trace)
@@ -1593,8 +1610,9 @@ public class JBossXBNoSchemaBuilder
          }
 
          XmlAnyElement xmlAnyElement = wildcardProperty.getUnderlyingAnnotation(XmlAnyElement.class);
+         boolean isLax = xmlAnyElement == null ? true : xmlAnyElement.lax();
          WildcardBinding wildcard = new WildcardBinding(schemaBinding);
-         if (xmlAnyElement.lax())
+         if (isLax)
             wildcard.setProcessContents((short) 3); // Lax
          else
             wildcard.setProcessContents((short) 1); // Strict

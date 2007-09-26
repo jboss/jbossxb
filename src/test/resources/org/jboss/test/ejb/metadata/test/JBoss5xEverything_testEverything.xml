@@ -2722,7 +2722,9 @@
                   <interceptor call-by-value="true">org.jboss.proxy.ejb.EntityInterceptorcbvt4.2</interceptor>
                </list-entity>
             </client-interceptors>
-         </proxy-factory-config>         
+         </proxy-factory-config>
+         <!-- Unknown element to test duplicate wildcards -->
+         <wildcard />
       </invoker-proxy-binding>
    </invoker-proxy-bindings>
    

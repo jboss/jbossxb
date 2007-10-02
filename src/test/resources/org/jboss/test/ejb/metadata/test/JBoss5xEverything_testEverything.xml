@@ -2745,7 +2745,7 @@
          <invoker-proxy-binding-name>containerConfiguration1InvokerProxyBindingName2</invoker-proxy-binding-name>
          <sync-on-commit-only>true</sync-on-commit-only>
          <insert-after-ejb-post-create>true</insert-after-ejb-post-create>
-         <ejb-store-on-clean>true</ejb-store-on-clean>
+         <call-ejb-store-on-clean>true</call-ejb-store-on-clean>
          <store-not-flushed>true</store-not-flushed>
          <!-- TODO container-interceptors -->
          <instance-pool>containerConfiguration1InstancePool</instance-pool>
@@ -2780,7 +2780,7 @@
          <invoker-proxy-binding-name>containerConfiguration2InvokerProxyBindingName2</invoker-proxy-binding-name>
          <sync-on-commit-only>false</sync-on-commit-only>
          <insert-after-ejb-post-create>false</insert-after-ejb-post-create>
-         <ejb-store-on-clean>false</ejb-store-on-clean>
+         <call-ejb-store-on-clean>false</call-ejb-store-on-clean>
          <store-not-flushed>false</store-not-flushed>
          <!-- TODO container-interceptors -->
          <instance-pool>containerConfiguration2InstancePool</instance-pool>

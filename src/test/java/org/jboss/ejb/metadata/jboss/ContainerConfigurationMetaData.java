@@ -45,7 +45,7 @@ import javax.xml.bind.annotation.XmlType;
       "ejbStoreOnClean", "storeNotFlushed", "instancePool",
       "instanceCache", "persistenceManager",
       "webClassLoader", "lockingPolicy",
-      "commitOption", "securityDomain",
+      "commitOption", "optiondRefreshRate", "securityDomain",
       "clusterConfig", "depends",
       "containerPoolConf", "containerCacheConf", "containerInterceptors"}
 )

@@ -157,4 +157,16 @@ public class EjbJar3xUnitTestCase extends AbstractJavaEEMetaDataTest
       assertEquals("TestBean", beanMetaData.getEjbName());
       assertFalse(iterator.hasNext());
 */   }
+
+   /**
+    * Test session/service-ref
+    * @throws Exception
+    */
+   public void testServiceRefs()
+      throws Exception
+   {
+         EjbJar3xMetaData result = unmarshal();
+         EnterpriseBeansMetaData beans = result.getEnterpriseBeans();
+         assertNotNull(beans);
+   }
 }

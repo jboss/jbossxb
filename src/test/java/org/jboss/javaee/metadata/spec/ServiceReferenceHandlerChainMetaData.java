@@ -43,9 +43,9 @@ public class ServiceReferenceHandlerChainMetaData implements Serializable
    /** The id */
    private String id;
    
-   // TODO service-name-pattern
+   private String serviceNamePatter;
    
-   // TODO port-name-pattern
+   private String portNamePattern;
    
    // TODO protocol-bindings
    
@@ -58,6 +58,30 @@ public class ServiceReferenceHandlerChainMetaData implements Serializable
    public ServiceReferenceHandlerChainMetaData()
    {
       // For serialization
+   }
+
+
+   public String getPortNamePattern()
+   {
+      return portNamePattern;
+   }
+
+
+   public void setPortNamePattern(String portNamePattern)
+   {
+      this.portNamePattern = portNamePattern;
+   }
+
+
+   public String getServiceNamePatter()
+   {
+      return serviceNamePatter;
+   }
+
+
+   public void setServiceNamePatter(String serviceNamePatter)
+   {
+      this.serviceNamePatter = serviceNamePatter;
    }
 
    /**

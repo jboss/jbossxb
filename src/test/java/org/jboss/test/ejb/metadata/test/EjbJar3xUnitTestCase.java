@@ -42,6 +42,9 @@ import org.jboss.javaee.metadata.spec.DisplayNameImpl;
 import org.jboss.javaee.metadata.spec.EnvironmentEntryMetaData;
 import org.jboss.javaee.metadata.spec.IconImpl;
 import org.jboss.javaee.metadata.spec.ResourceInjectionTargetMetaData;
+import org.jboss.javaee.metadata.spec.ServiceReferenceHandlerChainsMetaData;
+import org.jboss.javaee.metadata.spec.ServiceReferenceHandlersMetaData;
+import org.jboss.javaee.metadata.spec.ServiceReferenceMetaData;
 import org.jboss.javaee.metadata.spec.ServiceReferencesMetaData;
 //import org.jboss.metadata.ApplicationMetaData;
 //import org.jboss.metadata.BeanMetaData;
@@ -200,6 +203,11 @@ public class EjbJar3xUnitTestCase extends AbstractJavaEEMetaDataTest
       EnterpriseBeanMetaData bean = beans.get("StatelessSession1");
       ServiceReferencesMetaData serviceRefs = bean.getServiceReferences();
       assertNotNull(serviceRefs);
+      ServiceReferenceMetaData ref = serviceRefs.get("session1/Hello");
+      ServiceReferenceHandlerChainsMetaData chains = ref.getHandlerChains();
+      assertNotNull(chains);
+      ServiceReferenceHandlersMetaData handlers = ref.getHandlers();
+      assertTrue(handlers == null);
    }
 
    /**

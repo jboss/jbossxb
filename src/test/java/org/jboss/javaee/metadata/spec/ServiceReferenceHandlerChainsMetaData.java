@@ -21,8 +21,12 @@
 */
 package org.jboss.javaee.metadata.spec;
 
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.jboss.javaee.metadata.support.IdMetaDataImpl;
 import org.jboss.javaee.metadata.support.NonNullLinkedHashSet;
 
 /**
@@ -33,10 +37,13 @@ import org.jboss.javaee.metadata.support.NonNullLinkedHashSet;
  */
 //@SchemaType(name="service-ref_handler-chainsType", mandatory=false)
 @XmlType(name="service-ref_handler-chainsType")
-public class ServiceReferenceHandlerChainsMetaData extends NonNullLinkedHashSet<ServiceReferenceHandlerChainMetaData>
+public class ServiceReferenceHandlerChainsMetaData
+   // extends NonNullLinkedHashSet<ServiceReferenceHandlerChainMetaData>
+   extends IdMetaDataImpl
 {
    /** The serialVersionUID */
    private static final long serialVersionUID = -480961032781276640L;
+   private List<ServiceReferenceHandlerChainMetaData> handlers;
 
    /**
     * Create a new ServiceReferenceChainssMetaData.
@@ -45,4 +52,15 @@ public class ServiceReferenceHandlerChainsMetaData extends NonNullLinkedHashSet<
    {
       // For serialization
    }
+
+   public List<ServiceReferenceHandlerChainMetaData> getHandlers()
+   {
+      return handlers;
+   }
+
+   @XmlElement(name = "handler-chain", required = true)
+   public void setHandlers(List<ServiceReferenceHandlerChainMetaData> handlers)
+   {
+      this.handlers = handlers;
+   }   
 }

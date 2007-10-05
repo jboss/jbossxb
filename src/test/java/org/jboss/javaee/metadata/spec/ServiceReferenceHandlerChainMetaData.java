@@ -76,7 +76,7 @@ public class ServiceReferenceHandlerChainMetaData implements Serializable
     * @param handlers the handlers.
     * @throws IllegalArgumentException for a null handlers
     */
-   @XmlElement(name="handler")
+   @XmlElement(name="handler-chain")
    public void setHandlers(ServiceReferenceHandlersMetaData handlers)
    {
       if (handlers == null)

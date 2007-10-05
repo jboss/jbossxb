@@ -42,6 +42,7 @@ import org.jboss.javaee.metadata.spec.DisplayNameImpl;
 import org.jboss.javaee.metadata.spec.EnvironmentEntryMetaData;
 import org.jboss.javaee.metadata.spec.IconImpl;
 import org.jboss.javaee.metadata.spec.ResourceInjectionTargetMetaData;
+import org.jboss.javaee.metadata.spec.ServiceReferencesMetaData;
 //import org.jboss.metadata.ApplicationMetaData;
 //import org.jboss.metadata.BeanMetaData;
 import org.jboss.test.javaee.metadata.AbstractJavaEEMetaDataTest;
@@ -192,10 +193,15 @@ public class EjbJar3xUnitTestCase extends AbstractJavaEEMetaDataTest
    public void testServiceRefs()
       throws Exception
    {
-         EjbJar3xMetaData result = unmarshal();
-         EnterpriseBeansMetaData beans = result.getEnterpriseBeans();
-         assertNotNull(beans);
+      enableTrace("org.jboss.xb");
+      EjbJar3xMetaData result = unmarshal();
+      EnterpriseBeansMetaData beans = result.getEnterpriseBeans();
+      assertNotNull(beans);
+      EnterpriseBeanMetaData bean = beans.get("StatelessSession1");
+      ServiceReferencesMetaData serviceRefs = bean.getServiceReferences();
+      assertNotNull(serviceRefs);
    }
+
    /**
     * Simple session/ejb-ref test
     * @throws Exception

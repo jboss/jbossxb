@@ -26,13 +26,30 @@
                 <wsdl-file>session1-wsdl-file</wsdl-file>
                 <!-- Java<->XML mapping file -->
                 <jaxrpc-mapping-file>META-INF/jaxrpc-mapping.xml</jaxrpc-mapping-file>
+                <service-qname xmlns:session1="http://www.jboss.org">session1:TestEndpointService</service-qname>
                 <port-component-ref>
                     <!-- service endpoint interface class -->
                     <service-endpoint-interface>org.jboss.test.security.interfaces.HelloEndPoint</service-endpoint-interface>
                 </port-component-ref>
+                <handler-chains>
+                    <handler-chain id="session1-chain1">
+                        <service-name-pattern>*</service-name-pattern>
+                        <handler id="sesion1-chain1-handler1">
+                            <handler-name>session1.Handler1</handler-name>
+                            <handler-class>session1.Handler1</handler-class>
+                            <init-param>
+                                <param-name>param1</param-name>
+                                <param-value>value1</param-value>
+                            </init-param>
+                            <soap-header xmlns:session1="http://www.jboss.org">session1:soap-header</soap-header>
+                            <soap-role>session1:soap-role</soap-role>
+                            <port-name>session1:soap-role</port-name>
+                        </handler>
+                    </handler-chain>
+                </handler-chains>
             </service-ref>
         </session>
-        <session>
+        <session id="session2">
             <description>A secured trival echo session bean</description>
             <ejb-name>StatelessSession2</ejb-name>
             <home>org.jboss.test.security.interfaces.StatelessSessionHome</home>

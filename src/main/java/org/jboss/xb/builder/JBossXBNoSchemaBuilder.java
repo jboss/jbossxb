@@ -1579,8 +1579,17 @@ public class JBossXBNoSchemaBuilder
             if (typeInfo.isCollection())
                interceptor = ChildCollectionInterceptor.SINGLETON;
             else
-               throw new UnsupportedOperationException("TODO");
+            {
+               // Expect a type with a value property to accept the child value
+               PropertyInfo property = beanInfo.getProperty("value");
+               if (property == null)
+                  throw new UnsupportedOperationException("Expected a value property for non-collection type with JBossXmlChildren");
+               TypeInfo propertyType = property.getType();
+               interceptor = new PropertyInterceptor(property, propertyType);
+            }
             typeBinding.pushInterceptor(qName, interceptor);
+            if (trace)
+               log.trace("Added interceptor " + qName + " for type=" + childType + " interceptor=" + interceptor);
          }
       }
 

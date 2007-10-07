@@ -18,6 +18,7 @@ import org.jboss.xb.annotations.JBossXmlChildren;
 ({
    @JBossXmlChild(name="int", type=Integer.class),
    @JBossXmlChild(name="float", type=Float.class),
+   @JBossXmlChild(name="x", type=MyNumber.class),
 })
 public class Bar
 {

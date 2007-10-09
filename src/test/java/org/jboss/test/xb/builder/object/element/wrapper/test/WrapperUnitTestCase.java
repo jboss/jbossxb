@@ -19,11 +19,12 @@ public class WrapperUnitTestCase extends AbstractBuilderTest
    public void testFooWrapper()
       throws Exception
    {
-      enableTrace("org.jboss.xb");
+      //enableTrace("org.jboss.xb");
       Foo foo = unmarshalObject(Foo.class);
       List<Number> items = foo.getItems();
       assertEquals(3, items.size());
    }
+   
    public void testFoo2Wrapper()
       throws Exception
    {
@@ -31,6 +32,7 @@ public class WrapperUnitTestCase extends AbstractBuilderTest
       List<Number> items = foo.getItems();
       assertEquals(3, items.size());
    }
+   
    public void testFoo3Wrapper()
       throws Exception
    {

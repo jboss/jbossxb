@@ -50,7 +50,7 @@ public class MyNumber extends Number
    @Override
    public boolean equals(Object obj)
    {
-      if (obj instanceof MyNumber)
+      if (!(obj instanceof MyNumber))
          return false;
       MyNumber n = (MyNumber) obj;
       return x.equals(n.x);

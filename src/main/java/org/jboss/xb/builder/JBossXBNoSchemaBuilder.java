@@ -1240,6 +1240,39 @@ public class JBossXBNoSchemaBuilder
          // for now support just one JBossXmlNsPrefix
          JBossXmlNsPrefix xmlNsPrefix = property.getUnderlyingAnnotation(JBossXmlNsPrefix.class);
 
+         // support for @XmlElementWrapper
+         // the wrapping element is ignored in this case
+         XmlElementWrapper xmlWrapper = property.getUnderlyingAnnotation(XmlElementWrapper.class);
+         if(xmlWrapper != null)
+         {
+            String wrapperNamespace = xmlWrapper.namespace();
+            String wrapperName = xmlWrapper.name();
+            boolean wrapperNillable = xmlWrapper.nillable();
+
+            QName wrapperQName = generateXmlName(property.getName(), elementForm, wrapperNamespace, wrapperName);
+
+            boolean typeIsNew = !typeCache.containsKey(propertyType);
+
+            TypeBinding wrapperType = new TypeBinding();
+            SequenceBinding seq = new SequenceBinding(schemaBinding);
+            seq.setHandler(BuilderParticleHandler.INSTANCE);
+            ParticleBinding particle = new ParticleBinding(seq);
+            wrapperType.setParticle(particle);
+            wrapperType.setHandler(new DefaultElementHandler());
+
+            ElementBinding wrapperElement = createElementBinding(propertyType, wrapperType, wrapperQName, false);
+            wrapperElement.setNillable(wrapperNillable);
+            wrapperElement.setSkip(Boolean.TRUE);
+            particle = new ParticleBinding(wrapperElement, 1, 1, false);
+            localModel.addParticle(particle);
+
+            localModel = seq;
+            
+            if (trace)
+               log.trace("Added property " + wrapperQName + " for type=" + beanInfo.getName() + " property="
+                     + property.getName() + " as a wrapper element");
+         }
+         
          // Setup a choice
          if (elements.length > 1)
          {
@@ -1430,23 +1463,6 @@ public class JBossXBNoSchemaBuilder
                   propertyHandler = new CollectionPropertyHandler(property, localPropertyType);
                   isCol = true;
                   localPropertyType = findComponentType((ClassInfo) localPropertyType);
-
-//                  TypeInfo gs = ((ClassInfo) localPropertyType).getGenericSuperclass();
-//                  if (gs instanceof ParameterizedClassInfo)
-//                  {
-//                     ParameterizedClassInfo pti = (ParameterizedClassInfo) gs;
-//                     ClassInfo typeArg = (ClassInfo) pti.getActualTypeArguments()[0];
-//                     //if (((ClassInfo) typeArg).getUnderlyingAnnotation(XmlType.class) != null)
-//                     if (typeArg.getUnderlyingAnnotation(JBossXmlModelGroup.class) == null)
-//                     {// it may be a model group in which case we don't want to change the type
-//                        localPropertyType = typeArg;
-//                     
-//                        if(!type.equals(typeArg))
-//                        {
-//                           throw new IllegalStateException("Expected " + type + " but got " + typeArg.getName());
-//                        }
-//                     }
-//                  }
                }
                else
                {
@@ -1454,96 +1470,36 @@ public class JBossXBNoSchemaBuilder
                }
 
                ParticleBinding particle;
-
-               if (propertyType.isCollection() && property.getUnderlyingAnnotation(XmlElementWrapper.class) != null)
+               // DOM elements are going to be treated as unresolved
+               // however having the property registered
+               if (!Element.class.getName().equals(propertyType.getName()))
                {
-                  // support for @XmlElementWrapper
-                  // the wrapping element is ignored in this case
-                  XmlElementWrapper xmlWrapper = property.getUnderlyingAnnotation(XmlElementWrapper.class);
-                  String wrapperNamespace = xmlWrapper.namespace();
-                  String wrapperName = xmlWrapper.name();
-                  boolean wrapperNillable = xmlWrapper.nillable();
+                  XBValueAdapter valueAdapter = null;
+                  XmlJavaTypeAdapter xmlTypeAdapter = property.getUnderlyingAnnotation(XmlJavaTypeAdapter.class);
+                  if (xmlTypeAdapter != null)
+                  {
+                     valueAdapter = new XBValueAdapter(xmlTypeAdapter.value(), propertyType.getTypeInfoFactory());
+                     localPropertyType = valueAdapter.getAdaptedType();
+                  }
 
-                  QName childQName = qName;
-                  qName = generateXmlName(property.getName(), elementForm, wrapperNamespace, wrapperName);
+                  TypeBinding elementTypeBinding = resolveTypeBinding(localPropertyType);
+                  ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, qName,
+                        false);
+                  elementBinding.setNillable(nillable);
+                  elementBinding.setValueAdapter(valueAdapter);
 
-                  boolean typeIsNew = !typeCache.containsKey(propertyType);
+                  // Bind it to the model
+                  particle = new ParticleBinding(elementBinding, 1, 1, isCol);
+                  if (required == false)
+                     particle.setMinOccurs(0);
 
-                  TypeBinding wrapperType = new TypeBinding();
-                  SequenceBinding seq = new SequenceBinding(schemaBinding);
-                  seq.setHandler(BuilderParticleHandler.INSTANCE);
-                  particle = new ParticleBinding(seq);
-                  wrapperType.setParticle(particle);
-                  wrapperType.setHandler(new DefaultElementHandler());
-
-                  ElementBinding wrapperElement = createElementBinding(propertyType, wrapperType, qName, false);
-                  wrapperElement.setNillable(wrapperNillable);
-                  wrapperElement.setSkip(Boolean.TRUE);
-                  particle = new ParticleBinding(wrapperElement, 1, 1, false);
                   targetGroup.addParticle(particle);
-
-                  if(trace)
-                     log.trace("Added property " + qName + " for type=" + beanInfo.getName() + " property="
-                           + property.getName() + " as a wrapper element");
-
-                  if (typeIsNew)
-                  {
-                     // component stuff
-                     ClassInfo typeArg = (ClassInfo) findComponentType(property);
-                     if (typeArg == null)
-                     {
-                        throw new IllegalStateException("Failed to determine component type for collection "
-                              + propertyType.getName());
-                     }
-                     TypeInfo childType = JBossXBBuilder.configuration.getTypeInfo(typeArg.getType());
-
-                     TypeBinding childTypeBinding = resolveTypeBinding(childType);
-                     ElementBinding childElement = createElementBinding(childType, childTypeBinding, childQName, false);
-
-                     // Bind it to the model
-                     ParticleBinding childParticle = new ParticleBinding(childElement, 0, 1, true);
-                     wrapperElement.getType().addParticle(childParticle);
-
-                     beanAdapterFactory.addProperty(childQName, propertyHandler);
-                     if (trace)
-                        log.trace("Added property " + childQName + " for type=" + beanInfo.getName() + " property="
-                              + property.getName() + " handler=" + propertyHandler + " wrapper=" + qName);
-                  }
                }
-               // else if it's not a DOM element which is going to be treated as wildcard
-               else
-               {
-                  // DOM elements are going to be treated as unresolved
-                  // however having the property registered
-                  if(!Element.class.getName().equals(propertyType.getName()))
-                  {
-                     XBValueAdapter valueAdapter = null;
-                     XmlJavaTypeAdapter xmlTypeAdapter = property.getUnderlyingAnnotation(XmlJavaTypeAdapter.class);
-                     if (xmlTypeAdapter != null)
-                     {
-                        valueAdapter = new XBValueAdapter(xmlTypeAdapter.value(), propertyType.getTypeInfoFactory());
-                        localPropertyType = valueAdapter.getAdaptedType();
-                     }
 
-                     TypeBinding elementTypeBinding = resolveTypeBinding(localPropertyType);
-                     ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, qName,
-                           false);
-                     elementBinding.setNillable(nillable);
-                     elementBinding.setValueAdapter(valueAdapter);
-
-                     // Bind it to the model
-                     particle = new ParticleBinding(elementBinding, 1, 1, isCol);
-                     if (required == false)
-                        particle.setMinOccurs(0);
-
-                     targetGroup.addParticle(particle);
-                  }
-
-                  beanAdapterFactory.addProperty(qName, propertyHandler);
-                  if (trace)
-                     log.trace("Added property " + qName + " for type=" + beanInfo.getName() + " property="
-                           + property.getName() + " handler=" + propertyHandler);
-               }
+               beanAdapterFactory.addProperty(qName, propertyHandler);
+               if (trace)
+                  log.trace("Added property " + qName + " for type=" + beanInfo.getName() + " property="
+                        + property.getName() + " handler=" + propertyHandler);
             }
          }
          pop();

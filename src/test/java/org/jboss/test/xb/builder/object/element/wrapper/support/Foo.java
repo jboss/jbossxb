@@ -12,7 +12,7 @@ public class Foo
 {
    private List<Number> items;
 
-   public List<Number> getItems()
+   public List getItems()
    {
       return items;
    }
@@ -23,7 +23,7 @@ public class Foo
        @XmlElement(name="float", required=false, type=Float.class),
        @XmlElement(name="x", required=false, type=MyNumber.class)
    })
-   public void setItems(List<Number> items)
+   public void setItems(List items)
    {
       this.items = items;
    }

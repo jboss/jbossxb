@@ -22,15 +22,24 @@ public class WrapperUnitTestCase extends AbstractBuilderTest
       //enableTrace("org.jboss.xb");
       Foo foo = unmarshalObject(Foo.class);
       List<Number> items = foo.getItems();
-      assertEquals(3, items.size());
+      assertEquals(4, items.size());
+      assertEquals(1, items.get(0));
+      assertEquals(2, items.get(1));
+      assertEquals(new Float(1.1), items.get(2));
+      assertEquals(new MyNumber("123456789"), items.get(3));
    }
-   
+
    public void testFoo2Wrapper()
       throws Exception
    {
       Foo2 foo = unmarshalObject(Foo2.class);
       List<Number> items = foo.getItems();
-      assertEquals(3, items.size());
+      assertEquals(4, items.size());
+      assertEquals(4, items.size());
+      assertEquals(1, items.get(0));
+      assertEquals(2, items.get(1));
+      assertEquals(new Float(1.1), items.get(2));
+      assertEquals(new MyNumber("123456789"), items.get(3));
    }
    
    public void testFoo3Wrapper()

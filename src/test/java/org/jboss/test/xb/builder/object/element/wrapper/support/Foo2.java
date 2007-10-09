@@ -19,8 +19,9 @@ public class Foo2
 
    @XmlElementWrapper(name="bar")
    @XmlElements({
-       @XmlElement(name="int", type=Integer.class),
-       @XmlElement(name="float", type=Float.class)
+      @XmlElement(name="int", required=false, type=Integer.class),
+      @XmlElement(name="float", required=false, type=Float.class),
+      @XmlElement(name="x", required=false, type=MyNumber.class)
    })
    public void setItems(List<Number> items)
    {

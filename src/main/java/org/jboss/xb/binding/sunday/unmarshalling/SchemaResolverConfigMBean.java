@@ -86,4 +86,18 @@ public interface SchemaResolverConfigMBean
     * @param bindingClasses
     */
    public void setBindingClasses(Properties bindingClasses);
+
+   /**
+    * Get the JBossXBBuilder schema location to Class mappings.
+    * 
+    * @return bindingClasses
+    */
+   public Properties getBindingClassesByLocations();
+
+   /**
+    * Set the JBossXBBuilder schema location to Class mappings.
+    * 
+    * @param bindingClasses
+    */
+   public void setBindingClassesByLocations(Properties bindingClasses);
 }

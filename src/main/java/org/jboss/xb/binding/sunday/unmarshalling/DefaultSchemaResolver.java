@@ -50,6 +50,8 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    private Map<String, SchemaBinding> schemasByUri = Collections.emptyMap();
    /** Namespace to JBossXBBuilder binding class */
    private WeakHashMap<String, Class> uriToClass = new WeakHashMap<String, Class>();
+   /** SchemaLocation to JBossXBBuilder binding class */
+   private WeakHashMap<String, Class> schemaLocationToClass = new WeakHashMap<String, Class>();
    private Map<String, SchemaBindingInitializer> schemaInitByUri = Collections.emptyMap();
    private Map<String, Boolean> schemaParseAnnotationsByUri = Collections.emptyMap();
 
@@ -217,6 +219,10 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    {
       uriToClass.put(nsUri, clazz);
    }
+   public void addClassBindingForLocation(String schemaLocation, Class clazz)
+   {
+      schemaLocationToClass.put(schemaLocation, clazz);
+   }
    public Class removeClassBinding(String nsUri)
    {
       return uriToClass.remove(nsUri);      
@@ -250,6 +256,8 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
 
       // Look for a class 
       Class bindingClass = uriToClass.get(nsURI);
+      if (bindingClass == null)
+         bindingClass = schemaLocationToClass.get(schemaLocation);
       if (bindingClass != null)
       {
          if( log.isTraceEnabled() )

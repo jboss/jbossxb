@@ -291,7 +291,12 @@ public class SundayContentHandler
          else if(schemaResolver != null)
          {
             String schemaLocation = atts == null ? null : Util.getSchemaLocation(atts, namespaceURI);
-            schemaBinding = schemaResolver.resolve(namespaceURI, null, schemaLocation);
+            // Use the dtd info if it exists and there is no schemaLocation
+            if(sawDTD && schemaLocation != null && schemaLocation.length() == 0)
+            {
+               schemaLocation = dtdSystemId;
+            }
+            schemaBinding = schemaResolver.resolve(namespaceURI, dtdPublicId, schemaLocation);
             if(schemaBinding != null)
             {
                particle = schemaBinding.getElementParticle(startName);

@@ -767,7 +767,8 @@ public class SundayContentHandler
 
    private void startRepeatableParticle(QName startName, ParticleBinding particle)
    {
-      //System.out.println(" start repeatable (" + stack.size() + "): " + particle.getTerm());
+      if(trace)
+         log.trace(" start repeatable (" + stack.size() + "): " + particle.getTerm());
       
       TermBinding term = particle.getTerm();
       if(term.isSkip())
@@ -791,7 +792,8 @@ public class SundayContentHandler
 
    private void endRepeatableParticle(ParticleBinding particle)
    {
-      //System.out.println(" end repeatable (" + stack.size() + "): " + particle.getTerm());
+      if(trace)
+         log.trace(" end repeatable (" + stack.size() + "): " + particle.getTerm());
 
       StackItem item = stack.peek();
       ValueList valueList = item.repeatableParticleValue;

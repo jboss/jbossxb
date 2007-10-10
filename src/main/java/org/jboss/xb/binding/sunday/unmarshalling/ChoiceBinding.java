@@ -265,7 +265,8 @@ public class ChoiceBinding
                      }
                      groupStack = addItem(groupStack, this);
                      wildcardContent = true;
-                     System.out.println(qName + " is wildcard content");
+                     if(trace)
+                        log.trace(qName + " is wildcard content");
                      break;
                   }
                }

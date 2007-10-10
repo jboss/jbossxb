@@ -1198,7 +1198,7 @@ public class JBossXBNoSchemaBuilder
                   if (xmlTypeAdapter != null)
                   {
                      valueAdapter = new XBValueAdapter(xmlTypeAdapter.value(), memberTypeInfo.getTypeInfoFactory());
-                     memberTypeInfo = valueAdapter.getAdaptedType();
+                     memberTypeInfo = valueAdapter.getAdaptedTypeInfo();
                   }
 
                   TypeBinding memberTypeBinding = resolveTypeBinding(memberTypeInfo);
@@ -1428,6 +1428,14 @@ public class JBossXBNoSchemaBuilder
             }
             else
             {
+               XBValueAdapter valueAdapter = null;
+               XmlJavaTypeAdapter xmlTypeAdapter = property.getUnderlyingAnnotation(XmlJavaTypeAdapter.class);
+               if (xmlTypeAdapter != null)
+               {
+                  valueAdapter = new XBValueAdapter(xmlTypeAdapter.value(), propertyType.getTypeInfoFactory());
+                  localPropertyType = valueAdapter.getAdaptedTypeInfo();
+               }
+
                ModelGroupBinding targetGroup = localModel;
                boolean isCol = false;
                AbstractPropertyHandler propertyHandler = null;
@@ -1460,9 +1468,19 @@ public class JBossXBNoSchemaBuilder
                // this is to support the Descriptions.class -> DescriptionsImpl.class
                else if (localPropertyType.isCollection() && ((ClassInfo) localPropertyType).getUnderlyingAnnotation(XmlType.class) == null)
                {
-                  propertyHandler = new CollectionPropertyHandler(property, localPropertyType);
-                  isCol = true;
-                  localPropertyType = findComponentType((ClassInfo) localPropertyType);
+                  Type parameterizedType;
+                  if(valueAdapter != null)
+                  {
+                     propertyHandler = new PropertyHandler(property, localPropertyType);
+                     parameterizedType = valueAdapter.getAdaptedType();
+                  }
+                  else
+                  {
+                     propertyHandler = new CollectionPropertyHandler(property, localPropertyType);
+                     parameterizedType = localPropertyType.getType();
+                  }
+                  isCol = true;                  
+                  localPropertyType = findActualType((ClassInfo) localPropertyType, parameterizedType, java.util.Collection.class, 0);
                }
                else
                {
@@ -1474,14 +1492,6 @@ public class JBossXBNoSchemaBuilder
                // however having the property registered
                if (!Element.class.getName().equals(propertyType.getName()))
                {
-                  XBValueAdapter valueAdapter = null;
-                  XmlJavaTypeAdapter xmlTypeAdapter = property.getUnderlyingAnnotation(XmlJavaTypeAdapter.class);
-                  if (xmlTypeAdapter != null)
-                  {
-                     valueAdapter = new XBValueAdapter(xmlTypeAdapter.value(), propertyType.getTypeInfoFactory());
-                     localPropertyType = valueAdapter.getAdaptedType();
-                  }
-
                   TypeBinding elementTypeBinding = resolveTypeBinding(localPropertyType);
                   ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, qName,
                         false);
@@ -1909,8 +1919,9 @@ public class JBossXBNoSchemaBuilder
    {
       private final XmlAdapter xmlAdapter;
 
-      private final TypeInfo adaptedType;
-
+      private final TypeInfo adaptedTypeInfo;
+      private final Type adaptedType;
+      
       public XBValueAdapter(Class<? extends XmlAdapter> adapterImplClass, TypeInfoFactory factory)
       {
          try
@@ -1922,12 +1933,20 @@ public class JBossXBNoSchemaBuilder
             throw new IllegalStateException("Failed to create an instance of " + adapterImplClass.getName(), e);
          }
 
-         ClassInfo adapterImplInfo = (ClassInfo) factory.getTypeInfo(adapterImplClass);
-         ClassInfo xmlAdapterInfo = adapterImplInfo.getGenericSuperclass();
-         adaptedType = xmlAdapterInfo.getActualTypeArguments()[0];
+//         ClassInfo adapterImplInfo = (ClassInfo) factory.getTypeInfo(adapterImplClass);
+//         ClassInfo xmlAdapterInfo = adapterImplInfo.getGenericSuperclass();
+//         TypeInfo type = xmlAdapterInfo.getActualTypeArguments()[0];
+         
+         adaptedType = ((ParameterizedType)adapterImplClass.getGenericSuperclass()).getActualTypeArguments()[0];
+         adaptedTypeInfo = factory.getTypeInfo(adaptedType);
       }
 
-      public TypeInfo getAdaptedType()
+      public TypeInfo getAdaptedTypeInfo()
+      {
+         return adaptedTypeInfo;
+      }
+
+      public Type getAdaptedType()
       {
          return adaptedType;
       }

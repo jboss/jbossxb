@@ -142,10 +142,6 @@ public class AllBinding
                }
                groupStack = addItem(groupStack, this);
             }
-            else
-            {
-               log.warn("Element " + qName + " not found in " + elements.keySet());
-            }
             return groupStack;
          }
 

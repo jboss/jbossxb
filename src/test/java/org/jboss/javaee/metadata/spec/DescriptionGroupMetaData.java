@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlElement;
 import org.jboss.javaee.annotation.Descriptions;
 import org.jboss.javaee.annotation.DisplayNames;
 import org.jboss.javaee.annotation.Icons;
+import org.jboss.xb.annotations.JBossXmlConstants;
 import org.jboss.xb.annotations.JBossXmlModelGroup;
 import org.jboss.xb.annotations.JBossXmlNsPrefix;
 
@@ -38,7 +39,7 @@ import org.jboss.xb.annotations.JBossXmlNsPrefix;
  * @version $Revision: 1.1 $
  */
 //@JBossXmlGroup(name="descriptionGroup")
-@JBossXmlModelGroup(name="descriptionGroup", propOrder={"descriptions", "displayNames", "icons"})
+@JBossXmlModelGroup(name="descriptionGroup", propOrder={"descriptions", "displayNames", "icons"}, kind=JBossXmlConstants.MODEL_GROUP_ALL)
 public class DescriptionGroupMetaData implements Serializable
 {
    /** The serialVersionUID */

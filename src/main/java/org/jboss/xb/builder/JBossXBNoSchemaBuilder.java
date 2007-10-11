@@ -1081,17 +1081,31 @@ public class JBossXBNoSchemaBuilder
             {
                if (trace)
                   log.trace("Property " + property.getName() + " is bound to " + xmlModelGroup.kind());
-
-               ModelGroupBinding propertyGroup = new SequenceBinding(schemaBinding);
+               
+               ModelGroupBinding propertyGroup;
+               if(xmlModelGroup.kind().equals(JBossXmlConstants.MODEL_GROUP_SEQUENCE))
+               {
+                  propertyGroup = new SequenceBinding(schemaBinding);
+               }
+               else if(xmlModelGroup.kind().equals(JBossXmlConstants.MODEL_GROUP_CHOICE))
+               {
+                  propertyGroup = new ChoiceBinding(schemaBinding);
+               }
+               else if(xmlModelGroup.kind().equals(JBossXmlConstants.MODEL_GROUP_ALL))
+               {
+                  propertyGroup = new AllBinding(schemaBinding);
+               }
+               else
+               {
+                  throw new IllegalStateException("Unexpected JBossXmlModelGroup.kind=" + xmlModelGroup.kind());
+               }
+               
                if (!JBossXmlConstants.DEFAULT.equals(xmlModelGroup.name()))
                {
                   // TODO what if it doesn't have a name? should an artificial one be created?
                   propertyGroup.setQName(new QName(name));
                }
 
-               //ClassMetaData classMd = new ClassMetaData();
-               //classMd.setImpl(propClassInfo.getName());
-               //localModel.setClassMetaData(classMd);
                propertyGroup.setSkip(Boolean.FALSE);
                model.addParticle(new ParticleBinding(propertyGroup));
 

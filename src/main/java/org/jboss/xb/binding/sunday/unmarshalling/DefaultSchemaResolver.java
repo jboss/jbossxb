@@ -254,7 +254,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
          return schema;
       }
 
-      // Look for a class 
+      // Look for a class binding
       Class bindingClass = uriToClass.get(nsURI);
       if (bindingClass == null)
          bindingClass = schemaLocationToClass.get(schemaLocation);

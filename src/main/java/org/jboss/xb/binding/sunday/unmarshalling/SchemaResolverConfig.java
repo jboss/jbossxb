@@ -58,6 +58,15 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
    /** The binding classes by schemaLocation */
    protected Properties bindingClassesByLocation;
 
+   public boolean getCacheResolvedSchemas()
+   {
+      return resolver.isCacheResolvedSchemas();
+   }
+   public void setCacheResolvedSchemas(boolean flag)
+   {
+      resolver.setCacheResolvedSchemas(flag);
+   }
+
    public Properties getSchemaInitializers()
    {
       return schemaInitializers;

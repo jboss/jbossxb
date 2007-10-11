@@ -348,7 +348,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
          boolean trace)
    {
       Class bindingClass = schemaLocationToClass.get(schemaLocation);
-      if (bindingClass == null)
+      if (bindingClass == null && schemaLocation != null && schemaLocation.length() > 0)
       {
          // Parse the schemaLocation as a uri to get the final path component
          try

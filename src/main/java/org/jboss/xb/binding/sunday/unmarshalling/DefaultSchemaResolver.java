@@ -259,6 +259,8 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    public SchemaBinding resolve(String nsURI, String baseURI, String schemaLocation)
    {
       boolean trace = log.isTraceEnabled();
+      // Was the schema binding based on the nsURI
+      boolean foundByNS = false;
       SchemaBinding schema = schemasByUri.get(nsURI);
       if(schema != null)
       {
@@ -273,6 +275,8 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       {
          // Next look by namespace
          bindingClass = uriToClass.get(nsURI);
+         if(bindingClass != null)
+            foundByNS = true;
       }
       if (bindingClass != null)
       {
@@ -304,6 +308,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
             Boolean processAnnotationsBoolean = schemaParseAnnotationsByUri.get(nsURI);
             boolean processAnnotations = (processAnnotationsBoolean == null) ? true : processAnnotationsBoolean.booleanValue();
             schema = XsdBinder.bind(is.getByteStream(), null, baseURI, processAnnotations);
+            foundByNS = true;
          }
       }
 
@@ -316,7 +321,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
             schema = sbi.init(schema);
          }
 
-         if(schema != null && nsURI.length() > 0 && cacheResolvedSchemas)
+         if(schema != null && nsURI.length() > 0 && cacheResolvedSchemas && foundByNS)
          {
             if(schemasByUri == Collections.EMPTY_MAP)
             {

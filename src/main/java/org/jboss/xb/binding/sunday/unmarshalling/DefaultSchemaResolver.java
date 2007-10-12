@@ -31,6 +31,7 @@ import java.util.WeakHashMap;
 
 import org.jboss.logging.Logger;
 import org.jboss.util.xml.JBossEntityResolver;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.builder.JBossXBBuilder;
 import org.w3c.dom.ls.LSInput;
 import org.xml.sax.InputSource;
@@ -307,8 +308,18 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    
             Boolean processAnnotationsBoolean = schemaParseAnnotationsByUri.get(nsURI);
             boolean processAnnotations = (processAnnotationsBoolean == null) ? true : processAnnotationsBoolean.booleanValue();
-            schema = XsdBinder.bind(is.getByteStream(), null, baseURI, processAnnotations);
-            foundByNS = true;
+            try
+            {
+               schema = XsdBinder.bind(is.getByteStream(), null, baseURI, processAnnotations);
+               foundByNS = true;
+            }
+            catch(RuntimeException e)
+            {
+               String msg = "Failed to parse schema for nsURI="+nsURI
+                  +", baseURI="+baseURI
+                  +", schemaLocation="+schemaLocation;
+               throw new JBossXBRuntimeException(msg, e);
+            }
          }
       }
 

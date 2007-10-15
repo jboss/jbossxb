@@ -90,11 +90,21 @@ public class SaxJBossXBParser
       try
       {
          parser = saxFactory.newSAXParser();
-         log.debug("Created parser: "+parser
-               + ", isNamespaceAware: "+parser.isNamespaceAware()
-               + ", isValidating: "+parser.isValidating()
-               + ", isXIncludeAware: "+parser.isXIncludeAware()
-               );
+
+         StringBuffer sb = new StringBuffer();
+         sb.append("Created parser: ").append(parser)
+         .append(", isNamespaceAware: ").append(parser.isNamespaceAware())
+         .append(", isValidating: ").append(parser.isValidating())
+         .append(", isXIncludeAware: ");
+         try
+         {
+            sb.append(parser.isXIncludeAware());
+         }
+         catch(UnsupportedOperationException e)
+         {
+            sb.append("unsupported operation '").append(e.getMessage()).append('\'');
+         }
+         log.debug(sb.toString());
       }
       catch(Exception e)
       {

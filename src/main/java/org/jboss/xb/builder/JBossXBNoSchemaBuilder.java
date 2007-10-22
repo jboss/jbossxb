@@ -1460,7 +1460,7 @@ public class JBossXBNoSchemaBuilder
                }
                // a collection may be bound as a value of a complex type
                // and this is checked with the XmlType annotation
-               else if (propertyType.isCollection() && ((ClassInfo) propertyType).getUnderlyingAnnotation(XmlType.class) == null)
+               else if (propertyType.isCollection() && ((ClassInfo) localPropertyType).getUnderlyingAnnotation(XmlType.class) == null)
                {
                   isCol = true;
                   propertyHandler = new CollectionPropertyHandler(property, propertyType);

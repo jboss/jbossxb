@@ -33,6 +33,7 @@ import org.jboss.beans.info.spi.PropertyInfo;
 import org.jboss.reflect.spi.ClassInfo;
 import org.jboss.reflect.spi.ConstructorInfo;
 import org.jboss.reflect.spi.TypeInfo;
+import org.jboss.xb.annotations.JBossXmlCollection;
 import org.jboss.xb.spi.BeanAdapter;
 
 /**
@@ -43,8 +44,7 @@ import org.jboss.xb.spi.BeanAdapter;
  */
 public class CollectionPropertyHandler extends AbstractPropertyHandler
 {
-   /** Whether this is a set */
-   private boolean isSet = false;
+   private final CollectionFactory colFactory;
    
    /**
     * Create a new CollectionPropertyHandler.
@@ -56,10 +56,53 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
    public CollectionPropertyHandler(PropertyInfo propertyInfo, TypeInfo propertyType)
    {
       super(propertyInfo, propertyType);
-      
-      TypeInfo set = propertyType.getTypeInfoFactory().getTypeInfo(Set.class);
-      if (set.isAssignableFrom(propertyType))
-         isSet = true;
+
+      ClassInfo collectionType = null;
+      JBossXmlCollection xmlCol = propertyInfo.getUnderlyingAnnotation(JBossXmlCollection.class);
+      if (xmlCol != null)
+      {
+         collectionType = (ClassInfo) propertyType.getTypeInfoFactory().getTypeInfo(xmlCol.type());
+      }
+      else if (!Modifier.isAbstract(((ClassInfo) propertyType).getModifiers()))
+      {
+         collectionType = (ClassInfo) propertyType;
+      }
+
+      if (collectionType == null)
+      {
+         TypeInfo set = propertyType.getTypeInfoFactory().getTypeInfo(Set.class);
+         if (set.isAssignableFrom(propertyType))
+         {
+            colFactory = new HashSetFactory();
+         }
+         else
+         {
+            colFactory = new ArrayListFactory();
+         }
+      }
+      else
+      {
+         ConstructorInfo constructor = collectionType.getDeclaredConstructor(null);
+         if (constructor == null)
+         {
+            for (ConstructorInfo ctor : collectionType.getDeclaredConstructors())
+            {
+               if (ctor.getParameterTypes().length == 0)
+               {
+                  log.warn("ClassInfo.getDeclaredConstructor(null) didn't work for " + collectionType.getName()
+                        + ", found the default ctor in ClassInfo.getDeclaredConstructors()");
+                  constructor = ctor;
+                  break;
+               }
+            }
+
+            if (constructor == null)
+            {
+               throw new RuntimeException("Default constructor not found for " + collectionType.getName());
+            }
+         }
+         colFactory = new CtorCollectionFactory(constructor);
+      }
    }
 
    @Override
@@ -82,40 +125,14 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
       // No collection so create one
       if (c == null)
       {
-         ClassInfo collectionType = (ClassInfo) propertyType; 
-         if (Modifier.isAbstract(collectionType.getModifiers()) == false)
+         try
          {
-            try
-            {
-               ConstructorInfo constructor = collectionType.getDeclaredConstructor(null);
-               if(constructor == null)
-               {
-                  for(ConstructorInfo ctor : collectionType.getDeclaredConstructors())
-                  {
-                     if(ctor.getParameterTypes().length == 0)
-                     {
-                        log.warn("ClassInfo.getDeclaredConstructor(null) didn't work for " + collectionType.getName() + ", found the default ctor in ClassInfo.getDeclaredConstructors()");
-                        constructor = ctor;
-                        break;
-                     }
-                  }
-                  
-                  if(constructor == null)
-                  {
-                     throw new NoSuchMethodException("Default constructor not found for " + collectionType.getName());
-                  }
-               }
-               c = (Collection) constructor.newInstance(null);
-            }
-            catch (Throwable t)
-            {
-               throw new RuntimeException("QName " + qName + " error creating collection: " + propertyType.getName(), t);
-            }
+            c = colFactory.createCollection();
          }
-         else if (isSet)
-            c = new HashSet<Object>();
-         else
-            c = new ArrayList<Object>();
+         catch (Throwable t)
+         {
+            throw new RuntimeException("QName " + qName + " error creating collection: " + propertyType.getName(), t);
+         }
 
          try
          {
@@ -136,5 +153,44 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
       {
          throw new RuntimeException("QName " + qName + " error adding " + BuilderUtil.toDebugString(child) + " to collection " + BuilderUtil.toDebugString(c), e);
       }
+   }
+   
+   private static interface CollectionFactory
+   {
+      Collection<Object> createCollection() throws Throwable;
+   }
+   
+   private static class ArrayListFactory implements CollectionFactory
+   {
+      @SuppressWarnings("unchecked")
+      public Collection<Object> createCollection()
+      {
+         return new ArrayList();
+      }  
+   }
+   
+   private static class HashSetFactory implements CollectionFactory
+   {
+      @SuppressWarnings("unchecked")
+      public Collection<Object> createCollection()
+      {
+         return new HashSet();
+      }  
+   }
+   
+   private static class CtorCollectionFactory implements CollectionFactory
+   {
+      private final ConstructorInfo ctor;
+      
+      CtorCollectionFactory(ConstructorInfo ctor)
+      {
+         this.ctor = ctor;
+      }
+      
+      @SuppressWarnings("unchecked")
+      public Collection<Object> createCollection() throws Throwable
+      {
+         return (Collection) ctor.newInstance(null);
+      }      
    }
 }

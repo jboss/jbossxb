@@ -72,6 +72,7 @@ import org.jboss.xb.annotations.JBossXmlAttribute;
 import org.jboss.xb.annotations.JBossXmlChild;
 import org.jboss.xb.annotations.JBossXmlChildWildcard;
 import org.jboss.xb.annotations.JBossXmlChildren;
+import org.jboss.xb.annotations.JBossXmlCollection;
 import org.jboss.xb.annotations.JBossXmlConstants;
 import org.jboss.xb.annotations.JBossXmlGroup;
 import org.jboss.xb.annotations.JBossXmlGroupText;
@@ -968,55 +969,48 @@ public class JBossXBNoSchemaBuilder
       if (typeInfo.isCollection())
       {
          TypeInfo memberBaseType = findComponentType(typeInfo);
-         // if the type is a parameterized collection then
-         // bind its members as items
-         TypeInfo gs = typeInfo.getGenericSuperclass();
-         if (gs instanceof ParameterizedClassInfo)
+         JBossXmlModelGroup xmlModelGroup = ((ClassInfo) memberBaseType)
+               .getUnderlyingAnnotation(JBossXmlModelGroup.class);
+         if (xmlModelGroup != null && xmlModelGroup.particles().length > 0)
          {
-            //ParameterizedClassInfo pti = (ParameterizedClassInfo) gs;
-            //TypeInfo memberBaseType = pti.getActualTypeArguments()[0];
+            if (trace)
+               log.trace("Item base type for " + typeInfo.getName() + " is " + memberBaseType.getName()
+                     + " and bound to repeatable choice");
 
-            JBossXmlModelGroup xmlModelGroup = ((ClassInfo) memberBaseType)
-                  .getUnderlyingAnnotation(JBossXmlModelGroup.class);
-            if (xmlModelGroup != null && xmlModelGroup.particles().length > 0)
+            // it's choice by default based on the idea that the
+            // type parameter is a base class for items
+            ModelGroupBinding choiceGroup = new ChoiceBinding(schemaBinding);
+            choiceGroup.setHandler(BuilderParticleHandler.INSTANCE);
+            ParticleBinding choiceParticle = new ParticleBinding(choiceGroup, 0, 1, true);
+            model.addParticle(choiceParticle);
+
+            for (JBossXmlModelGroup.Particle member : xmlModelGroup.particles())
             {
-               if (trace)
-                  log.trace("Item base type for " + typeInfo.getName() + " is " + memberBaseType.getName() + " and bound to repeatable choice");
+               XmlElement element = member.element();
+               QName memberQName = generateXmlName(element.name(), XmlNsForm.QUALIFIED, element.namespace(), null);
+               TypeInfo memberTypeInfo = typeInfo.getTypeInfoFactory().getTypeInfo(member.type());
 
-               // it's choice by default based on the idea that the
-               // type parameter is a base class for items
-               ModelGroupBinding choiceGroup = new ChoiceBinding(schemaBinding);
-               choiceGroup.setHandler(BuilderParticleHandler.INSTANCE);
-               ParticleBinding choiceParticle = new ParticleBinding(choiceGroup, 0, 1, true);
-               model.addParticle(choiceParticle);
-
-               for (JBossXmlModelGroup.Particle member : xmlModelGroup.particles())
+               boolean isCol = false;
+               if (memberTypeInfo.isCollection())
                {
-                  XmlElement element = member.element();
-                  QName memberQName = generateXmlName(element.name(), XmlNsForm.QUALIFIED, element.namespace(), null);
-                  TypeInfo memberTypeInfo = typeInfo.getTypeInfoFactory().getTypeInfo(member.type());
-
-                  boolean isCol = false;
-                  if (memberTypeInfo.isCollection())
-                  {
-                     // TODO here we should properly identify the type of the item (based on a testcase)
-                     //memberTypeInfo = pti.getActualTypeArguments()[0];
-                     memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
-                     isCol = true;
-                  }
-
-                  TypeBinding memberTypeBinding = resolveTypeBinding(memberTypeInfo);
-                  ElementBinding memberElement = createElementBinding(memberTypeInfo, memberTypeBinding, memberQName, false);
-                  memberElement.setNillable(true);
-                  ParticleBinding memberParticle = new ParticleBinding(memberElement, 0, 1, isCol);
-                  choiceGroup.addParticle(memberParticle);
-
-                  typeBinding.pushInterceptor(memberQName, ChildCollectionInterceptor.SINGLETON);
+                  // TODO here we should properly identify the type of the item (based on a testcase)
+                  //memberTypeInfo = pti.getActualTypeArguments()[0];
+                  memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
+                  isCol = true;
                }
 
-               if (trace)
-                  log.trace("choices for " + typeBinding.getQName() + ": " + choiceGroup.getParticles());
+               TypeBinding memberTypeBinding = resolveTypeBinding(memberTypeInfo);
+               ElementBinding memberElement = createElementBinding(memberTypeInfo, memberTypeBinding, memberQName,
+                     false);
+               memberElement.setNillable(true);
+               ParticleBinding memberParticle = new ParticleBinding(memberElement, 0, 1, isCol);
+               choiceGroup.addParticle(memberParticle);
+
+               typeBinding.pushInterceptor(memberQName, ChildCollectionInterceptor.SINGLETON);
             }
+
+            if (trace)
+               log.trace("choices for " + typeBinding.getQName() + ": " + choiceGroup.getParticles());
          }
       }
 
@@ -1063,6 +1057,13 @@ public class JBossXBNoSchemaBuilder
             if (trace)
                log.trace("Property " + property.getName() + " is a collection");
             localModel = createCollection(localModel);
+            
+            JBossXmlCollection xmlCol = property.getUnderlyingAnnotation(JBossXmlCollection.class);
+            if(xmlCol != null)
+            {
+               // this is the type that should be analyzed
+               propertyType = propertyType.getTypeInfoFactory().getTypeInfo(xmlCol.type());
+            }
          }
          // Is this property bound to a model group
          else if (!property.getType().isPrimitive())
@@ -1460,7 +1461,7 @@ public class JBossXBNoSchemaBuilder
                }
                // a collection may be bound as a value of a complex type
                // and this is checked with the XmlType annotation
-               else if (propertyType.isCollection() && ((ClassInfo) localPropertyType).getUnderlyingAnnotation(XmlType.class) == null)
+               else if (propertyType.isCollection() && ((ClassInfo) propertyType).getUnderlyingAnnotation(XmlType.class) == null)
                {
                   isCol = true;
                   propertyHandler = new CollectionPropertyHandler(property, propertyType);

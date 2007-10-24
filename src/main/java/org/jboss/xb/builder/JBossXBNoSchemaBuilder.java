@@ -1194,15 +1194,27 @@ public class JBossXBNoSchemaBuilder
 
                   boolean isCol = false;
                   AbstractPropertyHandler memberPropertyHandler = null;
-                  if (memberTypeInfo.isCollection())
+                  if(memberProp.getType().isCollection())
+                  {
+                     memberPropertyHandler = new CollectionPropertyHandler(memberProp, memberProp.getType());
+                     isCol = true;
+                     // if memberXmlElement is present then the collection item type is set explicitly
+                     if(memberXmlElement == null || XmlElement.DEFAULT.class.equals(memberXmlElement.type()))
+                     {
+                        JBossXmlCollection jbossXmlCollection = memberProp.getUnderlyingAnnotation(JBossXmlCollection.class);
+                        if(jbossXmlCollection != null)
+                        {
+                           memberTypeInfo = memberTypeInfo.getTypeInfoFactory().getTypeInfo(jbossXmlCollection.type());
+                        }
+                        memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
+                     }
+                  }
+                  // if it is bound with XmlElement.type to a collection
+                  else if (memberTypeInfo.isCollection())
                   {
                      memberPropertyHandler = new CollectionPropertyHandler(memberProp, memberTypeInfo);
                      isCol = true;
-                     JBossXmlCollection xmlCol = memberProp.getUnderlyingAnnotation(JBossXmlCollection.class);
-                     if(xmlCol != null && xmlCol.elementType() != Void.class)
-                        memberTypeInfo = JBossXBBuilder.configuration.getTypeInfo(xmlCol.elementType());
-                     else
-                        memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
+                     memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
                   }
                   else
                   {
@@ -1469,12 +1481,7 @@ public class JBossXBNoSchemaBuilder
                {
                   isCol = true;
                   propertyHandler = new CollectionPropertyHandler(property, propertyType);
-                  ClassInfo typeArg = null;
-                  JBossXmlCollection xmlCol = property.getUnderlyingAnnotation(JBossXmlCollection.class);
-                  if(xmlCol != null && xmlCol.elementType() != Void.class)
-                     typeArg = (ClassInfo) JBossXBBuilder.configuration.getTypeInfo(xmlCol.elementType());
-                  else
-                     typeArg = (ClassInfo) findComponentType(property);
+                  ClassInfo typeArg = (ClassInfo) findComponentType(property);
 
                   //if (((ClassInfo) typeArg).getUnderlyingAnnotation(XmlType.class) != null)
                   if (typeArg != null && typeArg.getUnderlyingAnnotation(JBossXmlModelGroup.class) == null)

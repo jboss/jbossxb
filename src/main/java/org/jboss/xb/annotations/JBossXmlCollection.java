@@ -41,5 +41,4 @@ import java.lang.annotation.Target;
 public @interface JBossXmlCollection
 {
    Class<? extends java.util.Collection> type() default java.util.ArrayList.class;
-   Class elementType() default java.lang.Void.class;
 }

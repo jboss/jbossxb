@@ -1982,6 +1982,15 @@ public final class SimpleTypeBindings
     */
    public static QName unmarshalQName(String value, NamespaceContext nsRegistry)
    {
+      if(value.charAt(0) == '{')
+      {
+         int i = value.lastIndexOf('}');
+         if(i == -1)
+            throw new IllegalStateException("Malformed QName: the closing '}' not found in " + value);
+         String nsURI = value.substring(1, i);
+         return new QName(nsURI, value.substring(i + 1));
+      }
+
       int colonIndex = value.lastIndexOf(":");
       if(colonIndex > 0)
       {
@@ -2016,7 +2025,7 @@ public final class SimpleTypeBindings
             prefix = nsRegistry.getPrefix(nsURI);
             if(prefix == null)
             {
-               throw new IllegalStateException("Namespace URI not registered: " + nsURI);
+               return '{' + nsURI + '}' + value.getLocalPart();
             }
          }
          else

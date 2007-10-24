@@ -459,6 +459,40 @@ public class SimpleTypeBindingUnitTestCase
       assertEquals(qName.getLocalPart(), unmarshalled.getLocalPart());
    }
 
+   public void testNoPrefixQName() throws Exception
+   {
+      final String ns = "http://jboss.org/test/simple/bindings";
+      String local = "test1";
+      QName qName = new QName(ns, local);
+
+      NamespaceContext nsCtx = new NamespaceContext()
+      {
+         public String getNamespaceURI(String p)
+         {
+            return null;
+         }
+
+         public String getPrefix(String namespaceURI)
+         {
+            return null;
+         }
+
+         public Iterator getPrefixes(String namespaceURI)
+         {
+            return Collections.emptyList().iterator();
+         }
+      };
+
+      String marshalled = SimpleTypeBindings.marshal(SimpleTypeBindings.XS_QNAME_NAME, qName, nsCtx);
+      assertEquals('{' + ns + '}' + local, marshalled);
+
+      QName unmarshalled = (QName)SimpleTypeBindings.unmarshal(SimpleTypeBindings.XS_QNAME_NAME, marshalled, nsCtx);
+
+      assertEquals(qName.getPrefix(), unmarshalled.getPrefix());
+      assertEquals(qName.getNamespaceURI(), unmarshalled.getNamespaceURI());
+      assertEquals(qName.getLocalPart(), unmarshalled.getLocalPart());
+   }
+   
    public void testBooleanListUnmarshalling() throws Exception
    {
       List booleans = SimpleTypeBindings.unmarshalList(

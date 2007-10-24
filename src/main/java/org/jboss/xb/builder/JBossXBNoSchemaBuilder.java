@@ -1198,7 +1198,11 @@ public class JBossXBNoSchemaBuilder
                   {
                      memberPropertyHandler = new CollectionPropertyHandler(memberProp, memberTypeInfo);
                      isCol = true;
-                     memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
+                     JBossXmlCollection xmlCol = memberProp.getUnderlyingAnnotation(JBossXmlCollection.class);
+                     if(xmlCol != null && xmlCol.elementType() != Void.class)
+                        memberTypeInfo = JBossXBBuilder.configuration.getTypeInfo(xmlCol.elementType());
+                     else
+                        memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
                   }
                   else
                   {
@@ -1465,7 +1469,12 @@ public class JBossXBNoSchemaBuilder
                {
                   isCol = true;
                   propertyHandler = new CollectionPropertyHandler(property, propertyType);
-                  ClassInfo typeArg = (ClassInfo) findComponentType(property);
+                  ClassInfo typeArg = null;
+                  JBossXmlCollection xmlCol = property.getUnderlyingAnnotation(JBossXmlCollection.class);
+                  if(xmlCol != null && xmlCol.elementType() != Void.class)
+                     typeArg = (ClassInfo) JBossXBBuilder.configuration.getTypeInfo(xmlCol.elementType());
+                  else
+                     typeArg = (ClassInfo) findComponentType(property);
 
                   //if (((ClassInfo) typeArg).getUnderlyingAnnotation(XmlType.class) != null)
                   if (typeArg != null && typeArg.getUnderlyingAnnotation(JBossXmlModelGroup.class) == null)

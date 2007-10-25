@@ -296,6 +296,9 @@ public class SundayContentHandler
             {
                schemaLocation = dtdSystemId;
             }
+            // If there is still no schemaLocation, pass in the root local name
+            if(schemaLocation == null)
+               schemaLocation = localName;
             schemaBinding = schemaResolver.resolve(namespaceURI, null, schemaLocation);
             if(schemaBinding != null)
             {

@@ -90,21 +90,7 @@ public class SaxJBossXBParser
       try
       {
          parser = saxFactory.newSAXParser();
-
-         StringBuffer sb = new StringBuffer();
-         sb.append("Created parser: ").append(parser)
-         .append(", isNamespaceAware: ").append(parser.isNamespaceAware())
-         .append(", isValidating: ").append(parser.isValidating())
-         .append(", isXIncludeAware: ");
-         try
-         {
-            sb.append(parser.isXIncludeAware());
-         }
-         catch(UnsupportedOperationException e)
-         {
-            sb.append("unsupported operation '").append(e.getMessage()).append('\'');
-         }
-         log.debug(sb.toString());
+         logParserInfo();
       }
       catch(Exception e)
       {
@@ -180,16 +166,13 @@ public class SaxJBossXBParser
    {
       this.contentHandler = handler;
       trace = log.isTraceEnabled();
+
+      logParserInfo();
       try
       {
-         log.debug("Using parser: "+parser
-               + ", isNamespaceAware: "+parser.isValidating()
-               + ", isValidating: "+parser.isValidating()
-               + ", isXIncludeAware: "+parser.isXIncludeAware()
-               );
          reader.parse(systemId);
       }
-      catch(Exception e)
+      catch(Throwable e)
       {
          throw new JBossXBException("Failed to parse source: " + getLocationAsString(systemId), e);
       }
@@ -199,16 +182,13 @@ public class SaxJBossXBParser
    {
       this.contentHandler = handler;
       trace = log.isTraceEnabled();
+      
+      logParserInfo();
       try
       {
-         log.debug("Using parser: "+parser
-               + ", isNamespaceAware: "+parser.isValidating()
-               + ", isValidating: "+parser.isValidating()
-               + ", isXIncludeAware: "+parser.isXIncludeAware()
-               );
          reader.parse(new InputSource(is));
       }
-      catch(Exception e)
+      catch(Throwable e)
       {
          throw new JBossXBException("Failed to parse source: " + e.getMessage(), e);
       }
@@ -218,16 +198,13 @@ public class SaxJBossXBParser
    {
       this.contentHandler = handler;
       trace = log.isTraceEnabled();
+      
+      logParserInfo();
       try
       {
-         log.debug("Using parser: "+parser
-               + ", isNamespaceAware: "+parser.isValidating()
-               + ", isValidating: "+parser.isValidating()
-               + ", isXIncludeAware: "+parser.isXIncludeAware()
-               );
          this.reader.parse(new InputSource(reader));
       }
-      catch(Exception e)
+      catch(Throwable e)
       {
          throw new JBossXBException("Failed to parse source: " + e.getMessage(), e);
       }
@@ -250,6 +227,24 @@ public class SaxJBossXBParser
          buffer.append(locator.getColumnNumber());
          return buffer.toString();
       }
+   }
+
+   private void logParserInfo()
+   {
+      StringBuffer sb = new StringBuffer();
+      sb.append("Created parser: ").append(parser)
+      .append(", isNamespaceAware: ").append(parser.isNamespaceAware())
+      .append(", isValidating: ").append(parser.isValidating())
+      .append(", isXIncludeAware: ");
+      try
+      {
+         sb.append(parser.isXIncludeAware());
+      }
+      catch(UnsupportedOperationException e)
+      {
+         sb.append("unsupported operation '").append(e.getMessage()).append('\'');
+      }
+      log.debug(sb.toString());
    }
 
    // Inner

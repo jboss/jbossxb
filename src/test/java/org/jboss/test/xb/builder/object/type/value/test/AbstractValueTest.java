@@ -21,8 +21,11 @@
 */
 package org.jboss.test.xb.builder.object.type.value.test;
 
+import javax.xml.namespace.QName;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.value.support.SimpleValue;
+import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 
@@ -60,6 +63,8 @@ public abstract class AbstractValueTest<T extends SimpleValue> extends AbstractB
       SchemaBinding schemaBinding = JBossXBBuilder.build(root);
       assertNotNull(schemaBinding);
       
-      // TODO check the model
+      ElementBinding element = schemaBinding.getElement(new QName("integer-value"));
+      assertNotNull(element);
+      assertNotNull(element.getType().getSimpleType());
    }
 }

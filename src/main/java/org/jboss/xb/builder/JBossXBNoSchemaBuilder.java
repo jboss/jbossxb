@@ -979,36 +979,55 @@ public class JBossXBNoSchemaBuilder
 
             // it's choice by default based on the idea that the
             // type parameter is a base class for items
-            ModelGroupBinding choiceGroup = new ChoiceBinding(schemaBinding);
-            choiceGroup.setHandler(BuilderParticleHandler.INSTANCE);
-            ParticleBinding choiceParticle = new ParticleBinding(choiceGroup, 0, 1, true);
-            model.addParticle(choiceParticle);
-
-            for (JBossXmlModelGroup.Particle member : xmlModelGroup.particles())
+            ModelGroupBinding choiceGroup = null;
+            QName choiceName = null;
+            if(!JBossXmlConstants.DEFAULT.equals(xmlModelGroup.name()))
             {
-               XmlElement element = member.element();
-               QName memberQName = generateXmlName(element.name(), XmlNsForm.QUALIFIED, element.namespace(), null);
-               TypeInfo memberTypeInfo = typeInfo.getTypeInfoFactory().getTypeInfo(member.type());
-
-               boolean isCol = false;
-               if (memberTypeInfo.isCollection())
+               choiceName = new QName(defaultNamespace, xmlModelGroup.name());
+               choiceGroup = schemaBinding.getGroup(choiceName);
+            }
+            
+            if(choiceGroup == null)
+            {
+               choiceGroup = new ChoiceBinding(schemaBinding);
+               choiceGroup.setHandler(BuilderParticleHandler.INSTANCE);
+               if (choiceName != null)
                {
-                  // TODO here we should properly identify the type of the item (based on a testcase)
-                  //memberTypeInfo = pti.getActualTypeArguments()[0];
-                  memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
-                  isCol = true;
+                  choiceGroup.setQName(choiceName);
+                  schemaBinding.addGroup(choiceGroup.getQName(), choiceGroup);
                }
 
-               TypeBinding memberTypeBinding = resolveTypeBinding(memberTypeInfo);
-               ElementBinding memberElement = createElementBinding(memberTypeInfo, memberTypeBinding, memberQName,
-                     false);
-               memberElement.setNillable(true);
-               ParticleBinding memberParticle = new ParticleBinding(memberElement, 0, 1, isCol);
-               choiceGroup.addParticle(memberParticle);
+               ParticleBinding choiceParticle = new ParticleBinding(choiceGroup, 0, 1, true);
+               model.addParticle(choiceParticle);
 
-               typeBinding.pushInterceptor(memberQName, ChildCollectionInterceptor.SINGLETON);
+               for (JBossXmlModelGroup.Particle member : xmlModelGroup.particles())
+               {
+                  XmlElement element = member.element();
+                  QName memberQName = generateXmlName(element.name(), XmlNsForm.QUALIFIED, element.namespace(), null);
+                  TypeInfo memberTypeInfo = typeInfo.getTypeInfoFactory().getTypeInfo(member.type());
+
+                  boolean isCol = false;
+                  if (memberTypeInfo.isCollection())
+                  {
+                     memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
+                     isCol = true;
+                  }
+
+                  TypeBinding memberTypeBinding = resolveTypeBinding(memberTypeInfo);
+                  ElementBinding memberElement = createElementBinding(memberTypeInfo, memberTypeBinding, memberQName, false);
+                  memberElement.setNillable(true);
+                  ParticleBinding memberParticle = new ParticleBinding(memberElement, 0, 1, isCol);
+                  choiceGroup.addParticle(memberParticle);
+
+                  typeBinding.pushInterceptor(memberQName, ChildCollectionInterceptor.SINGLETON);
+               }
             }
-
+            else
+            {
+               ParticleBinding choiceParticle = new ParticleBinding(choiceGroup, 0, 1, true);
+               model.addParticle(choiceParticle);
+            }
+            
             if (trace)
                log.trace("choices for " + typeBinding.getQName() + ": " + choiceGroup.getParticles());
          }
@@ -1083,31 +1102,171 @@ public class JBossXBNoSchemaBuilder
                if (trace)
                   log.trace("Property " + property.getName() + " is bound to " + xmlModelGroup.kind());
                
-               ModelGroupBinding propertyGroup;
-               if(xmlModelGroup.kind().equals(JBossXmlConstants.MODEL_GROUP_SEQUENCE))
+               ModelGroupBinding propertyGroup = null;
+               QName groupName = null;
+               if (!JBossXmlConstants.DEFAULT.equals(xmlModelGroup.name()))
+                  groupName = new QName(xmlModelGroup.name());
+               
+               if(groupName != null)
+                  propertyGroup = schemaBinding.getGroup(groupName);
+               
+               if (propertyGroup == null)
                {
-                  propertyGroup = new SequenceBinding(schemaBinding);
-               }
-               else if(xmlModelGroup.kind().equals(JBossXmlConstants.MODEL_GROUP_CHOICE))
-               {
-                  propertyGroup = new ChoiceBinding(schemaBinding);
-               }
-               else if(xmlModelGroup.kind().equals(JBossXmlConstants.MODEL_GROUP_ALL))
-               {
-                  propertyGroup = new AllBinding(schemaBinding);
-               }
-               else
-               {
-                  throw new IllegalStateException("Unexpected JBossXmlModelGroup.kind=" + xmlModelGroup.kind());
+                  if (xmlModelGroup.kind().equals(JBossXmlConstants.MODEL_GROUP_SEQUENCE))
+                  {
+                     propertyGroup = new SequenceBinding(schemaBinding);
+                  }
+                  else if (xmlModelGroup.kind().equals(JBossXmlConstants.MODEL_GROUP_CHOICE))
+                  {
+                     propertyGroup = new ChoiceBinding(schemaBinding);
+                  }
+                  else if (xmlModelGroup.kind().equals(JBossXmlConstants.MODEL_GROUP_ALL))
+                  {
+                     propertyGroup = new AllBinding(schemaBinding);
+                  }
+                  else
+                  {
+                     throw new IllegalStateException("Unexpected JBossXmlModelGroup.kind=" + xmlModelGroup.kind());
+                  }
+
+                  if (groupName != null)
+                  {
+                     // TODO what if it doesn't have a name? should an artificial one be created?
+                     propertyGroup.setQName(groupName);
+                     schemaBinding.addGroup(propertyGroup.getQName(), propertyGroup);
+                  }
+
+                  propertyGroup.setSkip(Boolean.FALSE);
+
+                  // handler for the model group members
+                  BeanInfo propBeanInfo = JBossXBBuilder.configuration.getBeanInfo(propClassInfo);
+                  BeanAdapterFactory propBeanAdapterFactory = null;
+                  try
+                  {
+                     BeanInfo propBeanAdapterBuilderInfo = JBossXBBuilder.configuration.getBeanInfo(beanAdapterBuilderClass);
+                     BeanAdapterBuilder propBeanAdapterBuilder = (BeanAdapterBuilder) propBeanAdapterBuilderInfo.newInstance();
+                     propBeanAdapterFactory = propBeanAdapterBuilder.newFactory(propBeanInfo, factory);
+                  }
+                  catch (Throwable t)
+                  {
+                     throw new RuntimeException("Error creating BeanAdapterFactory for "
+                           + beanAdapterBuilderClass.getName(), t);
+                  }
+                  BeanHandler propHandler = new BeanHandler(propBeanInfo.getName(), propBeanAdapterFactory);
+                  propertyGroup.setHandler(propHandler);
+
+                  String[] memberOrder = xmlModelGroup.propOrder();
+                  if (memberOrder.length == 0 || memberOrder[0].length() == 0)
+                  {
+                     List<String> propNames = new ArrayList<String>();
+                     for (PropertyInfo prop : propBeanInfo.getProperties())
+                     {
+                        propNames.add(prop.getName());
+                     }
+                     memberOrder = propNames.toArray(new String[propNames.size()]);
+                  }
+
+                  if (trace)
+                     log.trace("Property order for " + xmlModelGroup.kind() + " property " + property.getName() + ": "
+                           + Arrays.asList(memberOrder));
+
+                  // bind model group members
+                  for (String memberPropName : memberOrder)
+                  {
+                     if ("class".equals(memberPropName))
+                     {
+                        continue;
+                     }
+
+                     PropertyInfo memberProp = propBeanInfo.getProperty(memberPropName);
+                     TypeInfo memberTypeInfo = memberProp.getType();
+                     String memberNamespace = null;
+
+                     JBossXmlNsPrefix nsPrefix = memberProp.getUnderlyingAnnotation(JBossXmlNsPrefix.class);
+                     if (nsPrefix != null)
+                     {
+                        memberNamespace = schemaBinding.getNamespace(nsPrefix.prefix());
+                        if (memberNamespace == null && nsPrefix.schemaTargetIfNotMapped())
+                        {
+                           throw new IllegalStateException("Prefix '" + nsPrefix.prefix()
+                                 + "' is not mapped to any namespace!");
+                        }
+                     }
+
+                     String memberName = null;
+                     XmlElement memberXmlElement = memberProp.getUnderlyingAnnotation(XmlElement.class);
+                     if (memberXmlElement != null)
+                     {
+                        if (!XmlElement.DEFAULT.class.equals(memberXmlElement.type()))
+                        {
+                           memberTypeInfo = memberTypeInfo.getTypeInfoFactory().getTypeInfo(memberXmlElement.type());
+                        }
+
+                        if (memberNamespace == null)
+                           memberNamespace = memberXmlElement.namespace();
+                        memberName = memberXmlElement.name();
+                     }
+
+                     if (memberNamespace == null)
+                     {
+                        memberNamespace = defaultNamespace;
+                     }
+
+                     boolean isCol = false;
+                     AbstractPropertyHandler memberPropertyHandler = null;
+                     if (memberProp.getType().isCollection())
+                     {
+                        memberPropertyHandler = new CollectionPropertyHandler(memberProp, memberProp.getType());
+                        isCol = true;
+                        // if memberXmlElement is present then the collection item type is set explicitly
+                        if (memberXmlElement == null || XmlElement.DEFAULT.class.equals(memberXmlElement.type()))
+                        {
+                           JBossXmlCollection jbossXmlCollection = memberProp
+                                 .getUnderlyingAnnotation(JBossXmlCollection.class);
+                           if (jbossXmlCollection != null)
+                           {
+                              memberTypeInfo = memberTypeInfo.getTypeInfoFactory().getTypeInfo(
+                                    jbossXmlCollection.type());
+                           }
+                           memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
+                        }
+                     }
+                     // if it is bound with XmlElement.type to a collection
+                     else if (memberTypeInfo.isCollection())
+                     {
+                        memberPropertyHandler = new CollectionPropertyHandler(memberProp, memberTypeInfo);
+                        isCol = true;
+                        memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
+                     }
+                     else
+                     {
+                        memberPropertyHandler = new PropertyHandler(memberProp, memberTypeInfo);
+                     }
+
+                     QName memberQName = generateXmlName(memberProp.getName(), elementForm, memberNamespace, memberName);
+                     propBeanAdapterFactory.addProperty(memberQName, memberPropertyHandler);
+
+                     XBValueAdapter valueAdapter = null;
+                     XmlJavaTypeAdapter xmlTypeAdapter = memberProp.getUnderlyingAnnotation(XmlJavaTypeAdapter.class);
+                     if (xmlTypeAdapter != null)
+                     {
+                        valueAdapter = new XBValueAdapter(xmlTypeAdapter.value(), memberTypeInfo.getTypeInfoFactory());
+                        memberTypeInfo = valueAdapter.getAdaptedTypeInfo();
+                     }
+
+                     TypeBinding memberTypeBinding = resolveTypeBinding(memberTypeInfo);
+                     ElementBinding memberElement = createElementBinding(memberTypeInfo, memberTypeBinding,
+                           memberQName, false);
+                     memberElement.setNillable(true);
+                     memberElement.setValueAdapter(valueAdapter);
+                     ParticleBinding memberParticle = new ParticleBinding(memberElement, 0, 1, isCol);
+                     propertyGroup.addParticle(memberParticle);
+
+                     if (trace)
+                        log.trace("added " + memberParticle + " to " + xmlModelGroup.kind() + ", property " + property.getName());
+                  }
                }
                
-               if (!JBossXmlConstants.DEFAULT.equals(xmlModelGroup.name()))
-               {
-                  // TODO what if it doesn't have a name? should an artificial one be created?
-                  propertyGroup.setQName(new QName(name));
-               }
-
-               propertyGroup.setSkip(Boolean.FALSE);
                model.addParticle(new ParticleBinding(propertyGroup));
 
                // model group value handler based on the model group name
@@ -1120,128 +1279,6 @@ public class JBossXBNoSchemaBuilder
                   propertyHandler = new PropertyHandler(property, propClassInfo);
                }
                beanAdapterFactory.addProperty(propertyGroup.getQName(), propertyHandler);
-
-               // handler for the model group members
-               BeanInfo propBeanInfo = JBossXBBuilder.configuration.getBeanInfo(propClassInfo);
-               BeanAdapterFactory propBeanAdapterFactory = null;
-               try
-               {
-                  BeanInfo propBeanAdapterBuilderInfo = JBossXBBuilder.configuration.getBeanInfo(beanAdapterBuilderClass);
-                  BeanAdapterBuilder propBeanAdapterBuilder = (BeanAdapterBuilder) propBeanAdapterBuilderInfo.newInstance();
-                  propBeanAdapterFactory = propBeanAdapterBuilder.newFactory(propBeanInfo, factory);
-               }
-               catch (Throwable t)
-               {
-                  throw new RuntimeException("Error creating BeanAdapterFactory for " + beanAdapterBuilderClass.getName(), t);
-               }
-               BeanHandler propHandler = new BeanHandler(propBeanInfo.getName(), propBeanAdapterFactory);
-               propertyGroup.setHandler(propHandler);
-
-               String[] memberOrder = xmlModelGroup.propOrder();
-               if (memberOrder.length == 0 || memberOrder[0].length() == 0)
-               {
-                  List<String> propNames = new ArrayList<String>();
-                  for (PropertyInfo prop : propBeanInfo.getProperties())
-                  {
-                     propNames.add(prop.getName());
-                  }
-                  memberOrder = propNames.toArray(new String[propNames.size()]);
-               }
-
-               if (trace)
-                  log.trace("Property order for " + xmlModelGroup.kind() + " property " + property.getName() + ": " + Arrays.asList(memberOrder));
-
-               // bind model group members
-               for (String memberPropName : memberOrder)
-               {
-                  if ("class".equals(memberPropName))
-                  {
-                     continue;
-                  }
-
-                  PropertyInfo memberProp = propBeanInfo.getProperty(memberPropName);
-                  TypeInfo memberTypeInfo = memberProp.getType();
-                  String memberNamespace = null;
-
-                  JBossXmlNsPrefix nsPrefix = memberProp.getUnderlyingAnnotation(JBossXmlNsPrefix.class);
-                  if (nsPrefix != null)
-                  {
-                     memberNamespace = schemaBinding.getNamespace(nsPrefix.prefix());
-                     if (memberNamespace == null && nsPrefix.schemaTargetIfNotMapped())
-                     {
-                        throw new IllegalStateException("Prefix '" + nsPrefix.prefix() + "' is not mapped to any namespace!");
-                     }
-                  }
-
-                  String memberName = null;
-                  XmlElement memberXmlElement = memberProp.getUnderlyingAnnotation(XmlElement.class);
-                  if (memberXmlElement != null)
-                  {
-                     if (!XmlElement.DEFAULT.class.equals(memberXmlElement.type()))
-                     {
-                        memberTypeInfo = memberTypeInfo.getTypeInfoFactory().getTypeInfo(memberXmlElement.type());
-                     }
-
-                     if (memberNamespace == null)
-                        memberNamespace = memberXmlElement.namespace();
-                     memberName = memberXmlElement.name();
-                  }
-
-                  if (memberNamespace == null)
-                  {
-                     memberNamespace = defaultNamespace;
-                  }
-
-                  boolean isCol = false;
-                  AbstractPropertyHandler memberPropertyHandler = null;
-                  if(memberProp.getType().isCollection())
-                  {
-                     memberPropertyHandler = new CollectionPropertyHandler(memberProp, memberProp.getType());
-                     isCol = true;
-                     // if memberXmlElement is present then the collection item type is set explicitly
-                     if(memberXmlElement == null || XmlElement.DEFAULT.class.equals(memberXmlElement.type()))
-                     {
-                        JBossXmlCollection jbossXmlCollection = memberProp.getUnderlyingAnnotation(JBossXmlCollection.class);
-                        if(jbossXmlCollection != null)
-                        {
-                           memberTypeInfo = memberTypeInfo.getTypeInfoFactory().getTypeInfo(jbossXmlCollection.type());
-                        }
-                        memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
-                     }
-                  }
-                  // if it is bound with XmlElement.type to a collection
-                  else if (memberTypeInfo.isCollection())
-                  {
-                     memberPropertyHandler = new CollectionPropertyHandler(memberProp, memberTypeInfo);
-                     isCol = true;
-                     memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
-                  }
-                  else
-                  {
-                     memberPropertyHandler = new PropertyHandler(memberProp, memberTypeInfo);
-                  }
-
-                  QName memberQName = generateXmlName(memberProp.getName(), elementForm, memberNamespace, memberName);
-                  propBeanAdapterFactory.addProperty(memberQName, memberPropertyHandler);
-
-                  XBValueAdapter valueAdapter = null;
-                  XmlJavaTypeAdapter xmlTypeAdapter = memberProp.getUnderlyingAnnotation(XmlJavaTypeAdapter.class);
-                  if (xmlTypeAdapter != null)
-                  {
-                     valueAdapter = new XBValueAdapter(xmlTypeAdapter.value(), memberTypeInfo.getTypeInfoFactory());
-                     memberTypeInfo = valueAdapter.getAdaptedTypeInfo();
-                  }
-
-                  TypeBinding memberTypeBinding = resolveTypeBinding(memberTypeInfo);
-                  ElementBinding memberElement = createElementBinding(memberTypeInfo, memberTypeBinding, memberQName, false);
-                  memberElement.setNillable(true);
-                  memberElement.setValueAdapter(valueAdapter);
-                  ParticleBinding memberParticle = new ParticleBinding(memberElement, 0, 1, isCol);
-                  propertyGroup.addParticle(memberParticle);
-
-                  if (trace)
-                     log.trace("added " + memberParticle + " to " + xmlModelGroup.kind() + ", property " + property.getName());
-               }
 
                pop();
                continue;

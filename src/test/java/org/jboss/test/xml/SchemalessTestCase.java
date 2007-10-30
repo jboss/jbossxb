@@ -27,7 +27,6 @@ import org.jboss.xb.binding.SchemalessMarshaller;
 import org.jboss.xb.binding.SchemalessObjectModelFactory;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
-import org.jboss.logging.Logger;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -39,8 +38,6 @@ import java.io.StringWriter;
 public class SchemalessTestCase
    extends TestCase
 {
-   private static final Logger log = Logger.getLogger(SchemalessTestCase.class);
-
    public SchemalessTestCase()
    {
    }
@@ -58,15 +55,11 @@ public class SchemalessTestCase
       SchemalessMarshaller marshaller = new SchemalessMarshaller();
       marshaller.marshal(person, writer);
 
-      log.info("marshalled:\n" + writer.getBuffer());
-
       StringReader reader = new StringReader(writer.getBuffer().toString());
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
       SchemalessObjectModelFactory factory = new SchemalessObjectModelFactory();
       Person unmarshalled = (Person)unmarshaller.unmarshal(reader, factory, null);
 
-      log.info("unmarshalled: " + unmarshalled);
       assertEquals(person, unmarshalled);
    }
-
 }

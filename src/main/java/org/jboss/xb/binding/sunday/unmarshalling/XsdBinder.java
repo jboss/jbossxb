@@ -852,7 +852,7 @@ public class XsdBinder
             ctx.simpleContentWithIdAsSimpleType &&
             particle == null && hasOnlyIdAttrs)
       {
-         binding.setStartElementCreatesObject(false);System.out.println("no object for " + binding.getQName());
+         binding.setStartElementCreatesObject(false);
       }
       else
       {

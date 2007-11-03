@@ -72,8 +72,8 @@ public class EnumGlobalTypeUnitTestCase extends AbstractBuilderTest
       assertNotNull(elementBinding);
       TypeBinding typeBinding = elementBinding.getType();
       assertNotNull(typeBinding);
-      System.out.println(Strings.defaultToString(type));
-      System.out.println(Strings.defaultToString(typeBinding));
+      //System.out.println(Strings.defaultToString(type));
+      //System.out.println(Strings.defaultToString(typeBinding));
       assertTrue(type == typeBinding);
    }
 }

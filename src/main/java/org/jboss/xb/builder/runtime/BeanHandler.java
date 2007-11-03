@@ -192,7 +192,7 @@ public class BeanHandler extends DefaultElementHandler
          {
             if(valueAdapter != null)
             {
-               o = valueAdapter.cast(item, null/*propertyHandler.getPropertyType().getType()*/);
+               item = valueAdapter.cast(item, null/*propertyHandler.getPropertyType().getType()*/);
             }
             propertyHandler.doHandle(beanAdapter, item, qName);
          }

@@ -1143,9 +1143,10 @@ public class JBossXBNoSchemaBuilder
                   BeanAdapterFactory propBeanAdapterFactory = null;
                   try
                   {
-                     BeanInfo propBeanAdapterBuilderInfo = JBossXBBuilder.configuration.getBeanInfo(beanAdapterBuilderClass);
+                     // TODO this has to use its own adapter class and the factory method
+                     BeanInfo propBeanAdapterBuilderInfo = JBossXBBuilder.configuration.getBeanInfo(DefaultBeanAdapterBuilder.class);
                      BeanAdapterBuilder propBeanAdapterBuilder = (BeanAdapterBuilder) propBeanAdapterBuilderInfo.newInstance();
-                     propBeanAdapterFactory = propBeanAdapterBuilder.newFactory(propBeanInfo, factory);
+                     propBeanAdapterFactory = propBeanAdapterBuilder.newFactory(propBeanInfo, null);
                   }
                   catch (Throwable t)
                   {
@@ -1318,8 +1319,6 @@ public class JBossXBNoSchemaBuilder
             boolean wrapperNillable = xmlWrapper.nillable();
 
             QName wrapperQName = generateXmlName(property.getName(), elementForm, wrapperNamespace, wrapperName);
-
-            boolean typeIsNew = !typeCache.containsKey(propertyType);
 
             TypeBinding wrapperType = new TypeBinding();
             SequenceBinding seq = new SequenceBinding(schemaBinding);
@@ -1561,8 +1560,7 @@ public class JBossXBNoSchemaBuilder
                if (!Element.class.getName().equals(propertyType.getName()))
                {
                   TypeBinding elementTypeBinding = resolveTypeBinding(localPropertyType);
-                  ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, qName,
-                        false);
+                  ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, qName, false);
                   elementBinding.setNillable(nillable);
                   elementBinding.setValueAdapter(valueAdapter);
 

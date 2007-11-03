@@ -155,7 +155,7 @@ public class ArrayWrapper
       ArrayInfo arrayInfo = (ArrayInfo) propertyType;
       try
       {
-         Object[] result = arrayInfo.newArrayInstance(elements.size());
+         Object[] result = (Object[]) arrayInfo.newArrayInstance(elements.size());
          for (int i = 0; i < result.length; ++i)
             result[i] = elements.get(i);
          return result;

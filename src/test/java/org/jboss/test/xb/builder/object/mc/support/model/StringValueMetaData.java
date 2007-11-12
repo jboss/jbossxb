@@ -73,12 +73,12 @@ public class StringValueMetaData extends AbstractTypeMetaData
     * 
     * @param value the value
     */
+   @XmlValue
    public void setValue(String value)
    {
       super.setValue(value);
    }
 
-   @XmlValue
    public void setValue(Object value)
    {
       if (value != null && value instanceof String == false)

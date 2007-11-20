@@ -1584,7 +1584,7 @@ public class JBossXBNoSchemaBuilder
                   }
                   else
                      textHandler = new ValueHandler(property);
-                  elementTypeBinding.setCharactersHandler(textHandler);
+                  elementTypeBinding.setSimpleType(textHandler);
                }
 
                // Setup the child model

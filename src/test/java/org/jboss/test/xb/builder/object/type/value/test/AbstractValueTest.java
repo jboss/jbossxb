@@ -63,7 +63,7 @@ public abstract class AbstractValueTest<T extends SimpleValue> extends AbstractB
       SchemaBinding schemaBinding = JBossXBBuilder.build(root);
       assertNotNull(schemaBinding);
       
-      ElementBinding element = schemaBinding.getElement(new QName("integer-value"));
+      ElementBinding element = schemaBinding.getElement(new QName("string-value"));
       assertNotNull(element);
       assertNotNull(element.getType().getSimpleType());
    }

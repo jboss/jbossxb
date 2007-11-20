@@ -1751,7 +1751,6 @@ public class JBossXBNoSchemaBuilder
       arraySequenceBinding.addParticle(particle);
       particle = new ParticleBinding(arraySequenceBinding);
       localModel.addParticle(particle);
-      System.out.println("added " + arraySequenceBinding + " to " + localModel);
       return sequenceBinding;
    }
 

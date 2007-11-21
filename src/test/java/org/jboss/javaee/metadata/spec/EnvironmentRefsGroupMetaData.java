@@ -343,6 +343,7 @@ public class EnvironmentRefsGroupMetaData implements Serializable, Environment
     * @param serviceReferences the serviceReferences.
     * @throws IllegalArgumentException for a null serviceReferences
     */
+   @XmlElement(name="service-ref")
    public void setServiceReferences(ServiceReferencesMetaData serviceReferences)
    {
       if (serviceReferences == null)

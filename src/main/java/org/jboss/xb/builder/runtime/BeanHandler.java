@@ -184,12 +184,16 @@ public class BeanHandler extends DefaultElementHandler
          return;
       }
 
-      if(particle.isRepeatable() && o instanceof java.util.Collection)
+      if(particle.isRepeatable() && propertyHandler instanceof CollectionPropertyHandler)
       {
          // TODO this is not optimal!
          // repeatable particles are collected into java.util.Collection
          for(Object item : (java.util.Collection)o)
          {
+            if(valueAdapter != null)
+            {
+               item = valueAdapter.cast(item, null/*propertyHandler.getPropertyType().getType()*/);
+            }
             propertyHandler.doHandle(beanAdapter, item, qName);
          }
       }

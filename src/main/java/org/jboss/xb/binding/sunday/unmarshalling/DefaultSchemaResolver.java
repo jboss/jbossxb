@@ -21,6 +21,8 @@
  */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,6 +31,7 @@ import java.util.WeakHashMap;
 
 import org.jboss.logging.Logger;
 import org.jboss.util.xml.JBossEntityResolver;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.builder.JBossXBBuilder;
 import org.w3c.dom.ls.LSInput;
 import org.xml.sax.InputSource;
@@ -47,10 +50,15 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    private String baseURI;
    private JBossEntityResolver resolver;
    private boolean cacheResolvedSchemas = true;
+   /** Namespace to SchemaBinding cache */
    private Map<String, SchemaBinding> schemasByUri = Collections.emptyMap();
    /** Namespace to JBossXBBuilder binding class */
    private WeakHashMap<String, Class> uriToClass = new WeakHashMap<String, Class>();
+   /** SchemaLocation to JBossXBBuilder binding class */
+   private WeakHashMap<String, Class> schemaLocationToClass = new WeakHashMap<String, Class>();
+   /** Namespace to SchemaBindingInitializer */
    private Map<String, SchemaBindingInitializer> schemaInitByUri = Collections.emptyMap();
+   /** Namespace to processAnnotations flag used with the XsdBinder.bind call */
    private Map<String, Boolean> schemaParseAnnotationsByUri = Collections.emptyMap();
 
    public DefaultSchemaResolver()
@@ -222,6 +230,15 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       return uriToClass.remove(nsUri);      
    }
 
+   public void addClassBindingForLocation(String schemaLocation, Class clazz)
+   {
+      schemaLocationToClass.put(schemaLocation, clazz);
+   }
+   public Class removeClassBindingForLocation(String schemaLocation)
+   {
+      return schemaLocationToClass.remove(schemaLocation);
+   }
+
    public String getBaseURI()
    {
       return baseURI;
@@ -242,24 +259,47 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
     */
    public SchemaBinding resolve(String nsURI, String baseURI, String schemaLocation)
    {
+      boolean trace = log.isTraceEnabled();
+      // Was the schema binding based on the nsURI
+      boolean foundByNS = false;
       SchemaBinding schema = schemasByUri.get(nsURI);
       if(schema != null)
       {
+         if(trace)
+            log.trace("resolved cached schema, nsURI="+nsURI+", schema: " + schema);
          return schema;
       }
 
-      // Look for a class 
-      Class bindingClass = uriToClass.get(nsURI);
+      // Look for a class binding by schemaLocation
+      Class bindingClass = resolveClassFromSchemaLocation(schemaLocation, trace);
+      if (bindingClass == null)
+      {
+         // Next look by namespace
+         bindingClass = uriToClass.get(nsURI);
+         if(bindingClass != null)
+            foundByNS = true;
+      }
       if (bindingClass != null)
       {
-         if( log.isTraceEnabled() )
-            log.trace("resolve, nsURI="+nsURI+", baseURI="+baseURI+", class="+bindingClass);
+         if( trace )
+         {
+            log.trace("found bindingClass, nsURI="+nsURI
+                  +", baseURI="+baseURI
+                  +", schemaLocation="+schemaLocation
+                  +", class="+bindingClass);
+         }
          schema = JBossXBBuilder.build(bindingClass);
       }
       else
       {
          // Parse the schema
          InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
+         if( trace )
+         {
+            log.trace("found schema InputSource, nsURI="+nsURI
+                  +", baseURI="+baseURI
+                  +", schemaLocation="+schemaLocation);
+         }
          
          if (is != null)
          {
@@ -268,7 +308,18 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    
             Boolean processAnnotationsBoolean = schemaParseAnnotationsByUri.get(nsURI);
             boolean processAnnotations = (processAnnotationsBoolean == null) ? true : processAnnotationsBoolean.booleanValue();
-            schema = XsdBinder.bind(is.getByteStream(), null, baseURI, processAnnotations);
+            try
+            {
+               schema = XsdBinder.bind(is.getByteStream(), null, baseURI, processAnnotations);
+               foundByNS = true;
+            }
+            catch(RuntimeException e)
+            {
+               String msg = "Failed to parse schema for nsURI="+nsURI
+                  +", baseURI="+baseURI
+                  +", schemaLocation="+schemaLocation;
+               throw new JBossXBRuntimeException(msg, e);
+            }
          }
       }
 
@@ -281,7 +332,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
             schema = sbi.init(schema);
          }
 
-         if(schema != null && cacheResolvedSchemas)
+         if(schema != null && nsURI.length() > 0 && cacheResolvedSchemas && foundByNS)
          {
             if(schemasByUri == Collections.EMPTY_MAP)
             {
@@ -291,12 +342,58 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
          }
       }
 
-      if(log.isTraceEnabled())
+      if(trace)
       {
          log.trace("resolved schema: " + schema);
       }
 
       return schema;
+   }
+
+   /**
+    * Lookup a binding class by schemaLocation. This first uses the
+    * schemaLocation as is, then parses this as a URI to obtain the
+    * final path component. This allows registration of a binding class
+    * using jboss_5_0.dtd rather than http://www.jboss.org/j2ee/schema/jboss_5_0.xsd
+    * 
+    * @param schemaLocation the schema location from the parser
+    * @param trace - logging trace flag
+    * @return the binding class if found.
+    */
+   protected Class resolveClassFromSchemaLocation(String schemaLocation,
+         boolean trace)
+   {
+      Class bindingClass = schemaLocationToClass.get(schemaLocation);
+      if (bindingClass == null && schemaLocation != null && schemaLocation.length() > 0)
+      {
+         // Parse the schemaLocation as a uri to get the final path component
+         try
+         {
+            URI url = new URI(schemaLocation);
+            String path = url.getPath();
+            if( path == null )
+               path = url.getSchemeSpecificPart();
+            int slash = path.lastIndexOf('/');
+            String filename;
+            if( slash >= 0 )
+               filename = path.substring(slash + 1);
+            else
+               filename = path;
+      
+            if(path.length() == 0)
+               return null;
+      
+            if (trace)
+               log.trace("Mapped schemaLocation to filename: " + filename);
+            bindingClass = schemaLocationToClass.get(filename);
+         }
+         catch (URISyntaxException e)
+         {
+            if (trace)
+               log.trace("schemaLocation: is not a URI, using systemId as resource", e);
+         }
+      }
+      return bindingClass;
    }
 
    public LSInput resolveAsLSInput(String nsURI, String baseURI, String schemaLocation)
@@ -386,4 +483,5 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       }
       return is;
    }
+
 }

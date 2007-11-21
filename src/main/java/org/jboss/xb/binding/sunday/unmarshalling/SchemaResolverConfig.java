@@ -55,6 +55,18 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
    /** The binding classes by namespace */
    protected Properties bindingClasses;
 
+   /** The binding classes by schemaLocation */
+   protected Properties bindingClassesByLocation;
+
+   public boolean getCacheResolvedSchemas()
+   {
+      return resolver.isCacheResolvedSchemas();
+   }
+   public void setCacheResolvedSchemas(boolean flag)
+   {
+      resolver.setCacheResolvedSchemas(flag);
+   }
+
    public Properties getSchemaInitializers()
    {
       return schemaInitializers;
@@ -123,6 +135,35 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
       }
    }
 
+   public Properties getBindingClassesByLocations()
+   {
+      return bindingClassesByLocation;
+   }
+
+   public void setBindingClassesByLocations(Properties bindingClassesByLocation)
+   {
+      this.bindingClassesByLocation = bindingClassesByLocation;
+      if (bindingClassesByLocation != null && bindingClassesByLocation.size() != 0)
+      {
+         ClassLoader loader = Thread.currentThread().getContextClassLoader();
+         for (Iterator i = bindingClassesByLocation.entrySet().iterator(); i.hasNext();)
+         {
+            Map.Entry entry = (Map.Entry) i.next();
+            String schemaLocation = (String) entry.getKey();
+            String value = (String) entry.getValue();
+            try
+            {
+               Class clazz = loader.loadClass(value);
+               resolver.addClassBindingForLocation(schemaLocation, clazz);
+            }
+            catch(ClassNotFoundException e)
+            {
+               log.warn("Failed to load class: "+value, e);
+            }
+         }
+      }
+   }
+
    public Properties getBindingClasses()
    {
       return bindingClasses;
@@ -151,4 +192,5 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
          }
       }
    }
+
 }

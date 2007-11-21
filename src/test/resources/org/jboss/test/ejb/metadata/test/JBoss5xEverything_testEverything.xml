@@ -2701,6 +2701,30 @@
          <invoker-proxy-binding-name>invokerProxyBinding2Name</invoker-proxy-binding-name>
          <invoker-mbean>invokerProxyBinding2InvokerMBean</invoker-mbean>
          <proxy-factory>invokerProxyBinding2ProxyFactory</proxy-factory>
+         <proxy-factory-config>
+            <client-interceptors>
+               <home>
+                  <interceptor>org.jboss.proxy.ejb.HomeInterceptor1.2</interceptor>
+                  <interceptor>org.jboss.proxy.ejb.HomeInterceptor2.2</interceptor>
+                  <interceptor call-by-value="false">org.jboss.proxy.ejb.HomeInterceptorcbvf3.2</interceptor>
+                  <interceptor call-by-value="true">org.jboss.proxy.ejb.HomeInterceptorcbvt4.2</interceptor>
+               </home>
+               <bean>
+                  <interceptor>org.jboss.proxy.ejb.BeanInterceptor1.2</interceptor>
+                  <interceptor>org.jboss.proxy.ejb.BeanInterceptor2.2</interceptor>
+                  <interceptor call-by-value="false">org.jboss.proxy.ejb.BeanInterceptorcbvf3.2</interceptor>
+                  <interceptor call-by-value="true">org.jboss.proxy.ejb.BeanInterceptorcbvt4.2</interceptor>
+               </bean>
+               <list-entity>
+                  <interceptor>org.jboss.proxy.ejb.EntityInterceptor1.2</interceptor>
+                  <interceptor>org.jboss.proxy.ejb.EntityInterceptor2.2</interceptor>
+                  <interceptor call-by-value="false">org.jboss.proxy.ejb.EntityInterceptorcbvf3.2</interceptor>
+                  <interceptor call-by-value="true">org.jboss.proxy.ejb.EntityInterceptorcbvt4.2</interceptor>
+               </list-entity>
+            </client-interceptors>
+         </proxy-factory-config>
+         <!-- Unknown element to test duplicate wildcards -->
+         <wildcard />
       </invoker-proxy-binding>
    </invoker-proxy-bindings>
    
@@ -2721,7 +2745,7 @@
          <invoker-proxy-binding-name>containerConfiguration1InvokerProxyBindingName2</invoker-proxy-binding-name>
          <sync-on-commit-only>true</sync-on-commit-only>
          <insert-after-ejb-post-create>true</insert-after-ejb-post-create>
-         <ejb-store-on-clean>true</ejb-store-on-clean>
+         <call-ejb-store-on-clean>true</call-ejb-store-on-clean>
          <store-not-flushed>true</store-not-flushed>
          <!-- TODO container-interceptors -->
          <instance-pool>containerConfiguration1InstancePool</instance-pool>
@@ -2756,7 +2780,7 @@
          <invoker-proxy-binding-name>containerConfiguration2InvokerProxyBindingName2</invoker-proxy-binding-name>
          <sync-on-commit-only>false</sync-on-commit-only>
          <insert-after-ejb-post-create>false</insert-after-ejb-post-create>
-         <ejb-store-on-clean>false</ejb-store-on-clean>
+         <call-ejb-store-on-clean>false</call-ejb-store-on-clean>
          <store-not-flushed>false</store-not-flushed>
          <!-- TODO container-interceptors -->
          <instance-pool>containerConfiguration2InstancePool</instance-pool>

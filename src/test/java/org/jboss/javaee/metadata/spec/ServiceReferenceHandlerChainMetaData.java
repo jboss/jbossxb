@@ -22,9 +22,12 @@
 package org.jboss.javaee.metadata.spec;
 
 import java.io.Serializable;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+
+import org.jboss.javaee.metadata.support.IdMetaDataImpl;
 
 
 /**
@@ -35,22 +38,20 @@ import javax.xml.bind.annotation.XmlType;
  */
 //@SchemaType(name="service-ref_handler-chainType", mandatory=false)
 @XmlType(name="service-ref_handler-chainType")
-public class ServiceReferenceHandlerChainMetaData implements Serializable
+public class ServiceReferenceHandlerChainMetaData
+   extends IdMetaDataImpl
 {
    /** The serialVersionUID */
    private static final long serialVersionUID = -1266911268623169174L;
 
-   /** The id */
-   private String id;
+   private String serviceNamePattern;
    
-   // TODO service-name-pattern
-   
-   // TODO port-name-pattern
+   private String portNamePattern;
    
    // TODO protocol-bindings
    
    /** The handlers */
-   private ServiceReferenceHandlersMetaData handlers;
+   private List<ServiceReferenceHandlerMetaData> handlers;
    
    /**
     * Create a new ServiceReferenceHandlerChainMetaData.
@@ -60,50 +61,38 @@ public class ServiceReferenceHandlerChainMetaData implements Serializable
       // For serialization
    }
 
-   /**
-    * Get the handlers.
-    * 
-    * @return the handlers.
-    */
-   public ServiceReferenceHandlersMetaData getHandlers()
+
+   public String getPortNamePattern()
+   {
+      return portNamePattern;
+   }
+
+   public void setPortNamePattern(String portNamePattern)
+   {
+      this.portNamePattern = portNamePattern;
+   }
+
+
+   public String getServiceNamePattern()
+   {
+      return serviceNamePattern;
+   }
+
+
+   public void setServiceNamePattern(String serviceNamePatter)
+   {
+      this.serviceNamePattern = serviceNamePatter;
+   }
+
+
+   public List<ServiceReferenceHandlerMetaData> getHandler()
    {
       return handlers;
    }
 
-   /**
-    * Set the handlers.
-    * 
-    * @param handlers the handlers.
-    * @throws IllegalArgumentException for a null handlers
-    */
-   @XmlElement(name="handler")
-   public void setHandlers(ServiceReferenceHandlersMetaData handlers)
+   public void setHandler(List<ServiceReferenceHandlerMetaData> handlers)
    {
-      if (handlers == null)
-         throw new IllegalArgumentException("Null handlers");
       this.handlers = handlers;
    }
 
-   /**
-    * Get the id.
-    * 
-    * @return the id.
-    */
-   public String getId()
-   {
-      return id;
-   }
-
-   /**
-    * Set the id.
-    * 
-    * @param id the id.
-    * @throws IllegalArgumentException for a null id
-    */
-   public void setId(String id)
-   {
-      if (id == null)
-         throw new IllegalArgumentException("Null id");
-      this.id = id;
-   }
 }

@@ -21,8 +21,11 @@
 */
 package org.jboss.test.xb.builder.object.type.value.test;
 
+import javax.xml.namespace.QName;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.value.support.SimpleValue;
+import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 
@@ -41,11 +44,14 @@ public abstract class AbstractValueTest<T extends SimpleValue> extends AbstractB
    /** The expected value */
    private Object expected;
    
-   public AbstractValueTest(String name, Class<T> root, Object expected)
+   private String valueElement;
+   
+   public AbstractValueTest(String name, Class<T> root, Object expected, String valueElement)
    {
       super(name);
       this.root = root;
       this.expected = expected;
+      this.valueElement = valueElement;
    }
 
    public void testUnmarshal() throws Exception
@@ -60,6 +66,8 @@ public abstract class AbstractValueTest<T extends SimpleValue> extends AbstractB
       SchemaBinding schemaBinding = JBossXBBuilder.build(root);
       assertNotNull(schemaBinding);
       
-      // TODO check the model
+      ElementBinding element = schemaBinding.getElement(new QName(valueElement));
+      assertNotNull(element);
+      assertNotNull(element.getType().getSimpleType());
    }
 }

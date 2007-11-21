@@ -40,6 +40,6 @@ public class IntegerUnitTestCase extends AbstractValueTest<IntegerValue>
    
    public IntegerUnitTestCase(String name)
    {
-      super(name, IntegerValue.class, new Integer(4));
+      super(name, IntegerValue.class, new Integer(4), "integer-value");
    }
 }

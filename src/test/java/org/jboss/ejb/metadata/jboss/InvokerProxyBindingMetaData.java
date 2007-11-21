@@ -22,6 +22,8 @@
 package org.jboss.ejb.metadata.jboss;
 
 import org.jboss.javaee.metadata.support.NamedMetaDataWithDescriptions;
+import org.w3c.dom.Element;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -31,7 +33,8 @@ import javax.xml.bind.annotation.XmlType;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-@XmlType(name="invoker-proxy-bindingType")
+@XmlType(name="invoker-proxy-bindingType", propOrder={"descriptions", "name", "invokerProxyBindingName", "invokerMBean", "proxyFactory",
+      "proxyFactoryConfig", "wildcard"})
 public class InvokerProxyBindingMetaData extends NamedMetaDataWithDescriptions
 {
    /** The serialVersionUID */
@@ -44,8 +47,10 @@ public class InvokerProxyBindingMetaData extends NamedMetaDataWithDescriptions
    private String proxyFactory;
    
    /** The proxy factory config */
-   // TODO DOM private Element proxyFactoryConfig;
-   
+   private Element proxyFactoryConfig;
+   /** A duplicate dom wildcard property */
+   private Element wildcard;
+
    /**
     * Get the invokerProxyBindingName.
     * 
@@ -112,5 +117,25 @@ public class InvokerProxyBindingMetaData extends NamedMetaDataWithDescriptions
       if (proxyFactory == null)
          throw new IllegalArgumentException("Null proxyFactory");
       this.proxyFactory = proxyFactory;
+   }
+
+   public Element getProxyFactoryConfig()
+   {
+      return proxyFactoryConfig;
+   }
+
+   public void setProxyFactoryConfig(Element proxyFactoryConfig)
+   {
+      this.proxyFactoryConfig = proxyFactoryConfig;
+   }
+
+   public Element getWildcard()
+   {
+      return wildcard;
+   }
+
+   public void setWildcard(Element wildcard)
+   {
+      this.wildcard = wildcard;
    }
 }

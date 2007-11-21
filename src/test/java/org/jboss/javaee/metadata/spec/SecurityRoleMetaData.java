@@ -91,7 +91,7 @@ public class SecurityRoleMetaData extends NamedMetaDataWithDescriptions implemen
     * @throws IllegalArgumentException for a null principals
     */
    //@SchemaProperty(name="principal", mandatory=false, impl=NonNullLinkedHashSet.class)
-   @XmlElement(name="principal", required=false, type=NonNullLinkedHashSet.class)
+   @XmlElement(name="principal", required=false/*, type=NonNullLinkedHashSet.class*/)
    public void setPrincipals(Set<String> principals)
    {
       if (principals == null)

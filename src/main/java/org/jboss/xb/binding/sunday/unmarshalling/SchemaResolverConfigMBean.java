@@ -32,6 +32,17 @@ import java.util.Properties;
 public interface SchemaResolverConfigMBean
 {
    /**
+    * Get whether schemas are cached by namespaceURI
+    * @return true if schemas are cached
+    */
+   public boolean getCacheResolvedSchemas();
+   /**
+    * Set whether schemas are cached by namespaceURI
+    * @param flag - true if schemas are cached
+    */
+   public void setCacheResolvedSchemas(boolean flag);
+
+   /**
     * Get the schemaInitializers.
     * 
     * @return the schemaInitializers.
@@ -86,4 +97,18 @@ public interface SchemaResolverConfigMBean
     * @param bindingClasses
     */
    public void setBindingClasses(Properties bindingClasses);
+
+   /**
+    * Get the JBossXBBuilder schema location to Class mappings.
+    * 
+    * @return bindingClasses
+    */
+   public Properties getBindingClassesByLocations();
+
+   /**
+    * Set the JBossXBBuilder schema location to Class mappings.
+    * 
+    * @param bindingClasses
+    */
+   public void setBindingClassesByLocations(Properties bindingClasses);
 }

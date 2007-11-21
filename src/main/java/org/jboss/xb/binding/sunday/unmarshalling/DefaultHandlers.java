@@ -41,6 +41,8 @@ public class DefaultHandlers
 {
    public static ParticleHandler ELEMENT_HANDLER = RtElementHandler.INSTANCE;
 
+   public static ParticleHandler MODEL_GROUP_HANDLER = RtElementHandler.INSTANCE;
+
    public static ParticleHandler SIMPLE_HANDLER = new RtElementHandler()
    {
       public Object startParticle(Object parent, QName qName, ParticleBinding particle)

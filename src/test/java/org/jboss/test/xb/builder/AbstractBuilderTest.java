@@ -30,11 +30,13 @@ import org.jboss.util.UnreachableStatementException;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
+import org.jboss.xb.builder.runtime.BuilderParticleHandler;
 
 /**
  * AbstractBuilderTest.
@@ -44,15 +46,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class AbstractBuilderTest extends AbstractTestCaseWithSetup
 {
+   private static final ParticleHandler XB_DEFAULT_ELEMENT_HANDLER = DefaultHandlers.ELEMENT_HANDLER;
+   private static final ParticleHandler XB_DEFAULT_MODELGROUP_HANDLER = DefaultHandlers.MODEL_GROUP_HANDLER;
+
    protected String rootName = getRootName();
    
-   static
-   {
-      // Uncomment this to make sure we aren't using the RtElementHandler anywhere
-      DefaultHandlers.ELEMENT_HANDLER = new DebugElementHandler();
-      DefaultHandlers.SIMPLE_HANDLER = DefaultHandlers.ELEMENT_HANDLER;
-   }
-
    public AbstractBuilderTest(String name)
    {
       super(name);
@@ -80,6 +78,19 @@ public class AbstractBuilderTest extends AbstractTestCaseWithSetup
    {
       super.setUp();
       configureLogging();
+
+      DefaultHandlers.ELEMENT_HANDLER = new DebugElementHandler();
+      DefaultHandlers.SIMPLE_HANDLER = DefaultHandlers.ELEMENT_HANDLER;
+      DefaultHandlers.MODEL_GROUP_HANDLER = BuilderParticleHandler.INSTANCE;
+   }
+   
+   @Override
+   protected void tearDown() throws Exception
+   {
+      super.tearDown();
+      DefaultHandlers.ELEMENT_HANDLER = XB_DEFAULT_ELEMENT_HANDLER;
+      DefaultHandlers.SIMPLE_HANDLER = DefaultHandlers.ELEMENT_HANDLER;
+      DefaultHandlers.MODEL_GROUP_HANDLER = XB_DEFAULT_MODELGROUP_HANDLER;
    }
    
    protected <T> T unmarshalObjectFromSchema(Class<T> expected) throws Exception

@@ -121,6 +121,11 @@ public class AllBinding
             return occurence;
          }
 
+         public boolean isWildcardContent()
+         {
+            return false;
+         }
+         
          protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
          {
             ParticleBinding particle = (ParticleBinding)elements.get(qName);
@@ -136,10 +141,6 @@ public class AllBinding
                   occurence = 1;
                }
                groupStack = addItem(groupStack, this);
-            }
-            else
-            {
-               log.warn("Element " + qName + " not found in " + elements.keySet());
             }
             return groupStack;
          }

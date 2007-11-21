@@ -62,13 +62,13 @@ public class SchemaBinding
    /** The namespaces Set<String> */
    private Set namespaces = Collections.EMPTY_SET;
    /** namespace to prefix map, used in xb builder during binding */
-   private Map nsByPrefix = Collections.EMPTY_MAP;
+   private Map<String, String> nsByPrefix = Collections.emptyMap();
    /** Map<QName, TypeBinding> for simple/complex types */
-   private Map types = new HashMap();
+   private Map<QName, TypeBinding> types = new HashMap<QName, TypeBinding>();
    /** Map<QName, ParticleBinding> for */
-   private Map elements = new HashMap();
+   private Map<QName, ParticleBinding> elements = new HashMap<QName, ParticleBinding>();
    /** Map<QName, ModelGroupBinding> for */
-   private Map groups = new HashMap();
+   private Map<QName, ModelGroupBinding> groups = new HashMap<QName, ModelGroupBinding>();
    /** The default package information */
    private PackageMetaData packageMetaData;
    /** Schema resolver to use for foreign namespaces */
@@ -157,7 +157,7 @@ public class SchemaBinding
       {
          if(nsByPrefix.size() == 1)
          {
-            nsByPrefix = new HashMap(nsByPrefix);
+            nsByPrefix = new HashMap<String, String>(nsByPrefix);
          }
          nsByPrefix.put(prefix, ns);
       }
@@ -165,7 +165,7 @@ public class SchemaBinding
    
    public String getNamespace(String prefix)
    {
-      return (String) nsByPrefix.get(prefix);
+      return nsByPrefix.get(prefix);
    }
    
    /**
@@ -193,7 +193,7 @@ public class SchemaBinding
 
    public TypeBinding getType(QName qName)
    {
-      return (TypeBinding)types.get(qName);
+      return types.get(qName);
    }
 
    public void addType(TypeBinding type)
@@ -208,14 +208,14 @@ public class SchemaBinding
 
    public ElementBinding getElement(QName name)
    {
-      ParticleBinding particle = (ParticleBinding)elements.get(name);
+      ParticleBinding particle = elements.get(name);
       ElementBinding element = (ElementBinding)(particle == null ? null : particle.getTerm());
       return element;
    }
 
    public ParticleBinding getElementParticle(QName name)
    {
-      return (ParticleBinding)elements.get(name);
+      return elements.get(name);
    }
 
    public void addElement(ElementBinding element)
@@ -235,7 +235,7 @@ public class SchemaBinding
    {
       return new Iterator()
       {
-         private Iterator particleIterator = elements.values().iterator();
+         private Iterator<ParticleBinding> particleIterator = elements.values().iterator();
 
          public boolean hasNext()
          {
@@ -244,7 +244,7 @@ public class SchemaBinding
 
          public Object next()
          {
-            ParticleBinding particle = (ParticleBinding)particleIterator.next();
+            ParticleBinding particle = particleIterator.next();
             return particle.getTerm();
          }
 
@@ -255,19 +255,19 @@ public class SchemaBinding
       };
    }
 
-   public Iterator getElementParticles()
+   public Iterator<ParticleBinding> getElementParticles()
    {
       return elements.values().iterator();
    }
 
-   public Iterator getTypes()
+   public Iterator<TypeBinding> getTypes()
    {
       return Collections.unmodifiableCollection(types.values()).iterator();
    }
 
    public ModelGroupBinding getGroup(QName name)
    {
-      return (ModelGroupBinding) groups.get(name);
+      return groups.get(name);
    }
 
    public void addGroup(QName name, ModelGroupBinding group)
@@ -275,7 +275,7 @@ public class SchemaBinding
       groups.put(name, group);
    }
 
-   public Iterator getGroups()
+   public Iterator<ModelGroupBinding> getGroups()
    {
       return groups.values().iterator();
    }

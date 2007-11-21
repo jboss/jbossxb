@@ -21,6 +21,7 @@
   */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,7 +55,7 @@ import org.xml.sax.Attributes;
  * @version <tt>$Revision$</tt>
  */
 public class SundayContentHandler
-   implements JBossXBParser.ContentHandler
+   implements JBossXBParser.DtdAwareContentHandler
 {
    private final static Logger log = Logger.getLogger(SundayContentHandler.class);
 
@@ -71,7 +72,12 @@ public class SundayContentHandler
    private ParticleHandler defParticleHandler = DefaultHandlers.ELEMENT_HANDLER;
 
    private UnmarshallingContextImpl ctx = new UnmarshallingContextImpl();
-   
+   // DTD information frm startDTD
+   private String dtdRootName;
+   private String dtdPublicId;
+   private String dtdSystemId;
+   private boolean sawDTD;
+
    private final boolean trace = log.isTraceEnabled();
 
    public SundayContentHandler(SchemaBinding schema)
@@ -84,6 +90,18 @@ public class SundayContentHandler
    {
       this.schemaResolver = schemaResolver;
       this.schema = null;
+   }
+
+   
+   public void startDTD(String dtdRootName, String dtdPublicId, String dtdSystemId)
+   {
+      this.dtdRootName = dtdRootName;
+      this.dtdPublicId = dtdPublicId;
+      this.dtdSystemId = dtdSystemId;
+   }
+   public void endDTD()
+   {
+      this.sawDTD = true;
    }
 
    public void characters(char[] ch, int start, int length)
@@ -273,6 +291,14 @@ public class SundayContentHandler
          else if(schemaResolver != null)
          {
             String schemaLocation = atts == null ? null : Util.getSchemaLocation(atts, namespaceURI);
+            // Use the dtd info if it exists and there is no schemaLocation
+            if(sawDTD && (schemaLocation == null || schemaLocation.length() == 0))
+            {
+               schemaLocation = dtdSystemId;
+            }
+            // If there is still no schemaLocation, pass in the root local name
+            if(schemaLocation == null)
+               schemaLocation = localName;
             schemaBinding = schemaResolver.resolve(namespaceURI, null, schemaLocation);
             if(schemaBinding != null)
             {
@@ -562,7 +588,7 @@ public class SundayContentHandler
             throw new JBossXBRuntimeException("No type for element " + element);
          }
 
-         handler = type.getHandler();
+         handler = type.getHandler();         
          if(handler == null)
          {
             handler = defParticleHandler;
@@ -749,7 +775,8 @@ public class SundayContentHandler
 
    private void startRepeatableParticle(QName startName, ParticleBinding particle)
    {
-      //System.out.println(" start repeatable (" + stack.size() + "): " + particle.getTerm());
+      if(trace)
+         log.trace(" start repeatable (" + stack.size() + "): " + particle.getTerm());
       
       TermBinding term = particle.getTerm();
       if(term.isSkip())
@@ -773,7 +800,8 @@ public class SundayContentHandler
 
    private void endRepeatableParticle(ParticleBinding particle)
    {
-      //System.out.println(" end repeatable (" + stack.size() + "): " + particle.getTerm());
+      if(trace)
+         log.trace(" end repeatable (" + stack.size() + "): " + particle.getTerm());
 
       StackItem item = stack.peek();
       ValueList valueList = item.repeatableParticleValue;
@@ -1135,7 +1163,10 @@ public class SundayContentHandler
             if (wildcard != null)
             {
                hasWildcard = true;
-               wildcardHandler = wildcard.getWildcardHandler();
+               if(parentItem.cursor.isWildcardContent())
+               {
+                  wildcardHandler = wildcard.getWildcardHandler();
+               }
             }
          }
 
@@ -1207,6 +1238,22 @@ public class SundayContentHandler
          o = type.getValueAdapter().cast(o, Object.class);
          root = o;
          stack.clear();
+         if(sawDTD)
+         {
+            // Probably should be integrated into schema binding?
+            try
+            {
+               // setDTD(String root, String publicId, String systemId)
+               Class[] sig = {String.class, String.class, String.class};
+               Method setDTD = o.getClass().getMethod("setDTD", sig);
+               Object[] args = {dtdRootName, dtdPublicId, dtdSystemId};
+               setDTD.invoke(o, args);
+            }
+            catch(Exception e)
+            {
+               log.debug("No setDTD found on root: " + o);
+            }
+         }
       }
    }
 

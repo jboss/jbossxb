@@ -66,6 +66,7 @@ public class PropertyWildcardHandler extends PropertyHandler implements Particle
          wrapper.setParentParticle(parentParticle);
          return;
       }
+
       BeanAdapter beanAdapter = (BeanAdapter) parent;
       AbstractPropertyHandler propertyHandler = beanAdapter.getPropertyHandler(elementName);
       if (propertyHandler != null)

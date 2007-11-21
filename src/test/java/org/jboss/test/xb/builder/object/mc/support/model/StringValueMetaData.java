@@ -21,11 +21,11 @@
 */
 package org.jboss.test.xb.builder.object.mc.support.model;
 
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
 import org.jboss.reflect.spi.TypeInfo;
-import org.jboss.xb.annotations.JBossXmlNoElements;
 
 /**
  * String value.
@@ -34,7 +34,7 @@ import org.jboss.xb.annotations.JBossXmlNoElements;
  * @version $Revision: 59990 $
  */
 @XmlType
-@JBossXmlNoElements
+//@JBossXmlNoElements
 public class StringValueMetaData extends AbstractTypeMetaData
 {
    private static final long serialVersionUID = 1L;
@@ -96,6 +96,7 @@ public class StringValueMetaData extends AbstractTypeMetaData
       return replace;
    }
 
+   @XmlTransient
    public void setReplace(boolean replace)
    {
       this.replace = replace;

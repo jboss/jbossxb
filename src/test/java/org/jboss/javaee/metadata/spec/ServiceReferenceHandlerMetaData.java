@@ -21,6 +21,8 @@
 */
 package org.jboss.javaee.metadata.spec;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.javaee.metadata.support.NamedMetaDataWithDescriptionGroup;
@@ -31,7 +33,16 @@ import org.jboss.javaee.metadata.support.NamedMetaDataWithDescriptionGroup;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-@XmlType(name="service-ref_handlerType")
+@XmlType(name = "service-ref_handlerType", propOrder = {
+   "descriptionGroup",
+   "handlerName",
+   "handlerClass",
+   "initParam",
+   "soapHeader",
+   "soapRole",
+   "portName"
+   }
+)
 public class ServiceReferenceHandlerMetaData extends NamedMetaDataWithDescriptionGroup
 {
    /** The serialVersionUID */
@@ -40,14 +51,14 @@ public class ServiceReferenceHandlerMetaData extends NamedMetaDataWithDescriptio
    /** The handler class */
    private String handlerClass;
    
-   // TODO init-params
+   private List<ParamValueMetaData> initParam;
    
-   // TODO soap-headers
+   private List<String> soapHeader;
    
-   // TODO soap-roles
+   private List<String> soapRole;
    
-   // TODO port-names
-   
+   private List<String> portName;
+
    /**
     * Create a new ServiceReferenceHandlerMetaData.
     */
@@ -99,4 +110,45 @@ public class ServiceReferenceHandlerMetaData extends NamedMetaDataWithDescriptio
          throw new IllegalArgumentException("Null handlerClass");
       this.handlerClass = handlerClass;
    }
+
+   public List<ParamValueMetaData> getInitParam()
+   {
+      return this.initParam;
+   }
+   public void setInitParam(List<ParamValueMetaData> initParam)
+   {
+      this.initParam = initParam;
+   }
+
+   public List<String> getPortName()
+   {
+      return portName;
+   }
+
+   public void setPortName(List<String> portName)
+   {
+      this.portName = portName;
+   }
+
+   public List<String> getSoapHeader()
+   {
+      return soapHeader;
+   }
+
+   public void setSoapHeader(List<String> soapHeader)
+   {
+      this.soapHeader = soapHeader;
+   }
+
+   public List<String> getSoapRole()
+   {
+      return soapRole;
+   }
+
+   public void setSoapRole(List<String> soapRole)
+   {
+      this.soapRole = soapRole;
+   }
+
+   
 }

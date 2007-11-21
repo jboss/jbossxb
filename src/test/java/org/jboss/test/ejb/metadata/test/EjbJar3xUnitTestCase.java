@@ -22,6 +22,8 @@
 package org.jboss.test.ejb.metadata.test;
 
 
+import java.util.Set;
+
 import junit.framework.Test;
 
 import org.jboss.ejb.metadata.spec.EjbJar30MetaData;
@@ -37,7 +39,13 @@ import org.jboss.javaee.annotation.Icons;
 import org.jboss.javaee.metadata.spec.DescriptionGroupMetaData;
 import org.jboss.javaee.metadata.spec.DescriptionImpl;
 import org.jboss.javaee.metadata.spec.DisplayNameImpl;
+import org.jboss.javaee.metadata.spec.EnvironmentEntryMetaData;
 import org.jboss.javaee.metadata.spec.IconImpl;
+import org.jboss.javaee.metadata.spec.ResourceInjectionTargetMetaData;
+import org.jboss.javaee.metadata.spec.ServiceReferenceHandlerChainsMetaData;
+import org.jboss.javaee.metadata.spec.ServiceReferenceHandlersMetaData;
+import org.jboss.javaee.metadata.spec.ServiceReferenceMetaData;
+import org.jboss.javaee.metadata.spec.ServiceReferencesMetaData;
 //import org.jboss.metadata.ApplicationMetaData;
 //import org.jboss.metadata.BeanMetaData;
 import org.jboss.test.javaee.metadata.AbstractJavaEEMetaDataTest;
@@ -157,4 +165,60 @@ public class EjbJar3xUnitTestCase extends AbstractJavaEEMetaDataTest
       assertEquals("TestBean", beanMetaData.getEjbName());
       assertFalse(iterator.hasNext());
 */   }
+
+   /**
+    * Simple session/env-entry test
+    * @throws Exception
+    */
+   public void testEnvEntry()
+      throws Exception
+   {
+      EjbJar3xMetaData result = unmarshal();
+      EnterpriseBeansMetaData beans = result.getEnterpriseBeans();
+      assertNotNull(beans);
+      EnterpriseBeanMetaData bean = beans.get("StatelessSession1");
+      assertNotNull("StatelessSession1 bean", bean);
+      EnvironmentEntryMetaData entry = bean.getEnvironmentEntryByName("session1-entry1-name");
+      assertEquals("session1-entry1-id", entry.getId());
+      assertEquals("session1-entry1-value", entry.getValue());
+      assertEquals("java.lang.String", entry.getType());
+      assertEquals("session1-entry1-mapped-name", entry.getMappedName());
+      Set<ResourceInjectionTargetMetaData> targets = entry.getInjectionTargets();
+      assertEquals(1, targets.size());
+      ResourceInjectionTargetMetaData target = targets.iterator().next();
+      assertEquals("session1.entry1.target", target.getInjectionTargetClass());
+      assertEquals("session1_entry1_injection_target_name", target.getInjectionTargetName());
+   }
+   /**
+    * Test session/service-ref
+    * @throws Exception
+    */
+   public void testServiceRefs()
+      throws Exception
+   {
+      enableTrace("org.jboss.xb");
+      EjbJar3xMetaData result = unmarshal();
+      EnterpriseBeansMetaData beans = result.getEnterpriseBeans();
+      assertNotNull(beans);
+      EnterpriseBeanMetaData bean = beans.get("StatelessSession1");
+      ServiceReferencesMetaData serviceRefs = bean.getServiceReferences();
+      assertNotNull(serviceRefs);
+      ServiceReferenceMetaData ref = serviceRefs.get("session1/Hello");
+      ServiceReferenceHandlerChainsMetaData chains = ref.getHandlerChains();
+      assertNotNull(chains);
+      ServiceReferenceHandlersMetaData handlers = ref.getHandlers();
+      assertTrue(handlers == null);
+   }
+
+   /**
+    * Simple session/ejb-ref test
+    * @throws Exception
+    */
+   public void testEjbRefs()
+      throws Exception
+   {
+      EjbJar3xMetaData result = unmarshal();
+      EnterpriseBeansMetaData beans = result.getEnterpriseBeans();
+      assertNotNull(beans);
+   }
 }

@@ -21,6 +21,8 @@
 */
 package org.jboss.ejb.metadata.spec;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 import org.jboss.javaee.metadata.support.IdMetaDataImplWithDescriptionGroup;
 
 /**
@@ -34,6 +36,8 @@ public abstract class EjbJarMetaData extends IdMetaDataImplWithDescriptionGroup
    /** The serialVersionUID */
    private static final long serialVersionUID = 809339942454480150L;
 
+   private String dtdPublicId;
+   private String dtdSystemId;
    /** The ejb client jar */
    private String ejbClientJar;
 
@@ -52,6 +56,37 @@ public abstract class EjbJarMetaData extends IdMetaDataImplWithDescriptionGroup
    public EjbJarMetaData()
    {
       // For serialization
+   }
+
+   /**
+    * Callback for the DTD information
+    * @param root
+    * @param publicId
+    * @param systemId
+    */
+   @XmlTransient
+   public void setDTD(String root, String publicId, String systemId)
+   {
+      this.dtdPublicId = publicId;
+      this.dtdSystemId = systemId;
+   }
+   /**
+    * Get the DTD public id if one was seen
+    * @return the value of the web.xml dtd public id
+    */
+   @XmlTransient
+   public String getDtdPublicId()
+   {
+      return dtdPublicId;
+   }
+   /**
+    * Get the DTD system id if one was seen
+    * @return the value of the web.xml dtd system id
+    */
+   @XmlTransient
+   public String getDtdSystemId()
+   {
+      return dtdSystemId;
    }
 
    /**

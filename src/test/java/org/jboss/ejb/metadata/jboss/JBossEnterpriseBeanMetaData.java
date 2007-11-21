@@ -452,7 +452,7 @@ public abstract class JBossEnterpriseBeanMetaData extends NamedMetaDataWithDescr
     * @param depends the depends.
     * @throws IllegalArgumentException for a null depends
     */
-   @XmlElement(type=NonNullLinkedHashSet.class)
+   //@XmlElement(type=NonNullLinkedHashSet.class)
    public void setDepends(Set<String> depends)
    {
       if (depends == null)

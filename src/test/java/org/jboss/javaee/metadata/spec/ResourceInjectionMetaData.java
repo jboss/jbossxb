@@ -122,7 +122,7 @@ public abstract class ResourceInjectionMetaData extends NamedMetaData
     * @throws IllegalArgumentException for a null injectionTargets
     */
    //@SchemaProperty(name="injection-target", impl=NonNullLinkedHashSet.class, mandatory=false)
-   @XmlElement(name="injection-target", type=NonNullLinkedHashSet.class, required=false)
+   @XmlElement(name="injection-target", /*type=NonNullLinkedHashSet.class,*/ required=false)
    public void setInjectionTargets(Set<ResourceInjectionTargetMetaData> injectionTargets)
    {
       if (injectionTargets == null)

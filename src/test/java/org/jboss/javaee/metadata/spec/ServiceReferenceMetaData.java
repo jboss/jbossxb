@@ -53,13 +53,16 @@ public class ServiceReferenceMetaData extends ResourceInjectionMetaDataWithDescr
 
    /** The service qname */
    private QName serviceQname;
-   
+
+   /** The port-component-ref */
+   private PortComponentRef portComponentRef;
+
    /** The handlers */
    private ServiceReferenceHandlersMetaData handlers;
    
    /** The handler chains */
    private ServiceReferenceHandlerChainsMetaData handlerChains;
-   
+
    /**
     * Create a new ServiceReferenceMetaData.
     */
@@ -204,6 +207,17 @@ public class ServiceReferenceMetaData extends ResourceInjectionMetaDataWithDescr
       if (wsdlFile == null)
          throw new IllegalArgumentException("Null wsdlFile");
       this.wsdlFile = wsdlFile;
+   }
+
+
+   public PortComponentRef getPortComponentRef()
+   {
+      return portComponentRef;
+   }
+
+   public void setPortComponentRef(PortComponentRef portComponentRef)
+   {
+      this.portComponentRef = portComponentRef;
    }
 
    /**

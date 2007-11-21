@@ -44,11 +44,14 @@ public abstract class AbstractValueTest<T extends SimpleValue> extends AbstractB
    /** The expected value */
    private Object expected;
    
-   public AbstractValueTest(String name, Class<T> root, Object expected)
+   private String valueElement;
+   
+   public AbstractValueTest(String name, Class<T> root, Object expected, String valueElement)
    {
       super(name);
       this.root = root;
       this.expected = expected;
+      this.valueElement = valueElement;
    }
 
    public void testUnmarshal() throws Exception
@@ -63,7 +66,7 @@ public abstract class AbstractValueTest<T extends SimpleValue> extends AbstractB
       SchemaBinding schemaBinding = JBossXBBuilder.build(root);
       assertNotNull(schemaBinding);
       
-      ElementBinding element = schemaBinding.getElement(new QName("string-value"));
+      ElementBinding element = schemaBinding.getElement(new QName(valueElement));
       assertNotNull(element);
       assertNotNull(element.getType().getSimpleType());
    }

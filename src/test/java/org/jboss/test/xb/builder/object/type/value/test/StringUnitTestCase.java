@@ -40,6 +40,6 @@ public class StringUnitTestCase extends AbstractValueTest<StringValue>
    
    public StringUnitTestCase(String name)
    {
-      super(name, StringValue.class, "Hello");
+      super(name, StringValue.class, "Hello", "string-value");
    }
 }

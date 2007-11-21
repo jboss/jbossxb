@@ -29,7 +29,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
           <testFailureIgnore>true</testFailureIgnore>
-		      <redirectTestOutputToFile>true</redirectTestOutputToFile>
+          <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <includes>
             <include>**/*TestCase.java</include>
           </includes>

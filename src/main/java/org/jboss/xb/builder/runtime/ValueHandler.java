@@ -49,12 +49,15 @@ public class ValueHandler extends CharactersHandler
    /** The property info */
    private PropertyInfo propertyInfo;
    
+   /** value type info */
+   private TypeInfo valueTypeInfo;
+   
    /** The wrapper type */
    private BeanInfo beanInfo;
    
    /** The wrapper property */
    private String property;
-   
+      
    /**
     * Create a new AbstractPropertyHandler
     * 
@@ -66,8 +69,28 @@ public class ValueHandler extends CharactersHandler
       if (propertyInfo == null)
          throw new IllegalArgumentException("Null propertyInfo");
       this.propertyInfo = propertyInfo;
+      this.valueTypeInfo = propertyInfo.getType();
    }
+
    
+   
+   /**
+    * Create a new ValueHandler.
+    * 
+    * @param propertyInfo  the property
+    * @param valueTypeInfo  the type of the property to cast the value to before setting
+    */   
+   public ValueHandler(PropertyInfo propertyInfo, TypeInfo valueTypeInfo)
+   {
+      if (propertyInfo == null)
+         throw new IllegalArgumentException("Null propertyInfo");
+      this.propertyInfo = propertyInfo;
+      this.valueTypeInfo = valueTypeInfo;
+      if(valueTypeInfo == null)
+         this.valueTypeInfo = propertyInfo.getType(); 
+   }
+
+
    /**
     * Create a new AbstractPropertyHandler
     * 
@@ -85,6 +108,7 @@ public class ValueHandler extends CharactersHandler
       if (property == null)
          throw new IllegalArgumentException("Null property");
       this.propertyInfo = propertyInfo;
+      this.valueTypeInfo = propertyInfo.getType();
       this.beanInfo = beanInfo;
       this.property = property;
    }
@@ -106,8 +130,7 @@ public class ValueHandler extends CharactersHandler
          log.trace("QName " + qName + " handle " + BuilderUtil.toDebugString(value) + " to " + BuilderUtil.toDebugString(owner));
       try
       {
-         TypeInfo typeInfo = propertyInfo.getType();
-         value = typeInfo.convertValue(value, false);
+         value = valueTypeInfo.convertValue(value, false);
          if (beanInfo != null)
          {
             ClassInfo classInfo = beanInfo.getClassInfo();

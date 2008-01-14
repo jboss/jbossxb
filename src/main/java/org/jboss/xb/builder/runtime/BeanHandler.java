@@ -184,7 +184,7 @@ public class BeanHandler extends DefaultElementHandler
          return;
       }
 
-      if(particle.isRepeatable() && propertyHandler instanceof CollectionPropertyHandler)
+      if(particle.isRepeatable() && !(propertyHandler instanceof PropertyHandler))
       {
          // TODO this is not optimal!
          // repeatable particles are collected into java.util.Collection

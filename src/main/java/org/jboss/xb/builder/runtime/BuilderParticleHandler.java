@@ -25,6 +25,7 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
@@ -53,20 +54,31 @@ public class BuilderParticleHandler implements ParticleHandler
    {
       TermBinding term = particle.getTerm();
       TermBinding parentTerm = parentParticle.getTerm();
-      if (term.isModelGroup() == false && parentTerm instanceof ElementBinding)
+      if (term.isModelGroup() == false)
       {
-         ElementBinding elementBinding = (ElementBinding) parentTerm;
-         if (parent != null && parent instanceof ArrayWrapper)
+         ParticleHandler particleHandler = null;
+         if(parentTerm.isElement())
          {
-            ArrayWrapper wrapper = (ArrayWrapper) parent;
-            wrapper.add(o);
-            wrapper.setChildParticle(particle);
-            wrapper.setParentParticle(parentParticle);
-            return;
+            particleHandler = ((ElementBinding)parentTerm).getType().getHandler();            
          }
-      
-         ParticleHandler particleHandler = elementBinding.getType().getHandler();
-         particleHandler.setParent(parent, o, elementName, particle, parentParticle);
+         else if (!parentTerm.isSkip() && parentTerm.isModelGroup())
+         {
+            particleHandler = ((ModelGroupBinding)parentTerm).getHandler();
+         }
+         
+         if(particleHandler != null)
+         {
+            if (parent != null && parent instanceof ArrayWrapper)
+            {
+               ArrayWrapper wrapper = (ArrayWrapper) parent;
+               wrapper.add(o);
+               wrapper.setChildParticle(particle);
+               wrapper.setParentParticle(parentParticle);
+               return;
+            }
+
+            particleHandler.setParent(parent, o, elementName, particle, parentParticle);
+         }
       }
    }
 

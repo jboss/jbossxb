@@ -42,6 +42,7 @@ import org.jboss.xb.annotations.JBossXmlMapValueElement;
 public class Root
 {
    private Map<String, Integer> stringToInteger;
+   private Map<String, EntryTypeKeyAttributeValueEntry> entryTypeMap;
    
    @JBossXmlMapKeyElement(name = "key")
    @JBossXmlMapValueElement(name = "value")
@@ -91,5 +92,27 @@ public class Root
    public void setKeyAttributeValueEntryContent(Map<String, Integer> value)
    {
       this.stringToInteger = value;
+   }
+
+   @JBossXmlMapEntry(name = "entry-type-key-attr-value-entry-content", type=EntryTypeKeyAttributeValueEntryContent.class)
+   public Map<String, Integer> getEntryTypeKeyAttributeValueEntryContent()
+   {
+      return this.stringToInteger;
+   }
+   
+   public void setEntryTypeKeyAttributeValueEntryContent(Map<String, Integer> value)
+   {
+      this.stringToInteger = value;
+   }
+
+   @JBossXmlMapEntry(name = "entry-type-key-attr-value-entry", type=EntryTypeKeyAttributeValueEntry.class)
+   public Map<String, EntryTypeKeyAttributeValueEntry> getEntryTypeKeyAttributeValueEntry()
+   {
+      return this.entryTypeMap;
+   }
+   
+   public void setEntryTypeKeyAttributeValueEntry(Map<String, EntryTypeKeyAttributeValueEntry> value)
+   {
+      this.entryTypeMap = value;
    }
 }

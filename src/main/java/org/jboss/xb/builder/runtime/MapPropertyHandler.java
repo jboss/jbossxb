@@ -27,10 +27,15 @@ import java.util.Map;
 
 import javax.xml.namespace.QName;
 
+import org.jboss.beans.info.spi.BeanInfo;
 import org.jboss.beans.info.spi.PropertyInfo;
+import org.jboss.config.spi.Configuration;
 import org.jboss.reflect.spi.ClassInfo;
 import org.jboss.reflect.spi.ConstructorInfo;
 import org.jboss.reflect.spi.TypeInfo;
+import org.jboss.xb.annotations.JBossXmlMapEntry;
+import org.jboss.xb.annotations.JBossXmlMapKey;
+import org.jboss.xb.annotations.JBossXmlMapValue;
 import org.jboss.xb.spi.BeanAdapter;
 
 /**
@@ -42,7 +47,7 @@ import org.jboss.xb.spi.BeanAdapter;
 public class MapPropertyHandler extends AbstractPropertyHandler
 {
    private final MapFactory mapFactory;
-   
+   private final MapPutAdapter mapPutAdapter;
    /**
     * Create a new MapPropertyHandler.
     * 
@@ -50,14 +55,14 @@ public class MapPropertyHandler extends AbstractPropertyHandler
     * @param propertyType the property type
     * @throws IllegalArgumentException for a null qName or property
     */
-   public MapPropertyHandler(PropertyInfo propertyInfo, TypeInfo propertyType)
+   public MapPropertyHandler(Configuration config, PropertyInfo propertyInfo, TypeInfo propertyType)
    {
       super(propertyInfo, propertyType);
 
       ClassInfo classInfo = (ClassInfo) propertyType;
       if (Modifier.isAbstract(classInfo.getModifiers()))
       {
-         mapFactory = new HashMapFactory();
+         mapFactory = HashMapFactory.INSTANCE;
       }
       else
       {
@@ -82,6 +87,15 @@ public class MapPropertyHandler extends AbstractPropertyHandler
          }
          mapFactory = new CtorMapFactory(constructor);
       }
+      
+      JBossXmlMapEntry entry = propertyInfo.getUnderlyingAnnotation(JBossXmlMapEntry.class);
+      if(entry != null && !JBossXmlMapEntry.DEFAULT.class.equals(entry.type()))
+      {
+         BeanInfo entryBean = config.getBeanInfo(entry.type());
+         mapPutAdapter = new CustomMapEntryPutAdapter(entryBean);
+      }
+      else
+         mapPutAdapter = DefaultMapEntryPutAdapter.INSTANCE;
    }
 
    @Override
@@ -122,21 +136,86 @@ public class MapPropertyHandler extends AbstractPropertyHandler
             throw new RuntimeException("QName " + qName + " error setting map property " + propertyInfo.getName() + " for " + BuilderUtil.toDebugString(parent) + " with value " + BuilderUtil.toDebugString(m), t);
          }
       }
-
-      if(!(child instanceof DefaultMapEntry))
-         throw new IllegalStateException("Only the DefaultMapEntry is supported at the moment: " + child);
-         
-      DefaultMapEntry entry = (DefaultMapEntry) child;
       
-      // Now add
       try
       {
-         m.put(entry.getKey(), entry.getValue());
+         mapPutAdapter.put(m, child);
       }
-      catch (Exception e)
+      catch (Throwable e)
       {
          throw new RuntimeException("QName " + qName + " error adding " + BuilderUtil.toDebugString(child) + " to map " + BuilderUtil.toDebugString(m), e);
       }
+   }
+   
+   private static interface MapPutAdapter
+   {
+      void put(Map<Object,Object> map, Object entry) throws Throwable;
+   }
+   
+   private static class CustomMapEntryPutAdapter implements MapPutAdapter
+   {
+      private final PropertyInfo keyProp;
+      private final PropertyInfo valueProp;
+      
+      CustomMapEntryPutAdapter(BeanInfo entryBean)
+      {
+         PropertyInfo keyProp = null;
+         PropertyInfo valueProp = null;
+         for(PropertyInfo prop : entryBean.getProperties())
+         {
+            JBossXmlMapKey key = prop.getUnderlyingAnnotation(JBossXmlMapKey.class);
+            if(key != null)
+            {
+               if(keyProp != null)
+                  throw new IllegalStateException(
+                        "Found two properties in entry type " + entryBean.getName() +
+                        " annotated with @JBossXmlMapKey: " +
+                        keyProp.getName() + " and " + prop.getName());
+               keyProp = prop;
+            }
+
+            JBossXmlMapValue value = prop.getUnderlyingAnnotation(JBossXmlMapValue.class);
+            if(value != null)
+            {
+               if(valueProp != null)
+                  throw new IllegalStateException(
+                        "Found two properties in entry type " + entryBean.getName() +
+                        " annotated with @JBossXmlMapValue: " +
+                        valueProp.getName() + " and " + prop.getName());
+               valueProp = prop;
+            }
+         }
+
+         if(keyProp == null)
+            throw new IllegalStateException(
+                  "Entry type " + entryBean.getName() +
+                  " doesn't have any property annotated with @JBossXmlMapKey.");
+         
+         this.keyProp = keyProp;
+         this.valueProp = valueProp;
+      }
+      
+      public void put(Map<Object, Object> map, Object entry) throws Throwable
+      {
+         Object key = keyProp.get(entry);
+         Object value = entry;
+         if(valueProp != null)
+            value = valueProp.get(entry);
+         map.put(key, value);
+      }
+   }
+   
+   private static class DefaultMapEntryPutAdapter implements MapPutAdapter
+   {
+      static final MapPutAdapter INSTANCE = new DefaultMapEntryPutAdapter();
+      
+      public void put(Map<Object, Object> map, Object entry)
+      {
+         if(!(entry instanceof DefaultMapEntry))
+            throw new IllegalStateException("Expected DefaultMapEntry but got " + entry);
+         DefaultMapEntry defEntry = (DefaultMapEntry) entry;
+         map.put(defEntry.getKey(), defEntry.getValue());
+      }      
    }
    
    private static interface MapFactory
@@ -146,6 +225,8 @@ public class MapPropertyHandler extends AbstractPropertyHandler
    
    private static class HashMapFactory implements MapFactory
    {
+      static final MapFactory INSTANCE = new HashMapFactory();
+      
       @SuppressWarnings("unchecked")
       public Map<Object, Object> createMap()
       {

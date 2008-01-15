@@ -1687,6 +1687,7 @@ public class JBossXBNoSchemaBuilder
             }
             else if (propertyType.isMap() && ((ClassInfo) propertyType).getUnderlyingAnnotation(XmlType.class) == null)
             {
+               JBossXmlMapEntry entryElement = property.getUnderlyingAnnotation(JBossXmlMapEntry.class);
                JBossXmlMapKeyElement keyElement = property.getUnderlyingAnnotation(JBossXmlMapKeyElement.class);
                JBossXmlMapKeyAttribute keyAttribute = property.getUnderlyingAnnotation(JBossXmlMapKeyAttribute.class);
                
@@ -1694,7 +1695,6 @@ public class JBossXBNoSchemaBuilder
                {
                   // further assuming the map is bound
 
-                  JBossXmlMapEntry entryElement = property.getUnderlyingAnnotation(JBossXmlMapEntry.class);
                   JBossXmlMapValueElement valueElement = property.getUnderlyingAnnotation(JBossXmlMapValueElement.class);
                   JBossXmlMapValueAttribute valueAttribute = property.getUnderlyingAnnotation(JBossXmlMapValueAttribute.class);
 
@@ -1722,8 +1722,7 @@ public class JBossXBNoSchemaBuilder
                      entryType.setSchemaBinding(schemaBinding);
                      entryType.setHandler(entryHandler);
 
-                     entryTypeInfo = JBossXBBuilder.configuration.getTypeInfo(DefaultMapEntry.class);
-                     
+                     entryTypeInfo = JBossXBBuilder.configuration.getTypeInfo(DefaultMapEntry.class);                     
                      ElementBinding entryElementBinding = createElementBinding(entryTypeInfo, entryType, entryName, false);
                      ParticleBinding entryParticle = new ParticleBinding(entryElementBinding, 0, -1, true);
                      targetGroup.addParticle(entryParticle);
@@ -1753,7 +1752,7 @@ public class JBossXBNoSchemaBuilder
                         valueBinding.setRequired(true);
                         entryType.addAttribute(valueBinding);
                          
-                        propertyHandler = new MapPropertyHandler(property, localPropertyType);
+                        propertyHandler = new MapPropertyHandler(JBossXBBuilder.configuration, property, localPropertyType);
                      }
                      else if(valueElement == null)
                      {
@@ -1808,7 +1807,25 @@ public class JBossXBNoSchemaBuilder
 
                   // TODO: need to verify correct binding before proceeding
                   isMap = true;
-                  propertyHandler = new MapPropertyHandler(property, localPropertyType);
+                  propertyHandler = new MapPropertyHandler(JBossXBBuilder.configuration, property, localPropertyType);
+               }
+               else if(entryElement != null && !JBossXmlMapEntry.DEFAULT.class.equals(entryElement.type()))
+               {
+                  if(!JBossXmlConstants.DEFAULT.equals(entryElement.name()))
+                  {
+                     String ns = entryElement.namespace();
+                     if(JBossXmlConstants.DEFAULT.equals(ns))
+                        ns = propertyQName.getNamespaceURI();
+                     propertyQName = new QName(ns, entryElement.name());
+                  }
+
+                  TypeInfo entryTypeBinding = JBossXBBuilder.configuration.getTypeInfo(entryElement.type());
+                  ElementBinding entryElementBinding = createElementBinding(entryTypeBinding, propertyQName.getLocalPart(), false);
+                  ParticleBinding entryParticle = new ParticleBinding(entryElementBinding, 0, -1, true);
+                  targetGroup.addParticle(entryParticle);
+
+                  propertyHandler = new MapPropertyHandler(JBossXBBuilder.configuration, property, localPropertyType);
+                  isMap = true;
                }
                else
                {

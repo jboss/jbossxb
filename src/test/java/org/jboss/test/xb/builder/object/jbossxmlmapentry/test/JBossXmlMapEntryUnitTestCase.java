@@ -24,6 +24,7 @@ package org.jboss.test.xb.builder.object.jbossxmlmapentry.test;
 import java.util.Map;
 
 import org.jboss.test.xb.builder.AbstractBuilderTest;
+import org.jboss.test.xb.builder.object.jbossxmlmapentry.support.EntryTypeKeyAttributeValueEntry;
 import org.jboss.test.xb.builder.object.jbossxmlmapentry.support.Root;
 
 
@@ -63,6 +64,38 @@ public class JBossXmlMapEntryUnitTestCase extends AbstractBuilderTest
    {
       Root root = unmarshalObject(Root.class);
       assertMap(root.getKeyAttributeValueEntryContent());
+   }
+
+   public void testEntryTypeKeyAttributeValueEntryContent() throws Exception
+   {
+      Root root = unmarshalObject(Root.class);
+      assertMap(root.getEntryTypeKeyAttributeValueEntryContent());
+   }
+
+   public void testEntryTypeKeyAttributeValueEntry() throws Exception
+   {
+      Root root = unmarshalObject(Root.class);
+      Map<String, EntryTypeKeyAttributeValueEntry> map = root.getEntryTypeKeyAttributeValueEntry();
+      assertNotNull(map);
+      assertEquals(3, map.size());
+      
+      EntryTypeKeyAttributeValueEntry entry = map.get("key1");
+      assertNotNull(entry);
+      assertEquals("key1", entry.getKey());
+      assertEquals("attr1", entry.getValueAttribute());
+      assertEquals(new Integer(1), entry.getValueElement());
+      
+      entry = map.get("key2");
+      assertNotNull(entry);
+      assertEquals("key2", entry.getKey());
+      assertEquals("attr2", entry.getValueAttribute());
+      assertEquals(new Integer(22), entry.getValueElement());
+
+      entry = map.get("key3");
+      assertNotNull(entry);
+      assertEquals("key3", entry.getKey());
+      assertEquals("attr3", entry.getValueAttribute());
+      assertEquals(new Integer(333), entry.getValueElement());
    }
 
    private void assertMap(Map<String, Integer> map)

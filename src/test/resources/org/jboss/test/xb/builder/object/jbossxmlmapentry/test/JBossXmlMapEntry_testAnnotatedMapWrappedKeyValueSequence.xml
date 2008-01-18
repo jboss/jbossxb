@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<root>
+  <annotated-map-wrapped-key-value>
+    <key>key1</key><value>1</value>
+  </annotated-map-wrapped-key-value>
+  <annotated-map-wrapped-key-value>
+    <key>key2</key><value>22</value>
+  </annotated-map-wrapped-key-value>
+  <annotated-map-wrapped-key-value>
+    <key>key3</key><value>333</value>
+  </annotated-map-wrapped-key-value>
+</root>

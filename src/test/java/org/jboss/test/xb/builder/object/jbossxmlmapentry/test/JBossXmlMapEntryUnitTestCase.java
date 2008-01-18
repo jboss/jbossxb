@@ -48,10 +48,22 @@ public class JBossXmlMapEntryUnitTestCase extends AbstractBuilderTest
       assertMap(root.getKeyValueSequence());
    }
 
+   public void testAnnotatedMapKeyValueSequence() throws Exception
+   {
+      Root root = unmarshalObject(Root.class);
+      assertMap(root.getAnnotatedMapKeyValueSequence());
+   }
+
    public void testWrappedKeyValueSequence() throws Exception
    {
       Root root = unmarshalObject(Root.class);
       assertMap(root.getWrappedKeyValueSequence());
+   }
+
+   public void testAnnotatedMapWrappedKeyValueSequence() throws Exception
+   {
+      Root root = unmarshalObject(Root.class);
+      assertMap(root.getAnnotatedMapWrappedKeyValueSequence());
    }
 
    public void testKeyValueAttributes() throws Exception
@@ -60,10 +72,22 @@ public class JBossXmlMapEntryUnitTestCase extends AbstractBuilderTest
       assertMap(root.getKeyValueAttributes());
    }
 
+   public void testAnnotatedMapKeyValueAttributes() throws Exception
+   {
+      Root root = unmarshalObject(Root.class);
+      assertMap(root.getAnnotatedMapKeyValueAttributes());
+   }
+
    public void testKeyAttributeValueEntryContent() throws Exception
    {
       Root root = unmarshalObject(Root.class);
       assertMap(root.getKeyAttributeValueEntryContent());
+   }
+
+   public void testAnnotatedMapKeyAttributeValueEntryContent() throws Exception
+   {
+      Root root = unmarshalObject(Root.class);
+      assertMap(root.getAnnotatedMapKeyAttributeValueEntryContent());
    }
 
    public void testEntryTypeKeyAttributeValueEntryContent() throws Exception
@@ -72,10 +96,28 @@ public class JBossXmlMapEntryUnitTestCase extends AbstractBuilderTest
       assertMap(root.getEntryTypeKeyAttributeValueEntryContent());
    }
 
+   public void testAnnotatedMapWithEntryTypeKeyAttributeValueEntryContent() throws Exception
+   {
+      Root root = unmarshalObject(Root.class);
+      assertMap(root.getAnnotatedMapWithEntryTypeKeyAttributeValueEntryContent());
+   }
+
    public void testEntryTypeKeyAttributeValueEntry() throws Exception
    {
       Root root = unmarshalObject(Root.class);
       Map<String, EntryTypeKeyAttributeValueEntry> map = root.getEntryTypeKeyAttributeValueEntry();
+      assertMapWithEntry(map);
+   }
+
+   public void testAnnotatedMapWithEntryTypeKeyAttributeValueEntry() throws Exception
+   {
+      Root root = unmarshalObject(Root.class);
+      Map<String, EntryTypeKeyAttributeValueEntry> map = root.getAnnotatedMapWithEntryTypeKeyAttributeValueEntry();
+      assertMapWithEntry(map);
+   }
+
+   private void assertMapWithEntry(Map<String, EntryTypeKeyAttributeValueEntry> map)
+   {
       assertNotNull(map);
       assertEquals(3, map.size());
       

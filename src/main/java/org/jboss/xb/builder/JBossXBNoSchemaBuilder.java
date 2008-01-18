@@ -642,7 +642,7 @@ public class JBossXBNoSchemaBuilder
     */
    public TypeBinding generateMap(ClassInfo typeInfo)
    {
-      // TODO generateMap
+      // the map is bound in bindProperty method currently
       return generateBean(typeInfo);
    }
 
@@ -1685,21 +1685,31 @@ public class JBossXBNoSchemaBuilder
                localPropertyType = findActualType((ClassInfo) localPropertyType, parameterizedType,
                      java.util.Collection.class, 0);
             }
-            else if (propertyType.isMap() && ((ClassInfo) propertyType).getUnderlyingAnnotation(XmlType.class) == null)
+            else if (propertyType.isMap() /*&& ((ClassInfo) propertyType).getUnderlyingAnnotation(XmlType.class) == null*/)
             {
                JBossXmlMapEntry entryElement = property.getUnderlyingAnnotation(JBossXmlMapEntry.class);
+               if(entryElement == null)
+                  entryElement = ((ClassInfo)localPropertyType).getUnderlyingAnnotation(JBossXmlMapEntry.class);
                JBossXmlMapKeyElement keyElement = property.getUnderlyingAnnotation(JBossXmlMapKeyElement.class);
+               if(keyElement == null)
+                  keyElement = ((ClassInfo)localPropertyType).getUnderlyingAnnotation(JBossXmlMapKeyElement.class);
                JBossXmlMapKeyAttribute keyAttribute = property.getUnderlyingAnnotation(JBossXmlMapKeyAttribute.class);
+               if(keyAttribute == null)
+                  keyAttribute = ((ClassInfo)localPropertyType).getUnderlyingAnnotation(JBossXmlMapKeyAttribute.class);
                
                if(keyElement != null || keyAttribute != null)
                {
                   // further assuming the map is bound
 
                   JBossXmlMapValueElement valueElement = property.getUnderlyingAnnotation(JBossXmlMapValueElement.class);
+                  if(valueElement == null)
+                     valueElement = ((ClassInfo)localPropertyType).getUnderlyingAnnotation(JBossXmlMapValueElement.class);
                   JBossXmlMapValueAttribute valueAttribute = property.getUnderlyingAnnotation(JBossXmlMapValueAttribute.class);
+                  if(valueAttribute == null)
+                     valueAttribute = ((ClassInfo)localPropertyType).getUnderlyingAnnotation(JBossXmlMapValueAttribute.class);
 
-                  TypeInfo keyType = ((ClassInfo)propertyType).getKeyType();
-                  TypeInfo valueType = ((ClassInfo)propertyType).getValueType();
+                  TypeInfo keyType = ((ClassInfo)localPropertyType).getKeyType();
+                  TypeInfo valueType = ((ClassInfo)localPropertyType).getValueType();
 
                   // entry handler
                   BeanAdapterFactory entryAdapterFactory = null;

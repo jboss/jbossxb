@@ -89,6 +89,9 @@ public class MapPropertyHandler extends AbstractPropertyHandler
       }
       
       JBossXmlMapEntry entry = propertyInfo.getUnderlyingAnnotation(JBossXmlMapEntry.class);
+      if(entry == null)
+         entry =((ClassInfo)propertyType).getUnderlyingAnnotation(JBossXmlMapEntry.class);
+      
       if(entry != null && !JBossXmlMapEntry.DEFAULT.class.equals(entry.type()))
       {
          BeanInfo entryBean = config.getBeanInfo(entry.type());

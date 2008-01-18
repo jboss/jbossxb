@@ -23,6 +23,7 @@ package org.jboss.test.xb.builder.object.jbossxmlmapentry.support;
 
 import java.util.Map;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.jboss.xb.annotations.JBossXmlMapEntry;
@@ -43,6 +44,12 @@ public class Root
 {
    private Map<String, Integer> stringToInteger;
    private Map<String, EntryTypeKeyAttributeValueEntry> entryTypeMap;
+   private AnnotatedMapKeyValueSequence annotatedMapKeyValueSequence;
+   private AnnotatedMapWrappedKeyValueSequence annotatedWrappedMapKeyValueSequence;
+   private AnnotatedMapKeyValueAttributes<String,Integer> annotatedMapKeyValueAttributes;
+   private AnnotatedMapKeyAttributeValueEntryContent annotatedMapKeyAttributeValueEntryContent;
+   private AnnotatedMapWithEntryTypeKeyAttributeValueEntryContent annotatedMapWithEntryTypeKeyAttributeValueEntryContent;
+   private Map<String, EntryTypeKeyAttributeValueEntry> annotatedMapWithEntryTypeKeyAttributeValueEntry;
    
    @JBossXmlMapKeyElement(name = "key")
    @JBossXmlMapValueElement(name = "value")
@@ -54,6 +61,16 @@ public class Root
    public void setKeyValueSequence(Map<String, Integer> value)
    {
       this.stringToInteger = value;
+   }
+
+   public AnnotatedMapKeyValueSequence getAnnotatedMapKeyValueSequence()
+   {
+      return this.annotatedMapKeyValueSequence;
+   }
+
+   public void setAnnotatedMapKeyValueSequence(AnnotatedMapKeyValueSequence value)
+   {
+      this.annotatedMapKeyValueSequence = value;
    }
 
    @JBossXmlMapEntry(name = "wrapped-key-value")
@@ -69,6 +86,16 @@ public class Root
       this.stringToInteger = value;
    }
 
+   public AnnotatedMapWrappedKeyValueSequence getAnnotatedMapWrappedKeyValueSequence()
+   {
+      return this.annotatedWrappedMapKeyValueSequence;
+   }
+   
+   public void setAnnotatedMapWrappedKeyValueSequence(AnnotatedMapWrappedKeyValueSequence value)
+   {
+      this.annotatedWrappedMapKeyValueSequence = value;
+   }
+
    @JBossXmlMapEntry(name = "key-value-attr")
    @JBossXmlMapKeyAttribute(name = "key")
    @JBossXmlMapValueAttribute(name = "value")
@@ -82,6 +109,16 @@ public class Root
       this.stringToInteger = value;
    }
 
+   public AnnotatedMapKeyValueAttributes<String, Integer> getAnnotatedMapKeyValueAttributes()
+   {
+      return this.annotatedMapKeyValueAttributes;
+   }
+   
+   public void setAnnotatedMapKeyValueAttributes(AnnotatedMapKeyValueAttributes<String,Integer> value)
+   {
+      this.annotatedMapKeyValueAttributes = value;
+   }
+
    @JBossXmlMapEntry(name = "key-attr-value-entry-content")
    @JBossXmlMapKeyAttribute(name = "key")
    public Map<String, Integer> getKeyAttributeValueEntryContent()
@@ -89,9 +126,19 @@ public class Root
       return this.stringToInteger;
    }
    
-   public void setKeyAttributeValueEntryContent(Map<String, Integer> value)
+   public void setKeyAttributeValueEntryContent(Map<String,Integer> value)
    {
       this.stringToInteger = value;
+   }
+
+   public AnnotatedMapKeyAttributeValueEntryContent getAnnotatedMapKeyAttributeValueEntryContent()
+   {
+      return this.annotatedMapKeyAttributeValueEntryContent;
+   }
+   
+   public void setAnnotatedMapKeyAttributeValueEntryContent(AnnotatedMapKeyAttributeValueEntryContent value)
+   {
+      this.annotatedMapKeyAttributeValueEntryContent = value;
    }
 
    @JBossXmlMapEntry(name = "entry-type-key-attr-value-entry-content", type=EntryTypeKeyAttributeValueEntryContent.class)
@@ -105,6 +152,16 @@ public class Root
       this.stringToInteger = value;
    }
 
+   public AnnotatedMapWithEntryTypeKeyAttributeValueEntryContent getAnnotatedMapWithEntryTypeKeyAttributeValueEntryContent()
+   {
+      return this.annotatedMapWithEntryTypeKeyAttributeValueEntryContent;
+   }
+   
+   public void setAnnotatedMapWithEntryTypeKeyAttributeValueEntryContent(AnnotatedMapWithEntryTypeKeyAttributeValueEntryContent value)
+   {
+      this.annotatedMapWithEntryTypeKeyAttributeValueEntryContent = value;
+   }
+
    @JBossXmlMapEntry(name = "entry-type-key-attr-value-entry", type=EntryTypeKeyAttributeValueEntry.class)
    public Map<String, EntryTypeKeyAttributeValueEntry> getEntryTypeKeyAttributeValueEntry()
    {
@@ -114,5 +171,16 @@ public class Root
    public void setEntryTypeKeyAttributeValueEntry(Map<String, EntryTypeKeyAttributeValueEntry> value)
    {
       this.entryTypeMap = value;
+   }
+
+   @XmlElement(type=AnnotatedMapWithEntryTypeKeyAttributeValueEntry.class)
+   public Map<String, EntryTypeKeyAttributeValueEntry> getAnnotatedMapWithEntryTypeKeyAttributeValueEntry()
+   {
+      return this.annotatedMapWithEntryTypeKeyAttributeValueEntry;
+   }
+   
+   public void setAnnotatedMapWithEntryTypeKeyAttributeValueEntry(Map<String, EntryTypeKeyAttributeValueEntry> value)
+   {
+      this.annotatedMapWithEntryTypeKeyAttributeValueEntry = value;
    }
 }

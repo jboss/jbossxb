@@ -24,6 +24,7 @@ package org.jboss.test.xb.builder.object.jbossxmlmapentry.support;
 import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.jboss.xb.annotations.JBossXmlMapEntry;
@@ -182,5 +183,18 @@ public class Root
    public void setAnnotatedMapWithEntryTypeKeyAttributeValueEntry(Map<String, EntryTypeKeyAttributeValueEntry> value)
    {
       this.annotatedMapWithEntryTypeKeyAttributeValueEntry = value;
+   }
+   
+   @XmlElementWrapper(name="map")
+   @JBossXmlMapEntry(name = "entry")
+   @JBossXmlMapKeyAttribute(name = "key")
+   public Map<String,Integer> getXmlElementWrapperMap()
+   {
+      return this.stringToInteger;
+   }
+   
+   public void setXmlElementWrapperMap(Map<String, Integer> value)
+   {
+      this.stringToInteger = value;
    }
 }

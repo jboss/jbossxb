@@ -116,6 +116,12 @@ public class JBossXmlMapEntryUnitTestCase extends AbstractBuilderTest
       assertMapWithEntry(map);
    }
 
+   public void testXmlElementWrapperMap() throws Exception
+   {
+      Root root = unmarshalObject(Root.class);
+      assertMap(root.getXmlElementWrapperMap());
+   }
+
    private void assertMapWithEntry(Map<String, EntryTypeKeyAttributeValueEntry> map)
    {
       assertNotNull(map);

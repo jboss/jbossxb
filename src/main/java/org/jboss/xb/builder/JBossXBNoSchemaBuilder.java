@@ -1078,6 +1078,9 @@ public class JBossXBNoSchemaBuilder
             ParticleBinding particle = new ParticleBinding(elementBinding, child.minOccurs(), child.maxOccurs(), child.unbounded());
             model.addParticle(particle);
 
+            if(childType.isMap())
+               bindMapProperty(null, (ClassInfo) childType, elementTypeBinding.getQName(), (ModelGroupBinding) elementTypeBinding.getParticle().getTerm());
+            
             DefaultElementInterceptor interceptor = null;
             if (typeInfo.isCollection())
                interceptor = ChildCollectionInterceptor.SINGLETON;
@@ -1443,28 +1446,11 @@ public class JBossXBNoSchemaBuilder
       // the wrapping element is ignored in this case
       XmlElementWrapper xmlWrapper = property.getUnderlyingAnnotation(XmlElementWrapper.class);
       if (xmlWrapper != null)
-      {
+      {         
          String wrapperNamespace = xmlWrapper.namespace();
          String wrapperName = xmlWrapper.name();
-         boolean wrapperNillable = xmlWrapper.nillable();
-
          QName wrapperQName = generateXmlName(property.getName(), elementForm, wrapperNamespace, wrapperName);
-
-         TypeBinding wrapperType = new TypeBinding();
-         SequenceBinding seq = new SequenceBinding(schemaBinding);
-         seq.setHandler(BuilderParticleHandler.INSTANCE);
-         ParticleBinding particle = new ParticleBinding(seq);
-         wrapperType.setParticle(particle);
-         wrapperType.setHandler(new DefaultElementHandler());
-
-         ElementBinding wrapperElement = createElementBinding(propertyType, wrapperType, wrapperQName, false);
-         wrapperElement.setNillable(wrapperNillable);
-         wrapperElement.setSkip(Boolean.TRUE);
-         particle = new ParticleBinding(wrapperElement, 1, 1, false);
-         localModel.addParticle(particle);
-
-         localModel = seq;
-
+         localModel = bindXmlElementWrapper(propertyType, localModel, xmlWrapper.nillable(), wrapperQName);
          if (trace)
             log.trace("Added property " + wrapperQName + " for type=" + property.getBeanInfo().getName() + " property="
                   + property.getName() + " as a wrapper element");
@@ -1592,11 +1578,14 @@ public class JBossXBNoSchemaBuilder
                   particle.setMinOccurs(0);
                   childModel.addParticle(particle);
 
+                  if(childType.isMap())
+                     bindMapProperty(property, (ClassInfo) childType, childName, (ModelGroupBinding) childTypeBinding.getParticle().getTerm());
+                                    
                   DefaultElementInterceptor interceptor = new PropertyInterceptor(property, propertyType);
                   elementTypeBinding.pushInterceptor(childName, interceptor);
                   if (trace)
                      log.trace("Added interceptor " + childName + " for type=" + property.getBeanInfo().getName()
-                           + " property=" + property.getName() + " interceptor=" + interceptor);
+                           + " property=" + property.getName() + " interceptor=" + interceptor + " " + childType.getName());
 
                   beanAdapterFactory.addProperty(propertyQName, new NoopPropertyHandler(property, propertyType));
 
@@ -1685,163 +1674,48 @@ public class JBossXBNoSchemaBuilder
                localPropertyType = findActualType((ClassInfo) localPropertyType, parameterizedType,
                      java.util.Collection.class, 0);
             }
-            else if (propertyType.isMap() /*&& ((ClassInfo) propertyType).getUnderlyingAnnotation(XmlType.class) == null*/)
+            else if (localPropertyType.isMap())
             {
-               JBossXmlMapEntry entryElement = property.getUnderlyingAnnotation(JBossXmlMapEntry.class);
-               if(entryElement == null)
-                  entryElement = ((ClassInfo)localPropertyType).getUnderlyingAnnotation(JBossXmlMapEntry.class);
-               JBossXmlMapKeyElement keyElement = property.getUnderlyingAnnotation(JBossXmlMapKeyElement.class);
-               if(keyElement == null)
-                  keyElement = ((ClassInfo)localPropertyType).getUnderlyingAnnotation(JBossXmlMapKeyElement.class);
-               JBossXmlMapKeyAttribute keyAttribute = property.getUnderlyingAnnotation(JBossXmlMapKeyAttribute.class);
-               if(keyAttribute == null)
-                  keyAttribute = ((ClassInfo)localPropertyType).getUnderlyingAnnotation(JBossXmlMapKeyAttribute.class);
-               
-               if(keyElement != null || keyAttribute != null)
+               TypeBinding wrapperType = null;
+               if(elements.length > 1)
                {
-                  // further assuming the map is bound
+                  wrapperType = resolveTypeBinding(localPropertyType);
+                  ElementBinding elementBinding = createElementBinding(localPropertyType, wrapperType, propertyQName, false);
+                  elementBinding.setNillable(nillable);
+                  elementBinding.setValueAdapter(valueAdapter);
 
-                  JBossXmlMapValueElement valueElement = property.getUnderlyingAnnotation(JBossXmlMapValueElement.class);
-                  if(valueElement == null)
-                     valueElement = ((ClassInfo)localPropertyType).getUnderlyingAnnotation(JBossXmlMapValueElement.class);
-                  JBossXmlMapValueAttribute valueAttribute = property.getUnderlyingAnnotation(JBossXmlMapValueAttribute.class);
-                  if(valueAttribute == null)
-                     valueAttribute = ((ClassInfo)localPropertyType).getUnderlyingAnnotation(JBossXmlMapValueAttribute.class);
+                  // Bind it to the model
+                  ParticleBinding particle = new ParticleBinding(elementBinding, 0, 1, isCol);
+                  if (required == false)
+                     particle.setMinOccurs(0);
 
-                  TypeInfo keyType = ((ClassInfo)localPropertyType).getKeyType();
-                  TypeInfo valueType = ((ClassInfo)localPropertyType).getValueType();
-
-                  // entry handler
-                  BeanAdapterFactory entryAdapterFactory = null;
-                  BeanInfo entryInfo = JBossXBBuilder.configuration.getBeanInfo(DefaultMapEntry.class);
-                  entryAdapterFactory = createAdapterFactory(DefaultBeanAdapterBuilder.class, entryInfo, null);
-                  BeanHandler entryHandler = new BeanHandler(entryInfo.getName(), entryAdapterFactory);
-
-                  TypeBinding entryType = null;
-                  TypeInfo entryTypeInfo = null;
-
-                  // bind the entry element if present
-                  if(entryElement != null && !JBossXmlConstants.DEFAULT.equals(entryElement.name()))
-                  {
-                     String ns = entryElement.namespace();
-                     if(JBossXmlConstants.DEFAULT.equals(ns))
-                        ns = defaultNamespace;                  
-                     QName entryName = new QName(ns, entryElement.name());
-
-                     entryType = new TypeBinding();
-                     entryType.setSchemaBinding(schemaBinding);
-                     entryType.setHandler(entryHandler);
-
-                     entryTypeInfo = JBossXBBuilder.configuration.getTypeInfo(DefaultMapEntry.class);                     
-                     ElementBinding entryElementBinding = createElementBinding(entryTypeInfo, entryType, entryName, false);
-                     ParticleBinding entryParticle = new ParticleBinding(entryElementBinding, 0, -1, true);
-                     targetGroup.addParticle(entryParticle);
-                        
-                     propertyQName = entryName;
-                        
-                     if(keyAttribute != null)
-                     {
-                        TypeBinding attributeType = resolveTypeBinding(keyType);
-                        AttributeHandler attributeHandler = new PropertyHandler(entryInfo.getProperty("key"), keyType);
-                        String attrNs = keyAttribute.namespace();
-                        if(JBossXmlConstants.DEFAULT.equals(attrNs))
-                           attrNs = defaultNamespace;
-                        AttributeBinding keyBinding = new AttributeBinding(schemaBinding, new QName(attrNs, keyAttribute.name()), attributeType, attributeHandler);
-                        keyBinding.setRequired(true);
-                        entryType.addAttribute(keyBinding);
-                     }
-
-                     if(valueAttribute != null)
-                     {
-                        TypeBinding attributeType = resolveTypeBinding(valueType);
-                        AttributeHandler attributeHandler = new PropertyHandler(entryInfo.getProperty("value"), valueType);
-                        String valueNs = valueAttribute.namespace();
-                        if(JBossXmlConstants.DEFAULT.equals(valueNs))
-                           valueNs = defaultNamespace;
-                        AttributeBinding valueBinding = new AttributeBinding(schemaBinding, new QName(valueNs, valueAttribute.name()), attributeType, attributeHandler);
-                        valueBinding.setRequired(true);
-                        entryType.addAttribute(valueBinding);
-                         
-                        propertyHandler = new MapPropertyHandler(JBossXBBuilder.configuration, property, localPropertyType);
-                     }
-                     else if(valueElement == null)
-                     {
-                        CharactersHandler charactersHandler = new ValueHandler(entryInfo.getProperty("value"), valueType);
-                        entryType.setSimpleType(charactersHandler);
-                     }
-                  }
-                  
-                  SequenceBinding keyValueSequence = null;
-                  if(keyElement != null)
-                  {
-                     keyValueSequence = new SequenceBinding(schemaBinding);                     
-                     if(entryType == null)
-                     {
-                        keyValueSequence.setSkip(Boolean.FALSE);
-                        keyValueSequence.setQName(propertyQName);
-                        schemaBinding.addGroup(keyValueSequence.getQName(), keyValueSequence);
-                        ParticleBinding keyValueParticle = new ParticleBinding(keyValueSequence, 0, -1, true);
-                        targetGroup.addParticle(keyValueParticle);
-                        keyValueSequence.setHandler(entryHandler);
-                     }
-                     else
-                     {
-                        ParticleBinding keyValueParticle = new ParticleBinding(keyValueSequence, 1, 1, false);
-                        entryType.setParticle(keyValueParticle);
-                     }
-                     
-                     // key element
-                     TypeBinding keyTypeBinding = resolveTypeBinding(keyType);                  
-                     String keyNs = keyElement.namespace();
-                     if(JBossXmlConstants.DEFAULT.equals(keyNs))
-                        keyNs = defaultNamespace;                  
-                     ElementBinding keyElementBinding = createElementBinding(keyType, keyTypeBinding, new QName(keyNs, keyElement.name()), false);
-                     ParticleBinding particle = new ParticleBinding(keyElementBinding, 1, 1, false);
-                     keyValueSequence.addParticle(particle);
-                     PropertyHandler keyHandler = new PropertyHandler(entryInfo.getProperty("key"), keyType);
-                     entryAdapterFactory.addProperty(keyElementBinding.getQName(), keyHandler);
-                  }
-                  
-                  if(valueElement != null)
-                  {
-                     TypeBinding valueTypeBinding = resolveTypeBinding(valueType);                  
-                     String valueNs = valueElement.namespace();
-                     if(JBossXmlConstants.DEFAULT.equals(valueNs))
-                        valueNs = defaultNamespace;                  
-                     ElementBinding valueElementBinding = createElementBinding(valueType, valueTypeBinding, new QName(valueNs, valueElement.name()), false);
-                     ParticleBinding particle = new ParticleBinding(valueElementBinding, 1, 1, false);
-                     keyValueSequence.addParticle(particle);
-                     PropertyHandler valueHandler = new PropertyHandler(entryInfo.getProperty("value"), valueType);
-                     entryAdapterFactory.addProperty(valueElementBinding.getQName(), valueHandler);
-                  }
-
-                  // TODO: need to verify correct binding before proceeding
-                  isMap = true;
-                  propertyHandler = new MapPropertyHandler(JBossXBBuilder.configuration, property, localPropertyType);
+                  targetGroup.addParticle(particle);
+                  targetGroup = (ModelGroupBinding) wrapperType.getParticle().getTerm();
                }
-               else if(entryElement != null && !JBossXmlMapEntry.DEFAULT.class.equals(entryElement.type()))
+               
+               QName boundQName = bindMapProperty(property, (ClassInfo) localPropertyType, propertyQName, targetGroup);
+               if(boundQName != null)
                {
-                  if(!JBossXmlConstants.DEFAULT.equals(entryElement.name()))
+                  if(wrapperType != null)
                   {
-                     String ns = entryElement.namespace();
-                     if(JBossXmlConstants.DEFAULT.equals(ns))
-                        ns = propertyQName.getNamespaceURI();
-                     propertyQName = new QName(ns, entryElement.name());
+                     BeanAdapterFactory wrapperBeanFactory = ((BeanHandler)wrapperType.getHandler()).getBeanAdapterFactory();
+                     Map<QName, AbstractPropertyHandler> properties = wrapperBeanFactory.getProperties();
+                     if(!properties.containsKey(boundQName))
+                     {
+                        propertyHandler = new MapPropertyHandler(JBossXBBuilder.configuration, property, localPropertyType, true);
+                        wrapperBeanFactory.addProperty(boundQName, propertyHandler);
+                     }
+                     propertyHandler = new PropertyHandler(property, localPropertyType);
                   }
-
-                  TypeInfo entryTypeBinding = JBossXBBuilder.configuration.getTypeInfo(entryElement.type());
-                  ElementBinding entryElementBinding = createElementBinding(entryTypeBinding, propertyQName.getLocalPart(), false);
-                  ParticleBinding entryParticle = new ParticleBinding(entryElementBinding, 0, -1, true);
-                  targetGroup.addParticle(entryParticle);
-
-                  propertyHandler = new MapPropertyHandler(JBossXBBuilder.configuration, property, localPropertyType);
+                  else
+                  {
+                     propertyQName = boundQName;
+                     propertyHandler = new MapPropertyHandler(JBossXBBuilder.configuration, property, localPropertyType, false);
+                  }
                   isMap = true;
                }
                else
-               {
-                  // no or incorrect binding
                   propertyHandler = new PropertyHandler(property, localPropertyType);
-               }
             }
             else
             {
@@ -1852,7 +1726,7 @@ public class JBossXBNoSchemaBuilder
             // DOM elements are going to be treated as unresolved
             // however having the property registered
             if (!isMap && !Element.class.getName().equals(propertyType.getName()))
-            {
+            {               
                TypeBinding elementTypeBinding = resolveTypeBinding(localPropertyType);
                ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, propertyQName, false);
                elementBinding.setNillable(nillable);
@@ -1872,6 +1746,23 @@ public class JBossXBNoSchemaBuilder
                      + property.getName() + " handler=" + propertyHandler);
          }
       }
+   }
+   
+   private SequenceBinding bindXmlElementWrapper(TypeInfo propertyType, ModelGroupBinding parentModel, boolean wrapperNillable, QName wrapperQName)
+   {
+      TypeBinding wrapperType = new TypeBinding();
+      SequenceBinding seq = new SequenceBinding(schemaBinding);
+      seq.setHandler(BuilderParticleHandler.INSTANCE);
+      ParticleBinding particle = new ParticleBinding(seq);
+      wrapperType.setParticle(particle);
+      wrapperType.setHandler(new DefaultElementHandler());
+
+      ElementBinding wrapperElement = createElementBinding(propertyType, wrapperType, wrapperQName, false);
+      wrapperElement.setNillable(wrapperNillable);
+      wrapperElement.setSkip(Boolean.TRUE);
+      particle = new ParticleBinding(wrapperElement, 1, 1, false);
+      parentModel.addParticle(particle);
+      return seq;
    }
 
    private BeanAdapterFactory createAdapterFactory(Class<? extends BeanAdapterBuilder> beanAdapterBuilderClass, BeanInfo beanInfo, MethodInfo factory)
@@ -2197,5 +2088,170 @@ public class JBossXBNoSchemaBuilder
             throw new IllegalStateException("Failed to adapt value " + o + " to type " + c, e);
          }
       }
+   }
+   
+   private QName bindMapProperty(PropertyInfo prop, ClassInfo propType, QName propertyQName, ModelGroupBinding targetGroup)
+   {
+      QName boundQName = null;
+      
+      JBossXmlMapEntry entryElement = null;
+      if(prop != null)
+         entryElement = prop.getUnderlyingAnnotation(JBossXmlMapEntry.class);
+      if(entryElement == null)
+         entryElement = propType.getUnderlyingAnnotation(JBossXmlMapEntry.class);
+
+      JBossXmlMapKeyElement keyElement = null;
+      if(prop != null)
+         keyElement = prop.getUnderlyingAnnotation(JBossXmlMapKeyElement.class);
+      if(keyElement == null)
+         keyElement = propType.getUnderlyingAnnotation(JBossXmlMapKeyElement.class);
+      
+      JBossXmlMapKeyAttribute keyAttribute = null;
+      if(prop != null)
+         keyAttribute = prop.getUnderlyingAnnotation(JBossXmlMapKeyAttribute.class);
+      if(keyAttribute == null)
+         keyAttribute = propType.getUnderlyingAnnotation(JBossXmlMapKeyAttribute.class);
+      
+      if(keyElement != null || keyAttribute != null)
+      {
+         // further assuming the map is bound
+
+         JBossXmlMapValueElement valueElement = null;
+         if(prop != null)
+            valueElement = prop.getUnderlyingAnnotation(JBossXmlMapValueElement.class);
+         if(valueElement == null)
+            valueElement = propType.getUnderlyingAnnotation(JBossXmlMapValueElement.class);
+         
+         JBossXmlMapValueAttribute valueAttribute = null;
+         if(prop != null)
+            valueAttribute = prop.getUnderlyingAnnotation(JBossXmlMapValueAttribute.class);
+         if(valueAttribute == null)
+            valueAttribute = propType.getUnderlyingAnnotation(JBossXmlMapValueAttribute.class);
+
+         TypeInfo keyType = propType.getKeyType();
+         TypeInfo valueType = propType.getValueType();
+
+         // entry handler
+         BeanAdapterFactory entryAdapterFactory = null;
+         BeanInfo entryInfo = JBossXBBuilder.configuration.getBeanInfo(DefaultMapEntry.class);
+         entryAdapterFactory = createAdapterFactory(DefaultBeanAdapterBuilder.class, entryInfo, null);
+         BeanHandler entryHandler = new BeanHandler(entryInfo.getName(), entryAdapterFactory);
+
+         TypeBinding entryType = null;
+         TypeInfo entryTypeInfo = null;
+
+         // bind the entry element if present
+         if(entryElement != null && !JBossXmlConstants.DEFAULT.equals(entryElement.name()))
+         {
+            String ns = entryElement.namespace();
+            if(JBossXmlConstants.DEFAULT.equals(ns))
+               ns = defaultNamespace;                  
+            QName entryName = new QName(ns, entryElement.name());
+
+            entryType = new TypeBinding();
+            entryType.setSchemaBinding(schemaBinding);
+            entryType.setHandler(entryHandler);
+
+            entryTypeInfo = JBossXBBuilder.configuration.getTypeInfo(DefaultMapEntry.class);                     
+            ElementBinding entryElementBinding = createElementBinding(entryTypeInfo, entryType, entryName, false);
+            ParticleBinding entryParticle = new ParticleBinding(entryElementBinding, 0, -1, true);
+            targetGroup.addParticle(entryParticle);
+               
+            propertyQName = entryName;
+               
+            if(keyAttribute != null)
+            {
+               TypeBinding attributeType = resolveTypeBinding(keyType);
+               AttributeHandler attributeHandler = new PropertyHandler(entryInfo.getProperty("key"), keyType);
+               String attrNs = keyAttribute.namespace();
+               if(JBossXmlConstants.DEFAULT.equals(attrNs))
+                  attrNs = defaultNamespace;
+               AttributeBinding keyBinding = new AttributeBinding(schemaBinding, new QName(attrNs, keyAttribute.name()), attributeType, attributeHandler);
+               keyBinding.setRequired(true);
+               entryType.addAttribute(keyBinding);
+            }
+
+            if(valueAttribute != null)
+            {
+               TypeBinding attributeType = resolveTypeBinding(valueType);
+               AttributeHandler attributeHandler = new PropertyHandler(entryInfo.getProperty("value"), valueType);
+               String valueNs = valueAttribute.namespace();
+               if(JBossXmlConstants.DEFAULT.equals(valueNs))
+                  valueNs = defaultNamespace;
+               AttributeBinding valueBinding = new AttributeBinding(schemaBinding, new QName(valueNs, valueAttribute.name()), attributeType, attributeHandler);
+               valueBinding.setRequired(true);
+               entryType.addAttribute(valueBinding);
+            }
+            else if(valueElement == null)
+            {
+               CharactersHandler charactersHandler = new ValueHandler(entryInfo.getProperty("value"), valueType);
+               entryType.setSimpleType(charactersHandler);
+            }
+         }
+         
+         SequenceBinding keyValueSequence = null;
+         if(keyElement != null)
+         {
+            keyValueSequence = new SequenceBinding(schemaBinding);                     
+            if(entryType == null)
+            {
+               keyValueSequence.setSkip(Boolean.FALSE);
+               keyValueSequence.setQName(propertyQName);
+               schemaBinding.addGroup(keyValueSequence.getQName(), keyValueSequence);
+               ParticleBinding keyValueParticle = new ParticleBinding(keyValueSequence, 0, -1, true);
+               targetGroup.addParticle(keyValueParticle);
+               keyValueSequence.setHandler(entryHandler);
+            }
+            else
+            {
+               ParticleBinding keyValueParticle = new ParticleBinding(keyValueSequence, 1, 1, false);
+               entryType.setParticle(keyValueParticle);
+            }
+            
+            // key element
+            TypeBinding keyTypeBinding = resolveTypeBinding(keyType);                  
+            String keyNs = keyElement.namespace();
+            if(JBossXmlConstants.DEFAULT.equals(keyNs))
+               keyNs = defaultNamespace;                  
+            ElementBinding keyElementBinding = createElementBinding(keyType, keyTypeBinding, new QName(keyNs, keyElement.name()), false);
+            ParticleBinding particle = new ParticleBinding(keyElementBinding, 1, 1, false);
+            keyValueSequence.addParticle(particle);
+            PropertyHandler keyHandler = new PropertyHandler(entryInfo.getProperty("key"), keyType);
+            entryAdapterFactory.addProperty(keyElementBinding.getQName(), keyHandler);
+         }
+         
+         if(valueElement != null)
+         {
+            TypeBinding valueTypeBinding = resolveTypeBinding(valueType);                  
+            String valueNs = valueElement.namespace();
+            if(JBossXmlConstants.DEFAULT.equals(valueNs))
+               valueNs = defaultNamespace;                  
+            ElementBinding valueElementBinding = createElementBinding(valueType, valueTypeBinding, new QName(valueNs, valueElement.name()), false);
+            ParticleBinding particle = new ParticleBinding(valueElementBinding, 1, 1, false);
+            keyValueSequence.addParticle(particle);
+            PropertyHandler valueHandler = new PropertyHandler(entryInfo.getProperty("value"), valueType);
+            entryAdapterFactory.addProperty(valueElementBinding.getQName(), valueHandler);
+         }
+
+         // TODO: need to verify correct binding before proceeding
+         boundQName = propertyQName;
+      }
+      else if(entryElement != null && !JBossXmlMapEntry.DEFAULT.class.equals(entryElement.type()))
+      {
+         if(!JBossXmlConstants.DEFAULT.equals(entryElement.name()))
+         {
+            String ns = entryElement.namespace();
+            if(JBossXmlConstants.DEFAULT.equals(ns))
+               ns = propertyQName.getNamespaceURI();
+            propertyQName = new QName(ns, entryElement.name());
+         }
+
+         TypeInfo entryTypeInfo = JBossXBBuilder.configuration.getTypeInfo(entryElement.type());
+         ElementBinding entryElementBinding = createElementBinding(entryTypeInfo, propertyQName.getLocalPart(), false);
+         ParticleBinding entryParticle = new ParticleBinding(entryElementBinding, 0, -1, true);
+         targetGroup.addParticle(entryParticle);
+         boundQName = propertyQName;
+      }
+      return boundQName;
    }
 }

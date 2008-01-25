@@ -55,37 +55,44 @@ public class MapPropertyHandler extends AbstractPropertyHandler
     * @param propertyType the property type
     * @throws IllegalArgumentException for a null qName or property
     */
-   public MapPropertyHandler(Configuration config, PropertyInfo propertyInfo, TypeInfo propertyType)
+   public MapPropertyHandler(Configuration config, PropertyInfo propertyInfo, TypeInfo propertyType, boolean wrapped)
    {
       super(propertyInfo, propertyType);
 
-      ClassInfo classInfo = (ClassInfo) propertyType;
-      if (Modifier.isAbstract(classInfo.getModifiers()))
+      if(wrapped)
       {
-         mapFactory = HashMapFactory.INSTANCE;
+         mapFactory = null;
       }
       else
       {
-         ConstructorInfo constructor = classInfo.getDeclaredConstructor(null);
-         if (constructor == null)
+         ClassInfo classInfo = (ClassInfo) propertyType;
+         if (Modifier.isAbstract(classInfo.getModifiers()))
          {
-            for (ConstructorInfo ctor : classInfo.getDeclaredConstructors())
-            {
-               if (ctor.getParameterTypes().length == 0)
-               {
-                  log.warn("ClassInfo.getDeclaredConstructor(null) didn't work for " + classInfo.getName()
-                        + ", found the default ctor in ClassInfo.getDeclaredConstructors()");
-                  constructor = ctor;
-                  break;
-               }
-            }
-
+            mapFactory = HashMapFactory.INSTANCE;
+         }
+         else
+         {
+            ConstructorInfo constructor = classInfo.getDeclaredConstructor(null);
             if (constructor == null)
             {
-               throw new RuntimeException("Default constructor not found for " + classInfo.getName());
+               for (ConstructorInfo ctor : classInfo.getDeclaredConstructors())
+               {
+                  if (ctor.getParameterTypes().length == 0)
+                  {
+                     log.warn("ClassInfo.getDeclaredConstructor(null) didn't work for " + classInfo.getName()
+                           + ", found the default ctor in ClassInfo.getDeclaredConstructors()");
+                     constructor = ctor;
+                     break;
+                  }
+               }
+
+               if (constructor == null)
+               {
+                  throw new RuntimeException("Default constructor not found for " + classInfo.getName());
+               }
             }
+            mapFactory = new CtorMapFactory(constructor);
          }
-         mapFactory = new CtorMapFactory(constructor);
       }
       
       JBossXmlMapEntry entry = propertyInfo.getUnderlyingAnnotation(JBossXmlMapEntry.class);
@@ -105,38 +112,51 @@ public class MapPropertyHandler extends AbstractPropertyHandler
    @SuppressWarnings("unchecked")
    public void handle(PropertyInfo propertyInfo, TypeInfo propertyType, Object parent, Object child, QName qName)
    {
+      if(trace)
+         log.trace("handle entry " + qName + ", property=" + propertyInfo.getName() + ", parent=" + parent + ", child=" + child);
+      
       BeanAdapter beanAdapter = (BeanAdapter) parent;
       
       Map<Object, Object> m = null;
-      try
+      if(mapFactory == null)
       {
-         if (propertyInfo.getGetter() != null)
-            m = (Map<Object, Object>) beanAdapter.get(propertyInfo);
+         // it's wrapped, so the parent expected to be a map
+         m = (Map<Object, Object>) beanAdapter.getValue();
       }
-      catch (Throwable t)
-      {
-         throw new RuntimeException("QName " + qName + " error getting map property " + propertyInfo.getName() + " for " + BuilderUtil.toDebugString(parent), t);
-      }
-      
-      // No map so create one
-      if (m == null)
+      else
       {
          try
          {
-            m = mapFactory.createMap();
+            if (propertyInfo.getGetter() != null)
+               m = (Map<Object, Object>) beanAdapter.get(propertyInfo);
          }
          catch (Throwable t)
          {
-            throw new RuntimeException("QName " + qName + " error creating map: " + propertyType.getName(), t);
+            throw new RuntimeException("QName " + qName + " error getting map property " + propertyInfo.getName()
+                  + " for " + BuilderUtil.toDebugString(parent), t);
          }
 
-         try
+         // No map so create one
+         if (m == null)
          {
-            beanAdapter.set(propertyInfo, m);
-         }
-         catch (Throwable t)
-         {
-            throw new RuntimeException("QName " + qName + " error setting map property " + propertyInfo.getName() + " for " + BuilderUtil.toDebugString(parent) + " with value " + BuilderUtil.toDebugString(m), t);
+            try
+            {
+               m = mapFactory.createMap();
+            }
+            catch (Throwable t)
+            {
+               throw new RuntimeException("QName " + qName + " error creating map: " + propertyType.getName(), t);
+            }
+
+            try
+            {
+               beanAdapter.set(propertyInfo, m);
+            }
+            catch (Throwable t)
+            {
+               throw new RuntimeException("QName " + qName + " error setting map property " + propertyInfo.getName()
+                     + " for " + BuilderUtil.toDebugString(parent) + " with value " + BuilderUtil.toDebugString(m), t);
+            }
          }
       }
       

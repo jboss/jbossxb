@@ -23,6 +23,9 @@ package org.jboss.test.xb.builder.object.mc.support.model;
 
 import javax.xml.bind.annotation.XmlType;
 
+import org.jboss.xb.annotations.JBossXmlMapKey;
+import org.jboss.xb.annotations.JBossXmlMapValue;
+
 
 /**
  * MapEntry.
@@ -39,6 +42,7 @@ public class MapEntry
    /** The value */
    private ValueMetaData value;
 
+   @JBossXmlMapKey
    public ValueMetaData getKey()
    {
       return key;
@@ -49,6 +53,7 @@ public class MapEntry
       this.key = key;
    }
 
+   @JBossXmlMapValue
    public ValueMetaData getValue()
    {
       return value;

@@ -97,7 +97,7 @@ public class ChildWildcardHandler  implements ParticleHandler
       {
          try
          {
-            ClassInfo classInfo = beanInfo.getClassInfo();
+            ClassInfo classInfo = (ClassInfo) propertyInfo.getType();//beanInfo.getClassInfo();
             TypeInfo valueType = classInfo.getTypeInfoFactory().getTypeInfo(o.getClass());
             if (classInfo.isAssignableFrom(valueType) == false)
             {

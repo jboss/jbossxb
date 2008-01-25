@@ -1,27 +1,28 @@
 /*
-* JBoss, Home of Professional Open Source
-* Copyright 2005, JBoss Inc., and individual contributors as indicated
-* by the @authors tag. See the copyright.txt in the distribution for a
-* full listing of individual contributors.
-*
-* This is free software; you can redistribute it and/or modify it
-* under the terms of the GNU Lesser General Public License as
-* published by the Free Software Foundation; either version 2.1 of
-* the License, or (at your option) any later version.
-*
-* This software is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-* Lesser General Public License for more details.
-*
-* You should have received a copy of the GNU Lesser General Public
-* License along with this software; if not, write to the Free
-* Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-* 02110-1301 USA, or see the FSF site: http://www.fsf.org.
-*/
+ * JBoss, Home of Professional Open Source
+ * Copyright 2005, JBoss Inc., and individual contributors as indicated
+ * by the @authors tag. See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.jboss.test.xb.builder.object.mc.support.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,12 +30,13 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
+import org.jboss.test.xb.builder.object.mc.support.model.MapEntry;
+import org.jboss.reflect.spi.ClassInfo;
 import org.jboss.reflect.spi.TypeInfo;
-import org.jboss.xb.annotations.JBossXmlChild;
-import org.jboss.xb.annotations.JBossXmlChildren;
-import org.jboss.xb.annotations.JBossXmlNoElements;
+import org.jboss.xb.annotations.JBossXmlMapEntry;
 
 /**
  * Map metadata.
@@ -42,19 +44,17 @@ import org.jboss.xb.annotations.JBossXmlNoElements;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 59429 $
  */
-@XmlType()
-@JBossXmlNoElements
-@JBossXmlChildren
-({
-   @JBossXmlChild(name="entry", type=MapEntry.class)
-})
+@XmlType
+@JBossXmlMapEntry(name = "entry", type = MapEntry.class)
 public class AbstractMapMetaData extends AbstractTypeMetaData
-   implements Set<MapEntry>, Serializable
+      implements
+         Map<MetaDataVisitorNode, MetaDataVisitorNode>,
+         Serializable
 {
-   private static final long serialVersionUID = 1L;
+   private static final long serialVersionUID = 2L;
 
    /** The map */
-   private HashMap<MetaDataVisitorNode, MetaDataVisitorNode> map = new HashMap<MetaDataVisitorNode, MetaDataVisitorNode>();
+   private Map<MetaDataVisitorNode, MetaDataVisitorNode> map = new HashMap<MetaDataVisitorNode, MetaDataVisitorNode>();
 
    /** The key type */
    protected String keyType;
@@ -84,7 +84,7 @@ public class AbstractMapMetaData extends AbstractTypeMetaData
     * 
     * @param keyType the key type
     */
-   @XmlAttribute(name="keyClass")
+   @XmlAttribute(name = "keyClass")
    public void setKeyType(String keyType)
    {
       this.keyType = keyType;
@@ -105,20 +105,33 @@ public class AbstractMapMetaData extends AbstractTypeMetaData
     * 
     * @param valueType the value type
     */
-   @XmlAttribute(name="valueClass")
+   @XmlAttribute(name = "valueClass")
    public void setValueType(String valueType)
    {
       this.valueType = valueType;
    }
 
-   protected Class<? extends Map> expectedMapClass()
-   {
-      return Map.class;
-   }
-
+   @SuppressWarnings("unchecked")
    public Object getValue(TypeInfo info, ClassLoader cl) throws Throwable
    {
-      return null;
+      Map result = getExpectedClass().newInstance();//getTypeInstance(info, cl, getExpectedClass());
+
+      TypeInfo keyTypeInfo = ((ClassInfo) info).getKeyType();// getKeyClassInfo(cl);
+      TypeInfo valueTypeInfo = ((ClassInfo) info).getValueType();//getValueClassInfo(cl);
+
+      if (map.size() > 0)
+      {
+         for (Iterator i = map.entrySet().iterator(); i.hasNext();)
+         {
+            Map.Entry entry = (Map.Entry) i.next();
+            ValueMetaData key = (ValueMetaData) entry.getKey();
+            ValueMetaData value = (ValueMetaData) entry.getValue();
+            Object keyValue = key.getValue(keyTypeInfo, cl);
+            Object valueValue = value.getValue(valueTypeInfo, cl);
+            result.put(keyValue, valueValue);
+         }
+      }
+      return result;
    }
 
    public void clear()
@@ -136,7 +149,7 @@ public class AbstractMapMetaData extends AbstractTypeMetaData
       return map.containsValue(value);
    }
 
-   public Set<Map.Entry<MetaDataVisitorNode, MetaDataVisitorNode>> entrySet()
+   public Set<Entry<MetaDataVisitorNode, MetaDataVisitorNode>> entrySet()
    {
       return map.entrySet();
    }
@@ -166,9 +179,9 @@ public class AbstractMapMetaData extends AbstractTypeMetaData
       map.putAll(t);
    }
 
-   public boolean remove(Object key)
+   public MetaDataVisitorNode remove(Object key)
    {
-      throw new UnsupportedOperationException();
+      return map.remove(key);
    }
 
    public int size()
@@ -181,51 +194,28 @@ public class AbstractMapMetaData extends AbstractTypeMetaData
       return map.values();
    }
 
-   public boolean add(MapEntry o)
+   @XmlTransient
+   public Iterator<? extends MetaDataVisitorNode> getChildren()
    {
-      map.put(o.getKey(), o.getValue());
-      return true;
+      ArrayList<MetaDataVisitorNode> children = new ArrayList<MetaDataVisitorNode>(keySet());
+      children.addAll(values());
+      return children.iterator();
    }
 
-   public boolean addAll(Collection<? extends MapEntry> c)
+   /**
+    * Create the default map instance
+    * 
+    * @return the class instance
+    */
+   @XmlTransient
+   protected Object getDefaultInstance()
    {
-      for (MapEntry mapEntry : c)
-         add(mapEntry);
-      return true;
+      return new HashMap<Object, Object>();
    }
 
-   public boolean contains(Object o)
+   @XmlTransient
+   protected Class<? extends Map> getExpectedClass()
    {
-      throw new UnsupportedOperationException();
-   }
-
-   public boolean containsAll(Collection<?> c)
-   {
-      throw new UnsupportedOperationException();
-   }
-
-   public Iterator<MapEntry> iterator()
-   {
-      throw new UnsupportedOperationException();
-   }
-
-   public boolean removeAll(Collection<?> c)
-   {
-      throw new UnsupportedOperationException();
-   }
-
-   public boolean retainAll(Collection<?> c)
-   {
-      throw new UnsupportedOperationException();
-   }
-
-   public Object[] toArray()
-   {
-      throw new UnsupportedOperationException();
-   }
-
-   public <T> T[] toArray(T[] a)
-   {
-      throw new UnsupportedOperationException();
+      return Map.class;
    }
 }

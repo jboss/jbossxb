@@ -21,10 +21,8 @@
  */
 package org.jboss.xb.builder;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -965,7 +963,7 @@ public class JBossXBNoSchemaBuilder
 
       if (typeInfo.isCollection())
       {
-         TypeInfo memberBaseType = findComponentType(typeInfo);
+         TypeInfo memberBaseType = ((ClassInfo)typeInfo).getComponentType();
          JBossXmlModelGroup xmlModelGroup = ((ClassInfo) memberBaseType)
                .getUnderlyingAnnotation(JBossXmlModelGroup.class);
          if (xmlModelGroup != null && xmlModelGroup.particles().length > 0)
@@ -1006,7 +1004,7 @@ public class JBossXBNoSchemaBuilder
                   boolean isCol = false;
                   if (memberTypeInfo.isCollection())
                   {
-                     memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
+                     memberTypeInfo = ((ClassInfo) memberTypeInfo).getComponentType();
                      isCol = true;
                   }
 
@@ -1119,7 +1117,7 @@ public class JBossXBNoSchemaBuilder
          else if (wildcardType.isCollection())
          {
             localModel = createCollection(localModel);
-            type = findComponentType(wildcardProperty);
+            type = ((ClassInfo)wildcardProperty.getType()).getComponentType();
             if (trace)
                log.trace("Wildcard " + wildcardProperty.getName() + " is a collection of type " + type.getName());
          }
@@ -1362,7 +1360,7 @@ public class JBossXBNoSchemaBuilder
                         {
                            memberTypeInfo = memberTypeInfo.getTypeInfoFactory().getTypeInfo(jbossXmlCollection.type());
                         }
-                        memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
+                        memberTypeInfo = ((ClassInfo) memberTypeInfo).getComponentType();
                      }
                   }
                   // if it is bound with XmlElement.type to a collection
@@ -1370,7 +1368,7 @@ public class JBossXBNoSchemaBuilder
                   {
                      memberPropertyHandler = new CollectionPropertyHandler(memberProp, memberTypeInfo);
                      isCol = true;
-                     memberTypeInfo = findComponentType((ClassInfo) memberTypeInfo);
+                     memberTypeInfo = ((ClassInfo) memberTypeInfo).getComponentType();
                   }
                   else
                   {
@@ -1640,12 +1638,12 @@ public class JBossXBNoSchemaBuilder
             {
                isCol = true;
                propertyHandler = new CollectionPropertyHandler(property, propertyType);
-               ClassInfo typeArg = (ClassInfo) findComponentType(property);
+               // here we get the comp type based on the non-overriden property type...
+               // which feels like a weak point
+               TypeInfo typeArg = ((ClassInfo)property.getType()).getComponentType();
 
-               //if (((ClassInfo) typeArg).getUnderlyingAnnotation(XmlType.class) != null)
-               if (typeArg != null && typeArg.getUnderlyingAnnotation(JBossXmlModelGroup.class) == null)
+               if (typeArg != null && ((ClassInfo)typeArg).getUnderlyingAnnotation(JBossXmlModelGroup.class) == null)
                {// it may be a model group in which case we don't want to change the type
-
                   // TODO yes, this is another hack with collections
                   JBossXmlChild xmlChild = ((ClassInfo) propertyType).getUnderlyingAnnotation(JBossXmlChild.class);
                   if (xmlChild == null && localPropertyType.equals(propertyType))
@@ -1659,20 +1657,16 @@ public class JBossXBNoSchemaBuilder
             else if (localPropertyType.isCollection()
                   && ((ClassInfo) localPropertyType).getUnderlyingAnnotation(XmlType.class) == null)
             {
-               Type parameterizedType;
                if (valueAdapter != null)
                {
                   propertyHandler = new PropertyHandler(property, localPropertyType);
-                  parameterizedType = valueAdapter.getAdaptedType();
                }
                else
                {
                   propertyHandler = new CollectionPropertyHandler(property, localPropertyType);
-                  parameterizedType = localPropertyType.getType();
                }
                isCol = true;
-               localPropertyType = findActualType((ClassInfo) localPropertyType, parameterizedType,
-                     java.util.Collection.class, 0);
+               localPropertyType = ((ClassInfo)localPropertyType).getComponentType();
             }
             else if (localPropertyType.isMap())
             {
@@ -1923,122 +1917,6 @@ public class JBossXBNoSchemaBuilder
          if (joinpoint != null)
             builder.append('.').append(joinpoint);
       }
-   }
-
-   // the following is available in the latest org.jboss.reflect package
-   // but doesn't build at the moment...
-   private TypeInfo findComponentType(PropertyInfo prop)
-   {
-      return findActualType(prop, java.util.Collection.class, 0);
-   }
-
-   protected TypeInfo findComponentType(ClassInfo classInfo)
-   {
-      return findActualType(classInfo, classInfo.getType(), java.util.Collection.class, 0);
-   }
-
-   private TypeInfo findActualType(PropertyInfo property, Class reference, int parameter)
-   {
-      MethodInfo getter = property.getGetter();
-      if (getter == null)
-      {
-         throw new IllegalStateException("Expected a getter for " + property.getName() + " in " + property.getBeanInfo().getName());
-      }
-
-      Method m;
-      try
-      {
-         m = property.getBeanInfo().getClassInfo().getType().getMethod(getter.getName(), null);
-      }
-      catch (NoSuchMethodException e)
-      {
-         throw new IllegalStateException("Expected a getter for " + property.getName() + " in " + property.getBeanInfo().getName());
-      }
-
-      return findActualType((ClassInfo) property.getType(), m.getGenericReturnType(), reference, parameter);
-   }
-
-   protected TypeInfo findActualType(ClassInfo classInfo, Type genericType, Class reference, int parameter)
-   {
-      Type result = locateActualType(reference, parameter, classInfo.getType(), genericType);
-      if (result instanceof TypeVariable)
-      {
-         TypeVariable typeVariable = (TypeVariable) result;
-         result = typeVariable.getBounds()[0];
-      }
-
-      return classInfo.getTypeInfoFactory().getTypeInfo(result);
-   }
-
-   protected static Type locateActualType(Class reference, int parameter, Class clazz, Type type)
-   {
-      if (reference.equals(clazz))
-      {
-         if (type instanceof Class)
-         {
-            Class typeClass = (Class) type;
-            return typeClass.getTypeParameters()[parameter];
-         }
-         else
-         {
-            ParameterizedType parameterized = (ParameterizedType) type;
-            return parameterized.getActualTypeArguments()[parameter];
-         }
-      }
-
-      Type[] interfaces = clazz.getGenericInterfaces();
-      for (Type intf : interfaces)
-      {
-         Class interfaceClass;
-         if (intf instanceof Class)
-         {
-            interfaceClass = (Class) intf;
-         }
-         else if (intf instanceof ParameterizedType)
-         {
-            ParameterizedType interfaceType = (ParameterizedType) intf;
-            interfaceClass = (Class) interfaceType.getRawType();
-         }
-         else
-            throw new IllegalStateException("Unexpected type " + intf.getClass());
-
-         Type result = null;
-         if (reference.isAssignableFrom(interfaceClass))
-         {
-            result = locateActualType(reference, parameter, interfaceClass, intf);
-            if (result instanceof TypeVariable)
-               result = getParameter(clazz, type, (TypeVariable) result);
-         }
-
-         if (result != null)
-            return result;
-      }
-
-      Class superClass = clazz.getSuperclass();
-      Type genericSuperClass = clazz.getGenericSuperclass();
-      Type result = locateActualType(reference, parameter, superClass, genericSuperClass);
-      if (result instanceof TypeVariable)
-         result = getParameter(clazz, type, (TypeVariable) result);
-      return result;
-   }
-
-   private static Type getParameter(Class clazz, Type type, TypeVariable variable)
-   {
-      TypeVariable[] variables = clazz.getTypeParameters();
-      for (int i = 0; i < variables.length; ++i)
-      {
-         if (variables[i].getName().equals(variable.getName()))
-         {
-            if (type instanceof ParameterizedType)
-            {
-               ParameterizedType parameterized = (ParameterizedType) type;
-               return parameterized.getActualTypeArguments()[i];
-            }
-            return variable;
-         }
-      }
-      // Not generic
-      return Object.class;
    }
 
    private static class XBValueAdapter implements ValueAdapter

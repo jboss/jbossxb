@@ -14,7 +14,7 @@
 	<classpathentry kind="var" path="M2_REPO/wutka-dtdparser/dtdparser121/1.2.1/dtdparser121-1.2.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/sun-jaxb/jaxb-api/2.0.5/jaxb-api-2.0.5.jar"/>
 	<classpathentry kind="var" path="M2_REPO/jboss/jboss-logging-spi/2.0.2.GA/jboss-logging-spi-2.0.2.GA.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/jboss/microcontainer/jboss-container/2.0.0.Beta6/jboss-container-2.0.0.Beta6.jar" sourcepath="/M2_REPO/org/jboss/microcontainer/jboss-container/2.0.0.Beta6/jboss-container-2.0.0.Beta6-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/jboss/microcontainer/jboss-container/2.0.0.Beta9/jboss-container-2.0.0.Beta9.jar" sourcepath="/M2_REPO/org/jboss/microcontainer/jboss-container/2.0.0.Beta9/jboss-container-2.0.0.Beta9-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/jboss/jboss-test/1.0.4.GA/jboss-test-1.0.4.GA.jar" sourcepath="/M2_REPO/org/jboss/jboss-test/1.0.4.GA/jboss-test-1.0.4.GA-sources.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

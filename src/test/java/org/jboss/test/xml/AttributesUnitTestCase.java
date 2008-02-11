@@ -218,8 +218,6 @@ public class AttributesUnitTestCase
       
       SchemaBinding schema = new SchemaBinding();
       
-      System.out.println("simple: " + complexType.isSimple() + ", " + complexType.getValueAdapter());
-      
       try
       {
          new AttributeBinding(schema, new QName("name"), complexType, DefaultHandlers.ATTRIBUTE_HANDLER);

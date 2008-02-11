@@ -50,15 +50,19 @@ public class AttributeBinding
 
    public AttributeBinding(SchemaBinding schema, QName qName, TypeBinding type, AttributeHandler handler)
    {
-      this.schema = schema;
-      this.qName = qName;
-      this.type = type;
-      this.handler = handler;
-
       if(qName == null)
       {
          throw new JBossXBRuntimeException("Each attribute should have a non-null QName!");
       }
+
+      if(type == null || !type.isSimple() && type.getValueAdapter() == ValueAdapter.NOOP)
+         throw new JBossXBRuntimeException("The type of the attribute " + qName +
+            " must be simple or complex with a value adapter: " + type);
+      
+      this.schema = schema;
+      this.qName = qName;
+      this.type = type;
+      this.handler = handler;
    }
 
    public QName getQName()

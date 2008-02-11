@@ -26,13 +26,17 @@ import java.io.StringWriter;
 import java.util.Collection;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.Constants;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.XercesXsMarshaller;
 import org.jboss.xb.binding.MappingObjectModelProvider;
+import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.LSInputAdaptor;
+import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
@@ -200,6 +204,51 @@ public class AttributesUnitTestCase
       assertXmlEqual(XML, writer.getBuffer().toString());
    }
 
+   /**
+    * Attribute binding can't be created with a complex type not being
+    * adapted to a simple type.
+    * Note: that's still bizarre to allow a complex type for an attribute
+    * from the xsd point of view.
+    */
+   public void testAttributeComplexType() throws Exception
+   {
+      TypeBinding complexType = new TypeBinding();
+      complexType.setSimple(false);
+      assertTrue(!complexType.isSimple());
+      
+      SchemaBinding schema = new SchemaBinding();
+      
+      System.out.println("simple: " + complexType.isSimple() + ", " + complexType.getValueAdapter());
+      
+      try
+      {
+         new AttributeBinding(schema, new QName("name"), complexType, DefaultHandlers.ATTRIBUTE_HANDLER);
+         fail("Attribute can't be of a complex type w/o a value adapter.");
+      }
+      catch(JBossXBRuntimeException e)
+      {
+      }
+      
+      complexType.setValueAdapter(
+         new ValueAdapter()
+         {
+            public Object cast(Object o, Class c)
+            {
+               // TODO Auto-generated method stub
+               return null;
+            }
+         }
+      );
+      try
+      {
+         new AttributeBinding(schema, new QName("name"), complexType, DefaultHandlers.ATTRIBUTE_HANDLER);
+      }
+      catch(JBossXBRuntimeException e)
+      {
+         fail("Attribute can be of a complex type with value adapter.");
+      }
+   }
+   
    // Inner
 
    public static final class E

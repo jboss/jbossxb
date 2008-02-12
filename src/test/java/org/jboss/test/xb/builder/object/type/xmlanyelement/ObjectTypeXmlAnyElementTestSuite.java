@@ -27,10 +27,14 @@ import junit.textui.TestRunner;
 
 import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ArrayElementWildcardUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ArrayObjectWildcardUnitTestCase;
+import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ElementPropertiesAndWildcardUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ElementWildcardUnitTestCase;
+import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ElementWildcardWithCollectionPropertyUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ListElementWildcardUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ListObjectWildcardUnitTestCase;
+import org.jboss.test.xb.builder.object.type.xmlanyelement.test.NotAnnotatedElementWildcardUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.test.SimpleObjectWildcardUnitTestCase;
+import org.jboss.test.xb.builder.object.type.xmlanyelement.test.XmlElementsAndXmlAnyElementUnitTestCase;
 
 /**
  * ObjectTypeXmlAnyElementTestSuite.
@@ -55,6 +59,10 @@ public class ObjectTypeXmlAnyElementTestSuite extends TestSuite
       suite.addTest(ElementWildcardUnitTestCase.suite());
       suite.addTest(ArrayElementWildcardUnitTestCase.suite());
       suite.addTest(ListElementWildcardUnitTestCase.suite());
+      suite.addTest(ElementPropertiesAndWildcardUnitTestCase.suite());
+      suite.addTest(ElementWildcardWithCollectionPropertyUnitTestCase.suite());
+      suite.addTest(NotAnnotatedElementWildcardUnitTestCase.suite());
+      suite.addTest(XmlElementsAndXmlAnyElementUnitTestCase.suite());
       
       return suite;
    }

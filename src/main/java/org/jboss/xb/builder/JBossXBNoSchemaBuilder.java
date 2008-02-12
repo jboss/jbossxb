@@ -39,6 +39,7 @@ import javax.xml.bind.annotation.XmlAccessorOrder;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlEnum;
@@ -807,6 +808,7 @@ public class JBossXBNoSchemaBuilder
             }
 
             // Is this the wildcard property?
+            boolean ignoreXmlAnyElement = false;
             XmlAnyElement xmlAnyElement = property.getUnderlyingAnnotation(XmlAnyElement.class);
             if (xmlAnyElement != null)
             {
@@ -816,6 +818,11 @@ public class JBossXBNoSchemaBuilder
                   throw new RuntimeException("@XmlAnyElement seen on two properties: " + property.getName() + " and " + wildcardProperty.getName());
                wildcardProperty = property;
                seenXmlAnyElement = true;
+               
+               // should we ignore it
+               if(property.getUnderlyingAnnotation(XmlElements.class) == null &&
+                  property.getUnderlyingAnnotation(XmlElementRefs.class) == null)
+                  ignoreXmlAnyElement = true;
             }
             else if (!seenXmlAnyElement && wildcardProperty == null && property.getType().getName().equals(org.w3c.dom.Element.class.getName()))
             {
@@ -860,7 +867,7 @@ public class JBossXBNoSchemaBuilder
                   continue;
                }
                // Wildcard property
-               if (xmlAnyElement != null)
+               if (ignoreXmlAnyElement)
                {
                   if (trace)
                      log.trace("Ignore not element @XmlAnyElement for type=" + beanInfo.getName() + " property=" + property.getName());

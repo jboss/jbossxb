@@ -66,4 +66,18 @@ public class AmbiguityTestCase extends AbstractJavaBeanTest
       assertEquals(something.getClass(), String.class);
    }
 
+   public void testConstructorInt() throws Exception
+   {
+      AmbiguityBean ab = unmarshal("TestConstructorAmbiguityInt.xml", AmbiguityBean.class);
+      Object something = ab.something();
+      assertEquals(something.getClass(), Integer.class);
+   }
+
+   public void testConstrutorString() throws Exception
+   {
+      AmbiguityBean ab = unmarshal("TestConstructorAmbiguityString.xml", AmbiguityBean.class);
+      Object something = ab.something();
+      assertEquals(something.getClass(), String.class);
+   }
+
 }

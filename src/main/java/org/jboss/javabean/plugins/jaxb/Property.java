@@ -32,7 +32,7 @@ import javax.xml.bind.annotation.XmlType;
  * @version $Revision: 1.1 $
  */
 @XmlType(name="propertyType")
-public class Property extends Parameter
+public class Property extends AbstractParameter
 {
    private String name;
 
@@ -41,7 +41,7 @@ public class Property extends Parameter
       return name;
    }
 
-   @XmlAttribute
+   @XmlAttribute(name="name")
    public void setName(String name)
    {
       this.name = name;

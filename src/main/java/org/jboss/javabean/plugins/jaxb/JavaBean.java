@@ -23,6 +23,7 @@ package org.jboss.javabean.plugins.jaxb;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -206,13 +207,17 @@ public class JavaBean extends BeanAdapter
     * @param parameters the parameters
     * @return parameter types
     */
-   protected String[] getSignature(Parameter[] parameters)
+   protected String[] getSignature(List<? extends AbstractParameter> parameters)
    {
       if (parameters == null)
          return new String[0];
-      String[] signature = new String[parameters.length];
+      String[] signature = new String[parameters.size()];
       for (int i = 0; i < signature.length; ++i)
-         signature[i] = parameters[i].getType();
+      {
+         AbstractParameter parameter = parameters.get(i);
+         if (parameter instanceof Parameter)
+            signature[i] = ((Parameter) parameter).getParamType();
+      }
       return signature;
    }
 
@@ -223,17 +228,22 @@ public class JavaBean extends BeanAdapter
     * @param paramTypes the types
     * @return parameter values
     */
-   protected Object[] getParams(Parameter[] parameters, TypeInfo[] paramTypes)
+   protected Object[] getParams(List<? extends AbstractParameter> parameters, TypeInfo[] paramTypes)
    {
       if (parameters == null)
          return new String[0];
-      Object[] params = new Object[parameters.length];
+      Object[] params = new Object[parameters.size()];
       for (int i = 0; i < params.length; ++i)
       {
-         Object value = parameters[i].getValue();
+         AbstractParameter parameter = parameters.get(i);
+         Object value = parameter.getValue();
          try
          {
-            params[i] = paramTypes[i].convertValue(value, false);
+            TypeInfo parameterType = paramTypes[i];
+            String type = parameter.getType();
+            if (type != null)
+               parameterType = parameterType.getTypeInfoFactory().getTypeInfo(type, null);
+            params[i] = parameterType.convertValue(value, false);
          }
          catch (Throwable t)
          {

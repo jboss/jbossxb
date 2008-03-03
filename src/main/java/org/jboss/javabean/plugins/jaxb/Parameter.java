@@ -21,9 +21,8 @@
 */
 package org.jboss.javabean.plugins.jaxb;
 
-import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlValue;
+import javax.xml.bind.annotation.XmlType;
 
 /**
  * Parameter.
@@ -32,32 +31,19 @@ import javax.xml.bind.annotation.XmlValue;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public class Parameter
+@XmlType(name="propertyType")
+public class Parameter extends AbstractParameter
 {
-   private String type;
+   private String paramType;
 
-   private Object value;
-
-   public String getType()
+   public String getParamType()
    {
-      return type;
+      return paramType;
    }
-
-   @XmlAttribute(name="class")
-   public void setType(String type)
+   
+   @XmlAttribute(name="paramClass")
+   public void setParamType(String type)
    {
-      this.type = type;
-   }
-
-   public Object getValue()
-   {
-      return value;
-   }
-
-   @XmlValue
-   @XmlAnyElement
-   public void setValue(Object value)
-   {
-      this.value = value;
+      this.paramType = type;
    }
 }

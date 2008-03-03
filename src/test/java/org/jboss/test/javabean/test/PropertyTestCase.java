@@ -103,6 +103,27 @@ public class PropertyTestCase extends AbstractJavaBeanTest
       validateFields("(<all-fields>)", "SimpleBeanFactory.newInstance(<all-fields>)", bean);
    }
 
+   public void testConstructor() throws Exception
+   {
+      // check bean
+      SimpleBean bean = unmarshal("TestConstructor.xml", SimpleBean.class);
+      validateFields("(<all-fields>)", null, bean);
+   }
+
+   public void testConstructorFactory() throws Exception
+   {
+      // check bean
+      SimpleBean bean = unmarshal("TestConstructorFactory.xml", SimpleBean.class);
+      validateFields("(<all-fields>)", "getInstance(<all-fields>)", bean);
+   }
+
+   public void testConstructorExplicitFactoryClassAndParams() throws Exception
+   {
+      // check bean
+      SimpleBean bean = unmarshal("TestConstructorExplicitFactoryClassAndParams.xml", SimpleBean.class);
+      validateFields("(<all-fields>)", "SimpleBeanFactory.newInstance(<all-fields>)", bean);
+   }
+
    /**
     * Validate the JavaBean property name introspection
     * @throws Exception

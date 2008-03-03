@@ -31,6 +31,20 @@ public class AmbiguityBean
    private Integer someint;
    private String somestring;
 
+   public AmbiguityBean()
+   {
+   }
+
+   public AmbiguityBean(String someString)
+   {
+      this.somestring = someString;
+   }
+   
+   public AmbiguityBean(int someint)
+   {
+      this.someint = someint;
+   }
+   
    public void setSomething(Integer integer)
    {
       someint = integer;

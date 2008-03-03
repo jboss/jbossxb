@@ -21,63 +21,43 @@
 */
 package org.jboss.javabean.plugins.jaxb;
 
-import java.util.List;
-
+import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 
 /**
- * Constructor.
+ * Abstrat Parameter.
  *
  * @author <a href="mailto:ales.justin@jboss.com">Ales Justin</a>
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-@XmlType(name="constructorType")
-public class Constructor
+public class AbstractParameter
 {
-   private String factoryClass;
+   private String type;
 
-   private String factoryMethod;
+   private Object value;
 
-   private List<? extends AbstractParameter> parameters;
-
-   public String getFactoryClass()
+   public String getType()
    {
-      return factoryClass;
+      return type;
    }
 
-   @XmlAttribute(name="factoryClass")
-   public void setFactoryClass(String factoryClass)
+   @XmlAttribute(name="class")
+   public void setType(String type)
    {
-      this.factoryClass = factoryClass;
+      this.type = type;
    }
 
-   public String getFactoryMethod()
+   public Object getValue()
    {
-      return factoryMethod;
+      return value;
    }
 
-   @XmlAttribute(name="factoryMethod")
-   public void setFactoryMethod(String factoryMethod)
+   @XmlValue
+   @XmlAnyElement
+   public void setValue(Object value)
    {
-      this.factoryMethod = factoryMethod;
-   }
-
-   public List<? extends AbstractParameter> getParameters()
-   {
-      return parameters;
-   }
-
-   @XmlElements
-   ({
-      @XmlElement(name="parameter", type=Parameter.class),
-      @XmlElement(name="property", type=Property.class)
-   })
-   public void setParameters(List<? extends AbstractParameter> parameters)
-   {
-      this.parameters = parameters;
+      this.value = value;
    }
 }

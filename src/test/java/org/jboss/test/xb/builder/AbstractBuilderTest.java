@@ -213,6 +213,37 @@ public class AbstractBuilderTest extends AbstractTestCaseWithSetup
    }
    
    /**
+    * Unmarshal some xml
+    *
+    * @param <T> the expected type
+    * @param name the name
+    * @param expected the expected type
+    * @return the unmarshalled object
+    * @throws Exception for any error
+    */
+   protected <T> T unmarshal(String name, Class<T> expected) throws Exception
+   {
+      Object object = unmarshal(name);
+      if (object == null)
+         fail("No object from " + name);
+      assertTrue("Object '" + object + "' cannot be assigned to " + expected.getName(), expected.isAssignableFrom(object.getClass()));
+      return expected.cast(object);
+   }
+
+   /**
+    * Unmarshal some xml
+    *
+    * @param name the name
+    * @return the unmarshalled object
+    * @throws Exception for any error
+    */
+   protected Object unmarshal(String name) throws Exception
+   {
+      String url = findXML(name);
+      return getJBossXBDelegate().unmarshal(url);
+   }
+
+   /**
     * Get the package root name
     * 
     * @return the root name

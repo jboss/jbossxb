@@ -221,6 +221,23 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       return schemaInitByUri.remove(nsUri);
    }
 
+   /**
+    * Add an in-memory schema.
+    *
+    * @param nsUri schema namespace
+    * @param reference the schema reference class name
+    * @throws Exception for any error
+    */
+   public void addClassBinding(String nsUri, String reference) throws Exception
+   {
+      if (reference == null)
+         throw new IllegalArgumentException("Null reference class");
+
+      ClassLoader cl = Thread.currentThread().getContextClassLoader();
+      Class clazz = cl.loadClass(reference);
+      addClassBinding(nsUri, clazz);
+   }
+
    public void addClassBinding(String nsUri, Class clazz)
    {
       uriToClass.put(nsUri, clazz);

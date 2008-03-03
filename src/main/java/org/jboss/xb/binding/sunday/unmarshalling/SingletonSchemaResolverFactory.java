@@ -26,6 +26,7 @@ import org.jboss.logging.Logger;
 /**
  * SingletonSchemaResolverFactory.
  * 
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision$
  */
@@ -55,15 +56,17 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
     */
    private SingletonSchemaResolverFactory()
    {
-      addSchema("urn:jboss:aop-beans:1.0", "org.jboss.aop.microcontainer.beans.xml.AOPBeansSchemaInitializer", Boolean.FALSE);
-      addSchema("urn:jboss:bean-deployer", "org.jboss.kernel.plugins.deployment.xml.BeanSchemaInitializer", Boolean.FALSE);
-      addSchema("urn:jboss:bean-deployer:2.0", "org.jboss.kernel.plugins.deployment.xml.BeanSchemaInitializer20", Boolean.FALSE);
-      addSchema("urn:jboss:javabean:1.0", "org.jboss.javabean.plugins.xml.JavaBeanSchemaInitializer", Boolean.FALSE);
-      addSchema("urn:jboss:javabean:2.0", "org.jboss.javabean.plugins.xml.JavaBeanSchemaInitializer20", Boolean.FALSE);
+      // old initializer 
       addSchema("urn:jboss:spring-beans:2.0", "org.jboss.spring.deployment.xml.SpringSchemaInitializer", Boolean.FALSE);
-      addSchema("urn:jboss:policy:1.0", "org.jboss.kernel.plugins.deployment.xml.PolicySchemaInitializer", Boolean.FALSE);
       addSchema("urn:jboss:osgi-beans:1.0", "org.jboss.osgi.deployment.xml.OSGiSchemaInitializer", Boolean.FALSE);
       addSchema("urn:jboss:seam-components:1.0", "org.jboss.seam.ioc.microcontainer.xml.SeamSchemaInitializer", Boolean.FALSE);
+      // new jaxb
+      addJaxbSchema("urn:jboss:aop-beans:1.0", "org.jboss.aop.microcontainer.beans.beanmetadatafactory.AOPDeployment");
+      addJaxbSchema("urn:jboss:bean-deployer", "org.jboss.kernel.plugins.deployment.AbstractKernelDeployment10");
+      addJaxbSchema("urn:jboss:bean-deployer:2.0", "org.jboss.kernel.plugins.deployment.AbstractKernelDeployment");
+      addJaxbSchema("urn:jboss:javabean:1.0", "org.jboss.javabean.plugins.jaxb.JavaBean10");
+      addJaxbSchema("urn:jboss:javabean:2.0", "org.jboss.javabean.plugins.jaxb.JavaBean20");
+      addJaxbSchema("urn:jboss:policy:1.0", "org.jboss.beans.metadata.plugins.policy.AbstractPolicyMetaData");
    }
 
    public SchemaBindingResolver getSchemaBindingResolver()
@@ -83,12 +86,14 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
       try
       {
          resolver.addSchemaInitializer(namespace, initializer);
-         log.trace("Mapped initializer '" + namespace + "' to '" + initializer + "'");
+         if (log.isTraceEnabled())
+            log.trace("Mapped initializer '" + namespace + "' to '" + initializer + "'");
          return true;
       }
       catch (Exception ignored)
       {
-         log.trace("Ignored: ", ignored);
+         if (log.isTraceEnabled())
+            log.trace("Ignored: ", ignored);
          return false;
       }
    }
@@ -124,12 +129,14 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
       try
       {
          resolver.addSchemaLocation(namespace, location);
-         log.trace("Mapped location '" + namespace + "' to '" + location + "'");
+         if (log.isTraceEnabled())
+            log.trace("Mapped location '" + namespace + "' to '" + location + "'");
          return true;
       }
       catch (Exception ignored)
       {
-         log.trace("Ignored: ", ignored);
+         if (log.isTraceEnabled())
+            log.trace("Ignored: ", ignored);
          return false;
       }
    }
@@ -160,6 +167,31 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
    protected void setParseAnnotations(String namespace, Boolean parseAnnotations)
    {
       resolver.addSchemaParseAnnotations(namespace, parseAnnotations);
-      log.trace("Parse annotations '" + namespace + "' set to '" + parseAnnotations + "'");
+      if (log.isTraceEnabled())
+         log.trace("Parse annotations '" + namespace + "' set to '" + parseAnnotations + "'");
+   }
+
+   /**
+    * Add a schema.
+    *
+    * @param namespace the namespace
+    * @param reference the schema reference class
+    * @return true when added
+    */
+   public boolean addJaxbSchema(String namespace, String reference)
+   {
+      try
+      {
+         resolver.addClassBinding(namespace, reference);
+         if (log.isTraceEnabled())
+            log.trace("Mapped '" + namespace + "' to '" + reference + "'");
+         return true;
+      }
+      catch (Exception ignored)
+      {
+         if (log.isTraceEnabled())
+            log.trace("Ignored: ", ignored);
+         return false;
+      }
    }
 }

@@ -21,14 +21,11 @@
 */
 package org.jboss.test.xb.builder.object.mc.test;
 
-import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import junit.framework.Test;
 
 import org.jboss.test.xb.builder.object.mc.support.Annotation1;
-import org.jboss.test.xb.builder.object.mc.support.AnnotationWithAttribute;
-import org.jboss.test.xb.builder.object.mc.support.AnnotationWithAttributes;
 import org.jboss.test.xb.builder.object.mc.support.model.AbstractAnnotationMetaData;
 import org.jboss.test.xb.builder.object.mc.support.model.AbstractBeanMetaData;
 import org.jboss.test.xb.builder.object.mc.support.model.ConstructorMetaData;
@@ -56,81 +53,8 @@ public class AnnotationTestCase extends AbstractMCTest
    public void testAnnotationSimple() throws Exception
    {
       AbstractAnnotationMetaData annotation = getAnnotation();
-      Annotation ann = annotation.getAnnotationInstance();
-      assertEquals(Annotation1.class.getName(), ann.annotationType().getName());
-      assertTrue(ann instanceof Annotation1);
+      assertEquals("@" + Annotation1.class.getName(), annotation.getAnnotation());
    }
-   
-   public void testAnnotationWithAttribute() throws Exception
-   {
-      AbstractAnnotationMetaData annotation = getAnnotation();
-      Annotation ann = annotation.getAnnotationInstance();
-      assertEquals(AnnotationWithAttribute.class.getName(), ann.annotationType().getName());
-      assertTrue(ann instanceof AnnotationWithAttribute);
-      AnnotationWithAttribute ann1 = (AnnotationWithAttribute)ann;
-      assertNotNull(ann1.attribute());
-      assertEquals(Long.class, ann1.attribute());
-   }
-   
-   public void testAnnotationWithAttributes() throws Exception
-   {
-      AbstractAnnotationMetaData annotation = getAnnotation();
-      Annotation ann = annotation.getAnnotationInstance();
-      assertEquals(AnnotationWithAttributes.class.getName(), ann.annotationType().getName());
-      assertTrue(ann instanceof AnnotationWithAttributes);
-      AnnotationWithAttributes ann1 = (AnnotationWithAttributes)ann;
-      assertNotNull(ann1.clazz());
-      assertEquals(Integer.class, ann1.clazz());
-      assertNotNull(ann1.integer());
-      assertEquals(100, ann1.integer());
-      assertNotNull(ann1.str());
-      assertEquals("Annotations are nice", ann1.str());
-   }
-
-   /* TODO
-   public void testAnnotationBadNoContent() throws Exception
-   {
-      try
-      {
-         unmarshalBean("AnnotationBadNoContent.xml");
-         fail("Should not be here");
-      }
-      catch (Exception expected)
-      {
-         checkJBossXBException(IllegalArgumentException.class, expected);
-      }
-   }
-   */
-
-   /* TODO
-   public void testAnnotationBadNoContent2() throws Exception
-   {
-      try
-      {
-         unmarshalBean("AnnotationBadNoContent2.xml");
-         fail("Should not be here");
-      }
-      catch (Exception expected)
-      {
-         checkJBossXBException(IllegalArgumentException.class, expected);
-      }
-   }
-   */
-
-   /* TODO
-   public void testAnnotationBadNoLeadingAt() throws Exception
-   {
-      try
-      {
-         unmarshalBean("AnnotationBadNoLeadingAt.xml");
-         fail("Should not be here");
-      }
-      catch (Exception expected)
-      {
-         checkJBossXBException(IllegalArgumentException.class, expected);
-      }
-   }
-   */
 
    public static Test suite()
    {

@@ -89,7 +89,7 @@ public class PropertyTestCase extends AbstractMCTest
       PropertyMetaData property = getProperty();
       assertNotNull("PropertyName", property.getName());
       HashSet<String> expected = new HashSet<String>();
-      expected.add(Annotation1.class.getName());
+      expected.add("@" + Annotation1.class.getName());
       assertAnnotations(expected, property.getAnnotations());
       assertNull(property.getValue());
    }
@@ -99,9 +99,9 @@ public class PropertyTestCase extends AbstractMCTest
       PropertyMetaData property = getProperty();
       assertNotNull("PropertyName", property.getName());
       HashSet<String> expected = new HashSet<String>();
-      expected.add(Annotation1.class.getName());
-      expected.add(Annotation2.class.getName());
-      expected.add(Annotation3.class.getName());
+      expected.add("@" + Annotation1.class.getName());
+      expected.add("@" + Annotation2.class.getName());
+      expected.add("@" + Annotation3.class.getName());
       assertAnnotations(expected, property.getAnnotations());
       assertNull(property.getValue());
    }

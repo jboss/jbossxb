@@ -78,7 +78,7 @@ public class LifecycleTestCase extends AbstractMCTest
       LifecycleMetaData lifecycle = getLifecycle();
       assertNull(lifecycle.getMethodName());
       HashSet<String> expected = new HashSet<String>();
-      expected.add(Annotation1.class.getName());
+      expected.add("@" + Annotation1.class.getName());
       assertAnnotations(expected, lifecycle.getAnnotations());
       assertNull(lifecycle.getParameters());
    }
@@ -88,9 +88,9 @@ public class LifecycleTestCase extends AbstractMCTest
       LifecycleMetaData lifecycle = getLifecycle();
       assertNull(lifecycle.getMethodName());
       HashSet<String> expected = new HashSet<String>();
-      expected.add(Annotation1.class.getName());
-      expected.add(Annotation2.class.getName());
-      expected.add(Annotation3.class.getName());
+      expected.add("@" + Annotation1.class.getName());
+      expected.add("@" + Annotation2.class.getName());
+      expected.add("@" + Annotation3.class.getName());
       assertAnnotations(expected, lifecycle.getAnnotations());
       assertNull(lifecycle.getParameters());
    }

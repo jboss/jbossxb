@@ -88,7 +88,7 @@ public class AbstractMCTest extends AbstractBuilderTest
       for (Iterator i = annotations.iterator(); i.hasNext();)
       {
          AnnotationMetaData annotation = (AnnotationMetaData) i.next();
-         if (clonedExpected.remove(annotation.getAnnotationInstance().annotationType().getName()) == false)
+         if (clonedExpected.remove(annotation.getAnnotation()) == false)
             fail("Did not expect " + annotation + " expected " + expected);
       }
       if (clonedExpected.size() != 0)

@@ -27,7 +27,6 @@ import java.lang.annotation.Annotation;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import org.jboss.javaee.annotation.Description;
-import org.jboss.metadata.annotation.AbstractAnnotationImpl;
 import org.jboss.xb.binding.Constants;
 
 /**

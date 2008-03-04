@@ -21,10 +21,6 @@
 */
 package org.jboss.test.xb.builder.object.mc.support.model;
 
-import java.lang.annotation.Annotation;
-
-import javax.xml.bind.annotation.XmlTransient;
-
 import org.jboss.util.JBossInterface;
 
 /**
@@ -35,6 +31,5 @@ import org.jboss.util.JBossInterface;
  */
 public interface AnnotationMetaData extends JBossInterface, MetaDataVisitorNode
 {
-   @XmlTransient
-   Annotation getAnnotationInstance();
+   String getAnnotation();
 }

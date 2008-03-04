@@ -100,7 +100,7 @@ public class ConstructorTestCase extends AbstractMCTest
       assertNull(constructor.getFactoryClass());
       assertNull(constructor.getFactoryMethod());
       HashSet<String> expected = new HashSet<String>();
-      expected.add(Annotation1.class.getName());
+      expected.add("@" + Annotation1.class.getName());
       assertAnnotations(expected, constructor.getAnnotations());
       assertNull(constructor.getFactory());
       assertNull(constructor.getParameters());
@@ -113,9 +113,9 @@ public class ConstructorTestCase extends AbstractMCTest
       assertNull(constructor.getFactoryClass());
       assertNull(constructor.getFactoryMethod());
       HashSet<String> expected = new HashSet<String>();
-      expected.add(Annotation1.class.getName());
-      expected.add(Annotation2.class.getName());
-      expected.add(Annotation3.class.getName());
+      expected.add("@" + Annotation1.class.getName());
+      expected.add("@" + Annotation2.class.getName());
+      expected.add("@" + Annotation3.class.getName());
       assertAnnotations(expected, constructor.getAnnotations());
       assertNull(constructor.getFactory());
       assertNull(constructor.getParameters());

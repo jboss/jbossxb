@@ -84,7 +84,7 @@ public class ParameterTestCase extends AbstractMCTest
       ParameterMetaData parameter = getParameter();
       assertNull(parameter.getType());
       HashSet<String> expected = new HashSet<String>();
-      expected.add(Annotation1.class.getName());
+      expected.add("@" + Annotation1.class.getName());
       assertAnnotations(expected, parameter.getAnnotations());
       assertNull(parameter.getValue());
    }
@@ -94,9 +94,9 @@ public class ParameterTestCase extends AbstractMCTest
       ParameterMetaData parameter = getParameter();
       assertNull(parameter.getType());
       HashSet<String> expected = new HashSet<String>();
-      expected.add(Annotation1.class.getName());
-      expected.add(Annotation2.class.getName());
-      expected.add(Annotation3.class.getName());
+      expected.add("@" + Annotation1.class.getName());
+      expected.add("@" + Annotation2.class.getName());
+      expected.add("@" + Annotation3.class.getName());
       assertAnnotations(expected, parameter.getAnnotations());
       assertNull(parameter.getValue());
    }

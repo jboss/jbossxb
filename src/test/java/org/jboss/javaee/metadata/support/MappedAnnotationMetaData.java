@@ -27,8 +27,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.jboss.metadata.annotation.AbstractAnnotationImpl;
-
 /**
  * MappedAnnotationMetaData.
  * 

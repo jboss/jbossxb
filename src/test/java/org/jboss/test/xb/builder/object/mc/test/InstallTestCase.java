@@ -90,7 +90,7 @@ public class InstallTestCase extends AbstractMCTest
       assertEquals(ControllerState.INSTALLED, install.getDependentState());
       assertEquals("Dummy", install.getMethodName());
       HashSet<String> expected = new HashSet<String>();
-      expected.add(Annotation1.class.getName());
+      expected.add("@" + Annotation1.class.getName());
       assertAnnotations(expected, install.getAnnotations());
       assertNull(install.getParameters());
    }
@@ -102,9 +102,9 @@ public class InstallTestCase extends AbstractMCTest
       assertEquals(ControllerState.INSTALLED, install.getDependentState());
       assertEquals("Dummy", install.getMethodName());
       HashSet<String> expected = new HashSet<String>();
-      expected.add(Annotation1.class.getName());
-      expected.add(Annotation2.class.getName());
-      expected.add(Annotation3.class.getName());
+      expected.add("@" + Annotation1.class.getName());
+      expected.add("@" + Annotation2.class.getName());
+      expected.add("@" + Annotation3.class.getName());
       assertAnnotations(expected, install.getAnnotations());
       assertNull(install.getParameters());
    }

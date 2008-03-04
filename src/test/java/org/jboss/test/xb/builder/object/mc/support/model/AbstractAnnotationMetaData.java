@@ -24,15 +24,11 @@ package org.jboss.test.xb.builder.object.mc.support.model;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
-import org.jboss.annotation.factory.AnnotationCreator;
-import org.jboss.annotation.factory.ast.TokenMgrError;
 import org.jboss.util.JBossObject;
 import org.jboss.util.JBossStringBuilder;
-import org.jboss.util.StringPropertyReplacer;
 
 /**
  * Metadata for an annotation.
@@ -79,32 +75,6 @@ public class AbstractAnnotationMetaData extends JBossObject
    public void setReplace(boolean replace)
    {
       this.replace = replace;
-   }
-
-   @XmlTransient
-   public Annotation getAnnotationInstance()
-   {
-      try
-      {
-         String annString = annotation;
-         // TODO - JBMICROCONT-143 + any better way?
-         if (replace)
-         {
-            annString = StringPropertyReplacer.replaceProperties(annString);
-         }
-         //FIXME [JBMICROCONT-99] [JBAOP-278] Use the loader for the bean?
-         ann = (Annotation)AnnotationCreator.createAnnotation(annString, Thread.currentThread().getContextClassLoader());
-      }
-      catch (Exception e)
-      {
-         throw new RuntimeException("Error creating annotation for " + annotation, e);
-      }
-      catch(TokenMgrError e)
-      {
-         throw new RuntimeException("Error creating annotation for " + annotation, e);
-      }
-
-      return ann;
    }
 
    public void toString(JBossStringBuilder buffer)

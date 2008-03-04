@@ -24,8 +24,6 @@ package org.jboss.javaee.metadata.support;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 
-import org.jboss.metadata.annotation.AbstractAnnotationImpl;
-
 /**
  * NamedAnnotationMetaData.
  * 

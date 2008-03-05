@@ -202,6 +202,13 @@ public class AbstractMCTest extends AbstractBuilderTest
       assertEquals(expected, value);
    }
    
+   protected void assertStringValue(String type, String expected, ValueMetaData valueMetaData)
+   {
+      assertValue(expected, valueMetaData);
+      StringValueMetaData stringValueMetaData = (StringValueMetaData) valueMetaData;
+      assertEquals(type, stringValueMetaData.getType());
+   }
+   
    protected void assertInjection(ValueMetaData value)
    {
       assertNotNull(value);

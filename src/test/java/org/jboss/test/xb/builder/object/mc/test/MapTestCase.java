@@ -94,6 +94,17 @@ public class MapTestCase extends AbstractMCTest
       assertValue("Value", getValue(map));
    }
    
+   public void testMapWithKeyValueOverrides() throws Exception
+   {
+      enableTrace("org.jboss.xb");
+      AbstractMapMetaData map = getMap();
+      assertNull(map.getType());
+      assertNull(map.getKeyType());
+      assertNull(map.getValueType());
+      assertStringValue(Integer.class.getName(), "4", getKey(map));
+      assertStringValue(Boolean.class.getName(), "true", getKey(map));
+   }
+   
    public void testMapWithInjection() throws Exception
    {
       AbstractMapMetaData map = getMap();

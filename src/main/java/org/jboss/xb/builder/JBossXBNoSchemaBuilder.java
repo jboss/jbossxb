@@ -1456,6 +1456,7 @@ public class JBossXBNoSchemaBuilder
          String wrapperName = xmlWrapper.name();
          QName wrapperQName = generateXmlName(property.getName(), elementForm, wrapperNamespace, wrapperName);
          localModel = bindXmlElementWrapper(propertyType, localModel, xmlWrapper.nillable(), wrapperQName);
+         beanAdapterFactory.addProperty(wrapperQName, new PropertyHandler(property, propertyType));
          if (trace)
             log.trace("Added property " + wrapperQName + " for type=" + property.getBeanInfo().getName() + " property="
                   + property.getName() + " as a wrapper element");

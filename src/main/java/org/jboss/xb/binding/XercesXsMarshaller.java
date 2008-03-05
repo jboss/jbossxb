@@ -55,6 +55,7 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
+ * @deprecated In favor of org.jboss.xb.binding.sunday.marshalling.MarshallerImpl.
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */

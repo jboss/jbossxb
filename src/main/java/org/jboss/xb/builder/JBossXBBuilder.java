@@ -21,6 +21,8 @@
 */
 package org.jboss.xb.builder;
 
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.HashSet;
 
@@ -46,13 +48,27 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingInitializer;
 public class JBossXBBuilder
 {
    /** The configuration */
-   static Configuration configuration = new PropertyConfiguration();
+   static Configuration configuration;
    
    /** The string type */
-   static final ClassInfo STRING = configuration.getClassInfo(String.class);
+   static final ClassInfo STRING;
    
    /** The object type */
-   static final ClassInfo OBJECT = configuration.getClassInfo(Object.class);
+   static final ClassInfo OBJECT;
+   
+   static
+   {
+      configuration = AccessController.doPrivileged(new PrivilegedAction<PropertyConfiguration>()
+      {
+         public PropertyConfiguration run()
+         {
+            return new PropertyConfiguration();
+         }
+      });
+      
+      STRING = configuration.getClassInfo(String.class);
+      OBJECT = configuration.getClassInfo(Object.class);
+   }
    
    /**
     * Create a new schema binding initializer

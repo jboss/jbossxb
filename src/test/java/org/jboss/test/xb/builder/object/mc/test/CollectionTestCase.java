@@ -21,6 +21,7 @@
 */
 package org.jboss.test.xb.builder.object.mc.test;
 
+import java.util.Iterator;
 import java.util.Set;
 
 import junit.framework.Test;
@@ -79,6 +80,14 @@ public class CollectionTestCase extends AbstractMCTest
       assertNull(collection.getType());
       assertNull(collection.getElementType());
       assertValue("Value", getValue(collection));
+   }
+   
+   public void testCollectionWithValues() throws Exception
+   {
+      AbstractCollectionMetaData collection = getCollection();
+      assertNull(collection.getType());
+      assertNull(collection.getElementType());
+      assertValues(collection, "Value1", "Value2", "Value3");
    }
    
    public void testCollectionWithInjection() throws Exception
@@ -157,6 +166,16 @@ public class CollectionTestCase extends AbstractMCTest
    {
       assertEquals(1, collection.size());
       return (ValueMetaData) collection.iterator().next();
+   }
+   
+   protected void assertValues(AbstractCollectionMetaData collection, String... values)
+   {
+      assertEquals(values.length, collection.size());
+      Iterator<ValueMetaData> iterator = (Iterator) collection.iterator();
+      for (int i = 0; i < values.length; ++i)
+      {
+         assertValue(values[i], iterator.next());
+      }
    }
    
    public static Test suite()

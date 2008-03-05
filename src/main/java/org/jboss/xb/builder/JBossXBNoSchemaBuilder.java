@@ -970,7 +970,9 @@ public class JBossXBNoSchemaBuilder
 
       if (typeInfo.isCollection())
       {
-         TypeInfo memberBaseType = ((ClassInfo)typeInfo).getComponentType();
+         typeParticle.setMinOccurs(0);
+         typeParticle.setMaxOccursUnbounded(true);
+         TypeInfo memberBaseType = typeInfo.getComponentType();
          JBossXmlModelGroup xmlModelGroup = ((ClassInfo) memberBaseType)
                .getUnderlyingAnnotation(JBossXmlModelGroup.class);
          if (xmlModelGroup != null && xmlModelGroup.particles().length > 0)

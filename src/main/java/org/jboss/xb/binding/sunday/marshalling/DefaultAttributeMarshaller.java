@@ -31,7 +31,9 @@ import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.introspection.FieldInfo;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 
 
@@ -78,14 +80,20 @@ public class DefaultAttributeMarshaller
 
    public String marshalValue(MarshallingContext ctx, Object value)
    {
+      AttributeBinding binding = ctx.getAttributeBinding();
+
       if(value == null)
       {
+         if(binding.getRequired())
+         {
+            ElementBinding element = (ElementBinding) ctx.getParticleBinding().getTerm();
+            throw new JBossXBRuntimeException("Missing value for the required attribute " + binding.getQName() + " of element " + element.getQName());
+         }   
          return null;
       }
 
       String marshalled;
 
-      AttributeBinding binding = ctx.getAttributeBinding();
       TypeBinding attrType = binding.getType();
 
       if(attrType.getItemType() != null)

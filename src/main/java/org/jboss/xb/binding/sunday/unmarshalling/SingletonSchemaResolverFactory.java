@@ -67,6 +67,8 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
       addJaxbSchema("urn:jboss:javabean:1.0", "org.jboss.javabean.plugins.jaxb.JavaBean10");
       addJaxbSchema("urn:jboss:javabean:2.0", "org.jboss.javabean.plugins.jaxb.JavaBean20");
       addJaxbSchema("urn:jboss:policy:1.0", "org.jboss.beans.metadata.plugins.policy.AbstractPolicyMetaData");
+      addJaxbSchema("urn:jboss:classloading:1.0", "org.jboss.classloading.spi.metadata.ClassLoadingMetaData10");
+      addJaxbSchema("urn:jboss:classloader:1.0", " org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory10");
    }
 
    public SchemaBindingResolver getSchemaBindingResolver()

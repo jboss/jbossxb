@@ -25,6 +25,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -117,11 +118,11 @@ import org.jboss.xb.builder.runtime.DOMHandler;
 import org.jboss.xb.builder.runtime.DefaultMapEntry;
 import org.jboss.xb.builder.runtime.EnumValueAdapter;
 import org.jboss.xb.builder.runtime.MapPropertyHandler;
-import org.jboss.xb.builder.runtime.NoopPropertyHandler;
 import org.jboss.xb.builder.runtime.PropertyHandler;
 import org.jboss.xb.builder.runtime.PropertyInterceptor;
 import org.jboss.xb.builder.runtime.PropertyWildcardHandler;
 import org.jboss.xb.builder.runtime.ValueHandler;
+import org.jboss.xb.builder.runtime.WrapperBeanAdapterFactory;
 import org.jboss.xb.spi.BeanAdapterBuilder;
 import org.jboss.xb.spi.BeanAdapterFactory;
 import org.jboss.xb.spi.DefaultBeanAdapterBuilder;
@@ -1534,12 +1535,36 @@ public class JBossXBNoSchemaBuilder
             if (trace)
                log.trace("Processing group for property " + property.getName() + " in "
                      + property.getBeanInfo().getName() + " " + jbossXmlGroup);
+
             JBossXmlChild[] children = jbossXmlGroup.value();
             if (children != null && children.length > 0)
             {
                TypeBinding elementTypeBinding = new TypeBinding();
+               JBossXmlGroupText groupText = ((ClassInfo) propertyType).getUnderlyingAnnotation(JBossXmlGroupText.class);
+               if (groupText != null && groupText.wrapper() != Object.class)
+               {
+                  BeanInfo wrapperInfo = JBossXBBuilder.configuration.getBeanInfo(groupText.wrapper());
+                  TypeBinding wrapperTypeBinding = resolveTypeBinding(wrapperInfo.getClassInfo());
+                  // Steal the attributes
+                  Collection<AttributeBinding> otherAttributes = wrapperTypeBinding.getAttributes();
+                  if (otherAttributes != null)
+                  {
+                     for (AttributeBinding other : otherAttributes)
+                        elementTypeBinding.addAttribute(other);
+                  }
+                  ParticleHandler particleHandler = wrapperTypeBinding.getHandler();
+                  if (particleHandler instanceof BeanHandler == false)
+                     throw new IllegalStateException("Cannot wrap " + wrapperInfo.getName() + " not a bean type " + particleHandler);
+                  BeanHandler beanHandler = (BeanHandler) particleHandler;
+                  WrapperBeanAdapterFactory wrapperFactory = new WrapperBeanAdapterFactory(beanHandler.getBeanAdapterFactory(), propertyType.getType());
+                  elementTypeBinding.setHandler(new BeanHandler(wrapperInfo.getName(), wrapperFactory));
+                  elementTypeBinding.setSimpleType(wrapperTypeBinding.getSimpleType());
+               }
+               else
+               {
+                  elementTypeBinding.setHandler(BuilderParticleHandler.INSTANCE);
+               }
                elementTypeBinding.setSchemaBinding(schemaBinding);
-               elementTypeBinding.setHandler(BuilderParticleHandler.INSTANCE);
                ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, propertyQName, false);
 
                // Bind it to the model
@@ -1547,22 +1572,6 @@ public class JBossXBNoSchemaBuilder
                if (required == false)
                   particle.setMinOccurs(0);
                localModel.addParticle(particle);
-
-               // Can it take text?
-               JBossXmlGroupText groupText = ((ClassInfo) propertyType)
-                     .getUnderlyingAnnotation(JBossXmlGroupText.class);
-               if (groupText != null)
-               {
-                  CharactersHandler textHandler;
-                  if (groupText.wrapper() != Object.class)
-                  {
-                     BeanInfo wrapperInfo = JBossXBBuilder.configuration.getBeanInfo(groupText.wrapper());
-                     textHandler = new ValueHandler(property, wrapperInfo, groupText.property());
-                  }
-                  else
-                     textHandler = new ValueHandler(property);
-                  elementTypeBinding.setSimpleType(textHandler);
-               }
 
                // Setup the child model
                ChoiceBinding childModel = new ChoiceBinding(schemaBinding);
@@ -1595,7 +1604,7 @@ public class JBossXBNoSchemaBuilder
                      log.trace("Added interceptor " + childName + " for type=" + property.getBeanInfo().getName()
                            + " property=" + property.getName() + " interceptor=" + interceptor + " " + childType.getName());
 
-                  beanAdapterFactory.addProperty(propertyQName, new NoopPropertyHandler(property, propertyType));
+                  beanAdapterFactory.addProperty(propertyQName, new PropertyHandler(property, propertyType));
 
                   JBossXmlGroupWildcard groupWildcard = ((ClassInfo) propertyType)
                         .getUnderlyingAnnotation(JBossXmlGroupWildcard.class);

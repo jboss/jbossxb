@@ -101,7 +101,7 @@ public class MapTestCase extends AbstractMCTest
       assertNull(map.getKeyType());
       assertNull(map.getValueType());
       assertStringValue(Integer.class.getName(), "4", getKey(map));
-      assertStringValue(Boolean.class.getName(), "true", getKey(map));
+      assertStringValue(Boolean.class.getName(), "true", getValue(map));
    }
    
    public void testMapWithInjection() throws Exception

@@ -52,6 +52,16 @@ public abstract class BeanAdapter
    }
    
    /**
+    * Get the bean adapter factory
+    * 
+    * @return the factory
+    */
+   protected BeanAdapterFactory getBeanAdapterFactory()
+   {
+      return beanAdapterFactory;
+   }
+
+   /**
     * Get the property handler for an element name
     * 
     * @param qName the element name

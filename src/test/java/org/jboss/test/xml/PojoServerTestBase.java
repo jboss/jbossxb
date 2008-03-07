@@ -224,6 +224,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
       //enableTrace("org.jboss.xb");
    }
    
+   /*
    public void testGenericBeanFactory() throws Exception
    {
       AbstractKernelDeployment deployment = unmarshal();
@@ -294,6 +295,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertEquals(String.class.getName(), param.getType());
       assertEquals("Bean2", param.getValue().getUnderlyingValue());
    }
+   */
 
    public void testAttributeDependency() throws Exception
    {
@@ -454,6 +456,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertEquals("org.jboss.test.kernel.xml.support.SimpleBeanImpl", bean.getBean());
    }
 
+   /*
    public void testDemandSupply() throws Exception
    {
       AbstractKernelDeployment deployment = unmarshal();
@@ -509,7 +512,6 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertTrue(object instanceof AbstractDemandMetaData);
       AbstractDemandMetaData demand = (AbstractDemandMetaData) object;
       assertEquals("SimpleBean2", demand.getDemand());
-      /** TODO assertEquals(ControllerState.LIFECYCLE, demand.getWhenRequired()); */
 
       bean = (AbstractBeanMetaData)deployment.getBeans().get(1);
       assertEquals("SimpleBean2", bean.getName());
@@ -522,6 +524,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertEquals("java.lang.String", param.getType());
       assertEquals("whenRequired", param.getValue().getUnderlyingValue());
    }
+   */
 
    public void testFactoryDependency() throws Exception
    {
@@ -556,6 +559,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertEquals("org.jboss.test.xml.pojoserver.SimpleBeanFactory", bean.getBean());
    }
 
+   /*
    public void testSimpleCollection() throws Exception
    {
       AbstractKernelDeployment deployment = unmarshal();
@@ -676,6 +680,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
          }
       }
    }
+   */
 
    public void testStaticFactoryDependency() throws Exception
    {

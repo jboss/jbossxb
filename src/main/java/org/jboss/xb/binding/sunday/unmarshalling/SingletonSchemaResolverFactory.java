@@ -61,7 +61,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
       addSchema("urn:jboss:osgi-beans:1.0", "org.jboss.osgi.deployment.xml.OSGiSchemaInitializer", Boolean.FALSE);
       addSchema("urn:jboss:seam-components:1.0", "org.jboss.seam.ioc.microcontainer.xml.SeamSchemaInitializer", Boolean.FALSE);
       // new jaxb
-      addJaxbSchema("urn:jboss:aop-beans:1.0", "org.jboss.aop.microcontainer.beans.beanmetadatafactory.AOPDeployment");
+      addJaxbSchema("urn:jboss:aop-beans:1.0", "org.jboss.aop.microcontainer.beans.metadata.AOPDeployment");
       addJaxbSchema("urn:jboss:bean-deployer", "org.jboss.kernel.plugins.deployment.AbstractKernelDeployment10");
       addJaxbSchema("urn:jboss:bean-deployer:2.0", "org.jboss.kernel.plugins.deployment.AbstractKernelDeployment");
       addJaxbSchema("urn:jboss:javabean:1.0", "org.jboss.javabean.plugins.jaxb.JavaBean10");

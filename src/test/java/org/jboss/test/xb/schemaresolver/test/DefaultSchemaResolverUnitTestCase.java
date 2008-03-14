@@ -44,7 +44,7 @@ public class DefaultSchemaResolverUnitTestCase
 
    public void testRedefine() throws Exception
    {
-      enableTrace("org.jboss.xb");
+      //enableTrace("org.jboss.xb");
       /**
        * it *has to* be in the classpath, not found with findXML()
        */

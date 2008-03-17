@@ -21,12 +21,15 @@
  */
 package org.jboss.test.resolver;
 
+import java.net.URL;
+
 import javax.xml.namespace.QName;
 
 import org.jboss.ejb.metadata.spec.EjbJar20MetaData;
 import org.jboss.ejb.metadata.spec.EjbJar21MetaData;
 import org.jboss.ejb.metadata.spec.EjbJar30MetaData;
-import org.jboss.test.BaseTestCase;
+import org.jboss.test.xml.AbstractJBossXBTest;
+import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -36,7 +39,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
  * @author Scott.Stark@jboss.org
  * @version $Revision$
  */
-public class DefaultSchemaResolverUnitTestCase extends BaseTestCase
+public class DefaultSchemaResolverUnitTestCase extends AbstractJBossXBTest
 {
    public DefaultSchemaResolverUnitTestCase(String name)
    {
@@ -97,5 +100,21 @@ public class DefaultSchemaResolverUnitTestCase extends BaseTestCase
       QName ejbJar3xName = new QName("http://java.sun.com/xml/ns/javaee", "ejb-jar");
       ElementBinding ejbJar3x = schema.getElement(ejbJar3xName);
       assertNotNull(ejbJar3x);
+   }
+   
+   public void testRedefine() throws Exception
+   {
+      //enableTrace("org.jboss.util.xml");
+
+      /**
+       * it *has to* be in the classpath, not found with findXML()
+       */
+      String redefiningName = getRootName() + "_" + getName() + "_redefining.xsd";
+      URL redefiningURL = Thread.currentThread().getContextClassLoader().getResource(redefiningName);
+      assertNotNull("Expected to find " + redefiningName + " in the classpath", redefiningURL);
+      
+      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      resolver.addSchemaLocation("urn:jboss:xb:test", redefiningName);
+      Util.loadSchema(redefiningURL.toExternalForm(), resolver);
    }
 }

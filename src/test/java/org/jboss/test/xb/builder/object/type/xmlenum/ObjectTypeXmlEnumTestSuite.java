@@ -31,6 +31,9 @@ import org.jboss.test.xb.builder.object.type.xmlenum.test.EnumGlobalTypeUnitTest
 import org.jboss.test.xb.builder.object.type.xmlenum.test.EnumNotSimpleUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlenum.test.NonDefaultsUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlenum.test.NoneUnitTestCase;
+import org.jboss.test.xb.builder.object.type.xmlenum.test.IgnoreCaseUnitTestCase;
+import org.jboss.test.xb.builder.object.type.xmlenum.test.FailIgnoreCaseTestCase;
+import org.jboss.test.xb.builder.object.type.xmlenum.test.MatchCaseUnitTestCase;
 
 /**
  * ObjectTypeXmlAnyElementTestSuite.
@@ -55,7 +58,10 @@ public class ObjectTypeXmlEnumTestSuite extends TestSuite
       suite.addTest(EnumGlobalTypeUnitTestCase.suite());
       suite.addTest(EnumNotSimpleUnitTestCase.suite());
       suite.addTest(EnumConstantUnconvertableUnitTestCase.suite());
-      
+      suite.addTest(IgnoreCaseUnitTestCase.suite());
+      suite.addTest(FailIgnoreCaseTestCase.suite());
+      suite.addTest(MatchCaseUnitTestCase.suite());
+
       return suite;
    }
 }

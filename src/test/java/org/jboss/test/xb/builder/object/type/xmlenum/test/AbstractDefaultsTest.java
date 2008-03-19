@@ -89,8 +89,11 @@ public abstract class AbstractDefaultsTest<T extends Enum<T>> extends AbstractBu
       ValueAdapter valueAdapter = typeBinding.getValueAdapter();
       assertNotNull(valueAdapter);
       assertTrue(valueAdapter instanceof EnumValueAdapter);
-      EnumValueAdapter enumValueAdapter = (EnumValueAdapter) valueAdapter;
-      
+      testEnumValueAdapter((EnumValueAdapter)valueAdapter);
+   }
+
+   protected void testEnumValueAdapter(EnumValueAdapter enumValueAdapter)
+   {
       Map<Object, Object> actual = enumValueAdapter.getMapping();
       assertEquals(expected, actual);
    }

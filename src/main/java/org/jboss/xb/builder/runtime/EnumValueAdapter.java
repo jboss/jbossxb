@@ -31,6 +31,7 @@ import org.jboss.reflect.spi.EnumConstantInfo;
 import org.jboss.reflect.spi.EnumInfo;
 import org.jboss.reflect.spi.TypeInfo;
 import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
+import org.jboss.xb.annotations.JBossXmlEnum;
 
 /**
  * EnumValueAdapter.
@@ -45,7 +46,10 @@ public class EnumValueAdapter implements ValueAdapter
    
    /** The valid values */
    private Map<Object, Object> valid;
-   
+
+   /** The jboss enum extension */
+   private JBossXmlEnum jBossXmlEnum;
+
    /**
     * Create a new EnumValueAdapter.
     * 
@@ -62,7 +66,8 @@ public class EnumValueAdapter implements ValueAdapter
          throw new IllegalArgumentException("Null enumType");
       
       this.qName = qName;
-      
+      this.jBossXmlEnum = enumInfo.getUnderlyingAnnotation(JBossXmlEnum.class);
+
       // Setup the mapping
       EnumConstantInfo[] constants = enumInfo.getEnumConstants();
       valid = new HashMap<Object, Object>(constants.length);
@@ -73,7 +78,7 @@ public class EnumValueAdapter implements ValueAdapter
          if (xmlEnumValue != null)
             enumValue = xmlEnumValue.value();
          
-         Object key = enumValue;
+         Object key;
          try
          {
             key = enumType.convertValue(enumValue, false);
@@ -82,11 +87,28 @@ public class EnumValueAdapter implements ValueAdapter
          {
             throw new RuntimeException("Error for enum " + enumInfo.getName() + " unable to convert " + enumValue + " to " + enumType.getName());
          }
+         if (isCaseIgnored())
+         {
+            if (key instanceof String == false)
+               throw new IllegalArgumentException("Cannot ignore case on non string key: " + enumInfo);
+
+            key = key.toString().toUpperCase();
+         }
          Object value = constant.getValue();
          valid.put(key, value);
       }
    }
-   
+
+   /**
+    * Check if we should ignore case.
+    *
+    * @return true if case should be ignored, false otherwise
+    */
+   protected boolean isCaseIgnored()
+   {
+      return jBossXmlEnum != null && jBossXmlEnum.ignoreCase();
+   }
+
    /**
     * Get the mapping
     * 
@@ -102,8 +124,12 @@ public class EnumValueAdapter implements ValueAdapter
    {
       if (o == null)
          return null;
+
+      Object key = o;
+      if (isCaseIgnored())
+         key = key.toString().toUpperCase();
       
-      Object result = valid.get(o);
+      Object result = valid.get(key);
       if (result == null)
       {
          if (qName == null)

@@ -313,9 +313,11 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
          InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
          if( trace )
          {
-            log.trace("found schema InputSource, nsURI="+nsURI
-                  +", baseURI="+baseURI
-                  +", schemaLocation="+schemaLocation);
+            String msg = (is == null ? "couldn't find" : "found") +
+                  " schema InputSource, nsURI=" + nsURI +
+                  ", baseURI=" + baseURI + ", schemaLocation=" +
+                  schemaLocation;
+            log.trace(msg);
          }
          
          if (is != null)

@@ -57,20 +57,19 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
    private SingletonSchemaResolverFactory()
    {
       // old initializer 
-      //addSchema("urn:jboss:aop-beans:1.0", "org.jboss.aop.microcontainer.beans.xml.AOPBeansSchemaInitializer", Boolean.FALSE);
+      addSchema("urn:jboss:aop-beans:1.0", "org.jboss.aop.microcontainer.beans.xml.AOPBeansSchemaInitializer", Boolean.FALSE);
       addSchema("urn:jboss:spring-beans:2.0", "org.jboss.spring.deployment.xml.SpringSchemaInitializer", Boolean.FALSE);
       addSchema("urn:jboss:osgi-beans:1.0", "org.jboss.osgi.deployment.xml.OSGiSchemaInitializer", Boolean.FALSE);
       addSchema("urn:jboss:seam-components:1.0", "org.jboss.seam.ioc.microcontainer.xml.SeamSchemaInitializer", Boolean.FALSE);
       // new jaxb
-      addJaxbSchema("urn:jboss:aop-beans:1.0", "org.jboss.aop.microcontainer.beans.metadata.AOPDeployment");
+      //addJaxbSchema("urn:jboss:aop-beans:1.0", "org.jboss.aop.microcontainer.beans.metadata.AOPDeployment");
       addJaxbSchema("urn:jboss:bean-deployer", "org.jboss.kernel.plugins.deployment.AbstractKernelDeployment10");
       addJaxbSchema("urn:jboss:bean-deployer:2.0", "org.jboss.kernel.plugins.deployment.AbstractKernelDeployment");
       addJaxbSchema("urn:jboss:javabean:1.0", "org.jboss.javabean.plugins.jaxb.JavaBean10");
       addJaxbSchema("urn:jboss:javabean:2.0", "org.jboss.javabean.plugins.jaxb.JavaBean20");
       addJaxbSchema("urn:jboss:policy:1.0", "org.jboss.beans.metadata.plugins.policy.AbstractPolicyMetaData");
       addJaxbSchema("urn:jboss:classloading:1.0", "org.jboss.classloading.spi.metadata.ClassLoadingMetaData10");
-      addJaxbSchema("urn:jboss:classloader:1.0", "org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory10");
-      addJaxbSchema("urn:jboss:deployers:2.0", "org.jboss.deployers.vfs.plugins.xb.SchemaResolverDeployerMetaData");
+      addJaxbSchema("urn:jboss:classloader:1.0", " org.jboss.classloading.spi.vfs.metadata.VFSClassLoaderFactory10");
    }
 
    public SchemaBindingResolver getSchemaBindingResolver()

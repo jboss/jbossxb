@@ -444,14 +444,18 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       {
          is = resolver.resolveEntity(nsURI, schemaLocation);
          if (trace)
-            log.trace("Resolved schema using namespace as publicId and schemaLocation as systemId");
+         {
+            String msg = (is == null ? "Couldn't resolve" : "Resolved") +
+            " schema using namespace as publicId and schemaLocation as systemId";
+            log.trace(msg);
+         }
       }
       catch (Exception e)
       {
          if (trace)
             log.trace("Failed to use nsUri/schemaLocation", e);
       }
-
+      
       // Next, try to use the baseURI to resolve the schema location
       if(baseURI == null)
       {

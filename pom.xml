@@ -74,11 +74,17 @@
       <artifactId>jboss-common-logging-log4j</artifactId>
       <version>2.0.4.GA</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jboss</groupId>
       <artifactId>jboss-common-core</artifactId>
-      <version>2.2.3.GA</version>
+      <version>2.2.4.GA</version>
       <exclusions>
         <exclusion>
           <groupId>jboss</groupId>
@@ -133,6 +139,12 @@
       <artifactId>jboss-test</artifactId>
       <version>1.0.4.GA</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

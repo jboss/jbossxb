@@ -7,12 +7,12 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>jbossxb</artifactId>
   <packaging>jar</packaging>
-  <version>2.0.0-SNAPSHOT</version>
+  <version>2.0.0.CR8</version>
   <name>JBoss XML Binding</name>
   <url>http://www.jboss.org</url>
   <description>JBoss XML Binding</description>
   <scm>
-    <connection>scm:svn:https://svn.jboss.org/repos/common/jbossxb/trunk</connection>
+    <connection>scm:svn:https://svn.jboss.org/repos/common/jbossxb/tags/2.0.0.CR8</connection>
   </scm>
   <build>
     <finalName>jboss-xml-binding</finalName>
@@ -74,11 +74,17 @@
       <artifactId>jboss-common-logging-log4j</artifactId>
       <version>2.0.4.GA</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jboss</groupId>
       <artifactId>jboss-common-core</artifactId>
-      <version>2.2.3.GA</version>
+      <version>2.2.4.GA</version>
       <exclusions>
         <exclusion>
           <groupId>jboss</groupId>
@@ -133,6 +139,12 @@
       <artifactId>jboss-test</artifactId>
       <version>1.0.4.GA</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>jboss</groupId>
+          <artifactId>jboss-common-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

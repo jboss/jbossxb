@@ -313,9 +313,11 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
          InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
          if( trace )
          {
-            log.trace("found schema InputSource, nsURI="+nsURI
-                  +", baseURI="+baseURI
-                  +", schemaLocation="+schemaLocation);
+            String msg = (is == null ? "couldn't find" : "found") +
+                  " schema InputSource, nsURI=" + nsURI +
+                  ", baseURI=" + baseURI + ", schemaLocation=" +
+                  schemaLocation;
+            log.trace(msg);
          }
          
          if (is != null)
@@ -442,14 +444,18 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       {
          is = resolver.resolveEntity(nsURI, schemaLocation);
          if (trace)
-            log.trace("Resolved schema using namespace as publicId and schemaLocation as systemId");
+         {
+            String msg = (is == null ? "Couldn't resolve" : "Resolved") +
+            " schema using namespace as publicId and schemaLocation as systemId";
+            log.trace(msg);
+         }
       }
       catch (Exception e)
       {
          if (trace)
             log.trace("Failed to use nsUri/schemaLocation", e);
       }
-
+      
       // Next, try to use the baseURI to resolve the schema location
       if(baseURI == null)
       {

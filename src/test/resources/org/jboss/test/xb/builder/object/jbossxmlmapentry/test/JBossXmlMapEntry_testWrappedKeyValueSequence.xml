@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root>
+<root xmlns="ns">
   <wrapped-key-value>
     <key>key1</key><value>1</value>
   </wrapped-key-value>

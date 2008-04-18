@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root>
+<root xmlns="ns">
   <map>
      <entry key="key1">1</entry>
      <entry key="key2">22</entry>

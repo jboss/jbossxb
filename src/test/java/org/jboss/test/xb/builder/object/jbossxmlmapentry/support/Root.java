@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlNsForm;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.jboss.xb.annotations.JBossXmlMapEntry;
@@ -32,6 +33,7 @@ import org.jboss.xb.annotations.JBossXmlMapKeyAttribute;
 import org.jboss.xb.annotations.JBossXmlMapKeyElement;
 import org.jboss.xb.annotations.JBossXmlMapValueAttribute;
 import org.jboss.xb.annotations.JBossXmlMapValueElement;
+import org.jboss.xb.annotations.JBossXmlSchema;
 
 
 /**
@@ -41,6 +43,7 @@ import org.jboss.xb.annotations.JBossXmlMapValueElement;
  * @version $Revision: 1.1 $
  */
 @XmlRootElement
+@JBossXmlSchema(namespace="ns", elementFormDefault= XmlNsForm.QUALIFIED)
 public class Root
 {
    private Map<String, Integer> stringToInteger;

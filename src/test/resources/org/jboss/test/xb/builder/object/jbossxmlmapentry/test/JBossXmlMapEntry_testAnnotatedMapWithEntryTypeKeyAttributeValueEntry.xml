@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root>
+<root xmlns="ns">
   <annotated-map-entry-type-key-attr-value-entry key="key1" attr="attr1">
      <value>1</value>
   </annotated-map-entry-type-key-attr-value-entry>

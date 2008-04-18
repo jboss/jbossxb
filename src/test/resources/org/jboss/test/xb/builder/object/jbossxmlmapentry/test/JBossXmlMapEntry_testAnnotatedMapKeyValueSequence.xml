@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root>
+<root xmlns="ns">
   <key-kvs>key1</key-kvs><value-kvs>1</value-kvs>
   <key-kvs>key2</key-kvs><value-kvs>22</value-kvs>
   <key-kvs>key3</key-kvs><value-kvs>333</value-kvs>

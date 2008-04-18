@@ -2060,10 +2060,8 @@ public class JBossXBNoSchemaBuilder
             {
                TypeBinding attributeType = resolveTypeBinding(keyType);
                AttributeHandler attributeHandler = new PropertyHandler(entryInfo.getProperty("key"), keyType);
-               String attrNs = keyAttribute.namespace();
-               if(JBossXmlConstants.DEFAULT.equals(attrNs))
-                  attrNs = defaultNamespace;
-               AttributeBinding keyBinding = new AttributeBinding(schemaBinding, new QName(attrNs, keyAttribute.name()), attributeType, attributeHandler);
+               QName attrQName = generateXmlName(keyType, attributeForm, keyAttribute.namespace(), keyAttribute.name());
+               AttributeBinding keyBinding = new AttributeBinding(schemaBinding, attrQName, attributeType, attributeHandler);
                keyBinding.setRequired(true);
                entryType.addAttribute(keyBinding);
             }
@@ -2072,10 +2070,8 @@ public class JBossXBNoSchemaBuilder
             {
                TypeBinding attributeType = resolveTypeBinding(valueType);
                AttributeHandler attributeHandler = new PropertyHandler(entryInfo.getProperty("value"), valueType);
-               String valueNs = valueAttribute.namespace();
-               if(JBossXmlConstants.DEFAULT.equals(valueNs))
-                  valueNs = defaultNamespace;
-               AttributeBinding valueBinding = new AttributeBinding(schemaBinding, new QName(valueNs, valueAttribute.name()), attributeType, attributeHandler);
+               QName attrQName = generateXmlName(valueType, attributeForm, valueAttribute.namespace(), valueAttribute.name());
+               AttributeBinding valueBinding = new AttributeBinding(schemaBinding, attrQName, attributeType, attributeHandler);
                valueBinding.setRequired(true);
                entryType.addAttribute(valueBinding);
             }

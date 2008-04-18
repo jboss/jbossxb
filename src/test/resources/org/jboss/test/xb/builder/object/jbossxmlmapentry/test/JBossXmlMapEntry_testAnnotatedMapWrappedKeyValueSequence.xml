@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root>
+<root xmlns="ns">
   <annotated-map-wrapped-key-value>
     <key>key1</key><value>1</value>
   </annotated-map-wrapped-key-value>

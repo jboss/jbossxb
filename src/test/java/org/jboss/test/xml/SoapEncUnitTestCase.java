@@ -29,7 +29,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Arrays;
 import java.util.TimeZone;
@@ -93,7 +92,7 @@ public class SoapEncUnitTestCase
       "<varShort>-32768</varShort>" +
       "<varDecimal>3512359.1456</varDecimal>" +
       "<varFloat>1.4E-45</varFloat>" +
-      "<varDouble>4.9E-324</varDouble>" +
+      "<varDouble>0.0000000000000001</varDouble>" +
       "<varBoolean>false</varBoolean>" +
       "<varByte>-128</varByte>" +
       "<varQName xmlns=\"\">String2</varQName>" +
@@ -101,7 +100,7 @@ public class SoapEncUnitTestCase
       "<varSoapString>String3</varSoapString>" +
       "<varSoapBoolean>false</varSoapBoolean>" +
       "<varSoapFloat>1.4E-45</varSoapFloat>" +
-      "<varSoapDouble>4.9E-324</varSoapDouble>" +
+      "<varSoapDouble>0.0000000000000001</varSoapDouble>" +
       "<varSoapDecimal>3512359.1111</varSoapDecimal>" +
       "<varSoapInt>-2147483648</varSoapInt>" +
       "<varSoapShort>-32768</varSoapShort>" +
@@ -199,7 +198,7 @@ public class SoapEncUnitTestCase
          struct.setVarShort((short)Short.MIN_VALUE);
          struct.setVarDecimal(new BigDecimal("3512359.1456"));
          struct.setVarFloat((float)Float.MIN_VALUE);
-         struct.setVarDouble((double)Double.MIN_VALUE);
+         struct.setVarDouble(0.0000000000000001);
          struct.setVarBoolean(false);
          struct.setVarByte((byte)Byte.MIN_VALUE);
          struct.setVarQName(new QName("String2"));
@@ -220,7 +219,7 @@ public class SoapEncUnitTestCase
          struct.setVarSoapString("String3");
          struct.setVarSoapBoolean(new Boolean(false));
          struct.setVarSoapFloat(new Float(Float.MIN_VALUE));
-         struct.setVarSoapDouble(new Double(Double.MIN_VALUE));
+         struct.setVarSoapDouble(new Double(0.0000000000000001));
          struct.setVarSoapDecimal(new BigDecimal("3512359.1111"));
          struct.setVarSoapInt(new Integer(Integer.MIN_VALUE));
          struct.setVarSoapShort(new Short(Short.MIN_VALUE));

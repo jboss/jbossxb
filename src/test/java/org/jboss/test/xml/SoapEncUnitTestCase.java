@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Arrays;
 import java.util.TimeZone;
@@ -135,8 +136,9 @@ public class SoapEncUnitTestCase
       SchemaBinding schema = XsdBinder.bind(xsdPath, RESOLVER);
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
       Object o = unmarshaller.unmarshal(new StringReader(XML), schema);
+      
       assertNotNull(o);
-      assertTrue(o instanceof AllStruct);
+      assertTrue(o instanceof AllStruct);            
       assertEquals(AllStruct.INSTANCE, o);
    }
 
@@ -202,16 +204,17 @@ public class SoapEncUnitTestCase
          struct.setVarByte((byte)Byte.MIN_VALUE);
          struct.setVarQName(new QName("String2"));
 
-         Calendar varDateTime = (Calendar)new GregorianCalendar(96, 5, 1);
-         int offset = varDateTime.get(Calendar.ZONE_OFFSET) + varDateTime.get(Calendar.DST_OFFSET);
-         StringBuffer buf = new StringBuffer();
-         buf.append("GMT");
-         if(offset > 0)
-         {
-            buf.append('+');
-         }
-         buf.append(offset);
-         varDateTime.setTimeZone(TimeZone.getTimeZone(buf.toString()));
+         // This calendar is for 31st May 96 (Not 1996) at 23:00:00.000
+         // Care needs to be taken to ensure GMT.
+         Calendar varDateTime = new GregorianCalendar();
+         varDateTime.setTimeZone(TimeZone.getTimeZone("GMT"));
+         varDateTime.set(Calendar.YEAR, 96);
+         varDateTime.set(Calendar.MONTH, 4);
+         varDateTime.set(Calendar.DAY_OF_MONTH, 31);
+         varDateTime.set(Calendar.HOUR_OF_DAY, 23);
+         varDateTime.set(Calendar.MINUTE, 0);
+         varDateTime.set(Calendar.SECOND, 0);
+         varDateTime.set(Calendar.MILLISECOND, 0);      
          struct.setVarDateTime(varDateTime);
 
          struct.setVarSoapString("String3");

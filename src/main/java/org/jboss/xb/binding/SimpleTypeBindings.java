@@ -200,7 +200,7 @@ public final class SimpleTypeBindings
 
       public String marshal(Object value)
       {
-         return String.valueOf(value);
+         return marshallDouble((Double)value);
       }
    };
 
@@ -1079,19 +1079,7 @@ public final class SimpleTypeBindings
       }
       else if(typeCode == XS_DOUBLE)
       {
-         Double d = (Double)value;
-         if(d.doubleValue() == Double.POSITIVE_INFINITY)
-         {
-            result = "INF";
-         }
-         else if(d.doubleValue() == Double.NEGATIVE_INFINITY)
-         {
-            result = "-INF";
-         }
-         else
-         {
-            result = d.toString();
-         }
+         result = marshallDouble((Double)value);
       }
       else if(typeCode == XS_BOOLEAN)
       {
@@ -2259,6 +2247,31 @@ public final class SimpleTypeBindings
       return result;
    }
 
+   private static String marshallDouble(Double d)
+   {	   
+      String result;
+      if(d.doubleValue() == Double.POSITIVE_INFINITY)
+      {
+         result = "INF";
+      }
+      else if(d.doubleValue() == Double.NEGATIVE_INFINITY)
+      {
+         result = "-INF";
+      }
+      else
+      {
+         DecimalFormat df = new DecimalFormat();
+         df.setGroupingUsed(false);
+         df.setMinimumFractionDigits(1);
+         df.setMaximumFractionDigits(18);
+         df.setMinimumIntegerDigits(1);
+         df.setMaximumIntegerDigits(18);
+         
+         result = df.format(d.doubleValue());
+      }
+      return result;	   
+   }
+   
    private static char convertDigit(int value)
    {
       value &= 0x0f;

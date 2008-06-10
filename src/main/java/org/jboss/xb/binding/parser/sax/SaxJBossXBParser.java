@@ -180,13 +180,21 @@ public class SaxJBossXBParser
 
    public void parse(InputStream is, ContentHandler handler) throws JBossXBException
    {
+      parse(is, null, handler);
+   }
+
+   public void parse(InputStream is, String systemId, ContentHandler handler) throws JBossXBException
+   {
       this.contentHandler = handler;
       trace = log.isTraceEnabled();
       
       logParserInfo();
       try
       {
-         reader.parse(new InputSource(is));
+         InputSource source = new InputSource(is);
+         if (systemId != null)
+            source.setSystemId(systemId);
+         reader.parse(source);
       }
       catch(Throwable e)
       {
@@ -196,13 +204,21 @@ public class SaxJBossXBParser
 
    public void parse(Reader reader, ContentHandler handler) throws JBossXBException
    {
+      parse(reader, null, handler);   
+   }
+
+   public void parse(Reader reader, String systemId, ContentHandler handler) throws JBossXBException
+   {
       this.contentHandler = handler;
       trace = log.isTraceEnabled();
       
       logParserInfo();
       try
       {
-         this.reader.parse(new InputSource(reader));
+         InputSource source = new InputSource(reader);
+         if (systemId != null)
+            source.setSystemId(systemId);
+         this.reader.parse(source);
       }
       catch(Throwable e)
       {

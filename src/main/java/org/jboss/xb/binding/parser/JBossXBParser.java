@@ -21,14 +21,13 @@
   */
 package org.jboss.xb.binding.parser;
 
+import java.io.InputStream;
+import java.io.Reader;
+
+import org.apache.xerces.xs.XSTypeDefinition;
+import org.jboss.xb.binding.JBossXBException;
 import org.xml.sax.Attributes;
 import org.xml.sax.EntityResolver;
-import org.xml.sax.SAXException;
-import org.jboss.xb.binding.JBossXBException;
-import org.apache.xerces.xs.XSTypeDefinition;
-
-import java.io.Reader;
-import java.io.InputStream;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -71,5 +70,9 @@ public interface JBossXBParser
 
    void parse(InputStream is, ContentHandler handler) throws JBossXBException;
 
+   void parse(InputStream is, String systemId, ContentHandler handler) throws JBossXBException;
+
    void parse(Reader reader, ContentHandler handler) throws JBossXBException;
+
+   void parse(Reader reader, String systemId, ContentHandler handler) throws JBossXBException;
 }

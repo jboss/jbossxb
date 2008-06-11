@@ -28,6 +28,7 @@ import org.apache.xerces.xs.XSTypeDefinition;
 import org.jboss.xb.binding.JBossXBException;
 import org.xml.sax.Attributes;
 import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -70,9 +71,7 @@ public interface JBossXBParser
 
    void parse(InputStream is, ContentHandler handler) throws JBossXBException;
 
-   void parse(InputStream is, String systemId, ContentHandler handler) throws JBossXBException;
-
    void parse(Reader reader, ContentHandler handler) throws JBossXBException;
 
-   void parse(Reader reader, String systemId, ContentHandler handler) throws JBossXBException;
+   void parse(InputSource source, ContentHandler handler) throws JBossXBException;
 }

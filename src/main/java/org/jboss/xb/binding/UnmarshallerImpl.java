@@ -32,6 +32,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
 
 /**
  * Unmarshaller implementation.
@@ -126,13 +127,6 @@ public class UnmarshallerImpl implements Unmarshaller
       return cHandler.getRoot();
    }
 
-   public Object unmarshal(Reader xmlReader, String systemId, SchemaBinding schemaBinding) throws JBossXBException
-   {
-      JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaBinding);
-      parser.parse(xmlReader, systemId, cHandler);
-      return cHandler.getRoot();
-   }
-
    public Object unmarshal(InputStream xmlStream, SchemaBinding schemaBinding) throws JBossXBException
    {
       JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaBinding);
@@ -140,10 +134,10 @@ public class UnmarshallerImpl implements Unmarshaller
       return cHandler.getRoot();
    }
 
-   public Object unmarshal(InputStream xmlStream, String systemId, SchemaBinding schemaBinding) throws JBossXBException
+   public Object unmarshal(InputSource source, SchemaBinding schemaBinding) throws JBossXBException
    {
       JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaBinding);
-      parser.parse(xmlStream, systemId, cHandler);
+      parser.parse(source, cHandler);
       return cHandler.getRoot();
    }
 
@@ -161,13 +155,6 @@ public class UnmarshallerImpl implements Unmarshaller
       return cHandler.getRoot();
    }
 
-   public Object unmarshal(Reader xmlReader, String systemId, SchemaBindingResolver schemaResolver) throws JBossXBException
-   {
-      JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaResolver);
-      parser.parse(xmlReader, systemId, cHandler);
-      return cHandler.getRoot();
-   }
-
    public Object unmarshal(InputStream xmlStream, SchemaBindingResolver schemaResolver) throws JBossXBException
    {
       JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaResolver);
@@ -175,10 +162,10 @@ public class UnmarshallerImpl implements Unmarshaller
       return cHandler.getRoot();
    }
 
-   public Object unmarshal(InputStream xmlStream, String systemId, SchemaBindingResolver schemaResolver) throws JBossXBException
+   public Object unmarshal(InputSource source, SchemaBindingResolver schemaResolver) throws JBossXBException
    {
       JBossXBParser.ContentHandler cHandler = new SundayContentHandler(schemaResolver);
-      parser.parse(xmlStream, systemId, cHandler);
+      parser.parse(source, cHandler);
       return cHandler.getRoot();
    }
 
@@ -193,17 +180,6 @@ public class UnmarshallerImpl implements Unmarshaller
       return builder.getRoot();
    }
 
-   public Object unmarshal(Reader reader, String systemId, ObjectModelFactory factory, Object root) throws JBossXBException
-   {
-      if(builder == null)
-      {
-         builder = new ObjectModelBuilder();
-      }
-      builder.init(factory, root);
-      parser.parse(reader, systemId, builder);
-      return builder.getRoot();
-   }
-
    public Object unmarshal(InputStream is, ObjectModelFactory factory, Object root) throws JBossXBException
    {
       if(builder == null)
@@ -215,17 +191,6 @@ public class UnmarshallerImpl implements Unmarshaller
       return builder.getRoot();
    }
 
-   public Object unmarshal(InputStream is, String systemId, ObjectModelFactory factory, Object root) throws JBossXBException
-   {
-      if(builder == null)
-      {
-         builder = new ObjectModelBuilder();
-      }
-      builder.init(factory, root);
-      parser.parse(is, systemId, builder);
-      return builder.getRoot();
-   }
-
    public Object unmarshal(String systemId, ObjectModelFactory factory, Object root) throws JBossXBException
    {
       if(builder == null)
@@ -234,6 +199,17 @@ public class UnmarshallerImpl implements Unmarshaller
       }
       builder.init(factory, root);
       parser.parse(systemId, builder);
+      return builder.getRoot();
+   }
+
+   public Object unmarshal(InputSource is, ObjectModelFactory factory, Object root) throws JBossXBException
+   {
+      if(builder == null)
+      {
+         builder = new ObjectModelBuilder();
+      }
+      builder.init(factory, root);
+      parser.parse(is, builder);
       return builder.getRoot();
    }
 

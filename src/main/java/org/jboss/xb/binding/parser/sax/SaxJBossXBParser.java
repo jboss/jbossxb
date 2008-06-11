@@ -180,34 +180,15 @@ public class SaxJBossXBParser
 
    public void parse(InputStream is, ContentHandler handler) throws JBossXBException
    {
-      parse(is, null, handler);
-   }
-
-   public void parse(InputStream is, String systemId, ContentHandler handler) throws JBossXBException
-   {
-      this.contentHandler = handler;
-      trace = log.isTraceEnabled();
-      
-      logParserInfo();
-      try
-      {
-         InputSource source = new InputSource(is);
-         if (systemId != null)
-            source.setSystemId(systemId);
-         reader.parse(source);
-      }
-      catch(Throwable e)
-      {
-         throw new JBossXBException("Failed to parse source: " + e.getMessage(), e);
-      }
+      parse(new InputSource(is), handler);
    }
 
    public void parse(Reader reader, ContentHandler handler) throws JBossXBException
    {
-      parse(reader, null, handler);   
+      parse(new InputSource(reader), handler);
    }
 
-   public void parse(Reader reader, String systemId, ContentHandler handler) throws JBossXBException
+   public void parse(InputSource source, ContentHandler handler) throws JBossXBException
    {
       this.contentHandler = handler;
       trace = log.isTraceEnabled();
@@ -215,10 +196,7 @@ public class SaxJBossXBParser
       logParserInfo();
       try
       {
-         InputSource source = new InputSource(reader);
-         if (systemId != null)
-            source.setSystemId(systemId);
-         this.reader.parse(source);
+         reader.parse(source);
       }
       catch(Throwable e)
       {

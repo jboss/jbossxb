@@ -29,6 +29,8 @@ import javax.xml.namespace.NamespaceContext;
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
@@ -271,6 +273,30 @@ public final class SimpleTypeBindings
       }
    };
 
+   private static final Method BIG_DECIMAL_TO_STRING;
+
+   static
+   {
+      Class bigDecimalClass = BigDecimal.class;
+      Method bigDecimalToString = null;
+      try 
+      {
+         bigDecimalToString = bigDecimalClass.getMethod("toPlainString", new Class[] {});
+      } 
+      catch (NoSuchMethodException e) 
+      {
+         try 
+         {
+            bigDecimalToString = bigDecimalClass.getMethod("toString", new Class[] {});
+         } 
+         catch (NoSuchMethodException e2)
+         {
+        	 throw new JBossXBRuntimeException("Unable to find java.math.BigDecimal.toString() method",e2);
+         }
+      }
+      BIG_DECIMAL_TO_STRING = bigDecimalToString;
+   }
+	
    // check for uniqueness of hashCode's
    static
    {
@@ -1135,7 +1161,14 @@ public final class SimpleTypeBindings
       else if(typeCode == XS_DECIMAL)
       {
          BigDecimal bd = (BigDecimal)value;
-         result = bd.toString();
+         try 
+         {
+            result = (String) BIG_DECIMAL_TO_STRING.invoke(bd, new Object[] {});
+         }
+         catch (Exception e)
+         {
+            throw new JBossXBRuntimeException("Unable to invoke java.math.BigDecimal." + BIG_DECIMAL_TO_STRING.getName() + "() method.", e);
+         }
       }
       else if(typeCode == XS_DATETIME)
       {

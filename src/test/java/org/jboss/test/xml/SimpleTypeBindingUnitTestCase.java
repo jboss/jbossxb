@@ -168,6 +168,14 @@ public class SimpleTypeBindingUnitTestCase
          SimpleTypeBindings.unmarshal("decimal", "12678967.543233", null)
       );
    }
+   
+   public void testDecimalMarshalling() throws Exception
+   {
+	   assertEquals("-1.23",SimpleTypeBindings.marshal("decimal", new BigDecimal("-1.23"), null));
+	   assertEquals("12678967.543233", SimpleTypeBindings.marshal("decimal", new BigDecimal("12678967.543233"), null));
+	   assertEquals("0.0000000001", SimpleTypeBindings.marshal("decimal", new BigDecimal("0.0000000001"), null));	   
+	   assertEquals("0.000000000001", SimpleTypeBindings.marshal("decimal", new BigDecimal("0.000000000001"), null));
+   }
 
    public void testAnyUriUnmarshalling() throws Exception
    {

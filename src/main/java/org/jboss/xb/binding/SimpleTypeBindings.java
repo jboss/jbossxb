@@ -24,6 +24,8 @@ package org.jboss.xb.binding;
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
@@ -271,7 +273,7 @@ public final class SimpleTypeBindings
          return marshalDate(c);
       }
    };
-
+	
    // check for uniqueness of hashCode's
    static
    {
@@ -1136,7 +1138,7 @@ public final class SimpleTypeBindings
       else if(typeCode == XS_DECIMAL)
       {
          BigDecimal bd = (BigDecimal)value;
-         result = bd.toString();
+         result = bd.toPlainString();
       }
       else if(typeCode == XS_DATETIME)
       {

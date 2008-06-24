@@ -23,7 +23,7 @@
   </organization>
 
   <scm>
-    <connection>scm:svn:https://svn.jboss.org/repos/common/jbossxb/branches/1_0</connection>
+    <connection>scm:svn:https://svn.jboss.org/repos/common/jbossxb/tags/1.0.0.SP3</connection>
   </scm>
  
   <repositories>

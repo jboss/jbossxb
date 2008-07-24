@@ -67,5 +67,6 @@ public abstract class AbstractDefaultsTest extends AbstractBuilderTest
       assertTrue(schemaBinding.isIgnoreLowLine());
       assertTrue(schemaBinding.isReplacePropertyRefs());
       assertEquals(root.getPackage().getName(), schemaBinding.getPackageMetaData().getName());
+      assertFalse(schemaBinding.isNormalizeSpace());
    }
 }

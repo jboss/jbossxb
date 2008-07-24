@@ -64,4 +64,7 @@ public @interface JBossXmlSchema
    
    /** Whether the schema is strict */
    boolean strict() default true;
+   
+   /** Whether to trim string values */
+   boolean normalizeSpace() default false;
 }

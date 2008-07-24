@@ -1010,6 +1010,9 @@ public class SundayContentHandler
                {
                   dataContent = StringPropertyReplacer.replaceProperties(dataContent);
                }
+               
+               if(element.isNormalizeSpace())
+                  dataContent = dataContent.trim();
             }
 
             Object unmarshalled;

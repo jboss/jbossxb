@@ -29,7 +29,7 @@ import org.jboss.xb.annotations.JBossXmlSchema;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-@JBossXmlSchema(namespace = "testNamespace", ignoreLowLine=false, ignoreUnresolvedFieldOrClass=false, packageName="testPackage", replacePropertyRefs=false)
+@JBossXmlSchema(namespace = "testNamespace", ignoreLowLine=false, ignoreUnresolvedFieldOrClass=false, packageName="testPackage", replacePropertyRefs=false, normalizeSpace=true)
 public class NonDefaults
 {
 }

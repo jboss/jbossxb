@@ -64,5 +64,6 @@ public class NonDefaultsUnitTestCase extends AbstractBuilderTest
       assertFalse(schemaBinding.isIgnoreLowLine());
       assertFalse(schemaBinding.isReplacePropertyRefs());
       assertEquals("testPackage", schemaBinding.getPackageMetaData().getName());
+      assertTrue(schemaBinding.isNormalizeSpace());
    }
 }

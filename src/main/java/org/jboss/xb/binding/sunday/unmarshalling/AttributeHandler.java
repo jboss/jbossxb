@@ -45,6 +45,9 @@ public abstract class AttributeHandler
                            NamespaceContext nsCtx,
                            String value)
    {
+      if(value != null && binding.isNormalizeSpace())
+         value = value.trim();
+      
       TypeBinding type = binding.getType();
       ValueMetaData valueMetaData = binding.getValueMetaData();
       return type == null ? value : type.getCharactersHandler().unmarshal(attrName, type, nsCtx, valueMetaData, value);

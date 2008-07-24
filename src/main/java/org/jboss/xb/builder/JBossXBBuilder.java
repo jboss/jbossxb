@@ -187,6 +187,7 @@ public class JBossXBBuilder
       schemaBinding.setIgnoreLowLine(schema.ignoreLowLine());
       schemaBinding.setReplacePropertyRefs(schema.replacePropertyRefs());
       schemaBinding.setStrictSchema(schema.strict());
+      schemaBinding.setNormalizeSpace(schema.normalizeSpace());
    }
 
    /**

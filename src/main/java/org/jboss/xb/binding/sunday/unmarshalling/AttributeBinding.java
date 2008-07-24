@@ -47,6 +47,7 @@ public class AttributeBinding
    private boolean mapEntryValue;
    private ValueAdapter valueAdapter;
    private boolean required;
+   protected Boolean normalizeSpace;
 
    public AttributeBinding(SchemaBinding schema, QName qName, TypeBinding type, AttributeHandler handler)
    {
@@ -173,5 +174,17 @@ public class AttributeBinding
    public boolean getRequired()
    {
       return required;
+   }
+
+   public void setNormalizeSpace(Boolean value)
+   {
+      this.normalizeSpace = value;
+   }
+   
+   public boolean isNormalizeSpace()
+   {
+      if(normalizeSpace != null)
+         return normalizeSpace.booleanValue();      
+      return schema == null ? true : schema.isNormalizeSpace();
    }
 }

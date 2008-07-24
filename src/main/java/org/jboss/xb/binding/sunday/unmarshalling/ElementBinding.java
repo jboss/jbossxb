@@ -47,6 +47,7 @@ public class ElementBinding
    protected QName qName;
    protected TypeBinding typeBinding;
    protected boolean nillable;
+   protected Boolean normalizeSpace;
 
    protected XOPUnmarshaller xopUnmarshaller;
 
@@ -195,6 +196,18 @@ public class ElementBinding
       this.xopUnmarshaller = xopUnmarshaller;
    }
 
+   public void setNormalizeSpace(Boolean value)
+   {
+      this.normalizeSpace = value;
+   }
+   
+   public boolean isNormalizeSpace()
+   {
+      if(normalizeSpace != null)
+         return normalizeSpace.booleanValue();      
+      return schema == null ? true : schema.isNormalizeSpace();
+   }
+   
    public String toString()
    {
       return super.toString() + "(" + qName + ", type=" + typeBinding.getQName() + ")";

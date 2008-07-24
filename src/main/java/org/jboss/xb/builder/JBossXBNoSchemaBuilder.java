@@ -85,6 +85,7 @@ import org.jboss.xb.annotations.JBossXmlMapValueElement;
 import org.jboss.xb.annotations.JBossXmlModelGroup;
 import org.jboss.xb.annotations.JBossXmlNoElements;
 import org.jboss.xb.annotations.JBossXmlNsPrefix;
+import org.jboss.xb.annotations.JBossXmlPreserveWhitespace;
 import org.jboss.xb.annotations.JBossXmlSchema;
 import org.jboss.xb.annotations.JBossXmlType;
 import org.jboss.xb.binding.SimpleTypeBindings;
@@ -852,8 +853,11 @@ public class JBossXBNoSchemaBuilder
                AttributeBinding attribute = new AttributeBinding(schemaBinding, qName, attributeType, attributeHandler);
                attribute.setRequired(xmlAttribute.required());
                typeBinding.addAttribute(attribute);
+               JBossXmlPreserveWhitespace preserveSpace = property.getUnderlyingAnnotation(JBossXmlPreserveWhitespace.class);
+               if(preserveSpace != null)
+                  attribute.setNormalizeSpace(preserveSpace.preserve() ? false : true);
                if (trace)
-                  log.trace("Bound attribute " + qName + " type=" + beanInfo.getName() + " property=" + property.getName() + " propertyType=" + attributeTypeInfo);
+                  log.trace("Bound attribute " + qName + " type=" + beanInfo.getName() + " property=" + property.getName() + " propertyType=" + attributeTypeInfo + ", normalizeSpace=" + attribute.isNormalizeSpace());
             }
 
             // Are we determining the property order?
@@ -1744,6 +1748,14 @@ public class JBossXBNoSchemaBuilder
                ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, propertyQName, false);
                elementBinding.setNillable(nillable);
                elementBinding.setValueAdapter(valueAdapter);
+               
+               JBossXmlPreserveWhitespace preserveSpace = property.getUnderlyingAnnotation(JBossXmlPreserveWhitespace.class);
+               if(preserveSpace != null)
+               {
+                  elementBinding.setNormalizeSpace(preserveSpace.preserve() ? false : true);
+                  if(trace)
+                     log.trace("@JBossXmlPreserveWhitespace.preserve=" + preserveSpace.preserve() + " for " + elementBinding.getQName());
+               }
 
                // Bind it to the model
                particle = new ParticleBinding(elementBinding, 1, 1, isCol);

@@ -93,6 +93,9 @@ public class SchemaBinding
     *  the default is true for the backwards compatibility */
    private boolean ignoreWhitespacesInMixedContent = true;
 
+   /** whether to trim string values */
+   private boolean normalizeSpace;
+   
    /** default XOP unmarshaller */
    private XOPUnmarshaller xopUnmarshaller;
    /** default XOP marshaller */
@@ -481,6 +484,16 @@ public class SchemaBinding
    public void setIgnoreWhitespacesInMixedContent(boolean value)
    {
       this.ignoreWhitespacesInMixedContent = value;
+   }
+   
+   public boolean isNormalizeSpace()
+   {
+      return normalizeSpace;
+   }
+   
+   public void setNormalizeSpace(boolean value)
+   {
+      this.normalizeSpace = value;
    }
    
    void addElementParticle(ParticleBinding particle)

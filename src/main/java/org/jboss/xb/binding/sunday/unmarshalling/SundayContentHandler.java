@@ -27,10 +27,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+
 import javax.xml.namespace.QName;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.jboss.logging.Logger;
 import org.jboss.util.StringPropertyReplacer;
+import org.jboss.xb.binding.AttributesImpl;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.GenericValueContainer;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -282,6 +284,8 @@ public class SundayContentHandler
       ModelGroupBinding.Cursor cursor = null; // used only when particle is a wildcard
       SchemaBinding schemaBinding = schema;
 
+      atts = preprocessAttributes(atts);
+      
       if(stack.isEmpty())
       {
          if(schemaBinding != null)
@@ -918,6 +922,45 @@ public class SundayContentHandler
 
    // Private
 
+   private Attributes preprocessAttributes(Attributes attrs)
+   {
+      SchemaBindingResolver resolver = schemaResolver == null ? schema.getSchemaResolver() : schemaResolver;
+      if(resolver == null || !(resolver instanceof DefaultSchemaResolver))
+         return attrs;
+      
+      int ind = attrs.getIndex(Constants.NS_JBXB, "schemabinding");
+      if (ind != -1)
+      {
+         DefaultSchemaResolver defaultResolver = (DefaultSchemaResolver)resolver;
+         String value = attrs.getValue(ind);
+         java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(value);
+         while(tokenizer.hasMoreTokens())
+         {
+            String uri = tokenizer.nextToken();
+            if(!tokenizer.hasMoreTokens())
+               throw new JBossXBRuntimeException("jbxb:schemabinding attribute value is invalid: ns uri '" + uri + "' is missing value in '" + value + "'");
+            String cls = tokenizer.nextToken();
+            try
+            {
+               defaultResolver.addClassBinding(uri, cls);
+            }
+            catch (Exception e)
+            {
+               throw new JBossXBRuntimeException("Failed to addClassBinding: uri='" + uri + "', class='" + cls + "'", e);
+            }
+         }
+         
+         AttributesImpl attrsImpl = new AttributesImpl(attrs.getLength() - 1);
+         for(int i = 0; i < attrs.getLength(); ++i)
+         {
+            if(i != ind)
+               attrsImpl.add(attrs.getURI(i), attrs.getLocalName(i), attrs.getQName(i), attrs.getType(i), attrs.getValue(i));
+         }
+         attrs = attrsImpl;
+      }
+      return attrs;
+   }
+   
    private void flushIgnorableCharacters()
    {
       StackItem stackItem = stack.peek();

@@ -45,7 +45,7 @@ public @interface JBossXmlAdaptedType
    String name() default JBossXmlConstants.DEFAULT;
    
    /** The type */
-   Class<?> type();
+   Class<?> type() default JBossXmlConstants.DEFAULT.class;
    
    /** The value adapter */
    Class<? extends ValueAdapter> valueAdapter();

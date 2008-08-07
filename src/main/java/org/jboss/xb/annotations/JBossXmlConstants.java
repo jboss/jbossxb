@@ -37,4 +37,9 @@ public interface JBossXmlConstants
    String MODEL_GROUP_CHOICE = "choice";
    
    String MODEL_GROUP_ALL = "all";
+   
+   class DEFAULT
+   {
+      private DEFAULT(){}
+   }
 }

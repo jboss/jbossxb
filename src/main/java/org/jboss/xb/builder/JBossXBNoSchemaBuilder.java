@@ -88,6 +88,7 @@ import org.jboss.xb.annotations.JBossXmlNsPrefix;
 import org.jboss.xb.annotations.JBossXmlPreserveWhitespace;
 import org.jboss.xb.annotations.JBossXmlSchema;
 import org.jboss.xb.annotations.JBossXmlType;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
@@ -557,33 +558,56 @@ public class JBossXBNoSchemaBuilder
     */
    public TypeBinding generateAdaptedType(JBossXmlAdaptedType adaptedType)
    {
+      if(adaptedType.type() == JBossXmlConstants.DEFAULT.class)
+         throw new JBossXBRuntimeException("@JBossXmlAdaptedType used in package-info.java must specify type element.");
+      
       // Determine the parameters
       String overrideNamespace = adaptedType.namespace();
       String overrideName = adaptedType.name();
       Class<?> type = adaptedType.type();
-      Class<? extends ValueAdapter> adapter = adaptedType.valueAdapter();
       try
       {
-
          TypeInfo typeInfo = JBossXBBuilder.configuration.getTypeInfo(type);
-         BeanInfo adapterInfo = JBossXBBuilder.configuration.getBeanInfo(adapter);
-
-         ValueAdapter valueAdapter = (ValueAdapter) adapterInfo.newInstance();
 
          QName qName = generateXmlName(typeInfo, XmlNsForm.QUALIFIED, overrideNamespace, overrideName);
 
          TypeInfo parentType = typeInfo.getTypeInfoFactory().getTypeInfo(String.class);
          TypeBinding parent = getSimpleType(parentType);
-
          TypeBinding typeBinding = new TypeBinding(qName, parent);
-         typeBinding.setValueAdapter(valueAdapter);
-         if (trace)
-            log.trace("Created adapted type=" + typeInfo.getName() + " typeBinding=" + typeBinding + " adapter=" + adapter.getName());
+
+         adaptType(typeBinding, adaptedType);
 
          typeCache.put(typeInfo, typeBinding);
          schemaBinding.addType(typeBinding);
 
          return typeBinding;
+      }
+      catch (Throwable t)
+      {
+         throw new RuntimeException("Unable to adapt type " + type.getName() + " with " + adaptedType.valueAdapter().getName(), t);
+      }
+   }
+
+   /**
+    * Generate an adapted type
+    * 
+    * @param adaptedType the information about the adaption
+    * @return the type binding
+    */
+   public void adaptType(TypeBinding adaptedType, JBossXmlAdaptedType annotation)
+   {
+      // Determine the parameters
+      Class<?> type = annotation.type();
+      Class<? extends ValueAdapter> adapter = annotation.valueAdapter();
+      try
+      {
+         BeanInfo adapterInfo = JBossXBBuilder.configuration.getBeanInfo(adapter);
+
+         ValueAdapter valueAdapter = (ValueAdapter) adapterInfo.newInstance();
+
+         adaptedType.setValueAdapter(valueAdapter);
+         if (trace)
+            log.trace("adapted typeBinding=" + adaptedType + " adapter=" + adapter.getName());
       }
       catch (Throwable t)
       {
@@ -753,6 +777,7 @@ public class JBossXBNoSchemaBuilder
 
       // Create the binding
       TypeBinding typeBinding = null;
+
       if (root)
       {
          QName qName = generateXmlName(typeInfo, XmlNsForm.QUALIFIED, overrideNamespace, overrideName);
@@ -765,6 +790,14 @@ public class JBossXBNoSchemaBuilder
 
       // Push into the cache early to avoid recursion
       typeCache.put(typeInfo, typeBinding);
+
+      JBossXmlAdaptedType adaptedType = typeInfo.getUnderlyingAnnotation(JBossXmlAdaptedType.class);
+      if(adaptedType != null)
+      {
+         if(adaptedType.type() != JBossXmlConstants.DEFAULT.class)
+            throw new JBossXBRuntimeException("@JBossXmlAdaptedType on a type must not specify type element: " + typeInfo.getName());
+         adaptType(typeBinding, adaptedType);
+      }
 
       // Determine any factory method
       MethodInfo factory = null;

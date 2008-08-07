@@ -21,7 +21,7 @@
 */
 @JBossXmlAdaptedTypes
 ({
-   @JBossXmlAdaptedType(type=Cardinality.class, valueAdapter=CardinalityValueAdapter.class),
+   //@JBossXmlAdaptedType(type=Cardinality.class, valueAdapter=CardinalityValueAdapter.class),
    @JBossXmlAdaptedType(type=ControllerMode.class, valueAdapter=ControllerModeValueAdapter.class),
    @JBossXmlAdaptedType(type=ControllerState.class, valueAdapter=ControllerStateValueAdapter.class)
 })

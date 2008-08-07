@@ -23,14 +23,19 @@ package org.jboss.test.xb.builder.object.mc.support.model;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlType;
+
 import org.jboss.util.JBossObject;
 import org.jboss.util.JBossStringBuilder;
+import org.jboss.xb.annotations.JBossXmlAdaptedType;
 
 /**
  * Cardinality def.
  *
  * @author <a href="mailto:ales.justin@jboss.com">Ales Justin</a>
  */
+@XmlType()
+@JBossXmlAdaptedType(valueAdapter=CardinalityValueAdapter.class)
 public class Cardinality extends JBossObject implements Serializable
 {
    private static final long serialVersionUID = 2L;

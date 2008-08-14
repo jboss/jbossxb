@@ -22,6 +22,10 @@
 package org.jboss.test.xml;
 
 import java.util.Arrays;
+import java.util.List;
+
+import org.jboss.test.xml.repeatableterms.AbstractProduct;
+import org.jboss.test.xml.repeatableterms.ProductArray;
 
 import junit.framework.TestSuite;
 
@@ -103,6 +107,17 @@ public class RepeatableTermsUnitTestCase
       assertEquals("item2", top.item2);
    }
 
+   public void testPolymorphicArray() throws Exception
+   {
+      Object o = unmarshal();
+      assertNotNull(o);
+      assertTrue(o instanceof ProductArray);
+      ProductArray arr = (ProductArray) o;
+      List<AbstractProduct> products = arr.getProduct();
+      assertNotNull(products);
+      assertEquals(3, products.size());
+   }
+   
    // Inner
 
    public static final class Top

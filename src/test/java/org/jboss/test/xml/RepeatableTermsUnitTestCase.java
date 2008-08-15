@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.jboss.test.xml.repeatableterms.AbstractProduct;
+import org.jboss.test.xml.repeatableterms.Product;
 import org.jboss.test.xml.repeatableterms.ProductArray;
 
 import junit.framework.TestSuite;
@@ -116,6 +117,15 @@ public class RepeatableTermsUnitTestCase
       List<AbstractProduct> products = arr.getProduct();
       assertNotNull(products);
       assertEquals(3, products.size());
+      
+      int i = 0;
+      while(i < products.size())
+      {
+         Product product = (Product) products.get(i++);
+         assertNotNull(product);
+         assertEquals("product" + i, product.getName());
+         assertEquals(i, product.getPrice());
+      }
    }
    
    // Inner

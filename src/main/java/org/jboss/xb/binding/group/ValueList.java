@@ -114,7 +114,7 @@ public class ValueList
    void addRepeatableTermValue(QName qName, ParticleBinding binding, Object handler, Object value, ParticleBinding parentParticle)
    {
       NonRequiredValue last = (NonRequiredValue) (nonRequiredValues.isEmpty() ? null : nonRequiredValues.get(nonRequiredValues.size() - 1));
-      if (last == null || last.binding != binding)
+      if (last == null /*|| last.binding != binding*/)
       {
          Collection col;
          PropertyMetaData propMetaData = binding.getTerm().getPropertyMetaData();

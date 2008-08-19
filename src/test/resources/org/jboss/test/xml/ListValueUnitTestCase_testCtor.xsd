@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   targetNamespace=""
+   xmlns=""
+   xmlns:jbxb="http://www.jboss.org/xml/ns/jbxb"
+   elementFormDefault="qualified"
+   attributeFormDefault="unqualified"
+   version="1.0">
+
+   <xsd:element name="root">
+      <xsd:annotation>
+         <xsd:appinfo>
+            <jbxb:class impl="org.jboss.test.xml.ListValueUnitTestCase$Root"/>
+         </xsd:appinfo>
+      </xsd:annotation>
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element name="str" type="xsd:string" maxOccurs="unbounded">
+               <xsd:annotation>
+                  <xsd:appinfo>
+                     <jbxb:property name="strs"/>
+                  </xsd:appinfo>
+               </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="int" type="xsd:int" maxOccurs="unbounded">
+               <xsd:annotation>
+                  <xsd:appinfo>
+                     <jbxb:property name="ints"/>
+                  </xsd:appinfo>
+               </xsd:annotation>
+            </xsd:element>
+         </xsd:sequence>
+         <xsd:attribute name="attr" type="xsd:string"></xsd:attribute>
+      </xsd:complexType>
+   </xsd:element>
+</xsd:schema>

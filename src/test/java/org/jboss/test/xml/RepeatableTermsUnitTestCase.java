@@ -22,6 +22,10 @@
 package org.jboss.test.xml;
 
 import java.util.Arrays;
+import java.util.List;
+ 
+import org.jboss.test.xml.repeatableterms.Product;
+import org.jboss.test.xml.repeatableterms.ProductArray;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -94,6 +98,26 @@ public class RepeatableTermsUnitTestCase
       
       assertEquals("item1", top.item1);
       assertEquals("item2", top.item2);
+   }
+
+   public void testPolymorphicArray() throws Exception
+   {
+      Object o = unmarshal();
+      assertNotNull(o);
+      assertTrue(o instanceof ProductArray);
+      ProductArray arr = (ProductArray) o;
+      List products = arr.getProduct();
+      assertNotNull(products);
+      assertEquals(3, products.size());
+      
+      int i = 0;
+      while(i < products.size())
+      {
+         Product product = (Product) products.get(i++);
+         assertNotNull(product);
+         assertEquals("product" + i, product.getName());
+         assertEquals(i, product.getPrice());
+      }
    }
 
    // Inner

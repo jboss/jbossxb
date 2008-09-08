@@ -56,15 +56,19 @@ public abstract class CharactersHandler
 
    public Object unmarshalEmpty(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, ValueMetaData valueMetaData)
    {
-      Object result = null;
+      if(typeBinding.isIgnoreEmptyString())
+         return null;
+      
+      Object result = "";
       QName typeQName = typeBinding.getQName();
-      if(Constants.QNAME_STRING.equals(typeQName))
-      {
-         result = "";
-      }
-      else if(Constants.QNAME_BASE64BINARY.equals(typeQName))
+      if(Constants.QNAME_BASE64BINARY.equals(typeQName))
       {
          result = new byte[0];
+      }
+      else if(Constants.QNAME_BOOLEAN.equals(typeQName))
+      {// this should be an error but this hack is still here
+       // for backwards compatibility in handling empty elements bound to boolean types
+         result = null;
       }
       return result;
    }

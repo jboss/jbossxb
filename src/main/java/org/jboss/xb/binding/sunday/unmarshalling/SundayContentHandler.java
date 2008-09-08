@@ -1038,7 +1038,7 @@ public class SundayContentHandler
           * (in case of simple types that's not always true and depends on nillable attribute).
           */
          String textContent = item.textContent == null ? "" : item.textContent.toString();
-         if(textContent.length() > 0 || charHandler != null && type.isSimple())
+         if(textContent.length() > 0 || charHandler != null && !type.isIgnoreEmptyString())
          {
             String dataContent;
             SchemaBinding schema = element.getSchema();

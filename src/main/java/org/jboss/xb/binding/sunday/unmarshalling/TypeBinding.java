@@ -70,6 +70,7 @@ public class TypeBinding
    
    private Boolean startElementCreatesObject;
    private Boolean simple;
+   private Boolean ignoreEmptyString;
 
    private WildcardBinding wildcard;
    private ParticleBinding particle;
@@ -682,6 +683,16 @@ public class TypeBinding
       return beforeSetParentCallback;
    }
 
+   public boolean isIgnoreEmptyString()
+   {
+      return ignoreEmptyString == null ? !isSimple() : ignoreEmptyString;
+   }
+   
+   public void setIgnoreEmptyString(boolean value)
+   {
+      this.ignoreEmptyString = value;
+   }
+   
    public String toString()
    {
       return super.toString() + "[" + qName + "]";

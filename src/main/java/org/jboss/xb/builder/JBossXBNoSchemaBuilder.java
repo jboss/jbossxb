@@ -88,6 +88,7 @@ import org.jboss.xb.annotations.JBossXmlNsPrefix;
 import org.jboss.xb.annotations.JBossXmlPreserveWhitespace;
 import org.jboss.xb.annotations.JBossXmlSchema;
 import org.jboss.xb.annotations.JBossXmlType;
+import org.jboss.xb.annotations.JBossXmlValue;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
@@ -736,7 +737,7 @@ public class JBossXBNoSchemaBuilder
     */
    public TypeBinding generateType(ClassInfo typeInfo, boolean root)
    {
-      // Determine the paremeters
+      // Determine the parameters
       String overrideNamespace = null;
       String overrideName = null;
       ClassInfo factoryClassInfo = typeInfo;
@@ -977,6 +978,14 @@ public class JBossXBNoSchemaBuilder
       {
          CharactersHandler charactersHandler = new ValueHandler(valueProperty);
          typeBinding.setSimpleType(charactersHandler);
+         
+         JBossXmlValue jbossXmlValue = typeInfo.getUnderlyingAnnotation(JBossXmlValue.class);
+         if(jbossXmlValue != null)
+         {
+            if(trace)
+               log.trace("Type " + typeInfo.getName() + " is annotated with @JBossXmlValue.ignoreEmptyString=" + jbossXmlValue.ignoreEmptyString());
+            typeBinding.setIgnoreEmptyString(jbossXmlValue.ignoreEmptyString());
+         }
       }
       else if (trace)
          log.trace("No value for type=" + beanInfo.getName());

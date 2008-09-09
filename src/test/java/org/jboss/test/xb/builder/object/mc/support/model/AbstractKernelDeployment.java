@@ -86,7 +86,7 @@ public class AbstractKernelDeployment extends JBossObject
     * @param beans a List<BeanMetaData>.
     */
    @SuppressWarnings("unchecked")
-   public void setBeans(List beans)
+   public void setBeans(List<BeanMetaDataFactory> beans)
    {
       this.beanFactories = beans;
       flushJBossObjectCache();

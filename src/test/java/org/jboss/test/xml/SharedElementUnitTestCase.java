@@ -74,14 +74,14 @@ public class SharedElementUnitTestCase extends AbstractJBossXBTest
       assertNotNull(term);
       assertTrue(term instanceof SequenceBinding);
       SequenceBinding sequence = (SequenceBinding) term;
-      Collection particles = sequence.getParticles();
+      Collection<ParticleBinding> particles = sequence.getParticles();
       assertNotNull(particles);
       assertEquals(2, particles.size());
-      Iterator iterator = particles.iterator();
-      particle = (ParticleBinding) iterator.next();
+      Iterator<ParticleBinding> iterator = particles.iterator();
+      particle = iterator.next();
       term = particle.getTerm();
       assertTrue(element1 == term);
-      particle = (ParticleBinding) iterator.next();
+      particle = iterator.next();
       term = particle.getTerm();
       assertTrue(element3 == term);
    }
@@ -96,14 +96,14 @@ public class SharedElementUnitTestCase extends AbstractJBossXBTest
       ElementBinding element3 = schema.getElement(new QName(NS, "element3"));
       assertNotNull(element3);
       
-      Collection particles = group.getParticles();
+      Collection<ParticleBinding> particles = group.getParticles();
       assertNotNull(particles);
       assertEquals(2, particles.size());
-      Iterator iterator = particles.iterator();
-      ParticleBinding particle = (ParticleBinding) iterator.next();
+      Iterator<ParticleBinding> iterator = particles.iterator();
+      ParticleBinding particle = iterator.next();
       TermBinding term = particle.getTerm();
       assertTrue(element1 == term);
-      particle = (ParticleBinding) iterator.next();
+      particle = iterator.next();
       term = particle.getTerm();
       assertTrue(element3 == term);
    }

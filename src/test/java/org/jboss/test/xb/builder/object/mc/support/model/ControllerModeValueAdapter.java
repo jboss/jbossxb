@@ -31,7 +31,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
  */
 public class ControllerModeValueAdapter implements ValueAdapter
 {
-   public Object cast(Object o, Class c)
+   public Object cast(Object o, Class<?> c)
    {
       return new ControllerMode((String) o);
    }

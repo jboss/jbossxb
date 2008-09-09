@@ -41,7 +41,7 @@ public class SetTestCase extends AbstractMCTest
    protected AbstractSetMetaData getCollection() throws Exception
    {
       AbstractBeanMetaData bean = unmarshalBean();
-      Set properties = bean.getProperties();
+      Set<?> properties = bean.getProperties();
       assertNotNull(properties);
       assertEquals(1, properties.size());
       PropertyMetaData property = (PropertyMetaData) properties.iterator().next();

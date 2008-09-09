@@ -38,7 +38,7 @@ public class GenericBeanFactory
    protected ConstructorMetaData constructor;
    
    /** The properties Map<propertyName, ValueMetaData> */
-   protected Map properties;
+   protected Map<?, ?> properties;
 
    /**
     * Create a new generic bean factory
@@ -94,7 +94,7 @@ public class GenericBeanFactory
     * 
     * @return the properties Map<propertyName, ValueMetaData>
     */
-   public Map getProperties()
+   public Map<?, ?> getProperties()
    {
       return properties;
    }
@@ -104,7 +104,7 @@ public class GenericBeanFactory
     * 
     * @param properties the properties Map<propertyName, ValueMetaData>
     */
-   public void setProperties(Map properties)
+   public void setProperties(Map<?, ?> properties)
    {
       this.properties = properties;
    }

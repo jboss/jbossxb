@@ -264,7 +264,7 @@ public class XOPUnitTestCase
             public Object beforeSetParent(Object o, UnmarshallingContext ctx)
             {
                ElementBinding e = (ElementBinding) ctx.getParticle().getTerm();
-               Class propType = ctx.resolvePropertyType();
+               Class<?> propType = ctx.resolvePropertyType();
 
                String localPart = e.getQName().getLocalPart();
                if("image".equals(localPart) ||
@@ -297,7 +297,7 @@ public class XOPUnitTestCase
 
          ElementBinding e = SCHEMA.getElement(new javax.xml.namespace.QName("http://www.jboss.org/xml/test/xop", "e"));
          SequenceBinding seq = (SequenceBinding) e.getType().getParticle().getTerm();
-         for(Iterator i = seq.getParticles().iterator(); i.hasNext();)
+         for(Iterator<?> i = seq.getParticles().iterator(); i.hasNext();)
          {
             ParticleBinding particle = (ParticleBinding) i.next();
             ElementBinding child = (ElementBinding) particle.getTerm();
@@ -310,7 +310,7 @@ public class XOPUnitTestCase
             public Object beforeSetParent(Object o, UnmarshallingContext ctx)
             {
                ElementBinding e = (ElementBinding) ctx.getParticle().getTerm();
-               Class propType = ctx.resolvePropertyType();
+               Class<?> propType = ctx.resolvePropertyType();
 
                assertNotNull("Failed to resolve property type for "+e.getQName(), propType);
 

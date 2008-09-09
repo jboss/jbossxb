@@ -49,16 +49,16 @@ public interface ValueListHandler
    {
       public Object newInstance(ParticleBinding particle, ValueList valueList)
       {
-         Class cls = valueList.getTargetClass();
-         Map map = valueList.getNonRequiredValues();
+         Class<?> cls = valueList.getTargetClass();
+         Map<?, ?> map = valueList.getNonRequiredValues();
 
-         Collection values = map.values();
+         Collection<?> values = map.values();
          if(values.isEmpty())
          {
             throw new JBossXBRuntimeException("Value list does not contain non-required values.");
          }
 
-         Constructor ctor = null;
+         Constructor<?> ctor = null;
          Constructor[] ctors = cls.getConstructors();
 
          if(ctors == null || ctors.length == 0)
@@ -80,10 +80,10 @@ public interface ValueListHandler
                ctor = ctors[i];
 
                int typeInd = 0;
-               Iterator iter = values.iterator();
+               Iterator<?> iter = values.iterator();
                while(iter.hasNext())
                {
-                  Class type = types[typeInd++];
+                  Class<?> type = types[typeInd++];
                   if(type.isPrimitive())
                   {
                      type = Classes.getPrimitiveWrapper(type);
@@ -110,7 +110,7 @@ public interface ValueListHandler
                .append(cls)
                .append(" that would take the following arguments:\n");
             int cnt = 0;
-            for(Iterator i = values.iterator(); i.hasNext();)
+            for(Iterator<?> i = values.iterator(); i.hasNext();)
             {
                Object o = i.next();
                buf.append(' ').append(++cnt).append(") ").append(o.getClass()).append(": ").append(o).append('\n');
@@ -137,7 +137,7 @@ public interface ValueListHandler
    {
       public Object newInstance(ParticleBinding particle, ValueList valueList)
       {
-         Class cls = valueList.getTargetClass();
+         Class<?> cls = valueList.getTargetClass();
          int size = valueList.size();
 
          if(size == 0)
@@ -154,7 +154,7 @@ public interface ValueListHandler
             }
          }
 
-         Constructor ctor = matchBestCtor(cls, valueList);
+         Constructor<?> ctor = matchBestCtor(cls, valueList);
 
          if(ctor == null)
          {
@@ -207,8 +207,8 @@ public interface ValueListHandler
                         }
                         else
                         {
-                           Collection col = (Collection)valueEntry.value;
-                           for(Iterator iter = col.iterator(); iter.hasNext();)
+                           Collection<?> col = (Collection<?>)valueEntry.value;
+                           for(Iterator<?> iter = col.iterator(); iter.hasNext();)
                            {
                               pHandler.setParent(o, iter.next(), valueEntry.qName, childParticle, particle);
                            }
@@ -255,16 +255,16 @@ public interface ValueListHandler
          return o;
       }
 
-      private Constructor matchBestCtor(Class cls, ValueList valueList)
+      private Constructor<?> matchBestCtor(Class<?> cls, ValueList valueList)
       {
-         Constructor bestMatch = null;
+         Constructor<?> bestMatch = null;
          int bestMatchArgsTotal = 0;
          Constructor[] ctors = cls.getConstructors();
          int size = valueList.size();
 
          for(int i = 0; i < ctors.length; ++i)
          {
-            Constructor ctor = ctors[i];
+            Constructor<?> ctor = ctors[i];
             Class[] types = ctor.getParameterTypes();
 
             if((types == null || types.length == 0) && bestMatch == null)
@@ -278,7 +278,7 @@ public interface ValueListHandler
                int typeInd = 0;
                for(int valueInd = 0; typeInd < types.length && valueInd < size; ++typeInd, ++valueInd)
                {
-                  Class type = types[typeInd];
+                  Class<?> type = types[typeInd];
                   if(type.isPrimitive())
                   {
                      type = Classes.getPrimitiveWrapper(type);
@@ -316,7 +316,7 @@ public interface ValueListHandler
          return bestMatch;
       }
 
-      private Object newInstance(Constructor bestMatch, Object[] args)
+      private Object newInstance(Constructor<?> bestMatch, Object[] args)
       {
          try
          {
@@ -332,7 +332,7 @@ public interface ValueListHandler
          }
       }
 
-      private Object[] getArgs(Constructor ctor, ValueList valueList)
+      private Object[] getArgs(Constructor<?> ctor, ValueList valueList)
       {
          Class[] types = ctor.getParameterTypes();
          Object[] args = new Object[types.length];
@@ -346,10 +346,10 @@ public interface ValueListHandler
                // todo this part should be smarter about collections
                if(types[i].isArray() && Collection.class.isAssignableFrom(arg.getClass()))
                {
-                  Collection col = (Collection)arg;
+                  Collection<?> col = (Collection<?>)arg;
                   arg = Array.newInstance(types[i].getComponentType(), col.size());
                   int arrInd = 0;
-                  for(Iterator iter = col.iterator(); iter.hasNext();)
+                  for(Iterator<?> iter = col.iterator(); iter.hasNext();)
                   {
                      Array.set(arg, arrInd++, iter.next());
                   }
@@ -396,7 +396,7 @@ public interface ValueListHandler
                            }
                            else
                            {
-                              Collection col = (Collection) valueEntry.value;
+                              Collection<?> col = (Collection<?>) valueEntry.value;
                               //System.out.println("newInstance: " + childParticle.getTerm() + "=" + col);
                               pHandler.setParent(parent, col, valueEntry.qName, childParticle, valueEntry.parentParticle);
 

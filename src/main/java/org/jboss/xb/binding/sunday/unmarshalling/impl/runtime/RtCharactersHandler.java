@@ -85,7 +85,7 @@ public class RtCharactersHandler
                }
             }
 
-            Class cls = clsName == null ? null : RtUtil.loadClass(clsName, failIfNotFound);
+            Class<?> cls = clsName == null ? null : RtUtil.loadClass(clsName, failIfNotFound);
             if(cls != null && !cls.isPrimitive())
             {
                // I assume if it doesn't have ctors, there should be static fromValue
@@ -93,7 +93,7 @@ public class RtCharactersHandler
                // for java5 cls.isEnum() should be used instead
                if(cls.getConstructors().length == 0)
                {
-                  Class valueType = unmarshalled.getClass();
+                  Class<?> valueType = unmarshalled.getClass();
                   // todo: this should be used in combination element.isNillable...
                   if(Classes.isPrimitiveWrapper(valueType))
                   {

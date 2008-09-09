@@ -32,10 +32,10 @@ public class XMBeanMetaData
 {
    private String description;
    private String mbeanClass;
-   private List constructors = new ArrayList();
-   private List attributes = new ArrayList();
-   private List operations = new ArrayList();
-   private List notifications = new ArrayList();
+   private List<XMBeanConstructorMetaData> constructors = new ArrayList<XMBeanConstructorMetaData>();
+   private List<XMBeanAttributeMetaData> attributes = new ArrayList<XMBeanAttributeMetaData>();
+   private List<XMBeanOperationMetaData> operations = new ArrayList<XMBeanOperationMetaData>();
+   private List<XMBeanNotificationMetaData> notifications = new ArrayList<XMBeanNotificationMetaData>();
 
    private Object persistenceManager;
 
@@ -59,7 +59,7 @@ public class XMBeanMetaData
       this.mbeanClass = mbeanClass;
    }
 
-   public List getConstructors()
+   public List<XMBeanConstructorMetaData> getConstructors()
    {
       return constructors;
    }
@@ -69,7 +69,7 @@ public class XMBeanMetaData
       constructors.add(constructor);
    }
 
-   public List getAttributes()
+   public List<XMBeanAttributeMetaData> getAttributes()
    {
       return attributes;
    }
@@ -79,7 +79,7 @@ public class XMBeanMetaData
       attributes.add(attribute);
    }
 
-   public List getOperations()
+   public List<XMBeanOperationMetaData> getOperations()
    {
       return operations;
    }
@@ -89,7 +89,7 @@ public class XMBeanMetaData
       operations.add(operation);
    }
 
-   public List getNotifications()
+   public List<XMBeanNotificationMetaData> getNotifications()
    {
       return notifications;
    }

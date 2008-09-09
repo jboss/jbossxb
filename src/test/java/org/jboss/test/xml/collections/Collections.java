@@ -45,9 +45,9 @@ public class Collections
    }
 
    private String[] stringArray;
-   private Collection intCol;
+   private Collection<Integer> intCol;
    private String[] itemArray;
-   private Collection itemCol;
+   private Collection<String> itemCol;
    private int[] intArray;
 
    public String[] getStringArray()
@@ -60,12 +60,12 @@ public class Collections
       this.stringArray = stringArray;
    }
 
-   public Collection getIntCol()
+   public Collection<Integer> getIntCol()
    {
       return intCol;
    }
 
-   public void setIntCol(Collection intCol)
+   public void setIntCol(Collection<Integer> intCol)
    {
       this.intCol = intCol;
    }
@@ -80,12 +80,12 @@ public class Collections
       this.itemArray = itemArray;
    }
 
-   public Collection getItemCol()
+   public Collection<String> getItemCol()
    {
       return itemCol;
    }
 
-   public void setItemCol(Collection itemCol)
+   public void setItemCol(Collection<String> itemCol)
    {
       this.itemCol = itemCol;
    }

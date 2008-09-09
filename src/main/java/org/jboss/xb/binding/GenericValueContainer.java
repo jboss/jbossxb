@@ -36,21 +36,21 @@ public interface GenericValueContainer
 {
    class FACTORY
    {
-      public static GenericValueContainer array(final Class itemClass)
+      public static GenericValueContainer array(final Class<?> itemClass)
       {
          return array(null, null, itemClass);
       }
       
-      public static GenericValueContainer array(final Class wrapperClass,
+      public static GenericValueContainer array(final Class<?> wrapperClass,
                                                 final String itemProperty,
-                                                final Class itemClass)
+                                                final Class<?> itemClass)
       {
          return new GenericValueContainer()
          {
-            private final Class wrapperType = wrapperClass;
+            private final Class<?> wrapperType = wrapperClass;
             private final String itemProp = itemProperty;
-            private final Class itemType = itemClass;
-            private final List items = new ArrayList();
+            private final Class<?> itemType = itemClass;
+            private final List<Object> items = new ArrayList<Object>();
 
             public void addChild(QName name, Object value)
             {
@@ -114,7 +114,7 @@ public interface GenericValueContainer
                // wrap
                if(wrapperType != null)
                {
-                  Constructor ctor = null;
+                  Constructor<?> ctor = null;
                   try
                   {
                      try
@@ -163,7 +163,7 @@ public interface GenericValueContainer
                return result;
             }
 
-            public Class getTargetClass()
+            public Class<?> getTargetClass()
             {
                // this method should only be called for multidimansional arrays
                // todo: what's the best way to get a class for array having the item class?
@@ -182,5 +182,5 @@ public interface GenericValueContainer
 
    Object instantiate();
 
-   Class getTargetClass();
+   Class<?> getTargetClass();
 }

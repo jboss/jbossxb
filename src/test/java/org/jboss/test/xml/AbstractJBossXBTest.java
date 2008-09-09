@@ -120,7 +120,7 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
     * @return the unmarshalled object
     * @throws Exception for any error
     */
-   protected Object unmarshal(String name, Class expected) throws Exception
+   protected Object unmarshal(String name, Class<?> expected) throws Exception
    {
       Object object = unmarshal(name);
       if (object == null)
@@ -138,7 +138,7 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
     * @return the unmarshalled object
     * @throws Exception for any error
     */
-   protected Object unmarshal(String name, Class expected, SchemaBindingResolver resolver) throws Exception
+   protected Object unmarshal(String name, Class<?> expected, SchemaBindingResolver resolver) throws Exception
    {
       Object object = unmarshal(name, resolver);
       if (object == null)
@@ -204,7 +204,7 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
     * @return the object
     * @throws Exception for any problem
     */
-   protected Object unmarshal(Class expected) throws Exception
+   protected Object unmarshal(Class<?> expected) throws Exception
    {
       Object object = unmarshal();
       if (object == null)
@@ -236,7 +236,7 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
     * @return the unmarshalled object
     * @throws Exception for any error
     */
-   protected Object unmarshal(String name, SchemaBinding schema, Class expected) throws Exception
+   protected Object unmarshal(String name, SchemaBinding schema, Class<?> expected) throws Exception
    {
       Object object = unmarshal(name, schema);
       if (object == null)
@@ -292,7 +292,7 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
     * @param schema the schema name
     * @return the location in the "classpath"
     */
-   protected static String getSchemaLocation(Class clazz, String schema)
+   protected static String getSchemaLocation(Class<?> clazz, String schema)
    {
       String packageName = Classes.getPackageName(clazz);
       packageName = packageName.replace('.', '/');
@@ -307,7 +307,7 @@ public class AbstractJBossXBTest extends AbstractTestCaseWithSetup
     * @return the delegate
     * @throws Exception for any error
     */
-   public static AbstractTestDelegate getDelegate(Class clazz) throws Exception
+   public static AbstractTestDelegate getDelegate(Class<?> clazz) throws Exception
    {
       return new JBossXBTestDelegate(clazz);
    }

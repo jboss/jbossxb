@@ -39,7 +39,7 @@ public class AbstractAnnotationMetaData implements AnnotationMetaData
    protected String name;
    
    /** The attributes Set<AnnotationAttributeMetaData> */
-   protected Set attributes;
+   protected Set<?> attributes;
    
    // Static --------------------------------------------------------
    
@@ -70,7 +70,7 @@ public class AbstractAnnotationMetaData implements AnnotationMetaData
     * 
     * @param attributes Set<AnnotationAttributeMetaData>
     */
-   public void setAttributes(Set attributes)
+   public void setAttributes(Set<?> attributes)
    {
       this.attributes = attributes;
    }
@@ -82,7 +82,7 @@ public class AbstractAnnotationMetaData implements AnnotationMetaData
       return name;
    }
 
-   public Set getAttributes()
+   public Set<?> getAttributes()
    {
       return attributes;
    }

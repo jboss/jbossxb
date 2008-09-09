@@ -44,7 +44,7 @@ public class ChildCollectionInterceptor extends DefaultElementInterceptor
    public void add(Object parent, Object child, QName qName)
    {
       BeanAdapter beanAdapter = (BeanAdapter) parent;
-      Collection collection = (Collection) beanAdapter.getValue();
+      Collection<Object> collection = (Collection<Object>) beanAdapter.getValue();
       collection.add(child);
    } 
 }

@@ -37,7 +37,7 @@ public class AbstractConstructorMetaData extends AbstractFeatureMetaData
    // Attributes ----------------------------------------------------
    
    /** The paramaters List<ParameterMetaData> */
-   protected List parameters;
+   protected List<AbstractParameterMetaData> parameters;
 
    /** The factory */
    protected ValueMetaData factory;
@@ -66,7 +66,7 @@ public class AbstractConstructorMetaData extends AbstractFeatureMetaData
     * 
     * @param parameters List<ParameterMetaData>
     */
-   public void setParameters(List parameters)
+   public void setParameters(List<AbstractParameterMetaData> parameters)
    {
       this.parameters = parameters;
    }
@@ -103,7 +103,7 @@ public class AbstractConstructorMetaData extends AbstractFeatureMetaData
    
    // ConstructorMetaData implementation ----------------------------
    
-   public List getParameters()
+   public List<AbstractParameterMetaData> getParameters()
    {
       return parameters;
    }
@@ -125,7 +125,7 @@ public class AbstractConstructorMetaData extends AbstractFeatureMetaData
    
    // MetaDataVisitorNode overrides ----------------------------------
    
-   public Iterator getChildren()
+   public Iterator<?> getChildren()
    {
       ArrayList list = new ArrayList();
       if (parameters != null)

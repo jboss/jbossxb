@@ -47,7 +47,7 @@ public interface AnnotationMetaData
     * 
     * @return Set<AnnotationAttributeMetaData>.
     */
-   Set getAttributes();
+   Set<?> getAttributes();
 
    // Inner classes -------------------------------------------------
 }

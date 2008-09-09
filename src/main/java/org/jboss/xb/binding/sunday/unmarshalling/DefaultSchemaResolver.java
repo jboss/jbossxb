@@ -172,7 +172,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    {
       if (sbiClassName == null)
          throw new IllegalArgumentException("Null class name");
-      Class clazz = Thread.currentThread().getContextClassLoader().loadClass(sbiClassName);
+      Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(sbiClassName);
       Object object = clazz.newInstance();
       if (object instanceof SchemaBindingInitializer == false)
          throw new IllegalArgumentException(clazz.getName() + " is not an instance of " + SchemaBindingInitializer.class.getName());
@@ -234,24 +234,24 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
          throw new IllegalArgumentException("Null reference class");
 
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
-      Class clazz = cl.loadClass(reference);
+      Class<?> clazz = cl.loadClass(reference);
       addClassBinding(nsUri, clazz);
    }
 
-   public void addClassBinding(String nsUri, Class clazz)
+   public void addClassBinding(String nsUri, Class<?> clazz)
    {
       uriToClass.put(nsUri, clazz);
    }
-   public Class removeClassBinding(String nsUri)
+   public Class<?> removeClassBinding(String nsUri)
    {
       return uriToClass.remove(nsUri);      
    }
 
-   public void addClassBindingForLocation(String schemaLocation, Class clazz)
+   public void addClassBindingForLocation(String schemaLocation, Class<?> clazz)
    {
       schemaLocationToClass.put(schemaLocation, clazz);
    }
-   public Class removeClassBindingForLocation(String schemaLocation)
+   public Class<?> removeClassBindingForLocation(String schemaLocation)
    {
       return schemaLocationToClass.remove(schemaLocation);
    }
@@ -288,7 +288,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
       }
 
       // Look for a class binding by schemaLocation
-      Class bindingClass = resolveClassFromSchemaLocation(schemaLocation, trace);
+      Class<?> bindingClass = resolveClassFromSchemaLocation(schemaLocation, trace);
       if (bindingClass == null)
       {
          // Next look by namespace
@@ -353,7 +353,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
 
          if(schema != null && nsURI.length() > 0 && cacheResolvedSchemas && foundByNS)
          {
-            if(schemasByUri == Collections.EMPTY_MAP)
+            if(schemasByUri.isEmpty())
             {
                schemasByUri = new HashMap<String, SchemaBinding>();
             }
@@ -379,10 +379,10 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
     * @param trace - logging trace flag
     * @return the binding class if found.
     */
-   protected Class resolveClassFromSchemaLocation(String schemaLocation,
+   protected Class<?> resolveClassFromSchemaLocation(String schemaLocation,
          boolean trace)
    {
-      Class bindingClass = schemaLocationToClass.get(schemaLocation);
+      Class<?> bindingClass = schemaLocationToClass.get(schemaLocation);
       if (bindingClass == null && schemaLocation != null && schemaLocation.length() > 0)
       {
          // Parse the schemaLocation as a uri to get the final path component

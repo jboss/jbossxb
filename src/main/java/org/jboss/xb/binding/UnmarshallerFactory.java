@@ -32,7 +32,7 @@ import org.jboss.xb.binding.parser.JBossXBParser;
  */
 public abstract class UnmarshallerFactory
 {
-   protected Map features;
+   protected Map<String, Object> features;
    protected Boolean validation = Boolean.TRUE;
    protected Boolean namespaces = Boolean.TRUE;
 
@@ -77,7 +77,7 @@ public abstract class UnmarshallerFactory
       {
          if(features == null)
          {
-            features = new HashMap();
+            features = new HashMap<String, Object>();
          }
          features.put(name, value);
       }
@@ -113,9 +113,9 @@ public abstract class UnmarshallerFactory
 
          if(features != null)
          {
-            for(Iterator i = features.entrySet().iterator(); i.hasNext();)
+            for(Iterator<?> i = features.entrySet().iterator(); i.hasNext();)
             {
-               Map.Entry entry = (Map.Entry)i.next();
+               Map.Entry<?, ?> entry = (Map.Entry<?, ?>)i.next();
                if(entry.getValue() != null)
                {
                   Boolean value = (Boolean)entry.getValue();

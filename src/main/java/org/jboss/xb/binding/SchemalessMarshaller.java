@@ -49,7 +49,7 @@ public class SchemalessMarshaller
 
    private final Properties props = new Properties();
 
-   private final Map gettersPerClass = new HashMap();
+   private final Map<Class<?>, List> gettersPerClass = new HashMap<Class<?>, List>();
 
    private final Content content = new Content();
 
@@ -88,13 +88,13 @@ public class SchemalessMarshaller
 
    private void marshalObject(Object root, String localName, StringWriter writer)
    {
-      List getters = getGetterList(root.getClass());
+      List<Method> getters = getGetterList(root.getClass());
       AttributesImpl attrs = null; //new AttributesImpl(5);
       content.startElement(null, localName, localName, attrs);
 
       for(int i = 0; i < getters.size(); ++i)
       {
-         Method getter = (Method)getters.get(i);
+         Method getter = getters.get(i);
          Object child;
          try
          {
@@ -137,8 +137,8 @@ public class SchemalessMarshaller
             else if(Collection.class.isAssignableFrom(child.getClass()))
             {
                content.startElement(null, childName, childName, null);
-               Collection col = (Collection)child;
-               for(Iterator iter = col.iterator(); iter.hasNext();)
+               Collection<?> col = (Collection<?>)child;
+               for(Iterator<?> iter = col.iterator(); iter.hasNext();)
                {
                   Object o = iter.next();
                   marshalCollectionItem(o, o.getClass().getName(), o.getClass().getName(), writer);
@@ -178,12 +178,12 @@ public class SchemalessMarshaller
       content.endElement(null, qName, qName);
    }
 
-   private List getGetterList(Class aClass)
+   private List<Method> getGetterList(Class<?> aClass)
    {
-      List getters = (List)gettersPerClass.get(aClass);
+      List<Method> getters = gettersPerClass.get(aClass);
       if(getters == null)
       {
-         getters = new ArrayList();
+         getters = new ArrayList<Method>();
          Method[] methods = aClass.getMethods();
          for(int i = 0; i < methods.length; ++i)
          {
@@ -202,7 +202,7 @@ public class SchemalessMarshaller
       return getters;
    }
 
-   static boolean isAttributeType(Class cls)
+   static boolean isAttributeType(Class<?> cls)
    {
       if(cls.isPrimitive() ||
          cls == Byte.class ||

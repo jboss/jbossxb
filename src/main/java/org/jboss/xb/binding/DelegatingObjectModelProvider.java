@@ -70,8 +70,8 @@ public class DelegatingObjectModelProvider
                           String namespaceUri,
                           String name)
    {
-      Class providerClass = provider.getClass();
-      Class parentClass = parent.getClass();
+      Class<? extends ObjectModelProvider> providerClass = provider.getClass();
+      Class<?> parentClass = parent.getClass();
       String methodName = "getChildren";
 
       Object container = null;
@@ -103,8 +103,8 @@ public class DelegatingObjectModelProvider
                        String namespaceUri,
                        String name)
    {
-      Class providerClass = provider.getClass();
-      Class parentClass = parent.getClass();
+      Class<? extends ObjectModelProvider> providerClass = provider.getClass();
+      Class<?> parentClass = parent.getClass();
       String methodName = "getElementValue";
 
       Object value = null;
@@ -135,8 +135,8 @@ public class DelegatingObjectModelProvider
                                 String namespaceUri,
                                 String name)
    {
-      Class providerClass = provider.getClass();
-      Class objectClass = object.getClass();
+      Class<? extends ObjectModelProvider> providerClass = provider.getClass();
+      Class<?> objectClass = object.getClass();
       String methodName = "getAttributeValue";
 
       Object value = null;
@@ -162,7 +162,7 @@ public class DelegatingObjectModelProvider
       return value;
    }
 
-   private static Method getProviderMethod(Class providerClass, String methodName, Class[] args)
+   private static Method getProviderMethod(Class<? extends ObjectModelProvider> providerClass, String methodName, Class[] args)
    {
       Method method = null;
       try

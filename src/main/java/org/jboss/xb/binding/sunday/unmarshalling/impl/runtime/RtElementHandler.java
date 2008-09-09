@@ -147,7 +147,7 @@ public class RtElementHandler
                setKeyMethodName = "setKey";
             }
 
-            Class parentCls = parent.getClass();
+            Class<?> parentCls = parent.getClass();
             Method setKeyMethod = getSetMethod(parentCls, getKeyMethodName, setKeyMethodName);
             invokeSetter(setKeyMethod, parent, o, setKeyMethodName);
          }
@@ -219,7 +219,7 @@ public class RtElementHandler
                   );
                }
 
-               Class valueCls;
+               Class<?> valueCls;
                try
                {
                   valueCls = Thread.currentThread().getContextClassLoader().loadClass(valueType);
@@ -280,7 +280,7 @@ public class RtElementHandler
             {
                log.trace("setParent " + qName + " collection.add()");
             }
-            ((Collection) owner).add(o);
+            ((Collection<Object>) owner).add(o);
          }
          else
          {
@@ -427,7 +427,7 @@ public class RtElementHandler
 
       if(arrayItem != null)
       {
-         Class wrapperType = null;
+         Class<?> wrapperType = null;
          if(classMetaData != null)
          {
             wrapperType = loadClassForTerm(classMetaData.getImpl(),
@@ -445,7 +445,7 @@ public class RtElementHandler
 
          if(wrapperType == null && parent == null)
          {
-            Class itemType = classForElement(arrayItem, null);
+            Class<?> itemType = classForElement(arrayItem, null);
             if(itemType != null)
             {
                if(trace)
@@ -478,7 +478,7 @@ public class RtElementHandler
                log.trace("startElement " + elementName + " property=" + propName + " wrapper=" + wrapperType);
             }
 
-            Class parentClass = wrapperType;
+            Class<?> parentClass = wrapperType;
             if(wrapperType == null)
             {
                if(parent instanceof GenericValueContainer)
@@ -495,7 +495,7 @@ public class RtElementHandler
                }
             }
 
-            Class fieldType = null;
+            Class<?> fieldType = null;
             if(parentClass.isArray())
             {
                fieldType = parentClass.getComponentType();
@@ -556,7 +556,7 @@ public class RtElementHandler
       {
          if (mapEntryMetaData.getImpl() != null)
          {
-            Class cls = loadClassForTerm(mapEntryMetaData.getImpl(), term.getSchema().isIgnoreUnresolvedFieldOrClass(), elementName);
+            Class<?> cls = loadClassForTerm(mapEntryMetaData.getImpl(), term.getSchema().isIgnoreUnresolvedFieldOrClass(), elementName);
 
             if (trace)
             {
@@ -576,7 +576,7 @@ public class RtElementHandler
 
          if (mapEntryMetaData.isNonNullValue() && mapEntryMetaData.getValueType() != null)
          {
-            Class mapValueType;
+            Class<?> mapValueType;
             try
             {
                mapValueType = Thread.currentThread().getContextClassLoader().loadClass(mapEntryMetaData.getValueType());
@@ -660,7 +660,7 @@ public class RtElementHandler
       {
          // todo: for now we require metadata for model groups to be bound
          // todo 2: parent.getClass() is not going to work for containers
-         Class parentClass = null;
+         Class<?> parentClass = null;
          if (parent != null)
          {
             if (parent instanceof GenericValueContainer)
@@ -677,7 +677,7 @@ public class RtElementHandler
             }
          }
 
-         Class cls;
+         Class<?> cls;
          if (term.isModelGroup())
          {
             if (classMetaData == null)
@@ -697,7 +697,7 @@ public class RtElementHandler
                TypeBinding simpleType = element.getType().getSimpleType();
                if (simpleType != null)
                {
-                  Class simpleCls = classForSimpleType(simpleType, element.isNillable());
+                  Class<?> simpleCls = classForSimpleType(simpleType, element.isNillable());
                   if (cls.equals(simpleCls) || cls.isPrimitive() && Classes.getPrimitiveWrapper(cls) == simpleCls
                         || simpleCls.isPrimitive() && Classes.getPrimitiveWrapper(simpleCls) == cls)
                   {
@@ -815,9 +815,9 @@ public class RtElementHandler
       return false;
    }
 
-   private Class classForElement(ElementBinding element, Class parentClass)
+   private Class<?> classForElement(ElementBinding element, Class<?> parentClass)
    {
-      Class cls;
+      Class<?> cls;
       TypeBinding type = element.getType();
       QName typeQName = type.getQName();
       if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))
@@ -862,7 +862,7 @@ public class RtElementHandler
          setValueMethodName = "setValue";
       }
 
-      Class parentCls = parent.getClass();
+      Class<?> parentCls = parent.getClass();
       Method setValueMethod = getSetMethod(parentCls, getValueMethodName, setValueMethodName);
       invokeSetter(setValueMethod, parent, o, setValueMethodName);
    }
@@ -887,7 +887,7 @@ public class RtElementHandler
       }
    }
 
-   private static Method getSetMethod(Class cls, String getMethodName, String setMethodName)
+   private static Method getSetMethod(Class<?> cls, String getMethodName, String setMethodName)
    {
       Method getKeyMethod;
       try
@@ -946,7 +946,7 @@ public class RtElementHandler
       return mapEntryMetaData;
    }
 
-   private static Object newInstance(Class cls, QName elementName, boolean useNoArgCtorIfFound)
+   private static Object newInstance(Class<?> cls, QName elementName, boolean useNoArgCtorIfFound)
    {
       Object o;
       if(cls.isArray())
@@ -967,7 +967,7 @@ public class RtElementHandler
          {
             try
             {
-               Constructor ctor = cls.getConstructor(null);
+               Constructor<?> ctor = cls.getConstructor(null);
                o = ctor.newInstance(null);
             }
             catch(NoSuchMethodException e)
@@ -1006,7 +1006,7 @@ public class RtElementHandler
       return o;
    }
 
-   private static Class loadClassForTerm(String className,
+   private static Class<?> loadClassForTerm(String className,
                                          boolean ignoreCNFE,
                                          QName elementName)
    {
@@ -1015,7 +1015,7 @@ public class RtElementHandler
          throw new JBossXBRuntimeException("No class for " + elementName);
       }
 
-      Class cls = null;
+      Class<?> cls = null;
       try
       {
          cls = Thread.currentThread().getContextClassLoader().loadClass(className);
@@ -1047,7 +1047,7 @@ public class RtElementHandler
 
    private void invokeAdd(QName qName, AddMethodMetaData addMethodMetaData, Object owner, Object o)
    {
-      Class valueType = Object.class;
+      Class<?> valueType = Object.class;
       if(addMethodMetaData.getValueType() != null)
       {
          try
@@ -1080,7 +1080,7 @@ public class RtElementHandler
          valueType = o.getClass();
       }
 
-      Class ownerClass = owner.getClass();
+      Class<?> ownerClass = owner.getClass();
       Method addMethod;
       try
       {
@@ -1139,7 +1139,7 @@ public class RtElementHandler
          );
       }
 
-      Class oClass = o.getClass();
+      Class<?> oClass = o.getClass();
       String getKeyMethodName = mapEntryMetaData.getGetKeyMethod();
       if(getKeyMethodName == null)
       {
@@ -1180,10 +1180,10 @@ public class RtElementHandler
          );
       }
 
-      Class keyType = Object.class;
-      Class valueType = Object.class;
+      Class<?> keyType = Object.class;
+      Class<?> valueType = Object.class;
       String putMethodName = "put";
-      Class ownerClass = owner.getClass();
+      Class<?> ownerClass = owner.getClass();
 
       if(putMethodMetaData != null)
       {
@@ -1302,7 +1302,7 @@ public class RtElementHandler
       }
    }
 
-   private Class classForNonArrayItem(ElementBinding element, Class parentClass)
+   private Class<?> classForNonArrayItem(ElementBinding element, Class<?> parentClass)
    {
       String clsName;
 
@@ -1346,7 +1346,7 @@ public class RtElementHandler
             if(propName != null)
             {
                FieldInfo fieldInfo = FieldInfo.getFieldInfo(parentClass, propName, false);
-               Class fieldType = fieldInfo == null ? null : fieldInfo.getType();
+               Class<?> fieldType = fieldInfo == null ? null : fieldInfo.getType();
 
                if(fieldType == null ||
                   Modifier.isAbstract(fieldType.getModifiers()) ||
@@ -1397,7 +1397,7 @@ public class RtElementHandler
       return clsName;
    }
 
-   private static Class classForSimpleType(TypeBinding type, boolean nillable)
+   private static Class<?> classForSimpleType(TypeBinding type, boolean nillable)
    {
       ValueMetaData valueMetaData = type.getValueMetaData();
       if(valueMetaData != null && valueMetaData.getUnmarshalMethod() != null)
@@ -1415,7 +1415,7 @@ public class RtElementHandler
          if(type.getSchemaBinding().isUnmarshalListsToArrays())
          {
             // todo: nillable not always should be propagated to the item
-            Class itemClass = classForSimpleType(itemType, nillable);
+            Class<?> itemClass = classForSimpleType(itemType, nillable);
             return Array.newInstance(itemClass, 0).getClass();
          }
          else

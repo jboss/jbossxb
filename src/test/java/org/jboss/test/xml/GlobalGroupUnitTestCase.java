@@ -74,10 +74,10 @@ public class GlobalGroupUnitTestCase extends AbstractJBossXBTest
       assertNotNull(term);
       assertTrue(term instanceof SequenceBinding);
       SequenceBinding sequence = (SequenceBinding) term;
-      Collection particles = sequence.getParticles();
+      Collection<ParticleBinding> particles = sequence.getParticles();
       assertNotNull(particles);
       assertEquals(1, particles.size());
-      particle = (ParticleBinding) particles.iterator().next();
+      particle = particles.iterator().next();
       term = particle.getTerm();
       assertTrue(group == term);
    }
@@ -93,10 +93,10 @@ public class GlobalGroupUnitTestCase extends AbstractJBossXBTest
       assertNotNull(group4);
       
       // Forwards
-      Collection particles = group2.getParticles();
+      Collection<ParticleBinding> particles = group2.getParticles();
       assertNotNull(particles);
       assertEquals(1, particles.size());
-      ParticleBinding particle = (ParticleBinding) particles.iterator().next();
+      ParticleBinding particle = particles.iterator().next();
       TermBinding term = particle.getTerm();
       assertTrue(term == group3);
       
@@ -104,7 +104,7 @@ public class GlobalGroupUnitTestCase extends AbstractJBossXBTest
       particles = group4.getParticles();
       assertNotNull(particles);
       assertEquals(1, particles.size());
-      particle = (ParticleBinding) particles.iterator().next();
+      particle = particles.iterator().next();
       term = particle.getTerm();
       assertTrue(term == group3);
    }
@@ -136,7 +136,7 @@ public class GlobalGroupUnitTestCase extends AbstractJBossXBTest
       assertNotNull(parent.global1);
       assertEquals(2, parent.global1.child.size());
       
-      ArrayList expected = new ArrayList();
+      ArrayList<String> expected = new ArrayList<String>();
       expected.add("Hello");
       expected.add("Goodbye");
       assertEquals(expected, parent.global1.child);
@@ -149,6 +149,6 @@ public class GlobalGroupUnitTestCase extends AbstractJBossXBTest
    
    public static class Global1
    {
-      public Collection child = new ArrayList();
+      public Collection<?> child = new ArrayList<Object>();
    }
 }

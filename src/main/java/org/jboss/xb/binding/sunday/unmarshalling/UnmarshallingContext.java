@@ -35,5 +35,5 @@ public interface UnmarshallingContext
    
    String resolvePropertyName();
    
-   Class resolvePropertyType();
+   Class<?> resolvePropertyType();
 }

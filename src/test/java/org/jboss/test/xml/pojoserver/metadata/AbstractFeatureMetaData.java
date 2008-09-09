@@ -37,7 +37,7 @@ public class AbstractFeatureMetaData
    protected String description;
 
    /** The generic metadata */
-   protected Map values;
+   protected Map<String, Object> values;
    
    // Static --------------------------------------------------------
    
@@ -71,7 +71,7 @@ public class AbstractFeatureMetaData
    public void setValue(String key, Object value)
    {
       if (values == null)
-         values = new ConcurrentHashMap();
+         values = new ConcurrentHashMap<String, Object>();
       values.put(key, value);
    }
 
@@ -96,7 +96,7 @@ public class AbstractFeatureMetaData
       visitor.visit(this);
    }
    
-   public Iterator getChildren()
+   public Iterator<?> getChildren()
    {
       return null;
    }

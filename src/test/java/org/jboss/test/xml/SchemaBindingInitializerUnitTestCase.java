@@ -41,7 +41,7 @@ public class SchemaBindingInitializerUnitTestCase extends AbstractJBossXBTest
 {
    public static SchemaBindingResolver initResolver() throws Exception
    {
-      Class clazz = SchemaBindingInitializerUnitTestCase.class;
+      Class<?> clazz = SchemaBindingInitializerUnitTestCase.class;
       DefaultSchemaResolver resolver = new DefaultSchemaResolver();
       resolver.addSchemaInitializer(SimpleInitializer.NS, SimpleInitializer.class.getName());
       String location = getSchemaLocation(clazz, "SchemaBindingInitializerUnitTestCaseSimple.xsd");

@@ -59,7 +59,7 @@ public interface BeanMetaData extends FeatureMetaData
     * 
     * @return List<PropertyMetaData>.
     */
-   Set getProperties();
+   Set<AbstractPropertyMetaData> getProperties();
    
    /**
     * Get the constructor
@@ -73,12 +73,12 @@ public interface BeanMetaData extends FeatureMetaData
     * 
     * @return Set<DemandMetaData>
     */
-   Set getDemands();
+   Set<Object> getDemands();
 
    /**
     * Get what this bean supplies.
     * 
     * @return Set<SupplyMetaData>
     */
-   Set getSupplies();
+   Set<AbstractSupplyMetaData> getSupplies();
 }

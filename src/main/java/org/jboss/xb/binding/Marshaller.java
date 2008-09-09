@@ -64,7 +64,7 @@ public interface Marshaller
             throw new IllegalStateException("Required system property is not set: " + PROP_MARSHALLER);
          }
 
-         Class implCls;
+         Class<?> implCls;
          try
          {
             implCls = Thread.currentThread().getContextClassLoader().loadClass(impl);
@@ -93,9 +93,9 @@ public interface Marshaller
 
    void mapPublicIdToSystemId(String publicId, String systemId);
 
-   void mapClassToGlobalElement(Class cls, String localName, String nsUri, String schemaUrl, ObjectModelProvider provider);
+   void mapClassToGlobalElement(Class<?> cls, String localName, String nsUri, String schemaUrl, ObjectModelProvider provider);
 
-   void mapClassToGlobalType(Class cls, String localName, String nsUri, String schemaUrl, ObjectModelProvider provider);
+   void mapClassToGlobalType(Class<?> cls, String localName, String nsUri, String schemaUrl, ObjectModelProvider provider);
 
    void addRootElement(String namespaceUri, String prefix, String name);
 

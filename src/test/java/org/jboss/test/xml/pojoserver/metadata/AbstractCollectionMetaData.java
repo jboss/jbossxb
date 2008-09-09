@@ -96,7 +96,7 @@ public class AbstractCollectionMetaData extends AbstractTypeMetaData implements 
       return collection.isEmpty();
    }
 
-   public Iterator iterator()
+   public Iterator<?> iterator()
    {
       return collection.iterator();
    }

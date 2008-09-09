@@ -52,8 +52,8 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
    // The index of the last assigned prefix
    private int namespaceIndex;
 
-   private final Map prefixByUri = new HashMap();
-   private final Map uriByPrefix = new HashMap();
+   private final Map<String, Object> prefixByUri = new HashMap<String, Object>();
+   private final Map<String, Object> uriByPrefix = new HashMap<String, Object>();
 
    public NamespaceRegistry()
    {
@@ -119,14 +119,14 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
          }
          else if (obj instanceof String)
          {
-            List list = new ArrayList();
-            list.add(obj);
+            List<String> list = new ArrayList<String>();
+            list.add((String) obj);
             list.add(nsURI);
             uriByPrefix.put(prefix, list);
          }
          else if (obj instanceof List)
          {
-            ((List)obj).add(nsURI);
+            ((List<String>)obj).add(nsURI);
          }
          else
          {
@@ -140,14 +140,14 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
          }
          else if (obj instanceof String)
          {
-            List list = new ArrayList();
-            list.add(obj);
+            List<String> list = new ArrayList<String>();
+            list.add((String) obj);
             list.add(prefix);
             prefixByUri.put(nsURI, list);
          }
          else if (obj instanceof List)
          {
-            ((List)obj).add(prefix);
+            ((List<String>)obj).add(prefix);
          }
          else
          {
@@ -174,7 +174,7 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
          }
          else if (obj instanceof List)
          {
-            List list = (List)obj;
+            List<String> list = (List<String>)obj;
             uri = (String)list.remove(list.size() - 1);
             if (list.isEmpty())
             {
@@ -199,7 +199,7 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
             }
             else if (obj instanceof List)
             {
-               List list = (ArrayList)obj;
+               List<String> list = (ArrayList<String>)obj;
                list.remove(prefix);
                if (list.isEmpty())
                {
@@ -234,7 +234,7 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
          }
          else if (obj instanceof List)
          {
-            List list = (List)obj;
+            List<?> list = (List<?>)obj;
             for (int i = 0; i < list.size(); ++i)
             {
                removePrefixMappingOnly((String)list.get(i), nsURI);
@@ -257,14 +257,14 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
 
    /** Return an iterator over all registered nsURIs.
     */
-   public Iterator getRegisteredURIs()
+   public Iterator<String> getRegisteredURIs()
    {
       return prefixByUri.keySet().iterator();
    }
 
    /** Return an iterator over all registered nsURIs.
     */
-   public Iterator getRegisteredPrefixes()
+   public Iterator<String> getRegisteredPrefixes()
    {
       return uriByPrefix.keySet().iterator();
    }
@@ -295,7 +295,7 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
          }
          else if (obj instanceof List)
          {
-            List list = (List)obj;
+            List<String> list = (List<String>)obj;
             prefix = (String)list.get(list.size() - 1);
          }
          else
@@ -313,22 +313,22 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
     * @param namespaceURI  the URI to return prefixes for
     * @return  prefixes mapped to the URI
     */
-   public Iterator getPrefixes(String namespaceURI)
+   public Iterator<String> getPrefixes(String namespaceURI)
    {
       Object obj = prefixByUri.get(namespaceURI);
 
-      Iterator result = null;
+      Iterator<String> result = null;
       if (obj == null)
       {
          result = Collections.EMPTY_LIST.iterator();
       }
       else if (obj instanceof String)
       {
-         result = Collections.singletonList(obj).iterator();
+         result = Collections.singletonList((String)obj).iterator();
       }
       else if (obj instanceof List)
       {
-         result = ((List)obj).iterator();
+         result = ((List<String>)obj).iterator();
       }
       else
       {
@@ -353,7 +353,7 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
          }
          else if (obj instanceof List)
          {
-            List list = (List)obj;
+            List<String> list = (List<String>)obj;
             uri = (String)list.get(list.size() - 1);
          }
          else
@@ -380,7 +380,7 @@ public class NamespaceRegistry implements NamespaceContext, Serializable
       }
       else if (obj instanceof List)
       {
-         List list = (List)obj;
+         List<String> list = (List<String>) obj;
          list.remove(prefix);
          if (list.isEmpty())
          {

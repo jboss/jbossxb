@@ -42,7 +42,7 @@ public class CollectionTestCase extends AbstractMCTest
    protected AbstractCollectionMetaData getCollection() throws Exception
    {
       AbstractBeanMetaData bean = unmarshalBean();
-      Set properties = bean.getProperties();
+      Set<?> properties = bean.getProperties();
       assertNotNull(properties);
       assertEquals(1, properties.size());
       PropertyMetaData property = (PropertyMetaData) properties.iterator().next();
@@ -171,10 +171,10 @@ public class CollectionTestCase extends AbstractMCTest
    protected void assertValues(AbstractCollectionMetaData collection, String... values)
    {
       assertEquals(values.length, collection.size());
-      Iterator<ValueMetaData> iterator = (Iterator) collection.iterator();
+      Iterator iterator = collection.iterator();
       for (int i = 0; i < values.length; ++i)
       {
-         assertValue(values[i], iterator.next());
+         assertValue(values[i], (ValueMetaData) iterator.next());
       }
    }
    

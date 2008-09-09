@@ -305,7 +305,7 @@ public class XsdBinder
    private boolean trace = log.isTraceEnabled();
    private final SchemaBinding schema;
    private SharedElements sharedElements = new SharedElements();
-   private final List typeGroupStack = new ArrayList();
+   private final List<Object> typeGroupStack = new ArrayList<Object>();
 
    // Ctors
    
@@ -439,7 +439,7 @@ public class XsdBinder
       }
 
       StringList namespaceList = model.getNamespaces();
-      Set namespaces = new LinkedHashSet(namespaceList.getLength());
+      Set<String> namespaces = new LinkedHashSet<String>(namespaceList.getLength());
       for (int i = 0; i < namespaceList.getLength(); ++i)
          namespaces.add(namespaceList.item(i));
       schema.setNamespaces(namespaces);
@@ -1483,7 +1483,7 @@ public class XsdBinder
    private TypeBinding peekType()
    {
       TypeBinding binding = null;
-      for(ListIterator i = typeGroupStack.listIterator(typeGroupStack.size()); i.hasPrevious();)
+      for(ListIterator<Object> i = typeGroupStack.listIterator(typeGroupStack.size()); i.hasPrevious();)
       {
          Object o = i.previous();
          if(o instanceof TypeBinding)
@@ -1499,9 +1499,8 @@ public class XsdBinder
 
    private static final class SharedElements
    {
-      private Map elements = Collections.EMPTY_MAP;
-
-      private Map globalGroups = Collections.EMPTY_MAP;
+      private Map<XSElementDeclaration, TypeBinding> elements = Collections.emptyMap();
+      private Map<XSModelGroup, ModelGroupBinding> globalGroups = Collections.emptyMap();
       
       public void add(XSElementDeclaration element)
       {
@@ -1511,7 +1510,7 @@ public class XsdBinder
                elements = Collections.singletonMap(element, null);
                break;
             case 1:
-               elements = new HashMap(elements);
+               elements = new HashMap<XSElementDeclaration, TypeBinding>(elements);
             default:
                elements.put(element, null);
          }
@@ -1535,7 +1534,7 @@ public class XsdBinder
                elements = Collections.singletonMap(element, type);
                break;
             case 1:
-               elements = new HashMap(elements);
+               elements = new HashMap<XSElementDeclaration, TypeBinding>(elements);
             default:
                elements.put(element, type);
          }
@@ -1549,7 +1548,7 @@ public class XsdBinder
                globalGroups = Collections.singletonMap(group, groupBinding);
                break;
             case 1:
-               globalGroups = new HashMap(globalGroups);
+               globalGroups = new HashMap<XSModelGroup, ModelGroupBinding>(globalGroups);
             default:
                globalGroups.put(group, groupBinding);
          }

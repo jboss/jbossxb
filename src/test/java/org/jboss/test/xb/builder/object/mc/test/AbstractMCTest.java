@@ -85,9 +85,9 @@ public class AbstractMCTest extends AbstractBuilderTest
       assertNotNull(annotations);
       assertEquals(expected.size(), annotations.size());
       HashSet<String> clonedExpected = new HashSet<String>(expected);
-      for (Iterator i = annotations.iterator(); i.hasNext();)
+      for (Iterator<AnnotationMetaData> i = annotations.iterator(); i.hasNext();)
       {
-         AnnotationMetaData annotation = (AnnotationMetaData) i.next();
+         AnnotationMetaData annotation = i.next();
          if (clonedExpected.remove(annotation.getAnnotation()) == false)
             fail("Did not expect " + annotation + " expected " + expected);
       }
@@ -100,7 +100,7 @@ public class AbstractMCTest extends AbstractBuilderTest
       assertNotNull(properties);
       assertEquals(expected.size(), properties.size());
       HashSet<String> clonedExpected = new HashSet<String>(expected);
-      for (Iterator i = properties.iterator(); i.hasNext();)
+      for (Iterator<?> i = properties.iterator(); i.hasNext();)
       {
          PropertyMetaData property = (PropertyMetaData) i.next();
          if (clonedExpected.remove(property.getName()) == false)
@@ -143,7 +143,7 @@ public class AbstractMCTest extends AbstractBuilderTest
       assertNotNull(supplies);
       assertEquals(expected.size(), supplies.size());
       HashSet<String> clonedExpected = new HashSet<String>(expected);
-      for (Iterator i = supplies.iterator(); i.hasNext();)
+      for (Iterator<?> i = supplies.iterator(); i.hasNext();)
       {
          SupplyMetaData supply = (SupplyMetaData) i.next();
          if (clonedExpected.remove(supply.getSupply()) == false)
@@ -153,7 +153,7 @@ public class AbstractMCTest extends AbstractBuilderTest
          fail("Expected " + expected + " got " + supplies);
    }
    
-   protected void assertInstalls(List expected, List installs)
+   protected void assertInstalls(List<?> expected, List<?> installs)
    {
       assertNotNull(installs);
       assertEquals(expected.size(), installs.size());
@@ -165,7 +165,7 @@ public class AbstractMCTest extends AbstractBuilderTest
       }
    }
    
-   protected void assertCallbacks(List expected, List callbacks)
+   protected void assertCallbacks(List<?> expected, List<?> callbacks)
    {
       assertNotNull(callbacks);
       assertEquals(expected.size(), callbacks.size());
@@ -177,7 +177,7 @@ public class AbstractMCTest extends AbstractBuilderTest
       }
    }
 
-   protected void assertParameters(List expected, List parameters)
+   protected void assertParameters(List<?> expected, List<?> parameters)
    {
       assertNotNull(parameters);
       assertEquals(expected.size(), parameters.size());
@@ -266,7 +266,7 @@ public class AbstractMCTest extends AbstractBuilderTest
       assertTrue(value instanceof ThisValueMetaData);
    }
    
-   protected void checkJBossXBException(Class expected, Throwable throwable)
+   protected void checkJBossXBException(Class<? extends Throwable> expected, Throwable throwable)
    {
       checkThrowable(JBossXBException.class, throwable);
       JBossXBException e = (JBossXBException) throwable;

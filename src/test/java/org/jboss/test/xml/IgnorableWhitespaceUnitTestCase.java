@@ -174,7 +174,7 @@ public class IgnorableWhitespaceUnitTestCase extends AbstractJBossXBTest
          {
             if(top.string == null)
             {
-               top.string = new ArrayList();
+               top.string = new ArrayList<Object>();
             }
             top.string.add(value);
          }

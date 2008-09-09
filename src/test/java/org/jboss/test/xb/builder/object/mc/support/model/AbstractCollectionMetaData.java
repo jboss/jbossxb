@@ -122,7 +122,7 @@ public class AbstractCollectionMetaData extends AbstractTypeMetaData
       return collection.contains(o);
    }
 
-   public boolean containsAll(Collection c)
+   public boolean containsAll(Collection<?> c)
    {
       return collection.containsAll(c);
    }
@@ -142,12 +142,12 @@ public class AbstractCollectionMetaData extends AbstractTypeMetaData
       return collection.remove(o);
    }
 
-   public boolean removeAll(Collection c)
+   public boolean removeAll(Collection<?> c)
    {
       return collection.removeAll(c);
    }
 
-   public boolean retainAll(Collection c)
+   public boolean retainAll(Collection<?> c)
    {
       return collection.retainAll(c);
    }

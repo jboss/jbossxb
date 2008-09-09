@@ -39,7 +39,7 @@ import org.xml.sax.Attributes;
 public class ChoiceBinding
    extends ModelGroupBinding
 {
-   private List choices = Collections.EMPTY_LIST;
+   private List<ParticleBinding> choices = Collections.emptyList();
 
    public ChoiceBinding(SchemaBinding schema)
    {
@@ -59,7 +59,7 @@ public class ChoiceBinding
             choices = Collections.singletonList(particle);
             break;
          case 1:
-            choices = new ArrayList(choices);
+            choices = new ArrayList<ParticleBinding>(choices);
          default:
             choices.add(particle);
       }
@@ -67,7 +67,7 @@ public class ChoiceBinding
       super.addParticle(particle);
    }
 
-   public Collection getParticles()
+   public Collection<ParticleBinding> getParticles()
    {
       return Collections.unmodifiableCollection(choices);
    }
@@ -133,7 +133,7 @@ public class ChoiceBinding
             return wildcardContent;
          }
          
-         protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
+         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
          {
             if(trace)
             {
@@ -218,10 +218,10 @@ public class ChoiceBinding
                      switch(passedGroups.size())
                      {
                         case 0:
-                           passedGroups = Collections.singleton(this);
+                           passedGroups = Collections.singleton((ModelGroupBinding.Cursor)this);
                            break;
                         case 1:
-                           passedGroups = new HashSet(passedGroups);
+                           passedGroups = new HashSet<ModelGroupBinding.Cursor>(passedGroups);
                         default:
                            passedGroups.add(this);
                      }
@@ -287,14 +287,14 @@ public class ChoiceBinding
             return groupStack;
          }
 
-         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups, boolean ignoreWildcards)
+         protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
          {
             return getElement(choices, qName, atts, passedGroups, ignoreWildcards);
          }
       };
    }
 
-   protected boolean mayStartWith(QName qName, Set set)
+   protected boolean mayStartWith(QName qName, Set<ModelGroupBinding> set)
    {
       boolean result = false;
       for(int i = 0; i < choices.size(); ++i)
@@ -318,10 +318,10 @@ public class ChoiceBinding
                switch(set.size())
                {
                   case 0:
-                     set = Collections.singleton(this);
+                     set = Collections.singleton((ModelGroupBinding)this);
                      break;
                   case 1:
-                     set = new HashSet(set);
+                     set = new HashSet<ModelGroupBinding>(set);
                   default:
                      set.add(this);
                }

@@ -48,7 +48,7 @@ public class AliasTestCase extends AbstractMCTest
    protected Object getAlias() throws Exception
    {
       AbstractBeanMetaData bean = unmarshalBean();
-      Set aliases = bean.getAliases();
+      Set<?> aliases = bean.getAliases();
       assertNotNull(aliases);
       assertEquals(1, aliases.size());
       Object alias = aliases.iterator().next();
@@ -106,7 +106,7 @@ public class AliasTestCase extends AbstractMCTest
    public void testMultipleAlias() throws Exception
    {
       AbstractBeanMetaData bean = unmarshalBean();
-      Set aliases = bean.getAliases();
+      Set<?> aliases = bean.getAliases();
       assertNotNull(aliases);
       int size = aliases.size();
       assertTrue(size > 1);
@@ -117,7 +117,7 @@ public class AliasTestCase extends AbstractMCTest
    public void testAliasWithBeanFactory() throws Exception
    {
       GenericBeanFactoryMetaData bean = unmarshalBeanFactory();
-      Set aliases = bean.getAliases();
+      Set<?> aliases = bean.getAliases();
       assertNotNull(aliases);
       assertFalse(aliases.isEmpty());
    }

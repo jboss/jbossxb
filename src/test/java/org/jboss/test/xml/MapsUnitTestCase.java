@@ -61,11 +61,11 @@ public class MapsUnitTestCase
    private static final QName QNAME_VALUE1 = new QName(NS, "value1");
    private static final QName QNAME_VALUE2 = new QName(NS, "value2");
 
-   private static final Map EXPECTED;
+   private static final Map<?, ?> EXPECTED;
 
    static
    {
-      Map expected = new HashMap();
+      Map<String, Object> expected = new HashMap<String, Object>();
       expected.put("key1", "value1");
       expected.put("key2", "value2");
       expected.put("key3", "value3");
@@ -147,7 +147,7 @@ public class MapsUnitTestCase
       {
          public void add(Object parent, Object child, QName name)
          {
-            Map map = (Map)parent;
+            Map<Object, Object> map = (Map<Object, Object>)parent;
             Object[] arr = (Object[])child;
             map.put(arr[0], arr[1]);
          }
@@ -313,7 +313,7 @@ public class MapsUnitTestCase
          public void add(Object parent, Object child, QName qName)
          {
             Object[] arr = (Object[])parent;
-            Map submap = (Map)child;
+            Map<?, ?> submap = (Map<?, ?>)child;
             arr[1] = submap;
          }
       }
@@ -342,7 +342,7 @@ public class MapsUnitTestCase
                                ParticleBinding particle,
                                ParticleBinding parentParticle)
          {
-            Map map = (Map)parent;
+            Map<Object, Object> map = (Map<Object, Object>)parent;
             Object[] arr = (Object[])o;
             map.put(arr[0], arr[1]);
          }

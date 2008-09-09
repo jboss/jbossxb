@@ -112,12 +112,12 @@ public class SimpleBeanImpl implements Serializable, SimpleBean
    private SimpleBean other;
    
    /** A collection */
-   private Collection collection;
+   private Collection<?> collection;
 
    /** A list */
-   private List aList;
+   private List<?> aList;
    /** A set */
-   private Set aSet;
+   private Set<?> aSet;
    /** A properties */
    private Properties props;
 
@@ -363,32 +363,32 @@ public class SimpleBeanImpl implements Serializable, SimpleBean
       this.other = other;
    }
    
-   public Collection getCollection()
+   public Collection<?> getCollection()
    {
       return collection;
    }
    
-   public void setCollection(Collection collection)
+   public void setCollection(Collection<?> collection)
    {
       this.collection = collection;
    }
 
-   public List getAList()
+   public List<?> getAList()
    {
       return aList;
    }
 
-   public void setAList(List aList)
+   public void setAList(List<?> aList)
    {
       this.aList = aList;
    }
 
-   public Set getASet()
+   public Set<?> getASet()
    {
       return aSet;
    }
 
-   public void setASet(Set aSet)
+   public void setASet(Set<?> aSet)
    {
       this.aSet = aSet;
    }

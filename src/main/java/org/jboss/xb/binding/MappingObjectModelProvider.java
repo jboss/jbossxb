@@ -37,8 +37,8 @@ public class MappingObjectModelProvider
 {
    private static final Logger log = Logger.getLogger(MappingObjectModelProvider.class);
 
-   private final Map classMappings = new HashMap();
-   private final Map fieldMappings = new HashMap();
+   private final Map<Class<?>, ClassToElementMapping> classMappings = new HashMap<Class<?>, ClassToElementMapping>();
+   private final Map<String, FieldToElementMapping> fieldMappings = new HashMap<String, FieldToElementMapping>();
    private boolean ignoreLowLine = true;
    private boolean ignoreNotFoundField = true;
 
@@ -52,7 +52,7 @@ public class MappingObjectModelProvider
       this.ignoreNotFoundField = ignoreNotFoundField;
    }
 
-   public void mapClassToElement(Class cls, String namespaceURI, String localName, ObjectModelProvider provider)
+   public void mapClassToElement(Class<?> cls, String namespaceURI, String localName, ObjectModelProvider provider)
    {
       ClassToElementMapping mapping = new ClassToElementMapping(cls, namespaceURI, localName,
          provider instanceof GenericObjectModelProvider ?
@@ -61,7 +61,7 @@ public class MappingObjectModelProvider
       classMappings.put(mapping.cls, mapping);
    }
 
-   public void mapFieldToElement(Class cls,
+   public void mapFieldToElement(Class<?> cls,
                                  String field,
                                  String namespaceURI,
                                  String localName,
@@ -147,7 +147,7 @@ public class MappingObjectModelProvider
    private Object getJavaValue(String namespaceURI, String localName, String fieldName, Object o, boolean forComplexType, boolean optional)
    {
       String mappingKey = o.getClass().getName() + ":" + localName;
-      FieldToElementMapping mapping = (FieldToElementMapping)fieldMappings.get(mappingKey);
+      FieldToElementMapping mapping = fieldMappings.get(mappingKey);
       if(mapping == null)
       {
          if(fieldName == null)
@@ -197,7 +197,7 @@ public class MappingObjectModelProvider
       return value;
    }
 
-   private boolean writeAsValue(final Class type)
+   private boolean writeAsValue(final Class<?> type)
    {
       return Classes.isPrimitive(type) ||
          type == String.class ||
@@ -210,12 +210,12 @@ public class MappingObjectModelProvider
 
    private class ClassToElementMapping
    {
-      public final Class cls;
+      public final Class<?> cls;
       public final String namespaceURI;
       public final String localName;
       public final GenericObjectModelProvider provider;
 
-      public ClassToElementMapping(Class cls,
+      public ClassToElementMapping(Class<?> cls,
                                    String namespaceURI,
                                    String localName,
                                    GenericObjectModelProvider provider)
@@ -281,13 +281,13 @@ public class MappingObjectModelProvider
 
    private class FieldToElementMapping
    {
-      public final Class cls;
+      public final Class<?> cls;
       public final String namespaceURI;
       public final String localName;
       public final TypeBinding converter;
       public final FieldInfo fieldInfo;
 
-      public FieldToElementMapping(Class cls,
+      public FieldToElementMapping(Class<?> cls,
                                    String field,
                                    String namespaceURI,
                                    String localName,

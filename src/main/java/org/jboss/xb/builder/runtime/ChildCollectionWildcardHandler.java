@@ -84,7 +84,7 @@ public class ChildCollectionWildcardHandler  implements ParticleHandler
    public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
    {
       BeanAdapter beanAdapter = (BeanAdapter) parent;
-      Collection collection = (Collection) beanAdapter.getValue();
+      Collection<Object> collection = (Collection<Object>) beanAdapter.getValue();
       
       if (beanInfo != null)
       {

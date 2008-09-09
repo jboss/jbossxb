@@ -1994,7 +1994,7 @@ public class JBossXBNoSchemaBuilder
 
    private static class XBValueAdapter implements ValueAdapter
    {
-      private final XmlAdapter xmlAdapter;
+      private final XmlAdapter<Object, ?> xmlAdapter;
 
       private final TypeInfo adaptedTypeInfo;
       private final Type adaptedType;
@@ -2028,7 +2028,7 @@ public class JBossXBNoSchemaBuilder
          return adaptedType;
       }
 
-      public Object cast(Object o, Class c)
+      public Object cast(Object o, Class<?> c)
       {
          try
          {

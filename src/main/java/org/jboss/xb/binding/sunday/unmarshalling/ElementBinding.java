@@ -42,7 +42,7 @@ import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 public class ElementBinding
    extends TermBinding
 {
-   protected List interceptors = Collections.EMPTY_LIST;
+   protected List<ElementInterceptor> interceptors = Collections.emptyList();
 
    protected QName qName;
    protected TypeBinding typeBinding;
@@ -72,7 +72,7 @@ public class ElementBinding
       return qName;
    }
 
-   public List getInterceptors()
+   public List<ElementInterceptor> getInterceptors()
    {
       return interceptors;
    }
@@ -90,7 +90,7 @@ public class ElementBinding
             interceptors = Collections.singletonList(interceptor);
             break;
          case 1:
-            interceptors = new ArrayList(interceptors);
+            interceptors = new ArrayList<ElementInterceptor>(interceptors);
          default:
          {
             if( interceptors.contains(interceptor) == false )

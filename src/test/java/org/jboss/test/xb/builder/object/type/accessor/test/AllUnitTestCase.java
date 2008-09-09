@@ -89,7 +89,7 @@ public class AllUnitTestCase extends AbstractBuilderTest
          assertTrue(term instanceof ElementBinding);
          elements.add(((ElementBinding) term).getQName());
       }
-      HashSet<QName> expected = new HashSet();
+      HashSet<QName> expected = new HashSet<QName>();
       expected.add(new QName(XMLConstants.NULL_NS_URI, "one"));
       expected.add(new QName(XMLConstants.NULL_NS_URI, "two"));
       expected.add(new QName(XMLConstants.NULL_NS_URI, "three"));

@@ -211,8 +211,8 @@ public class WildcardUnresolvedElementsUnitTestCase
                   if(ge.getAttributesTotal() > 0)
                   {
                      attrs = new AttributesImpl(ge.getAttributesTotal() + 1);
-                     Set attrNames = ge.getAttributeNames();
-                     for(Iterator i = attrNames.iterator(); i.hasNext();)
+                     Set<?> attrNames = ge.getAttributeNames();
+                     for(Iterator<?> i = attrNames.iterator(); i.hasNext();)
                      {
                         String attrName = (String)i.next();
                         String attrValue = ge.getAttribute(attrName);
@@ -236,7 +236,7 @@ public class WildcardUnresolvedElementsUnitTestCase
 
                   if(ge.getChildElementsTotal() > 0)
                   {
-                     for(Iterator i = ge.getChildElements(); i.hasNext();)
+                     for(Iterator<?> i = ge.getChildElements(); i.hasNext();)
                      {
                         GenericElement child = (GenericElement)i.next();
                         this.marshal(ctx, child);
@@ -329,7 +329,7 @@ public class WildcardUnresolvedElementsUnitTestCase
       assertNoTextContent(ge);
       assertChildElementsTotal(ge, 3);
 
-      for(Iterator i = ge.getChildElements(); i.hasNext();)
+      for(Iterator<?> i = ge.getChildElements(); i.hasNext();)
       {
          ge = (GenericElement)i.next();
          String localName = ge.getLocalName();
@@ -743,8 +743,8 @@ public class WildcardUnresolvedElementsUnitTestCase
    {
       private String localName;
       private String nsUri;
-      private Map attributes = Collections.EMPTY_MAP;
-      private Map childElements = Collections.EMPTY_MAP;
+      private Map<String, String> attributes = Collections.emptyMap();
+      private Map<String, GenericElement> childElements = Collections.emptyMap();
       private String textContent;
 
       public GenericElement(String localName)
@@ -786,7 +786,7 @@ public class WildcardUnresolvedElementsUnitTestCase
                attributes = Collections.singletonMap(name, value);
                break;
             case 1:
-               attributes = new HashMap(attributes);
+               attributes = new HashMap<String, String>(attributes);
             default:
                attributes.put(name, value);
          }
@@ -805,7 +805,7 @@ public class WildcardUnresolvedElementsUnitTestCase
                childElements = Collections.singletonMap(child.getLocalName(), child);
                break;
             case 1:
-               childElements = new LinkedHashMap(childElements);
+               childElements = new LinkedHashMap<String, GenericElement>(childElements);
             default:
                childElements.put(child.getLocalName(), child);
          }
@@ -816,7 +816,7 @@ public class WildcardUnresolvedElementsUnitTestCase
          return (GenericElement)childElements.get(name);
       }
 
-      public Iterator getChildElements()
+      public Iterator<?> getChildElements()
       {
          return childElements.values().iterator();
       }
@@ -826,7 +826,7 @@ public class WildcardUnresolvedElementsUnitTestCase
          return childElements.size();
       }
 
-      public Set getAttributeNames()
+      public Set<?> getAttributeNames()
       {
          return attributes.keySet();
       }

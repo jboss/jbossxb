@@ -120,7 +120,7 @@ public class EnumValueAdapter implements ValueAdapter
    }
    
    @SuppressWarnings("unchecked")
-   public Object cast(Object o, Class c)
+   public Object cast(Object o, Class<?> c)
    {
       if (o == null)
          return null;

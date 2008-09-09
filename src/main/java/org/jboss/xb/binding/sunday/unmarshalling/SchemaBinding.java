@@ -49,7 +49,7 @@ public class SchemaBinding
 {
    private static final ValueAdapter DATE_ADAPTER = new ValueAdapter()
    {
-      public Object cast(Object o, Class c)
+      public Object cast(Object o, Class<?> c)
       {
          if (o != null && java.util.Date.class.isAssignableFrom(c))
          {
@@ -60,7 +60,7 @@ public class SchemaBinding
    };
    
    /** The namespaces Set<String> */
-   private Set namespaces = Collections.EMPTY_SET;
+   private Set<String> namespaces = Collections.emptySet();
    /** namespace to prefix map, used in xb builder during binding */
    private Map<String, String> nsByPrefix = Collections.emptyMap();
    /** Map<QName, TypeBinding> for simple/complex types */
@@ -152,7 +152,7 @@ public class SchemaBinding
    
    public void addPrefixMapping(String prefix, String ns)
    {
-      if(nsByPrefix == Collections.EMPTY_MAP)
+      if(nsByPrefix.isEmpty())
       {
          nsByPrefix = Collections.singletonMap(prefix, ns);
       }
@@ -176,7 +176,7 @@ public class SchemaBinding
     * 
     * @return the namespaces.
     */
-   public Set getNamespaces()
+   public Set<String> getNamespaces()
    {
       return namespaces;
    }
@@ -187,7 +187,7 @@ public class SchemaBinding
     * @param namespaces the namespaces.
     * @throws IllegalArgumentException for null spaces
     */
-   public void setNamespaces(Set namespaces)
+   public void setNamespaces(Set<String> namespaces)
    {
       if (namespaces == null)
          throw new IllegalArgumentException("Null namespaces");
@@ -234,9 +234,9 @@ public class SchemaBinding
       return element;
    }
 
-   public Iterator getElements()
+   public Iterator<ElementBinding> getElements()
    {
-      return new Iterator()
+      return new Iterator<ElementBinding>()
       {
          private Iterator<ParticleBinding> particleIterator = elements.values().iterator();
 
@@ -245,10 +245,10 @@ public class SchemaBinding
             return particleIterator.hasNext();
          }
 
-         public Object next()
+         public ElementBinding next()
          {
             ParticleBinding particle = particleIterator.next();
-            return particle.getTerm();
+            return (ElementBinding) particle.getTerm();
          }
 
          public void remove()

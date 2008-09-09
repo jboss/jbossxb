@@ -73,7 +73,7 @@ public class CollectionOverridePropertyUnitTestCase extends AbstractJBossXBTest
             getLog().debug("Add " + parent + " " + child);
             Parent p = (Parent) parent;
             if (p.list == null)
-               p.list = new LinkedList();
+               p.list = new LinkedList<Object>();
             p.list.add(child);
          }
       }); 
@@ -85,7 +85,7 @@ public class CollectionOverridePropertyUnitTestCase extends AbstractJBossXBTest
       type.setClassMetaData(classMetaData);
 
       Parent parent = (Parent) unmarshal("CollectionOverrideProperty.xml", schema, Parent.class);
-      List list = parent.list;
+      List<Object> list = parent.list;
       assertNotNull(list);
       assertEquals("one", ((Child) list.get(0)).getValue());
       assertEquals("two", ((Child) list.get(1)).getValue());
@@ -113,7 +113,7 @@ public class CollectionOverridePropertyUnitTestCase extends AbstractJBossXBTest
       type.setClassMetaData(classMetaData);
 
       Parent parent = (Parent) unmarshal("CollectionOverrideProperty.xml", schema, Parent.class);
-      List list = parent.list;
+      List<Object> list = parent.list;
       assertNotNull(list);
       assertEquals("one", ((Child) list.get(0)).getValue());
       assertEquals("two", ((Child) list.get(1)).getValue());
@@ -121,14 +121,14 @@ public class CollectionOverridePropertyUnitTestCase extends AbstractJBossXBTest
 
    public static class Parent
    {
-      private List list;
+      private List<Object> list;
       
-      public List getList()
+      public List<Object> getList()
       {
          return list;
       }
       
-      public void setList(List list)
+      public void setList(List<Object> list)
       {
          this.list = list;
       }

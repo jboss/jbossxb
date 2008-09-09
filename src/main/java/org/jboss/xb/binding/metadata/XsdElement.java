@@ -35,8 +35,8 @@ public class XsdElement
    public static final QName QNAME_NAME = new QName("name");
 
    private final QName qName;
-   private Map attributes = Collections.EMPTY_MAP;
-   private Map children = Collections.EMPTY_MAP;
+   private Map<QName, String> attributes = Collections.emptyMap();
+   private Map<QName, XsdElement> children = Collections.emptyMap();
    private String data;
 
    public XsdElement(QName qName)
@@ -57,7 +57,7 @@ public class XsdElement
             attributes = Collections.singletonMap(qName, value);
             break;
          case 1:
-            attributes = new HashMap(attributes);
+            attributes = new HashMap<QName, String>(attributes);
          default:
             attributes.put(qName, value);
       }
@@ -76,7 +76,7 @@ public class XsdElement
             children = Collections.singletonMap(child.qName, child);
             break;
          case 1:
-            children = new HashMap(children);
+            children = new HashMap<QName, XsdElement>(children);
          default:
             children.put(child.qName, child);
       }

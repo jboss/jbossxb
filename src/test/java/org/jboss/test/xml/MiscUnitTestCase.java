@@ -322,9 +322,9 @@ public class MiscUnitTestCase
       final URL xsdUrl = getUrl("xml/immutable.xsd");
 
       Child1 child1 = new Child1("child1");
-      List child2 = Arrays.asList(new Object[]{new Child2("child2_1"), new Child2("child2_2")});
-      List others = Arrays.asList(new Object[]{new Child3("child3_1"), new Child3("child3_2"), new Child3("child3_3")});
-      List choice = Arrays.asList(
+      List<Object> child2 = Arrays.asList(new Object[]{new Child2("child2_1"), new Child2("child2_2")});
+      List<Object> others = Arrays.asList(new Object[]{new Child3("child3_1"), new Child3("child3_2"), new Child3("child3_3")});
+      List<Object> choice = Arrays.asList(
          new Object[]{new ImmutableChoice("choice1"), new ImmutableChoice(new Child1("child1"))}
       );
       Parent parent = new Parent(child1, child2, others, choice);

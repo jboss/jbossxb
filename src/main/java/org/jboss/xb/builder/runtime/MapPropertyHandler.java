@@ -267,7 +267,7 @@ public class MapPropertyHandler extends AbstractPropertyHandler
       }
       
       @SuppressWarnings("unchecked")
-      public Map<Object, Object> createMap() throws Throwable
+      public Map createMap() throws Throwable
       {
          return (Map) ctor.newInstance(null);
       }      

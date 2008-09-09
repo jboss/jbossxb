@@ -34,6 +34,10 @@ import org.jboss.xb.binding.sunday.unmarshalling.ElementInterceptor;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.test.xml.config.Config;
+import org.jboss.test.xml.config.Config.Bean;
+import org.jboss.test.xml.config.Config.ConfigAttr;
+import org.jboss.test.xml.config.Config.Depends;
+import org.jboss.test.xml.config.Config.ListValue;
 import org.xml.sax.Attributes;
 
 import javax.xml.namespace.QName;
@@ -127,10 +131,10 @@ public class SundayUnitTestCase
          {
             Config config = (Config)parent;
             Config.ConfigAttr attr = (Config.ConfigAttr)child;
-            Collection attrs = config.getAttrs();
+            Collection<ConfigAttr> attrs = config.getAttrs();
             if(attrs == null)
             {
-               attrs = new ArrayList();
+               attrs = new ArrayList<ConfigAttr>();
                config.setAttrs(attrs);
             }
             attrs.add(attr);
@@ -143,7 +147,7 @@ public class SundayUnitTestCase
          public void add(Object parent, Object child, QName name)
          {
             Config config = (Config)parent;
-            config.beans = (Collection)child;
+            config.beans = (Collection<Bean>)child;
          }
       }
       );
@@ -153,7 +157,7 @@ public class SundayUnitTestCase
          public void add(Object parent, Object child, QName name)
          {
             Config config = (Config)parent;
-            config.list = (Collection)child;
+            config.list = (Collection<Object>)child;
          }
       }
       );
@@ -163,7 +167,7 @@ public class SundayUnitTestCase
          public void add(Object parent, Object child, QName name)
          {
             Config config = (Config)parent;
-            config.map = (Map)child;
+            config.map = (Map<?, ?>)child;
          }
       }
       );
@@ -261,7 +265,7 @@ public class SundayUnitTestCase
       {
          public void add(Object parent, Object child, QName name)
          {
-            Collection beans = (Collection)parent;
+            Collection<Bean> beans = (Collection<Bean>)parent;
             Config.Bean bean = (Config.Bean)child;
             beans.add(bean);
          }
@@ -306,7 +310,7 @@ public class SundayUnitTestCase
       {
          public void add(Object parent, Object child, QName name)
          {
-            Collection list = (Collection)parent;
+            Collection<ListValue> list = (Collection<ListValue>)parent;
             Config.ListValue value = (Config.ListValue)child;
             list.add(value);
          }
@@ -316,7 +320,7 @@ public class SundayUnitTestCase
       {
          public void add(Object parent, Object child, QName name)
          {
-            Collection list = (Collection)parent;
+            Collection<Depends> list = (Collection<Depends>)parent;
             Config.Depends depends = (Config.Depends)child;
             list.add(depends);
          }
@@ -326,8 +330,8 @@ public class SundayUnitTestCase
       {
          public void add(Object parent, Object child, QName name)
          {
-            Collection list = (Collection)parent;
-            Collection sublist = (Collection)child;
+            Collection<Collection<?>> list = (Collection<Collection<?>>)parent;
+            Collection<?> sublist = (Collection<?>)child;
             list.add(sublist);
          }
       }
@@ -419,7 +423,7 @@ public class SundayUnitTestCase
       {
          public void add(Object parent, Object child, QName name)
          {
-            Map map = (Map)parent;
+            Map<Object, Object> map = (Map<Object, Object>)parent;
             Object[] arr = (Object[])child;
             map.put(arr[0], arr[1]);
          }
@@ -583,7 +587,7 @@ public class SundayUnitTestCase
          public void add(Object parent, Object child, QName qName)
          {
             Object[] arr = (Object[])parent;
-            Map submap = (Map)child;
+            Map<?, ?> submap = (Map<?, ?>)child;
             arr[1] = submap;
          }
       }

@@ -39,9 +39,9 @@ import org.jboss.xb.annotations.JBossXmlCollection;
 public class Root
 {
    private List<String> defaultList;
-   private List unparameterizedList;
+   private List<?> unparameterizedList;
    private List<String> jbossXmlList;
-   private List unparameterizedJbossXmlList;
+   private List<?> unparameterizedJbossXmlList;
    
    public List<String> getDefaultList()
    {
@@ -54,12 +54,12 @@ public class Root
    }
    
    @XmlElement(type=Integer.class)
-   public List getUnparameterizedList()
+   public List<?> getUnparameterizedList()
    {
       return unparameterizedList;
    }
    
-   public void setUnparameterizedList(List unparameterizedList)
+   public void setUnparameterizedList(List<?> unparameterizedList)
    {
       this.unparameterizedList = unparameterizedList;
    }
@@ -77,12 +77,12 @@ public class Root
 
    @JBossXmlCollection(type=java.util.LinkedList.class)
    @XmlElement(type=Integer.class)
-   public List getUnparameterizedJbossXmlList()
+   public List<?> getUnparameterizedJbossXmlList()
    {
       return unparameterizedJbossXmlList;
    }
    
-   public void setUnparameterizedJbossXmlList(List unparameterizedList)
+   public void setUnparameterizedJbossXmlList(List<?> unparameterizedList)
    {
       this.unparameterizedJbossXmlList = unparameterizedList;
    }

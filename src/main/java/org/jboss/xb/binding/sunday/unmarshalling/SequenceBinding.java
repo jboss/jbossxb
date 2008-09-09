@@ -39,7 +39,7 @@ import org.xml.sax.Attributes;
 public class SequenceBinding
    extends ModelGroupBinding
 {
-   private List sequence = Collections.EMPTY_LIST;
+   private List<ParticleBinding> sequence = Collections.emptyList();
    private ElementBinding arrayItem;
 
    public SequenceBinding(SchemaBinding schema)
@@ -68,7 +68,7 @@ public class SequenceBinding
             }
             break;
          case 1:
-            sequence = new ArrayList(sequence);
+            sequence = new ArrayList<ParticleBinding>(sequence);
             arrayItem = null;
          default:
             sequence.add(particle);
@@ -76,7 +76,7 @@ public class SequenceBinding
       super.addParticle(particle);
    }
 
-   public Collection getParticles()
+   public Collection<ParticleBinding> getParticles()
    {
       return Collections.unmodifiableCollection(sequence);
    }
@@ -142,7 +142,7 @@ public class SequenceBinding
             return wildcardContent;
          }
          
-         protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
+         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
          {
             if(trace)
             {
@@ -242,10 +242,10 @@ public class SequenceBinding
                      switch(passedGroups.size())
                      {
                         case 0:
-                           passedGroups = Collections.singleton(this);
+                           passedGroups = Collections.singleton((ModelGroupBinding.Cursor)this);
                            break;
                         case 1:
-                           passedGroups = new HashSet(passedGroups);
+                           passedGroups = new HashSet<ModelGroupBinding.Cursor>(passedGroups);
                         default:
                            passedGroups.add(this);
                      }
@@ -345,14 +345,14 @@ public class SequenceBinding
             return groupStack;
          }
 
-         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups, boolean ignoreWildcards)
+         protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
          {
             return getElement(sequence, qName, atts, passedGroups, ignoreWildcards);
          }
       };
    }
 
-   protected boolean mayStartWith(QName qName, Set set)
+   protected boolean mayStartWith(QName qName, Set<ModelGroupBinding> set)
    {
       boolean result = false;
       for(int i = 0; i < sequence.size(); ++i)
@@ -381,10 +381,10 @@ public class SequenceBinding
                switch(set.size())
                {
                   case 0:
-                     set = Collections.singleton(this);
+                     set = Collections.singleton((ModelGroupBinding)this);
                      break;
                   case 1:
-                     set = new HashSet(set);
+                     set = new HashSet<ModelGroupBinding>(set);
                   default:
                      set.add(this);
                }

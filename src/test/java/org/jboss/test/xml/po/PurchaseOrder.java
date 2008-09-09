@@ -54,7 +54,7 @@ public class PurchaseOrder
       po.billTo.setState("PA");
       po.billTo.setZip(new BigDecimal((double)95819));
       po.comment = "Hurry, my lawn is going wild!";
-      po.items = new ArrayList();
+      po.items = new ArrayList<Item>();
 
       Item item = new Item();
       item.setPartNum("872-AA");
@@ -78,7 +78,7 @@ public class PurchaseOrder
    public USAddress shipTo;
    private USAddress billTo;
    private String comment;
-   private Collection items;
+   private Collection<Item> items;
    private Calendar orderDate;
 
    public USAddress getBillTo()
@@ -101,12 +101,12 @@ public class PurchaseOrder
       this.comment = comment;
    }
 
-   public Collection getItems()
+   public Collection<Item> getItems()
    {
       return items;
    }
 
-   public void setItems(Collection items)
+   public void setItems(Collection<Item> items)
    {
       this.items = items;
    }

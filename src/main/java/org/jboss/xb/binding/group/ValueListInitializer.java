@@ -24,7 +24,6 @@ package org.jboss.xb.binding.group;
 import java.util.Map;
 import java.util.Collections;
 import java.util.List;
-import java.util.ArrayList;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
@@ -38,10 +37,10 @@ import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
  */
 public class ValueListInitializer
 {
-   private int initializedState;
+   //private int initializedState;
    private Map attrIndex = Collections.EMPTY_MAP;
    private Map elemIndex = Collections.EMPTY_MAP;
-   private List requiredBindings = Collections.EMPTY_LIST;
+   //private List<?> requiredBindings = Collections.EMPTY_LIST;
 
    public void addRequiredAttribute(QName qName, AttributeBinding binding)
    {
@@ -83,7 +82,7 @@ public class ValueListInitializer
       throw new UnsupportedOperationException();
    }
 
-   public ValueList newValueList(ValueListHandler handler, Class targetClass)
+   public ValueList newValueList(ValueListHandler handler, Class<?> targetClass)
    {
       return new ValueList(this, handler, targetClass);
    }
@@ -180,7 +179,7 @@ public class ValueListInitializer
       throw new UnsupportedOperationException();
    }
 
-   public List getRequiredBindings()
+   public List<?> getRequiredBindings()
    {
 //      return requiredBindings;
       throw new UnsupportedOperationException();
@@ -188,12 +187,12 @@ public class ValueListInitializer
 
    // Private
 
-   private void addBinding(Object binding)
+/*   private void addBinding(Object binding)
    {
       if(requiredBindings == Collections.EMPTY_LIST)
       {
-         requiredBindings = new ArrayList();
+         requiredBindings = new ArrayList<Object>();
       }
       requiredBindings.add(binding);
    }
-}
+*/}

@@ -103,7 +103,7 @@ public abstract class ModelGroupBinding
       }
    }
 
-   public abstract Collection getParticles();
+   public abstract Collection<ParticleBinding> getParticles();
 
    public boolean hasRequiredParticle()
    {
@@ -130,7 +130,7 @@ public abstract class ModelGroupBinding
 
    // Protected
 
-   protected abstract boolean mayStartWith(QName qName, Set set);
+   protected abstract boolean mayStartWith(QName qName, Set<ModelGroupBinding> set);
 
    public boolean isSkip()
    {
@@ -180,7 +180,7 @@ public abstract class ModelGroupBinding
 
       public abstract boolean isPositioned();
 
-      public List startElement(QName qName, Attributes attrs)
+      public List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes attrs)
       {
          return startElement(qName, attrs, Collections.EMPTY_SET, Collections.EMPTY_LIST, true);
       }
@@ -198,15 +198,15 @@ public abstract class ModelGroupBinding
       
       // Protected
 
-      protected abstract List startElement(QName qName,
+      protected abstract List<ModelGroupBinding.Cursor> startElement(QName qName,
                                            Attributes atts,
-                                           Set passedGroups,
-                                           List groupStack,
+                                           Set<ModelGroupBinding.Cursor> passedGroups,
+                                           List<ModelGroupBinding.Cursor> groupStack,
                                            boolean required);
 
-      protected abstract ElementBinding getElement(QName qName, Attributes atts, Set passedGroups, boolean ignoreWildcards);
+      protected abstract ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards);
 
-      protected ElementBinding getElement(List group, QName qName, Attributes atts, Set passedGroups, boolean ignoreWildcards)
+      protected ElementBinding getElement(List<ParticleBinding> group, QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
       {
          ElementBinding element = null;
          for(int i = 0; i < group.size(); ++i)
@@ -233,7 +233,7 @@ public abstract class ModelGroupBinding
                         passedGroups = Collections.singleton(this);
                         break;
                      case 1:
-                        passedGroups = new HashSet(passedGroups);
+                        passedGroups = new HashSet<ModelGroupBinding.Cursor>(passedGroups);
                      default:
                         passedGroups.add(this);
                   }
@@ -272,7 +272,7 @@ public abstract class ModelGroupBinding
          return element;
       }
 
-      protected List addItem(List list, Object o)
+      protected List<ModelGroupBinding.Cursor> addItem(List<ModelGroupBinding.Cursor> list, ModelGroupBinding.Cursor o)
       {
          switch(list.size())
          {
@@ -280,7 +280,7 @@ public abstract class ModelGroupBinding
                list = Collections.singletonList(o);
                break;
             case 1:
-               list = new ArrayList(list);
+               list = new ArrayList<ModelGroupBinding.Cursor>(list);
             default:
                list.add(o);
          }

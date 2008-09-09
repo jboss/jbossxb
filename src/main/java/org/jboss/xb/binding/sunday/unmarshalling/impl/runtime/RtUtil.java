@@ -58,7 +58,7 @@ public class RtUtil
          return;
       }
 
-      Class fieldType = fieldInfo.getType();
+      Class<?> fieldType = fieldInfo.getType();
       boolean arrType;
       if(fieldType.isArray())
       {
@@ -83,16 +83,16 @@ public class RtUtil
 
       if(!arrType || colType != null)
       {
-         Collection col = (Collection)fieldInfo.getValue(o);
+         Collection<Object> col = (Collection<Object>)fieldInfo.getValue(o);
          if(col == null)
          {
             if(colType == null)
             {
-               col = new ArrayList();
+               col = new ArrayList<Object>();
             }
             else
             {
-               Class colCls;
+               Class<?> colCls;
                try
                {
                   colCls = Thread.currentThread().getContextClassLoader().loadClass(colType);
@@ -104,7 +104,7 @@ public class RtUtil
 
                try
                {
-                  col = (Collection)colCls.newInstance();
+                  col = (Collection<Object>)colCls.newInstance();
                }
                catch(Exception e)
                {
@@ -151,7 +151,7 @@ public class RtUtil
          return;
       }
 
-      Class fieldType = fieldInfo.getType();
+      Class<?> fieldType = fieldInfo.getType();
 
       if(valueAdapter != null)
       {
@@ -161,16 +161,16 @@ public class RtUtil
       if(Collection.class.isAssignableFrom(fieldType) &&
          !Collection.class.isAssignableFrom(value.getClass()))
       {
-         Collection col = (Collection)fieldInfo.getValue(o);
+         Collection<Object> col = (Collection<Object>)fieldInfo.getValue(o);
          if(col == null)
          {
             if(colType == null)
             {
-               col = new ArrayList();
+               col = new ArrayList<Object>();
             }
             else
             {
-               Class colCls;
+               Class<?> colCls;
                try
                {
                   colCls = Thread.currentThread().getContextClassLoader().loadClass(colType);
@@ -182,7 +182,7 @@ public class RtUtil
 
                try
                {
-                  col = (Collection)colCls.newInstance();
+                  col = (Collection<Object>)colCls.newInstance();
                }
                catch(Exception e)
                {
@@ -225,16 +225,16 @@ public class RtUtil
       else
       {
          // todo: unmarshalling should produce the right type instead
-         Class valueClass = value == null ? null : value.getClass();
+         Class<? extends Object> valueClass = value == null ? null : value.getClass();
          if (valueClass != null && fieldType.isArray() && Collection.class.isAssignableFrom(valueClass))
          {
-            Collection col = (Collection) value;
-            Class compType = fieldType.getComponentType();
+            Collection<?> col = (Collection<?>) value;
+            Class<?> compType = fieldType.getComponentType();
             value = Array.newInstance(compType, col.size());
             if (compType.isPrimitive())
             {
                int i = 0;
-               for (Iterator iter = col.iterator(); iter.hasNext();)
+               for (Iterator<?> iter = col.iterator(); iter.hasNext();)
                {
                   Array.set(value, i++, iter.next());
                }
@@ -253,7 +253,7 @@ public class RtUtil
    {
       if(o instanceof Collection)
       {
-         ((Collection)o).add(value);
+         ((Collection<Object>)o).add(value);
       }
       else
       {
@@ -263,9 +263,9 @@ public class RtUtil
       }
    }
 
-   public static Class loadClass(String clsName, boolean failIfNotFound)
+   public static Class<?> loadClass(String clsName, boolean failIfNotFound)
    {
-      Class cls = null;
+      Class<?> cls = null;
       try
       {
          cls = Classes.loadClass(clsName);
@@ -294,7 +294,7 @@ public class RtUtil
       String clsName = unmarshalMethod.substring(0, lastDot);
       String methodName = unmarshalMethod.substring(lastDot + 1);
 
-      Class cls = RtUtil.loadClass(clsName, true);
+      Class<?> cls = RtUtil.loadClass(clsName, true);
 
       try
       {
@@ -324,10 +324,10 @@ public class RtUtil
       }
    }
 
-   public static Object invokeUnmarshalMethod(Class cls,
+   public static Object invokeUnmarshalMethod(Class<?> cls,
                                               String methodName,
                                               Object value,
-                                              Class valueType,
+                                              Class<?> valueType,
                                               NamespaceContext nsCtx,
                                               QName qName)
    {

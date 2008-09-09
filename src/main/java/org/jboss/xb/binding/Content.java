@@ -44,7 +44,7 @@ public class Content
 {
    private static Logger log = Logger.getLogger(Content.class);
 
-   private List content = new ArrayList();
+   private List<Node> content = new ArrayList<Node>();
    private final boolean trace = log.isTraceEnabled();
 
    // Public
@@ -104,7 +104,7 @@ public class Content
    {
       handler.startDocument();
 
-      for(Iterator i = content.iterator(); i.hasNext();)
+      for(Iterator<Node> i = content.iterator(); i.hasNext();)
       {
          Object item = i.next();
          if(item instanceof StartElement)
@@ -232,7 +232,7 @@ public class Content
 
    public void append(Content content)
    {
-      for(Iterator i = content.content.iterator(); i.hasNext();)
+      for(Iterator<Node> i = content.content.iterator(); i.hasNext();)
       {
          this.content.add(i.next());
       }

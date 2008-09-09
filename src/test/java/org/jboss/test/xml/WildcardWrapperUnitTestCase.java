@@ -43,7 +43,7 @@ public class WildcardWrapperUnitTestCase extends AbstractJBossXBTest
 {
    public static SchemaBindingResolver initResolver() throws Exception
    {
-      Class clazz = WildcardWrapperUnitTestCase.class;
+      Class<?> clazz = WildcardWrapperUnitTestCase.class;
       DefaultSchemaResolver resolver = new DefaultSchemaResolver();
       resolver.addSchemaInitializer(PropertyInitializer.NS, PropertyInitializer.class.getName());
       String location = getSchemaLocation(clazz, "WildcardWrapperUnitTestCase.xsd");

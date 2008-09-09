@@ -394,7 +394,7 @@ public class SundayContentHandler
                   }
 
                   cursor = modelGroup.newCursor(typeParticle);
-                  List newCursors = cursor.startElement(startName, atts);
+                  List<ModelGroupBinding.Cursor> newCursors = cursor.startElement(startName, atts);
                   if(newCursors.isEmpty())
                   {
                      throw new JBossXBRuntimeException(startName +
@@ -410,7 +410,7 @@ public class SundayContentHandler
                      // push all except the last one
                      for(int i = newCursors.size() - 1; i >= 0; --i)
                      {
-                        cursor = (ModelGroupBinding.Cursor)newCursors.get(i);
+                        cursor = newCursors.get(i);
 
                         ParticleBinding modelGroupParticle = cursor.getParticle();
                         if(modelGroupParticle.isRepeatable())
@@ -448,7 +448,7 @@ public class SundayContentHandler
 
                //int prevOccurence = cursor.getOccurence();
                ParticleBinding prevParticle = cursor.isPositioned() ? cursor.getCurrentParticle() : null;
-               List newCursors = cursor.startElement(startName, atts);
+               List<ModelGroupBinding.Cursor> newCursors = cursor.startElement(startName, atts);
                if(newCursors.isEmpty())
                {
                   if(!item.ended) // this is for choices
@@ -494,14 +494,14 @@ public class SundayContentHandler
                   Object o = item.o;
                   for(int i = newCursors.size() - 2; i >= 0; --i)
                   {
-                     cursor = (ModelGroupBinding.Cursor)newCursors.get(i);
+                     cursor = newCursors.get(i);
 
                      ParticleBinding modelGroupParticle = cursor.getParticle();
                      handler = getHandler(modelGroupParticle);
                      o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
                      push(cursor, o, handler, parentType);
                   }
-                  cursor = (ModelGroupBinding.Cursor)newCursors.get(0);
+                  cursor = newCursors.get(0);
                   particle = cursor.getCurrentParticle();
                   break;
                }
@@ -598,8 +598,8 @@ public class SundayContentHandler
             handler = defParticleHandler;
          }
 
-         List localInterceptors = parentType == null ? Collections.EMPTY_LIST : parentType.getInterceptors(startName);         
-         List interceptors = element.getInterceptors();
+         List<ElementInterceptor> localInterceptors = parentType == null ? Collections.EMPTY_LIST : parentType.getInterceptors(startName);         
+         List<ElementInterceptor> interceptors = element.getInterceptors();
          if(interceptors.size() + localInterceptors.size() > 0)
          {
             if (repeated)
@@ -797,7 +797,7 @@ public class SundayContentHandler
             term.getPutMethodMetaData() == null)
       {
          ValueListHandler handler = ValueListHandler.FACTORY.lazy(item.o);
-         Class cls = item.o.getClass();
+         Class<?> cls = item.o.getClass();
          item.repeatableParticleValue = new ValueListInitializer().newValueList(handler, cls);
       }
    }
@@ -830,7 +830,7 @@ public class SundayContentHandler
             
             // that's not good. some elements can be handled as "unresolved" and some as "resolved"
             QName qName = valueList.getValue(0).qName;
-            Collection col = new ArrayList();
+            Collection<Object> col = new ArrayList<Object>();
             for(int i = 0; i < valueList.size(); ++i)
             {
                NonRequiredValue value = valueList.getValue(i);
@@ -983,10 +983,10 @@ public class SundayContentHandler
    
    private ParticleBinding getParentParticle()
    {
-      ListIterator iter = stack.prevIterator();
+      ListIterator<StackItem> iter = stack.prevIterator();
       while(iter.hasPrevious())
       {
-         StackItem prev = (StackItem)iter.previous();
+         StackItem prev = iter.previous();
          ParticleBinding peeked = prev.particle;
 
          TermBinding term = peeked.getTerm();
@@ -1007,10 +1007,10 @@ public class SundayContentHandler
       ElementBinding element = (ElementBinding)particle.getTerm();
       QName endName = element.getQName();
       TypeBinding type = element.getType();
-      List interceptors = element.getInterceptors();
+      List<ElementInterceptor> interceptors = element.getInterceptors();
       int interceptorsTotal = interceptors.size();
 
-      List localInterceptors = item.parentType == null ? Collections.EMPTY_LIST : item.parentType.getInterceptors(endName);
+      List<ElementInterceptor> localInterceptors = item.parentType == null ? Collections.EMPTY_LIST : item.parentType.getInterceptors(endName);
       int localInterceptorsTotal = localInterceptors.size();
 
       if(o != NIL)
@@ -1238,10 +1238,10 @@ public class SundayContentHandler
          else if(parentParticle != null && hasWildcard && stack.size() > 1)
          {
             // the parent has anyType, so it gets the value of its child
-            ListIterator iter = stack.prevIterator();
+            ListIterator<StackItem> iter = stack.prevIterator();
             while(iter.hasPrevious())
             {
-               StackItem peeked = (StackItem)iter.previous();
+               StackItem peeked = iter.previous();
                peeked.o = o;
                if(peeked.cursor == null)
                {
@@ -1440,7 +1440,7 @@ public class SundayContentHandler
 
    static class StackImpl
    {
-      private List list = new ArrayList();
+      private List<StackItem> list = new ArrayList<StackItem>();
 
       public void clear()
       {
@@ -1454,22 +1454,22 @@ public class SundayContentHandler
 
       public StackItem pop()
       {
-         return (StackItem)list.remove(list.size() - 1);
+         return list.remove(list.size() - 1);
       }
 
-      public ListIterator prevIterator()
+      public ListIterator<StackItem> prevIterator()
       {
          return list.listIterator(list.size() - 1);
       }
 
       public StackItem peek()
       {
-         return (StackItem)list.get(list.size() - 1);
+         return list.get(list.size() - 1);
       }
 
       public StackItem peek(int i)
       {
-         return (StackItem)list.get(list.size() - 1 - i);
+         return list.get(list.size() - 1 - i);
       }
 
       public boolean isEmpty()
@@ -1524,7 +1524,7 @@ public class SundayContentHandler
          return prop;
       }
 
-      public Class resolvePropertyType()
+      public Class<?> resolvePropertyType()
       {
          if(parent == null)
          {

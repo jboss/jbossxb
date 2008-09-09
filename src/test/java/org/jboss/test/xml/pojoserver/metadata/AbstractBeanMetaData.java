@@ -44,7 +44,7 @@ public class AbstractBeanMetaData extends AbstractFeatureMetaData implements Bea
    protected ControllerMode mode = null;
    
    /** The properties configuration Set<PropertyMetaData> */
-   protected Set properties;
+   protected Set<AbstractPropertyMetaData> properties;
    
    /** The constructor */
    protected ConstructorMetaData constructor;
@@ -62,12 +62,12 @@ public class AbstractBeanMetaData extends AbstractFeatureMetaData implements Bea
    protected LifecycleMetaData destroy;
    
    /** What the bean demands Set<DemandMetaData> */
-   protected Set demands;
+   protected Set<Object> demands;
    
    /** What the bean supplies Set<SupplyMetaData> */
-   protected Set supplies;
+   protected Set<AbstractSupplyMetaData> supplies;
 
-   protected Map metaData;
+   protected Map<?, ?> metaData;
    /**
     * Create a new bean meta data
     */
@@ -112,7 +112,7 @@ public class AbstractBeanMetaData extends AbstractFeatureMetaData implements Bea
     * 
     * @param properties Set<PropertiesMetaData>
     */
-   public void setProperties(Set properties)
+   public void setProperties(Set<AbstractPropertyMetaData> properties)
    {
       this.properties = properties;
    }
@@ -132,7 +132,7 @@ public class AbstractBeanMetaData extends AbstractFeatureMetaData implements Bea
     * 
     * @param demands Set<DemandMetaData>
     */
-   public void setDemands(Set demands)
+   public void setDemands(Set<Object> demands)
    {
       this.demands = demands;
    }
@@ -142,7 +142,7 @@ public class AbstractBeanMetaData extends AbstractFeatureMetaData implements Bea
     * 
     * @param supplies Set<SupplyMetaData>
     */
-   public void setSupplies(Set supplies)
+   public void setSupplies(Set<AbstractSupplyMetaData> supplies)
    {
       this.supplies = supplies;
    }
@@ -177,7 +177,7 @@ public class AbstractBeanMetaData extends AbstractFeatureMetaData implements Bea
       this.mode = mode;
    }
    
-   public Set getProperties()
+   public Set<AbstractPropertyMetaData> getProperties()
    {
       return properties;
    }
@@ -251,19 +251,19 @@ public class AbstractBeanMetaData extends AbstractFeatureMetaData implements Bea
       this.destroy = lifecycle;
    }
    
-   public Set getDemands()
+   public Set<Object> getDemands()
    {
       return demands;
    }
    
-   public Set getSupplies()
+   public Set<AbstractSupplyMetaData> getSupplies()
    {
       return supplies;
    }
    
-   public Iterator getChildren()
+   public Iterator<Object> getChildren()
    {
-      ArrayList list = new ArrayList();
+      ArrayList<Object> list = new ArrayList<Object>();
       if (constructor != null)
          list.add(constructor);
       if (properties != null)

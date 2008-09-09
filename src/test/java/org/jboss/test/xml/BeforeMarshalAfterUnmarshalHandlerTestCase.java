@@ -256,9 +256,9 @@ public class BeforeMarshalAfterUnmarshalHandlerTestCase
          // have to override string type's handlers
          ElementBinding global = SCHEMA.getElement(new QName("http://jboss.org/ns/test", "global"));
          SequenceBinding sequence = (SequenceBinding) global.getType().getParticle().getTerm();
-         Iterator iter = sequence.getParticles().iterator();
+         Iterator<ParticleBinding> iter = sequence.getParticles().iterator();
          iter.next(); // stringType element
-         ElementBinding stringElement = (ElementBinding) ((ParticleBinding)iter.next()).getTerm();
+         ElementBinding stringElement = (ElementBinding) iter.next().getTerm();
          stringElement.setBeforeMarshallingCallback(new TermBeforeMarshallingCallback()
          {
             public Object beforeMarshalling(Object o, MarshallingContext ctx)

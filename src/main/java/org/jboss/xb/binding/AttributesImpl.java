@@ -35,7 +35,7 @@ import java.util.ArrayList;
 public class AttributesImpl
    implements Attributes
 {
-   private final List attrList;
+   private final List<AttributeImpl> attrList;
 
    public AttributesImpl(Attributes attrs)
    {
@@ -58,7 +58,7 @@ public class AttributesImpl
 
    public AttributesImpl(int size)
    {
-      this.attrList = new ArrayList(size);
+      this.attrList = new ArrayList<AttributeImpl>(size);
    }
 
    public void add(String namespaceUri, String localName, String qName, String type, String value)
@@ -255,7 +255,7 @@ public class AttributesImpl
 
    private AttributeImpl getAttribute(int index)
    {
-      return (AttributeImpl)attrList.get(index);
+      return attrList.get(index);
    }
 
    // Inner

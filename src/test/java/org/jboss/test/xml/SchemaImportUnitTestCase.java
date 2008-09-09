@@ -120,7 +120,7 @@ public class SchemaImportUnitTestCase
       Object o = unmarshaller.unmarshal(new StringReader(XML), schema);
       assertNotNull(o);
       assertTrue(o instanceof List);
-      List list = (List)o;
+      List<?> list = (List<?>)o;
       assertEquals(1, list.size());
       o = list.get(0);
       assertTrue(o instanceof Book);

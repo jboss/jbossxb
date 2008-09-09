@@ -105,7 +105,7 @@ public class AbstractMapMetaData extends AbstractTypeMetaData implements Map
       return map.containsValue(value);
    }
 
-   public Set entrySet()
+   public Set<?> entrySet()
    {
       return map.entrySet();
    }
@@ -120,7 +120,7 @@ public class AbstractMapMetaData extends AbstractTypeMetaData implements Map
       return map.isEmpty();
    }
 
-   public Set keySet()
+   public Set<?> keySet()
    {
       return map.keySet();
    }
@@ -145,7 +145,7 @@ public class AbstractMapMetaData extends AbstractTypeMetaData implements Map
       return map.size();
    }
 
-   public Collection values()
+   public Collection<?> values()
    {
       return map.values();
    }

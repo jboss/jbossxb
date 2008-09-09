@@ -59,7 +59,7 @@ public class SchemalessObjectModelFactory
          {
             if(!localName.equals(java.lang.String.class.getName()))
             {
-               Class itemClass = Thread.currentThread().getContextClassLoader().loadClass(localName);
+               Class<?> itemClass = Thread.currentThread().getContextClassLoader().loadClass(localName);
                child = itemClass.newInstance();
                ((Collection)parent).add(child);
             }
@@ -71,15 +71,15 @@ public class SchemalessObjectModelFactory
             {
                if(List.class.isAssignableFrom(getter.getReturnType()))
                {
-                  child = new ArrayList();
+                  child = new ArrayList<Object>();
                }
                else if(Set.class.isAssignableFrom(getter.getReturnType()))
                {
-                  child = new HashSet();
+                  child = new HashSet<Object>();
                }
                else if(Collection.class.isAssignableFrom(getter.getReturnType()))
                {
-                  child = new ArrayList();
+                  child = new ArrayList<Object>();
                }
                else
                {
@@ -129,7 +129,7 @@ public class SchemalessObjectModelFactory
          {
             if(localName.equals(java.lang.String.class.getName()))
             {
-               ((Collection)o).add(value);
+               ((Collection<String>)o).add(value);
             }
          }
          else
@@ -167,7 +167,7 @@ public class SchemalessObjectModelFactory
                          String localName,
                          Attributes attrs)
    {
-      Class rootClass;
+      Class<?> rootClass;
       try
       {
          rootClass = Thread.currentThread().getContextClassLoader().loadClass(localName);

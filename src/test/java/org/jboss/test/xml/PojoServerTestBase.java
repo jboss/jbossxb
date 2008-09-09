@@ -304,26 +304,26 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertNotNull(deployment.getBeans());
       assertEquals(2, deployment.getBeans().size());
 
-      AbstractBeanMetaData bean = (AbstractBeanMetaData)deployment.getBeans().get(0);
+      AbstractBeanMetaData bean = deployment.getBeans().get(0);
       assertEquals("SimpleBean1", bean.getName());
       assertEquals("org.jboss.test.kernel.xml.support.SimpleBeanImpl", bean.getBean());
       assertNotNull(bean.getProperties());
       assertEquals(1, bean.getProperties().size());
-      AbstractPropertyMetaData prop = (AbstractPropertyMetaData)bean.getProperties().iterator().next();
+      AbstractPropertyMetaData prop = bean.getProperties().iterator().next();
       assertNotNull(prop);
       assertEquals("other", prop.getName());
       assertTrue(prop.getValue() instanceof AbstractDependencyValueMetaData);
       AbstractDependencyValueMetaData dependency = (AbstractDependencyValueMetaData)prop.getValue();
       assertEquals("SimpleBean2", dependency.getValue());
 
-      bean = (AbstractBeanMetaData)deployment.getBeans().get(1);
+      bean = deployment.getBeans().get(1);
       assertEquals("SimpleBean2", bean.getName());
       assertEquals("org.jboss.test.kernel.xml.support.SimpleBeanImpl", bean.getBean());
       assertNotNull(bean.getConstructor());
       ConstructorMetaData ctor = bean.getConstructor();
       assertNotNull(ctor.getParameters());
       assertEquals(1, ctor.getParameters().size());
-      AbstractParameterMetaData param = (AbstractParameterMetaData)ctor.getParameters().get(0);
+      AbstractParameterMetaData param = ctor.getParameters().get(0);
       assertEquals("java.lang.String", param.getType());
       assertEquals("Bean2", param.getValue().getUnderlyingValue());
    }
@@ -335,26 +335,26 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertNotNull(deployment.getBeans());
       assertEquals(2, deployment.getBeans().size());
 
-      AbstractBeanMetaData bean = (AbstractBeanMetaData)deployment.getBeans().get(0);
+      AbstractBeanMetaData bean = deployment.getBeans().get(0);
       assertEquals("SimpleBean1", bean.getName());
       assertEquals("org.jboss.test.xml.pojoserver.SimpleBeanImpl", bean.getBean());
       assertNotNull(bean.getProperties());
       assertEquals(1, bean.getProperties().size());
-      AbstractPropertyMetaData prop = (AbstractPropertyMetaData)bean.getProperties().iterator().next();
+      AbstractPropertyMetaData prop = bean.getProperties().iterator().next();
       assertNotNull(prop);
       assertEquals("other", prop.getName());
       assertTrue(prop.getValue() instanceof AbstractDependencyValueMetaData);
       AbstractDependencyValueMetaData dependency = (AbstractDependencyValueMetaData)prop.getValue();
       assertEquals("SimpleBean2", dependency.getValue());
 
-      bean = (AbstractBeanMetaData)deployment.getBeans().get(1);
+      bean = deployment.getBeans().get(1);
       assertEquals("SimpleBean2", bean.getName());
       assertEquals("org.jboss.test.kernel.xml.support.SimpleBeanImpl", bean.getBean());
       assertNotNull(bean.getConstructor());
       ConstructorMetaData ctor = bean.getConstructor();
       assertNotNull(ctor.getParameters());
       assertEquals(1, ctor.getParameters().size());
-      AbstractParameterMetaData param = (AbstractParameterMetaData)ctor.getParameters().get(0);
+      AbstractParameterMetaData param = ctor.getParameters().get(0);
       assertEquals("java.lang.String", param.getType());
       assertEquals("Bean2", param.getValue().getUnderlyingValue());
    }
@@ -366,15 +366,15 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertNotNull(deployment.getBeans());
       assertEquals(1, deployment.getBeans().size());
 
-      AbstractBeanMetaData bean = (AbstractBeanMetaData)deployment.getBeans().get(0);
+      AbstractBeanMetaData bean = deployment.getBeans().get(0);
       assertEquals("SimpleBean1", bean.getName());
       assertEquals("org.jboss.test.xml.pojoserver.SimpleBeanImpl", bean.getBean());
       assertNotNull(bean.getProperties());
       assertEquals(18, bean.getProperties().size());
 
-      for(Iterator i = bean.getProperties().iterator(); i.hasNext();)
+      for(Iterator<AbstractPropertyMetaData> i = bean.getProperties().iterator(); i.hasNext();)
       {
-         AbstractPropertyMetaData prop = (AbstractPropertyMetaData)i.next();
+         AbstractPropertyMetaData prop = i.next();
          String name = prop.getName();
          Object value = prop.getValue().getUnderlyingValue();
          assertConfigureProperty(name, value);
@@ -388,15 +388,15 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertNotNull(deployment.getBeans());
       assertEquals(1, deployment.getBeans().size());
 
-      AbstractBeanMetaData bean = (AbstractBeanMetaData)deployment.getBeans().get(0);
+      AbstractBeanMetaData bean = deployment.getBeans().get(0);
       assertEquals("SimpleBean1", bean.getName());
       assertEquals("org.jboss.test.xml.pojoserver.SimpleBeanImpl", bean.getBean());
       assertNotNull(bean.getProperties());
       assertEquals(19, bean.getProperties().size());
 
-      for(Iterator i = bean.getProperties().iterator(); i.hasNext();)
+      for(Iterator<AbstractPropertyMetaData> i = bean.getProperties().iterator(); i.hasNext();)
       {
-         AbstractPropertyMetaData prop = (AbstractPropertyMetaData)i.next();
+         AbstractPropertyMetaData prop = i.next();
          String name = prop.getName();
          if("other".equals(name))
          {
@@ -435,7 +435,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertNotNull(deployment.getBeans());
       assertEquals(2, deployment.getBeans().size());
 
-      AbstractBeanMetaData bean = (AbstractBeanMetaData)deployment.getBeans().get(0);
+      AbstractBeanMetaData bean = deployment.getBeans().get(0);
       assertEquals("SimpleBean1", bean.getName());
       assertEquals("org.jboss.test.xml.pojoserver.SimpleBeanImpl", bean.getBean());
       assertNotNull(bean.getConstructor());
@@ -451,7 +451,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
       AbstractDependencyValueMetaData dependency = (AbstractDependencyValueMetaData)param.getValue();
       assertEquals("SimpleBean2", dependency.getValue());
 
-      bean = (AbstractBeanMetaData)deployment.getBeans().get(1);
+      bean = deployment.getBeans().get(1);
       assertEquals("SimpleBean2", bean.getName());
       assertEquals("org.jboss.test.kernel.xml.support.SimpleBeanImpl", bean.getBean());
    }
@@ -534,7 +534,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertNotNull(deployment.getBeans());
       assertEquals(3, deployment.getBeans().size());
 
-      AbstractBeanMetaData bean = (AbstractBeanMetaData)deployment.getBeans().get(0);
+      AbstractBeanMetaData bean = deployment.getBeans().get(0);
       assertEquals("SimpleBean1", bean.getName());
       assertEquals("org.jboss.test.xml.pojoserver.SimpleBeanImpl", bean.getBean());
       assertNotNull(bean.getConstructor());
@@ -544,17 +544,17 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertEquals("SimpleBeanFactory", ctor.getFactory().getUnderlyingValue());
       assertNotNull(ctor.getParameters());
       assertEquals(1, ctor.getParameters().size());
-      AbstractParameterMetaData param = (AbstractParameterMetaData)ctor.getParameters().get(0);
+      AbstractParameterMetaData param = ctor.getParameters().get(0);
       assertEquals("org.jboss.test.xml.pojoserver.SimpleBean", param.getType());
       assertTrue(param.getValue() instanceof AbstractDependencyValueMetaData);
       AbstractDependencyValueMetaData dependency = (AbstractDependencyValueMetaData)param.getValue();
       assertEquals("SimpleBean2", dependency.getValue());
 
-      bean = (AbstractBeanMetaData)deployment.getBeans().get(1);
+      bean = deployment.getBeans().get(1);
       assertEquals("SimpleBean2", bean.getName());
       assertEquals("org.jboss.test.xml.pojoserver.SimpleBeanImpl", bean.getBean());
 
-      bean = (AbstractBeanMetaData)deployment.getBeans().get(2);
+      bean = deployment.getBeans().get(2);
       assertEquals("SimpleBeanFactory", bean.getName());
       assertEquals("org.jboss.test.xml.pojoserver.SimpleBeanFactory", bean.getBean());
    }
@@ -690,7 +690,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertNotNull(deployment.getBeans());
       assertEquals(2, deployment.getBeans().size());
 
-      AbstractBeanMetaData bean = (AbstractBeanMetaData)deployment.getBeans().get(0);
+      AbstractBeanMetaData bean = deployment.getBeans().get(0);
       assertEquals("SimpleBean1", bean.getName());
       assertEquals("org.jboss.test.xml.pojoserver.SimpleBeanImpl", bean.getBean());
       assertNotNull(bean.getConstructor());
@@ -699,7 +699,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
       assertEquals("staticCreateSimpleBean", ctor.getFactoryMethod());
       assertNotNull(ctor.getParameters());
       assertEquals(1, ctor.getParameters().size());
-      AbstractParameterMetaData param = (AbstractParameterMetaData)ctor.getParameters().get(0);
+      AbstractParameterMetaData param = ctor.getParameters().get(0);
       assertNotNull(param);
       assertEquals("org.jboss.test.kernel.xml.support.SimpleBean", param.getType());
       assertNotNull(param.getValue());
@@ -707,7 +707,7 @@ public abstract class PojoServerTestBase extends BaseTestCase
       AbstractDependencyValueMetaData dependency = (AbstractDependencyValueMetaData)param.getValue();
       assertEquals("SimpleBean2", dependency.getValue());
 
-      bean = (AbstractBeanMetaData)deployment.getBeans().get(1);
+      bean = deployment.getBeans().get(1);
       assertEquals("SimpleBean2", bean.getName());
       assertEquals("org.jboss.test.xml.pojoserver.SimpleBeanImpl", bean.getBean());
    }

@@ -37,16 +37,16 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
 public class ClassInfo
 {
    private static final Object FIELD_INFO_NA = new Object();
-   private final Class type;
-   private Map fields = new ConcurrentHashMap();
+   private final Class<?> type;
+   private Map<String, Object> fields = new ConcurrentHashMap<String, Object>();
    private boolean introspected;
 
-   public ClassInfo(Class cls)
+   public ClassInfo(Class<?> cls)
    {
       this.type = cls;
    }
 
-   public Class getType()
+   public Class<?> getType()
    {
       return type;
    }

@@ -201,7 +201,7 @@ public class EnumUnitTestCase
    {
       public Color color;
       public Nmbr number;
-      public List all;
+      public List<Object> all;
 
       public boolean equals(Object o)
       {

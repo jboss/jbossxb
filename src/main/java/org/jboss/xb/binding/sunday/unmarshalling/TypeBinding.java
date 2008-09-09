@@ -52,7 +52,7 @@ public class TypeBinding
 {
    protected QName qName;
    /** Map<QName, AttributeBinding>  */
-   private Map attrs = Collections.EMPTY_MAP;
+   private Map<QName, AttributeBinding> attrs = Collections.emptyMap();
    private ParticleHandler handler;//todo default handler is now in SundayContentHandler.
    private CharactersHandler charactersHandler;
    private ClassMetaData classMetaData;
@@ -75,8 +75,8 @@ public class TypeBinding
    private WildcardBinding wildcard;
    private ParticleBinding particle;
 
-   private List patternValues;
-   private List enumValues;
+   private List<String> patternValues;
+   private List<String> enumValues;
    private TypeBinding itemType; // the type is a list type with this item type
    private TypeBinding simpleType;
 
@@ -86,7 +86,7 @@ public class TypeBinding
    /** Map<QName, List<ElementInterceptor>>
     * these are local element interceptors that are "added" to the interceptor stack
     * defined in the element binding */
-   private Map interceptors = Collections.EMPTY_MAP;
+   private Map<QName, List<ElementInterceptor>> interceptors = Collections.emptyMap();
    
    public TypeBinding()
    {
@@ -120,7 +120,7 @@ public class TypeBinding
          this.particle = baseType.particle;
       }
 
-      this.attrs = new HashMap(baseType.attrs);
+      this.attrs = new HashMap<QName, AttributeBinding>(baseType.attrs);
       this.classMetaData = baseType.classMetaData;
       this.valueMetaData = baseType.valueMetaData;
       this.propertyMetaData = baseType.propertyMetaData;
@@ -200,20 +200,20 @@ public class TypeBinding
       return el;
    }
 
-   public void addGroup(Map group)
+   public void addGroup(Map<QName, TypeBinding> group)
    {
-      for(Iterator i = group.entrySet().iterator(); i.hasNext();)
+      for(Iterator<Map.Entry<QName, TypeBinding>> i = group.entrySet().iterator(); i.hasNext();)
       {
-         Map.Entry entry = (Map.Entry)i.next();
-         QName name = (QName)entry.getKey();
-         TypeBinding type = (TypeBinding)entry.getValue();
+         Map.Entry<QName, TypeBinding> entry = i.next();
+         QName name = entry.getKey();
+         TypeBinding type = entry.getValue();
          addElement(name, type);
       }
    }
 
    public AttributeBinding getAttribute(QName qName)
    {
-      return (AttributeBinding)attrs.get(qName);
+      return attrs.get(qName);
    }
 
    /**
@@ -232,7 +232,7 @@ public class TypeBinding
       }
 
       // Map<QName, AttributeBinding>
-      HashMap attrsNotSeen = new HashMap(this.attrs);
+      HashMap<QName, AttributeBinding> attrsNotSeen = new HashMap<QName, AttributeBinding>(this.attrs);
       for(int n = 0; n < attrs.getLength(); n ++)
       {
          QName name = new QName(attrs.getURI(n), attrs.getLocalName(n));
@@ -243,12 +243,12 @@ public class TypeBinding
       if( attrsNotSeen.size() > 0 )
       {
          AttributesImpl tmp = new AttributesImpl(attrs);
-         Iterator iter = attrsNotSeen.entrySet().iterator();
+         Iterator<Map.Entry<QName, AttributeBinding>> iter = attrsNotSeen.entrySet().iterator();
          while( iter.hasNext() )
          {
-            Map.Entry entry = (Map.Entry) iter.next();
-            QName name = (QName) entry.getKey();
-            AttributeBinding binding = (AttributeBinding) entry.getValue();
+            Map.Entry<QName, AttributeBinding> entry = (Map.Entry<QName, AttributeBinding>) iter.next();
+            QName name = entry.getKey();
+            AttributeBinding binding = entry.getValue();
             String constraint = binding.getDefaultConstraint();
             if( constraint != null )
             {
@@ -256,8 +256,7 @@ public class TypeBinding
                // "The attribute type is one of the strings
                // "CDATA", "ID", "IDREF", "IDREFS", "NMTOKEN", "NMTOKENS", "ENTITY", "ENTITIES",
                // or "NOTATION" (always in upper case)."
-               tmp.addAttribute(name.getNamespaceURI(), name.getLocalPart(),
-                  name.toString(), "CDATA", constraint);
+               tmp.addAttribute(name.getNamespaceURI(), name.getLocalPart(), name.toString(), "CDATA", constraint);
             }
          }
          expandedAttrs = tmp;
@@ -281,13 +280,13 @@ public class TypeBinding
             attrs = Collections.singletonMap(attr.getQName(), attr);
             break;
          case 1:
-            attrs = new HashMap(attrs);
+            attrs = new HashMap<QName, AttributeBinding>(attrs);
          default:
             attrs.put(attr.getQName(), attr);
       }
    }
 
-   public Collection getAttributes()
+   public Collection<AttributeBinding> getAttributes()
    {
       return attrs.values();
    }
@@ -354,7 +353,7 @@ public class TypeBinding
       }
       //el.pushInterceptor(interceptor);
       
-      List intList = (List) interceptors.get(qName);
+      List<ElementInterceptor> intList = (List<ElementInterceptor>) interceptors.get(qName);
       if(intList == null)
       {
          intList = Collections.singletonList(interceptor);
@@ -364,7 +363,7 @@ public class TypeBinding
                interceptors = Collections.singletonMap(qName, intList);
                break;
             case 1:
-               interceptors = new HashMap(interceptors);
+               interceptors = new HashMap<QName, List<ElementInterceptor>>(interceptors);
             default:
                interceptors.put(qName, intList);
          }
@@ -373,7 +372,7 @@ public class TypeBinding
       {
          if(intList.size() == 1)
          {
-            intList = new ArrayList(intList);
+            intList = new ArrayList<ElementInterceptor>(intList);
             interceptors.put(qName, intList);
          }
          intList.add(interceptor);
@@ -388,9 +387,9 @@ public class TypeBinding
     * @param qName
     * @return
     */
-   public List getInterceptors(QName qName)
+   public List<ElementInterceptor> getInterceptors(QName qName)
    {
-      List list = (List) interceptors.get(qName);
+      List<ElementInterceptor> list = interceptors.get(qName);
       return list == null ? Collections.EMPTY_LIST : list;
    }
    
@@ -568,7 +567,7 @@ public class TypeBinding
       this.particle = particle;
    }
 
-   public List getLexicalPattern()
+   public List<String> getLexicalPattern()
    {
       return patternValues;
    }
@@ -583,13 +582,13 @@ public class TypeBinding
       {
          if(patternValues.size() == 1)
          {
-            patternValues = new ArrayList(patternValues);
+            patternValues = new ArrayList<String>(patternValues);
          }
          patternValues.add(patternValue);
       }
    }
 
-   public List getLexicalEnumeration()
+   public List<String> getLexicalEnumeration()
    {
       return enumValues;
    }
@@ -604,7 +603,7 @@ public class TypeBinding
       {
          if(enumValues.size() == 1)
          {
-            enumValues = new ArrayList(enumValues);
+            enumValues = new ArrayList<String>(enumValues);
          }
          enumValues.add(value);
       }
@@ -650,10 +649,10 @@ public class TypeBinding
       }
       else
       {
-         Iterator iter = attrs.keySet().iterator();
+         Iterator<QName> iter = attrs.keySet().iterator();
          while(iter.hasNext())
          {
-            QName qName = (QName)iter.next();
+            QName qName = iter.next();
             if(!Constants.NS_XML_MIME.equals(qName.getNamespaceURI()))
             {
                return false;
@@ -708,9 +707,9 @@ public class TypeBinding
       if(term.isModelGroup())
       {
          ModelGroupBinding group = (ModelGroupBinding) term;
-         for(Iterator i = group.getParticles().iterator(); i.hasNext();)
+         for(Iterator<ParticleBinding> i = group.getParticles().iterator(); i.hasNext();)
          {
-            term = ((ParticleBinding)i.next()).getTerm();
+            term = i.next().getTerm();
             if(term.isWildcard())
             {
                return (WildcardBinding)term;

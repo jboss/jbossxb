@@ -89,7 +89,7 @@ public class AlphaUnitTestCase extends AbstractBuilderTest
          assertTrue(term instanceof ElementBinding);
          elements.add(((ElementBinding) term).getQName());
       }
-      ArrayList<QName> expected = new ArrayList();
+      ArrayList<QName> expected = new ArrayList<QName>();
       expected.add(new QName(XMLConstants.NULL_NS_URI, "one"));
       expected.add(new QName(XMLConstants.NULL_NS_URI, "three"));
       expected.add(new QName(XMLConstants.NULL_NS_URI, "two"));

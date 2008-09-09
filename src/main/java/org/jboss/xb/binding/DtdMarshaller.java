@@ -74,9 +74,9 @@ public class DtdMarshaller
    private GenericObjectModelProvider provider;
    private Content content = new Content();
 
-   private final List elementStack = new ArrayList();
+   private final List<Element> elementStack = new ArrayList<Element>();
 
-   private final Map simpleTypeBindings = new HashMap();
+   private final Map<String, TypeBinding> simpleTypeBindings = new HashMap<String, TypeBinding>();
 
    public void addBinding(String elementName, TypeBinding binding)
    {
@@ -244,7 +244,7 @@ public class DtdMarshaller
       boolean startElement = false;
       if(!elementStack.isEmpty())
       {
-         Element e = (Element) elementStack.get(elementStack.size() - 1);
+         Element e = elementStack.get(elementStack.size() - 1);
          startElement = element != e.element;
       }
       
@@ -263,7 +263,7 @@ public class DtdMarshaller
                writeSkippedElements();
 
                String marshalled;
-               TypeBinding binding = (TypeBinding)simpleTypeBindings.get(elementName);
+               TypeBinding binding = simpleTypeBindings.get(elementName);
                if(binding != null)
                {
                   marshalled = binding.marshal(value);
@@ -297,14 +297,14 @@ public class DtdMarshaller
 
       if(children != null)
       {
-         Iterator iter;
+         Iterator<Object> iter;
          if(children instanceof Iterator)
          {
-            iter = (Iterator)children;
+            iter = (Iterator<Object>)children;
          }
          else if(children instanceof Collection)
          {
-            iter = ((Collection)children).iterator();
+            iter = ((Collection<Object>)children).iterator();
          }
          else
          {
@@ -366,7 +366,7 @@ public class DtdMarshaller
 
          if(removeLast)
          {
-            Element el = (Element)elementStack.remove(elementStack.size() - 1);
+            Element el = elementStack.remove(elementStack.size() - 1);
             if(el.started)
             {
                DTDElement started = el.element;
@@ -397,13 +397,13 @@ public class DtdMarshaller
 
    private void writeSkippedElements()
    {
-      Element el = (Element)elementStack.get(elementStack.size() - 1);
+      Element el = elementStack.get(elementStack.size() - 1);
       if(!el.started)
       {
          int firstNotStarted = elementStack.size() - 1;
          do
          {
-            el = (Element)elementStack.get(--firstNotStarted);
+            el = elementStack.get(--firstNotStarted);
          }
          while(!el.started);
 
@@ -411,7 +411,7 @@ public class DtdMarshaller
 
          while(firstNotStarted < elementStack.size())
          {
-            el = (Element)elementStack.get(firstNotStarted++);
+            el = elementStack.get(firstNotStarted++);
             DTDElement notStarted = el.element;
 
             if(log.isTraceEnabled())
@@ -427,10 +427,10 @@ public class DtdMarshaller
 
    private AttributesImpl provideAttributes(DTDElement element, Object container)
    {
-      final Hashtable attributes = element.attributes;
+      final Hashtable<?, ?> attributes = element.attributes;
       AttributesImpl attrs = new AttributesImpl(attributes.size());
 
-      for(Iterator attrIter = attributes.values().iterator(); attrIter.hasNext();)
+      for(Iterator<?> attrIter = attributes.values().iterator(); attrIter.hasNext();)
       {
          DTDAttribute attr = (DTDAttribute)attrIter.next();
          final Object attrValue = provider.getAttributeValue(container, null, systemId, attr.getName());
@@ -455,8 +455,8 @@ public class DtdMarshaller
     */
    protected static DTDElement[] getRootList(DTD dtd)
    {
-      Hashtable roots = new Hashtable();
-      Enumeration e = dtd.elements.elements();
+      Hashtable<String, DTDElement> roots = new Hashtable<String, DTDElement>();
+      Enumeration<?> e = dtd.elements.elements();
       while(e.hasMoreElements())
       {
          DTDElement element = (DTDElement)e.nextElement();
@@ -472,18 +472,18 @@ public class DtdMarshaller
             continue;
          }
 
-         Enumeration items = ((DTDContainer)element.content).getItemsVec().elements();
+         Enumeration<?> items = ((DTDContainer)element.content).getItemsVec().elements();
          while(items.hasMoreElements())
          {
             removeElements(roots, dtd, (DTDItem)items.nextElement());
          }
       }
 
-      final Collection rootCol = roots.values();
-      return (DTDElement[])rootCol.toArray(new DTDElement[rootCol.size()]);
+      final Collection<DTDElement> rootCol = roots.values();
+      return rootCol.toArray(new DTDElement[rootCol.size()]);
    }
 
-   protected static void removeElements(Hashtable h, DTD dtd, DTDItem item)
+   protected static void removeElements(Hashtable<String, DTDElement> h, DTD dtd, DTDItem item)
    {
       if(item instanceof DTDName)
       {
@@ -491,7 +491,7 @@ public class DtdMarshaller
       }
       else if(item instanceof DTDContainer)
       {
-         Enumeration e = ((DTDContainer)item).getItemsVec().elements();
+         Enumeration<?> e = ((DTDContainer)item).getItemsVec().elements();
          while(e.hasMoreElements())
          {
             removeElements(h, dtd, (DTDItem)e.nextElement());

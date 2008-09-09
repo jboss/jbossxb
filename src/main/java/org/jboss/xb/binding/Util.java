@@ -312,7 +312,7 @@ public final class Util
          xmlNamespaceToJavaPackage(namespaceUri) + '.' + xmlNameToClassName(localName, ignoreLowLine);
    }
 
-   public static boolean isAttributeType(final Class type)
+   public static boolean isAttributeType(final Class<?> type)
    {
       return Classes.isPrimitive(type) ||
          type == String.class ||

@@ -92,7 +92,7 @@ public abstract class AbstractJavaEEMetaDataTest extends AbstractTestCaseWithSet
     * @return the delegate
     * @throws Exception for any error
     */
-   public static AbstractTestDelegate getDelegate(Class clazz) throws Exception
+   public static AbstractTestDelegate getDelegate(Class<?> clazz) throws Exception
    {
       return new JavaEEMetaDataTestDelegate(clazz);
    }
@@ -212,7 +212,7 @@ public abstract class AbstractJavaEEMetaDataTest extends AbstractTestCaseWithSet
       return url.toString();
    }
    
-   protected static SchemaBindingResolver schemaResolverForClass(final Class root)
+   protected static SchemaBindingResolver schemaResolverForClass(final Class<?> root)
    {
       return new SchemaBindingResolver()
       {

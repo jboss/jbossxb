@@ -430,8 +430,8 @@ public class CollectionsUnitTestCase
 
    public static final class ListWrapper
    {
-      public List field1;
-      public List field2;
+      public List<String> field1;
+      public List<Boolean> field2;
       public QName[] field3;
    }
 }

@@ -26,17 +26,16 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision: $</tt>
  */
-public class NoopMap
-   extends AbstractMap
+public class NoopMap<K,V>
+   extends AbstractMap<K,V>
 {
-   public static final Map INSTANCE = new NoopMap();
-
-   public Object put(Object key, Object value)
+   public V put(K key, V value)
    {
       return null;
    }
@@ -61,24 +60,24 @@ public class NoopMap
       return false;
    }
 
-   public Object get(Object key)
+   public V get(Object key)
    {
       return null;
    }
 
-   public Set keySet()
+   public Set<K> keySet()
    {
-      return Collections.EMPTY_SET;
+      return Collections.emptySet();
    }
 
-   public Collection values()
+   public Collection<V> values()
    {
-      return Collections.EMPTY_SET;
+      return Collections.emptySet();
    }
 
-   public Set entrySet()
+   public Set<Entry<K,V>> entrySet()
    {
-      return Collections.EMPTY_SET;
+      return Collections.emptySet();
    }
 
    public boolean equals(Object o)

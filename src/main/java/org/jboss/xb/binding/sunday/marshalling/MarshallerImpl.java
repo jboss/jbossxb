@@ -179,7 +179,7 @@ public class MarshallerImpl
                 ") for the root element is specified then the name for the root element is required!"
             );
          }
-         QName rootQName = (QName)rootQNames.get(0);
+         QName rootQName = rootQNames.get(0);
 
          TypeBinding type = schema.getType(rootTypeQName);
          if(type == null)
@@ -202,7 +202,7 @@ public class MarshallerImpl
       }
       else if(rootQNames.isEmpty())
       {
-         Iterator elements = schema.getElementParticles();
+         Iterator<ParticleBinding> elements = schema.getElementParticles();
          if(!elements.hasNext())
          {
             throw new JBossXBRuntimeException("The schema doesn't contain global element declarations.");
@@ -210,7 +210,7 @@ public class MarshallerImpl
 
          while(elements.hasNext())
          {
-            ParticleBinding element = (ParticleBinding)elements.next();
+            ParticleBinding element = elements.next();
             ctx.particle = element;
             marshalElementOccurence((ElementBinding) element.getTerm(), root, true, true);
          }
@@ -219,11 +219,11 @@ public class MarshallerImpl
       {
          for(int i = 0; i < rootQNames.size(); ++i)
          {
-            QName qName = (QName)rootQNames.get(i);
+            QName qName = rootQNames.get(i);
             ParticleBinding element = schema.getElementParticle(qName);
             if(element == null)
             {
-               Iterator components = schema.getElements();
+               Iterator<ElementBinding> components = schema.getElements();
                String roots = "";
                for(int j = 0; components.hasNext(); ++j)
                {
@@ -492,7 +492,7 @@ public class MarshallerImpl
                                    boolean declareNs,
                                    boolean declareXsiType)
    {
-      Collection attrBindings = type.getAttributes();
+      Collection<AttributeBinding> attrBindings = type.getAttributes();
       int attrsTotal = declareNs || declareXsiType ? nsRegistry.size() + attrBindings.size() + 1: attrBindings.size();
       ctx.attrs = attrsTotal > 0 ? new AttributesImpl(attrsTotal) : null;
 
@@ -532,9 +532,9 @@ public class MarshallerImpl
 
       if(!attrBindings.isEmpty())
       {
-         for(Iterator i = attrBindings.iterator(); i.hasNext();)
+         for(Iterator<AttributeBinding> i = attrBindings.iterator(); i.hasNext();)
          {
-            AttributeBinding attrBinding = (AttributeBinding)i.next();
+            AttributeBinding attrBinding = i.next();
             QName attrQName = attrBinding.getQName();
 
             if(Constants.QNAME_XMIME_CONTENTTYPE.equals(attrQName))
@@ -643,7 +643,7 @@ public class MarshallerImpl
       boolean marshalled;
       TermBinding term = particle.getTerm();
       Object o;
-      Iterator i;
+      Iterator<?> i;
       
       ParticleBinding ctxParticle = ctx.particle;
       ctx.particle = particle;
@@ -912,24 +912,24 @@ public class MarshallerImpl
       return marshalled;
    }
 
-   private boolean marshalModelGroupAll(Collection particles, boolean declareNs)
+   private boolean marshalModelGroupAll(Collection<ParticleBinding> particles, boolean declareNs)
    {
       boolean marshalled = false;
-      for(Iterator i = particles.iterator(); i.hasNext();)
+      for(Iterator<ParticleBinding> i = particles.iterator(); i.hasNext();)
       {
-         ParticleBinding particle = (ParticleBinding)i.next();
+         ParticleBinding particle = i.next();
          marshalled |= marshalParticle(particle, declareNs);
       }
       return marshalled;
    }
 
-   private boolean marshalModelGroupChoice(Collection particles, boolean declareNs)
+   private boolean marshalModelGroupChoice(Collection<ParticleBinding> particles, boolean declareNs)
    {
       boolean marshalled = false;
       Content mainContent = this.content;
-      for(Iterator i = particles.iterator(); i.hasNext() && !marshalled;)
+      for(Iterator<ParticleBinding> i = particles.iterator(); i.hasNext() && !marshalled;)
       {
-         ParticleBinding particle = (ParticleBinding)i.next();
+         ParticleBinding particle = i.next();
          this.content = new Content();
          marshalled = marshalParticle(particle, declareNs);
       }
@@ -947,7 +947,7 @@ public class MarshallerImpl
    {
       // if sequence is bound to a collection,
       // we assume the iterator over the collection is in sync with the particle iterator
-      Iterator valueIterator = null;
+      Iterator<?> valueIterator = null;
       if(!sequence.isSkip() && !stack.isEmpty())
       {
          Object o = stack.peek();
@@ -958,7 +958,7 @@ public class MarshallerImpl
       }
 
       boolean marshalled = true;
-      for(Iterator i = sequence.getParticles().iterator(); i.hasNext();)
+      for(Iterator<ParticleBinding> i = sequence.getParticles().iterator(); i.hasNext();)
       {
          if(valueIterator != null)
          {
@@ -966,7 +966,7 @@ public class MarshallerImpl
             stack.push(o);
          }
 
-         ParticleBinding particle = (ParticleBinding)i.next();
+         ParticleBinding particle = i.next();
          marshalled &= marshalParticle(particle, declareNs);
 
          if(valueIterator != null)
@@ -989,10 +989,10 @@ public class MarshallerImpl
          TypeBinding itemType = simpleType.getItemType();
          if(Constants.NS_XML_SCHEMA.equals(itemType.getQName().getNamespaceURI()))
          {
-            List list;
+            List<?> list;
             if(value instanceof List)
             {
-               list = (List)value;
+               list = (List<?>)value;
             }
             else if(value.getClass().isArray())
             {
@@ -1055,7 +1055,7 @@ public class MarshallerImpl
           simpleType.getBaseType() != null &&
           Constants.QNAME_BOOLEAN.equals(simpleType.getBaseType().getQName()))
       {
-         String item = (String)simpleType.getLexicalPattern().get(0);
+         String item = simpleType.getLexicalPattern().get(0);
          if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
          {
             marshalled = ((Boolean)value).booleanValue() ? "1" : "0";
@@ -1207,12 +1207,12 @@ public class MarshallerImpl
       return is;
    }
 
-   private Iterator getIterator(Object value)
+   private Iterator<?> getIterator(Object value)
    {
-      Iterator i = null;
+      Iterator<?> i = null;
       if(value instanceof Collection)
       {
-         i = ((Collection)value).iterator();
+         i = ((Collection<?>)value).iterator();
       }
       else if(value.getClass().isArray())
       {
@@ -1240,7 +1240,7 @@ public class MarshallerImpl
       }
       else if(value instanceof Iterator)
       {
-         i = (Iterator)value;
+         i = (Iterator<?>)value;
       }
       else
       {
@@ -1288,7 +1288,7 @@ public class MarshallerImpl
       return value;
    }
 
-   private static boolean writeAsValue(final Class type)
+   private static boolean writeAsValue(final Class<?> type)
    {
       return Classes.isPrimitive(type) ||
           type == String.class ||

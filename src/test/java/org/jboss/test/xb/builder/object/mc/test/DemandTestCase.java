@@ -40,7 +40,7 @@ public class DemandTestCase extends AbstractMCTest
    protected AbstractDemandMetaData getDemand() throws Exception
    {
       AbstractBeanMetaData bean = unmarshalBean();
-      Set demands = bean.getDemands();
+      Set<?> demands = bean.getDemands();
       assertNotNull(demands);
       assertEquals(1, demands.size());
       AbstractDemandMetaData demand = (AbstractDemandMetaData) demands.iterator().next();

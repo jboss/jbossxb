@@ -29,25 +29,25 @@ import java.util.Collection;
  */
 public class Root
 {
-   private Collection choice1;
-   private Collection choice2;
+   private Collection<Choice1> choice1;
+   private Collection<Choice2> choice2;
 
-   public Collection getChoice1()
+   public Collection<Choice1> getChoice1()
    {
       return choice1;
    }
 
-   public void setChoice1(Collection choice1)
+   public void setChoice1(Collection<Choice1> choice1)
    {
       this.choice1 = choice1;
    }
 
-   public Collection getChoice2()
+   public Collection<Choice2> getChoice2()
    {
       return choice2;
    }
 
-   public void setChoice2(Collection choice2)
+   public void setChoice2(Collection<Choice2> choice2)
    {
       this.choice2 = choice2;
    }

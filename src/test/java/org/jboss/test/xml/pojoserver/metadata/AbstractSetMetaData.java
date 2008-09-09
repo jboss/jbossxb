@@ -52,7 +52,7 @@ public class AbstractSetMetaData extends AbstractCollectionMetaData implements S
       boolean changed = false;
       if (c != null && c.size() > 0)
       {
-         for (Iterator i = c.iterator(); i.hasNext(); )
+         for (Iterator<?> i = c.iterator(); i.hasNext(); )
          {
             Object o = i.next();
             if (collection.contains(o) == false)

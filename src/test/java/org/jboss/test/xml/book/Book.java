@@ -58,7 +58,7 @@ public class Book
    private String isbn;
    private String title;
    private String author;
-   private List characters = new ArrayList();
+   private List<BookCharacter> characters = new ArrayList<BookCharacter>();
 
    public String getIsbn()
    {
@@ -90,12 +90,12 @@ public class Book
       this.title = title;
    }
 
-   public List getCharacters()
+   public List<BookCharacter> getCharacters()
    {
       return characters;
    }
 
-   public void setCharacters(List characters)
+   public void setCharacters(List<BookCharacter> characters)
    {
       this.characters = characters;
    }

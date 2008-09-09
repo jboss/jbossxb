@@ -35,7 +35,8 @@ import org.jboss.xb.util.NoopMap;
  */
 public class ClassInfos
 {
-   private static Map classloaderCache = new WeakHashMap();
+   private static final Map<ClassLoader, Map<String, WeakReference<ClassInfo>>> NO_CACHE = new NoopMap<ClassLoader, Map<String, WeakReference<ClassInfo>>>();
+   private static Map<ClassLoader, Map<String, WeakReference<ClassInfo>>> classloaderCache = new WeakHashMap<ClassLoader, Map<String, WeakReference<ClassInfo>>>();
 
    /**
     * Disables caching of ClassInfo's. Already cached ClassInfo's will be lost after
@@ -45,7 +46,7 @@ public class ClassInfos
    {
       synchronized(classloaderCache)
       {
-         classloaderCache = NoopMap.INSTANCE;
+         classloaderCache = NO_CACHE;
       }
    }
 
@@ -58,7 +59,7 @@ public class ClassInfos
       {
          if(!isCacheEnabled())
          {
-            classloaderCache = new WeakHashMap();
+            classloaderCache = new WeakHashMap<ClassLoader, Map<String, WeakReference<ClassInfo>>>();
          }
       }
    }
@@ -70,7 +71,7 @@ public class ClassInfos
    {
       synchronized(classloaderCache)
       {
-         return classloaderCache != NoopMap.INSTANCE;
+         return classloaderCache != NO_CACHE;
       }
    }
 
@@ -92,7 +93,7 @@ public class ClassInfos
    public static void flushCache(String cls)
    {
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
-      Map classLoaderCache = getClassLoaderCache(cl);
+      Map<String, WeakReference<ClassInfo>> classLoaderCache = getClassLoaderCache(cl);
       classLoaderCache.remove(cls);
    }
 
@@ -100,17 +101,17 @@ public class ClassInfos
     * Evicts ClassInfo for a specific class.
     * @param cls  the class to remove the ClassInfo for
     */
-   public static void flushCache(Class cls)
+   public static void flushCache(Class<?> cls)
    {
-      Map classLoaderCache = getClassLoaderCache(cls.getClassLoader());
+      Map<String, WeakReference<ClassInfo>> classLoaderCache = getClassLoaderCache(cls.getClassLoader());
       classLoaderCache.remove(cls.getName());
    }
 
-   public static ClassInfo getClassInfo(Class cls)
+   public static ClassInfo getClassInfo(Class<?> cls)
    {
-      Map classLoaderCache = getClassLoaderCache(cls.getClassLoader());
+      Map<String, WeakReference<ClassInfo>> classLoaderCache = getClassLoaderCache(cls.getClassLoader());
 
-      WeakReference weak = (WeakReference)classLoaderCache.get(cls.getName());
+      WeakReference<ClassInfo> weak = classLoaderCache.get(cls.getName());
       if(weak != null)
       {
          Object result = weak.get();
@@ -121,7 +122,7 @@ public class ClassInfos
       }
 
       ClassInfo clsInfo = new ClassInfo(cls);
-      weak = new WeakReference(clsInfo);
+      weak = new WeakReference<ClassInfo>(clsInfo);
       classLoaderCache.put(cls.getName(), weak);
       return clsInfo;
    }
@@ -129,9 +130,9 @@ public class ClassInfos
    public static ClassInfo getClassInfo(String name, boolean required)
    {
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
-      Map classLoaderCache = getClassLoaderCache(cl);
+      Map<String, WeakReference<ClassInfo>> classLoaderCache = getClassLoaderCache(cl);
 
-      WeakReference weak = (WeakReference)classLoaderCache.get(name);
+      WeakReference<ClassInfo> weak = classLoaderCache.get(name);
       if(weak != null)
       {
          Object result = weak.get();
@@ -144,7 +145,7 @@ public class ClassInfos
       try
       {
          ClassInfo clsInfo = new ClassInfo(cl.loadClass(name));
-         weak = new WeakReference(clsInfo);
+         weak = new WeakReference<ClassInfo>(clsInfo);
          classLoaderCache.put(name, weak);
          return clsInfo;
       }
@@ -159,14 +160,14 @@ public class ClassInfos
       return null;
    }
 
-   private static Map getClassLoaderCache(ClassLoader cl)
+   private static Map<String, WeakReference<ClassInfo>> getClassLoaderCache(ClassLoader cl)
    {
       synchronized(classloaderCache)
       {
-         Map result = (Map) classloaderCache.get(cl);
+         Map<String, WeakReference<ClassInfo>> result = classloaderCache.get(cl);
          if (result == null)
          {
-            result = new ConcurrentHashMap();
+            result = new ConcurrentHashMap<String, WeakReference<ClassInfo>>();
             classloaderCache.put(cl, result);
          }
          return result;

@@ -77,9 +77,9 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
       this.schemaInitializers = schemaInitializers;
       if (schemaInitializers != null && schemaInitializers.size() != 0)
       {
-         for (Iterator i = schemaInitializers.entrySet().iterator(); i.hasNext();)
+         for (Iterator<?> i = schemaInitializers.entrySet().iterator(); i.hasNext();)
          {
-            Map.Entry entry = (Map.Entry) i.next();
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) i.next();
             String namespace = (String) entry.getKey();
             String initializer = (String) entry.getValue();
             try
@@ -104,9 +104,9 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
       this.schemaLocations = schemaLocations;
       if (schemaLocations != null && schemaLocations.size() != 0)
       {
-         for (Iterator i = schemaLocations.entrySet().iterator(); i.hasNext();)
+         for (Iterator<?> i = schemaLocations.entrySet().iterator(); i.hasNext();)
          {
-            Map.Entry entry = (Map.Entry) i.next();
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) i.next();
             String namespace = (String) entry.getKey();
             String location = (String) entry.getValue();
             resolver.addSchemaLocation(namespace, location);
@@ -124,9 +124,9 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
       this.parseAnnotations = parseAnnotations;
       if (parseAnnotations != null && parseAnnotations.size() != 0)
       {
-         for (Iterator i = parseAnnotations.entrySet().iterator(); i.hasNext();)
+         for (Iterator<?> i = parseAnnotations.entrySet().iterator(); i.hasNext();)
          {
-            Map.Entry entry = (Map.Entry) i.next();
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) i.next();
             String namespace = (String) entry.getKey();
             String value = (String) entry.getValue();
             Boolean booleanValue = Boolean.valueOf(value); 
@@ -146,14 +146,14 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
       if (bindingClassesByLocation != null && bindingClassesByLocation.size() != 0)
       {
          ClassLoader loader = Thread.currentThread().getContextClassLoader();
-         for (Iterator i = bindingClassesByLocation.entrySet().iterator(); i.hasNext();)
+         for (Iterator<?> i = bindingClassesByLocation.entrySet().iterator(); i.hasNext();)
          {
-            Map.Entry entry = (Map.Entry) i.next();
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) i.next();
             String schemaLocation = (String) entry.getKey();
             String value = (String) entry.getValue();
             try
             {
-               Class clazz = loader.loadClass(value);
+               Class<?> clazz = loader.loadClass(value);
                resolver.addClassBindingForLocation(schemaLocation, clazz);
             }
             catch(ClassNotFoundException e)
@@ -175,14 +175,14 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
       if (bindingClasses != null && bindingClasses.size() != 0)
       {
          ClassLoader loader = Thread.currentThread().getContextClassLoader();
-         for (Iterator i = bindingClasses.entrySet().iterator(); i.hasNext();)
+         for (Iterator<?> i = bindingClasses.entrySet().iterator(); i.hasNext();)
          {
-            Map.Entry entry = (Map.Entry) i.next();
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) i.next();
             String namespace = (String) entry.getKey();
             String value = (String) entry.getValue();
             try
             {
-               Class clazz = loader.loadClass(value);
+               Class<?> clazz = loader.loadClass(value);
                resolver.addClassBinding(namespace, clazz);
             }
             catch(ClassNotFoundException e)

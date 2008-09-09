@@ -447,7 +447,7 @@ public class SimpleTypeBindingUnitTestCase
             return prefix;
          }
 
-         public Iterator getPrefixes(String namespaceURI)
+         public Iterator<?> getPrefixes(String namespaceURI)
          {
             if(!ns.equals(namespaceURI))
             {
@@ -485,7 +485,7 @@ public class SimpleTypeBindingUnitTestCase
             return null;
          }
 
-         public Iterator getPrefixes(String namespaceURI)
+         public Iterator<?> getPrefixes(String namespaceURI)
          {
             return Collections.emptyList().iterator();
          }
@@ -503,7 +503,7 @@ public class SimpleTypeBindingUnitTestCase
    
    public void testBooleanListUnmarshalling() throws Exception
    {
-      List booleans = SimpleTypeBindings.unmarshalList(
+      List<Object> booleans = SimpleTypeBindings.unmarshalList(
          SimpleTypeBindings.XS_BOOLEAN_NAME, " 1 1 0  true true false  ", null
       );
       assertNotNull(booleans);

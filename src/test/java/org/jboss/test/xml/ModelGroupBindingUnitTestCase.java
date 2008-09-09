@@ -123,7 +123,7 @@ public class ModelGroupBindingUnitTestCase
       "<item_2>item32</item_2>" +
       "</global>";
 
-   private static final List LIST_OF_LISTS = Arrays.asList(new Object[]{
+   private static final List<Object> LIST_OF_LISTS = Arrays.asList(new Object[]{
       Arrays.asList(new String[]{"item11", "item12"}),
       Arrays.asList(new String[]{"item21", "item22"}),
       Arrays.asList(new String[]{"item31", "item32"})
@@ -217,9 +217,9 @@ public class ModelGroupBindingUnitTestCase
          INSTANCE = global;
       }
 
-      public Collection sequences;
-      public Collection choices;
-      public Collection listOfLists;
+      public Collection<Object> sequences;
+      public Collection<Object> choices;
+      public Collection<Object> listOfLists;
 
       public String toString()
       {

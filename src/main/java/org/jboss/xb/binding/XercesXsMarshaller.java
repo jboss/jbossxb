@@ -243,7 +243,7 @@ public class XercesXsMarshaller
                ") for the root element is specified then the name for the root element is required!"
             );
          }
-         QName rootQName = (QName)rootQNames.get(0);
+         QName rootQName = rootQNames.get(0);
 
          XSTypeDefinition type = model.getTypeDefinition(rootTypeQName.getLocalPart(),
             rootTypeQName.getNamespaceURI()
@@ -304,7 +304,7 @@ public class XercesXsMarshaller
       {
          for(int i = 0; i < rootQNames.size(); ++i)
          {
-            QName qName = (QName)rootQNames.get(i);
+            QName qName = rootQNames.get(i);
             XSElementDeclaration element = model.getElementDeclaration(qName.getLocalPart(), qName.getNamespaceURI());
             if(element == null)
             {
@@ -562,14 +562,14 @@ public class XercesXsMarshaller
                XSSimpleTypeDefinition itemType = attrType.getItemType();
                if(Constants.NS_XML_SCHEMA.equals(itemType.getNamespace()))
                {
-                  List list;
+                  List<QName> list;
                   if(attrValue instanceof List)
                   {
-                     list = (List)attrValue;
+                     list = (List<QName>)attrValue;
                   }
                   else if(attrValue.getClass().isArray())
                   {
-                     list = Arrays.asList((Object[])attrValue);
+                     list = Arrays.asList((QName[])attrValue);
                   }
                   else
                   {
@@ -734,7 +734,7 @@ public class XercesXsMarshaller
       boolean marshalled;
       XSTerm term = particle.getTerm();
       Object o;
-      Iterator i;
+      Iterator<?> i;
       switch(term.getType())
       {
          case XSConstants.MODEL_GROUP:
@@ -993,7 +993,7 @@ public class XercesXsMarshaller
 
          if(typeDef == null)
          {
-            List typeNames = new ArrayList();
+            List<QName> typeNames = new ArrayList<QName>();
             XSNamedMap types = model.getComponents(XSConstants.TYPE_DEFINITION);
             for(int i = 0; i < types.getLength(); ++i)
             {
@@ -1112,10 +1112,10 @@ public class XercesXsMarshaller
          XSSimpleTypeDefinition itemType = type.getItemType();
          if(Constants.NS_XML_SCHEMA.equals(itemType.getNamespace()))
          {
-            List list;
+            List<?> list;
             if(value instanceof List)
             {
-               list = (List)value;
+               list = (List<?>)value;
             }
             else if(value.getClass().isArray())
             {
@@ -1208,7 +1208,7 @@ public class XercesXsMarshaller
                }
                catch(NoSuchMethodException e1)
                {
-                  List values = new ArrayList(lexicalEnumeration.getLength());
+                  List<String> values = new ArrayList<String>(lexicalEnumeration.getLength());
                   for(int i = 0; i < lexicalEnumeration.getLength(); ++i)
                   {
                      values.add(lexicalEnumeration.item(i));
@@ -1383,12 +1383,12 @@ public class XercesXsMarshaller
       return is;
    }
 
-   private Iterator getIterator(Object value)
+   private Iterator<?> getIterator(Object value)
    {
-      Iterator i = null;
+      Iterator<?> i = null;
       if(value instanceof Collection)
       {
-         i = ((Collection)value).iterator();
+         i = ((Collection<?>)value).iterator();
       }
       else if(value.getClass().isArray())
       {
@@ -1416,7 +1416,7 @@ public class XercesXsMarshaller
       }
       else if(value instanceof Iterator)
       {
-         i = (Iterator)value;
+         i = (Iterator<?>)value;
       }
       else
       {

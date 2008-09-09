@@ -111,7 +111,7 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
    {
       BeanAdapter beanAdapter = (BeanAdapter) parent;
       
-      Collection<Object> c = null;
+      Collection c = null;
       try
       {
          if (propertyInfo.getGetter() != null)
@@ -165,7 +165,7 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
       @SuppressWarnings("unchecked")
       public Collection<Object> createCollection()
       {
-         return new ArrayList();
+         return new ArrayList<Object>();
       }  
    }
    
@@ -174,7 +174,7 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
       @SuppressWarnings("unchecked")
       public Collection<Object> createCollection()
       {
-         return new HashSet();
+         return new HashSet<Object>();
       }  
    }
    
@@ -188,7 +188,7 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
       }
       
       @SuppressWarnings("unchecked")
-      public Collection<Object> createCollection() throws Throwable
+      public Collection createCollection() throws Throwable
       {
          return (Collection) ctor.newInstance(null);
       }      

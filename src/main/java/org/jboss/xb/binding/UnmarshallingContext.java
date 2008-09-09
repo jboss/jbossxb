@@ -44,7 +44,7 @@ public interface UnmarshallingContext
    /**
     * @return  all the known namespace URIs
     */
-   Iterator getNamespaceURIs();
+   Iterator<String> getNamespaceURIs();
 
    /**
     * @return  NamespaceContext instance

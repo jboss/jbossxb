@@ -587,7 +587,7 @@ public class XmlDiff
    private static final class MutableNodeList
       implements NodeList
    {
-      private List list = Collections.EMPTY_LIST;
+      private List<Node> list = Collections.emptyList();
 
       public void add(Node node)
       {
@@ -597,7 +597,7 @@ public class XmlDiff
                list = Collections.singletonList(node);
                break;
             case 1:
-               list = new ArrayList(list);
+               list = new ArrayList<Node>(list);
             default:
                list.add(node);
          }

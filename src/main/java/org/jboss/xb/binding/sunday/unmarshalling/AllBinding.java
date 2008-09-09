@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Collection;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
 
@@ -40,9 +39,9 @@ import org.xml.sax.Attributes;
 public class AllBinding
    extends ModelGroupBinding
 {
-   private static final Logger log = Logger.getLogger(AllBinding.class);
+   //private static final Logger log = Logger.getLogger(AllBinding.class);
 
-   private Map elements = Collections.EMPTY_MAP;
+   private Map<QName, ParticleBinding> elements = Collections.emptyMap();
 
    public AllBinding(SchemaBinding schema)
    {
@@ -68,14 +67,14 @@ public class AllBinding
             elements = Collections.singletonMap(element.getQName(), particle);
             break;
          case 1:
-            elements = new HashMap(elements);
+            elements = new HashMap<QName, ParticleBinding>(elements);
          default:
             elements.put(element.getQName(), particle);
       }
       super.addParticle(particle);
    }
 
-   public Collection getParticles()
+   public Collection<ParticleBinding> getParticles()
    {
       return Collections.unmodifiableCollection(elements.values());
    }
@@ -126,7 +125,7 @@ public class AllBinding
             return false;
          }
          
-         protected List startElement(QName qName, Attributes atts, Set passedGroups, List groupStack, boolean required)
+         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
          {
             ParticleBinding particle = (ParticleBinding)elements.get(qName);
             if(particle != null)
@@ -145,7 +144,7 @@ public class AllBinding
             return groupStack;
          }
 
-         protected ElementBinding getElement(QName qName, Attributes atts, Set passedGroups, boolean ignoreWildcards)
+         protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
          {
             ParticleBinding particle = (ParticleBinding)elements.get(qName);
             return particle == null ? null : (ElementBinding)particle.getTerm();
@@ -153,7 +152,7 @@ public class AllBinding
       };
    }
 
-   protected boolean mayStartWith(QName qName, Set set)
+   protected boolean mayStartWith(QName qName, Set<ModelGroupBinding> set)
    {
       return elements.containsKey(qName);
    }

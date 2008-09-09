@@ -47,7 +47,7 @@ public class JavaEEMetaDataTestDelegate extends JBossXBTestDelegate
 
    protected void initResolver() throws Exception
    {
-      Class test = clazz;
+      Class<?> test = clazz;
       while (test != null)
       {
          try

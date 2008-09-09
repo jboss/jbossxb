@@ -29,35 +29,35 @@ import java.util.Collection;
  */
 public class Choice3
 {
-   private Collection listOfIntegers;
-   private Collection listOfStrings;
+   private Collection<Integer> listOfIntegers;
+   private Collection<String> listOfStrings;
 
    public Choice3()
    {
    }
 
-   public Choice3(Collection listOfIntegers, Collection listOfStrings)
+   public Choice3(Collection<Integer> listOfIntegers, Collection<String> listOfStrings)
    {
       this.listOfIntegers = listOfIntegers;
       this.listOfStrings = listOfStrings;
    }
 
-   public Collection getListOfIntegers()
+   public Collection<Integer> getListOfIntegers()
    {
       return listOfIntegers;
    }
 
-   public void setListOfIntegers(Collection listOfIntegers)
+   public void setListOfIntegers(Collection<Integer> listOfIntegers)
    {
       this.listOfIntegers = listOfIntegers;
    }
 
-   public Collection getListOfStrings()
+   public Collection<String> getListOfStrings()
    {
       return listOfStrings;
    }
 
-   public void setListOfStrings(Collection listOfStrings)
+   public void setListOfStrings(Collection<String> listOfStrings)
    {
       this.listOfStrings = listOfStrings;
    }

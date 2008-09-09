@@ -38,7 +38,7 @@ public class AbstractLifecycleMetaData extends AbstractFeatureMetaData implement
    protected String methodName;
    
    /** The paramaters List<ParameterMetaData> */
-   protected List parameters;
+   protected List<AbstractParameterMetaData> parameters;
 
    /**
     * Create a new lifecycle meta data
@@ -72,7 +72,7 @@ public class AbstractLifecycleMetaData extends AbstractFeatureMetaData implement
       this.methodName = name;
    }
    
-   public List getParameters()
+   public List<AbstractParameterMetaData> getParameters()
    {
       return parameters;
    }
@@ -82,7 +82,7 @@ public class AbstractLifecycleMetaData extends AbstractFeatureMetaData implement
     * 
     * @param parameters List<ParameterMetaData>
     */
-   public void setParameters(List parameters)
+   public void setParameters(List<AbstractParameterMetaData> parameters)
    {
       this.parameters = parameters;
    }

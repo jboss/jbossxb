@@ -59,7 +59,7 @@ public class Dom2Sax
    {
       AttributesImpl attrs = new AttributesImpl();
 
-      List startedPrefixes = Collections.EMPTY_LIST;
+      List<String> startedPrefixes = Collections.emptyList();
 
       NamedNodeMap domAttrs = e.getAttributes();
       if(domAttrs != null && domAttrs.getLength() > 0)
@@ -216,7 +216,7 @@ public class Dom2Sax
             list = Collections.singletonList(o);
             break;
          case 1:
-            list = new ArrayList(list);
+            list = new ArrayList<Object>(list);
          default:
             list.add(o);
       }

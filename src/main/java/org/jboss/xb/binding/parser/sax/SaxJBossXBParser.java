@@ -74,7 +74,7 @@ public class SaxJBossXBParser
    {
       try
       {
-         Class clazz = saxFactory.getClass();
+         Class<? extends SAXParserFactory> clazz = saxFactory.getClass();
          Method method = clazz.getMethod("setXIncludeAware", new Class[] { Boolean.TYPE });
          method.invoke(saxFactory, new Object[] { Boolean.TRUE });
       }

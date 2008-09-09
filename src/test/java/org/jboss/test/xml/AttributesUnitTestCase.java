@@ -171,7 +171,7 @@ public class AttributesUnitTestCase
    {
       ElementBinding eBinding = SCHEMA.getElement(new QName(NS_1, "e"));
       TypeBinding eType = eBinding.getType();
-      Collection attributes = eType.getAttributes();
+      Collection<?> attributes = eType.getAttributes();
       assertNotNull(attributes);
       assertEquals(3, attributes.size());
       assertNotNull(eType.getAttribute(UNQUALIFIED_QNAME));
@@ -230,7 +230,7 @@ public class AttributesUnitTestCase
       complexType.setValueAdapter(
          new ValueAdapter()
          {
-            public Object cast(Object o, Class c)
+            public Object cast(Object o, Class<?> c)
             {
                // TODO Auto-generated method stub
                return null;

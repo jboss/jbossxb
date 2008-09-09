@@ -73,7 +73,7 @@ public class JBossXBTestDelegate extends AbstractTestDelegate
     * 
     * @param clazz the test class
     */
-   public JBossXBTestDelegate(Class clazz)
+   public JBossXBTestDelegate(Class<?> clazz)
    {
       super(clazz);
    }

@@ -38,7 +38,7 @@ public interface ConstructorMetaData extends FeatureMetaData
        *
        * @return List<ParameterMetaData>.
        */
-      List getParameters();
+      List<AbstractParameterMetaData> getParameters();
    
       /**
        * Get the factory.

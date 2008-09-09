@@ -30,11 +30,11 @@ import java.util.Collection;
 public class Parent
 {
    private final Child1 child1;
-   private final Collection child2;
-   private final Collection otherChildren;
-   private final Collection immutableChoice;
+   private final Collection<Object> child2;
+   private final Collection<Object> otherChildren;
+   private final Collection<Object> immutableChoice;
 
-   public Parent(Child1 child1, Collection child2, Collection otherChildren, Collection immutableChoice)
+   public Parent(Child1 child1, Collection<Object> child2, Collection<Object> otherChildren, Collection<Object> immutableChoice)
    {
       this.child1 = child1;
       this.child2 = child2;
@@ -47,17 +47,17 @@ public class Parent
       return child1;
    }
 
-   public Collection getChild2()
+   public Collection<Object> getChild2()
    {
       return child2;
    }
 
-   public Collection getOtherChildren()
+   public Collection<Object> getOtherChildren()
    {
       return otherChildren;
    }
 
-   public Collection getImmutableChoice()
+   public Collection<Object> getImmutableChoice()
    {
       return immutableChoice;
    }

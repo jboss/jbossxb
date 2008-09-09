@@ -69,7 +69,7 @@ public class DeploymentTestCase extends AbstractMCTest
       AbstractKernelDeployment deployment = unmarshalDeployment();
       assertEquals("SimpleDeployment", deployment.getName());
       assertNull(deployment.getClassLoader());
-      List beans = deployment.getBeans();
+      List<?> beans = deployment.getBeans();
       assertNotNull(beans);
       assertEquals(1, beans.size());
       BeanMetaData bean = (BeanMetaData) beans.get(0);
@@ -83,7 +83,7 @@ public class DeploymentTestCase extends AbstractMCTest
       AbstractKernelDeployment deployment = unmarshalDeployment();
       assertEquals("SimpleDeployment", deployment.getName());
       assertNull(deployment.getClassLoader());
-      List beans = deployment.getBeans();
+      List<?> beans = deployment.getBeans();
       assertNotNull(beans);
       assertEquals(3, beans.size());
       BeanMetaData bean = (BeanMetaData) beans.get(0);
@@ -105,7 +105,7 @@ public class DeploymentTestCase extends AbstractMCTest
       AbstractKernelDeployment deployment = unmarshalDeployment();
       assertEquals("SimpleDeployment", deployment.getName());
       assertNull(deployment.getClassLoader());
-      List beans = deployment.getBeans();
+      List<?> beans = deployment.getBeans();
       assertNotNull(beans);
       assertEquals(1, beans.size());
       BeanMetaData bean = (BeanMetaData) beans.get(0);
@@ -119,7 +119,7 @@ public class DeploymentTestCase extends AbstractMCTest
       AbstractKernelDeployment deployment = unmarshalDeployment();
       assertEquals("SimpleDeployment", deployment.getName());
       assertNull(deployment.getClassLoader());
-      List beans = deployment.getBeans();
+      List<?> beans = deployment.getBeans();
       assertNotNull(beans);
       assertEquals(3, beans.size());
       BeanMetaData bean = (BeanMetaData) beans.get(0);
@@ -141,7 +141,7 @@ public class DeploymentTestCase extends AbstractMCTest
       AbstractKernelDeployment deployment = unmarshalDeployment();
       assertEquals("SimpleDeployment", deployment.getName());
       assertNull(deployment.getClassLoader());
-      List beanFactories = deployment.getBeanFactories();
+      List<?> beanFactories = deployment.getBeanFactories();
       assertNotNull(beanFactories);
       assertEquals(3, beanFactories.size());
       BeanMetaDataFactory factory = (BeanMetaDataFactory) beanFactories.get(0);
@@ -150,7 +150,7 @@ public class DeploymentTestCase extends AbstractMCTest
       assertEquals(TestBeanMetaDataFactory1.class.getName(), factory.getClass().getName());
       factory = (BeanMetaDataFactory) beanFactories.get(2);
       assertEquals(TestBeanMetaDataFactory2.class.getName(), factory.getClass().getName());
-      List beans = deployment.getBeans();
+      List<?> beans = deployment.getBeans();
       assertNotNull(beans);
       assertEquals(6, beans.size());
       BeanMetaData bean = (BeanMetaData) beans.get(0);
@@ -178,12 +178,12 @@ public class DeploymentTestCase extends AbstractMCTest
       AbstractKernelDeployment deployment = unmarshalDeployment();
       assertEquals("SimpleDeployment", deployment.getName());
       assertNull(deployment.getClassLoader());
-      List beanFactories = deployment.getBeanFactories();
+      List<?> beanFactories = deployment.getBeanFactories();
       assertNotNull(beanFactories);
       assertEquals(1, beanFactories.size());
       BeanMetaDataFactory factory = (BeanMetaDataFactory) beanFactories.get(0);
       assertEquals(TestBeanMetaDataFactory.class.getName(), factory.getClass().getName());
-      List beans = deployment.getBeans();
+      List<?> beans = deployment.getBeans();
       assertNotNull(beans);
       assertEquals(2, beans.size());
       BeanMetaData bean = (BeanMetaData) beans.get(0);
@@ -199,7 +199,7 @@ public class DeploymentTestCase extends AbstractMCTest
       AbstractKernelDeployment deployment = unmarshalDeployment();
       assertEquals("SimpleDeployment", deployment.getName());
       assertNull(deployment.getClassLoader());
-      List beans = deployment.getBeans();
+      List<?> beans = deployment.getBeans();
       assertNotNull(beans);
       assertEquals(8, beans.size());
       BeanMetaData bean = (BeanMetaData) beans.get(0);

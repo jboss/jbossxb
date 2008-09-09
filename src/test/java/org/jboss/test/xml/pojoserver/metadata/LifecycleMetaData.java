@@ -57,5 +57,5 @@ public interface LifecycleMetaData extends FeatureMetaData
     *
     * @return List<ParameterMetaData>.
     */
-   List getParameters();
+   List<AbstractParameterMetaData> getParameters();
 }

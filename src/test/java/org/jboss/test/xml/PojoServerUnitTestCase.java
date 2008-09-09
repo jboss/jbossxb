@@ -115,10 +115,10 @@ public class PojoServerUnitTestCase
          {
             AbstractKernelDeployment deployment = (AbstractKernelDeployment) parent;
             AbstractBeanMetaData bean = (AbstractBeanMetaData) child;
-            List beans = deployment.getBeans();
+            List<AbstractBeanMetaData> beans = deployment.getBeans();
             if (beans == null)
             {
-               beans = new ArrayList();
+               beans = new ArrayList<AbstractBeanMetaData>();
                deployment.setBeans(beans);
             }
             beans.add(bean);
@@ -132,10 +132,10 @@ public class PojoServerUnitTestCase
          {
             AbstractKernelDeployment deployment = (AbstractKernelDeployment) parent;
             AbstractBeanMetaData bean = (AbstractBeanMetaData) child;
-            List beans = deployment.getBeans();
+            List<AbstractBeanMetaData> beans = deployment.getBeans();
             if (beans == null)
             {
-               beans = new ArrayList();
+               beans = new ArrayList<AbstractBeanMetaData>();
                deployment.setBeans(beans);
             }
             beans.add(bean);
@@ -175,14 +175,14 @@ public class PojoServerUnitTestCase
          {
             AbstractBeanMetaData beanMetaData = new AbstractBeanMetaData();
             beanMetaData.setBean(GenericBeanFactory.class.getName());
-            beanMetaData.setProperties(new HashSet());
+            beanMetaData.setProperties(new HashSet<AbstractPropertyMetaData>());
             return beanMetaData;
          }
 
          public void attributes(Object o, QName elementName, ElementBinding element, Attributes attrs, NamespaceContext nsCtx)
          {
             AbstractBeanMetaData bean = (AbstractBeanMetaData) o;
-            Set properties = bean.getProperties();
+            Set<AbstractPropertyMetaData> properties = bean.getProperties();
             for (int i = 0; i < attrs.getLength(); ++i)
             {
                String localName = attrs.getLocalName(i);
@@ -212,7 +212,7 @@ public class PojoServerUnitTestCase
          {
             AbstractBeanMetaData bean = (AbstractBeanMetaData) parent;
             AbstractConstructorMetaData constructor = (AbstractConstructorMetaData) child;
-            Set properties = bean.getProperties();
+            Set<AbstractPropertyMetaData> properties = bean.getProperties();
             properties.add(new AbstractPropertyMetaData("constructor", new AbstractValueMetaData(constructor)));
          }
       });
@@ -258,10 +258,10 @@ public class PojoServerUnitTestCase
          {
             AbstractConstructorMetaData constructor = (AbstractConstructorMetaData) parent;
             AbstractParameterMetaData parameter = (AbstractParameterMetaData) child;
-            List parameters = constructor.getParameters();
+            List<AbstractParameterMetaData> parameters = constructor.getParameters();
             if (parameters == null)
             {
-               parameters = new ArrayList();
+               parameters = new ArrayList<AbstractParameterMetaData>();
                constructor.setParameters(parameters);
             }
             parameters.add(parameter);
@@ -269,7 +269,7 @@ public class PojoServerUnitTestCase
       });
 
       ModelGroupBinding valueGroup = schemaBinding.getGroup(valueGroupQName);
-      for(Iterator i = valueGroup.getParticles().iterator(); i.hasNext();)
+      for(Iterator<?> i = valueGroup.getParticles().iterator(); i.hasNext();)
       {
          TermBinding term = ((ParticleBinding)i.next()).getTerm();
          if(!term.isWildcard())
@@ -394,10 +394,10 @@ public class PojoServerUnitTestCase
          {
             AbstractLifecycleMetaData lifecycle = (AbstractLifecycleMetaData) parent;
             AbstractParameterMetaData parameter = (AbstractParameterMetaData) child;
-            List parameters = lifecycle.getParameters();
+            List<AbstractParameterMetaData> parameters = lifecycle.getParameters();
             if (parameters == null)
             {
-               parameters = new ArrayList();
+               parameters = new ArrayList<AbstractParameterMetaData>();
                lifecycle.setParameters(parameters);
             }
             parameters.add(parameter);
@@ -411,10 +411,10 @@ public class PojoServerUnitTestCase
          {
             AbstractBeanMetaData bean = (AbstractBeanMetaData) parent;
             AbstractPropertyMetaData property = (AbstractPropertyMetaData) child;
-            Set properties = bean.getProperties();
+            Set<AbstractPropertyMetaData> properties = bean.getProperties();
             if (properties == null)
             {
-               properties = new HashSet();
+               properties = new HashSet<AbstractPropertyMetaData>();
                bean.setProperties(properties);
             }
             properties.add(property);
@@ -427,11 +427,11 @@ public class PojoServerUnitTestCase
          public void add(Object parent, Object child, QName name)
          {
             AbstractBeanMetaData bean = (AbstractBeanMetaData) parent;
-            Set properties = bean.getProperties();
+            Set<AbstractPropertyMetaData> properties = bean.getProperties();
             AbstractPropertyMetaData props = null;
-            for (Iterator i = properties.iterator(); i.hasNext();)
+            for (Iterator<AbstractPropertyMetaData> i = properties.iterator(); i.hasNext();)
             {
-               AbstractPropertyMetaData prop = (AbstractPropertyMetaData) i.next();
+               AbstractPropertyMetaData prop = i.next();
                if ("properties".equals(prop.getName()))
                {
                   props = prop;
@@ -464,10 +464,10 @@ public class PojoServerUnitTestCase
          {
             AbstractBeanMetaData bean = (AbstractBeanMetaData) parent;
             AbstractDependencyMetaData dependency = (AbstractDependencyMetaData) child;
-            Set demands = bean.getDemands();
+            Set<Object> demands = bean.getDemands();
             if (demands == null)
             {
-               demands = new HashSet();
+               demands = new HashSet<Object>();
                bean.setDemands(demands);
             }
             demands.add(dependency);
@@ -481,10 +481,10 @@ public class PojoServerUnitTestCase
          {
             AbstractBeanMetaData bean = (AbstractBeanMetaData) parent;
             AbstractDemandMetaData demand = (AbstractDemandMetaData) child;
-            Set demands = bean.getDemands();
+            Set<Object> demands = bean.getDemands();
             if (demands == null)
             {
-               demands = new HashSet();
+               demands = new HashSet<Object>();
                bean.setDemands(demands);
             }
             demands.add(demand);
@@ -498,10 +498,10 @@ public class PojoServerUnitTestCase
          {
             AbstractBeanMetaData bean = (AbstractBeanMetaData) parent;
             AbstractSupplyMetaData supply = (AbstractSupplyMetaData) child;
-            Set supplies = bean.getSupplies();
+            Set<AbstractSupplyMetaData> supplies = bean.getSupplies();
             if (supplies == null)
             {
-               supplies = new HashSet();
+               supplies = new HashSet<AbstractSupplyMetaData>();
                bean.setSupplies(supplies);
             }
             supplies.add(supply);

@@ -50,15 +50,15 @@ public class Config
       value2.setValue2("value2");
       config.getAttrs().add(new Config.ConfigAttr(value2));
 
-      config.beans = new ArrayList();
+      config.beans = new ArrayList<Bean>();
       config.beans.add(new Config.Bean("A"));
       config.beans.add(new Config.Bean("B"));
 
-      config.list = new LinkedList();
+      config.list = new LinkedList<Object>();
       config.list.add(new Config.ListValue("some.type", "foo"));
       config.list.add(new Config.Depends("SomeBean"));
 
-      List sublist = new LinkedList();
+      List<Object> sublist = new LinkedList<Object>();
       sublist.add(new Config.ListValue("another.type", "bar"));
       sublist.add(new Config.Depends("AnotherBean"));
       config.list.add(sublist);
@@ -76,17 +76,17 @@ public class Config
       return config;
    }
 
-   private Collection attrs = new ArrayList();
-   public Collection beans;
-   public Collection list;
+   private Collection<ConfigAttr> attrs = new ArrayList<ConfigAttr>();
+   public Collection<Bean> beans;
+   public Collection<Object> list;
    public Map map;
 
-   public Collection getAttrs()
+   public Collection<ConfigAttr> getAttrs()
    {
       return attrs;
    }
 
-   public void setAttrs(Collection attrs)
+   public void setAttrs(Collection<ConfigAttr> attrs)
    {
       this.attrs = attrs;
    }

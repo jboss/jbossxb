@@ -42,7 +42,7 @@ public class Person
       person.setDateOfBirth((java.util.Date)SimpleTypeBindings.JAVA_UTIL_DATE.unmarshal("1980-01-01"));
       person.setPhones(Arrays.asList(new Object[]{"01", "02"}));
 
-      ArrayList list = new ArrayList();
+      ArrayList<Address> list = new ArrayList<Address>();
       Address addr1 = new Address();
       addr1.setStreet("prosp. Rad. Ukr. 11A, 70");
       list.add(addr1);
@@ -57,8 +57,8 @@ public class Person
    private String firstName;
    private String lastName;
    private java.util.Date dateOfBirth;
-   private Collection phones = new ArrayList();
-   private Collection addresses = new ArrayList();
+   private Collection<Object> phones = new ArrayList<Object>();
+   private Collection<Address> addresses = new ArrayList<Address>();
 
    public String getFirstName()
    {
@@ -90,22 +90,22 @@ public class Person
       this.dateOfBirth = dateOfBirth;
    }
 
-   public Collection getPhones()
+   public Collection<Object> getPhones()
    {
       return phones;
    }
 
-   public void setPhones(Collection phones)
+   public void setPhones(Collection<Object> phones)
    {
       this.phones = phones;
    }
 
-   public Collection getAddresses()
+   public Collection<Address> getAddresses()
    {
       return addresses;
    }
 
-   public void setAddresses(Collection addresses)
+   public void setAddresses(Collection<Address> addresses)
    {
       this.addresses = addresses;
    }

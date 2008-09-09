@@ -342,9 +342,9 @@ public class SimpleTestCase
       assertEquals("0836217462", book.getIsbn());
       assertEquals(book.getCharactersTotal(), 2);
 
-      for(Iterator iter = book.getCharacters().iterator(); iter.hasNext();)
+      for(Iterator<BookCharacter> iter = book.getCharacters().iterator(); iter.hasNext();)
       {
-         BookCharacter character = (BookCharacter)iter.next();
+         BookCharacter character = iter.next();
          final String name = character.getName();
          if(name.equals("Snoopy"))
          {

@@ -49,13 +49,13 @@ public abstract class AbstractMarshaller
 
    protected String version = VERSION;
    protected String encoding = ENCODING;
-   protected List rootQNames = new ArrayList();
+   protected List<QName> rootQNames = new ArrayList<QName>();
 
    protected NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
-   private Map classMappings = Collections.EMPTY_MAP;
-   protected Map field2WildcardMap = Collections.EMPTY_MAP;
-   protected Map cls2TypeMap = Collections.EMPTY_MAP;
+   private Map<Class<?>, ClassMapping> classMappings = Collections.emptyMap();
+   protected Map<Class<?>, FieldToWildcardMapping> field2WildcardMap = Collections.emptyMap();
+   protected Map<Class<?>, QName> cls2TypeMap = Collections.emptyMap();
 
    /**
     * Content the result is written to
@@ -66,7 +66,7 @@ public abstract class AbstractMarshaller
 
    // Marshaller implementation
 
-   public void mapClassToGlobalElement(Class cls,
+   public void mapClassToGlobalElement(Class<?> cls,
                                        String localName,
                                        String namespaceUri,
                                        String schemaUrl,
@@ -91,7 +91,7 @@ public abstract class AbstractMarshaller
       addClassMapping(mapping);
    }
 
-   public void mapClassToGlobalType(Class cls,
+   public void mapClassToGlobalType(Class<?> cls,
                                     String localName,
                                     String nsUri,
                                     String schemaUrl,
@@ -110,39 +110,23 @@ public abstract class AbstractMarshaller
       addClassMapping(mapping);
    }
 
-   public void mapFieldToWildcard(Class cls, String field, ObjectLocalMarshaller marshaller)
+   public void mapFieldToWildcard(Class<?> cls, String field, ObjectLocalMarshaller marshaller)
    {
       FieldToWildcardMapping mapping = new FieldToWildcardMapping(cls, field, marshaller);
-      switch(field2WildcardMap.size())
-      {
-         case 0:
-            field2WildcardMap = Collections.singletonMap(cls, mapping);
-            break;
-         case 1:
-            field2WildcardMap = new HashMap(field2WildcardMap);
-         default:
-            field2WildcardMap.put(cls, mapping);
-      }
+      if(field2WildcardMap.isEmpty())
+         field2WildcardMap = new HashMap<Class<?>, FieldToWildcardMapping>(field2WildcardMap);
+      field2WildcardMap.put(cls, mapping);
    }
 
-   public void mapClassToXsiType(Class cls, String typeNs, String typeLocalPart)
+   public void mapClassToXsiType(Class<?> cls, String typeNs, String typeLocalPart)
    {
       QName typeQName = new QName(typeNs, typeLocalPart);
-      switch(cls2TypeMap.size())
-      {
-         case 0:
-            cls2TypeMap = Collections.singletonMap(cls, typeQName);
-            break;
-         case 1:
-            cls2TypeMap = new HashMap(cls2TypeMap);
-         default:
-            cls2TypeMap.put(cls, typeQName);
-      }
+      if(cls2TypeMap.isEmpty())
+         cls2TypeMap = new HashMap<Class<?>, QName>(cls2TypeMap);
+      cls2TypeMap.put(cls, typeQName);
 
       if(log.isTraceEnabled())
-      {
          log.trace("mapped " + cls + " to xsi:type " + typeQName);
-      }
    }
 
    public void setVersion(String version)
@@ -221,9 +205,9 @@ public abstract class AbstractMarshaller
 
    protected void declareNs(AttributesImpl attrs)
    {
-      for(Iterator i = nsRegistry.getRegisteredURIs(); i.hasNext();)
+      for(Iterator<String> i = nsRegistry.getRegisteredURIs(); i.hasNext();)
       {
-         String uri = (String)i.next();
+         String uri = i.next();
          String prefix = nsRegistry.getPrefix(uri);
          declareNs(attrs, prefix, uri);
       }
@@ -291,16 +275,16 @@ public abstract class AbstractMarshaller
       }
    }
 
-   protected ClassMapping getClassMapping(Class cls)
+   protected ClassMapping getClassMapping(Class<?> cls)
    {
       return (ClassMapping)classMappings.get(cls);
    }
 
    private void addClassMapping(ClassMapping mapping)
    {
-      if(classMappings == Collections.EMPTY_MAP)
+      if(classMappings.isEmpty())
       {
-         classMappings = new HashMap();
+         classMappings = new HashMap<Class<?>, ClassMapping>();
       }
       classMappings.put(mapping.cls, mapping);
    }
@@ -309,13 +293,13 @@ public abstract class AbstractMarshaller
 
    protected class ClassMapping
    {
-      public final Class cls;
+      public final Class<?> cls;
       public final QName elementName;
       public final QName typeName;
       public final String schemaUrl;
       public final GenericObjectModelProvider provider;
 
-      public ClassMapping(Class cls,
+      public ClassMapping(Class<?> cls,
                           String elementName,
                           String typeName,
                           String nsUri,
@@ -393,11 +377,11 @@ public abstract class AbstractMarshaller
 
    protected class FieldToWildcardMapping
    {
-      public final Class cls;
+      public final Class<?> cls;
       public final ObjectLocalMarshaller marshaller;
       public final FieldInfo fieldInfo;
 
-      public FieldToWildcardMapping(Class cls, String field, ObjectLocalMarshaller marshaller)
+      public FieldToWildcardMapping(Class<?> cls, String field, ObjectLocalMarshaller marshaller)
       {
          if(log.isTraceEnabled())
          {
@@ -464,7 +448,7 @@ public abstract class AbstractMarshaller
    public static class StackImpl
       implements Stack
    {
-      private List list = new ArrayList();
+      private List<Object> list = new ArrayList<Object>();
 
       public void clear()
       {

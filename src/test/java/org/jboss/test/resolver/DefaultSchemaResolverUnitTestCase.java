@@ -70,7 +70,7 @@ public class DefaultSchemaResolverUnitTestCase extends AbstractJBossXBTest
 
       for(int n = 0; n < locations.length; n ++)
       {
-         Class c = resolver.removeClassBindingForLocation(locations[n]);
+         Class<?> c = resolver.removeClassBindingForLocation(locations[n]);
          assertNotNull(c);
       }
       for(int n = 0; n < locations.length; n ++)

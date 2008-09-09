@@ -47,7 +47,7 @@ public class JBossCMPEntityCommandMetaData extends AbstractCollection<JBossCMPEn
 {
    private String name;
    private String className;
-   private Map<String, Attribute> attributes = Collections.EMPTY_MAP;
+   private Map<String, Attribute> attributes = Collections.emptyMap();
    
    
    /**

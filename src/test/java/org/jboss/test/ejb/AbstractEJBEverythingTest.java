@@ -1261,7 +1261,7 @@ public abstract class AbstractEJBEverythingTest extends AbstractJavaEEEverything
       assertEquals(0, bean.getTransactionTimeout("getSomething"));
    }
 */   
-   private void assertEmptyIterator(Iterator i)
+   private void assertEmptyIterator(Iterator<?> i)
    {
       if (i != null && i.hasNext())
          throw new AssertionFailedError("The iterator should be empty: " + i);

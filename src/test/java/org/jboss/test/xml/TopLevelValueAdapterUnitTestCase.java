@@ -59,7 +59,7 @@ public class TopLevelValueAdapterUnitTestCase extends AbstractJBossXBTest
       TypeBinding type = element.getType();
       type.setValueAdapter(new ValueAdapter()
       {
-         public Object cast(Object o, Class c)
+         public Object cast(Object o, Class<?> c)
          {
             String string = (String) o;
             return string + "...";

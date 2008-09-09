@@ -43,7 +43,7 @@ public class ValueList
 {
    private final ValueListInitializer initializer;
    private final ValueListHandler handler;
-   private final Class targetClass;
+   private final Class<?> targetClass;
    //private final int requiredTotal;
 
    //private final Object[] requiredValues;
@@ -52,7 +52,7 @@ public class ValueList
    //private List nonRequiredBindings;
    private List nonRequiredValues = Collections.EMPTY_LIST;
 
-   ValueList(ValueListInitializer initializer, ValueListHandler handler, Class targetClass)
+   ValueList(ValueListInitializer initializer, ValueListHandler handler, Class<?> targetClass)
    {
       this.initializer = initializer;
       this.handler = handler;
@@ -120,7 +120,7 @@ public class ValueList
          PropertyMetaData propMetaData = binding.getTerm().getPropertyMetaData();
          if(propMetaData != null && propMetaData.getCollectionType() != null)
          {
-            Class colCls = RtUtil.loadClass(propMetaData.getCollectionType(), true);
+            Class<?> colCls = RtUtil.loadClass(propMetaData.getCollectionType(), true);
             try
             {
                col = (Collection) colCls.newInstance();
@@ -154,7 +154,7 @@ public class ValueList
             nonRequiredValues = Collections.singletonList(val);
             break;
          case 1:
-            nonRequiredValues = new ArrayList(nonRequiredValues);
+            nonRequiredValues = new ArrayList<Object>(nonRequiredValues);
          default:
             nonRequiredValues.add(val);
       }
@@ -171,19 +171,19 @@ public class ValueList
       return initializer;
    }
 
-   public List getRequiredValues()
+   public List<?> getRequiredValues()
    {
 //      return Arrays.asList(requiredValues);
       throw new UnsupportedOperationException();
    }
 
-   public Map getNonRequiredValues()
+   public Map<?, ?> getNonRequiredValues()
    {
 //      return nonRequiredValues;
       throw new UnsupportedOperationException();
    }
 
-   public List getNonRequiredBindings()
+   public List<?> getNonRequiredBindings()
    {
 //      return nonRequiredBindings;
       throw new UnsupportedOperationException();
@@ -194,7 +194,7 @@ public class ValueList
       return handler;
    }
 
-   public Class getTargetClass()
+   public Class<?> getTargetClass()
    {
       return targetClass;
    }

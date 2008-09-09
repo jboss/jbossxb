@@ -34,13 +34,13 @@ public class Immutable
 {
    private static final Logger log = Logger.getLogger(Immutable.class);
 
-   public final Class cls;
+   public final Class<?> cls;
 
-   final List names = new java.util.ArrayList();
+   final List<String> names = new java.util.ArrayList<String>();
 
-   final List values = new java.util.ArrayList();
+   final List<Object> values = new java.util.ArrayList<Object>();
 
-   public Immutable(Class cls)
+   public Immutable(Class<?> cls)
    {
       this.cls = cls;
       if(log.isTraceEnabled())
@@ -79,7 +79,7 @@ public class Immutable
 
    public Object newInstance()
    {
-      Constructor ctor = null;
+      Constructor<?> ctor = null;
       Constructor[] ctors = cls.getConstructors();
 
       if(ctors == null || ctors.length == 0)

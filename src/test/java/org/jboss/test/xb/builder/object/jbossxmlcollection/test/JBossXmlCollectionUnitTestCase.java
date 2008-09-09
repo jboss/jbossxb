@@ -48,7 +48,7 @@ public class JBossXmlCollectionUnitTestCase extends AbstractBuilderTest
       assertNotNull(root);
       assertNull(root.getUnparameterizedList());
       assertNull(root.getJbossXmlList());
-      List list = root.getDefaultList();
+      List<?> list = root.getDefaultList();
       assertNotNull(list);
       assertEquals(3, list.size());
       assertEquals("default1", list.get(0));
@@ -62,7 +62,7 @@ public class JBossXmlCollectionUnitTestCase extends AbstractBuilderTest
       assertNotNull(root);
       assertNull(root.getDefaultList());
       assertNull(root.getJbossXmlList());
-      List list = root.getUnparameterizedList();
+      List<?> list = root.getUnparameterizedList();
       assertNotNull(list);
       assertEquals(3, list.size());
       assertEquals(1, list.get(0));
@@ -76,7 +76,7 @@ public class JBossXmlCollectionUnitTestCase extends AbstractBuilderTest
       assertNotNull(root);
       assertNull(root.getDefaultList());
       assertNull(root.getUnparameterizedList());
-      List list = root.getJbossXmlList();
+      List<?> list = root.getJbossXmlList();
       assertNotNull(list);
       assertEquals(LinkedList.class, list.getClass());
       assertEquals(3, list.size());
@@ -92,7 +92,7 @@ public class JBossXmlCollectionUnitTestCase extends AbstractBuilderTest
       assertNull(root.getDefaultList());
       assertNull(root.getUnparameterizedList());
       assertNull(root.getJbossXmlList());
-      List list = root.getUnparameterizedJbossXmlList();
+      List<?> list = root.getUnparameterizedJbossXmlList();
       assertNotNull(list);
       assertEquals(LinkedList.class, list.getClass());
       assertEquals(3, list.size());

@@ -27,7 +27,6 @@ import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 
 import org.jboss.xb.binding.Constants;
-import org.jboss.xb.binding.JBossXBException;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.metadata.ValueMetaData;
@@ -83,17 +82,17 @@ public abstract class CharactersHandler
          QName itemTypeQName = itemType.getQName();
          if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
          {
-            List list = SimpleTypeBindings.unmarshalList(itemTypeQName.getLocalPart(), value, nsCtx);
+            List<?> list = SimpleTypeBindings.unmarshalList(itemTypeQName.getLocalPart(), value, nsCtx);
             if(typeBinding.getSchemaBinding().isUnmarshalListsToArrays())
             {
                if(list.isEmpty())
                {
-                  Class compType = SimpleTypeBindings.classForType(itemTypeQName.getLocalPart(), true);
+                  Class<?> compType = SimpleTypeBindings.classForType(itemTypeQName.getLocalPart(), true);
                   o = Array.newInstance(compType, 0);
                }
                else
                {
-                  Class compType = list.get(0).getClass();
+                  Class<?> compType = list.get(0).getClass();
                   o = list.toArray((Object[])Array.newInstance(compType, list.size()));
                }
             }

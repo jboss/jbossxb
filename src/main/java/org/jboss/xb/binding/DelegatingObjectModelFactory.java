@@ -40,7 +40,7 @@ public class DelegatingObjectModelFactory
    implements GenericObjectModelFactory
 {
    private final ObjectModelFactory typedFactory;
-   private final Map addMethodsByParent = new HashMap();
+   private final Map<Class<?>, AddMethods> addMethodsByParent = new HashMap<Class<?>, AddMethods>();
    private boolean replaceProps;
 
    public DelegatingObjectModelFactory(ObjectModelFactory typedFactory)
@@ -54,8 +54,8 @@ public class DelegatingObjectModelFactory
          Method method = methods[i];
          if("addChild".equals(method.getName()))
          {
-            Class parent = method.getParameterTypes()[0];
-            AddMethods addMethods = (AddMethods)addMethodsByParent.get(parent);
+            Class<?> parent = method.getParameterTypes()[0];
+            AddMethods addMethods = addMethodsByParent.get(parent);
             if(addMethods == null)
             {
                addMethods = new AddMethods(parent);
@@ -93,7 +93,7 @@ public class DelegatingObjectModelFactory
    public Object newChild(Object parent, UnmarshallingContext navigator, String namespaceURI, String localName, Attributes attrs)
    {
       // Get the newChild method
-      Class objClass = parent.getClass();
+      Class<?> objClass = parent.getClass();
       Class[] classes = new Class[] { objClass, UnmarshallingContext.class, String.class, String.class, Attributes.class };
       Method method = ObjectModelBuilder.getMethodForElement(typedFactory, "newChild", classes);
 
@@ -132,7 +132,7 @@ public class DelegatingObjectModelFactory
             String.class
          });
          */
-      AddMethods addMethods = (AddMethods)addMethodsByParent.get(parent.getClass());
+      AddMethods addMethods = addMethodsByParent.get(parent.getClass());
       if(addMethods != null)
       {
          Method method = addMethods.getMethodForChild(child.getClass());
@@ -155,7 +155,7 @@ public class DelegatingObjectModelFactory
    public void setValue(Object o, UnmarshallingContext navigator, String namespaceURI, String localName, String value)
    {
       // Get the setValue method
-      Class objClass = o.getClass();
+      Class<?> objClass = o.getClass();
       Class[] classes = new Class[] { objClass, UnmarshallingContext.class, String.class, String.class, String.class };
       Method method = ObjectModelBuilder.getMethodForElement(typedFactory, "setValue", classes);
       
@@ -216,11 +216,11 @@ public class DelegatingObjectModelFactory
    {
       private static final int DEFAULT_METHODS_SIZE = 10;
 
-      public final Class parent;
+      public final Class<?> parent;
       private Method[] methods = new Method[DEFAULT_METHODS_SIZE];
       private int totalMethods;
 
-      public AddMethods(Class parent)
+      public AddMethods(Class<?> parent)
       {
          this.parent = parent;
       }
@@ -236,14 +236,14 @@ public class DelegatingObjectModelFactory
          methods[totalMethods++] = m;
       }
 
-      public Method getMethodForChild(Class child)
+      public Method getMethodForChild(Class<?> child)
       {
-         Class closestParam = null;
+         Class<?> closestParam = null;
          Method closestMethod = null;
          for(int i = 0; i < totalMethods; ++i)
          {
             Method method = methods[i];
-            Class param = method.getParameterTypes()[1];
+            Class<?> param = method.getParameterTypes()[1];
             if(param == child)
             {
                return method;

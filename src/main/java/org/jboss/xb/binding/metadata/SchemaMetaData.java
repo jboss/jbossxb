@@ -34,7 +34,7 @@ import java.util.HashMap;
 public class SchemaMetaData
 {
    private PackageMetaData packageMetaData;
-   private Map values = Collections.EMPTY_MAP;
+   private Map<String, ValueMetaData> values = Collections.emptyMap();
    private boolean ignoreUnresolvedFieldOrClass = true;
    private boolean replacePropertyRefs = true;
 
@@ -84,7 +84,7 @@ public class SchemaMetaData
             values = Collections.singletonMap(value.getId(), value);
             break;
          case 1:
-            values = new HashMap(values);
+            values = new HashMap<String, ValueMetaData>(values);
          default:
             values.put(value.getId(), value);
       }

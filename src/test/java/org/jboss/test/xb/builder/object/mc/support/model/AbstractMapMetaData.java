@@ -114,16 +114,16 @@ public class AbstractMapMetaData extends AbstractTypeMetaData
    @SuppressWarnings("unchecked")
    public Object getValue(TypeInfo info, ClassLoader cl) throws Throwable
    {
-      Map result = getExpectedClass().newInstance();//getTypeInstance(info, cl, getExpectedClass());
+      Map<Object, Object> result = getExpectedClass().newInstance();//getTypeInstance(info, cl, getExpectedClass());
 
       TypeInfo keyTypeInfo = ((ClassInfo) info).getKeyType();// getKeyClassInfo(cl);
       TypeInfo valueTypeInfo = ((ClassInfo) info).getValueType();//getValueClassInfo(cl);
 
       if (map.size() > 0)
       {
-         for (Iterator i = map.entrySet().iterator(); i.hasNext();)
+         for (Iterator<?> i = map.entrySet().iterator(); i.hasNext();)
          {
-            Map.Entry entry = (Map.Entry) i.next();
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) i.next();
             ValueMetaData key = (ValueMetaData) entry.getKey();
             ValueMetaData value = (ValueMetaData) entry.getValue();
             Object keyValue = key.getValue(keyTypeInfo, cl);

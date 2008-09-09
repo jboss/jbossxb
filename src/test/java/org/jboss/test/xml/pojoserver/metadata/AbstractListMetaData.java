@@ -65,12 +65,12 @@ public class AbstractListMetaData extends AbstractCollectionMetaData implements 
       return lastIndexOf(o);
    }
 
-   public ListIterator listIterator()
+   public ListIterator<Object> listIterator()
    {
       return collection.listIterator();
    }
 
-   public ListIterator listIterator(int index)
+   public ListIterator<Object> listIterator(int index)
    {
       return collection.listIterator(index);
    }
@@ -85,7 +85,7 @@ public class AbstractListMetaData extends AbstractCollectionMetaData implements 
       return set(index, element);
    }
 
-   public List subList(int fromIndex, int toIndex)
+   public List<?> subList(int fromIndex, int toIndex)
    {
       return subList(fromIndex, toIndex);
    }

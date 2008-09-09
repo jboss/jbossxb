@@ -165,15 +165,15 @@ public class MultispacedUnitTestCase
       assertEquals("The JBoss XMBean version of the monitor server", xmbean.getDescription());
       assertEquals("monitor.MonitorPOJO", xmbean.getMbeanClass());
 
-      final List constructors = xmbean.getConstructors();
+      final List<XMBeanConstructorMetaData> constructors = xmbean.getConstructors();
       assertEquals(1, constructors.size());
-      XMBeanConstructorMetaData constructor = (XMBeanConstructorMetaData)constructors.get(0);
+      XMBeanConstructorMetaData constructor = constructors.get(0);
       assertEquals("The no-arg constructor", constructor.getDescription());
       assertEquals("monitor.MonitorPOJO", constructor.getName());
 
-      final List attributes = xmbean.getAttributes();
+      final List<XMBeanAttributeMetaData> attributes = xmbean.getAttributes();
       assertEquals(1, attributes.size());
-      XMBeanAttributeMetaData attribute = (XMBeanAttributeMetaData)attributes.get(0);
+      XMBeanAttributeMetaData attribute = attributes.get(0);
       assertEquals("read-write", attribute.getAccess());
       assertEquals("getInterval", attribute.getGetMethod());
       assertEquals("setInterval", attribute.getSetMethod());
@@ -181,16 +181,16 @@ public class MultispacedUnitTestCase
       assertEquals("Interval", attribute.getName());
       assertEquals("int", attribute.getType());
 
-      final List operations = xmbean.getOperations();
+      final List<XMBeanOperationMetaData> operations = xmbean.getOperations();
       assertEquals(1, operations.size());
-      XMBeanOperationMetaData operation = (XMBeanOperationMetaData)operations.get(0);
+      XMBeanOperationMetaData operation = operations.get(0);
       assertEquals("Access the last HistoryLength monitor reports", operation.getDescription());
       assertEquals("history", operation.getName());
       assertEquals("java.lang.String", operation.getReturnType());
 
-      final List notifications = xmbean.getNotifications();
+      final List<XMBeanNotificationMetaData> notifications = xmbean.getNotifications();
       assertEquals(1, notifications.size());
-      XMBeanNotificationMetaData notification = (XMBeanNotificationMetaData)notifications.get(0);
+      XMBeanNotificationMetaData notification = notifications.get(0);
       assertEquals("A notification sent when the monitor interval expires", notification.getDescription());
       assertEquals("javax.management.Notification", notification.getName());
       assertEquals("monitor.IntervalElapsed", notification.getNotificationType());

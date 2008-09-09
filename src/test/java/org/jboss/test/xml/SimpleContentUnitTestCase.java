@@ -76,7 +76,7 @@ public class SimpleContentUnitTestCase extends AbstractJBossXBTest
             getLog().debug("Add " + parent + " " + child);
             Top p = (Top) parent;
             if (p.string == null)
-               p.string = new LinkedList();
+               p.string = new LinkedList<Object>();
             p.string.add(child);
          }
       }); 
@@ -88,14 +88,14 @@ public class SimpleContentUnitTestCase extends AbstractJBossXBTest
    
    public static class Top
    {
-      public List string;
+      public List<Object> string;
 
-      public List getString()
+      public List<Object> getString()
       {
          return string;
       }
 
-      public void setString(List string)
+      public void setString(List<Object> string)
       {
          this.string = string;
       }

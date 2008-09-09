@@ -43,7 +43,7 @@ public class AnnotationTestCase extends AbstractMCTest
       AbstractBeanMetaData bean = unmarshalBean();
       ConstructorMetaData constructor = bean.getConstructor();
       assertNotNull(constructor);
-      Set annotations = constructor.getAnnotations();
+      Set<?> annotations = constructor.getAnnotations();
       assertEquals(1, annotations.size());
       AbstractAnnotationMetaData annotation = (AbstractAnnotationMetaData) annotations.iterator().next();
       assertNotNull(annotation);

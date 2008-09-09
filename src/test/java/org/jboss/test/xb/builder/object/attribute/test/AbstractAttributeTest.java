@@ -58,7 +58,7 @@ public abstract class AbstractAttributeTest<T> extends AbstractBuilderTest
    @SuppressWarnings("unchecked")
    public void testUnmarshal() throws Exception
    {
-      SimpleAttribute result = (SimpleAttribute) unmarshalObject(root);
+      SimpleAttribute<?> result = (SimpleAttribute<?>) unmarshalObject(root);
       T actual = (T) result.getAttribute();
       assertEquals(expected, actual);
    }

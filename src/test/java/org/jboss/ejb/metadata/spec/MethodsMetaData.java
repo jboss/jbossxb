@@ -154,7 +154,7 @@ public class MethodsMetaData extends NonNullLinkedHashSet<MethodMetaData>
       for (int i = 0; i < out.length; i++)
       {
          String brackets = "";
-         Class cls = classes[i];
+         Class<?> cls = classes[i];
          while (cls.isArray())
          {
             brackets += "[]";

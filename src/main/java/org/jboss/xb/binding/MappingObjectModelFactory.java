@@ -48,12 +48,12 @@ public class MappingObjectModelFactory
    /**
     * The class mappings
     */
-   private final Map elementToClassMapping = new HashMap();
+   private final Map<String, ElementToClassMapping> elementToClassMapping = new HashMap<String, ElementToClassMapping>();
 
    /**
     * The field mappings
     */
-   private final Map elementToFieldMapping = new HashMap();
+   private final Map<ElementToFieldMappingKey, ElementToFieldMapping> elementToFieldMapping = new HashMap<ElementToFieldMappingKey, ElementToFieldMapping>();
 
    // Public
 
@@ -63,7 +63,7 @@ public class MappingObjectModelFactory
     * @param element the element name
     * @param cls     the class
     */
-   public void mapElementToClass(String element, Class cls)
+   public void mapElementToClass(String element, Class<?> cls)
    {
       ElementToClassMapping mapping = new ElementToClassMapping(element, cls);
       addElementToClassMapping(mapping);
@@ -81,7 +81,7 @@ public class MappingObjectModelFactory
     * @param field     the field name
     * @param converter the type convertor
     */
-   public void mapElementToField(String element, Class cls, String field, TypeBinding converter)
+   public void mapElementToField(String element, Class<?> cls, String field, TypeBinding converter)
    {
       ElementToFieldMapping mapping = new ElementToFieldMapping(element, cls, field, converter);
       addElementToFieldMapping(mapping);
@@ -114,7 +114,7 @@ public class MappingObjectModelFactory
 
       if(root == null)
       {
-         ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
+         ElementToClassMapping mapping = elementToClassMapping.get(localName);
          if(mapping != null)
          {
             if(log.isTraceEnabled())
@@ -190,7 +190,7 @@ public class MappingObjectModelFactory
 
       Object child = null;
 
-      ElementToClassMapping mapping = (ElementToClassMapping)elementToClassMapping.get(localName);
+      ElementToClassMapping mapping = elementToClassMapping.get(localName);
       XSTypeDefinition type = ctx.getType();
       if(mapping != null)
       {
@@ -203,7 +203,7 @@ public class MappingObjectModelFactory
          {
             if(!(o instanceof Collection))
             {
-               ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
+               ElementToFieldMapping fieldMapping = elementToFieldMapping.get(
                   new ElementToFieldMappingKey(localName, o.getClass())
                );
 
@@ -263,7 +263,7 @@ public class MappingObjectModelFactory
          }
          else
          {
-            Class oCls;
+            Class<?> oCls;
             if(o instanceof Immutable)
             {
                oCls = ((Immutable)o).cls;
@@ -299,14 +299,14 @@ public class MappingObjectModelFactory
                {
                   if(child == null)
                   {
-                     child = new ArrayList();
+                     child = new ArrayList<Object>();
                   }
                }
             }
             else if(!Util.isAttributeType(fieldInfo.getType()))
             {
                // id there is no field mapping
-               ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
+               ElementToFieldMapping fieldMapping = elementToFieldMapping.get(
                   new ElementToFieldMappingKey(localName, o.getClass())
                );
                TypeBinding converter = fieldMapping == null ? null : fieldMapping.converter;
@@ -413,11 +413,11 @@ public class MappingObjectModelFactory
          {
             log.trace("Add " + value + " to collection " + parent);
          }
-         ((Collection)parent).add(value);
+         ((Collection<Object>)parent).add(value);
       }
       else
       {
-         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
+         final ElementToFieldMapping fieldMapping = elementToFieldMapping.get(
             new ElementToFieldMappingKey(localName, parent.getClass())
          );
          if(fieldMapping != null)
@@ -430,7 +430,7 @@ public class MappingObjectModelFactory
          }
          else
          {
-            Class parentCls = parent instanceof Immutable ?
+            Class<?> parentCls = parent instanceof Immutable ?
                ((Immutable)parent).cls :
                parent.getClass();
 
@@ -446,7 +446,7 @@ public class MappingObjectModelFactory
                if(!(child instanceof Collection) && Collection.class.isAssignableFrom(fieldInfo.getType()))
                {
                   Object o = get(parent, localName, fieldInfo);
-                  Collection col = (Collection)o;
+                  Collection<Object> col = (Collection<Object>)o;
                   if(trace)
                   {
                      log.trace("Add " + value + " to collection " + col + " retrieved from " + fieldName);
@@ -470,7 +470,7 @@ public class MappingObjectModelFactory
          if(type == null)
          {
             log.warn("Type is not available for collection item " + localName + "=" + value + " -> adding as string.");
-            ((Collection)o).add(value);
+            ((Collection<String>)o).add(value);
          }
          else
          {
@@ -480,13 +480,13 @@ public class MappingObjectModelFactory
             }
 
             Object trgValue = SimpleTypeBindings.unmarshal(type.getName(), value, ctx.getNamespaceContext());
-            ((Collection)o).add(trgValue);
+            ((Collection<Object>)o).add(trgValue);
          }
       }
       else
       {
          Object fieldValue = null;
-         final ElementToFieldMapping fieldMapping = (ElementToFieldMapping)elementToFieldMapping.get(
+         final ElementToFieldMapping fieldMapping = elementToFieldMapping.get(
             new ElementToFieldMappingKey(localName, o.getClass())
          );
 
@@ -497,7 +497,7 @@ public class MappingObjectModelFactory
          }
          else
          {
-            Class oCls;
+            Class<?> oCls;
             if(o instanceof Immutable)
             {
                oCls = ((Immutable)o).cls;
@@ -532,7 +532,7 @@ public class MappingObjectModelFactory
          Util.xmlNameToClassName(namespaceURI, type.getName(), true) :
          Util.xmlNameToClassName(namespaceURI, localName, true);
 
-      Class cls = null;
+      Class<?> cls = null;
       try
       {
          cls = Thread.currentThread().getContextClassLoader().loadClass(clsName);
@@ -598,7 +598,7 @@ public class MappingObjectModelFactory
       }
    }
 
-   private static Object newInstance(Class cls)
+   private static Object newInstance(Class<?> cls)
    {
       if(log.isTraceEnabled())
       {
@@ -608,7 +608,7 @@ public class MappingObjectModelFactory
       Object instance;
       try
       {
-         Constructor ctor = cls.getConstructor(null);
+         Constructor<?> ctor = cls.getConstructor(null);
          instance = ctor.newInstance(null);
       }
       catch(NoSuchMethodException e)
@@ -633,9 +633,9 @@ public class MappingObjectModelFactory
    {
       public final String element;
 
-      public final Class cls;
+      public final Class<?> cls;
 
-      public ElementToClassMapping(String element, Class cls)
+      public ElementToClassMapping(String element, Class<?> cls)
       {
          this.element = element;
          this.cls = cls;
@@ -685,9 +685,9 @@ public class MappingObjectModelFactory
    {
       public final String element;
 
-      public final Class cls;
+      public final Class<?> cls;
 
-      public ElementToFieldMappingKey(String element, Class cls)
+      public ElementToFieldMappingKey(String element, Class<?> cls)
       {
          this.element = element;
          this.cls = cls;
@@ -732,12 +732,12 @@ public class MappingObjectModelFactory
    private class ElementToFieldMapping
    {
       public final String element;
-      public final Class cls;
+      public final Class<?> cls;
       public final TypeBinding converter;
       public final ElementToFieldMappingKey key;
       public final FieldInfo fieldInfo;
 
-      public ElementToFieldMapping(String element, Class cls, String fieldName, TypeBinding converter)
+      public ElementToFieldMapping(String element, Class<?> cls, String fieldName, TypeBinding converter)
       {
          this.element = element;
          this.cls = cls;

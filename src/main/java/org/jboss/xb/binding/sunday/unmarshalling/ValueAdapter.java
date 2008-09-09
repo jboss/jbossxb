@@ -29,7 +29,7 @@ public interface ValueAdapter
 {
    ValueAdapter NOOP = new ValueAdapter()
    {
-      public Object cast(Object o, Class c)
+      public Object cast(Object o, Class<?> c)
       {
          return o;
       }
@@ -43,5 +43,5 @@ public interface ValueAdapter
     * @param c
     * @return
     */
-   Object cast(Object o, Class c);
+   Object cast(Object o, Class<?> c);
 }

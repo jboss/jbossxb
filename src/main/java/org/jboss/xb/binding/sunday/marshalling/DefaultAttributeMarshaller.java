@@ -33,7 +33,6 @@ import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 
 
@@ -101,14 +100,14 @@ public class DefaultAttributeMarshaller
          TypeBinding itemType = attrType.getItemType();
          if(Constants.NS_XML_SCHEMA.equals(itemType.getQName().getNamespaceURI()))
          {
-            List list;
+            List<QName> list;
             if(value instanceof List)
             {
-               list = (List)value;
+               list = (List<QName>)value;
             }
             else if(value.getClass().isArray())
             {
-               list = Arrays.asList((Object[])value);
+               list = Arrays.asList((QName[])value);
             }
             else
             {
@@ -161,7 +160,7 @@ public class DefaultAttributeMarshaller
          attrType.getBaseType() != null &&
          Constants.QNAME_BOOLEAN.equals(attrType.getBaseType().getQName()))
       {
-         String item = (String)attrType.getLexicalPattern().get(0);
+         String item = attrType.getLexicalPattern().get(0);
          if(item.indexOf('0') != -1 && item.indexOf('1') != -1)
          {
             marshalled = ((Boolean)value).booleanValue() ? "1" : "0";

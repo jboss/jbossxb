@@ -36,7 +36,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 @XmlRootElement
 public class Root
 {
-   private Map map;
+   private Map<?, ?> map;
    
    @XmlJavaTypeAdapter(MyHashMapAdapter.class)
    public Map getMap()

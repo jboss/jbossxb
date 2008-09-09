@@ -45,6 +45,6 @@ public interface MetaDataVisitorNode
     * 
     * @return Iterator<MetaDataVistorNode> or null if there aren't any
     */
-   public Iterator getChildren();
+   public Iterator<?> getChildren();
 
 }

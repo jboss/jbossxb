@@ -39,7 +39,7 @@ public class SupplyTestCase extends AbstractMCTest
    protected AbstractSupplyMetaData getSupply() throws Exception
    {
       AbstractBeanMetaData bean = unmarshalBean();
-      Set supplies = bean.getSupplies();
+      Set<?> supplies = bean.getSupplies();
       assertNotNull(supplies);
       assertEquals(1, supplies.size());
       AbstractSupplyMetaData supply = (AbstractSupplyMetaData) supplies.iterator().next();

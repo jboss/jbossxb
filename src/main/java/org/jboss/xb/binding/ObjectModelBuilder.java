@@ -89,7 +89,7 @@ public class ObjectModelBuilder
    /**
     * factories mapped to namespace URIs
     */
-   private Map factoriesToNs = Collections.EMPTY_MAP;
+   private Map<String, GenericObjectModelFactory> factoriesToNs = Collections.emptyMap();
 
    /**
     * NamespaceContext implementation
@@ -105,9 +105,9 @@ public class ObjectModelBuilder
 
    public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
    {
-      if(factoriesToNs == Collections.EMPTY_MAP)
+      if(factoriesToNs.isEmpty())
       {
-         factoriesToNs = new HashMap();
+         factoriesToNs = new HashMap<String, GenericObjectModelFactory>();
       }
       factoriesToNs.put(namespaceUri, getGenericObjectModelFactory(factory));
    }
@@ -155,7 +155,7 @@ public class ObjectModelBuilder
 
    // UnmarshallingContext implementation
 
-   public Iterator getNamespaceURIs()
+   public Iterator<String> getNamespaceURIs()
    {
       return nsRegistry.getRegisteredURIs();
    }
@@ -241,7 +241,7 @@ public class ObjectModelBuilder
          }
 
          String factoryProp = data.substring(i + 9, end);
-         Class factoryCls;
+         Class<?> factoryCls;
          try
          {
             factoryCls = Thread.currentThread().getContextClassLoader().loadClass(factoryProp);
@@ -575,7 +575,7 @@ public class ObjectModelBuilder
    private static class StackImpl
       implements Stack
    {
-      private List list = new ArrayList();
+      private List<Object> list = new ArrayList<Object>();
 
       public void clear()
       {

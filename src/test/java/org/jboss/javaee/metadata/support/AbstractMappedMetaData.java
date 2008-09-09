@@ -259,7 +259,7 @@ public abstract class AbstractMappedMetaData<T extends MappableMetaData> extends
          return true;
       if (obj == null || obj instanceof Collection == false)
          return false;
-      Collection<?> other = (Collection) obj;
+      Collection<?> other = (Collection<?>) obj;
       
       if (size() != other.size())
          return false;

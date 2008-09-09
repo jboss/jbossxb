@@ -23,6 +23,8 @@ package org.jboss.test.xml.pojoserver.deployment;
 
 import java.util.List;
 
+import org.jboss.test.xml.pojoserver.metadata.AbstractBeanMetaData;
+
 /**
  * An abstract kernel deployment.
  * 
@@ -35,7 +37,7 @@ public class AbstractKernelDeployment
    protected String name;
 
    /** The beans List<BeanMetaData> */
-   protected List beans;
+   protected List<AbstractBeanMetaData> beans;
 
    /**
     * Create a new kernel deployment
@@ -49,7 +51,7 @@ public class AbstractKernelDeployment
     * 
     * @param beans a List<BeanMetaData>.
     */
-   public void setBeans(List beans)
+   public void setBeans(List<AbstractBeanMetaData> beans)
    {
       this.beans = beans;
    }
@@ -64,7 +66,7 @@ public class AbstractKernelDeployment
       this.name = name;
    }
 
-   public List getBeans()
+   public List<AbstractBeanMetaData> getBeans()
    {
       return beans;
    }

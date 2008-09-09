@@ -442,9 +442,9 @@ public final class SimpleTypeBindings
       }
    }
 
-   public static Class classForType(String xsdType, boolean nillable)
+   public static Class<?> classForType(String xsdType, boolean nillable)
    {
-      Class result;
+      Class<?> result;
       int typeCode = xsdType.hashCode();
       if(typeCode == XS_INT)
       {
@@ -946,11 +946,11 @@ public final class SimpleTypeBindings
       return result;
    }
 
-   public static List unmarshalList(String itemType, String value, NamespaceContext nsCtx)
+   public static List<Object> unmarshalList(String itemType, String value, NamespaceContext nsCtx)
    {
       StringTokenizer tokenizer = new StringTokenizer(value);
       int total = tokenizer.countTokens();
-      List list = new ArrayList(total);
+      List<Object> list = new ArrayList<Object>(total);
       for(int i = 0; i < total; ++i)
       {
          Object o = unmarshal(itemType, tokenizer.nextToken(), nsCtx);
@@ -959,7 +959,7 @@ public final class SimpleTypeBindings
       return list;
    }
 
-   public static String marshalList(String itemType, List value, NamespaceContext nsCtx)
+   public static String marshalList(String itemType, List<?> value, NamespaceContext nsCtx)
    {
       StringBuffer buf = new StringBuffer();
       for(int i = 0; i < value.size(); ++i)
@@ -974,7 +974,7 @@ public final class SimpleTypeBindings
       return buf.toString();
    }
 
-   public static Object unmarshal(String value, Class javaType)
+   public static Object unmarshal(String value, Class<?> javaType)
    {
       Object result;
       if(String.class == javaType)
@@ -1403,7 +1403,7 @@ public final class SimpleTypeBindings
       return result;
    }
 
-   public static QName typeQName(Class cls)
+   public static QName typeQName(Class<?> cls)
    {
       if(cls == null)
       {

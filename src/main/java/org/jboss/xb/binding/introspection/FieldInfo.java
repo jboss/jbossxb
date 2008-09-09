@@ -100,14 +100,14 @@ public class FieldInfo
                {
                   if (owner == null)
                      throw new IllegalArgumentException("Null target for " + m.getName());
-                  ArrayList expected = new ArrayList();
+                  ArrayList<String> expected = new ArrayList<String>();
                   Class[] parameters = m.getParameterTypes();
                   if (parameters != null)
                   {
                      for (int i = 0; i < parameters.length; ++i)
                         expected.add(parameters[i].getName());
                   }
-                  ArrayList actual = new ArrayList();
+                  ArrayList<String> actual = new ArrayList<String>();
                   if (arguments != null)
                   {
                      for (int i = 0; i < arguments.length; ++i)
@@ -150,19 +150,19 @@ public class FieldInfo
       return fieldInfo;
    }
 
-   public static FieldInfo getFieldInfo(Class cls, String fieldName, boolean required)
+   public static FieldInfo getFieldInfo(Class<?> cls, String fieldName, boolean required)
    {
       return ClassInfos.getClassInfo(cls).getFieldInfo(fieldName, required);
    }
 
-   private final Class owner;
+   private final Class<?> owner;
    private final String name;
-   private final Class type;
+   private final Class<?> type;
    private final GetValueAccess getter;
    private SetValueAccess setter;
    private boolean setterInitialized;
 
-   public FieldInfo(Class owner, String name, Method getter)
+   public FieldInfo(Class<?> owner, String name, Method getter)
    {
       this.owner = owner;
       this.name = name;
@@ -170,7 +170,7 @@ public class FieldInfo
       this.getter = GetValueAccessFactory.methodAccess(getter);
    }
 
-   public FieldInfo(Class owner, String name, Method getter, Method setter)
+   public FieldInfo(Class<?> owner, String name, Method getter, Method setter)
    {
       this.owner = owner;
       this.name = name;
@@ -180,7 +180,7 @@ public class FieldInfo
       setterInitialized = true;
    }
 
-   public FieldInfo(Class owner, Field field)
+   public FieldInfo(Class<?> owner, Field field)
    {
       this.owner = owner;
       this.name = field.getName();
@@ -190,7 +190,7 @@ public class FieldInfo
       setterInitialized = true;
    }
 
-   public Class getOwner()
+   public Class<?> getOwner()
    {
       return owner;
    }
@@ -200,7 +200,7 @@ public class FieldInfo
       return name;
    }
 
-   public Class getType()
+   public Class<?> getType()
    {
       return type;
    }

@@ -127,7 +127,35 @@ public class RepeatableTermsUnitTestCase
          assertEquals(i, product.getPrice());
       }
    }
-   
+
+   public void testPolymorphicArray2() throws Exception
+   {
+      Object o = unmarshal();
+      assertNotNull(o);
+      assertTrue(o instanceof ProductArray);
+      ProductArray arr = (ProductArray) o;
+      List<AbstractProduct> products = arr.getProduct();
+      assertNotNull(products);
+      assertEquals(3, products.size());
+      
+      int i = 0;
+      AbstractProduct product = products.get(i++);
+      assertNotNull(product);
+      assertEquals("product" + i, product.getName());
+      assertFalse(product instanceof Product);
+
+      product = products.get(i++);
+      assertNotNull(product);
+      assertEquals("product" + i, product.getName());
+      assertTrue(product instanceof Product);
+      assertEquals(i, ((Product)product).getPrice());
+      
+      product = products.get(i++);
+      assertNotNull(product);
+      assertEquals("product" + i, product.getName());
+      assertFalse(product instanceof Product);
+   }
+
    // Inner
 
    public static final class Top

@@ -27,7 +27,7 @@ package org.jboss.test.xml.repeatableterms;
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public abstract class AbstractProduct
+public class AbstractProduct
 {
    private String name;
    

@@ -331,10 +331,10 @@ public class SundayContentHandler
                {
                   if(element.getQName().equals(startName))
                   {
+                     item.reset();
                      particle = item.particle;
                      parentType = item.parentType;
                      repeated = true;
-                     item.reset();
 
                      if(!particle.isRepeatable())
                      {
@@ -542,10 +542,11 @@ public class SundayContentHandler
          if(xsiType != null)
          {
             if(trace)
-            {
                log.trace(element.getQName() + " uses xsi:type " + xsiType);
-            }
 
+            if(item.nonXsiParticle == null)
+               item.nonXsiParticle = particle;
+            
             String xsiTypePrefix;
             String xsiTypeLocal;
             int colon = xsiType.indexOf(':');
@@ -1389,6 +1390,7 @@ public class SundayContentHandler
    {
       final ModelGroupBinding.Cursor cursor;
       ParticleBinding particle;
+      ParticleBinding nonXsiParticle;
       ParticleHandler handler;
       TypeBinding parentType;
       boolean ignoreCharacters;
@@ -1435,6 +1437,9 @@ public class SundayContentHandler
          
          indentation = null;
          ignorableCharacters = true;
+         
+         if(nonXsiParticle != null)
+            particle = nonXsiParticle;
       }
    }
 

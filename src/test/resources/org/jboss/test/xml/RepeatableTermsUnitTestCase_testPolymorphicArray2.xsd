@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   targetNamespace="http://www.jboss.org/test/xml/repeatableterms"
+   xmlns="http://www.jboss.org/test/xml/repeatableterms"
+   xmlns:jbxb="http://www.jboss.org/xml/ns/jbxb"
+   elementFormDefault="qualified"
+   attributeFormDefault="unqualified"
+   version="1.0">
+
+   <xsd:element name="product-array">
+      <xsd:annotation>
+         <xsd:appinfo>
+            <jbxb:class impl="org.jboss.test.xml.repeatableterms.ProductArray"/>
+         </xsd:appinfo>
+      </xsd:annotation>
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element name="product" type="AbstractProduct" maxOccurs="unbounded"/>
+         </xsd:sequence>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name='AbstractProduct'>
+     <xsd:annotation>
+       <xsd:appinfo>
+          <jbxb:class impl="org.jboss.test.xml.repeatableterms.AbstractProduct"/>
+       </xsd:appinfo>
+     </xsd:annotation>
+     <xsd:sequence>
+        <xsd:element name='name' nillable='true' type='xsd:string'/>
+     </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name='Product'>
+    <xsd:annotation>
+       <xsd:appinfo>
+          <jbxb:class impl="org.jboss.test.xml.repeatableterms.Product"/>
+       </xsd:appinfo>
+    </xsd:annotation>
+    <xsd:complexContent>
+     <xsd:extension base='AbstractProduct'>
+      <xsd:sequence>
+       <xsd:element name='price' type='xsd:int'/>
+      </xsd:sequence>
+     </xsd:extension>
+    </xsd:complexContent>
+   </xsd:complexType>
+</xsd:schema>

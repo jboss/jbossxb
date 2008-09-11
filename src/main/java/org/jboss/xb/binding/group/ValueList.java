@@ -31,6 +31,7 @@ import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtUtil;
@@ -114,7 +115,24 @@ public class ValueList
    void addRepeatableTermValue(QName qName, ParticleBinding binding, Object handler, Object value, ParticleBinding parentParticle)
    {
       NonRequiredValue last = (NonRequiredValue) (nonRequiredValues.isEmpty() ? null : nonRequiredValues.get(nonRequiredValues.size() - 1));
-      if (last == null /*|| last.binding != binding*/)
+      
+      boolean isSameBinding;
+      if(last == null)
+         isSameBinding = false;
+      else if(last.binding == binding)
+         isSameBinding = true;
+      else if(!(last.binding instanceof ParticleBinding))
+         isSameBinding = false;
+      else
+      {
+         ParticleBinding lastBinding = (ParticleBinding) last.binding;
+         if(lastBinding.getTerm().isElement() && binding.getTerm().isElement())
+            isSameBinding = ((ElementBinding)lastBinding.getTerm()).getQName().equals(((ElementBinding)binding.getTerm()).getQName());
+         else
+            isSameBinding = false;
+      }
+      
+      if (!isSameBinding)
       {
          Collection col;
          PropertyMetaData propMetaData = binding.getTerm().getPropertyMetaData();

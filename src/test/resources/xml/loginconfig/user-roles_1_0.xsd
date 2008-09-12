@@ -10,7 +10,7 @@
    <xsd:element name="users">
       <xsd:annotation>
          <xsd:appinfo>
-            <jbxb:class impl="org.jboss.security.auth.spi.Users"/>
+            <jbxb:class impl="org.jboss.test.xml.loginconfig.Users"/>
          </xsd:appinfo>
       </xsd:annotation>
       <xsd:complexType>
@@ -22,7 +22,7 @@
    <xsd:element name="user">
       <xsd:annotation>
          <xsd:appinfo>
-            <jbxb:class impl="org.jboss.security.auth.spi.Users$User"/>
+            <jbxb:class impl="org.jboss.test.xml.loginconfig.Users$User"/>
             <jbxb:addMethod name="addUser" valueType="child"/>
          </xsd:appinfo>
       </xsd:annotation>

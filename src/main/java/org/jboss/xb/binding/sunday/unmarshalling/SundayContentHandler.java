@@ -544,7 +544,7 @@ public class SundayContentHandler
             if(trace)
                log.trace(element.getQName() + " uses xsi:type " + xsiType);
 
-            if(item.nonXsiParticle == null)
+            if(item != null && item.nonXsiParticle == null)
                item.nonXsiParticle = particle;
             
             String xsiTypePrefix;

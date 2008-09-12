@@ -88,6 +88,26 @@ public class XsiTypeUnitTestCase
       "  </complexType>" +
       "</schema>";
 
+   private static final String ONE_ADDRESS_XSD =
+      "<schema targetNamespace='" + PO_NS + "'" +
+      "  xmlns='http://www.w3.org/2001/XMLSchema'" +
+      "  xmlns:jbxb='" + Constants.NS_JBXB + "'" +
+      "  xmlns:ipo='" + PO_NS + "'>" +
+      "  <include schemaLocation='http://www.example.com/schemas/address.xsd'/>" +
+      "  <element name='address' type='ipo:Address'/>" +
+      "</schema>";
+
+   private static final String ONE_ADDRESS_XML =
+      "<ipo:address" +
+      "  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'" +
+      "  xmlns:ipo='" + PO_NS + "'" +
+      "  exportCode='1' xsi:type='ipo:UKAddress'>" +
+      "    <name>Helen Zoe</name>" +
+      "    <street>47 Eden Street</street>" +
+      "    <city>Cambridge</city>" +
+      "    <postcode>CB1 1JR</postcode>" +
+      "</ipo:address>";
+
    private static final String PO_XSD =
       "<schema targetNamespace='" + PO_NS + "'" +
       "  xmlns='http://www.w3.org/2001/XMLSchema'" +
@@ -281,6 +301,28 @@ public class XsiTypeUnitTestCase
       
       marshaller.marshal(schema, null, po, writer);
       assertXmlEqual(COLLECTION_XML, writer.getBuffer().toString());
+   }
+
+   public void testOneAddressUnmarshalling() throws Exception
+   {
+      SchemaBinding schema = XsdBinder.bind(new StringReader(ONE_ADDRESS_XSD), null, SCHEMA_RESOLVER);
+      Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
+      Object o = unmarshaller.unmarshal(new StringReader(ONE_ADDRESS_XML), schema);
+      assertEquals(PurchaseOrder.INSTANCE.shipTo, o);
+   }
+
+   public void testOneAddressMarshalling() throws Exception
+   {
+      SchemaBinding schema = XsdBinder.bind(new StringReader(ONE_ADDRESS_XSD), null, SCHEMA_RESOLVER);
+
+      MarshallerImpl marshaller = new MarshallerImpl();
+      marshaller.setSchemaResolver(SCHEMA_RESOLVER);
+      marshaller.mapClassToXsiType(UKAddress.class, PO_NS, "UKAddress");
+
+      StringWriter writer = new StringWriter();
+
+      marshaller.marshal(schema, null, PurchaseOrder.INSTANCE.shipTo, writer);
+      assertXmlEqual(ONE_ADDRESS_XML, writer.getBuffer().toString());
    }
 
    // Inner

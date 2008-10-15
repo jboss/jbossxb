@@ -50,18 +50,28 @@ public class AttributesHandler
             Object value = handler.unmarshal(elementName, qName, binding, nsCtx, attrs.getValue(i));
             handler.attribute(elementName, qName, binding, o, value);
          }
-         else if(!Constants.NS_XML_SCHEMA_INSTANCE.equals(qName.getNamespaceURI()))
+         else
          {
-            SchemaBinding schemaBinding = type.getSchemaBinding();
-            if(schemaBinding != null && schemaBinding.isStrictSchema())
+            AnyAttributeBinding anyAttribute = type.getAnyAttribute();
+            if(anyAttribute != null)
             {
-               throw new JBossXBRuntimeException(
-                  "Attribute is not bound: element owner " + elementName + ", attribute " + qName
-               );
+               AnyAttributeHandler handler = anyAttribute.getHandler();
+               Object value = handler.unmarshal(elementName, qName, anyAttribute, nsCtx, attrs.getValue(i));
+               handler.attribute(elementName, qName, anyAttribute, o, value);
             }
-            else if(log.isTraceEnabled())
+            else if(!Constants.NS_XML_SCHEMA_INSTANCE.equals(qName.getNamespaceURI()))
             {
-               log.trace("Attribute is not bound: element owner " + elementName + ", attribute " + qName);
+               SchemaBinding schemaBinding = type.getSchemaBinding();
+               if(schemaBinding != null && schemaBinding.isStrictSchema())
+               {
+                  throw new JBossXBRuntimeException(
+                     "Attribute is not bound: element owner " + elementName + ", attribute " + qName
+                  );
+               }
+               else if(log.isTraceEnabled())
+               {
+                  log.trace("Attribute is not bound: element owner " + elementName + ", attribute " + qName);
+               }
             }
          }
       }

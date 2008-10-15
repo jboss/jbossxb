@@ -37,6 +37,7 @@ import java.util.Stack;
 import javax.xml.XMLConstants;
 import javax.xml.bind.annotation.XmlAccessOrder;
 import javax.xml.bind.annotation.XmlAccessorOrder;
+import javax.xml.bind.annotation.XmlAnyAttribute;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -92,6 +93,7 @@ import org.jboss.xb.annotations.JBossXmlValue;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.AnyAttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
@@ -108,6 +110,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.builder.runtime.AbstractPropertyHandler;
+import org.jboss.xb.builder.runtime.AnyAttributePropertyHandler;
 import org.jboss.xb.builder.runtime.ArraySequenceBinding;
 import org.jboss.xb.builder.runtime.BeanHandler;
 import org.jboss.xb.builder.runtime.BuilderParticleHandler;
@@ -825,6 +828,7 @@ public class JBossXBNoSchemaBuilder
       if (properties != null && properties.isEmpty() == false)
       {
          boolean seenXmlAnyElement = false;
+         PropertyInfo seenXmlAnyAttribute = null;
          for (PropertyInfo property : properties)
          {
             push(typeInfo, property.getName());
@@ -894,6 +898,25 @@ public class JBossXBNoSchemaBuilder
                   log.trace("Bound attribute " + qName + " type=" + beanInfo.getName() + " property=" + property.getName() + " propertyType=" + attributeTypeInfo + ", normalizeSpace=" + attribute.isNormalizeSpace());
             }
 
+            // Is this any attribute
+            XmlAnyAttribute xmlAnyAttribute = property.getUnderlyingAnnotation(XmlAnyAttribute.class);
+            if (xmlAnyAttribute != null)
+            {
+               if (seenXmlAnyAttribute != null)
+                  throw new RuntimeException("@XmlAnyAttribute seen on two properties: " + property.getName() + " and " + seenXmlAnyAttribute.getName());
+               seenXmlAnyAttribute = property;
+               
+               AnyAttributePropertyHandler anyHandler = new AnyAttributePropertyHandler(property, property.getType());
+               AnyAttributeBinding anyAttribute = new AnyAttributeBinding(schemaBinding, anyHandler);
+               typeBinding.setAnyAttribute(anyAttribute);
+
+               JBossXmlPreserveWhitespace preserveSpace = property.getUnderlyingAnnotation(JBossXmlPreserveWhitespace.class);
+               if(preserveSpace != null)
+                  anyAttribute.setNormalizeSpace(preserveSpace.preserve() ? false : true);
+               if (trace)
+                  log.trace("Bound any attribute type=" + beanInfo.getName() + " property=" + property.getName() + ", normalizeSpace=" + anyAttribute.isNormalizeSpace());
+            }
+            
             // Are we determining the property order?
             if (determinePropertyOrder)
             {

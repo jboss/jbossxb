@@ -53,6 +53,7 @@ public class TypeBinding
    protected QName qName;
    /** Map<QName, AttributeBinding>  */
    private Map<QName, AttributeBinding> attrs = Collections.emptyMap();
+   private AnyAttributeBinding anyAttribute;
    private ParticleHandler handler;//todo default handler is now in SundayContentHandler.
    private CharactersHandler charactersHandler;
    private ClassMetaData classMetaData;
@@ -690,6 +691,16 @@ public class TypeBinding
    public void setIgnoreEmptyString(boolean value)
    {
       this.ignoreEmptyString = value;
+   }
+   
+   public AnyAttributeBinding getAnyAttribute()
+   {
+      return anyAttribute;
+   }
+   
+   public void setAnyAttribute(AnyAttributeBinding anyAttribute)
+   {
+      this.anyAttribute = anyAttribute;
    }
    
    public String toString()

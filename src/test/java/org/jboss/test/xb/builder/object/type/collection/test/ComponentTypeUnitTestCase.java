@@ -19,40 +19,45 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-package org.jboss.test.xb.builder.object.type.collection;
+package org.jboss.test.xb.builder.object.type.collection.test;
 
 import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.textui.TestRunner;
-
-import org.jboss.test.xb.builder.object.type.collection.test.ArrayListUnitTestCase;
-import org.jboss.test.xb.builder.object.type.collection.test.ArrayUnitTestCase;
-import org.jboss.test.xb.builder.object.type.collection.test.HashSetUnitTestCase;
-import org.jboss.test.xb.builder.object.type.collection.test.ComponentTypeUnitTestCase;
+import org.jboss.test.xb.builder.AbstractBuilderTest;
+import org.jboss.test.xb.builder.object.type.collection.support.RootSomeInterface;
+import org.jboss.xb.binding.JBossXBException;
 
 /**
- * ObjectTypeCollectionTestSuite.
- * 
- * @author <a href="adrian@jboss.com">Adrian Brock</a>
- * @version $Revision: 1.1 $
+ * ComponentTypeUnitTestCase
+ *
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  */
-public class ObjectTypeCollectionTestSuite extends TestSuite
+public class ComponentTypeUnitTestCase extends AbstractBuilderTest
 {
-   public static void main(String[] args)
+   public ComponentTypeUnitTestCase(String name)
    {
-      TestRunner.run(suite());
+      super(name);
    }
 
    public static Test suite()
    {
-      TestSuite suite = new TestSuite("Object Type Collection Tests");
+      return suite(ComponentTypeUnitTestCase.class);
+   }
 
-      suite.addTest(ArrayListUnitTestCase.suite());
-      suite.addTest(HashSetUnitTestCase.suite());
-      suite.addTest(ArrayUnitTestCase.suite());
-      suite.addTest(ComponentTypeUnitTestCase.suite());
-      // TODO lots of other tests
-      
-      return suite;
+   @SuppressWarnings({"ThrowableResultOfMethodCallIgnored"})
+   public void testFailure() throws Throwable
+   {
+      try
+      {
+         unmarshalObject(RootSomeInterface.class);
+         fail("Should not be here.");
+      }
+      catch (Throwable t)
+      {
+         if (t instanceof RuntimeException || t instanceof JBossXBException)
+            t = t.getCause();
+
+         IllegalArgumentException iae = assertInstanceOf(t, IllegalArgumentException.class);
+         assertTrue(iae.getMessage().startsWith("Child is not an instance of"));
+      }
    }
 }

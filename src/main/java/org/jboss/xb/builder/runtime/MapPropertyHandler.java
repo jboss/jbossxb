@@ -42,22 +42,33 @@ import org.jboss.xb.spi.BeanAdapter;
  * MapPropertyHandler.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class MapPropertyHandler extends AbstractPropertyHandler
 {
    private final MapFactory mapFactory;
    private final MapPutAdapter mapPutAdapter;
+
+   private TypeInfo keyType;
+   private TypeInfo valueType;
+
    /**
     * Create a new MapPropertyHandler.
-    * 
+    *
+    * @param config the configuration
     * @param propertyInfo the property
     * @param propertyType the property type
+    * @param wrapped the wrapped flag
     * @throws IllegalArgumentException for a null qName or property
     */
    public MapPropertyHandler(Configuration config, PropertyInfo propertyInfo, TypeInfo propertyType, boolean wrapped)
    {
       super(propertyInfo, propertyType);
+
+      ClassInfo classInfo = (ClassInfo) propertyType;
+      keyType = classInfo.getKeyType();
+      valueType = classInfo.getValueType();
 
       if(wrapped)
       {
@@ -65,7 +76,6 @@ public class MapPropertyHandler extends AbstractPropertyHandler
       }
       else
       {
-         ClassInfo classInfo = (ClassInfo) propertyType;
          if (Modifier.isAbstract(classInfo.getModifiers()))
          {
             mapFactory = HashMapFactory.INSTANCE;
@@ -105,7 +115,7 @@ public class MapPropertyHandler extends AbstractPropertyHandler
          mapPutAdapter = new CustomMapEntryPutAdapter(entryBean);
       }
       else
-         mapPutAdapter = DefaultMapEntryPutAdapter.INSTANCE;
+         mapPutAdapter = new DefaultMapEntryPutAdapter();
    }
 
    @Override
@@ -169,13 +179,13 @@ public class MapPropertyHandler extends AbstractPropertyHandler
          throw new RuntimeException("QName " + qName + " error adding " + BuilderUtil.toDebugString(child) + " to map " + BuilderUtil.toDebugString(m), e);
       }
    }
-   
-   private static interface MapPutAdapter
+
+   private interface MapPutAdapter
    {
       void put(Map<Object,Object> map, Object entry) throws Throwable;
    }
    
-   private static class CustomMapEntryPutAdapter implements MapPutAdapter
+   private class CustomMapEntryPutAdapter implements MapPutAdapter
    {
       private final PropertyInfo keyProp;
       private final PropertyInfo valueProp;
@@ -224,23 +234,55 @@ public class MapPropertyHandler extends AbstractPropertyHandler
          Object value = entry;
          if(valueProp != null)
             value = valueProp.get(entry);
-         map.put(key, value);
+
+         checkPut(map, key, value);
       }
    }
    
-   private static class DefaultMapEntryPutAdapter implements MapPutAdapter
+   private class DefaultMapEntryPutAdapter implements MapPutAdapter
    {
-      static final MapPutAdapter INSTANCE = new DefaultMapEntryPutAdapter();
-      
       public void put(Map<Object, Object> map, Object entry)
       {
          if(!(entry instanceof DefaultMapEntry))
             throw new IllegalStateException("Expected DefaultMapEntry but got " + entry);
+
          DefaultMapEntry defEntry = (DefaultMapEntry) entry;
-         map.put(defEntry.getKey(), defEntry.getValue());
-      }      
+         Object key = defEntry.getKey();
+         Object value = defEntry.getValue();
+
+         checkPut(map, key, value);
+      }
    }
-   
+
+   /**
+    * Check values before they are put into map.
+    *
+    * @param map the map
+    * @param key the key
+    * @param value the value
+    */
+   protected void checkPut(Map<Object, Object> map, Object key, Object value)
+   {
+      if (keyType != null && key!= null && keyType.isInstance(key) == false)
+         throw new IllegalArgumentException("Key is not an instance of " + keyType + ", key: " + key);
+      if (valueType != null && value != null && valueType.isInstance(value) == false)
+         throw new IllegalArgumentException("Value is not an instance of " + valueType + ", value: " + value);
+
+      try
+      {
+         if (keyType != null && key != null)
+            key = keyType.convertValue(key);
+         if (valueType != null && value != null)
+            value = valueType.convertValue(value);
+      }
+      catch (Throwable t)
+      {
+         throw new RuntimeException(t);
+      }
+
+      map.put(key, value);
+   }
+
    private static interface MapFactory
    {
       Map<Object, Object> createMap() throws Throwable;

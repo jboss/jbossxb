@@ -40,12 +40,16 @@ import org.jboss.xb.spi.BeanAdapter;
  * CollectionPropertyHandler.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class CollectionPropertyHandler extends AbstractPropertyHandler
 {
    private final CollectionFactory colFactory;
-   
+
+   /** The component type info */
+   private TypeInfo componentType;
+
    /**
     * Create a new CollectionPropertyHandler.
     * 
@@ -56,6 +60,8 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
    public CollectionPropertyHandler(PropertyInfo propertyInfo, TypeInfo propertyType)
    {
       super(propertyInfo, propertyType);
+
+      componentType = ((ClassInfo) propertyType).getComponentType();
 
       ClassInfo collectionType = null;
       JBossXmlCollection xmlCol = propertyInfo.getUnderlyingAnnotation(JBossXmlCollection.class);
@@ -109,6 +115,9 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
    @SuppressWarnings("unchecked")
    public void handle(PropertyInfo propertyInfo, TypeInfo propertyType, Object parent, Object child, QName qName)
    {
+      if (componentType != null && child != null && componentType.isInstance(child) == false)
+         throw new IllegalArgumentException("Child is not an instance of " + componentType + ", child: " + child);
+
       BeanAdapter beanAdapter = (BeanAdapter) parent;
       
       Collection c = null;
@@ -147,11 +156,14 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
       // Now add
       try
       {
-         c.add(child);
+         if (componentType != null && child != null)
+            c.add(componentType.convertValue(child));
+         else
+            c.add(child);
       }
-      catch (Exception e)
+      catch (Throwable t)
       {
-         throw new RuntimeException("QName " + qName + " error adding " + BuilderUtil.toDebugString(child) + " to collection " + BuilderUtil.toDebugString(c), e);
+         throw new RuntimeException("QName " + qName + " error adding " + BuilderUtil.toDebugString(child) + " to collection " + BuilderUtil.toDebugString(c), t);
       }
    }
    

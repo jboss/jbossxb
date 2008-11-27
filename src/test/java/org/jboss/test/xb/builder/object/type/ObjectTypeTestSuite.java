@@ -24,9 +24,9 @@ package org.jboss.test.xb.builder.object.type;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
-
 import org.jboss.test.xb.builder.object.type.accessor.ObjectTypeAccessorTestSuite;
 import org.jboss.test.xb.builder.object.type.collection.ObjectTypeCollectionTestSuite;
+import org.jboss.test.xb.builder.object.type.map.ObjectTypeMapTestSuite;
 import org.jboss.test.xb.builder.object.type.simple.ObjectTypeSimpleTestSuite;
 import org.jboss.test.xb.builder.object.type.value.ObjectTypeValueTestSuite;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.ObjectTypeXmlAnyElementTestSuite;
@@ -38,6 +38,7 @@ import org.jboss.test.xb.builder.object.type.xmltype.ObjectTypeXmlTypeTestSuite;
  * ObjectTypeXmlTypeTestSuite.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public class ObjectTypeTestSuite extends TestSuite
@@ -55,6 +56,7 @@ public class ObjectTypeTestSuite extends TestSuite
       suite.addTest(ObjectTypeXmlEnumTestSuite.suite());
       suite.addTest(ObjectTypeSimpleTestSuite.suite());
       suite.addTest(ObjectTypeCollectionTestSuite.suite());
+      suite.addTest(ObjectTypeMapTestSuite.suite());
       suite.addTest(ObjectTypeValueTestSuite.suite());
       suite.addTest(ObjectTypeXmlAnyElementTestSuite.suite());
       suite.addTest(ObjectTypeXmlTransientTestSuite.suite());

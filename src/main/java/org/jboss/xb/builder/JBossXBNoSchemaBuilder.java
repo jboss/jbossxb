@@ -1575,6 +1575,7 @@ public class JBossXBNoSchemaBuilder
                localPropertyType = propertyType.getTypeInfoFactory().getTypeInfo(elementType);
          }
 
+         String overridenDefaultNamespace = defaultNamespace;
          if (xmlNsPrefix != null)
          {
             overrideNamespace = schemaBinding.getNamespace(xmlNsPrefix.prefix());
@@ -1590,6 +1591,8 @@ public class JBossXBNoSchemaBuilder
                         + "' is not mapped to any namespace!");
                }
             }
+            else if(xmlNsPrefix.applyToChildren())
+               defaultNamespace = overrideNamespace;
          }
 
          // Determine the name
@@ -1835,6 +1838,8 @@ public class JBossXBNoSchemaBuilder
                log.trace("Added property " + propertyQName + " for type=" + property.getBeanInfo().getName() + " property="
                      + property.getName() + " handler=" + propertyHandler);
          }
+         
+         defaultNamespace = overridenDefaultNamespace;
       }
    }
    

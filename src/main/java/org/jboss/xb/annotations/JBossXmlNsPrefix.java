@@ -54,4 +54,11 @@ public @interface JBossXmlNsPrefix
     * @return
     */
    boolean schemaTargetIfNotMapped() default false;
+   
+   /**
+    * Whether child elements (and their types) should also be bound to the namespace the prefix is mapped to
+    * 
+    * @return
+    */
+   boolean applyToChildren() default true;
 }

@@ -109,10 +109,25 @@ public class JBossXBBuilder
     */
    public static SchemaBinding build(Class<?> root)
    {
+      return build(root, false);
+   }
+
+   /**
+    * Build the SchemaBinding from the class.
+    * If the SchemaBinding has previously been buil, cached and rebuild argument is false
+    * then the previously built SchemaBinding is returned. Otherwise, a new SchemaBinding instance
+    * is built and cached.
+    * 
+    * @param root
+    * @param rebuild
+    * @return
+    */
+   public static SchemaBinding build(Class<?> root, boolean rebuild)
+   {
       ClassInfo classInfo = JBossXBBuilder.configuration.getClassInfo(root);
 
       SchemaBinding binding = classInfo.getAttachment(SchemaBinding.class);
-      if (binding == null)
+      if (rebuild || binding == null)
       {
          JBossXBNoSchemaBuilder builder = new JBossXBNoSchemaBuilder(classInfo);
          binding = builder.build();

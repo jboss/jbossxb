@@ -1594,21 +1594,20 @@ public class JBossXBNoSchemaBuilder
          String overridenDefaultNamespace = defaultNamespace;
          if (xmlNsPrefix != null)
          {
-            overrideNamespace = schemaBinding.getNamespace(xmlNsPrefix.prefix());
-            if (overrideNamespace == null)
+            String prefixNs = schemaBinding.getNamespace(xmlNsPrefix.prefix());
+            if (prefixNs == null)
             {
                if (xmlNsPrefix.schemaTargetIfNotMapped())
-               {
-                  overrideNamespace = defaultNamespace;
-               }
+                  prefixNs = defaultNamespace;
                else
-               {
-                  throw new IllegalStateException("Prefix '" + xmlNsPrefix.prefix()
-                        + "' is not mapped to any namespace!");
-               }
+                  throw new IllegalStateException("Prefix '" + xmlNsPrefix.prefix() + "' is not mapped to any namespace!");
             }
-            else if(xmlNsPrefix.applyToChildren())
-               defaultNamespace = overrideNamespace;
+            
+            if(xmlNsPrefix.applyToElement())
+               overrideNamespace = prefixNs;
+
+            if(xmlNsPrefix.applyToType())
+               defaultNamespace = prefixNs;
          }
 
          // Determine the name

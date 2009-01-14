@@ -38,11 +38,11 @@ import org.jboss.xb.annotations.JBossXmlSchema;
 @JBossXmlSchema(namespace = "ns.root",
       xmlns={@XmlNs(namespaceURI = "ns.child", prefix = "child")},
       elementFormDefault=XmlNsForm.QUALIFIED)
-public class ApplyToChildrenTrue
+public class ApplyToElementTrueApplyToTypeTrue
 {
    private Child child;
    
-   @JBossXmlNsPrefix(prefix = "child", applyToChildren=true)
+   @JBossXmlNsPrefix(prefix = "child", applyToType=true)
    public Child getChild()
    {
       return child;

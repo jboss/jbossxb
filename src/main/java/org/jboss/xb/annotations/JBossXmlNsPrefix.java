@@ -56,9 +56,20 @@ public @interface JBossXmlNsPrefix
    boolean schemaTargetIfNotMapped() default false;
    
    /**
-    * Whether child elements (and their types) should also be bound to the namespace the prefix is mapped to
+    * True means the element the property is bound to will be bound to the namespace specified by the prefix.
+    * False means the element will be in the schema's target namespace.
     * 
     * @return
     */
-   boolean applyToChildren() default true;
+   boolean applyToElement() default true;
+   
+   /**
+    * True means the type of the property (with its child elements and their types recursively)
+    * will be bound to the namespace specified by the prefix.
+    * False means the type of the property (with its child elements and their types recursively)
+    * will be bound to the schema's target namespace.
+    * 
+    * @return
+    */
+   boolean applyToType() default true;
 }

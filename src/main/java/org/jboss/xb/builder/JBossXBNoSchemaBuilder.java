@@ -193,19 +193,35 @@ public class JBossXBNoSchemaBuilder
     */
    public SchemaBinding build()
    {
-      initSchema();
+      // Initialize the schema
+      schemaBinding = new SchemaBinding();
+      JBossXBBuilder.initSchema(schemaBinding, root);
+      initBuilder();
       createRootElements();
       return schemaBinding;
    }
 
    /**
-    * Initialise the schema
+    * Builds schema binding components from the class and adds them to the SchemaBinding
+    * passed in the argument.
+    * Note, schema initialization step (processing of schema-related class- and package-level annotations) will be skipped.
+    * 
+    * @param schema  SchemaBinding to add the built binding components to
     */
-   protected void initSchema()
+   public void build(SchemaBinding schema)
    {
-      // Initialize the schema
-      schemaBinding = new SchemaBinding();
-      JBossXBBuilder.initSchema(schemaBinding, root);
+      if(schema == null)
+         throw new IllegalArgumentException("Null schema");
+      schemaBinding = schema;
+      initBuilder();
+      createRootElements();
+   }
+
+   /**
+    * Initialise the builder
+    */
+   protected void initBuilder()
+   {
       if (trace)
          log.trace("Building schema for " + root.getName() + " schemaBinding=" + schemaBinding);
 

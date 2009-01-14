@@ -25,6 +25,7 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 import javax.xml.XMLConstants;
 
@@ -82,9 +83,53 @@ public class JBossXBBuilder
    {
       return new BuilderSchemaBindingInitializer<T>(root);
    }
+
+   /**
+    * Calls build(false, roots).
+    * 
+    * @param roots
+    * @return
+    */
+   public static SchemaBinding build(Class<?>... roots)
+   {
+      return build(false, roots);
+   }
    
    /**
-    * Build from a preparsed schema binding
+    * Builds a schema binding from an array of classes. The classes must be mapped to the same namespace.
+    * SchemaBinding for the first class will be built by calling build(root, rebuildFirst).
+    * For each subsequent class build(SchemaBinding, root) will be called passing in the schema binding
+    * created for the first root class.
+    * 
+    * @param rebuildFirst
+    * @param roots
+    * @return
+    */
+   public static SchemaBinding build(boolean rebuildFirst, Class<?>... roots)
+   {
+      if(roots == null || roots.length == 0)
+         throw new IllegalArgumentException("There has to be at least one root class in the arguments.");
+      
+      Class<?> root = roots[0];
+      if(root == null)
+         throw new IllegalArgumentException("Root class can't be null.");
+      SchemaBinding schema = build(root, rebuildFirst);
+      for(int i = 1; i < roots.length; ++i)
+      {
+         root = roots[i];
+         if(root == null)
+            throw new IllegalArgumentException("Root class can't be null.");
+         build(schema, root);
+      }
+      
+      return schema;
+   }
+
+   /**
+    * Build from a preparsed schema binding. The target namespaces of the SchemaBinding and the class must be equal.
+    * Otherwise, an exception will be thrown. Schema properties defined with annotations on the class will be ignored
+    * and won't override the ones in the SchemaBinding instance (except for the prefix mappings which unless a conflict
+    * found will be added to the SchemaBinding and in case of prefix mapping conflict an exception will be thrown).
     * 
     * @param schemaBinding the schema binding
     * @param root the root
@@ -97,7 +142,51 @@ public class JBossXBBuilder
       if (root == null)
          throw new IllegalArgumentException("Null root");
 
-      // TODO build
+      ClassInfo classInfo = JBossXBBuilder.configuration.getClassInfo(root);
+
+      // add prefix mappings
+      JBossXmlSchema schema = classInfo.getUnderlyingAnnotation(JBossXmlSchema.class);
+      PackageInfo packageInfo = classInfo.getPackage();
+      if (schema == null && packageInfo != null)
+      {
+         schema = packageInfo.getUnderlyingAnnotation(JBossXmlSchema.class);
+      }
+
+      String classNamespace = XMLConstants.NULL_NS_URI;
+      Set<String> schemaNamespaces = schemaBinding.getNamespaces();
+      String schemaNamespace = schemaNamespaces.iterator().next();
+      if(schema != null)
+      {
+         // check the default namespaces are equal
+         if(!JBossXmlConstants.DEFAULT.equals(schema.namespace()))
+            classNamespace = schema.namespace();
+
+         // add prefix mappings
+         if (schema.xmlns().length > 0)
+         {
+            for(int i = 0; i < schema.xmlns().length; ++i)
+            {
+               String prefix = schema.xmlns()[i].prefix();
+               String existingMapping = schemaBinding.getNamespace(prefix);
+               if(existingMapping != null)
+               {
+                  String newMapping = schema.xmlns()[i].namespaceURI();
+                  if(!existingMapping.equals(newMapping))
+                     throw new IllegalStateException("Class " + root.getName() + " maps prefix '" + prefix +
+                           "' to namespace '" + newMapping + "' while in the schema binding it is mapped to '" + existingMapping + "'");
+               }
+               else
+                  schemaBinding.addPrefixMapping(prefix, schema.xmlns()[i].namespaceURI());
+            }
+         }
+      }
+
+      if(!classNamespace.equals(schemaNamespace))
+         throw new IllegalStateException("SchemaBinding namespace '" + schemaNamespace + "' does not match class namespace '" + classNamespace + "'");
+         
+      
+      JBossXBNoSchemaBuilder builder = new JBossXBNoSchemaBuilder(classInfo);
+      builder.build(schemaBinding);
    }
    
    /**
@@ -135,7 +224,7 @@ public class JBossXBBuilder
       }
       return binding;
    }
-   
+
    /**
     * Initialize the schema binding from the root
     * 

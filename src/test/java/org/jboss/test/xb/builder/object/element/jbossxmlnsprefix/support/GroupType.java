@@ -21,35 +21,37 @@
  */
 package org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support;
 
-import javax.xml.bind.annotation.XmlNs;
-import javax.xml.bind.annotation.XmlNsForm;
-import javax.xml.bind.annotation.XmlRootElement;
-
-import org.jboss.xb.annotations.JBossXmlNsPrefix;
-import org.jboss.xb.annotations.JBossXmlSchema;
+import org.jboss.xb.annotations.JBossXmlModelGroup;
 
 /**
- * A Root.
+ * A GroupType.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-@XmlRootElement(name="root")
-@JBossXmlSchema(namespace = "ns.root",
-      xmlns={@XmlNs(namespaceURI = "ns.child", prefix = "child")},
-      elementFormDefault=XmlNsForm.QUALIFIED)
-public class ApplyToElementTrueApplyToTypeTrue
+@JBossXmlModelGroup(name="group", propOrder={"count", "text"})
+public class GroupType
 {
-   private Child child;
+   private String text;
+   private int count;
    
-   @JBossXmlNsPrefix(prefix = "child", applyToType=true)
-   public Child getChild()
+   public String getText()
    {
-      return child;
+      return text;
    }
    
-   public void setChild(Child child)
+   public void setText(String text)
    {
-      this.child = child;
+      this.text = text;
+   }
+   
+   public int getCount()
+   {
+      return count;
+   }
+   
+   public void setCount(int count)
+   {
+      this.count = count;
    }
 }

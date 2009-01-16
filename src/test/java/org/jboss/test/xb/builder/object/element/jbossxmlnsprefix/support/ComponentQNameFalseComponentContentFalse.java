@@ -40,7 +40,7 @@ import org.jboss.xb.annotations.JBossXmlSchema;
       xmlns={@XmlNs(namespaceURI = "ns.child", prefix = "child")},
       elementFormDefault=XmlNsForm.QUALIFIED)
 @XmlType(propOrder={"child", "rootName"})
-public class ApplyToElementFalseApplyToTypeTrue
+public class ComponentQNameFalseComponentContentFalse
 {
    private String rootName;
    private Child child;
@@ -55,7 +55,7 @@ public class ApplyToElementFalseApplyToTypeTrue
       this.rootName = rootName;
    }
    
-   @JBossXmlNsPrefix(prefix = "child", applyToElement=false, applyToType=true)
+   @JBossXmlNsPrefix(prefix = "child", applyToComponentQName=false, applyToComponentContent=false)
    public Child getChild()
    {
       return child;

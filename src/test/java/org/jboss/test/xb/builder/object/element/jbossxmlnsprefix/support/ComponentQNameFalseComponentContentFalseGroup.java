@@ -21,48 +21,46 @@
  */
 package org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support;
 
-import javax.xml.bind.annotation.XmlNs;
 import javax.xml.bind.annotation.XmlNsForm;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.xb.annotations.JBossXmlNsPrefix;
 import org.jboss.xb.annotations.JBossXmlSchema;
+import javax.xml.bind.annotation.XmlNs;
 
 /**
- * A Root.
+ * A ApplyToElementTrueApplyToTypeTrueGroup.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-@XmlRootElement(name="root")
-@JBossXmlSchema(namespace = "ns.root",
-      xmlns={@XmlNs(namespaceURI = "ns.child", prefix = "child")},
-      elementFormDefault=XmlNsForm.QUALIFIED)
-@XmlType(propOrder={"child", "rootName"})
-public class ApplyToElementFalseApplyToTypeFalse
+@XmlRootElement(name="root", namespace="ns")
+@JBossXmlSchema(namespace="ns", xmlns={@XmlNs(prefix="ns2", namespaceURI = "anotherNs")}, elementFormDefault=XmlNsForm.QUALIFIED)
+@XmlType(propOrder={"group", "id"})
+public class ComponentQNameFalseComponentContentFalseGroup
 {
-   private String rootName;
-   private Child child;
+   private int id;
+   private GroupType group;
    
-   public String getRootName()
+   public int getId()
    {
-      return rootName;
+      return id;
    }
    
-   public void setRootName(String rootName)
+   public void setId(int id)
    {
-      this.rootName = rootName;
+      this.id = id;
    }
    
-   @JBossXmlNsPrefix(prefix = "child", applyToElement=false, applyToType=false)
-   public Child getChild()
+   @JBossXmlNsPrefix(prefix = "ns2", applyToComponentQName=false, applyToComponentContent=false)
+   public GroupType getGroup()
    {
-      return child;
+      return group;
    }
    
-   public void setChild(Child child)
+   public void setGroup(GroupType group)
    {
-      this.child = child;
+      this.group = group;
    }
 }

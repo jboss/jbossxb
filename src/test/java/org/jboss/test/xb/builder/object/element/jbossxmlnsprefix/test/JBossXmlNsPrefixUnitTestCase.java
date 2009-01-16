@@ -27,12 +27,17 @@ import java.util.Iterator;
 import javax.xml.namespace.QName;
 
 import org.jboss.test.xb.builder.AbstractBuilderTest;
-import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ApplyToElementFalseApplyToTypeTrue;
-import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ApplyToElementTrueApplyToTypeFalse;
-import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ApplyToElementFalseApplyToTypeFalse;
+import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ComponentQNameFalseComponentContentFalseGroup;
+import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ComponentQNameFalseComponentContentTrue;
+import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ComponentQNameFalseComponentContentTrueGroup;
+import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ComponentQNameTrueComponentContentFalse;
+import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ComponentQNameFalseComponentContentFalse;
+import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ComponentQNameTrueComponentContentFalseGroup;
+import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ComponentQNameTrueComponentContentTrueGroup;
 import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.MissingPrefixMappingException;
 import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.MissingPrefixMappingGoesTarget;
-import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ApplyToElementTrueApplyToTypeTrue;
+import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ComponentQNameTrueComponentContentTrue;
+import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.RootWithGroupWithJBossXmlNsPrefixProperty;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
@@ -95,7 +100,7 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
 
    public void testApplyToElementTrueApplyToTypeTrue()
    {
-      SchemaBinding schema = JBossXBBuilder.build(ApplyToElementTrueApplyToTypeTrue.class, true);
+      SchemaBinding schema = JBossXBBuilder.build(ComponentQNameTrueComponentContentTrue.class, true);
       assertNotNull(schema);
       Iterator<ElementBinding> elements = schema.getElements();
       assertTrue(elements.hasNext());
@@ -124,7 +129,7 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
 
    public void testApplyToElementTrueApplyToTypeFalse()
    {
-      SchemaBinding schema = JBossXBBuilder.build(ApplyToElementTrueApplyToTypeFalse.class, true);
+      SchemaBinding schema = JBossXBBuilder.build(ComponentQNameTrueComponentContentFalse.class, true);
       assertNotNull(schema);
       Iterator<ElementBinding> elements = schema.getElements();
       assertTrue(elements.hasNext());
@@ -159,7 +164,7 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
 
    public void testApplyToElementFalseApplyToTypeFalse()
    {
-      SchemaBinding schema = JBossXBBuilder.build(ApplyToElementFalseApplyToTypeFalse.class, true);
+      SchemaBinding schema = JBossXBBuilder.build(ComponentQNameFalseComponentContentFalse.class, true);
       assertNotNull(schema);
       Iterator<ElementBinding> elements = schema.getElements();
       assertTrue(elements.hasNext());
@@ -194,7 +199,7 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
 
    public void testApplyToElementFalseApplyToTypeTrue()
    {
-      SchemaBinding schema = JBossXBBuilder.build(ApplyToElementFalseApplyToTypeTrue.class, true);
+      SchemaBinding schema = JBossXBBuilder.build(ComponentQNameFalseComponentContentTrue.class, true);
       assertNotNull(schema);
       Iterator<ElementBinding> elements = schema.getElements();
       assertTrue(elements.hasNext());
@@ -225,5 +230,151 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       particle = particleIterator.next();
       e = (ElementBinding) particle.getTerm();
       assertEquals(new QName("ns.root", "root-name"), e.getQName());
+   }
+   
+   public void testApplyToElementTrueApplyToTypeTrueGroup() throws Exception
+   {
+      SchemaBinding schema = JBossXBBuilder.build(ComponentQNameTrueComponentContentTrueGroup.class, true);
+      
+      ElementBinding e = schema.getElement(new QName("ns", "root"));
+      assertNotNull(e);
+      ModelGroupBinding group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      Collection<ParticleBinding> particles = group.getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> iterator = particles.iterator();
+      
+      group = (ModelGroupBinding) iterator.next().getTerm();
+      assertEquals(new QName("anotherNs", "group"), group.getQName());
+      particles = group.getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> groupIterator = particles.iterator();
+      e = (ElementBinding) groupIterator.next().getTerm();
+      assertEquals(new QName("anotherNs", "count"), e.getQName());
+      e = (ElementBinding) groupIterator.next().getTerm();
+      assertEquals(new QName("anotherNs", "text"), e.getQName());
+      
+      e = (ElementBinding) iterator.next().getTerm();
+      assertEquals(new QName("ns", "id"), e.getQName());
+   }
+
+   public void testApplyToElementFalseApplyToTypeTrueGroup() throws Exception
+   {
+      SchemaBinding schema = JBossXBBuilder.build(ComponentQNameFalseComponentContentTrueGroup.class, true);
+      
+      ElementBinding e = schema.getElement(new QName("ns", "root"));
+      assertNotNull(e);
+      ModelGroupBinding group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      Collection<ParticleBinding> particles = group.getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> iterator = particles.iterator();
+      
+      group = (ModelGroupBinding) iterator.next().getTerm();
+      assertEquals(new QName("ns", "group"), group.getQName());
+      particles = group.getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> groupIterator = particles.iterator();
+      e = (ElementBinding) groupIterator.next().getTerm();
+      assertEquals(new QName("anotherNs", "count"), e.getQName());
+      e = (ElementBinding) groupIterator.next().getTerm();
+      assertEquals(new QName("anotherNs", "text"), e.getQName());
+      
+      e = (ElementBinding) iterator.next().getTerm();
+      assertEquals(new QName("ns", "id"), e.getQName());
+   }
+
+   public void testApplyToElementTrueApplyToTypeFalseGroup() throws Exception
+   {
+      SchemaBinding schema = JBossXBBuilder.build(ComponentQNameTrueComponentContentFalseGroup.class, true);
+      
+      ElementBinding e = schema.getElement(new QName("ns", "root"));
+      assertNotNull(e);
+      ModelGroupBinding group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      Collection<ParticleBinding> particles = group.getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> iterator = particles.iterator();
+      
+      group = (ModelGroupBinding) iterator.next().getTerm();
+      assertEquals(new QName("anotherNs", "group"), group.getQName());
+      particles = group.getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> groupIterator = particles.iterator();
+      e = (ElementBinding) groupIterator.next().getTerm();
+      assertEquals(new QName("ns", "count"), e.getQName());
+      e = (ElementBinding) groupIterator.next().getTerm();
+      assertEquals(new QName("ns", "text"), e.getQName());
+      
+      e = (ElementBinding) iterator.next().getTerm();
+      assertEquals(new QName("ns", "id"), e.getQName());
+   }
+
+   public void testApplyToElementFalseApplyToTypeFalseGroup() throws Exception
+   {
+      SchemaBinding schema = JBossXBBuilder.build(ComponentQNameFalseComponentContentFalseGroup.class, true);
+      
+      ElementBinding e = schema.getElement(new QName("ns", "root"));
+      assertNotNull(e);
+      ModelGroupBinding group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      Collection<ParticleBinding> particles = group.getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> iterator = particles.iterator();
+      
+      group = (ModelGroupBinding) iterator.next().getTerm();
+      assertEquals(new QName("ns", "group"), group.getQName());
+      particles = group.getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> groupIterator = particles.iterator();
+      e = (ElementBinding) groupIterator.next().getTerm();
+      assertEquals(new QName("ns", "count"), e.getQName());
+      e = (ElementBinding) groupIterator.next().getTerm();
+      assertEquals(new QName("ns", "text"), e.getQName());
+      
+      e = (ElementBinding) iterator.next().getTerm();
+      assertEquals(new QName("ns", "id"), e.getQName());
+   }
+   
+   public void testGroupWithJBossXmlNsProperty() throws Exception
+   {
+      SchemaBinding schema = JBossXBBuilder.build(RootWithGroupWithJBossXmlNsPrefixProperty.class, true);
+      
+      ElementBinding e = schema.getElement(new QName("ns", "root"));
+      ModelGroupBinding group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      Collection<ParticleBinding> particles = group.getParticles();
+      assertEquals(1, particles.size());
+      group = (ModelGroupBinding) particles.iterator().next().getTerm();
+      particles = group.getParticles();
+      assertEquals(4, particles.size());
+      Iterator<ParticleBinding> iterator = particles.iterator();
+      
+      e = (ElementBinding) iterator.next().getTerm();
+      assertEquals(new QName("childNs", "group-true-content-false"), e.getQName());
+      group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      particles = group.getParticles();
+      assertEquals(1, particles.size());
+      e = (ElementBinding) particles.iterator().next().getTerm();
+      assertEquals(new QName("ns", "name"), e.getQName());
+      
+      e = (ElementBinding) iterator.next().getTerm();
+      assertEquals(new QName("ns", "group-false-content-false"), e.getQName());
+      group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      particles = group.getParticles();
+      assertEquals(1, particles.size());
+      e = (ElementBinding) particles.iterator().next().getTerm();
+      assertEquals(new QName("ns", "name"), e.getQName());
+      
+      e = (ElementBinding) iterator.next().getTerm();
+      assertEquals(new QName("childNs", "group-true-content-true"), e.getQName());
+      group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      particles = group.getParticles();
+      assertEquals(1, particles.size());
+      e = (ElementBinding) particles.iterator().next().getTerm();
+      assertEquals(new QName("childNs", "name"), e.getQName());
+
+      e = (ElementBinding) iterator.next().getTerm();
+      assertEquals(new QName("ns", "group-false-content-true"), e.getQName());
+      group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      particles = group.getParticles();
+      assertEquals(1, particles.size());
+      e = (ElementBinding) particles.iterator().next().getTerm();
+      assertEquals(new QName("childNs", "name"), e.getQName());
    }
 }

@@ -216,7 +216,7 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       
       // child
       e = (ElementBinding) particle.getTerm();
-      assertEquals(new QName("ns.child", "child"), e.getQName());
+      assertEquals(new QName("ns.root", "child"), e.getQName());
       group = (ModelGroupBinding) e.getType().getParticle().getTerm();
       particles = group.getParticles();
       assertEquals(1, particles.size());

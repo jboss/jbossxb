@@ -1426,10 +1426,10 @@ public class JBossXBNoSchemaBuilder
 
                   PropertyInfo memberProp = propBeanInfo.getProperty(memberPropName);
                   TypeInfo memberTypeInfo = memberProp.getType();
-                  String memberNamespace = defaultNamespace;
-
-                  String memberName = null;
                   XmlElement memberXmlElement = memberProp.getUnderlyingAnnotation(XmlElement.class);
+
+                  String memberNamespace = null;
+                  String memberName = null;
                   if (memberXmlElement != null)
                   {
                      if (!XmlElement.DEFAULT.class.equals(memberXmlElement.type()))
@@ -1437,20 +1437,6 @@ public class JBossXBNoSchemaBuilder
                      if (memberNamespace == null)
                         memberNamespace = memberXmlElement.namespace();
                      memberName = memberXmlElement.name();
-                  }
-
-                  JBossXmlNsPrefix memberPrefix = memberProp.getUnderlyingAnnotation(JBossXmlNsPrefix.class);
-                  String memberOverridenDefaultNamespace = defaultNamespace;
-                  if(memberPrefix != null)
-                  {
-                     String ns = schemaBinding.getNamespace(memberPrefix.prefix());
-                     if (ns == null && memberPrefix.schemaTargetIfNotMapped())
-                        throw new IllegalStateException("Prefix '" + memberPrefix.prefix() + "' is not mapped to any namespace!");
-                        
-                     if(memberPrefix.applyToComponentQName())
-                        memberNamespace = ns;
-                     if(memberPrefix.applyToComponentContent())
-                        defaultNamespace = ns;
                   }
 
                   boolean isCol = false;
@@ -1483,9 +1469,25 @@ public class JBossXBNoSchemaBuilder
                      memberPropertyHandler = new PropertyHandler(memberProp, memberTypeInfo);
                   }
 
+                  JBossXmlNsPrefix memberPrefix = memberProp.getUnderlyingAnnotation(JBossXmlNsPrefix.class);
+                  String memberOverridenDefaultNamespace = defaultNamespace;
+                  String prefixNs = null;
+                  if(memberPrefix != null)
+                  {
+                     prefixNs = schemaBinding.getNamespace(memberPrefix.prefix());
+                     if (prefixNs == null && memberPrefix.schemaTargetIfNotMapped())
+                        throw new IllegalStateException("Prefix '" + memberPrefix.prefix() + "' is not mapped to any namespace!");
+                        
+                     if(memberPrefix.applyToComponentQName())
+                        memberNamespace = prefixNs;
+                  }
+
                   QName memberQName = generateXmlName(memberProp.getName(), elementForm, memberNamespace, memberName);
                   propBeanAdapterFactory.addProperty(memberQName, memberPropertyHandler);
 
+                  if(prefixNs != null && memberPrefix.applyToComponentContent())
+                     defaultNamespace = prefixNs;
+                  
                   XBValueAdapter valueAdapter = null;
                   XmlJavaTypeAdapter xmlTypeAdapter = memberProp.getUnderlyingAnnotation(XmlJavaTypeAdapter.class);
                   if (xmlTypeAdapter != null)
@@ -1604,11 +1606,12 @@ public class JBossXBNoSchemaBuilder
          }
 
          // for now support just one JBossXmlNsPrefix
+         String prefixNs = null;
          JBossXmlNsPrefix xmlNsPrefix = property.getUnderlyingAnnotation(JBossXmlNsPrefix.class);
          String overridenDefaultNamespace = defaultNamespace;
          if (xmlNsPrefix != null)
          {
-            String prefixNs = schemaBinding.getNamespace(xmlNsPrefix.prefix());
+            prefixNs = schemaBinding.getNamespace(xmlNsPrefix.prefix());
             if (prefixNs == null)
             {
                if (xmlNsPrefix.schemaTargetIfNotMapped())
@@ -1619,12 +1622,13 @@ public class JBossXBNoSchemaBuilder
             
             if(xmlNsPrefix.applyToComponentQName())
                overrideNamespace = prefixNs;
-            if(xmlNsPrefix.applyToComponentContent())
-               defaultNamespace = prefixNs;
          }
 
          // Determine the name
          QName propertyQName = generateXmlName(property.getName(), elementForm, overrideNamespace, overrideName);
+
+         if(prefixNs != null && xmlNsPrefix.applyToComponentContent())
+            defaultNamespace = prefixNs;
 
          // Create the element
          JBossXmlGroup jbossXmlGroup = null;

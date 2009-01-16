@@ -24,6 +24,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 import javax.xml.namespace.QName;
 import javax.xml.namespace.NamespaceContext;
 
+import org.jboss.util.StringPropertyReplacer;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 
 /**
@@ -45,10 +46,18 @@ public abstract class AttributeHandler
                            NamespaceContext nsCtx,
                            String value)
    {
-      if(value != null && binding.isNormalizeSpace())
-         value = value.trim();
-      
       TypeBinding type = binding.getType();
+
+      if(value != null)
+      {
+         if(binding.isNormalizeSpace())
+            value = value.trim();
+
+         SchemaBinding schema = binding.getSchema();
+         if(schema.isReplacePropertyRefs())
+            value = StringPropertyReplacer.replaceProperties(value);
+      }
+      
       ValueMetaData valueMetaData = binding.getValueMetaData();
       return type == null ? value : type.getCharactersHandler().unmarshal(attrName, type, nsCtx, valueMetaData, value);
    }

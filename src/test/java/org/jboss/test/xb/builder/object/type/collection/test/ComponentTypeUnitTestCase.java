@@ -21,9 +21,12 @@
 */
 package org.jboss.test.xb.builder.object.type.collection.test;
 
+import java.util.List;
+
 import junit.framework.Test;
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.collection.support.RootSomeInterface;
+import org.jboss.test.xb.builder.object.type.collection.support.SomeInterface;
 import org.jboss.xb.binding.JBossXBException;
 
 /**
@@ -43,6 +46,14 @@ public class ComponentTypeUnitTestCase extends AbstractBuilderTest
       return suite(ComponentTypeUnitTestCase.class);
    }
 
+   public void testPass() throws Exception
+   {
+      RootSomeInterface root = unmarshalObject(RootSomeInterface.class);
+      List<SomeInterface> list = root.getIface();
+      assertNotNull(list);
+      assertEquals(3, list.size());
+   }
+   
    @SuppressWarnings({"ThrowableResultOfMethodCallIgnored"})
    public void testFailure() throws Throwable
    {

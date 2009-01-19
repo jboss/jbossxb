@@ -1137,6 +1137,9 @@ public class JBossXBNoSchemaBuilder
       // Look through the properties
       for (String name : propertyOrder)
       {
+         // propertyOrder is initialized to {""}
+         if(name.length() == 0)
+            continue;
          // Setup the error stack
          push(typeInfo, name);
          // Get the property

@@ -37,6 +37,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 import org.jboss.xb.builder.runtime.BuilderParticleHandler;
+import org.jboss.test.xml.JBossXBTestDelegate;
 
 /**
  * AbstractBuilderTest.

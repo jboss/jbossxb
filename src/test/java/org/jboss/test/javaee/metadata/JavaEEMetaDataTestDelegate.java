@@ -23,7 +23,7 @@ package org.jboss.test.javaee.metadata;
 
 import java.lang.reflect.Method;
 
-import org.jboss.test.xb.builder.JBossXBTestDelegate;
+import org.jboss.test.xml.JBossXBTestDelegate;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 

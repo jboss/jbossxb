@@ -31,6 +31,7 @@ import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.SingletonSchemaResolverFactory;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 
 /**
@@ -128,6 +129,31 @@ public class JBossXBTestDelegate extends AbstractTestDelegate
       }
    }
    
+   /**
+    * Unmarshal an object
+    *
+    * @param url the url
+    * @return the object
+    * @throws Exception for any error
+    */
+   public Object unmarshal(String url) throws Exception
+   {
+      long start = System.currentTimeMillis();
+      Unmarshaller unmarshaller = unmarshallerFactory.newUnmarshaller();
+      log.debug("Initialized parsing in " + (System.currentTimeMillis() - start) + "ms");
+      try
+      {
+         Object result = unmarshaller.unmarshal(url, SingletonSchemaResolverFactory.getInstance().getSchemaBindingResolver());
+         log.debug("Total parse for " + url + " took " + (System.currentTimeMillis() - start) + "ms");
+         return result;
+      }
+      catch (Exception e)
+      {
+         log.debug("Error during parsing: " + url, e);
+         throw e;
+      }
+   }
+
    /**
     * Unmarshal an object
     * 

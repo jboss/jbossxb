@@ -1233,7 +1233,7 @@ public class JBossXBNoSchemaBuilder
 
          // Dom element?
          if (Element.class.getName().equals(type.getName()))
-         {System.out.println("wildcard prop " + wildcardProperty.getName());
+         {
             wildcard.setUnresolvedElementHandler(DOMHandler.INSTANCE);
             wildcard.setUnresolvedCharactersHandler(DOMHandler.INSTANCE);
          }

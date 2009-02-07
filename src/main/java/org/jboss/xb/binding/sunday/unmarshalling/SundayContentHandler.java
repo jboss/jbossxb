@@ -451,11 +451,28 @@ public class SundayContentHandler
                List<ModelGroupBinding.Cursor> newCursors = cursor.startElement(startName, atts);
                if(newCursors.isEmpty())
                {
-                  if(!item.ended) // this is for choices
-                  {
+                  if(!item.ended)
                      endParticle(item, startName, 1);
+                                    
+                  StackItem poped = pop();
+                  
+                  if(!poped.particle.isRepeatable() && stack.peek().cursor == null)
+                  {
+                     // normally it should be an error
+                     // but there is an issue with wildcard binding: it is never bound as repeatable (but should be sometimes)
+                     // so, this hack will give another iteration over the whole parent type and make it seem like it's repeatable
+                     TermBinding popedTerm = poped.particle.getTerm();
+                     if(popedTerm instanceof SequenceBinding &&
+                           ((ModelGroupBinding)popedTerm).getParticles().size() == 1 &&
+                           ((ModelGroupBinding)popedTerm).getParticles().iterator().next().getTerm().isWildcard())
+                     {
+                        // hack
+                     }
+                     else
+                        throw new JBossXBRuntimeException("Element " + startName +
+                           " cannot appear in this position (possibly child elements of " +
+                           ((ElementBinding)stack.peek().particle.getTerm()).getQName() + " are in the wrong order)");
                   }
-                  pop();
                }
                else
                {

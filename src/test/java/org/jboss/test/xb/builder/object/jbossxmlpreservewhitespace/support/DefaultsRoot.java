@@ -23,6 +23,7 @@ package org.jboss.test.xb.builder.object.jbossxmlpreservewhitespace.support;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.xb.annotations.JBossXmlPreserveWhitespace;
 
@@ -33,6 +34,7 @@ import org.jboss.xb.annotations.JBossXmlPreserveWhitespace;
  * @version $Revision: 1.1 $
  */
 @XmlRootElement(name="root")
+@XmlType(propOrder={"schemaDefaults", "preserveTrue", "preserveFalse"})
 public class DefaultsRoot
 {
    private String schemaDefaults;

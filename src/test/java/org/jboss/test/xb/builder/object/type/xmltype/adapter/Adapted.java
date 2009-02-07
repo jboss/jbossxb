@@ -31,7 +31,7 @@ import org.jboss.xb.annotations.JBossXmlType;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-@XmlType(namespace="testNamespace", name="adapted")
+@XmlType(namespace="testNamespace", name="adapted", propOrder={"property1", "property2"})
 @JBossXmlType(beanAdapterBuilder=TestBeanAdapterBuilder.class)
 public class Adapted
 {

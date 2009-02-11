@@ -1320,7 +1320,6 @@ public class JBossXBNoSchemaBuilder
       {
          if (trace)
             log.trace("Property " + property.getName() + " is a collection");
-         localModel = createCollection(localModel);
 
          JBossXmlCollection xmlCol = property.getUnderlyingAnnotation(JBossXmlCollection.class);
          if (xmlCol != null)
@@ -1403,7 +1402,7 @@ public class JBossXBNoSchemaBuilder
          choice.setHandler(BuilderParticleHandler.INSTANCE);
          ParticleBinding particleBinding = new ParticleBinding(choice);
          particleBinding.setMinOccurs(0);
-         particleBinding.setMaxOccurs(1);
+         particleBinding.setMaxOccursUnbounded(true);
          localModel.addParticle(particleBinding);
          localModel = choice;
          if (trace)
@@ -1654,7 +1653,7 @@ public class JBossXBNoSchemaBuilder
                   targetGroup.addParticle(particle);
                   targetGroup = (ModelGroupBinding) wrapperType.getParticle().getTerm();
                }
-               
+
                QName boundQName = bindMapProperty(property, (ClassInfo) localPropertyType, propertyQName, targetGroup);
                if(boundQName != null)
                {
@@ -1910,7 +1909,7 @@ public class JBossXBNoSchemaBuilder
       ElementBinding wrapperElement = createElementBinding(propertyType, wrapperType, wrapperQName, false);
       wrapperElement.setNillable(wrapperNillable);
       wrapperElement.setSkip(Boolean.TRUE);
-      particle = new ParticleBinding(wrapperElement, 1, 1, false);
+      particle = new ParticleBinding(wrapperElement, 1, 1, propertyType.isCollection());
       parentModel.addParticle(particle);
       return seq;
    }

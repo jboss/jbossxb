@@ -30,6 +30,8 @@ import javax.xml.namespace.QName;
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.collection.support.Root;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 
@@ -76,6 +78,15 @@ public abstract class AbstractCollectionTest<T extends Root<Collection<String>>>
       ElementBinding elementBinding = schemaBinding.getElement(elementName);
       assertNotNull(elementBinding);
       
-      // TODO check the collection model
+      ModelGroupBinding group = (ModelGroupBinding) elementBinding.getType().getParticle().getTerm();
+      assertRepeatableElementBinding(group);
+   }
+
+   protected void assertRepeatableElementBinding(ModelGroupBinding group)
+   {
+      assertEquals(1, group.getParticles().size());
+      ParticleBinding p = group.getParticles().iterator().next();
+      assertTrue(p.getMaxOccursUnbounded());
+      assertTrue(p.getTerm().isElement());
    }
 }

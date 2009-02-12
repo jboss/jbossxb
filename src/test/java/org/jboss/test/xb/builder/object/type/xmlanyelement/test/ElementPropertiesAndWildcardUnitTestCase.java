@@ -21,6 +21,9 @@
 */
 package org.jboss.test.xb.builder.object.type.xmlanyelement.test;
 
+import java.util.Collection;
+import java.util.Iterator;
+
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 
@@ -107,16 +110,60 @@ public class ElementPropertiesAndWildcardUnitTestCase extends AbstractBuilderTes
       TermBinding term = particle.getTerm();
       assertNotNull(term);
       assertTrue(term instanceof SequenceBinding);
-      term = assertSingleSequence(term);
-      assertTrue(term instanceof WildcardBinding);
+      
+      
+      Collection<ParticleBinding> particles = ((SequenceBinding)term).getParticles();
+      assertEquals(3, particles.size());
+      
+      Iterator<ParticleBinding> i = particles.iterator();
+      particle = i.next();
+      term = particle.getTerm();
+      assertTrue(particle.getTerm().isElement());
+      assertEquals(0, particle.getMinOccurs());
+      assertEquals(1, particle.getMaxOccurs());
+      assertFalse(particle.getMaxOccursUnbounded());
+      element = (ElementBinding) term;
+      assertEquals(new QName("e1"), element.getQName());
+      particles = ((SequenceBinding)element.getType().getParticle().getTerm()).getParticles();
+      assertEquals(1, particles.size());
+      particle = particles.iterator().next();
+      assertWildcardTerm(element.getType(), particle, (short) 2);
+
+      particle = i.next();
+      term = particle.getTerm();
+      assertTrue(particle.getTerm().isElement());
+      assertEquals(0, particle.getMinOccurs());
+      assertEquals(1, particle.getMaxOccurs());
+      assertFalse(particle.getMaxOccursUnbounded());
+      element = (ElementBinding) term;
+      assertEquals(new QName("e2"), element.getQName());
+      particles = ((SequenceBinding)element.getType().getParticle().getTerm()).getParticles();
+      assertEquals(1, particles.size());
+      particle = particles.iterator().next();
+      assertWildcardTerm(element.getType(), particle, (short) 2);
+
+      particle = i.next();
+      assertWildcardTerm(type, particle, (short) 3);
       WildcardBinding wildcardBinding = type.getWildcard();
-      assertNotNull(wildcardBinding);
-      assertTrue(term == wildcardBinding);
-      assertTrue(wildcardBinding.isProcessContentsLax());
-      assertTrue(DOMHandler.INSTANCE == wildcardBinding.getUnresolvedCharactersHandler());
-      assertTrue(DOMHandler.INSTANCE == wildcardBinding.getUnresolvedElementHandler());
       ParticleHandler particleHandler = wildcardBinding.getWildcardHandler();
       assertNotNull(particleHandler);
       assertTrue(particleHandler instanceof PropertyWildcardHandler);
+   }
+
+   private void assertWildcardTerm(TypeBinding type, ParticleBinding particle, short pc)
+   {
+      TermBinding term;
+      term = particle.getTerm();
+      assertTrue(particle.getTerm().isWildcard());
+      assertEquals(0, particle.getMinOccurs());
+      assertEquals(1, particle.getMaxOccurs());
+      assertFalse(particle.getMaxOccursUnbounded());
+
+      WildcardBinding wildcardBinding = type.getWildcard();
+      assertNotNull(wildcardBinding);
+      assertTrue(term == wildcardBinding);
+      assertEquals(pc, wildcardBinding.getProcessContents());
+      assertTrue(DOMHandler.INSTANCE == wildcardBinding.getUnresolvedCharactersHandler());
+      assertTrue(DOMHandler.INSTANCE == wildcardBinding.getUnresolvedElementHandler());
    }
 }

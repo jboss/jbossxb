@@ -124,6 +124,7 @@ import org.jboss.xb.builder.runtime.DOMHandler;
 import org.jboss.xb.builder.runtime.DefaultMapEntry;
 import org.jboss.xb.builder.runtime.EnumValueAdapter;
 import org.jboss.xb.builder.runtime.MapPropertyHandler;
+import org.jboss.xb.builder.runtime.NonXmlAnyElementDOMElementPropertyHandler;
 import org.jboss.xb.builder.runtime.PropertyHandler;
 import org.jboss.xb.builder.runtime.PropertyInterceptor;
 import org.jboss.xb.builder.runtime.PropertyWildcardHandler;
@@ -880,16 +881,6 @@ public class JBossXBNoSchemaBuilder
                   property.getUnderlyingAnnotation(XmlElementRefs.class) == null)
                   ignoreXmlAnyElement = true;
             }
-            else if (property.getType().getName().equals(org.w3c.dom.Element.class.getName()) && !seenXmlAnyElement && wildcardProperty == null)
-            {
-               if (trace)
-                  log.trace("Using type=" + beanInfo.getName() + " property=" + property.getName()
-                        + " as the base wildcard");
-               if (wildcardProperty != null)
-                  throw new RuntimeException("@XmlAnyElement seen on two properties: " + property.getName() + " and "
-                        + wildcardProperty.getName());
-               wildcardProperty = property;
-            }
 
             // Is this an attribute
             XmlAttribute xmlAttribute = property.getUnderlyingAnnotation(XmlAttribute.class);
@@ -1147,7 +1138,7 @@ public class JBossXBNoSchemaBuilder
          push(typeInfo, name);
          // Get the property
          PropertyInfo property = beanInfo.getProperty(name);
-         bindProperty(property, typeBinding, model, beanAdapterFactory, propertyOrder);
+         bindProperty(property, typeBinding, model, beanAdapterFactory, propertyOrder, property == wildcardProperty);
          pop();
       }
 
@@ -1294,7 +1285,7 @@ public class JBossXBNoSchemaBuilder
    }
 
    private void bindProperty(PropertyInfo property, TypeBinding typeBinding, ModelGroupBinding model,
-         BeanAdapterFactory beanAdapterFactory, String[] propertyOrder)
+         BeanAdapterFactory beanAdapterFactory, String[] propertyOrder, boolean wildcardProperty)
    {
       TypeInfo propertyType = property.getType();
       if (trace)
@@ -1365,8 +1356,7 @@ public class JBossXBNoSchemaBuilder
       if (xmlElement != null)
       {
          // A single element annotated
-         elements = new XmlElement[]
-         {xmlElement};
+         elements = new XmlElement[]{xmlElement};
       }
       else
       {
@@ -1684,9 +1674,36 @@ public class JBossXBNoSchemaBuilder
             }
 
             ParticleBinding particle;
-            // DOM elements are going to be treated as unresolved
-            // however having the property registered
-            if (!isMap && !Element.class.getName().equals(propertyType.getName()))
+            if(Element.class.getName().equals(propertyType.getName()))
+            {
+               if(!wildcardProperty)
+               {
+                  WildcardBinding wildcard = new WildcardBinding(schemaBinding);
+                  wildcard.setProcessContents((short) 2);
+                  wildcard.setUnresolvedElementHandler(DOMHandler.INSTANCE);
+                  wildcard.setUnresolvedCharactersHandler(DOMHandler.INSTANCE);
+
+                  SequenceBinding seq = new SequenceBinding(schemaBinding);
+                  seq.addParticle(new ParticleBinding(wildcard, 0, 1, false));
+
+                  TypeBinding elementTypeBinding = new TypeBinding();
+                  elementTypeBinding.setHandler(new NonXmlAnyElementDOMElementPropertyHandler(property, propertyType));
+                  elementTypeBinding.setParticle(new ParticleBinding(seq, 0, 1, true));
+
+                  ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding,
+                        propertyQName, false);
+                  elementBinding.setNillable(nillable);
+                  elementBinding.setValueAdapter(valueAdapter);
+
+                  // Bind it to the model
+                  particle = new ParticleBinding(elementBinding, 1, 1, isCol);
+                  if (required == false)
+                     particle.setMinOccurs(0);
+
+                  targetGroup.addParticle(particle);
+               }
+            }
+            else if (!isMap)
             {               
                TypeBinding elementTypeBinding = resolveTypeBinding(localPropertyType);
                ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, propertyQName, false);

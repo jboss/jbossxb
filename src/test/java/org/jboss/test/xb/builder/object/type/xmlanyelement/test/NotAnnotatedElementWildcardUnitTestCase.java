@@ -21,6 +21,8 @@
 */
 package org.jboss.test.xb.builder.object.type.xmlanyelement.test;
 
+import java.util.Collection;
+
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 
@@ -30,7 +32,6 @@ import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.support.NotAnnotatedElementWildcard;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
@@ -38,7 +39,6 @@ import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 import org.jboss.xb.builder.runtime.DOMHandler;
-import org.jboss.xb.builder.runtime.PropertyWildcardHandler;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -89,15 +89,24 @@ public class NotAnnotatedElementWildcardUnitTestCase extends AbstractBuilderTest
       assertNotNull(term);
       assertTrue(term instanceof SequenceBinding);
       term = assertSingleSequence(term);
+      
+      assertTrue(term.isElement());
+      element = (ElementBinding) term;
+      assertEquals(new QName("element"), element.getQName());
+      term = element.getType().getParticle().getTerm();
+      assertTrue(term instanceof SequenceBinding);
+      Collection<ParticleBinding> particles = ((SequenceBinding)term).getParticles();
+      assertEquals(1, particles.size());
+      particle = particles.iterator().next();
+      term = particle.getTerm();
+      
       assertTrue(term instanceof WildcardBinding);
+      type = element.getType();
       WildcardBinding wildcardBinding = type.getWildcard();
       assertNotNull(wildcardBinding);
       assertTrue(term == wildcardBinding);
-      assertTrue(wildcardBinding.isProcessContentsLax());
+      assertTrue(wildcardBinding.isProcessContentsSkip());
       assertTrue(DOMHandler.INSTANCE == wildcardBinding.getUnresolvedCharactersHandler());
       assertTrue(DOMHandler.INSTANCE == wildcardBinding.getUnresolvedElementHandler());
-      ParticleHandler particleHandler = wildcardBinding.getWildcardHandler();
-      assertNotNull(particleHandler);
-      assertTrue(particleHandler instanceof PropertyWildcardHandler);
    }
 }

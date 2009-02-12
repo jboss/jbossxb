@@ -1378,7 +1378,7 @@ public class JBossXBNoSchemaBuilder
          String wrapperNamespace = xmlWrapper.namespace();
          String wrapperName = xmlWrapper.name();
          QName wrapperQName = generateXmlName(property.getName(), elementForm, wrapperNamespace, wrapperName);
-         localModel = bindXmlElementWrapper(propertyType, localModel, xmlWrapper.nillable(), wrapperQName);
+         localModel = bindXmlElementWrapper(propertyType, localModel, xmlWrapper, wrapperQName);
          beanAdapterFactory.addProperty(wrapperQName, new PropertyHandler(property, propertyType));
          if (trace)
             log.trace("Added property " + wrapperQName + " for type=" + property.getBeanInfo().getName() + " property="
@@ -1914,7 +1914,7 @@ public class JBossXBNoSchemaBuilder
       return propertyGroup;
    }
    
-   private SequenceBinding bindXmlElementWrapper(TypeInfo propertyType, ModelGroupBinding parentModel, boolean wrapperNillable, QName wrapperQName)
+   private SequenceBinding bindXmlElementWrapper(TypeInfo propertyType, ModelGroupBinding parentModel, XmlElementWrapper annotation, QName wrapperQName)
    {
       TypeBinding wrapperType = new TypeBinding();
       SequenceBinding seq = new SequenceBinding(schemaBinding);
@@ -1924,9 +1924,9 @@ public class JBossXBNoSchemaBuilder
       wrapperType.setHandler(new DefaultElementHandler());
 
       ElementBinding wrapperElement = createElementBinding(propertyType, wrapperType, wrapperQName, false);
-      wrapperElement.setNillable(wrapperNillable);
+      wrapperElement.setNillable(annotation.nillable());
       wrapperElement.setSkip(Boolean.TRUE);
-      particle = new ParticleBinding(wrapperElement, 1, 1, propertyType.isCollection());
+      particle = new ParticleBinding(wrapperElement, annotation.required() ? 1 : 0, 1, propertyType.isCollection());
       parentModel.addParticle(particle);
       return seq;
    }

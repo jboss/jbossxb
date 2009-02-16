@@ -33,9 +33,11 @@ import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.AbstractChoice;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.ChoiceA;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.ChoiceB;
+import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.ChoiceCollectionXmlType;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.PropertiesAll;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.PropertiesChoice;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.PropertiesSequence;
+import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithChoiceCollectionXmlType;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithParticlesChoice;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithParticlesChoiceCollection;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithPropertiesAll;
@@ -51,6 +53,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 
 /**
@@ -202,6 +205,23 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       assertEquals("b", choice.getValue());
    }
 
+   public void testChoiceCollectionXmlTypeUnmarshalling() throws Exception
+   {
+      RootWithChoiceCollectionXmlType o = unmarshalObject(RootWithChoiceCollectionXmlType.class);
+      ChoiceCollectionXmlType choices = o.getChoices();
+      assertEquals("a", choices.getA());
+      assertEquals("e", choices.getE());
+      assertEquals("value", choices.getValue());
+      assertNotNull(choices);
+      assertEquals(2, choices.size());
+      AbstractChoice choice = choices.get(0);
+      assertTrue(choice instanceof ChoiceA);
+      assertEquals("a", choice.getValue());
+      choice = choices.get(1);
+      assertTrue(choice instanceof ChoiceB);
+      assertEquals("b", choice.getValue());
+   }
+
    public void testParticlesChoiceBinding() throws Exception
    {
       SchemaBinding schema = JBossXBBuilder.build(RootWithParticlesChoice.class);
@@ -233,6 +253,62 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       t = i.next().getTerm();
       assertTrue(t.isElement());
       assertEquals(new QName("e"), ((ElementBinding)t).getQName());
+   }
+
+   public void testChoiceCollectionXmlTypeBinding() throws Exception
+   {
+      SchemaBinding schema = JBossXBBuilder.build(RootWithChoiceCollectionXmlType.class);
+      ElementBinding e = schema.getElement(new QName("root"));
+      assertNotNull(e);
+      TypeBinding type = e.getType();
+      TermBinding t = type.getParticle().getTerm();
+      assertNull(type.getSimpleType());
+      assertTrue(t instanceof SequenceBinding);
+      SequenceBinding s = (SequenceBinding) t;
+      Collection<ParticleBinding> particles = s.getParticles();
+      assertEquals(1, particles.size());
+      ParticleBinding p = particles.iterator().next();
+      t = p.getTerm();
+      assertTrue(t.isElement());
+      assertEquals(0, p.getMinOccurs());
+      assertEquals(1, p.getMaxOccurs());
+      assertFalse(p.getMaxOccursUnbounded());
+      e = (ElementBinding)t;
+      assertEquals(new QName("choices"), e.getQName());
+      type = e.getType();
+      assertEquals(1, type.getAttributes().size());
+      assertNotNull(type.getAttribute(new QName("a")));
+      assertNotNull(type.getSimpleType());
+      
+      t = type.getParticle().getTerm();
+      assertTrue(t instanceof SequenceBinding);
+      particles = ((SequenceBinding)t).getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> i = particles.iterator();
+      p = i.next();
+      t = p.getTerm();
+      assertTrue(t.isElement());
+      assertEquals(0, p.getMinOccurs());
+      assertEquals(1, p.getMaxOccurs());
+      assertFalse(p.getMaxOccursUnbounded());
+      assertEquals(new QName("e"), ((ElementBinding)t).getQName());
+      
+      p = i.next();
+      t = p.getTerm();
+      assertTrue(t instanceof ChoiceBinding);
+      assertEquals(1, p.getMaxOccurs());
+      assertTrue(p.getMaxOccursUnbounded());
+      
+      ChoiceBinding c = (ChoiceBinding) t;
+      particles = c.getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> choiceIter = particles.iterator();
+      t = choiceIter.next().getTerm();
+      assertTrue(t.isElement());
+      assertEquals(new QName("a"), ((ElementBinding)t).getQName());
+      t = choiceIter.next().getTerm();
+      assertTrue(t.isElement());
+      assertEquals(new QName("b"), ((ElementBinding)t).getQName());
    }
 
    public void testParticlesChoiceCollectionBinding() throws Exception

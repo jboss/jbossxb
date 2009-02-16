@@ -130,6 +130,7 @@ import org.jboss.xb.builder.runtime.PropertyInterceptor;
 import org.jboss.xb.builder.runtime.PropertyWildcardHandler;
 import org.jboss.xb.builder.runtime.ValueHandler;
 import org.jboss.xb.builder.runtime.WrapperBeanAdapterFactory;
+import org.jboss.xb.spi.AbstractBeanAdapterFactory;
 import org.jboss.xb.spi.BeanAdapterBuilder;
 import org.jboss.xb.spi.BeanAdapterFactory;
 import org.jboss.xb.spi.DefaultBeanAdapterBuilder;
@@ -1243,7 +1244,9 @@ public class JBossXBNoSchemaBuilder
       // The current model
       ModelGroupBinding localModel = parentModel;
 
-      TypeInfo componentType = propertyType;
+      TypeInfo propertyComponentType = propertyType;
+      XmlType propertyXmlType = null;
+      JBossXmlModelGroup propertyXmlModelGroup = null;
       // Setup any new model
       if (propertyType.isArray())
       {
@@ -1261,13 +1264,15 @@ public class JBossXBNoSchemaBuilder
             // this is the type that should be analyzed
             propertyType = propertyType.getTypeInfoFactory().getTypeInfo(xmlCol.type());
          }
-         componentType = ((ClassInfo)propertyType).getComponentType();
+         ClassInfo propertyClassInfo = (ClassInfo)propertyType;
+         propertyXmlType = propertyClassInfo.getUnderlyingAnnotation(XmlType.class);
+         propertyComponentType = propertyClassInfo.getComponentType();
       }
 
       // Is this property bound to a model group
-      if (!componentType.isPrimitive())
+      if (!propertyComponentType.isPrimitive())
       {
-         ClassInfo componentClass = (ClassInfo) componentType;
+         ClassInfo componentClass = (ClassInfo) propertyComponentType;
 
          // TODO XmlElement on this property?..
          //XmlElement propXmlElement = property.getUnderlyingAnnotation(XmlElement.class);
@@ -1275,8 +1280,8 @@ public class JBossXBNoSchemaBuilder
          //   propClassInfo = (ClassInfo) propClassInfo.getTypeInfoFactory().getTypeInfo(propXmlElement.type());
          
          // if it's a model group then 
-         JBossXmlModelGroup xmlModelGroup = componentClass.getUnderlyingAnnotation(JBossXmlModelGroup.class);
-         if (xmlModelGroup != null)
+         propertyXmlModelGroup = componentClass.getUnderlyingAnnotation(JBossXmlModelGroup.class);
+         if (propertyXmlType == null && propertyXmlModelGroup != null)
          {
             // model group value handler based on the model group name
             // TODO what if it doesn't have a name?
@@ -1285,9 +1290,7 @@ public class JBossXBNoSchemaBuilder
                propertyHandler = new CollectionPropertyHandler(property, propertyType);
             else
                propertyHandler = new PropertyHandler(property, propertyType);
-
-            ModelGroupBinding group = bindModelGroup(xmlModelGroup, property, beanAdapterFactory, propertyHandler, parentType);
-            parentModel.addParticle(new ParticleBinding(group, 0, 1, propertyType.isCollection()));               
+            bindModelGroup(propertyXmlModelGroup, property, beanAdapterFactory, propertyHandler, null, parentModel);
             return;
          }
       }
@@ -1372,6 +1375,8 @@ public class JBossXBNoSchemaBuilder
          String prefixNs = null;
          JBossXmlNsPrefix xmlNsPrefix = property.getUnderlyingAnnotation(JBossXmlNsPrefix.class);
          String overridenDefaultNamespace = defaultNamespace;
+         try
+         {
          if (xmlNsPrefix != null)
          {
             prefixNs = schemaBinding.getNamespace(xmlNsPrefix.prefix());
@@ -1627,17 +1632,21 @@ public class JBossXBNoSchemaBuilder
                }
             }
             else if (!isMap)
-            {               
-               TypeBinding elementTypeBinding = resolveTypeBinding(localPropertyType);
-               ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, propertyQName, false);
+            {
+               TypeBinding elementType = resolveTypeBinding(localPropertyType);
+
+               if (propertyXmlModelGroup != null)
+                  bindModelGroup(propertyXmlModelGroup, property, null, null, elementType, (ModelGroupBinding) elementType.getParticle().getTerm());
+
+               ElementBinding elementBinding = createElementBinding(localPropertyType, elementType, propertyQName, false);
                elementBinding.setNillable(nillable);
                elementBinding.setValueAdapter(valueAdapter);
-               
+
                JBossXmlPreserveWhitespace preserveSpace = property.getUnderlyingAnnotation(JBossXmlPreserveWhitespace.class);
-               if(preserveSpace != null)
+               if (preserveSpace != null)
                {
                   elementBinding.setNormalizeSpace(preserveSpace.preserve() ? false : true);
-                  if(trace)
+                  if (trace)
                      log.trace("@JBossXmlPreserveWhitespace.preserve=" + preserveSpace.preserve() + " for " + elementBinding.getQName());
                }
 
@@ -1654,13 +1663,17 @@ public class JBossXBNoSchemaBuilder
                log.trace("Added property " + propertyQName + " for type=" + property.getBeanInfo().getName() + " property="
                      + property.getName() + " handler=" + propertyHandler);
          }
-         
-         defaultNamespace = overridenDefaultNamespace;
+         }
+         finally
+         {
+            defaultNamespace = overridenDefaultNamespace;
+         }
       }
    }
 
    private ModelGroupBinding bindModelGroup(JBossXmlModelGroup annotation, PropertyInfo property,
-         BeanAdapterFactory beanAdapterFactory, AbstractPropertyHandler propertyHandler, TypeBinding typeBinding)
+         BeanAdapterFactory beanAdapterFactory, AbstractPropertyHandler propertyHandler,
+         TypeBinding typeBinding, ModelGroupBinding parentGroup)
    {
       String groupNs = defaultNamespace;
       String overridenDefaultNamespace = defaultNamespace;
@@ -1704,6 +1717,8 @@ public class JBossXBNoSchemaBuilder
          group.setQName(groupName);
          schemaBinding.addGroup(group.getQName(), group);
       }
+
+      parentGroup.addParticle(new ParticleBinding(group, 0, 1, property.getType().isCollection()));               
 
       TypeInfo groupType = property.getType();
       if(groupType.isCollection())

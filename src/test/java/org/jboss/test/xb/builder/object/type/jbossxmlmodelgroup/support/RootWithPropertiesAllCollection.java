@@ -24,6 +24,7 @@ package org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 /**
  * A RootWithPropertiesSequenceCollection.
@@ -32,9 +33,11 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @version $Revision: 1.1 $
  */
 @XmlRootElement(name="root")
+@XmlType(propOrder={"groups", "prop"})
 public class RootWithPropertiesAllCollection
 {
    private List<PropertiesAll> groups;
+   private String prop;
    
    public List<PropertiesAll> getGroups()
    {
@@ -44,5 +47,15 @@ public class RootWithPropertiesAllCollection
    public void setGroups(List<PropertiesAll> groups)
    {
       this.groups = groups;
+   }
+   
+   public String getProp()
+   {
+      return prop;
+   }
+   
+   public void setProp(String prop)
+   {
+      this.prop = prop;
    }
 }

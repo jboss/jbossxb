@@ -134,6 +134,7 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       assertEquals("a", g.getA());
       assertEquals("b", g.getB());
       assertEquals("c", g.getC());
+      assertEquals("p", o.getProp());
    }
 
    public void testPropertiesAllCollectionUnmarshalling() throws Exception
@@ -417,8 +418,9 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       assertTrue(t instanceof SequenceBinding);
       SequenceBinding s = (SequenceBinding) t;
       Collection<ParticleBinding> particles = s.getParticles();
-      assertEquals(1, particles.size());
-      ParticleBinding p = particles.iterator().next();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> i = particles.iterator();
+      ParticleBinding p = i.next();
       t = p.getTerm();
       assertTrue(t instanceof AllBinding);
       //assertEquals(0, p.getMinOccurs());
@@ -439,5 +441,13 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
          assertTrue(t.isElement());
          assertTrue(set.contains(((ElementBinding) t).getQName()));
       }
+      
+      p = i.next();
+      t = p.getTerm();
+      assertTrue(t.isElement());
+      assertEquals(0, p.getMinOccurs());
+      assertEquals(1, p.getMaxOccurs());
+      assertFalse(p.getMaxOccursUnbounded());
+      assertEquals(new QName("prop"), ((ElementBinding)t).getQName());
    }
 }

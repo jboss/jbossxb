@@ -1290,7 +1290,7 @@ public class JBossXBNoSchemaBuilder
                propertyHandler = new CollectionPropertyHandler(property, propertyType);
             else
                propertyHandler = new PropertyHandler(property, propertyType);
-            bindModelGroup(propertyXmlModelGroup, property, beanAdapterFactory, propertyHandler, null, parentModel);
+            bindModelGroup(propertyXmlModelGroup, property, beanAdapterFactory, propertyHandler, null, localModel);
             return;
          }
       }
@@ -1696,10 +1696,14 @@ public class JBossXBNoSchemaBuilder
 
       ModelGroupBinding group = null;
       if (groupName != null)
+      {
          group = schemaBinding.getGroup(groupName);
-
-      if(group != null)
-         return group;
+         if(group != null)
+         {
+            parentGroup.addParticle(new ParticleBinding(group, 0, 1, property.getType().isCollection()));
+            return group;
+         }
+      }
       
       String kind = annotation.kind();
       if (kind.equals(JBossXmlConstants.MODEL_GROUP_SEQUENCE))

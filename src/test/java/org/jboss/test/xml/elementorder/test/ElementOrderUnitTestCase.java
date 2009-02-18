@@ -60,7 +60,8 @@ public class ElementOrderUnitTestCase extends AbstractBuilderTest
       catch(JBossXBException e)
       {
          JBossXBRuntimeException re = (JBossXBRuntimeException) e.getCause();
-         assertEquals("Element first cannot appear in this position (possibly child elements of root are in the wrong order)", re.getMessage());
+         assertEquals("Element first cannot appear in this position (possibly child elements of root are in the wrong order). " +
+               "Correct order of the current sequence group: first second {sequence abSequence} {sequence cdSequence}", re.getMessage());
       }
    }
    
@@ -83,7 +84,8 @@ public class ElementOrderUnitTestCase extends AbstractBuilderTest
       catch(JBossXBException e)
       {
          JBossXBRuntimeException re = (JBossXBRuntimeException) e.getCause();
-         assertEquals("Element a cannot appear in this position (possibly child elements of root are in the wrong order)", re.getMessage());
+         assertEquals("Element a cannot appear in this position (possibly child elements of root are in the wrong order). " +
+               "Correct order of the current sequence group: first second {sequence abSequence} {sequence cdSequence}", re.getMessage());
       }
    }
    

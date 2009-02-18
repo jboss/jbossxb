@@ -46,6 +46,10 @@ import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWith
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithPropertiesChoiceCollection;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithPropertiesSequence;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithPropertiesSequenceCollection;
+import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithTwoParticleGroups;
+import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithTwoPropertyGroups;
+import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithTwoPropertyGroups.GroupWrapper1;
+import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithTwoPropertyGroups.GroupWrapper2;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ChoiceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
@@ -73,6 +77,26 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
    {
       RootWithPropertiesSequence o = unmarshalObject(RootWithPropertiesSequence.class);
       PropertiesSequence g = o.getGroup();
+      assertNotNull(g);
+      assertEquals("a", g.getA());
+      assertEquals("b", g.getB());
+      assertEquals("c", g.getC());
+   }
+
+   public void testRootWithTwoPropertyGroupsUnmarshalling() throws Exception
+   {
+      RootWithTwoPropertyGroups o = unmarshalObject(RootWithTwoPropertyGroups.class);
+      GroupWrapper1 gw1 = o.getGroup1();
+      assertNotNull(gw1);
+      PropertiesSequence g = gw1.getGroup();
+      assertNotNull(g);
+      assertEquals("a", g.getA());
+      assertEquals("b", g.getB());
+      assertEquals("c", g.getC());
+      
+      GroupWrapper2 gw2 = o.getGroup2();
+      assertNotNull(gw2);
+      g = gw2.getGroup();
       assertNotNull(g);
       assertEquals("a", g.getA());
       assertEquals("b", g.getB());
@@ -192,6 +216,24 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       assertEquals("b", choice.getValue());
    }
 
+   public void testRootWithTwoParticleGroupsUnmarshalling() throws Exception
+   {
+      RootWithTwoParticleGroups o = unmarshalObject(RootWithTwoParticleGroups.class);
+      RootWithTwoParticleGroups.GroupWrapper1 group1 = o.getGroup1();
+      assertNotNull(group1);
+      AbstractChoice choice = group1.getGroup();
+      assertNotNull(choice);
+      assertTrue(choice instanceof ChoiceB);
+      assertEquals("b", choice.getValue());
+      
+      RootWithTwoParticleGroups.GroupWrapper2 group2 = o.getGroup2();
+      assertNotNull(group2);
+      choice = group2.getGroup();
+      assertNotNull(choice);
+      assertTrue(choice instanceof ChoiceA);
+      assertEquals("a", choice.getValue());
+   }
+
    public void testParticlesChoiceCollectionUnmarshalling() throws Exception
    {
       RootWithParticlesChoiceCollection o = unmarshalObject(RootWithParticlesChoiceCollection.class);
@@ -231,11 +273,16 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       TermBinding t = e.getType().getParticle().getTerm();
       assertTrue(t instanceof SequenceBinding);
       SequenceBinding s = (SequenceBinding) t;
+      assertParticleChoiceBinding(s);
+   }
+
+   private void assertParticleChoiceBinding(SequenceBinding s)
+   {
       Collection<ParticleBinding> particles = s.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> i = particles.iterator();
       ParticleBinding p = i.next();
-      t = p.getTerm();
+      TermBinding t = p.getTerm();
       assertTrue(t instanceof ChoiceBinding);
       assertEquals(1, p.getMaxOccurs());
       assertFalse(p.getMaxOccursUnbounded());
@@ -345,6 +392,68 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       assertEquals(new QName("e"), ((ElementBinding)t).getQName());
    }
 
+   public void testRootWithTwoPropertyGroupsBinding() throws Exception
+   {
+      SchemaBinding schema = JBossXBBuilder.build(RootWithTwoPropertyGroups.class);
+      ElementBinding e = schema.getElement(new QName("main-root"));
+      assertNotNull(e);
+      TermBinding t = e.getType().getParticle().getTerm();
+      assertTrue(t instanceof SequenceBinding);
+      Collection<ParticleBinding> particles = ((SequenceBinding)t).getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> i = particles.iterator();
+      ParticleBinding p = i.next();
+      t = p.getTerm();
+      assertTrue(t.isElement());
+      assertEquals(0, p.getMinOccurs());
+      assertEquals(1, p.getMaxOccurs());
+      assertFalse(p.getMaxOccursUnbounded());
+      e = (ElementBinding) t;
+      assertEquals(new QName("group1"), e.getQName());
+      assertPropertiesSequenceBinding((SequenceBinding)e.getType().getParticle().getTerm(), false);
+      
+      p = i.next();
+      t = p.getTerm();
+      assertTrue(t.isElement());
+      assertEquals(0, p.getMinOccurs());
+      assertEquals(1, p.getMaxOccurs());
+      assertFalse(p.getMaxOccursUnbounded());
+      e = (ElementBinding) t;
+      assertEquals(new QName("group2"), e.getQName());
+      assertPropertiesSequenceBinding((SequenceBinding)e.getType().getParticle().getTerm(), false);
+   }
+
+   public void testRootWithTwoParticleGroupsBinding() throws Exception
+   {
+      SchemaBinding schema = JBossXBBuilder.build(RootWithTwoParticleGroups.class);
+      ElementBinding e = schema.getElement(new QName("main-root"));
+      assertNotNull(e);
+      TermBinding t = e.getType().getParticle().getTerm();
+      assertTrue(t instanceof SequenceBinding);
+      Collection<ParticleBinding> particles = ((SequenceBinding)t).getParticles();
+      assertEquals(2, particles.size());
+      Iterator<ParticleBinding> i = particles.iterator();
+      ParticleBinding p = i.next();
+      t = p.getTerm();
+      assertTrue(t.isElement());
+      assertEquals(0, p.getMinOccurs());
+      assertEquals(1, p.getMaxOccurs());
+      assertFalse(p.getMaxOccursUnbounded());
+      e = (ElementBinding) t;
+      assertEquals(new QName("group1"), e.getQName());
+      assertParticleChoiceBinding((SequenceBinding) e.getType().getParticle().getTerm());
+      
+      p = i.next();
+      t = p.getTerm();
+      assertTrue(t.isElement());
+      assertEquals(0, p.getMinOccurs());
+      assertEquals(1, p.getMaxOccurs());
+      assertFalse(p.getMaxOccursUnbounded());
+      e = (ElementBinding) t;
+      assertEquals(new QName("group2"), e.getQName());
+      assertParticleChoiceBinding((SequenceBinding) e.getType().getParticle().getTerm());
+   }
+
    private void assertPropertiesSequenceBinding(Class<?> root, boolean inCollection)
    {
       SchemaBinding schema = JBossXBBuilder.build(root);
@@ -353,10 +462,15 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       TermBinding t = e.getType().getParticle().getTerm();
       assertTrue(t instanceof SequenceBinding);
       SequenceBinding s = (SequenceBinding) t;
+      assertPropertiesSequenceBinding(s, inCollection);
+   }
+
+   private void assertPropertiesSequenceBinding(SequenceBinding s, boolean inCollection)
+   {
       Collection<ParticleBinding> particles = s.getParticles();
       assertEquals(1, particles.size());
       ParticleBinding p = particles.iterator().next();
-      t = p.getTerm();
+      TermBinding t = p.getTerm();
       assertTrue(t instanceof SequenceBinding);
       //assertEquals(0, p.getMinOccurs());
       assertEquals(1, p.getMaxOccurs());

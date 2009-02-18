@@ -469,9 +469,49 @@ public class SundayContentHandler
                         // hack
                      }
                      else
-                        throw new JBossXBRuntimeException("Element " + startName +
-                           " cannot appear in this position (possibly child elements of " +
-                           ((ElementBinding)stack.peek().particle.getTerm()).getQName() + " are in the wrong order)");
+                     {
+                        TermBinding t = cursor.getParticle().getTerm();
+                        StringBuffer sb = new StringBuffer(250);
+                        sb.append("Element ").append(startName).append(" cannot appear in this position (possibly child elements of ")
+                        .append(((ElementBinding)stack.peek().particle.getTerm()).getQName()).append(" are in the wrong order).")
+                        .append(" Correct order of the current ");
+                        
+                        QName name = ((ModelGroupBinding)t).getQName();
+                        if(name != null)
+                           sb.append(name);
+                        else if(t instanceof SequenceBinding)
+                           sb.append("sequence");
+                        else if(t instanceof ChoiceBinding)
+                           sb.append("choice");
+                        else
+                           sb.append("all");
+
+                        sb.append(" group:");
+                        for(ParticleBinding p : ((ModelGroupBinding)t).getParticles())
+                        {
+                           t = p.getTerm();
+                           sb.append(' ');
+                           if(t.isElement())
+                              sb.append(((ElementBinding)t).getQName());
+                           else if(t.isModelGroup())
+                           {
+                              if(t instanceof SequenceBinding)
+                                 sb.append("{sequence");
+                              else if(t instanceof ChoiceBinding)
+                                 sb.append("{choice");
+                              else
+                                 sb.append("{all");
+                              name = ((ModelGroupBinding)t).getQName();
+                              if(name != null)
+                                 sb.append(' ').append(name);
+                              sb.append('}');
+                           }
+                           else
+                              sb.append("{wildcard}");
+                        }
+
+                        throw new JBossXBRuntimeException(sb.toString());
+                     }
                   }
                }
                else

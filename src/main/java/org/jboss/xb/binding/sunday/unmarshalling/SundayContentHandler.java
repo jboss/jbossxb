@@ -508,6 +508,10 @@ public class SundayContentHandler
                            }
                            else
                               sb.append("{wildcard}");
+                           if(p.getMaxOccursUnbounded())
+                              sb.append(p.getMinOccurs() == 0 ? '*' : '!');
+                           else if(p.getMinOccurs() == 0)
+                              sb.append('?');
                         }
 
                         throw new JBossXBRuntimeException(sb.toString());

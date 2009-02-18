@@ -1234,7 +1234,6 @@ public class JBossXBNoSchemaBuilder
       TypeInfo propertyType = property.getType();
       if (trace)
          log.trace("Processing type=" + property.getBeanInfo().getName() + " property=" + property.getName());
-      System.out.println("Processing type=" + property.getBeanInfo().getName() + " property=" + property.getName());
 
       // This is illegal
       XmlTransient xmlTransient = property.getUnderlyingAnnotation(XmlTransient.class);
@@ -1282,10 +1281,8 @@ public class JBossXBNoSchemaBuilder
          
          // if it's a model group then 
          propertyXmlModelGroup = componentClass.getUnderlyingAnnotation(JBossXmlModelGroup.class);
-         if(propertyXmlModelGroup != null)
-            System.out.println("model group ann: " + propertyXmlModelGroup.name());
          if (propertyXmlType == null && propertyXmlModelGroup != null)
-         {System.out.println("model group: " + propertyXmlModelGroup.name());
+         {
             // model group value handler based on the model group name
             // TODO what if it doesn't have a name?
             AbstractPropertyHandler propertyHandler = null;

@@ -472,9 +472,9 @@ public class SundayContentHandler
                      {
                         TermBinding t = cursor.getParticle().getTerm();
                         StringBuffer sb = new StringBuffer(250);
-                        sb.append("Element ").append(startName).append(" cannot appear in this position (possibly child elements of ")
-                        .append(((ElementBinding)stack.peek().particle.getTerm()).getQName()).append(" are in the wrong order).")
-                        .append(" Correct order of the current ");
+                        sb.append("Element ").append(startName).append(" cannot appear in this position under ")
+                        .append(((ElementBinding)stack.peek().particle.getTerm()).getQName())
+                        .append(". Expected content of the current ");
                         
                         QName name = ((ModelGroupBinding)t).getQName();
                         if(name != null)

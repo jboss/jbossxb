@@ -21,17 +21,17 @@
  */
 package org.jboss.test.xml.unorderedsequence.test;
 
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-
-import org.jboss.config.plugins.property.PropertyConfiguration;
-import org.jboss.reflect.spi.ClassInfo;
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.xb.binding.JBossXBException;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.builder.JBossXBNoSchemaBuilder;
+import org.jboss.xb.builder.JBossXBBuilder;
 
+/**
+ * 
+ * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
+ * @version $Revision: 1.1 $
+ */
 public abstract class AbstractUnorderedSequenceTest<T> extends AbstractBuilderTest
 {
 
@@ -82,20 +82,17 @@ public abstract class AbstractUnorderedSequenceTest<T> extends AbstractBuilderTe
 
    @SuppressWarnings("unchecked")
    protected T unmarshal(boolean unordered, String fileName) throws Exception
-   {
-      PropertyConfiguration config = AccessController.doPrivileged(new PrivilegedAction<PropertyConfiguration>()
-            {
-               public PropertyConfiguration run()
-               {
-                  return new PropertyConfiguration();
-               }
-            });
-      ClassInfo classInfo = config.getClassInfo(rootClass);
-      JBossXBNoSchemaBuilder builder = new JBossXBNoSchemaBuilder(classInfo);
-      builder.setUseUnorderedSequence(unordered);
-      SchemaBinding schema = builder.build();
-      
-      return (T) unmarshal(fileName, schema);
+   {      
+      boolean unorderedSequence = JBossXBBuilder.isUseUnorderedSequence();
+      try
+      {
+         JBossXBBuilder.setUseUnorderedSequence(unordered);
+         SchemaBinding schema = JBossXBBuilder.build(rootClass, true);
+         return (T) unmarshal(fileName, schema);
+      }
+      finally
+      {
+         JBossXBBuilder.setUseUnorderedSequence(unorderedSequence);
+      }
    }
-
 }

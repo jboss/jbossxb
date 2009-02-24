@@ -57,6 +57,8 @@ public class JBossXBBuilder
    /** The object type */
    static final ClassInfo OBJECT;
    
+   static boolean useUnorderedSequence;
+   
    static
    {
       configuration = AccessController.doPrivileged(new PrivilegedAction<PropertyConfiguration>()
@@ -71,6 +73,16 @@ public class JBossXBBuilder
       OBJECT = configuration.getClassInfo(Object.class);
    }
    
+   public static boolean isUseUnorderedSequence()
+   {
+      return useUnorderedSequence;
+   }
+
+   public static void setUseUnorderedSequence(boolean unorderedSequences)
+   {
+      JBossXBBuilder.useUnorderedSequence = unorderedSequences;
+   }
+
    /**
     * Create a new schema binding initializer
     * 
@@ -186,6 +198,7 @@ public class JBossXBBuilder
          
       
       JBossXBNoSchemaBuilder builder = new JBossXBNoSchemaBuilder(classInfo);
+      builder.setUseUnorderedSequence(useUnorderedSequence);
       builder.build(schemaBinding);
    }
    
@@ -219,6 +232,7 @@ public class JBossXBBuilder
       if (rebuild || binding == null)
       {
          JBossXBNoSchemaBuilder builder = new JBossXBNoSchemaBuilder(classInfo);
+         builder.setUseUnorderedSequence(useUnorderedSequence);
          binding = builder.build();
          classInfo.setAttachment(SchemaBinding.class.getName(), binding);
       }

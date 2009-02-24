@@ -19,20 +19,20 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.test.xml.elementorder.support;
+package org.jboss.test.xml.unorderedsequence.support;
 
-
-import org.jboss.xb.annotations.JBossXmlConstants;
-import org.jboss.xb.annotations.JBossXmlModelGroup;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 /**
- * A ABSequence.
+ * A RootWithUnorderedSequence.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-@JBossXmlModelGroup(name="abSequence", kind=JBossXmlConstants.MODEL_GROUP_SEQUENCE, propOrder={"a", "b"})
-public class ABSequence
+@XmlRootElement(name="root")
+@XmlType(propOrder={"a", "b"})
+public class RootWithUnorderedSequence
 {
    private String a;
    private String b;
@@ -46,12 +46,12 @@ public class ABSequence
    {
       this.a = a;
    }
-
+   
    public String getB()
    {
       return b;
    }
-
+   
    public void setB(String b)
    {
       this.b = b;

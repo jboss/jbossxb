@@ -19,41 +19,51 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.test.xml.elementorder.support;
+package org.jboss.test.xml.unorderedsequence.test;
 
-
-import org.jboss.xb.annotations.JBossXmlConstants;
-import org.jboss.xb.annotations.JBossXmlModelGroup;
+import org.jboss.test.xml.unorderedsequence.support.OneTwoSequence;
+import org.jboss.test.xml.unorderedsequence.support.RootWithOneTwoSequence;
 
 /**
- * A ABSequence.
+ * A NestedSequenceUnitTestCase.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-@JBossXmlModelGroup(name="abSequence", kind=JBossXmlConstants.MODEL_GROUP_SEQUENCE, propOrder={"a", "b"})
-public class ABSequence
+public class NestedSequenceUnitTestCase extends AbstractUnorderedSequenceTest<RootWithOneTwoSequence>
 {
-   private String a;
-   private String b;
-   
-   public String getA()
+   public NestedSequenceUnitTestCase(String name)
    {
-      return a;
-   }
-   
-   public void setA(String a)
-   {
-      this.a = a;
+      super(name, RootWithOneTwoSequence.class);
    }
 
-   public String getB()
+   @Override
+   protected String getCorrectName()
    {
-      return b;
+      return "NestedSequence_correct.xml";
    }
 
-   public void setB(String b)
+   @Override
+   protected String getIncorrectName()
    {
-      this.b = b;
+      return "NestedSequence_incorrect.xml";
+   }
+
+   @Override
+   protected void assertResult(RootWithOneTwoSequence result)
+   {
+      assertEquals("a", result.getA());
+      assertEquals("b", result.getB());
+      assertEquals("c", result.getC());
+      OneTwoSequence oneTwo = result.getOneTwo();
+      assertNotNull(oneTwo);
+      assertEquals(1, oneTwo.getOne());
+      assertEquals(2, oneTwo.getTwo());
+   }
+
+   @Override
+   protected String getValidationError()
+   {
+      return "two cannot appear in this position. Expected content of root is sequence: a? {sequence one-two}? b? c?";
    }
 }

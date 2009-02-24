@@ -147,32 +147,7 @@ public class SequenceBinding
             if(trace)
             {
                StringBuffer sb = new StringBuffer();
-               sb.append("startElement " + qName + " in " + getModelGroup() + ", " + sequence.size() + ": ");
-
-               for(int i = 0; i < sequence.size(); ++i)
-               {
-                  ParticleBinding particle = (ParticleBinding)sequence.get(i);
-                  Object o = particle.getTerm();
-                  if(o instanceof ElementBinding)
-                  {
-                     sb.append(((ElementBinding)o).getQName());
-                  }
-                  else if(o instanceof SequenceBinding)
-                  {
-                     sb.append("sequence");
-                  }
-                  else if(o instanceof ChoiceBinding)
-                  {
-                     sb.append("choice");
-                  }
-                  else if(o instanceof AllBinding)
-                  {
-                     sb.append("all");
-                  }
-
-                  sb.append(" ");
-               }
-               sb.append("]");
+               sb.append("startElement ").append(qName).append(" in ").append(SequenceBinding.this.toString());
                log.trace(sb.toString());
             }
 
@@ -223,10 +198,10 @@ public class SequenceBinding
                   {
                      if(required)
                      {
-                        throw new JBossXBRuntimeException("Requested element " + qName +
-                           " is not allowed in this position in the sequence. The next element should be " +
-                           element.getQName()
-                        );
+                        StringBuffer sb = new StringBuffer(250);
+                        sb.append(qName).append(" cannot appear in this position in group ")
+                        .append(SequenceBinding.this.toString());
+                        throw new JBossXBRuntimeException(sb.toString());
                      }
                      else
                      {
@@ -403,5 +378,11 @@ public class SequenceBinding
          }
       }
       return result;
+   }
+
+   @Override
+   public String getGroupType()
+   {
+      return "sequence";
    }
 }

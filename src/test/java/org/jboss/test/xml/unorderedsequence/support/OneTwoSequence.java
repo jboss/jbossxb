@@ -19,41 +19,40 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.test.xml.elementorder.support;
-
+package org.jboss.test.xml.unorderedsequence.support;
 
 import org.jboss.xb.annotations.JBossXmlConstants;
 import org.jboss.xb.annotations.JBossXmlModelGroup;
 
 /**
- * A ABSequence.
+ * A OneTwoSequence.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-@JBossXmlModelGroup(name="abSequence", kind=JBossXmlConstants.MODEL_GROUP_SEQUENCE, propOrder={"a", "b"})
-public class ABSequence
+@JBossXmlModelGroup(name="one-two", kind=JBossXmlConstants.MODEL_GROUP_SEQUENCE, propOrder={"one", "two"})
+public class OneTwoSequence
 {
-   private String a;
-   private String b;
+   private int one;
+   private int two;
    
-   public String getA()
+   public int getOne()
    {
-      return a;
+      return one;
    }
    
-   public void setA(String a)
+   public void setOne(int one)
    {
-      this.a = a;
+      this.one = one;
    }
-
-   public String getB()
+   
+   public int getTwo()
    {
-      return b;
+      return two;
    }
-
-   public void setB(String b)
+   
+   public void setTwo(int two)
    {
-      this.b = b;
+      this.two = two;
    }
 }

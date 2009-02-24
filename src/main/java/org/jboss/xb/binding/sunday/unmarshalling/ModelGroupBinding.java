@@ -152,6 +152,40 @@ public abstract class ModelGroupBinding
       return false;
    }
 
+   public String toString()
+   {
+      StringBuffer sb = new StringBuffer();
+      sb.append(getGroupType());
+      if(qName != null)
+         sb.append(' ').append(qName);
+      sb.append(':');
+      for(ParticleBinding p : getParticles())
+      {
+         TermBinding t = p.getTerm();
+         sb.append(' ');
+         if(t.isElement())
+            sb.append(((ElementBinding)t).getQName());
+         else if(t.isModelGroup())
+         {
+            sb.append('{').append(((ModelGroupBinding)t).getGroupType());
+            ModelGroupBinding group = (ModelGroupBinding) t;
+            if(group.getQName() != null)
+               sb.append(' ').append(group.getQName());
+            sb.append('}');
+         }
+         else
+            sb.append("{wildcard}");
+
+         if(p.getMaxOccursUnbounded())
+            sb.append(p.getMinOccurs() == 0 ? '*' : '!');
+         else if(p.getMinOccurs() == 0)
+            sb.append('?');
+      }
+      return sb.toString();
+   }
+
+   public abstract String getGroupType();
+   
    // Inner
 
    public abstract class Cursor

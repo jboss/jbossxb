@@ -156,4 +156,10 @@ public class AllBinding
    {
       return elements.containsKey(qName);
    }
+
+   @Override
+   public String getGroupType()
+   {
+      return "all";
+   }
 }

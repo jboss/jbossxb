@@ -138,32 +138,7 @@ public class ChoiceBinding
             if(trace)
             {
                StringBuffer sb = new StringBuffer();
-               sb.append("startElement " + qName + " in " + getModelGroup() + ", " + choices.size() + ": ");
-
-               for(int i = 0; i < choices.size(); ++i)
-               {
-                  ParticleBinding particle = (ParticleBinding)choices.get(i);
-                  Object o = particle.getTerm();
-                  if(o instanceof ElementBinding)
-                  {
-                     sb.append(((ElementBinding)o).getQName());
-                  }
-                  else if(o instanceof SequenceBinding)
-                  {
-                     sb.append("sequence");
-                  }
-                  else if(o instanceof ChoiceBinding)
-                  {
-                     sb.append("choice");
-                  }
-                  else if(o instanceof AllBinding)
-                  {
-                     sb.append("all");
-                  }
-
-                  sb.append(" ");
-               }
-               sb.append("]");
+               sb.append("startElement ").append(qName).append(" in ").append(toString());
                log.trace(sb.toString());
             }
 
@@ -341,5 +316,11 @@ public class ChoiceBinding
       }
 
       return result;
+   }
+
+   @Override
+   public String getGroupType()
+   {
+      return "choice";
    }
 }

@@ -19,41 +19,46 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.test.xml.elementorder.support;
+package org.jboss.test.xml.unorderedsequence.test;
 
 
-import org.jboss.xb.annotations.JBossXmlConstants;
-import org.jboss.xb.annotations.JBossXmlModelGroup;
+import org.jboss.test.xml.unorderedsequence.support.RootWithUnorderedSequence;
 
 /**
- * A ABSequence.
+ * A BasicUnoderedSequenceUnitTestCase.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-@JBossXmlModelGroup(name="abSequence", kind=JBossXmlConstants.MODEL_GROUP_SEQUENCE, propOrder={"a", "b"})
-public class ABSequence
+public class BasicUnorderedSequenceUnitTestCase extends AbstractUnorderedSequenceTest<RootWithUnorderedSequence>
 {
-   private String a;
-   private String b;
-   
-   public String getA()
+   public BasicUnorderedSequenceUnitTestCase(String name)
    {
-      return a;
-   }
-   
-   public void setA(String a)
-   {
-      this.a = a;
+      super(name, RootWithUnorderedSequence.class);
    }
 
-   public String getB()
+   @Override
+   protected String getCorrectName()
    {
-      return b;
+      return "BasicUnorderedSequence_correctAB.xml";
    }
 
-   public void setB(String b)
+   @Override
+   protected String getIncorrectName()
    {
-      this.b = b;
+      return "BasicUnorderedSequence_incorrectAB.xml";
+   }
+
+   @Override
+   protected String getValidationError()
+   {
+      return "a cannot appear in this position. Expected content of root is sequence: a? b?";
+   }
+
+   @Override
+   protected void assertResult(RootWithUnorderedSequence result)
+   {
+      assertEquals("a", result.getA());
+      assertEquals("b", result.getB());
    }
 }

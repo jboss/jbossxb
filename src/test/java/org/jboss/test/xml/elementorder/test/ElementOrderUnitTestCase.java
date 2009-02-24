@@ -60,8 +60,7 @@ public class ElementOrderUnitTestCase extends AbstractBuilderTest
       catch(JBossXBException e)
       {
          JBossXBRuntimeException re = (JBossXBRuntimeException) e.getCause();
-         assertEquals("Element first cannot appear in this position under root. " +
-               "Expected content of the current sequence group: first? second? {sequence abSequence}? {sequence cdSequence}*", re.getMessage());
+         assertEquals("first cannot appear in this position. Expected content of root is sequence: first? second? {sequence abSequence}? {sequence cdSequence}*", re.getMessage());
       }
    }
    
@@ -84,8 +83,7 @@ public class ElementOrderUnitTestCase extends AbstractBuilderTest
       catch(JBossXBException e)
       {
          JBossXBRuntimeException re = (JBossXBRuntimeException) e.getCause();
-         assertEquals("Element a cannot appear in this position under root. " +
-               "Expected content of the current sequence group: first? second? {sequence abSequence}? {sequence cdSequence}*", re.getMessage());
+         assertEquals("a cannot appear in this position. Expected content of root is sequence: first? second? {sequence abSequence}? {sequence cdSequence}*", re.getMessage());
       }
    }
    
@@ -117,7 +115,7 @@ public class ElementOrderUnitTestCase extends AbstractBuilderTest
       catch(JBossXBException e)
       {
          JBossXBRuntimeException re = (JBossXBRuntimeException) e.getCause();
-         assertEquals("Element d cannot appear in this position (possibly child elements of root are in the wrong order)", re.getMessage());
+         assertEquals("d not found as a child of root in sequence: first? second? {sequence abSequence}? {sequence cdSequence}*", re.getMessage());
       }
    }
 }

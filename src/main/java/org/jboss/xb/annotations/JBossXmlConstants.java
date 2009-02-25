@@ -37,7 +37,9 @@ public interface JBossXmlConstants
    String MODEL_GROUP_CHOICE = "choice";
    
    String MODEL_GROUP_ALL = "all";
-   
+
+   String MODEL_GROUP_UNORDERED_SEQUENCE = "unordered_sequence";
+
    class DEFAULT
    {
       private DEFAULT(){}

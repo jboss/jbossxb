@@ -1720,6 +1720,8 @@ public class JBossXBNoSchemaBuilder
          String kind = annotation.kind();
          if (kind.equals(JBossXmlConstants.MODEL_GROUP_SEQUENCE))
             group = groupFactory.createSequence(schemaBinding);
+         else if (kind.equals(JBossXmlConstants.MODEL_GROUP_UNORDERED_SEQUENCE))
+            group = new UnorderedSequenceBinding(schemaBinding);
          else if (kind.equals(JBossXmlConstants.MODEL_GROUP_CHOICE))
             group = new ChoiceBinding(schemaBinding);
          else if (kind.equals(JBossXmlConstants.MODEL_GROUP_ALL))

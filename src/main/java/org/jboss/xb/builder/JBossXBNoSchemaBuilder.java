@@ -1049,7 +1049,9 @@ public class JBossXBNoSchemaBuilder
       // TODO simple types/content when no properties other than @XmlValue and @XmlAttribute
       typeBinding.setSimple(false);
       ModelGroupBinding model = null;
-      if (allBinding)
+      if(jbossXmlType != null && !JBossXmlConstants.DEFAULT.equals(jbossXmlType.modelGroup()))
+         model = createModelGroup(jbossXmlType.modelGroup());
+      else if (allBinding)
          model = new AllBinding(schemaBinding);
       else
          model = groupFactory.createSequence(schemaBinding);
@@ -1717,18 +1719,7 @@ public class JBossXBNoSchemaBuilder
       
       if(createGroup)
       {
-         String kind = annotation.kind();
-         if (kind.equals(JBossXmlConstants.MODEL_GROUP_SEQUENCE))
-            group = groupFactory.createSequence(schemaBinding);
-         else if (kind.equals(JBossXmlConstants.MODEL_GROUP_UNORDERED_SEQUENCE))
-            group = new UnorderedSequenceBinding(schemaBinding);
-         else if (kind.equals(JBossXmlConstants.MODEL_GROUP_CHOICE))
-            group = new ChoiceBinding(schemaBinding);
-         else if (kind.equals(JBossXmlConstants.MODEL_GROUP_ALL))
-            group = new AllBinding(schemaBinding);
-         else
-            throw new IllegalStateException("Unexpected JBossXmlModelGroup.kind=" + kind);
-
+         group = createModelGroup(annotation.kind());
          if (groupName != null)
          {
             group.setQName(groupName);
@@ -1817,6 +1808,22 @@ public class JBossXBNoSchemaBuilder
       }
       
       defaultNamespace = overridenDefaultNamespace;
+   }
+
+   private ModelGroupBinding createModelGroup(String kind)
+   {
+      ModelGroupBinding group;
+      if (kind.equals(JBossXmlConstants.MODEL_GROUP_SEQUENCE))
+         group = groupFactory.createSequence(schemaBinding);
+      else if (kind.equals(JBossXmlConstants.MODEL_GROUP_UNORDERED_SEQUENCE))
+         group = new UnorderedSequenceBinding(schemaBinding);
+      else if (kind.equals(JBossXmlConstants.MODEL_GROUP_CHOICE))
+         group = new ChoiceBinding(schemaBinding);
+      else if (kind.equals(JBossXmlConstants.MODEL_GROUP_ALL))
+         group = new AllBinding(schemaBinding);
+      else
+         throw new IllegalStateException("Unexpected JBossXmlModelGroup.kind=" + kind);
+      return group;
    }
       
    private SequenceBinding bindXmlElementWrapper(TypeInfo propertyType, ModelGroupBinding parentModel, XmlElementWrapper annotation, QName wrapperQName)

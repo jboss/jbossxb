@@ -45,4 +45,9 @@ public @interface JBossXmlType
     * @return the builder
     */
    Class<? extends BeanAdapterBuilder> beanAdapterBuilder() default DefaultBeanAdapterBuilder.class;
+   
+   /**
+    * @return  model group type which should be used for the xml type
+    */
+   String modelGroup() default JBossXmlConstants.DEFAULT;
 }

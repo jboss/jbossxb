@@ -75,7 +75,7 @@ public class ChoiceMinOccurs0UnitTestCase extends AbstractJBossXBTest
 
    public void testMain() throws Exception
    {
-      enableTrace("org.jboss.xb.binding.sunday.unmarshalling.XsdBinder");
+      //enableTrace("org.jboss.xb.binding.sunday.unmarshalling.XsdBinder");
       SchemaBinding schema = XsdBinder.bind(new StringReader(XSD), null);      
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
       Object o = unmarshaller.unmarshal(new StringReader(XML), schema);

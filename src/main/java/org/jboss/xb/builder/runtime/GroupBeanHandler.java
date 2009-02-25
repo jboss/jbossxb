@@ -36,6 +36,14 @@ import org.xml.sax.Attributes;
 /**
  * A GroupBeanHandler.
  * 
+ * Before creating a new instance for the group during unmarshalling, this handler will try to obtain
+ * the current value of the group from the parent object using the property the group is bound to.
+ * If the current group value is not null then it will be returned,
+ * otherwise a new instance will be created. This is necessary to support unordered sequences.
+ * 
+ * If the property for the group is not readable then the step to get the group value will be skipped.
+ * It doesn't have to be a requirement for the property to be readable.
+ * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
@@ -67,16 +75,20 @@ public class GroupBeanHandler extends BeanHandler
          throw new JBossXBRuntimeException("No property mapped for group " + qName + " in bean adapter" + ((BeanAdapter)parent).getValue()
                + ", available: " + ((BeanAdapter) parent).getAvailable());
 
-      Object parentValue = ((BeanAdapter) parent).getValue();
       Object groupValue = null;
-      try
+      PropertyInfo propertyInfo = groupHandler.getPropertyInfo();
+      if(propertyInfo.isReadable())
       {
-         groupValue = ((BeanAdapter) parent).get(groupHandler.getPropertyInfo());
-      }
-      catch (Throwable e)
-      {
-         throw new JBossXBRuntimeException("Failed to get group value from parent: parent=" + parentValue + ", property="
-               + groupHandler.getPropertyInfo().getName() + ", qName=" + qName, e);
+         Object parentValue = ((BeanAdapter) parent).getValue();
+         try
+         {
+            groupValue = ((BeanAdapter) parent).get(propertyInfo);
+         }
+         catch (Throwable e)
+         {
+            throw new JBossXBRuntimeException("Failed to get group value from parent: parent=" + parentValue
+                  + ", property=" + propertyInfo.getName() + ", qName=" + qName, e);
+         }
       }
 
       if(groupValue == null)

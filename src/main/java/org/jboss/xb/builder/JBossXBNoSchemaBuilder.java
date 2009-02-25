@@ -1734,8 +1734,6 @@ public class JBossXBNoSchemaBuilder
             group.setQName(groupName);
             schemaBinding.addGroup(group.getQName(), group);
          }
-         else
-            throw new JBossXBRuntimeException("To be bound a group must have a non-null QName. Bean " + property.getBeanInfo().getName() + ", property=" + property.getName());
       }
       
       parentGroup.addParticle(new ParticleBinding(group, 0, 1, property.getType().isCollection()));

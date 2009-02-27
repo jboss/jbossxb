@@ -25,7 +25,7 @@ import java.net.URL;
 
 import org.jboss.test.BaseTestCase;
 import org.jboss.xb.binding.Util;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
 
 /**
  * SchemaIncludeUnitTestCase.
@@ -37,7 +37,7 @@ public class SchemaIncludeUnitTestCase extends BaseTestCase
 {
    public void testSimpleInclude() throws Exception
    {
-      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
       URL url = getClass().getResource("/xml/SchemaIncludeUnitTestCase.xsd");
       assertNotNull(url);
       Util.loadSchema(url.toString(), resolver);
@@ -45,7 +45,7 @@ public class SchemaIncludeUnitTestCase extends BaseTestCase
 
    public void testComplexInclude() throws Exception
    {
-      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
       URL url = getClass().getResource("/xml/SchemaIncludeUnitTestCase.xsd");
       assertNotNull(url);
       resolver.addSchemaLocation("urn:jbosstest:schemainclude", url.toString());

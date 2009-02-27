@@ -948,13 +948,13 @@ public class SundayContentHandler
    private Attributes preprocessAttributes(Attributes attrs)
    {
       SchemaBindingResolver resolver = schemaResolver == null ? schema.getSchemaResolver() : schemaResolver;
-      if(resolver == null || !(resolver instanceof DefaultSchemaResolver))
+      if(resolver == null || !(resolver instanceof UriToClassMapping))
          return attrs;
       
       int ind = attrs.getIndex(Constants.NS_JBXB, "schemabinding");
       if (ind != -1)
       {
-         DefaultSchemaResolver defaultResolver = (DefaultSchemaResolver)resolver;
+         UriToClassMapping defaultResolver = (UriToClassMapping)resolver;
          String value = attrs.getValue(ind);
          java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(value);
          while(tokenizer.hasMoreTokens())
@@ -965,7 +965,7 @@ public class SundayContentHandler
             String cls = tokenizer.nextToken();
             try
             {
-               defaultResolver.addClassBinding(uri, cls);
+               defaultResolver.mapUriToClass(uri, cls);
             }
             catch (Exception e)
             {

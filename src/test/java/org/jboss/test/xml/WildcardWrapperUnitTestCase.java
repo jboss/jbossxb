@@ -30,7 +30,7 @@ import org.jboss.test.xml.pojoserver.metadata.PropertyInitializer;
 import org.jboss.test.xml.pojoserver.metadata.PropertyMetaData;
 import org.jboss.test.xml.pojoserver.metadata.StringValueMetaData;
 import org.jboss.test.xml.pojoserver.metadata.ValueMetaData;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 
 /**
@@ -44,7 +44,7 @@ public class WildcardWrapperUnitTestCase extends AbstractJBossXBTest
    public static SchemaBindingResolver initResolver() throws Exception
    {
       Class<?> clazz = WildcardWrapperUnitTestCase.class;
-      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
       resolver.addSchemaInitializer(PropertyInitializer.NS, PropertyInitializer.class.getName());
       String location = getSchemaLocation(clazz, "WildcardWrapperUnitTestCase.xsd");
       resolver.addSchemaLocation(PropertyInitializer.NS, location);

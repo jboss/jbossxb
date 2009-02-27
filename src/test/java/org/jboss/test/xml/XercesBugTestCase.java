@@ -35,7 +35,7 @@ import org.apache.xerces.xs.XSModelGroup;
 import org.jboss.test.BaseTestCase;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.Util;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinderTerminatingErrorHandler;
 import org.w3c.dom.DOMConfiguration;
@@ -90,7 +90,7 @@ public class XercesBugTestCase extends BaseTestCase
       String name = "xml/xerces-bug.xsd";
       URL xsdUrl = Thread.currentThread().getContextClassLoader().getResource(name);
 
-      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
       resolver.setBaseURI(xsdUrl.toString());
       XSImplementation impl = getXSImplementation();
       XSLoader schemaLoader = impl.createXSLoader(null);

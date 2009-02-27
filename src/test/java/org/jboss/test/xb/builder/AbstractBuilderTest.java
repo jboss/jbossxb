@@ -27,8 +27,8 @@ import java.util.Collection;
 import org.jboss.test.AbstractTestCaseWithSetup;
 import org.jboss.test.AbstractTestDelegate;
 import org.jboss.util.UnreachableStatementException;
+import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -96,7 +96,7 @@ public class AbstractBuilderTest extends AbstractTestCaseWithSetup
    
    protected <T> T unmarshalObjectFromSchema(Class<T> expected) throws Exception
    {
-      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
       // TODO this is a mess
       String nsURI = "http://www.jboss.org/test/xml/" + rootName;
       String packageName = getClass().getPackage().getName();

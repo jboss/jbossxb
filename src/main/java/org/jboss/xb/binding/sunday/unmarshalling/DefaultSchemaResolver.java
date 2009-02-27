@@ -43,7 +43,7 @@ import org.xml.sax.InputSource;
  * @author Scott.Stark@jboss.org
  * @version $Revision$
  */
-public class DefaultSchemaResolver implements SchemaBindingResolver
+public class DefaultSchemaResolver implements SchemaBindingResolver, UriToClassMapping
 {
    private static Logger log = Logger.getLogger(DefaultSchemaResolver.class);
 
@@ -53,9 +53,9 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
    /** Namespace to SchemaBinding cache */
    private Map<String, SchemaBinding> schemasByUri = Collections.emptyMap();
    /** Namespace to JBossXBBuilder binding class */
-   private WeakHashMap<String, Class> uriToClass = new WeakHashMap<String, Class>();
+   private WeakHashMap<String, Class<?>> uriToClass = new WeakHashMap<String, Class<?>>();
    /** SchemaLocation to JBossXBBuilder binding class */
-   private WeakHashMap<String, Class> schemaLocationToClass = new WeakHashMap<String, Class>();
+   private WeakHashMap<String, Class<?>> schemaLocationToClass = new WeakHashMap<String, Class<?>>();
    /** Namespace to SchemaBindingInitializer */
    private Map<String, SchemaBindingInitializer> schemaInitByUri = Collections.emptyMap();
    /** Namespace to processAnnotations flag used with the XsdBinder.bind call */
@@ -228,7 +228,7 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
     * @param reference the schema reference class name
     * @throws Exception for any error
     */
-   public void addClassBinding(String nsUri, String reference) throws Exception
+   public void addClassBinding(String nsUri, String reference) throws ClassNotFoundException
    {
       if (reference == null)
          throw new IllegalArgumentException("Null reference class");
@@ -505,6 +505,34 @@ public class DefaultSchemaResolver implements SchemaBindingResolver
             +baseURI+", schemaLocation="+schemaLocation+", is="+is);
       }
       return is;
+   }
+
+   public void mapUriToClass(String nsUri, String reference) throws ClassNotFoundException
+   {
+      addClassBinding(nsUri, reference);
+   }
+
+   public void mapUriToClass(String nsUri, Class<?> clazz)
+   {
+      addClassBinding(nsUri, clazz);
+   }
+
+   public void mapUriToClasses(String nsUri, String... reference) throws ClassNotFoundException
+   {
+      throw new UnsupportedOperationException("Namespace URI mapping to multiple classes is not supported by this implementation.");
+   }
+
+   public void mapUriToClasses(String nsUri, Class<?>... clazz)
+   {
+      throw new UnsupportedOperationException("Namespace URI mapping to multiple classes is not supported by this implementation.");
+   }
+
+   public Class<?>[] removeUriToClassMapping(String nsUri)
+   {
+      Class<?> clazz = removeClassBinding(nsUri);
+      if(clazz != null)
+         return new Class<?>[]{clazz};
+      return null;
    }
 
 }

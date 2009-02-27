@@ -39,7 +39,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
    private static final SingletonSchemaResolverFactory singleton = new SingletonSchemaResolverFactory();
 
    /** The resolver */
-   private final DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+   private final MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
 
    /**
     * Get the factory instance

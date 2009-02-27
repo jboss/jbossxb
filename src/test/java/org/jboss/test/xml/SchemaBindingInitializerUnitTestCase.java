@@ -28,7 +28,7 @@ import org.jboss.test.xml.initializer.ContainerInitializer;
 import org.jboss.test.xml.initializer.Simple;
 import org.jboss.test.xml.initializer.SimpleInitializer;
 import org.jboss.xb.binding.JBossXBException;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 
 /**
@@ -42,7 +42,7 @@ public class SchemaBindingInitializerUnitTestCase extends AbstractJBossXBTest
    public static SchemaBindingResolver initResolver() throws Exception
    {
       Class<?> clazz = SchemaBindingInitializerUnitTestCase.class;
-      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
       resolver.addSchemaInitializer(SimpleInitializer.NS, SimpleInitializer.class.getName());
       String location = getSchemaLocation(clazz, "SchemaBindingInitializerUnitTestCaseSimple.xsd");
       resolver.addSchemaLocation(SimpleInitializer.NS, location);

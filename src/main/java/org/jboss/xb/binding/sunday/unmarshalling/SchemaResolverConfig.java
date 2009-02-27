@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultSchemaResolver;
 
 /**
  * SchemaResolverConfig.
@@ -41,7 +40,7 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
    private static final Logger log = Logger.getLogger(SchemaResolverConfig.class);
    
    /** The singleton schema resolver */
-   protected static DefaultSchemaResolver resolver = (DefaultSchemaResolver) SingletonSchemaResolverFactory.getInstance().getSchemaBindingResolver();
+   protected static MultiClassSchemaResolver resolver = (MultiClassSchemaResolver) SingletonSchemaResolverFactory.getInstance().getSchemaBindingResolver();
    
    /** The initializers by namespace */
    protected Properties schemaInitializers;

@@ -95,7 +95,7 @@ public class XsdBinder
     */
    public static SchemaBinding bind(String xsdUrl)
    {
-      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
       resolver.setBaseURI(xsdUrl);
       return bind(xsdUrl, resolver);
    }
@@ -116,7 +116,7 @@ public class XsdBinder
 
    public static SchemaBinding bind(InputStream xsdStream, String encoding)
    {
-      return bind(xsdStream, encoding, new DefaultSchemaResolver());
+      return bind(xsdStream, encoding, new MultiClassSchemaResolver());
    }
 
    /**
@@ -141,7 +141,7 @@ public class XsdBinder
     */
    public static SchemaBinding bind(InputStream xsdStream, String encoding, String baseURI, boolean processAnnotations)
    {
-      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
       resolver.setBaseURI(baseURI);
       return bind(xsdStream, encoding, resolver, processAnnotations);
    }
@@ -178,7 +178,7 @@ public class XsdBinder
 
    public static SchemaBinding bind(Reader xsdReader, String encoding)
    {
-      return bind(xsdReader, encoding, new DefaultSchemaResolver());
+      return bind(xsdReader, encoding, new MultiClassSchemaResolver());
    }
 
    /**
@@ -190,7 +190,7 @@ public class XsdBinder
     */
    public static SchemaBinding bind(Reader xsdReader, String encoding, String baseURI)
    {
-      DefaultSchemaResolver resolver = new DefaultSchemaResolver();
+      MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
       resolver.setBaseURI(baseURI);
       return bind(xsdReader, encoding, resolver);
    }
@@ -219,7 +219,7 @@ public class XsdBinder
     */
    public static SchemaBinding bind(String xsd, String encoding)
    {
-      return bind(xsd, encoding, new DefaultSchemaResolver());
+      return bind(xsd, encoding, new MultiClassSchemaResolver());
    }
 
    /**
@@ -365,7 +365,7 @@ public class XsdBinder
    {
       if(resolver == null)
       {
-         resolver = new DefaultSchemaResolver();
+         resolver = new MultiClassSchemaResolver();
       }
 
       XSModel model = Util.loadSchema(xsdUrl, resolver);
@@ -376,7 +376,7 @@ public class XsdBinder
    {
       if(resolver == null)
       {
-         resolver = new DefaultSchemaResolver();
+         resolver = new MultiClassSchemaResolver();
       }
 
       XSModel model = Util.loadSchema(xsdStream, encoding, resolver);
@@ -387,7 +387,7 @@ public class XsdBinder
    {
       if(resolver == null)
       {
-         resolver = new DefaultSchemaResolver();
+         resolver = new MultiClassSchemaResolver();
       }
   
       XSModel model = Util.loadSchema(xsdReader, encoding, resolver);

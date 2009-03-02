@@ -87,7 +87,6 @@ public class SequenceBinding
       {
          private int pos = -1;
          private ElementBinding element;
-         private int occurence;
          private boolean wildcardContent;
 
          public ParticleBinding getCurrentParticle()
@@ -95,7 +94,7 @@ public class SequenceBinding
             if(pos < 0)
             {
                throw new JBossXBRuntimeException(
-                  "The cursor has not been positioned yet! startElement should be called."
+                  "The cursor has not been positioned yet for " + SequenceBinding.this.toString()
                );
             }
             return (ParticleBinding)sequence.get(pos);
@@ -106,7 +105,7 @@ public class SequenceBinding
             if(pos < 0)
             {
                throw new JBossXBRuntimeException(
-                  "The cursor has not been positioned yet! startElement should be called."
+                     "The cursor has not been positioned yet for " + SequenceBinding.this.toString()
                );
             }
             return element;
@@ -131,12 +130,7 @@ public class SequenceBinding
                log.trace("endElement " + qName + " in " + getModelGroup());
             }
          }
-
-         public int getOccurence()
-         {
-            return occurence;
-         }
-
+         
          public boolean isWildcardContent()
          {
             return wildcardContent;

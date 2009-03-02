@@ -443,6 +443,7 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
 
       if( trace )
          log.trace("getInputSource, nsURI="+nsURI+", baseURI="+baseURI+", schemaLocation="+schemaLocation);
+      System.out.println("getInputSource, nsURI="+nsURI+", baseURI="+baseURI+", schemaLocation="+schemaLocation);
 
       // First try what is requested
       try

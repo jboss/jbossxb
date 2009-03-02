@@ -78,7 +78,6 @@ public class ChoiceBinding
       {
          private int pos = -1;
          private ElementBinding element;
-         private int occurence;
          private boolean wildcardContent;
 
          public ParticleBinding getCurrentParticle()
@@ -121,11 +120,6 @@ public class ChoiceBinding
             {
                log.trace("endElement " + qName + " in " + getModelGroup());
             }
-         }
-
-         public int getOccurence()
-         {
-            return occurence;
          }
 
          public boolean isWildcardContent()
@@ -202,9 +196,8 @@ public class ChoiceBinding
                      }
 
                      int groupStackSize = groupStack.size();
-                     groupStack = modelGroup.newCursor(particle).startElement(
-                        qName, atts, passedGroups, groupStack, particle.isRequired(occurence)
-                     );
+                     boolean isRequired = occurence == 0 ? false : particle.isRequired(occurence);
+                     groupStack = modelGroup.newCursor(particle).startElement(qName, atts, passedGroups, groupStack, isRequired);
 
                      if(groupStackSize != groupStack.size())
                      {

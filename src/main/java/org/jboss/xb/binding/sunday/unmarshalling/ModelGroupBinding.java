@@ -192,6 +192,7 @@ public abstract class ModelGroupBinding
    {
       protected final ParticleBinding particle;
       protected final boolean trace = log.isTraceEnabled();
+      protected int occurence;
 
       protected Cursor(ParticleBinding particle)
       {
@@ -226,8 +227,25 @@ public abstract class ModelGroupBinding
 
       public abstract void endElement(QName qName);
 
-      public abstract int getOccurence();
+      public int getOccurence()
+      {
+         return occurence;
+      }
 
+      public boolean repeatElement(QName qName)
+      {
+         ParticleBinding particle = getCurrentParticle();
+         if(particle.getMaxOccursUnbounded() ||
+            occurence < particle.getMinOccurs() ||
+            occurence < particle.getMaxOccurs())
+         {
+            ++occurence;
+            return true;
+         }
+         else
+            return false;
+      }
+      
       public abstract boolean isWildcardContent();
       
       // Protected

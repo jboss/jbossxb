@@ -84,7 +84,6 @@ public class AllBinding
       return new Cursor(particle)
       {
          private ParticleBinding curParticle;
-         private int occurence;
 
          public ParticleBinding getCurrentParticle()
          {
@@ -113,11 +112,6 @@ public class AllBinding
                   " since the current element is " + (curParticle == null ? null : getElement().getQName())
                );
             }
-         }
-
-         public int getOccurence()
-         {
-            return occurence;
          }
 
          public boolean isWildcardContent()

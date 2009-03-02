@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<message xmlns="file:///tmp/test.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+   <bar>bar</bar>
+</message>

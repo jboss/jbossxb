@@ -331,13 +331,30 @@ public class SundayContentHandler
                {
                   if(element.getQName().equals(startName))
                   {
-                     item.reset();
-                     particle = item.particle;
-                     parentType = item.parentType;
-                     repeated = true;
-
-                     if(!particle.isRepeatable())
+                     if(item.particle.isRepeatable())
                      {
+                        StackItem parentItem = stack.peek(1);
+                        if(parentItem.cursor.repeatElement(startName))
+                        {
+                           item.reset();
+                           particle = item.particle;
+                           parentType = item.parentType;
+                           repeated = true;
+                        }
+                        else
+                        {
+                           pop();
+                           endRepeatableParticle(item.particle);
+                           continue;
+                        }
+                     }
+                     else
+                     {
+                        item.reset();
+                        particle = item.particle;
+                        parentType = item.parentType;
+                        repeated = true;
+
                         endRepeatableParent(startName);
                      }
                   }
@@ -345,9 +362,7 @@ public class SundayContentHandler
                   {
                      pop();                     
                      if(item.particle.isRepeatable())
-                     {
                         endRepeatableParticle(item.particle);
-                     }
                      continue;
                   }
                }
@@ -1395,13 +1410,9 @@ public class SundayContentHandler
       if(trace)
       {
          if(item.cursor == null)
-         {
             log.trace("poped " + ((ElementBinding)item.particle.getTerm()).getQName() + "=" + item.particle);
-         }
          else
-         {
             log.trace("poped " + item.cursor.getCurrentParticle().getTerm());
-         }
       }
       return item;
    }

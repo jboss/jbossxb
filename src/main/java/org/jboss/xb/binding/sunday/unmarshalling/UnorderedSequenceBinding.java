@@ -113,6 +113,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
    {
       return new Cursor(particle)
       {
+         private ElementBinding element;
          private ParticleBinding curParticle;
          private int occurence;
          private boolean wildcardContent;
@@ -149,7 +150,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
             {
                throw new JBossXBRuntimeException("The cursor in all group has not been positioned yet!");
             }
-            return (ElementBinding) curParticle.getTerm();
+            return element;
          }
 
          @Override
@@ -249,6 +250,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
             if (curParticle != null)
             {
                ++occurence;
+               element = (ElementBinding) curParticle.getTerm();
                groupStack = addItem(groupStack, this);
                if (trace)
                   log.trace("found " + qName + " in " + getModelGroup());
@@ -277,6 +279,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                   if (groupStackSize != groupStack.size())
                   {
                      ++occurence;
+                     element = null;
                      curParticle = particle;
                      groupStack = addItem(groupStack, this);
                      return groupStack;
@@ -292,6 +295,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                {
                   ++occurence;
                   curParticle = particle;
+                  element = e;
                   wildcardContent = true;
                   groupStack = addItem(groupStack, this);
                   return groupStack;

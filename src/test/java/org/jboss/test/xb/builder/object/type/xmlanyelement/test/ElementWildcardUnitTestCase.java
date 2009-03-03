@@ -94,4 +94,25 @@ public class ElementWildcardUnitTestCase extends AbstractBuilderTest
       assertNotNull(particleHandler);
       assertTrue(particleHandler instanceof PropertyWildcardHandler);
    }
+   
+   public void testUnmarshalWildcardInUnroderedSequence() throws Exception
+   {
+      boolean useUnorderedSequence = JBossXBBuilder.isUseUnorderedSequence();
+      JBossXBBuilder.setUseUnorderedSequence(true);
+      try
+      {
+         SchemaBinding schema = JBossXBBuilder.build(ElementWildcard.class, true);
+         Object o = unmarshal(getRootName() + ".xml", schema);
+         assertNotNull(o);
+         assertTrue(o instanceof ElementWildcard);
+         ElementWildcard ew = (ElementWildcard) o;
+         Element element = ew.getWildcard();
+         assertNotNull(element);
+         assertEquals("test-element", element.getNodeName());
+      }
+      finally
+      {
+         JBossXBBuilder.setUseUnorderedSequence(useUnorderedSequence);
+      }
+   }
 }

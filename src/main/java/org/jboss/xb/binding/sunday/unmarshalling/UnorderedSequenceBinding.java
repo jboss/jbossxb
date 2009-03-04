@@ -183,7 +183,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
             if(trace)
             {
                StringBuffer sb = new StringBuffer();
-               sb.append("startElement ").append(qName).append(" in ").append(toString());
+               sb.append("startElement ").append(qName).append(" in ").append(UnorderedSequenceBinding.this.toString());
                log.trace(sb.toString());
             }
 
@@ -216,8 +216,8 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                      }
 
                      int groupStackSize = groupStack.size();
-                     groupStack = modelGroup.newCursor(particle).startElement(
-                        qName, atts, passedGroups, groupStack, particle.isRequired(occurence)
+                     groupStack = modelGroup.newCursor(curParticle).startElement(
+                        qName, atts, passedGroups, groupStack, curParticle.isRequired(occurence)
                      );
 
                      if(groupStackSize != groupStack.size())

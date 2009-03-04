@@ -42,6 +42,9 @@ import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.UnorderedSequenceBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 
 /**
@@ -177,24 +180,43 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       Collection<ParticleBinding> particles = group.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> particleIterator = particles.iterator();
-      ParticleBinding particle = particleIterator.next();
+      
+      ElementBinding child;
+      ElementBinding rootName;
+      if(group instanceof SequenceBinding)
+      {
+         child = (ElementBinding) particleIterator.next().getTerm();
+         rootName = (ElementBinding) particleIterator.next().getTerm();
+      }
+      else
+      {
+         ParticleBinding particle = particleIterator.next();
+         ElementBinding el = (ElementBinding) particle.getTerm();
+         if(el.getQName().equals(new QName("ns.root", "child")))
+         {
+            child = el;
+            rootName = (ElementBinding) particleIterator.next().getTerm();
+         }
+         else
+         {
+            child = (ElementBinding) particleIterator.next().getTerm();
+            rootName = el;
+         }
+      }
       
       // child
-      e = (ElementBinding) particle.getTerm();
-      assertEquals(new QName("ns.root", "child"), e.getQName());
-      group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      assertEquals(new QName("ns.root", "child"), child.getQName());
+      group = (ModelGroupBinding) child.getType().getParticle().getTerm();
       particles = group.getParticles();
       assertEquals(1, particles.size());
-      particle = particles.iterator().next();
+      ParticleBinding particle = particles.iterator().next();
 
       // child/name
       e = (ElementBinding) particle.getTerm();
       assertEquals(new QName("ns.root", "name"), e.getQName());
       
       // rootName
-      particle = particleIterator.next();
-      e = (ElementBinding) particle.getTerm();
-      assertEquals(new QName("ns.root", "root-name"), e.getQName());
+      assertEquals(new QName("ns.root", "root-name"), rootName.getQName());
    }
 
    public void testApplyToElementFalseApplyToTypeTrue()
@@ -212,24 +234,43 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       Collection<ParticleBinding> particles = group.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> particleIterator = particles.iterator();
-      ParticleBinding particle = particleIterator.next();
+
+      ElementBinding child;
+      ElementBinding rootName;
+      if(group instanceof SequenceBinding)
+      {
+         child = (ElementBinding) particleIterator.next().getTerm();
+         rootName = (ElementBinding) particleIterator.next().getTerm();
+      }
+      else
+      {
+         ParticleBinding particle = particleIterator.next();
+         ElementBinding el = (ElementBinding) particle.getTerm();
+         if(el.getQName().equals(new QName("ns.root", "child")))
+         {
+            child = el;
+            rootName = (ElementBinding) particleIterator.next().getTerm();
+         }
+         else
+         {
+            child = (ElementBinding) particleIterator.next().getTerm();
+            rootName = el;
+         }
+      }
       
       // child
-      e = (ElementBinding) particle.getTerm();
-      assertEquals(new QName("ns.root", "child"), e.getQName());
-      group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      assertEquals(new QName("ns.root", "child"), child.getQName());
+      group = (ModelGroupBinding) child.getType().getParticle().getTerm();
       particles = group.getParticles();
       assertEquals(1, particles.size());
-      particle = particles.iterator().next();
+      ParticleBinding particle = particles.iterator().next();
 
       // child/name
       e = (ElementBinding) particle.getTerm();
       assertEquals(new QName("ns.child", "name"), e.getQName());
       
       // rootName
-      particle = particleIterator.next();
-      e = (ElementBinding) particle.getTerm();
-      assertEquals(new QName("ns.root", "root-name"), e.getQName());
+      assertEquals(new QName("ns.root", "root-name"), rootName.getQName());
    }
    
    public void testApplyToElementTrueApplyToTypeTrueGroup() throws Exception
@@ -242,8 +283,29 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       Collection<ParticleBinding> particles = group.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> iterator = particles.iterator();
-      
-      group = (ModelGroupBinding) iterator.next().getTerm();
+
+      ElementBinding idElement;
+      if(group instanceof SequenceBinding)
+      {
+         group = (ModelGroupBinding) iterator.next().getTerm();
+         idElement = (ElementBinding) iterator.next().getTerm();
+      }
+      else
+      {
+         assertTrue(group instanceof UnorderedSequenceBinding);
+         TermBinding t = iterator.next().getTerm();
+         if(t.isElement())
+         {
+            idElement = (ElementBinding) t;
+            group = (ModelGroupBinding) iterator.next().getTerm();
+         }
+         else
+         {
+            group = (ModelGroupBinding) t;
+            idElement = (ElementBinding) iterator.next().getTerm();
+         }
+      }
+
       assertEquals(new QName("anotherNs", "group"), group.getQName());
       particles = group.getParticles();
       assertEquals(2, particles.size());
@@ -253,8 +315,7 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       e = (ElementBinding) groupIterator.next().getTerm();
       assertEquals(new QName("anotherNs", "text"), e.getQName());
       
-      e = (ElementBinding) iterator.next().getTerm();
-      assertEquals(new QName("ns", "id"), e.getQName());
+      assertEquals(new QName("ns", "id"), idElement.getQName());
    }
 
    public void testApplyToElementFalseApplyToTypeTrueGroup() throws Exception
@@ -268,7 +329,28 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> iterator = particles.iterator();
       
-      group = (ModelGroupBinding) iterator.next().getTerm();
+      ElementBinding idElement;
+      if(group instanceof SequenceBinding)
+      {
+         group = (ModelGroupBinding) iterator.next().getTerm();
+         idElement = (ElementBinding) iterator.next().getTerm();
+      }
+      else
+      {
+         assertTrue(group instanceof UnorderedSequenceBinding);
+         TermBinding t = iterator.next().getTerm();
+         if(t.isElement())
+         {
+            idElement = (ElementBinding) t;
+            group = (ModelGroupBinding) iterator.next().getTerm();
+         }
+         else
+         {
+            group = (ModelGroupBinding) t;
+            idElement = (ElementBinding) iterator.next().getTerm();
+         }
+      }
+
       assertEquals(new QName("ns", "group"), group.getQName());
       particles = group.getParticles();
       assertEquals(2, particles.size());
@@ -278,8 +360,7 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       e = (ElementBinding) groupIterator.next().getTerm();
       assertEquals(new QName("anotherNs", "text"), e.getQName());
       
-      e = (ElementBinding) iterator.next().getTerm();
-      assertEquals(new QName("ns", "id"), e.getQName());
+      assertEquals(new QName("ns", "id"), idElement.getQName());
    }
 
    public void testApplyToElementTrueApplyToTypeFalseGroup() throws Exception
@@ -293,7 +374,28 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> iterator = particles.iterator();
       
-      group = (ModelGroupBinding) iterator.next().getTerm();
+      ElementBinding idElement;
+      if(group instanceof SequenceBinding)
+      {
+         group = (ModelGroupBinding) iterator.next().getTerm();
+         idElement = (ElementBinding) iterator.next().getTerm();
+      }
+      else
+      {
+         assertTrue(group instanceof UnorderedSequenceBinding);
+         TermBinding t = iterator.next().getTerm();
+         if(t.isElement())
+         {
+            idElement = (ElementBinding) t;
+            group = (ModelGroupBinding) iterator.next().getTerm();
+         }
+         else
+         {
+            group = (ModelGroupBinding) t;
+            idElement = (ElementBinding) iterator.next().getTerm();
+         }
+      }
+
       assertEquals(new QName("anotherNs", "group"), group.getQName());
       particles = group.getParticles();
       assertEquals(2, particles.size());
@@ -303,8 +405,7 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       e = (ElementBinding) groupIterator.next().getTerm();
       assertEquals(new QName("ns", "text"), e.getQName());
       
-      e = (ElementBinding) iterator.next().getTerm();
-      assertEquals(new QName("ns", "id"), e.getQName());
+      assertEquals(new QName("ns", "id"), idElement.getQName());
    }
 
    public void testApplyToElementFalseApplyToTypeFalseGroup() throws Exception
@@ -318,7 +419,28 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> iterator = particles.iterator();
       
-      group = (ModelGroupBinding) iterator.next().getTerm();
+      ElementBinding idElement;
+      if(group instanceof SequenceBinding)
+      {
+         group = (ModelGroupBinding) iterator.next().getTerm();
+         idElement = (ElementBinding) iterator.next().getTerm();
+      }
+      else
+      {
+         assertTrue(group instanceof UnorderedSequenceBinding);
+         TermBinding t = iterator.next().getTerm();
+         if(t.isElement())
+         {
+            idElement = (ElementBinding) t;
+            group = (ModelGroupBinding) iterator.next().getTerm();
+         }
+         else
+         {
+            group = (ModelGroupBinding) t;
+            idElement = (ElementBinding) iterator.next().getTerm();
+         }
+      }
+
       assertEquals(new QName("ns", "group"), group.getQName());
       particles = group.getParticles();
       assertEquals(2, particles.size());
@@ -328,8 +450,7 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       e = (ElementBinding) groupIterator.next().getTerm();
       assertEquals(new QName("ns", "text"), e.getQName());
       
-      e = (ElementBinding) iterator.next().getTerm();
-      assertEquals(new QName("ns", "id"), e.getQName());
+      assertEquals(new QName("ns", "id"), idElement.getQName());
    }
    
    public void testGroupWithJBossXmlNsProperty() throws Exception
@@ -345,33 +466,57 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       assertEquals(4, particles.size());
       Iterator<ParticleBinding> iterator = particles.iterator();
       
-      e = (ElementBinding) iterator.next().getTerm();
-      assertEquals(new QName("childNs", "group-true-content-false"), e.getQName());
-      group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      ElementBinding gtcf = null;
+      ElementBinding gfcf = null;
+      ElementBinding gtct = null;
+      ElementBinding gfct = null;
+      if(group instanceof SequenceBinding)
+      {
+         gtcf = (ElementBinding) iterator.next().getTerm();
+         gfcf = (ElementBinding) iterator.next().getTerm();
+         gtct = (ElementBinding) iterator.next().getTerm();
+         gfct = (ElementBinding) iterator.next().getTerm();
+      }
+      else
+      {
+         assertTrue(group instanceof UnorderedSequenceBinding);
+         while(iterator.hasNext())
+         {
+            ElementBinding el = (ElementBinding) iterator.next().getTerm();
+            if(el.getQName().getLocalPart().equals("group-true-content-false"))
+               gtcf = el;
+            else if(el.getQName().getLocalPart().equals("group-false-content-false"))
+               gfcf = el;
+            else if(el.getQName().getLocalPart().equals("group-true-content-true"))
+               gtct = el;
+            else if(el.getQName().getLocalPart().equals("group-false-content-true"))
+               gfct = el;
+         }
+      }
+      
+      assertEquals(new QName("childNs", "group-true-content-false"), gtcf.getQName());
+      group = (ModelGroupBinding) gtcf.getType().getParticle().getTerm();
       particles = group.getParticles();
       assertEquals(1, particles.size());
       e = (ElementBinding) particles.iterator().next().getTerm();
       assertEquals(new QName("ns", "name"), e.getQName());
       
-      e = (ElementBinding) iterator.next().getTerm();
-      assertEquals(new QName("ns", "group-false-content-false"), e.getQName());
-      group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      assertEquals(new QName("ns", "group-false-content-false"), gfcf.getQName());
+      group = (ModelGroupBinding) gfcf.getType().getParticle().getTerm();
       particles = group.getParticles();
       assertEquals(1, particles.size());
       e = (ElementBinding) particles.iterator().next().getTerm();
       assertEquals(new QName("ns", "name"), e.getQName());
       
-      e = (ElementBinding) iterator.next().getTerm();
-      assertEquals(new QName("childNs", "group-true-content-true"), e.getQName());
-      group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      assertEquals(new QName("childNs", "group-true-content-true"), gtct.getQName());
+      group = (ModelGroupBinding) gtct.getType().getParticle().getTerm();
       particles = group.getParticles();
       assertEquals(1, particles.size());
       e = (ElementBinding) particles.iterator().next().getTerm();
       assertEquals(new QName("childNs", "name"), e.getQName());
 
-      e = (ElementBinding) iterator.next().getTerm();
-      assertEquals(new QName("ns", "group-false-content-true"), e.getQName());
-      group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      assertEquals(new QName("ns", "group-false-content-true"), gfct.getQName());
+      group = (ModelGroupBinding) gfct.getType().getParticle().getTerm();
       particles = group.getParticles();
       assertEquals(1, particles.size());
       e = (ElementBinding) particles.iterator().next().getTerm();

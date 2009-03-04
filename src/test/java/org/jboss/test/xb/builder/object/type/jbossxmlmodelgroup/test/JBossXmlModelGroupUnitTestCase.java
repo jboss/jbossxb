@@ -53,11 +53,13 @@ import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWith
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ChoiceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.UnorderedSequenceBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 
 /**
@@ -271,21 +273,43 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       ElementBinding e = schema.getElement(new QName("root"));
       assertNotNull(e);
       TermBinding t = e.getType().getParticle().getTerm();
-      assertTrue(t instanceof SequenceBinding);
-      SequenceBinding s = (SequenceBinding) t;
+      assertTrue(t instanceof SequenceBinding || t instanceof UnorderedSequenceBinding);
+      ModelGroupBinding s = (ModelGroupBinding) t;
       assertParticleChoiceBinding(s);
    }
 
-   private void assertParticleChoiceBinding(SequenceBinding s)
+   private void assertParticleChoiceBinding(ModelGroupBinding s)
    {
       Collection<ParticleBinding> particles = s.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> i = particles.iterator();
-      ParticleBinding p = i.next();
-      TermBinding t = p.getTerm();
+      
+      ParticleBinding choiceParticle;
+      ParticleBinding elementParticle;
+      if(s instanceof SequenceBinding)
+      {
+         choiceParticle = i.next();
+         elementParticle = i.next();
+      }
+      else
+      {
+         ParticleBinding p = i.next();
+         if(p.getTerm().isModelGroup())
+         {
+            choiceParticle = p;
+            elementParticle = i.next();
+         }
+         else
+         {
+            elementParticle = p;
+            choiceParticle = i.next();
+         }
+      }
+      
+      TermBinding t = choiceParticle.getTerm();
       assertTrue(t instanceof ChoiceBinding);
-      assertEquals(1, p.getMaxOccurs());
-      assertFalse(p.getMaxOccursUnbounded());
+      assertEquals(1, choiceParticle.getMaxOccurs());
+      assertFalse(choiceParticle.getMaxOccursUnbounded());
       
       ChoiceBinding c = (ChoiceBinding) t;
       particles = c.getParticles();
@@ -298,7 +322,7 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       assertTrue(t.isElement());
       assertEquals(new QName("b"), ((ElementBinding)t).getQName());
       
-      t = i.next().getTerm();
+      t = elementParticle.getTerm();
       assertTrue(t.isElement());
       assertEquals(new QName("e"), ((ElementBinding)t).getQName());
    }
@@ -311,8 +335,8 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       TypeBinding type = e.getType();
       TermBinding t = type.getParticle().getTerm();
       assertNull(type.getSimpleType());
-      assertTrue(t instanceof SequenceBinding);
-      SequenceBinding s = (SequenceBinding) t;
+      assertTrue(t instanceof SequenceBinding || t instanceof UnorderedSequenceBinding);
+      ModelGroupBinding s = (ModelGroupBinding) t;
       Collection<ParticleBinding> particles = s.getParticles();
       assertEquals(1, particles.size());
       ParticleBinding p = particles.iterator().next();
@@ -329,23 +353,44 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       assertNotNull(type.getSimpleType());
       
       t = type.getParticle().getTerm();
-      assertTrue(t instanceof SequenceBinding);
-      particles = ((SequenceBinding)t).getParticles();
+      assertTrue(t instanceof SequenceBinding || t instanceof UnorderedSequenceBinding);
+      particles = ((ModelGroupBinding)t).getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> i = particles.iterator();
-      p = i.next();
-      t = p.getTerm();
+      
+      ParticleBinding choiceParticle;
+      ParticleBinding elementParticle;
+      if(t instanceof SequenceBinding)
+      {
+         elementParticle = i.next();
+         choiceParticle = i.next();
+      }
+      else
+      {
+         p = i.next();
+         if (p.getTerm().isElement())
+         {
+            elementParticle = p;
+            choiceParticle = i.next();
+         }
+         else
+         {
+            choiceParticle = p;
+            elementParticle = i.next();
+         }
+      }
+
+      t = elementParticle.getTerm();
       assertTrue(t.isElement());
-      assertEquals(0, p.getMinOccurs());
-      assertEquals(1, p.getMaxOccurs());
-      assertFalse(p.getMaxOccursUnbounded());
+      assertEquals(0, elementParticle.getMinOccurs());
+      assertEquals(1, elementParticle.getMaxOccurs());
+      assertFalse(elementParticle.getMaxOccursUnbounded());
       assertEquals(new QName("e"), ((ElementBinding)t).getQName());
       
-      p = i.next();
-      t = p.getTerm();
+      t = choiceParticle.getTerm();
       assertTrue(t instanceof ChoiceBinding);
-      assertEquals(1, p.getMaxOccurs());
-      assertTrue(p.getMaxOccursUnbounded());
+      assertEquals(1, choiceParticle.getMaxOccurs());
+      assertTrue(choiceParticle.getMaxOccursUnbounded());
       
       ChoiceBinding c = (ChoiceBinding) t;
       particles = c.getParticles();
@@ -365,16 +410,39 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       ElementBinding e = schema.getElement(new QName("root"));
       assertNotNull(e);
       TermBinding t = e.getType().getParticle().getTerm();
-      assertTrue(t instanceof SequenceBinding);
-      SequenceBinding s = (SequenceBinding) t;
+      assertTrue(t instanceof SequenceBinding || t instanceof UnorderedSequenceBinding);
+      ModelGroupBinding s = (ModelGroupBinding) t;
       Collection<ParticleBinding> particles = s.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> i = particles.iterator();
-      ParticleBinding p = i.next();
-      t = p.getTerm();
+      
+
+      ParticleBinding choiceParticle;
+      ParticleBinding elementParticle;
+      if(t instanceof SequenceBinding)
+      {
+         choiceParticle = i.next();
+         elementParticle = i.next();
+      }
+      else
+      {
+         ParticleBinding p = i.next();
+         if (p.getTerm().isElement())
+         {
+            elementParticle = p;
+            choiceParticle = i.next();
+         }
+         else
+         {
+            choiceParticle = p;
+            elementParticle = i.next();
+         }
+      }
+      
+      t = choiceParticle.getTerm();
       assertTrue(t instanceof ChoiceBinding);
-      assertEquals(1, p.getMaxOccurs());
-      assertTrue(p.getMaxOccursUnbounded());
+      assertEquals(1, choiceParticle.getMaxOccurs());
+      assertTrue(choiceParticle.getMaxOccursUnbounded());
       
       ChoiceBinding c = (ChoiceBinding) t;
       particles = c.getParticles();
@@ -387,7 +455,7 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       assertTrue(t.isElement());
       assertEquals(new QName("b"), ((ElementBinding)t).getQName());
       
-      t = i.next().getTerm();
+      t = elementParticle.getTerm();
       assertTrue(t.isElement());
       assertEquals(new QName("e"), ((ElementBinding)t).getQName());
    }
@@ -398,29 +466,50 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       ElementBinding e = schema.getElement(new QName("main-root"));
       assertNotNull(e);
       TermBinding t = e.getType().getParticle().getTerm();
-      assertTrue(t instanceof SequenceBinding);
-      Collection<ParticleBinding> particles = ((SequenceBinding)t).getParticles();
+      assertTrue(t instanceof SequenceBinding || t instanceof UnorderedSequenceBinding);
+      Collection<ParticleBinding> particles = ((ModelGroupBinding)t).getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> i = particles.iterator();
-      ParticleBinding p = i.next();
-      t = p.getTerm();
-      assertTrue(t.isElement());
-      assertEquals(0, p.getMinOccurs());
-      assertEquals(1, p.getMaxOccurs());
-      assertFalse(p.getMaxOccursUnbounded());
-      e = (ElementBinding) t;
-      assertEquals(new QName("group1"), e.getQName());
-      assertPropertiesSequenceBinding((SequenceBinding)e.getType().getParticle().getTerm(), false);
       
-      p = i.next();
-      t = p.getTerm();
+      ParticleBinding group1Particle;
+      ParticleBinding group2Particle;
+      if(t instanceof SequenceBinding)
+      {
+         group1Particle = i.next();
+         group2Particle = i.next();
+      }
+      else
+      {
+         ParticleBinding p = i.next();
+         if(((ElementBinding)p.getTerm()).getQName().equals(new QName("group1")))
+         {
+            group1Particle = p;
+            group2Particle = i.next();
+         }
+         else
+         {
+            group2Particle = p;
+            group1Particle = i.next();
+         }
+      }
+      
+      t = group1Particle.getTerm();
       assertTrue(t.isElement());
-      assertEquals(0, p.getMinOccurs());
-      assertEquals(1, p.getMaxOccurs());
-      assertFalse(p.getMaxOccursUnbounded());
-      e = (ElementBinding) t;
-      assertEquals(new QName("group2"), e.getQName());
-      assertPropertiesSequenceBinding((SequenceBinding)e.getType().getParticle().getTerm(), false);
+      assertEquals(0, group1Particle.getMinOccurs());
+      assertEquals(1, group1Particle.getMaxOccurs());
+      assertFalse(group1Particle.getMaxOccursUnbounded());
+      ElementBinding e1 = (ElementBinding) t;
+      assertEquals(new QName("group1"), e1.getQName());
+      assertPropertiesSequenceBinding((ModelGroupBinding)e1.getType().getParticle().getTerm(), false);
+      
+      t = group2Particle.getTerm();
+      assertTrue(t.isElement());
+      assertEquals(0, group2Particle.getMinOccurs());
+      assertEquals(1, group2Particle.getMaxOccurs());
+      assertFalse(group2Particle.getMaxOccursUnbounded());
+      e1 = (ElementBinding) t;
+      assertEquals(new QName("group2"), e1.getQName());
+      assertPropertiesSequenceBinding((ModelGroupBinding)e1.getType().getParticle().getTerm(), false);
    }
 
    public void testRootWithTwoParticleGroupsBinding() throws Exception
@@ -429,29 +518,51 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       ElementBinding e = schema.getElement(new QName("main-root"));
       assertNotNull(e);
       TermBinding t = e.getType().getParticle().getTerm();
-      assertTrue(t instanceof SequenceBinding);
-      Collection<ParticleBinding> particles = ((SequenceBinding)t).getParticles();
+
+      assertTrue(t instanceof SequenceBinding || t instanceof UnorderedSequenceBinding);
+      Collection<ParticleBinding> particles = ((ModelGroupBinding)t).getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> i = particles.iterator();
-      ParticleBinding p = i.next();
-      t = p.getTerm();
+      
+      ParticleBinding group1Particle;
+      ParticleBinding group2Particle;
+      if(t instanceof SequenceBinding)
+      {
+         group1Particle = i.next();
+         group2Particle = i.next();
+      }
+      else
+      {
+         ParticleBinding p = i.next();
+         if(((ElementBinding)p.getTerm()).getQName().equals(new QName("group1")))
+         {
+            group1Particle = p;
+            group2Particle = i.next();
+         }
+         else
+         {
+            group2Particle = p;
+            group1Particle = i.next();
+         }
+      }
+      
+      t = group1Particle.getTerm();
       assertTrue(t.isElement());
-      assertEquals(0, p.getMinOccurs());
-      assertEquals(1, p.getMaxOccurs());
-      assertFalse(p.getMaxOccursUnbounded());
+      assertEquals(0, group1Particle.getMinOccurs());
+      assertEquals(1, group1Particle.getMaxOccurs());
+      assertFalse(group1Particle.getMaxOccursUnbounded());
       e = (ElementBinding) t;
       assertEquals(new QName("group1"), e.getQName());
-      assertParticleChoiceBinding((SequenceBinding) e.getType().getParticle().getTerm());
+      assertParticleChoiceBinding((ModelGroupBinding) e.getType().getParticle().getTerm());
       
-      p = i.next();
-      t = p.getTerm();
+      t = group2Particle.getTerm();
       assertTrue(t.isElement());
-      assertEquals(0, p.getMinOccurs());
-      assertEquals(1, p.getMaxOccurs());
-      assertFalse(p.getMaxOccursUnbounded());
+      assertEquals(0, group2Particle.getMinOccurs());
+      assertEquals(1, group2Particle.getMaxOccurs());
+      assertFalse(group2Particle.getMaxOccursUnbounded());
       e = (ElementBinding) t;
       assertEquals(new QName("group2"), e.getQName());
-      assertParticleChoiceBinding((SequenceBinding) e.getType().getParticle().getTerm());
+      assertParticleChoiceBinding((ModelGroupBinding) e.getType().getParticle().getTerm());
    }
 
    private void assertPropertiesSequenceBinding(Class<?> root, boolean inCollection)
@@ -460,34 +571,20 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       ElementBinding e = schema.getElement(new QName("root"));
       assertNotNull(e);
       TermBinding t = e.getType().getParticle().getTerm();
-      assertTrue(t instanceof SequenceBinding);
-      SequenceBinding s = (SequenceBinding) t;
+      assertTrue(t instanceof SequenceBinding || t instanceof UnorderedSequenceBinding);
+      ModelGroupBinding s = (ModelGroupBinding) t;
       assertPropertiesSequenceBinding(s, inCollection);
    }
 
-   private void assertPropertiesSequenceBinding(SequenceBinding s, boolean inCollection)
+   private void assertPropertiesSequenceBinding(ModelGroupBinding s, boolean inCollection)
    {
       Collection<ParticleBinding> particles = s.getParticles();
       assertEquals(1, particles.size());
       ParticleBinding p = particles.iterator().next();
-      TermBinding t = p.getTerm();
-      assertTrue(t instanceof SequenceBinding);
-      //assertEquals(0, p.getMinOccurs());
-      assertEquals(1, p.getMaxOccurs());
-      assertEquals(inCollection, p.getMaxOccursUnbounded());
-      s = (SequenceBinding) t;
-      particles = s.getParticles();
-      assertEquals(3, particles.size());
-      Iterator<ParticleBinding> i = particles.iterator();
-      t = i.next().getTerm();
-      assertTrue(t.isElement());
-      assertEquals(new QName("c"), ((ElementBinding)t).getQName());
-      t = i.next().getTerm();
-      assertTrue(t.isElement());
-      assertEquals(new QName("b"), ((ElementBinding)t).getQName());
-      t = i.next().getTerm();
-      assertTrue(t.isElement());
-      assertEquals(new QName("a"), ((ElementBinding)t).getQName());
+      if(p.getTerm() instanceof SequenceBinding)
+         assertABCGroupParticle(p, true, inCollection);
+      else
+         assertABCGroupParticle(p, false, inCollection);
    }
 
    private void assertPropertiesChoiceBinding(Class<?> root, boolean inCollection)
@@ -496,8 +593,8 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       ElementBinding e = schema.getElement(new QName("root"));
       assertNotNull(e);
       TermBinding t = e.getType().getParticle().getTerm();
-      assertTrue(t instanceof SequenceBinding);
-      SequenceBinding s = (SequenceBinding) t;
+      assertTrue(t instanceof SequenceBinding || t instanceof UnorderedSequenceBinding);
+      ModelGroupBinding s = (ModelGroupBinding) t;
       Collection<ParticleBinding> particles = s.getParticles();
       assertEquals(1, particles.size());
       ParticleBinding p = particles.iterator().next();
@@ -529,39 +626,78 @@ public class JBossXmlModelGroupUnitTestCase extends AbstractBuilderTest
       ElementBinding e = schema.getElement(new QName("root"));
       assertNotNull(e);
       TermBinding t = e.getType().getParticle().getTerm();
-      assertTrue(t instanceof SequenceBinding);
-      SequenceBinding s = (SequenceBinding) t;
+      assertTrue(t instanceof SequenceBinding || t instanceof UnorderedSequenceBinding);
+      ModelGroupBinding s = (ModelGroupBinding) t;
+
       Collection<ParticleBinding> particles = s.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> i = particles.iterator();
-      ParticleBinding p = i.next();
-      t = p.getTerm();
-      assertTrue(t instanceof AllBinding);
-      //assertEquals(0, p.getMinOccurs());
+
+      ParticleBinding groupParticle = null;
+      ParticleBinding elementParticle = null;
+      if(s instanceof SequenceBinding)
+      {
+         groupParticle = i.next();
+         elementParticle = i.next();
+      }
+      else
+      {
+         groupParticle = i.next();
+         if(groupParticle.getTerm().isElement())
+         {
+            elementParticle = groupParticle;
+            groupParticle = i.next();
+         }
+         else
+            elementParticle = i.next();
+      }
+
+      assertTrue(groupParticle.getTerm() instanceof AllBinding);
+      assertABCGroupParticle(groupParticle, false, inCollection);
+      
+      t = elementParticle.getTerm();
+      assertTrue(t.isElement());
+      assertEquals(0, elementParticle.getMinOccurs());
+      assertEquals(1, elementParticle.getMaxOccurs());
+      assertFalse(elementParticle.getMaxOccursUnbounded());
+      assertEquals(new QName("prop"), ((ElementBinding)t).getQName());
+   }
+
+   private void assertABCGroupParticle(ParticleBinding p, boolean ordered, boolean inCollection)
+   {
+      Collection<ParticleBinding> particles;
       assertEquals(1, p.getMaxOccurs());
       assertEquals(inCollection, p.getMaxOccursUnbounded());
-      AllBinding a = (AllBinding) t;
-      particles = a.getParticles();
+      ModelGroupBinding group = (ModelGroupBinding) p.getTerm();
+      particles = group.getParticles();
       assertEquals(3, particles.size());
-      
-      Set<QName> set = new HashSet<QName>();
-      set.add(new QName("c"));
-      set.add(new QName("b"));
-      set.add(new QName("a"));
 
-      for(ParticleBinding cp : particles)
+      if (ordered)
       {
-         t = cp.getTerm();
+         Iterator<ParticleBinding> i = particles.iterator();
+         TermBinding t = i.next().getTerm();
          assertTrue(t.isElement());
-         assertTrue(set.contains(((ElementBinding) t).getQName()));
+         assertEquals(new QName("c"), ((ElementBinding) t).getQName());
+         t = i.next().getTerm();
+         assertTrue(t.isElement());
+         assertEquals(new QName("b"), ((ElementBinding) t).getQName());
+         t = i.next().getTerm();
+         assertTrue(t.isElement());
+         assertEquals(new QName("a"), ((ElementBinding) t).getQName());
       }
-      
-      p = i.next();
-      t = p.getTerm();
-      assertTrue(t.isElement());
-      assertEquals(0, p.getMinOccurs());
-      assertEquals(1, p.getMaxOccurs());
-      assertFalse(p.getMaxOccursUnbounded());
-      assertEquals(new QName("prop"), ((ElementBinding)t).getQName());
+      else
+      {
+         Set<QName> set = new HashSet<QName>();
+         set.add(new QName("c"));
+         set.add(new QName("b"));
+         set.add(new QName("a"));
+
+         for (ParticleBinding cp : particles)
+         {
+            TermBinding t = cp.getTerm();
+            assertTrue(t.isElement());
+            assertTrue(set.contains(((ElementBinding) t).getQName()));
+         }
+      }
    }
 }

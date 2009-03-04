@@ -32,12 +32,14 @@ import junit.framework.Test;
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.support.ElementPropertiesAndWildcard;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.UnorderedSequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 import org.jboss.xb.builder.runtime.DOMHandler;
@@ -109,41 +111,64 @@ public class ElementPropertiesAndWildcardUnitTestCase extends AbstractBuilderTes
       assertNotNull(particle);
       TermBinding term = particle.getTerm();
       assertNotNull(term);
-      assertTrue(term instanceof SequenceBinding);
+      assertTrue(term instanceof SequenceBinding || term instanceof UnorderedSequenceBinding);
       
       
-      Collection<ParticleBinding> particles = ((SequenceBinding)term).getParticles();
+      Collection<ParticleBinding> particles = ((ModelGroupBinding)term).getParticles();
       assertEquals(3, particles.size());
       
       Iterator<ParticleBinding> i = particles.iterator();
-      particle = i.next();
-      term = particle.getTerm();
-      assertTrue(particle.getTerm().isElement());
-      assertEquals(0, particle.getMinOccurs());
-      assertEquals(1, particle.getMaxOccurs());
-      assertFalse(particle.getMaxOccursUnbounded());
-      element = (ElementBinding) term;
+      
+      ParticleBinding e1p = null;
+      ParticleBinding e2p = null;
+      ParticleBinding wp = null;
+      if(term instanceof SequenceBinding)
+      {
+         e1p = i.next();
+         e2p = i.next();
+         wp = i.next();
+      }
+      else
+      {
+         while(i.hasNext())
+         {
+            particle = i.next();
+            term = particle.getTerm();
+            if(term.isElement())
+            {
+               if("e1".equals(((ElementBinding)term).getQName().getLocalPart()))
+                  e1p = particle;
+               else
+                  e2p = particle;
+            }
+            else
+               wp = particle;
+         }
+      }
+      
+      assertTrue(e1p.getTerm().isElement());
+      assertEquals(0, e1p.getMinOccurs());
+      assertEquals(1, e1p.getMaxOccurs());
+      assertFalse(e1p.getMaxOccursUnbounded());
+      element = (ElementBinding) e1p.getTerm();
       assertEquals(new QName("e1"), element.getQName());
-      particles = ((SequenceBinding)element.getType().getParticle().getTerm()).getParticles();
+      particles = ((ModelGroupBinding)element.getType().getParticle().getTerm()).getParticles();
       assertEquals(1, particles.size());
       particle = particles.iterator().next();
       assertWildcardTerm(element.getType(), particle, (short) 2);
 
-      particle = i.next();
-      term = particle.getTerm();
-      assertTrue(particle.getTerm().isElement());
-      assertEquals(0, particle.getMinOccurs());
-      assertEquals(1, particle.getMaxOccurs());
-      assertFalse(particle.getMaxOccursUnbounded());
-      element = (ElementBinding) term;
+      assertTrue(e2p.getTerm().isElement());
+      assertEquals(0, e2p.getMinOccurs());
+      assertEquals(1, e2p.getMaxOccurs());
+      assertFalse(e2p.getMaxOccursUnbounded());
+      element = (ElementBinding) e2p.getTerm();
       assertEquals(new QName("e2"), element.getQName());
-      particles = ((SequenceBinding)element.getType().getParticle().getTerm()).getParticles();
+      particles = ((ModelGroupBinding)element.getType().getParticle().getTerm()).getParticles();
       assertEquals(1, particles.size());
       particle = particles.iterator().next();
       assertWildcardTerm(element.getType(), particle, (short) 2);
 
-      particle = i.next();
-      assertWildcardTerm(type, particle, (short) 3);
+      assertWildcardTerm(type, wp, (short) 3);
       WildcardBinding wildcardBinding = type.getWildcard();
       ParticleHandler particleHandler = wildcardBinding.getWildcardHandler();
       assertNotNull(particleHandler);

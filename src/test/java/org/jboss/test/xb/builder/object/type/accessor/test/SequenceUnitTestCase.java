@@ -33,11 +33,13 @@ import junit.framework.Test;
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.accessor.support.Sequence;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.UnorderedSequenceBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 
 /**
@@ -79,8 +81,8 @@ public class SequenceUnitTestCase extends AbstractBuilderTest
       assertNotNull(particle);
       TermBinding term = particle.getTerm();
       assertNotNull(term);
-      assertTrue(term instanceof SequenceBinding);
-      SequenceBinding sequence = (SequenceBinding) term;
+      assertTrue(term instanceof SequenceBinding || term instanceof UnorderedSequenceBinding);
+      ModelGroupBinding sequence = (ModelGroupBinding) term;
       List<QName> elements = new ArrayList<QName>();
       Collection<ParticleBinding> particles = sequence.getParticles();
       for (ParticleBinding p : particles)
@@ -93,6 +95,13 @@ public class SequenceUnitTestCase extends AbstractBuilderTest
       expected.add(new QName(XMLConstants.NULL_NS_URI, "three"));
       expected.add(new QName(XMLConstants.NULL_NS_URI, "two"));
       expected.add(new QName(XMLConstants.NULL_NS_URI, "one"));
-      assertEquals(expected, elements);
+      
+      if(sequence instanceof SequenceBinding)
+         assertEquals(expected, elements);
+      else
+      {
+         assertEquals(expected.size(), elements.size());
+         assertTrue(expected.containsAll(elements));
+      }
    }
 }

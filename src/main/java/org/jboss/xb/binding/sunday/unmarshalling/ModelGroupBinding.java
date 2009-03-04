@@ -242,8 +242,7 @@ public abstract class ModelGroupBinding
             ++occurence;
             return true;
          }
-         else
-            return false;
+         return false;
       }
       
       public abstract boolean isWildcardContent();

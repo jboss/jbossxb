@@ -84,7 +84,6 @@ public class ArrayElementWildcardUnitTestCase extends AbstractBuilderTest
       assertNotNull(particle);
       TermBinding term = particle.getTerm();
       assertNotNull(term);
-      assertTrue(term instanceof SequenceBinding);
       term = assertSingleSequence(term);
       assertTrue(term instanceof ArraySequenceBinding);
       term = assertSingleSequence(term);

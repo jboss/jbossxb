@@ -27,6 +27,7 @@ import java.util.Collection;
 import org.jboss.test.AbstractTestCaseWithSetup;
 import org.jboss.test.AbstractTestDelegate;
 import org.jboss.util.UnreachableStatementException;
+import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
@@ -35,6 +36,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.UnorderedSequenceBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 import org.jboss.xb.builder.runtime.BuilderParticleHandler;
 import org.jboss.test.xml.JBossXBTestDelegate;
@@ -265,8 +267,8 @@ public class AbstractBuilderTest extends AbstractTestCaseWithSetup
    protected TermBinding assertSingleSequence(TermBinding term)
    {
       assertNotNull(term);
-      assertTrue(term instanceof SequenceBinding);
-      SequenceBinding sequence = (SequenceBinding) term;
+      assertTrue(term instanceof SequenceBinding || term instanceof UnorderedSequenceBinding);
+      ModelGroupBinding sequence = (ModelGroupBinding) term;
       Collection<ParticleBinding> particles = sequence.getParticles();
       assertTrue(particles.size() == 1);
       ParticleBinding particle = particles.iterator().next();

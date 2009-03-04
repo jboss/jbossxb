@@ -53,23 +53,32 @@ public class UnorderedSequenceAnnotationUnitTestCase extends AbstractBuilderTest
 
    public void testBinding() throws Exception
    {
-      SchemaBinding schema = JBossXBBuilder.build(Root.class);
-      ElementBinding e = schema.getElement(new QName("root"));
-      assertNotNull(e);
-      TermBinding t = e.getType().getParticle().getTerm();
-      assertTrue(t instanceof SequenceBinding);
-      Collection<ParticleBinding> particles = ((SequenceBinding)t).getParticles();
-      assertEquals(3, particles.size());
-      Iterator<ParticleBinding> i = particles.iterator();
-      
-      t = i.next().getTerm();
-      assertTrue(t instanceof SequenceBinding);
-      
-      t = i.next().getTerm();
-      assertTrue(t instanceof SequenceBinding);
+      boolean defaultSequence = JBossXBBuilder.isUseUnorderedSequence();
+      JBossXBBuilder.setUseUnorderedSequence(false);
+      try
+      {
+         SchemaBinding schema = JBossXBBuilder.build(Root.class);
+         ElementBinding e = schema.getElement(new QName("root"));
+         assertNotNull(e);
+         TermBinding t = e.getType().getParticle().getTerm();
+         assertTrue(t instanceof SequenceBinding);
+         Collection<ParticleBinding> particles = ((SequenceBinding) t).getParticles();
+         assertEquals(3, particles.size());
+         Iterator<ParticleBinding> i = particles.iterator();
 
-      t = i.next().getTerm();
-      assertTrue(t instanceof UnorderedSequenceBinding);
+         t = i.next().getTerm();
+         assertTrue(t instanceof SequenceBinding);
+
+         t = i.next().getTerm();
+         assertTrue(t instanceof SequenceBinding);
+
+         t = i.next().getTerm();
+         assertTrue(t instanceof UnorderedSequenceBinding);
+      }
+      finally
+      {
+         JBossXBBuilder.setUseUnorderedSequence(defaultSequence);
+      }
    }
    
    public static class BaseGroup

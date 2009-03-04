@@ -32,11 +32,13 @@ import junit.framework.Test;
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.support.ElementBeforePrimitive;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.UnorderedSequenceBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -88,27 +90,47 @@ public class ElementBeforePrimitiveUnitTestCase extends AbstractBuilderTest
       assertNotNull(particle);
       TermBinding term = particle.getTerm();
       assertNotNull(term);
-      assertTrue(term instanceof SequenceBinding);
+      assertTrue(term instanceof SequenceBinding || term instanceof UnorderedSequenceBinding);
             
-      Collection<ParticleBinding> particles = ((SequenceBinding)term).getParticles();
+      Collection<ParticleBinding> particles = ((ModelGroupBinding)term).getParticles();
       assertEquals(2, particles.size());
 
+      ParticleBinding domParticle;
+      ParticleBinding textParticle;
       Iterator<ParticleBinding> i = particles.iterator();
-      particle = i.next();
-      term = particle.getTerm();
+      if(term instanceof SequenceBinding)
+      {
+         domParticle = i.next();
+         textParticle = i.next();
+      }
+      else
+      {
+         particle = i.next();
+         if (((ElementBinding) particle.getTerm()).getQName().equals(new QName("dom")))
+         {
+            domParticle = particle;
+            textParticle = i.next();
+         }
+         else
+         {
+            textParticle = particle;
+            domParticle = i.next();
+         }
+      }
+
+      term = domParticle.getTerm();
       assertTrue(term.isElement());
-      assertEquals(0, particle.getMinOccurs());
-      assertEquals(1, particle.getMaxOccurs());
-      assertFalse(particle.getMaxOccursUnbounded());
+      assertEquals(0, domParticle.getMinOccurs());
+      assertEquals(1, domParticle.getMaxOccurs());
+      assertFalse(domParticle.getMaxOccursUnbounded());
       element = (ElementBinding) term;
       assertEquals(new QName("dom"), element.getQName());
 
-      particle = i.next();
-      term = particle.getTerm();
+      term = textParticle.getTerm();
       assertTrue(term.isElement());
-      assertEquals(0, particle.getMinOccurs());
-      assertEquals(1, particle.getMaxOccurs());
-      assertFalse(particle.getMaxOccursUnbounded());
+      assertEquals(0, textParticle.getMinOccurs());
+      assertEquals(1, textParticle.getMaxOccurs());
+      assertFalse(textParticle.getMaxOccursUnbounded());
       element = (ElementBinding) term;
       assertEquals(new QName("text"), element.getQName());
    }

@@ -29,6 +29,7 @@ import org.jboss.test.xml.elementorder.support.CDSequence;
 import org.jboss.test.xml.elementorder.support.ElementOrderRoot;
 import org.jboss.xb.binding.JBossXBException;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.builder.JBossXBBuilder;
 
 /**
  * A ElementOrderUnitTestCase.
@@ -41,6 +42,21 @@ public class ElementOrderUnitTestCase extends AbstractBuilderTest
    public ElementOrderUnitTestCase(String name)
    {
       super(name);
+   }
+
+   private boolean defaultSequence;
+   
+   protected void setUp() throws Exception
+   {
+      super.setUp();
+      defaultSequence = JBossXBBuilder.isUseUnorderedSequence();
+      JBossXBBuilder.setUseUnorderedSequence(false);
+   }
+   
+   protected void tearDown() throws Exception 
+   {
+      super.tearDown();
+      JBossXBBuilder.setUseUnorderedSequence(defaultSequence);
    }
 
    public void testValidOneTwoOrder() throws Exception

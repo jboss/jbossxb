@@ -57,6 +57,21 @@ public class JBossXmlTypeUnitTestCase extends AbstractBuilderTest
       super(name);
    }
 
+   private boolean defaultSequence;
+   
+   protected void setUp() throws Exception
+   {
+      super.setUp();
+      defaultSequence = JBossXBBuilder.isUseUnorderedSequence();
+      JBossXBBuilder.setUseUnorderedSequence(false);
+   }
+   
+   protected void tearDown() throws Exception 
+   {
+      super.tearDown();
+      JBossXBBuilder.setUseUnorderedSequence(defaultSequence);
+   }
+   
    public void testModelGroupWithDefaults() throws Exception
    {
       ModelGroupBinding group = getTypeModelGroup(RootWithDefaults.class);

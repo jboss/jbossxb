@@ -80,7 +80,6 @@ public class SimpleObjectWildcardUnitTestCase extends AbstractBuilderTest
       assertNotNull(particle);
       TermBinding term = particle.getTerm();
       assertNotNull(term);
-      assertTrue(term instanceof SequenceBinding);
       term = assertSingleSequence(term);
       assertTrue(term instanceof WildcardBinding);
       WildcardBinding wildcardBinding = type.getWildcard();

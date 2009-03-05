@@ -43,11 +43,23 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingInitializer;
 /**
  * JBossXBBuilder.
  * 
+ * Builds instances SchemaBinding for passed in classes by parsing binding annotations.
+ * By default, built instances of SchemaBinding are cached in the instances of ClassInfo.
+ * There are methods though that allow to re-build the cached bindings.
+ * 
+ * Whether SequenceBinding or UnorderedSequenceBinding is used as the default for sequences is controlled
+ * by static property useUnorderedSequence. The value can be set by calling static method setUseUnorderedSequence(boolean value)
+ * or by setting system property xb.builder.useUnorderedSequence to true or false. The initialization fro the system property
+ * happens once in the static initializer.
+ * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
 public class JBossXBBuilder
 {
+   /** system property name to use for initialization */
+   public static final String USE_UNORDERED_SEQUENCE_PROPERTY = "xb.builder.useUnorderedSequence";
+   
    /** The configuration */
    static Configuration configuration;
    
@@ -68,9 +80,13 @@ public class JBossXBBuilder
             return new PropertyConfiguration();
          }
       });
-      
+  
       STRING = configuration.getClassInfo(String.class);
       OBJECT = configuration.getClassInfo(Object.class);
+      
+      String useUnorderedSequenceStr = System.getProperty(JBossXBBuilder.USE_UNORDERED_SEQUENCE_PROPERTY);
+      if(useUnorderedSequenceStr != null)
+         useUnorderedSequence = Boolean.parseBoolean(useUnorderedSequenceStr);
    }
    
    public static boolean isUseUnorderedSequence()

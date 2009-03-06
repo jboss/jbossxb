@@ -24,7 +24,7 @@ package org.jboss.test.xml;
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xml.jbxb.schemabindingattribute.Ns2Root;
 import org.jboss.test.xml.jbxb.schemabindingattribute.Root;
-import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
+import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 

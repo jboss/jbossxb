@@ -30,7 +30,7 @@ import org.jboss.test.xml.pojoserver.metadata.PropertyInitializer;
 import org.jboss.test.xml.pojoserver.metadata.PropertyMetaData;
 import org.jboss.test.xml.pojoserver.metadata.StringValueMetaData;
 import org.jboss.test.xml.pojoserver.metadata.ValueMetaData;
-import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
+import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 
 /**
@@ -45,12 +45,12 @@ public class WildcardWrapperUnitTestCase extends AbstractJBossXBTest
    {
       Class<?> clazz = WildcardWrapperUnitTestCase.class;
       MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
-      resolver.addSchemaInitializer(PropertyInitializer.NS, PropertyInitializer.class.getName());
+      resolver.mapSchemaInitializer(PropertyInitializer.NS, PropertyInitializer.class.getName());
       String location = getSchemaLocation(clazz, "WildcardWrapperUnitTestCase.xsd");
-      resolver.addSchemaLocation(PropertyInitializer.NS, location);
-      resolver.addSchemaInitializer(SimpleInitializer.NS, SimpleInitializer.class.getName());
+      resolver.mapSchemaLocation(PropertyInitializer.NS, location);
+      resolver.mapSchemaInitializer(SimpleInitializer.NS, SimpleInitializer.class.getName());
       location = getSchemaLocation(clazz, "SchemaBindingInitializerUnitTestCaseSimple.xsd");
-      resolver.addSchemaLocation(SimpleInitializer.NS, location);
+      resolver.mapSchemaLocation(SimpleInitializer.NS, location);
       return resolver;
    }
 

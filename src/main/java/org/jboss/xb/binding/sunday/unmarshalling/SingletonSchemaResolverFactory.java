@@ -22,6 +22,8 @@
 package org.jboss.xb.binding.sunday.unmarshalling;
 
 import org.jboss.logging.Logger;
+import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
+import org.jboss.xb.binding.resolver.MutableSchemaResolver;
 
 /**
  * SingletonSchemaResolverFactory.
@@ -39,7 +41,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
    private static final SingletonSchemaResolverFactory singleton = new SingletonSchemaResolverFactory();
 
    /** The resolver */
-   private final MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
+   private final MutableSchemaResolver resolver = new MultiClassSchemaResolver();
 
    /**
     * Get the factory instance
@@ -73,7 +75,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
       addJaxbSchema("urn:jboss:deployers:2.0", "org.jboss.deployers.vfs.plugins.xb.SchemaResolverDeployerMetaData");
    }
 
-   public SchemaBindingResolver getSchemaBindingResolver()
+   public MutableSchemaResolver getSchemaBindingResolver()
    {
       return resolver;
    }
@@ -89,7 +91,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
    {
       try
       {
-         resolver.addSchemaInitializer(namespace, initializer);
+         resolver.mapSchemaInitializer(namespace, initializer);
          if (log.isTraceEnabled())
             log.trace("Mapped initializer '" + namespace + "' to '" + initializer + "'");
          return true;
@@ -132,7 +134,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
          return false;
       try
       {
-         resolver.addSchemaLocation(namespace, location);
+         resolver.mapSchemaLocation(namespace, location);
          if (log.isTraceEnabled())
             log.trace("Mapped location '" + namespace + "' to '" + location + "'");
          return true;
@@ -170,7 +172,10 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
     */
    protected void setParseAnnotations(String namespace, Boolean parseAnnotations)
    {
-      resolver.addSchemaParseAnnotations(namespace, parseAnnotations);
+      if(parseAnnotations != null)
+         resolver.setParseXSDAnnotations(namespace, parseAnnotations);
+      else
+         resolver.unsetParseXSDAnnotations(namespace);
       if (log.isTraceEnabled())
          log.trace("Parse annotations '" + namespace + "' set to '" + parseAnnotations + "'");
    }
@@ -186,7 +191,7 @@ public class SingletonSchemaResolverFactory implements SchemaResolverFactory
    {
       try
       {
-         resolver.addClassBinding(namespace, reference);
+         resolver.mapURIToClass(namespace, reference);
          if (log.isTraceEnabled())
             log.trace("Mapped '" + namespace + "' to '" + reference + "'");
          return true;

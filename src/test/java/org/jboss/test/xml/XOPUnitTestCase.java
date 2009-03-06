@@ -23,8 +23,8 @@ package org.jboss.test.xml;
 
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
+import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
-import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -254,7 +254,7 @@ public class XOPUnitTestCase
 
          MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
          String xmimeXsd = getSchemaLocation(getClass(), "xmlmime.xsd");
-         resolver.addSchemaLocation("http://www.w3.org/2005/05/xmlmime", xmimeXsd);
+         resolver.mapSchemaLocation("http://www.w3.org/2005/05/xmlmime", xmimeXsd);
 
          SCHEMA = XsdBinder.bind(testXsd, resolver);
          SCHEMA.setIgnoreUnresolvedFieldOrClass(false);
@@ -610,7 +610,7 @@ public class XOPUnitTestCase
 
       MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
       String xmimeXsd = getSchemaLocation(getClass(), "xmlmime.xsd");
-      resolver.addSchemaLocation("http://www.w3.org/2005/05/xmlmime", xmimeXsd);
+      resolver.mapSchemaLocation("http://www.w3.org/2005/05/xmlmime", xmimeXsd);
 
       SchemaBinding schema = XsdBinder.bind(new StringReader(xsd), null, resolver);
       schema.setIgnoreUnresolvedFieldOrClass(false);

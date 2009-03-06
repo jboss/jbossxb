@@ -55,6 +55,7 @@ import org.jboss.logging.Logger;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.xop.XOPIncludeHandler;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.CharactersMetaData;

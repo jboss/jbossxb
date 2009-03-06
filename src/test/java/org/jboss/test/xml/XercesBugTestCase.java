@@ -35,7 +35,7 @@ import org.apache.xerces.xs.XSModelGroup;
 import org.jboss.test.BaseTestCase;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.Util;
-import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
+import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinderTerminatingErrorHandler;
 import org.w3c.dom.DOMConfiguration;

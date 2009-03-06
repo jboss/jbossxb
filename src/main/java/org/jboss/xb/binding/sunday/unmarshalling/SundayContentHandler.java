@@ -47,6 +47,7 @@ import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.parser.JBossXBParser;
+import org.jboss.xb.binding.resolver.MutableSchemaResolver;
 import org.jboss.xb.binding.sunday.xop.XOPIncludeHandler;
 import org.xml.sax.Attributes;
 
@@ -963,13 +964,13 @@ public class SundayContentHandler
    private Attributes preprocessAttributes(Attributes attrs)
    {
       SchemaBindingResolver resolver = schemaResolver == null ? schema.getSchemaResolver() : schemaResolver;
-      if(resolver == null || !(resolver instanceof UriToClassMapping))
+      if(resolver == null || !(resolver instanceof MutableSchemaResolver))
          return attrs;
       
       int ind = attrs.getIndex(Constants.NS_JBXB, "schemabinding");
       if (ind != -1)
       {
-         UriToClassMapping defaultResolver = (UriToClassMapping)resolver;
+         MutableSchemaResolver defaultResolver = (MutableSchemaResolver)resolver;
          String value = attrs.getValue(ind);
          java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(value);
          while(tokenizer.hasMoreTokens())
@@ -980,7 +981,7 @@ public class SundayContentHandler
             String cls = tokenizer.nextToken();
             try
             {
-               defaultResolver.mapUriToClass(uri, cls);
+               defaultResolver.mapURIToClass(uri, cls);
             }
             catch (Exception e)
             {

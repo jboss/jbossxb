@@ -19,7 +19,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.xb.binding.sunday.unmarshalling;
+package org.jboss.xb.binding.resolver;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,54 +28,49 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 import org.jboss.logging.Logger;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.unmarshalling.LSInputAdaptor;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingInitializer;
+import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.builder.JBossXBBuilder;
 import org.w3c.dom.ls.LSInput;
 import org.xml.sax.InputSource;
 
 /**
- * A default SchemaBindingResolver that uses a JBossEntityResolver to locate
- * the schema xsd.
+ * A AbstractMutableSchemaResolver.
  * 
- * @author Scott.Stark@jboss.org
- * @author alex@jboss.org
- * @version $Revision: 2913 $
+ * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
+ * @version $Revision: 1.1 $
  */
-public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToClassMapping
+public abstract class AbstractMutableSchemaResolver implements MutableSchemaResolver
 {
-   private static Logger log = Logger.getLogger(MultiClassSchemaResolver.class);
-
+   private Logger log;
    private String baseURI;
    private JBossEntityResolver resolver;
    private boolean cacheResolvedSchemas = true;
    /** Namespace to SchemaBinding cache */
    private Map<String, SchemaBinding> schemasByUri = Collections.emptyMap();
-   /** Namespace to JBossXBBuilder binding class */
-   private WeakHashMap<String, Class<?>[]> uriToClass = new WeakHashMap<String, Class<?>[]>();
-   /** SchemaLocation to JBossXBBuilder binding class */
-   private WeakHashMap<String, Class<?>[]> schemaLocationToClass = new WeakHashMap<String, Class<?>[]>();
-   /** Namespace to SchemaBindingInitializer */
-   private Map<String, SchemaBindingInitializer> schemaInitByUri = Collections.emptyMap();
    /** Namespace to processAnnotations flag used with the XsdBinder.bind call */
    private Map<String, Boolean> schemaParseAnnotationsByUri = Collections.emptyMap();
+   private Map<String, SchemaBindingInitializer> schemaInitByUri = Collections.emptyMap();
 
-   public MultiClassSchemaResolver()
+   protected AbstractMutableSchemaResolver(Logger log)
    {
-      this(new JBossEntityResolver());
+      this(log, new JBossEntityResolver());
    }
-
-   public MultiClassSchemaResolver(JBossEntityResolver resolver)
+   
+   protected AbstractMutableSchemaResolver(Logger log, JBossEntityResolver resolver)
    {
+      if(log == null)
+         throw new IllegalArgumentException("Logger is null!");
+      this.log = log;
       this.resolver = resolver;
    }
 
-   /**
-    * @return true if resolved SchemaBinding's are cached, false otherwise
-    */
    public boolean isCacheResolvedSchemas()
    {
       return cacheResolvedSchemas;
@@ -96,7 +91,7 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
          schemasByUri = Collections.emptyMap();
       }
    }
-
+   
    /**
     * Registers a location for the namespace URI.<p>
     * 
@@ -105,7 +100,7 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
     * @param nsUri the namespace location
     * @param location the classpath location
     */
-   public void addSchemaLocation(String nsUri, String location)
+   public void mapSchemaLocation(String nsUri, String location)
    {
       resolver.registerLocalEntity(nsUri, location);
    }
@@ -128,12 +123,10 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
     * @param nsUri the namespace
     * @param value the value of the option
     */
-   public void addSchemaParseAnnotations(String nsUri, Boolean value)
+   public void setParseXSDAnnotations(String nsUri, boolean value)
    {
       if (nsUri == null)
          throw new IllegalArgumentException("Null namespace uri");
-      if (value == null)
-         throw new IllegalArgumentException("Null value");
       switch(schemaParseAnnotationsByUri.size())
       {
          case 0:
@@ -145,20 +138,14 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
             schemaParseAnnotationsByUri.put(nsUri, value);
       }
    }
-   
-   /**
-    * Removes the parse annotation configuration for this namespace
-    * 
-    * @param nsUri the namespace
-    * @return the previous value
-    */
-   public Boolean removeSchemaParseAnnotations(String nsUri)
-   {
-      if (nsUri == null)
-         throw new IllegalArgumentException("Null namespace uri");
-      return schemaParseAnnotationsByUri.remove(nsUri);
-   }
 
+   public Boolean unsetParseXSDAnnotations(String nsURI)
+   {
+      if (nsURI == null)
+         throw new IllegalArgumentException("Null namespace uri");
+      return schemaParseAnnotationsByUri.remove(nsURI);
+   }
+   
    /**
     * Registers a SchemaBindingInitializer for the namespace URI.
     * When the schema binding that corresponds to the namespace URI
@@ -170,16 +157,14 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
     * @param sbiClassName  the class name SchemaBindingInitializer
     * @throws Exception for any error
     */
-   public void addSchemaInitializer(String nsUri, String sbiClassName) throws Exception
+   public void mapSchemaInitializer(String nsUri, String sbiClassName) throws Exception
    {
-      if (sbiClassName == null)
-         throw new IllegalArgumentException("Null class name");
-      Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(sbiClassName);
+      Class<?> clazz = loadReference(sbiClassName);
       Object object = clazz.newInstance();
       if (object instanceof SchemaBindingInitializer == false)
          throw new IllegalArgumentException(clazz.getName() + " is not an instance of " + SchemaBindingInitializer.class.getName());
       SchemaBindingInitializer sbi = (SchemaBindingInitializer) object;
-      addSchemaInitializer(nsUri, sbi);
+      mapSchemaInitializer(nsUri, sbi);
    }
 
    /**
@@ -192,7 +177,7 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
     * @param nsUri  the namespace URI to register the schema initializer for
     * @param sbi  an instance of SchemaBindingInitializer
     */
-   public void addSchemaInitializer(String nsUri, SchemaBindingInitializer sbi)
+   public void mapSchemaInitializer(String nsUri, SchemaBindingInitializer sbi)
    {
       if (nsUri == null)
          throw new IllegalArgumentException("Null namespace uri");
@@ -221,45 +206,6 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
       if (nsUri == null)
          throw new IllegalArgumentException("Null namespace uri");
       return schemaInitByUri.remove(nsUri);
-   }
-
-   /**
-    * Add an in-memory schema.
-    *
-    * @param nsUri schema namespace
-    * @param reference the schema reference class name
-    * @throws Exception for any error
-    */
-   public void addClassBinding(String nsUri, String... reference) throws ClassNotFoundException
-   {
-      if (reference == null)
-         throw new IllegalArgumentException("Null reference class");
-
-      ClassLoader cl = Thread.currentThread().getContextClassLoader();
-      Class<?>[] classes = new Class<?>[reference.length];
-      for(int i = 0; i < classes.length; ++i)
-         classes[i] = cl.loadClass(reference[i]);
-      addClassBinding(nsUri, classes);
-   }
-
-   public void addClassBinding(String nsUri, Class<?>... clazz)
-   {
-      uriToClass.put(nsUri, clazz);
-   }
-
-   public Class<?>[] removeClassBinding(String nsUri)
-   {
-      return uriToClass.remove(nsUri);      
-   }
-
-   public void addClassBindingForLocation(String schemaLocation, Class<?>... clazz)
-   {
-      schemaLocationToClass.put(schemaLocation, clazz);
-   }
-
-   public Class<?>[] removeClassBindingForLocation(String schemaLocation)
-   {
-      return schemaLocationToClass.remove(schemaLocation);
    }
 
    public String getBaseURI()
@@ -298,18 +244,19 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
       if (classes == null)
       {
          // Next look by namespace
-         classes = uriToClass.get(nsURI);
+         classes = getClassesForURI(nsURI);
          if(classes != null)
             foundByNS = true;
       }
+      
       if (classes != null)
       {
          if( trace )
          {
-            log.trace("found bindingClass, nsURI="+nsURI
-                  +", baseURI="+baseURI
-                  +", schemaLocation="+schemaLocation
-                  +", classes="+Arrays.asList(classes));
+            log.trace("found bindingClass, nsURI=" + nsURI +
+                  ", baseURI=" + baseURI +
+                  ", schemaLocation=" + schemaLocation +
+                  ", classes=" + Arrays.asList(classes));
          }
          schema = JBossXBBuilder.build(classes);
       }
@@ -353,26 +300,55 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
          schema.setSchemaResolver(this);
          SchemaBindingInitializer sbi = schemaInitByUri.get(nsURI);
          if(sbi != null)
-         {
             schema = sbi.init(schema);
-         }
 
          if(schema != null && nsURI.length() > 0 && cacheResolvedSchemas && foundByNS)
          {
             if(schemasByUri.isEmpty())
-            {
                schemasByUri = new HashMap<String, SchemaBinding>();
-            }
             schemasByUri.put(nsURI, schema);
          }
       }
 
       if(trace)
-      {
          log.trace("resolved schema: " + schema);
-      }
 
       return schema;
+   }
+
+   public void mapURIToClass(String nsUri, String reference) throws ClassNotFoundException
+   {
+      mapURIToClass(nsUri, loadReference(reference));
+   }
+   
+   public void mapURIToClasses(String nsUri, String... reference) throws ClassNotFoundException
+   {
+      Class<?>[] classes = new Class<?>[reference.length];
+      int i = 0;
+      for(String ref : reference)
+         classes[i++] = loadReference(ref);
+      mapURIToClasses(nsUri, classes);
+   }
+   
+   public void mapLocationToClass(String schemaLocation, String reference) throws ClassNotFoundException
+   {
+      mapLocationToClass(schemaLocation, loadReference(reference));
+   }
+
+   public void mapLocationToClasses(String schemaLocation, String... reference) throws ClassNotFoundException
+   {
+      Class<?>[] classes = new Class<?>[reference.length];
+      int i = 0;
+      for(String ref : reference)
+         classes[i++] = loadReference(ref);
+      mapLocationToClasses(schemaLocation, classes);      
+   }
+   
+   protected Class<?> loadReference(String sbiClassName) throws ClassNotFoundException
+   {
+      if (sbiClassName == null)
+         throw new IllegalArgumentException("Null class name");
+      return Thread.currentThread().getContextClassLoader().loadClass(sbiClassName);
    }
 
    /**
@@ -387,7 +363,7 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
     */
    protected Class<?>[] resolveClassFromSchemaLocation(String schemaLocation, boolean trace)
    {
-      Class<?>[] classes = schemaLocationToClass.get(schemaLocation);
+      Class<?>[] classes = getClassesForSchemaLocation(schemaLocation);
       if (classes == null && schemaLocation != null && schemaLocation.length() > 0)
       {
          // Parse the schemaLocation as a uri to get the final path component
@@ -409,7 +385,7 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
       
             if (trace)
                log.trace("Mapped schemaLocation to filename: " + filename);
-            classes = schemaLocationToClass.get(filename);
+            classes = getClassesForSchemaLocation(filename);
          }
          catch (URISyntaxException e)
          {
@@ -512,28 +488,8 @@ public class MultiClassSchemaResolver implements SchemaBindingResolver, UriToCla
       return is;
    }
 
-   public void mapUriToClass(String nsUri, String reference) throws ClassNotFoundException
-   {
-      addClassBinding(nsUri, reference);
-   }
+   protected abstract Class<?>[] getClassesForURI(String uri);
 
-   public void mapUriToClass(String nsUri, Class<?> clazz)
-   {
-      addClassBinding(nsUri, clazz);
-   }
-
-   public void mapUriToClasses(String nsUri, String... reference) throws ClassNotFoundException
-   {
-      addClassBinding(nsUri, reference);
-   }
-
-   public void mapUriToClasses(String nsUri, Class<?>... clazz)
-   {
-      addClassBinding(nsUri, clazz);
-   }
-
-   public Class<?>[] removeUriToClassMapping(String nsUri)
-   {
-      return this.removeClassBinding(nsUri);
-   }
+   protected abstract Class<?>[] getClassesForSchemaLocation(String uri);
 }
+

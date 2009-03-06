@@ -28,7 +28,7 @@ import org.jboss.net.protocol.URLStreamHandlerFactory;
 import org.jboss.test.AbstractTestDelegate;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
-import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
+import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SingletonSchemaResolverFactory;

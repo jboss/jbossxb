@@ -28,7 +28,7 @@ import org.jboss.test.xml.initializer.ContainerInitializer;
 import org.jboss.test.xml.initializer.Simple;
 import org.jboss.test.xml.initializer.SimpleInitializer;
 import org.jboss.xb.binding.JBossXBException;
-import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
+import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 
 /**
@@ -43,12 +43,12 @@ public class SchemaBindingInitializerUnitTestCase extends AbstractJBossXBTest
    {
       Class<?> clazz = SchemaBindingInitializerUnitTestCase.class;
       MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
-      resolver.addSchemaInitializer(SimpleInitializer.NS, SimpleInitializer.class.getName());
+      resolver.mapSchemaInitializer(SimpleInitializer.NS, SimpleInitializer.class.getName());
       String location = getSchemaLocation(clazz, "SchemaBindingInitializerUnitTestCaseSimple.xsd");
-      resolver.addSchemaLocation(SimpleInitializer.NS, location);
-      resolver.addSchemaInitializer(ContainerInitializer.NS, ContainerInitializer.class.getName());
+      resolver.mapSchemaLocation(SimpleInitializer.NS, location);
+      resolver.mapSchemaInitializer(ContainerInitializer.NS, ContainerInitializer.class.getName());
       location = getSchemaLocation(clazz, "SchemaBindingInitializerUnitTestCaseContainer.xsd");
-      resolver.addSchemaLocation(ContainerInitializer.NS, location);
+      resolver.mapSchemaLocation(ContainerInitializer.NS, location);
       return resolver;
    }
 

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jboss.logging.Logger;
+import org.jboss.xb.binding.resolver.MutableSchemaResolver;
 
 /**
  * SchemaResolverConfig.
@@ -40,7 +41,7 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
    private static final Logger log = Logger.getLogger(SchemaResolverConfig.class);
    
    /** The singleton schema resolver */
-   protected static MultiClassSchemaResolver resolver = (MultiClassSchemaResolver) SingletonSchemaResolverFactory.getInstance().getSchemaBindingResolver();
+   protected static MutableSchemaResolver resolver = SingletonSchemaResolverFactory.getInstance().getSchemaBindingResolver();
    
    /** The initializers by namespace */
    protected Properties schemaInitializers;
@@ -83,7 +84,7 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
             String initializer = (String) entry.getValue();
             try
             {
-               resolver.addSchemaInitializer(namespace, initializer);
+               resolver.mapSchemaInitializer(namespace, initializer);
             }
             catch (Exception ignored)
             {
@@ -108,7 +109,7 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
             Map.Entry<?, ?> entry = (Map.Entry<?, ?>) i.next();
             String namespace = (String) entry.getKey();
             String location = (String) entry.getValue();
-            resolver.addSchemaLocation(namespace, location);
+            resolver.mapSchemaLocation(namespace, location);
          }
       }
    }
@@ -128,8 +129,9 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
             Map.Entry<?, ?> entry = (Map.Entry<?, ?>) i.next();
             String namespace = (String) entry.getKey();
             String value = (String) entry.getValue();
-            Boolean booleanValue = Boolean.valueOf(value); 
-            resolver.addSchemaParseAnnotations(namespace, booleanValue);
+            Boolean booleanValue = Boolean.valueOf(value);
+            if(booleanValue != null)
+               resolver.setParseXSDAnnotations(namespace, booleanValue);
          }
       }
    }
@@ -153,7 +155,7 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
             try
             {
                Class<?> clazz = loader.loadClass(value);
-               resolver.addClassBindingForLocation(schemaLocation, clazz);
+               resolver.mapLocationToClass(schemaLocation, clazz);
             }
             catch(ClassNotFoundException e)
             {
@@ -182,7 +184,7 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
             try
             {
                Class<?> clazz = loader.loadClass(value);
-               resolver.addClassBinding(namespace, clazz);
+               resolver.mapURIToClass(namespace, clazz);
             }
             catch(ClassNotFoundException e)
             {

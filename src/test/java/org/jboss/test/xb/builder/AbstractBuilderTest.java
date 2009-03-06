@@ -27,8 +27,8 @@ import java.util.Collection;
 import org.jboss.test.AbstractTestCaseWithSetup;
 import org.jboss.test.AbstractTestDelegate;
 import org.jboss.util.UnreachableStatementException;
+import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
@@ -111,8 +111,8 @@ public class AbstractBuilderTest extends AbstractTestCaseWithSetup
       if (dot != -1)
          name = name.substring(0, dot);
       String testXsd = packageName + '/' + name + ".xsd";
-      resolver.addSchemaLocation(nsURI, testXsd);
-      resolver.addSchemaInitializer(nsURI, JBossXBBuilder.newInitializer(expected));
+      resolver.mapSchemaLocation(nsURI, testXsd);
+      resolver.mapSchemaInitializer(nsURI, JBossXBBuilder.newInitializer(expected));
       
       String testXml = findTestXml();
       Object o = unmarshal(testXml, expected, resolver);

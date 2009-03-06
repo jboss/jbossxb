@@ -24,7 +24,7 @@ package org.jboss.test.xml.jbxb.minOccurs;
 
 import java.net.URL;
 
-import org.jboss.xb.binding.sunday.unmarshalling.MultiClassSchemaResolver;
+import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.test.xml.AbstractJBossXBTest;
@@ -45,7 +45,7 @@ public class Schema1UnitTestCase
    {
       ClassLoader loader = Thread.currentThread().getContextClassLoader();
       MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
-      resolver.addSchemaLocation("urn:jboss:jbxb-minOccurs-schema1", "xml/jbxb/minOccurs/schema1.xsd");
+      resolver.mapSchemaLocation("urn:jboss:jbxb-minOccurs-schema1", "xml/jbxb/minOccurs/schema1.xsd");
 
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
       URL testSchema1 = loader.getResource("xml/jbxb/minOccurs/testSchema1.xml");
@@ -56,7 +56,7 @@ public class Schema1UnitTestCase
    {
       ClassLoader loader = Thread.currentThread().getContextClassLoader();
       MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
-      resolver.addSchemaLocation("urn:jboss:jbxb-minOccurs-schema1", "xml/jbxb/minOccurs/schema1v2.xsd");
+      resolver.mapSchemaLocation("urn:jboss:jbxb-minOccurs-schema1", "xml/jbxb/minOccurs/schema1v2.xsd");
 
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
       URL testSchema1 = loader.getResource("xml/jbxb/minOccurs/testSchema1.xml");

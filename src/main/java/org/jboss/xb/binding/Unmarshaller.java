@@ -36,7 +36,7 @@ import org.xml.sax.InputSource;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public interface Unmarshaller
+public interface Unmarshaller extends FeatureAware
 {
    String VALIDATION = "http://xml.org/sax/features/validation";
    String NAMESPACES = "http://xml.org/sax/features/namespaces";
@@ -52,8 +52,6 @@ public interface Unmarshaller
 
    void setSchemaValidation(boolean validation) throws JBossXBException;
    
-   void setFeature(String feature, boolean value) throws JBossXBException;
-
    void setEntityResolver(EntityResolver entityResolver) throws JBossXBException;
 
    void setErrorHandler(ErrorHandler errorHandler);

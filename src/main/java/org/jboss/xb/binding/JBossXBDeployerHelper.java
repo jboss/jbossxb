@@ -59,7 +59,7 @@ public class JBossXBDeployerHelper<T> implements FeatureAware
     * @param output the output
     * @throws IllegalArgumentException for a null output
     */
-   protected JBossXBDeployerHelper(Class<T> output)
+   public JBossXBDeployerHelper(Class<T> output)
    {
       if (output == null)
          throw new IllegalArgumentException("Null output.");

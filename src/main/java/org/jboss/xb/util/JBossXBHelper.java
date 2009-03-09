@@ -19,10 +19,14 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.xb.binding;
+package org.jboss.xb.util;
 
 import org.jboss.logging.Logger;
 import org.jboss.xb.annotations.JBossXmlSchema;
+import org.jboss.xb.binding.FeatureAware;
+import org.jboss.xb.binding.ObjectModelFactory;
+import org.jboss.xb.binding.Unmarshaller;
+import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.resolver.MutableSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SingletonSchemaResolverFactory;
 import org.xml.sax.InputSource;
@@ -33,10 +37,10 @@ import org.xml.sax.InputSource;
  * @param <T> the expected type
  * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  */
-public class JBossXBDeployerHelper<T> implements FeatureAware
+public class JBossXBHelper<T> implements FeatureAware
 {
    /** The log */
-   private Logger log = Logger.getLogger(JBossXBDeployerHelper.class);
+   private Logger log = Logger.getLogger(JBossXBHelper.class);
 
    /** Unmarshaller factory */
    private static final UnmarshallerFactory factory = UnmarshallerFactory.newInstance();
@@ -59,7 +63,7 @@ public class JBossXBDeployerHelper<T> implements FeatureAware
     * @param output the output
     * @throws IllegalArgumentException for a null output
     */
-   public JBossXBDeployerHelper(Class<T> output)
+   public JBossXBHelper(Class<T> output)
    {
       if (output == null)
          throw new IllegalArgumentException("Null output.");

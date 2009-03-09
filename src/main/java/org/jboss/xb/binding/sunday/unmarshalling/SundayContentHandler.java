@@ -1413,7 +1413,7 @@ public class SundayContentHandler
          if(item.cursor == null)
             log.trace("poped " + ((ElementBinding)item.particle.getTerm()).getQName() + "=" + item.particle);
          else
-            log.trace("poped " + item.cursor.getCurrentParticle().getTerm());
+            log.trace("poped " + item.cursor.getParticle().getTerm());
       }
       return item;
    }

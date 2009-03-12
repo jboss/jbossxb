@@ -28,16 +28,48 @@
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <testFailureIgnore>true</testFailureIgnore>
-          <redirectTestOutputToFile>true</redirectTestOutputToFile>
-          <includes>
-            <include>**/*TestCase.java</include>
-          </includes>
-          <!-- forkMode>pertest</forkMode -->
+           <!-- the tessuite will be run twice.
+                the first/default execution will run with the default xb configuration
+                if there are failures, the next execution won't be run -->
+           <testFailureIgnore>false</testFailureIgnore>
+           <redirectTestOutputToFile>true</redirectTestOutputToFile>
+           <includes>
+              <include>**/*TestCase.java</include>
+           </includes>
+           <excludes>
+              <exclude>org/jboss/test/xml/RepeatedElementsUnitTestCase.java</exclude> <!-- JBXB-88 -->
+              <exclude>org/jboss/test/xb/builder/object/type/jbossxmlmodelgroup/test/RepeatablePropertyAllUnmarshallingTestCase.java</exclude> <!-- JBXB-193 -->
+           </excludes>
         </configuration>
+        <executions>
+           <execution>
+              <!-- this execution will run with xb.builder.useUnorderedSequence=true
+                   the reports from the previous testsuite run will be overriden
+                   which is ok, since if the previous execution fails, this execution shouldn't start -->
+              <id>unordered-sequence-true-test</id>
+              <goals>
+                 <goal>test</goal>
+              </goals>
+              <configuration>
+                 <testFailureIgnore>false</testFailureIgnore>
+                 <redirectTestOutputToFile>true</redirectTestOutputToFile>
+                 <excludes>
+                    <exclude>org/jboss/test/xml/RepeatedElementsUnitTestCase.java</exclude> <!-- JBXB-88 -->
+                    <exclude>org/jboss/test/xb/builder/object/type/jbossxmlmodelgroup/test/RepeatablePropertyAllUnmarshallingTestCase.java</exclude> <!-- JBXB-193 -->
+                    <exclude>org/jboss/test/xb/builder/object/type/jbossxmlmodelgroup/test/RepeatablePropertySequenceUnmarshallingTestCase.java</exclude> <!-- unordered sequence makes it JBXB-193 -->
+                 </excludes>
+                 <systemProperties>
+                    <property>
+                       <name>xb.builder.useUnorderedSequence</name>
+                       <value>true</value>
+                    </property>
+                 </systemProperties>
+              </configuration>
+            </execution>
+         </executions>
       </plugin>    
     </plugins>
-  </build>  
+  </build>
   <repositories>
     <repository>
       <id>repository.jboss.org</id>

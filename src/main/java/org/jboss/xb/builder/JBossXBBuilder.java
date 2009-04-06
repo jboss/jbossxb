@@ -84,7 +84,15 @@ public class JBossXBBuilder
       STRING = configuration.getClassInfo(String.class);
       OBJECT = configuration.getClassInfo(Object.class);
       
-      String useUnorderedSequenceStr = System.getProperty(JBossXBBuilder.USE_UNORDERED_SEQUENCE_PROPERTY);
+      String useUnorderedSequenceStr = AccessController.doPrivileged(
+            new PrivilegedAction<String>()
+            {
+               public String run()
+               {
+                  return System.getProperty(JBossXBBuilder.USE_UNORDERED_SEQUENCE_PROPERTY);
+               }               
+            }
+      );            
       if(useUnorderedSequenceStr != null)
          useUnorderedSequence = Boolean.parseBoolean(useUnorderedSequenceStr);
    }

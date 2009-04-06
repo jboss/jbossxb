@@ -27,6 +27,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.Reader;
 import java.io.IOException;
 import java.io.Writer;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 /**
  * An interface for marshaller implementations, e.g. DTD and XML schema marshallers.
@@ -58,7 +60,14 @@ public interface Marshaller
    {
       public static Marshaller getInstance()
       {
-         String impl = System.getProperty(PROP_MARSHALLER);
+         String impl = AccessController.doPrivileged(new PrivilegedAction<String>()
+         {
+            public String run()
+            {
+               return System.getProperty(PROP_MARSHALLER);
+            }}
+         );
+         
          if(impl == null)
          {
             throw new IllegalStateException("Required system property is not set: " + PROP_MARSHALLER);

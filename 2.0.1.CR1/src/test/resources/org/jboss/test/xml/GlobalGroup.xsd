@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://www.jboss.org/test/xml/globalGroup"
+            xmlns="http://www.jboss.org/test/xml/globalGroup"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified"
+            version="1.0">
+
+   <xsd:group name="global1">
+      <xsd:sequence>
+         <xsd:element ref="child" maxOccurs="unbounded"/>
+      </xsd:sequence>
+   </xsd:group>
+
+   <xsd:group name="global2">
+      <xsd:sequence>
+         <xsd:group ref="global3"/>
+      </xsd:sequence>
+   </xsd:group>
+
+   <xsd:group name="global3">
+      <xsd:sequence>
+         <xsd:element ref="child"/>
+      </xsd:sequence>
+   </xsd:group>
+
+   <xsd:group name="global4">
+      <xsd:sequence>
+         <xsd:group ref="global3"/>
+      </xsd:sequence>
+   </xsd:group>
+
+   <xsd:element name="parent">
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:group ref="global1"/>
+         </xsd:sequence>
+      </xsd:complexType>
+   </xsd:element>
+   
+   <xsd:element name="child" type="xsd:string"/>
+   
+</xsd:schema>

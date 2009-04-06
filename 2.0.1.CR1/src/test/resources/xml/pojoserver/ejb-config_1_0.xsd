@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   targetNamespace="urn:jboss:testejb-ns1"
+   xmlns="urn:jboss:testejb-ns1"
+   elementFormDefault="qualified"
+   attributeFormDefault="unqualified"
+   version="1.0">
+
+   <xs:element name="ejb-container" type="EjbContainerType">
+   </xs:element>
+
+   <xs:complexType name="EjbContainerType">
+      <xs:sequence>
+         <xs:element name="invoker-proxy-bindings" type="InvokerBindingsType"
+            minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element name="container-interceptors" type="InterceptorStackType"
+            minOccurs="0" maxOccurs="1"/>
+         <xs:element name="instance-cache" type="EjbCacheType"
+            minOccurs="0" maxOccurs="1"/>
+      </xs:sequence>
+      <xs:attribute name="name" />
+   </xs:complexType>
+
+   <xs:complexType name="InvokerBindingsType">
+      <xs:sequence>
+         <xs:element name="invoker-proxy-binding">
+            <xs:complexType>
+               <xs:sequence>
+                  <xs:element name="invoker-mbean" type="xs:token" />
+                  <xs:element name="proxy-factory" type="xs:token" />
+                  <xs:element name="proxy-factory-config">
+                     <xs:complexType>
+                        <xs:choice>
+                           <xs:element name="client-interceptors">
+                              <xs:complexType>
+                                 <xs:sequence>
+                                    <xs:element name="home" type="InterceptorStackType"
+                                       minOccurs="0" maxOccurs="1" />
+                                    <xs:element name="bean" type="InterceptorStackType"
+                                       minOccurs="0" maxOccurs="1" />
+                                    <xs:element name="list-entity" type="InterceptorStackType"
+                                       minOccurs="0" maxOccurs="1" />
+                                 </xs:sequence>
+                              </xs:complexType>
+                           </xs:element>
+                           <xs:any namespace="##other" />
+                        </xs:choice>
+                     </xs:complexType>
+                  </xs:element>
+               </xs:sequence>
+               <xs:attribute name="name" use="required" />
+            </xs:complexType>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+
+   <xs:complexType name="InterceptorStackType">
+      <xs:sequence>
+         <xs:element name="interceptor" minOccurs="1" maxOccurs="unbounded">
+            <xs:complexType mixed="true">
+               <xs:choice minOccurs="0">
+                  <xs:any />
+               </xs:choice>
+               <xs:attribute name="callByValue" type="xs:boolean" default="false" />
+            </xs:complexType>
+         </xs:element>
+      </xs:sequence>
+      <xs:anyAttribute />
+   </xs:complexType>
+
+   <xs:complexType name="EjbCacheType">
+      <xs:choice>
+         <xs:any processContents="strict" />
+      </xs:choice>
+      <xs:attribute name="class" type="xs:token" use="required" />
+   </xs:complexType>
+   
+</xs:schema>

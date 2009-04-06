@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<!-- A variation of the book dtd that requires 1 or
+more misc elements. This is used to test disabling
+xml document validation.
+-->
+<!ELEMENT book (title, author, character+, misc+)>
+<!ATTLIST book isbn CDATA #REQUIRED>
+
+<!ELEMENT title (#PCDATA)>
+
+<!ELEMENT author (#PCDATA)>
+
+<!ELEMENT character (name, friend-of?, since?, qualification?)>
+
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT friend-of (#PCDATA)>
+<!ELEMENT since (#PCDATA)>
+<!ELEMENT qualification (#PCDATA)>
+<!-- Bogus element that will not be specified on documents -->
+<!ELEMENT misc (#PCDATA)>

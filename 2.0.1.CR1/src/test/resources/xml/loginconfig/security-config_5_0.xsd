@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: security-config_5_0.xsd 45787 2006-06-23 19:02:45Z asaldhana $ -->
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   elementFormDefault="qualified" 
+   xmlns:jbsx="urn:jboss:security-config"
+   xmlns:jbxb="http://www.jboss.org/xml/ns/jbxb"
+   targetNamespace="urn:jboss:security-config">
+   
+   <xsd:annotation>  
+      <xsd:appinfo>
+         <jbxb:schemaBindings>
+            <jbxb:package name="org.jboss.security.config"/>
+            <jbxb:ignoreUnresolvedFieldOrClass>
+               false</jbxb:ignoreUnresolvedFieldOrClass>
+         </jbxb:schemaBindings>
+      </xsd:appinfo>
+   </xsd:annotation>
+   
+   <xsd:element name="policy">
+      <xsd:complexType>
+         <xsd:annotation>
+            <xsd:appinfo>
+               <jbxb:class
+                  impl="org.jboss.security.config.PolicyConfig"/>
+            </xsd:appinfo>
+         </xsd:annotation>
+         
+         <xsd:sequence>
+            <xsd:element maxOccurs="unbounded" ref="jbsx:application-policy"/>
+         </xsd:sequence>
+      </xsd:complexType>
+   </xsd:element>
+   
+   <xsd:element name="application-policy">
+      <xsd:complexType>
+         <xsd:annotation>
+                    <xsd:appinfo> 
+            <jbxb:class impl="org.jboss.security.config.ApplicationPolicyContainer"/>
+                        <jbxb:addMethod name="add" valueType="org.jboss.security.config.ApplicationPolicy"/>
+                    </xsd:appinfo>
+
+         </xsd:annotation>
+         <xsd:sequence>
+                    <xsd:choice>
+                        <xsd:element ref="jbsx:authentication"/>
+                        <xsd:element ref="jbsx:authentication-jaspi"/>
+                    </xsd:choice> 
+                    <xsd:element minOccurs="0" maxOccurs="1"
+                                     ref="jbsx:authorization"/>
+                  </xsd:sequence>
+                 <xsd:attribute name="name" use="required" type="xsd:string"/>
+             </xsd:complexType> 
+   </xsd:element> 
+   
+   <xsd:element name="authentication">
+      <xsd:annotation>
+         <xsd:appinfo>
+            <jbxb:skip/>
+         </xsd:appinfo>
+      </xsd:annotation>
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element ref="jbsx:login-module"/>
+         </xsd:sequence>
+      </xsd:complexType>
+   </xsd:element>
+   
+   <xsd:element name="login-module">
+      <xsd:complexType>
+         <xsd:annotation>
+            <xsd:appinfo>
+               <jbxb:class
+                  impl="org.jboss.security.auth.login.AppConfigurationEntryHolder"/>
+            </xsd:appinfo>
+         </xsd:annotation>
+         <xsd:sequence>
+            <xsd:element minOccurs="0" maxOccurs="unbounded"
+               ref="jbsx:module-option"/>
+         </xsd:sequence>
+         <xsd:attribute name="code" use="required" type="xsd:string"/>
+         <xsd:attribute name="flag" use="required">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="required"/>
+                  <xsd:enumeration value="requisite"/>
+                  <xsd:enumeration value="sufficient"/>
+                  <xsd:enumeration value="optional"/>
+               </xsd:restriction>
+            </xsd:simpleType>
+         </xsd:attribute>
+      </xsd:complexType>
+   </xsd:element>
+   
+   <xsd:element name="module-option">
+      <xsd:complexType mixed="true">
+         <xsd:annotation>
+            <xsd:appinfo>
+               <!-- ModuleOption declares a constructor that takes name as a parameter
+               while the value should be set with the setter.
+               
+               This use-case is not supported out-of-the-box. So, we use this container. -->
+               <jbxb:class
+                  impl="org.jboss.security.auth.login.ModuleOptionContainer"/>
+            </xsd:appinfo>
+         </xsd:annotation>
+         <xsd:sequence>
+            <xsd:any minOccurs="0" maxOccurs="1" namespace="##other"/>
+         </xsd:sequence>
+         <xsd:attribute name="name" use="required" type="xsd:string"/>
+      </xsd:complexType>
+   </xsd:element>
+   
+
+   <xsd:element name="authentication-jaspi">
+      <xsd:annotation>
+         <xsd:appinfo>
+            <jbxb:skip/>
+         </xsd:appinfo>
+      </xsd:annotation>
+      <xsd:complexType>
+      <xsd:choice>
+         <xsd:element maxOccurs="unbounded" ref="jbsx:login-module-stack"/>
+         <xsd:element maxOccurs="unbounded" ref="jbsx:auth-module"/>
+      </xsd:choice>
+      </xsd:complexType>
+   </xsd:element> 
+   
+   <xsd:element name="login-module-stack">
+      <xsd:complexType>
+         <xsd:annotation>
+            <xsd:appinfo> 
+               <jbxb:class
+                  impl="org.jboss.security.auth.login.LoginModuleStackContainer"/>
+            </xsd:appinfo>
+         </xsd:annotation>
+         <xsd:sequence>
+            <xsd:element minOccurs="1" maxOccurs="unbounded"
+               ref="jbsx:login-module"/>
+         </xsd:sequence>
+         <xsd:attribute name="name" use="required" type="xsd:string"/>
+      </xsd:complexType>
+   </xsd:element>
+   
+   <xsd:element name="auth-module">
+      <xsd:complexType>
+         <xsd:annotation>
+            <xsd:appinfo>
+               <jbxb:class
+                  impl="org.jboss.security.auth.container.config.AuthModuleEntryHolder"/>
+            </xsd:appinfo>
+         </xsd:annotation>
+         <xsd:sequence>
+            <xsd:element minOccurs="0" maxOccurs="unbounded"
+               ref="jbsx:module-option"/>
+         </xsd:sequence>
+         <xsd:attribute name="code" use="required" type="xsd:string"/>
+         <xsd:attribute name="login-module-stack-ref" type="xsd:string"/>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="authorization">
+      <xsd:annotation>
+         <xsd:appinfo>
+            <jbxb:skip/>
+         </xsd:appinfo>
+      </xsd:annotation>
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element ref="jbsx:policy-module"/>
+         </xsd:sequence>
+      </xsd:complexType>
+   </xsd:element>
+   
+   <xsd:element name="policy-module">
+      <xsd:complexType>
+         <xsd:annotation>
+            <xsd:appinfo>
+               <jbxb:class
+                  impl="org.jboss.security.authorization.config.AuthorizationConfigEntryHolder"/>
+            </xsd:appinfo>
+         </xsd:annotation>
+         <xsd:sequence>
+            <xsd:element minOccurs="0" maxOccurs="unbounded"
+               ref="jbsx:module-option"/>
+         </xsd:sequence>
+         <xsd:attribute name="code" use="required" type="xsd:string"/>
+         <xsd:attribute name="flag" use="required">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="required"/>
+                  <xsd:enumeration value="requisite"/>
+                  <xsd:enumeration value="sufficient"/>
+                  <xsd:enumeration value="optional"/>
+               </xsd:restriction>
+            </xsd:simpleType>
+         </xsd:attribute>
+      </xsd:complexType>
+   </xsd:element>
+</xsd:schema>

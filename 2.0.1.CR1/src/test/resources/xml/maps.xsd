@@ -1,0 +1,233 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+   targetNamespace="http://www.jboss.org/test/xml/maps"
+   xmlns="http://www.jboss.org/test/xml/maps"
+   xmlns:jbxb="http://www.jboss.org/xml/ns/jbxb"
+   elementFormDefault="qualified"
+   attributeFormDefault="unqualified"
+   version="1.0">
+
+   <xsd:complexType name="mapType">
+      <xsd:annotation>
+         <xsd:documentation>
+            <![CDATA[
+               This type declares various elements that are bound to map entries.
+               This type itself is also bound to a map entry. The value of the map entry is bound to java.util.Map
+               (all the elements declared in this type are going to be bound to its entries)
+               and the key of the map entry is represented by the attribute "key" declared below.
+            ]]>
+         </xsd:documentation>
+         <xsd:appinfo>
+            <jbxb:mapEntry valueType="java.util.HashMap" nonNullValue="false"/>
+         </xsd:appinfo>
+      </xsd:annotation>
+      <xsd:sequence>
+         <xsd:element name="entry1" minOccurs="0" maxOccurs="unbounded">
+            <xsd:annotation>
+               <xsd:documentation>
+                  <![CDATA[
+                  This element represents a map entry of the following style:
+                  <entry>
+                     <key>key_data</key>
+                     <value>value_data</value>
+                  </entry>
+                  ]]>
+               </xsd:documentation>
+               <!-- specifying putMethod is optional if the parent is an instance of java.util.Map
+               <xsd:appinfo>
+                  <jbxb:putMethod name="put" keyType="java.lang.Object" valueType="java.lang.Object"/>
+               </xsd:appinfo>
+               -->
+            </xsd:annotation>
+            <xsd:complexType>
+               <xsd:annotation>
+                  <xsd:appinfo>
+                     <jbxb:mapEntry getKeyMethod="getKey" getValueMethod="getValue"/>
+                  </xsd:appinfo>
+               </xsd:annotation>
+               <xsd:sequence>
+                  <xsd:element name="key1" type="xsd:string">
+                     <xsd:annotation>
+                        <xsd:appinfo>
+                           <jbxb:mapEntryKey/>
+                        </xsd:appinfo>
+                     </xsd:annotation>
+                  </xsd:element>
+                  <xsd:element name="value1" type="xsd:string">
+                     <xsd:annotation>
+                        <xsd:appinfo>
+                           <jbxb:mapEntryValue/>
+                        </xsd:appinfo>
+                     </xsd:annotation>
+                  </xsd:element>
+               </xsd:sequence>
+            </xsd:complexType>
+         </xsd:element>
+ 
+         <xsd:element name="entry2" minOccurs="0" maxOccurs="unbounded">
+            <xsd:annotation>
+               <xsd:documentation>
+                  <![CDATA[
+                  This element represents a map entry of the following style:
+                  <entry key="key_data">
+                     <value>value_data</value>
+                  </entry>
+                  ]]>
+               </xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+               <xsd:annotation>
+                  <xsd:appinfo>
+                     <jbxb:mapEntry/>
+                  </xsd:appinfo>
+               </xsd:annotation>
+               <xsd:sequence>
+                  <xsd:element name="value2" type="xsd:string">
+                     <xsd:annotation>
+                        <xsd:appinfo>
+                           <jbxb:mapEntryValue/>
+                        </xsd:appinfo>
+                     </xsd:annotation>
+                  </xsd:element>
+               </xsd:sequence>
+               <xsd:attribute name="key2" type="xsd:string">
+                  <xsd:annotation>
+                     <xsd:appinfo>
+                        <jbxb:mapEntryKey/>
+                     </xsd:appinfo>
+                  </xsd:annotation>
+               </xsd:attribute>
+            </xsd:complexType>
+         </xsd:element>
+
+         <xsd:element name="entry3" minOccurs="0" maxOccurs="unbounded">
+            <xsd:annotation>
+               <xsd:documentation>
+                  <![CDATA[
+                  This element represents a map entry of the following style:
+                  <entry key="key_data" value="value_data"/>
+                  ]]>
+               </xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+               <xsd:annotation>
+                  <xsd:appinfo>
+                     <jbxb:mapEntry/>
+                  </xsd:appinfo>
+               </xsd:annotation>
+               <xsd:attribute name="key3" type="xsd:string">
+                  <xsd:annotation>
+                     <xsd:appinfo>
+                        <jbxb:mapEntryKey/>
+                     </xsd:appinfo>
+                  </xsd:annotation>
+               </xsd:attribute>
+               <xsd:attribute name="value3" type="xsd:string">
+                  <xsd:annotation>
+                     <xsd:appinfo>
+                        <jbxb:mapEntryValue/>
+                     </xsd:appinfo>
+                  </xsd:annotation>
+               </xsd:attribute>
+            </xsd:complexType>
+         </xsd:element>
+ 
+         <xsd:element name="entry4" minOccurs="0" maxOccurs="unbounded">
+            <xsd:annotation>
+               <xsd:documentation>
+                  <![CDATA[
+                  This element represents a map entry of the following style:
+                  <entry key="key_data">value_data</entry>
+                  ]]>
+               </xsd:documentation>
+            </xsd:annotation>
+            <xsd:complexType>
+               <xsd:annotation>
+                  <xsd:appinfo>
+                     <jbxb:mapEntry/>
+                     <jbxb:characters>
+                        <jbxb:mapEntryValue/>
+                     </jbxb:characters>
+                  </xsd:appinfo>
+               </xsd:annotation>
+               <xsd:simpleContent>
+                  <xsd:extension base="xsd:string">
+                     <xsd:attribute name="key4" type="xsd:string">
+                        <xsd:annotation>
+                           <xsd:appinfo>
+                              <jbxb:mapEntryKey/>
+                           </xsd:appinfo>
+                        </xsd:annotation>
+                     </xsd:attribute>
+                  </xsd:extension>
+               </xsd:simpleContent>
+            </xsd:complexType>
+         </xsd:element>
+
+         <xsd:sequence minOccurs="0" maxOccurs="unbounded">
+            <xsd:annotation>
+               <xsd:documentation>
+                  <![CDATA[
+                  This is another kind of entry which is represented by a sequence of two elements.
+                  ]]>
+               </xsd:documentation>
+               <xsd:appinfo>
+                  <jbxb:mapEntry/>
+               </xsd:appinfo>
+            </xsd:annotation>
+            <xsd:element name="key" type="xsd:string">
+               <xsd:annotation>
+                  <xsd:appinfo>
+                     <jbxb:mapEntryKey/>
+                  </xsd:appinfo>
+               </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="value" type="xsd:string">
+               <xsd:annotation>
+                  <xsd:appinfo>
+                     <jbxb:mapEntryValue/>
+                  </xsd:appinfo>
+               </xsd:annotation>
+            </xsd:element>
+         </xsd:sequence>
+
+         <xsd:element name="submap" type="mapType">
+            <xsd:annotation>
+               <xsd:documentation>
+                  <![CDATA[
+                  This element also represents a map entry. But while previous entries contained text values,
+                  this one has a value that is bound to java.util.Map as it is annotated in its complex type definition.
+                  ]]>
+               </xsd:documentation>
+            </xsd:annotation>
+         </xsd:element>
+      </xsd:sequence>
+
+      <xsd:attribute name="key" type="xsd:string">
+         <xsd:annotation>
+            <xsd:documentation>
+               <![CDATA[This attribute is bound to a map entry key.]]>
+            </xsd:documentation>
+            <xsd:appinfo>
+               <jbxb:mapEntryKey/>
+            </xsd:appinfo>
+         </xsd:annotation>
+      </xsd:attribute>
+   </xsd:complexType>
+
+   <xsd:element name="map" type="mapType">
+      <xsd:annotation>
+         <xsd:documentation>
+            <![CDATA[
+               Here, we declare an element of complex type map. Complex type map is bound to a map entry.
+               Elements inherit bindings from their types. So, this element inherits map entry binding metadata.
+               But that's not what we want for the root element in an XML content.
+               So, we override binding here using class annotation and bind this element to java.util.Map.
+               (See binding documentation: class and mapEntry are mutually exclusive)
+            ]]>
+         </xsd:documentation>
+         <xsd:appinfo>
+            <jbxb:class impl="java.util.HashMap"/>
+         </xsd:appinfo>
+      </xsd:annotation>
+   </xsd:element>
+</xsd:schema>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<root xmlns="ns">
+  <annotated-map-with-entry-type-key-attr-value-entry-content key="key1">1</annotated-map-with-entry-type-key-attr-value-entry-content>
+  <annotated-map-with-entry-type-key-attr-value-entry-content key="key2">22</annotated-map-with-entry-type-key-attr-value-entry-content>
+  <annotated-map-with-entry-type-key-attr-value-entry-content key="key3">333</annotated-map-with-entry-type-key-attr-value-entry-content>
+</root>

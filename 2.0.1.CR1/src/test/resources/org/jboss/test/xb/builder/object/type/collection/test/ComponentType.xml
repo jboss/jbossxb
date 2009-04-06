@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<root-some-interface>
+   <iface>ONE</iface>
+   <iface>TWO</iface>
+   <impl>THREE</impl>
+</root-some-interface>

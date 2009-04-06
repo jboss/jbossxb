@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   xmlns:jbxb="http://www.jboss.org/xml/ns/jbxb"
+   targetNamespace="urn:jboss:jbxb-characters-schema1"
+   elementFormDefault="qualified"
+   >
+   <xs:element name="binding">
+      <xs:annotation>
+         <xs:appinfo>
+            <jbxb:class impl="org.jboss.test.xml.jbxb.characters.Binding"/>
+         </xs:appinfo>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:choice minOccurs="1" maxOccurs="1">
+            <xs:element name="value">
+               <xs:annotation>
+                  <xs:appinfo>
+                        <jbxb:property name="text"/>
+                  </xs:appinfo>
+               </xs:annotation>
+               <xs:complexType>
+                  <xs:simpleContent>
+                     <xs:extension base="xs:string">
+                        <xs:attribute name="type" type="xs:string" use="optional" default="java.lang.String"/>
+                     </xs:extension>
+                  </xs:simpleContent>
+               </xs:complexType>
+            </xs:element>
+            <xs:element name="value2">
+               <xs:complexType>
+                  <xs:annotation>
+                     <xs:appinfo>
+                        <jbxb:class impl="org.jboss.test.xml.jbxb.characters.Binding$Value2"/>
+                        <jbxb:characters>
+                           <jbxb:property name="text"/>
+                        </jbxb:characters>
+                     </xs:appinfo>
+                  </xs:annotation>
+                  <xs:simpleContent>
+                     <xs:extension base="xs:string"/>
+                  </xs:simpleContent>
+               </xs:complexType>
+            </xs:element>
+            <xs:element name="value3">
+               <xs:complexType>
+                  <xs:annotation>
+                     <xs:appinfo>
+                        <jbxb:class impl="org.jboss.test.xml.jbxb.characters.Binding$Value3"/>
+                        <jbxb:characters>
+                           <jbxb:value unmarshalMethod="org.jboss.test.xml.jbxb.characters.Binding$Value3.unmarshalChars"/>
+                           <jbxb:property name="chars"/>
+                        </jbxb:characters>
+                     </xs:appinfo>
+                  </xs:annotation>
+                  <xs:simpleContent>
+                     <xs:extension base="xs:string">
+                        <xs:attribute name="attr" type="xs:string" use="optional"/>
+                     </xs:extension>
+                  </xs:simpleContent>
+               </xs:complexType>
+            </xs:element>
+            <xs:element name="value4">
+               <xs:complexType>
+                  <xs:annotation>
+                     <xs:appinfo>
+                        <jbxb:class impl="org.jboss.test.xml.jbxb.characters.Binding$Value4"/>
+                     </xs:appinfo>
+                  </xs:annotation>
+                  <xs:simpleContent>
+                     <xs:extension base="xs:string"/>
+                  </xs:simpleContent>
+               </xs:complexType>
+            </xs:element>
+            <xs:any namespace="##other">
+               <xs:annotation>
+                  <xs:documentation>An extension point for arbitrary xml value fragments</xs:documentation>
+               </xs:annotation>
+            </xs:any>
+         </xs:choice>
+         <xs:attribute name="name" type="xs:string" use="required"/>
+      </xs:complexType>
+   </xs:element>
+</xs:schema>

@@ -1,0 +1,8 @@
+<root
+   xmlns:jbxb="http://www.jboss.org/xml/ns/jbxb"
+   xmlns:ns2="urn:ns2"
+   jbxb:schemabinding="urn:ns2 org.jboss.test.xml.jbxb.schemabindingattribute.Ns2Root">
+
+   <ns2:root>
+   </ns2:root>
+</root>

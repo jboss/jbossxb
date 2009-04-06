@@ -1,0 +1,19 @@
+<?xml version = "1.0"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            elementFormDefault="qualified"
+            targetNamespace="file:///tmp/test.xsd"
+            xmlns="file:///tmp/test.xsd">
+
+<xsd:element name="message">
+  <xsd:complexType>
+    <xsd:choice maxOccurs="2">
+       <xsd:sequence>
+          <xsd:element name="foo" type="xsd:string"/>
+          <xsd:element name="bar" type="xsd:string" maxOccurs="2"/>
+       </xsd:sequence>
+       <xsd:element name="bar" type="xsd:string" maxOccurs="1"/>
+     </xsd:choice>
+  </xsd:complexType>
+</xsd:element>
+
+</xsd:schema>

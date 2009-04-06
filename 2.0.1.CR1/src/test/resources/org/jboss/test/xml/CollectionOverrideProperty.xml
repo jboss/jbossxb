@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<parent xmlns='http://www.jboss.org/test/xml/collectionOverrideProperty'>
+   <child>one</child>
+   <child>two</child>
+</parent>

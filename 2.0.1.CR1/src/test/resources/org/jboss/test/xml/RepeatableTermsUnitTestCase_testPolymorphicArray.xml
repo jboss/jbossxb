@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<product-array xmlns='http://www.jboss.org/test/xml/repeatableterms' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+  <product xsi:type='Product'>
+    <name>product1</name>
+    <price>1</price>
+  </product>
+  <product xsi:type='Product'>
+    <name>product2</name>
+    <price>2</price>
+  </product>
+  <product xsi:type='Product'>
+    <name>product3</name>
+    <price>3</price>
+  </product>
+</product-array>

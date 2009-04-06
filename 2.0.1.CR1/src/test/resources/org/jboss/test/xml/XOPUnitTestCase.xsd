@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:tns="http://www.jboss.org/xml/test/xop"
+  xmlns:xmime="http://www.w3.org/2005/05/xmlmime"
+  targetNamespace="http://www.jboss.org/xml/test/xop"
+  xmlns:jbxb="http://www.jboss.org/xml/ns/jbxb"
+  elementFormDefault="qualified">
+
+  <xs:import namespace="http://www.w3.org/2005/05/xmlmime" schemaLocation="xmlmime.xsd"/>
+
+  <xs:element name="e">
+    <xs:annotation>
+      <xs:appinfo>
+        <jbxb:class impl="org.jboss.test.xml.XOPUnitTestCase$E"/>
+      </xs:appinfo>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="image" type="xmime:base64Binary" minOccurs="0"/>
+        <xs:element name="sig" type="tns:MyBinaryType" minOccurs="0"/>
+        <xs:element name="imageWithContentType" type="tns:PictureType" minOccurs="0"/>
+        <xs:element name="jpeg" type="tns:JPEGPictureType" minOccurs="0"/>
+
+        <xs:element name="awtImage" type="xmime:base64Binary" minOccurs="0"/>
+        <xs:element name="source" type="xmime:base64Binary" minOccurs="0"/>
+        <xs:element name="string" type="xmime:base64Binary" minOccurs="0"/>
+
+        <xs:element name="octets" type="xs:base64Binary" minOccurs="0"/>
+
+        <xs:element name="xopContent" type="xmime:base64Binary" minOccurs="0"/>       
+
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- This element has binary content and requires the xmime:contentType
+         attribute that indicates the content-type of the binary element -->
+  <xs:complexType name="MyBinaryType">
+    <xs:simpleContent>
+      <xs:extension base="xs:base64Binary" >
+        <xs:attribute ref="xmime:contentType" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="PictureType">
+    <xs:simpleContent>
+      <xs:restriction base="xmime:base64Binary" >
+        <xs:attribute ref="xmime:contentType" use="required" />
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:simpleType name="JPEGPictureType" xmime:expectedContentTypes="image/jpeg"> 
+    <xs:restriction base="xs:base64Binary"/>
+  </xs:simpleType>
+
+</xs:schema>

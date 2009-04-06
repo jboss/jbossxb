@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns="dummy://www.jboss.org/property"
+        targetNamespace="dummy://www.jboss.org/property"
+        elementFormDefault="qualified"
+        attributeFormDefault="unqualified"
+        version="1.0"
+>
+   <xsd:element name="value" type="valueType"/>
+
+   <xsd:group name="values">
+      <xsd:choice>
+         <xsd:element ref="value"/>
+         <xsd:any namespace="##other" processContents="strict"/>
+      </xsd:choice>
+   </xsd:group>
+
+   <xsd:complexType name="valueType" mixed="true"/>
+
+   <xsd:element name="property">
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:group ref="values"/>
+         </xsd:sequence>
+      </xsd:complexType>
+   </xsd:element>
+
+</xsd:schema>

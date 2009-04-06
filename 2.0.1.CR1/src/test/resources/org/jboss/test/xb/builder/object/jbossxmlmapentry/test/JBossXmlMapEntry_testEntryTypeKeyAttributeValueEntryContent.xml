@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<root xmlns="ns">
-  <entry-type-key-attr-value-entry-content key="key1">1</entry-type-key-attr-value-entry-content>
-  <entry-type-key-attr-value-entry-content key="key2">22</entry-type-key-attr-value-entry-content>
-  <entry-type-key-attr-value-entry-content key="key3">333</entry-type-key-attr-value-entry-content>
-</root>

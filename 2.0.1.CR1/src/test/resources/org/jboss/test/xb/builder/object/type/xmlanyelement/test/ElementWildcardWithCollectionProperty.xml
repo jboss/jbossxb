@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<element-wildcard-with-collection-property>
-   <property>1</property>
-   <property>2</property>
-   <test-element>
-      <test-child-element/>
-   </test-element>
-</element-wildcard-with-collection-property>

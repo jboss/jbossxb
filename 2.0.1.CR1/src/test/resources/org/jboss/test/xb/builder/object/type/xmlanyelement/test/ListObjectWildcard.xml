@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<list-object-wildcard>
-   <simple-java-bean xmlns="urn:SimpleJavaBean"/>
-   <another-java-bean xmlns="urn:AnotherJavaBean"/>
-</list-object-wildcard>

@@ -1,6 +1,0 @@
-<e xmlns="http://www.jboss.org/xml/test/xop"
-  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'
-  xsi:schemaLocation='http://www.jboss.org/xml/test/xop XOPUnitTestCase.xsd'>
-  <image>aW1hZ2U=</image>
-  <sig>c2ln</sig>
-</e>

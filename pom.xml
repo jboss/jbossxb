@@ -12,7 +12,7 @@
   <url>http://www.jboss.org</url>
   <description>JBoss XML Binding</description>
   <scm>
-    <connection>scm:svn:https://svn.jboss.org/repos/common/jbossxb/tags/2.0.1.CR1</connection>
+    <connection>scm:svn:https://svn.jboss.org/repos/common/jbossxb/trunk</connection>
   </scm>
   <build>
     <finalName>jboss-xml-binding</finalName>
@@ -22,7 +22,7 @@
         <configuration>
           <!-- The tagBase property is needed during the release process so that the maven release plugin
             will create the release tag in the appropriate location. -->
-          <tagBase>https://svn.jboss.org/repos/common/jbossxb/trunk</tagBase>
+          <tagBase>https://svn.jboss.org/repos/common/jbossxb/tags</tagBase>
         </configuration>
       </plugin>
       <plugin>

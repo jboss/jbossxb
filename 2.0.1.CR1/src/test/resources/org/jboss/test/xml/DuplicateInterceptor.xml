@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<parent1 xmlns='http://www.jboss.org/test/xml/duplicateInterceptor'>
-   <child><string>Hello</string></child>
-</parent1>

@@ -1276,8 +1276,7 @@ public class JBossXBNoSchemaBuilder
       
       if(sequencesRequirePropOrder && !useUnorderedSequence)
          throw new JBossXBRuntimeException(msg.toString());
-      else
-         log.warn(msg.toString());
+      //else log.warn(msg.toString()); this resulted in a lot of WARN logging in the AS
    }
 
    private void bindProperty(PropertyInfo property, ModelGroupBinding parentModel,

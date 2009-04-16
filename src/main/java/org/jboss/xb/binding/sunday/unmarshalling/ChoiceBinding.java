@@ -76,35 +76,27 @@ public class ChoiceBinding
    {
       return new Cursor(particle)
       {
-         private int pos = -1;
+         private ParticleBinding currentParticle;
          private ElementBinding element;
          private boolean wildcardContent;
-
+         
          public ParticleBinding getCurrentParticle()
          {
-            if(pos < 0)
-            {
-               throw new JBossXBRuntimeException(
-                  "The cursor has not been positioned yet! startElement should be called."
-               );
-            }
-            return (ParticleBinding)choices.get(pos);
+            if(currentParticle == null)
+               throw new JBossXBRuntimeException("The cursor has not been positioned yet! startElement should be called.");
+            return currentParticle;
          }
 
          public ElementBinding getElement()
          {
-            if(pos < 0)
-            {
-               throw new JBossXBRuntimeException(
-                  "The cursor has not been positioned yet! startElement should be called."
-               );
-            }
+            if(currentParticle == null)
+               throw new JBossXBRuntimeException("The cursor has not been positioned yet! startElement should be called.");
             return element;
          }
 
          public boolean isPositioned()
          {
-            return pos != -1;
+            return currentParticle != null;
          }
 
          public void endElement(QName qName)
@@ -117,9 +109,7 @@ public class ChoiceBinding
             }
 
             if(trace)
-            {
                log.trace("endElement " + qName + " in " + getModelGroup());
-            }
          }
 
          public boolean isWildcardContent()
@@ -132,54 +122,86 @@ public class ChoiceBinding
             if(trace)
             {
                StringBuffer sb = new StringBuffer();
-               sb.append("startElement ").append(qName).append(" in ").append(toString());
+               sb.append("startElement ").append(qName).append(" in ").append(ChoiceBinding.this.toString());
                log.trace(sb.toString());
             }
 
-            wildcardContent = false;
-            int i = pos;
-            if(pos >= 0)
+            if(currentParticle != null)
             {
-               ParticleBinding particle = getCurrentParticle();
-               if(particle.getMaxOccursUnbounded() ||
-                  occurence < particle.getMinOccurs() ||
-                  occurence < particle.getMaxOccurs())
+               boolean repeated = false;
+               if(currentParticle.getMaxOccursUnbounded() ||
+                  occurence < currentParticle.getMinOccurs() ||
+                  occurence < currentParticle.getMaxOccurs())
                {
-                  --i;
+                  TermBinding item = currentParticle.getTerm();
+                  if(item.isElement())
+                  {
+                     ElementBinding element = (ElementBinding)item;
+                     repeated = qName.equals(element.getQName());
+                  }
+                  else if(item.isModelGroup())
+                  {
+                     ModelGroupBinding modelGroup = (ModelGroupBinding)item;
+                     if(!passedGroups.contains(modelGroup))
+                     {
+                        switch(passedGroups.size())
+                        {
+                           case 0:
+                              passedGroups = Collections.singleton((ModelGroupBinding.Cursor)this);
+                              break;
+                           case 1:
+                              passedGroups = new HashSet<ModelGroupBinding.Cursor>(passedGroups);
+                           default:
+                              passedGroups.add(this);
+                        }
+
+                        int groupStackSize = groupStack.size();
+                        boolean isRequired = occurence == 0 ? false : currentParticle.isRequired(occurence);
+                        groupStack = modelGroup.newCursor(currentParticle).startElement(qName, atts, passedGroups, groupStack, isRequired);
+                        repeated = groupStackSize != groupStack.size();
+                     }
+                  }
+                  else if(item.isWildcard())
+                  {
+                     WildcardBinding wildcard = (WildcardBinding)item;
+                     element = wildcard.getElement(qName, atts);
+                     repeated = element != null;
+                  }
                }
+
+               if(repeated)
+               {
+                  ++occurence;
+                  groupStack = addItem(groupStack, this);                  
+                  if(trace)
+                     log.trace("repeated " + qName + " in " + getModelGroup() + ", occurence=" + occurence + ", term=" + currentParticle.getTerm());
+               }
+               else
+               {
+                  wildcardContent = false;
+                  currentParticle = null;
+                  element = null;
+                  occurence = 0;
+               }
+               
+               return groupStack;
             }
 
-            // i update pos only if the element has been found, though it seems to be irrelevant
-            // since the cursor is going to be thrown away in case the element has not been found
-            while(i < choices.size() - 1)
+            for(int i = 0; i < choices.size(); ++i)
             {
-               ParticleBinding particle = (ParticleBinding)choices.get(++i);
-               Object item = particle.getTerm();
-               if(item instanceof ElementBinding)
+               boolean found = false;
+               ParticleBinding particle = (ParticleBinding)choices.get(i);
+               TermBinding item = particle.getTerm();
+               if(item.isElement())
                {
                   ElementBinding element = (ElementBinding)item;
                   if(qName.equals(element.getQName()))
                   {
-                     if(pos == i)
-                     {
-                        ++occurence;
-                     }
-                     else
-                     {
-                        pos = i;
-                        occurence = 1;
-                     }
-                     groupStack = addItem(groupStack, this);
+                     found = true;
                      this.element = element;
-
-                     if(trace)
-                     {
-                        log.trace("found " + qName + " in " + getModelGroup());
-                     }
-                     break;
                   }
                }
-               else if(item instanceof ModelGroupBinding)
+               else if(item.isModelGroup())
                {
                   ModelGroupBinding modelGroup = (ModelGroupBinding)item;
                   if(!passedGroups.contains(modelGroup))
@@ -198,57 +220,28 @@ public class ChoiceBinding
                      int groupStackSize = groupStack.size();
                      boolean isRequired = occurence == 0 ? false : particle.isRequired(occurence);
                      groupStack = modelGroup.newCursor(particle).startElement(qName, atts, passedGroups, groupStack, isRequired);
-
-                     if(groupStackSize != groupStack.size())
-                     {
-                        if(pos != i)
-                        {
-                           pos = i;
-                           occurence = 1;
-                        }
-                        else
-                        {
-                           ++occurence;
-                        }
-                        groupStack = addItem(groupStack, this);
-                        element = null;
-                        break;
-                     }
+                     found = groupStackSize != groupStack.size();
                   }
                }
-               else if(item instanceof WildcardBinding)
+               else if(item.isWildcard())
                {
                   WildcardBinding wildcard = (WildcardBinding)item;
                   element = wildcard.getElement(qName, atts);
                   if(element != null)
                   {
-                     if(pos != i)
-                     {
-                        pos = i;
-                        occurence = 1;
-                     }
-                     else
-                     {
-                        ++occurence;
-                     }
-                     groupStack = addItem(groupStack, this);
+                     found = true;
                      wildcardContent = true;
-                     if(trace)
-                        log.trace(qName + " is wildcard content");
-                     break;
                   }
                }
-            }
-
-            if(trace)
-            {
-               if(i == choices.size())
+               
+               if(found)
                {
-                  log.trace(qName + " not found in " + getModelGroup());
-               }
-               else
-               {
-                  log.trace("leaving " + getModelGroup() + " i=" + i + ", pos=" + pos);
+                  occurence = 1;
+                  currentParticle = particle;
+                  groupStack = addItem(groupStack, this);
+                  if(trace)
+                     log.trace("found " + qName + " in " + getModelGroup() + ", term=" + currentParticle.getTerm());
+                  break;
                }
             }
 

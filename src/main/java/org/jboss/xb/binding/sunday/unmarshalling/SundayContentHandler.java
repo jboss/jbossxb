@@ -452,7 +452,8 @@ public class SundayContentHandler
                }
 
                // todo review
-               if(!item.ended && cursor.isPositioned() && cursor.getParticle().getTerm() instanceof ChoiceBinding)
+               /*
+               if(!item.ended && cursor.isPositioned() && !cursor.getCurrentParticle().isRepeatable() && cursor.getParticle().getTerm() instanceof ChoiceBinding)
                {
                   endParticle(item, startName, 1);
                   if(!item.particle.isRepeatable()) // this is for repeatable choices that should stay on the stack
@@ -461,6 +462,7 @@ public class SundayContentHandler
                   }
                   continue;
                }
+               */
 
                //int prevOccurence = cursor.getOccurence();
                ParticleBinding prevParticle = cursor.isPositioned() ? cursor.getCurrentParticle() : null;
@@ -471,7 +473,6 @@ public class SundayContentHandler
                      endParticle(item, startName, 1);
                                     
                   StackItem poped = pop();
-                  
                   if(!poped.particle.isRepeatable() && stack.peek().cursor == null)
                   {
                      // normally it should be an error
@@ -1383,12 +1384,10 @@ public class SundayContentHandler
       stack.push(item);
       if(trace)
       {
-         Object binding = null;
          if(particle != null)
-         {
-            binding = particle.getTerm();
-         }
-         log.trace("pushed " + ((ElementBinding)particle.getTerm()).getQName() + "=" + o + ", binding=" + binding);
+            log.trace("pushed " + ((ElementBinding)particle.getTerm()).getQName() + "=" + o);
+         else
+            log.trace("pushed null particle, o=" + o);
       }
    }
 
@@ -1400,9 +1399,7 @@ public class SundayContentHandler
       item.parentType = parentType;
       stack.push(item);
       if(trace)
-      {
          log.trace("pushed cursor " + cursor + ", o=" + o);
-      }
    }
 
    private StackItem pop()

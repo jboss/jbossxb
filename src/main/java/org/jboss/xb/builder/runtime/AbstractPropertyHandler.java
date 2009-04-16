@@ -103,7 +103,7 @@ public abstract class AbstractPropertyHandler extends AttributeHandler
       }
       catch (Throwable t)
       {
-         throw new RuntimeException("QName " + qName + "error setting property " + propertyInfo.getName() + " with value " + BuilderUtil.toDebugString(child) + " to " + BuilderUtil.toDebugString(parent));
+         throw new RuntimeException("QName " + qName + " error setting property " + propertyInfo.getName() + " with value " + BuilderUtil.toDebugString(child) + " to " + BuilderUtil.toDebugString(parent), t);
       }
    }
 

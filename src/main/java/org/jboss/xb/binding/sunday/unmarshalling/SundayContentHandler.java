@@ -116,39 +116,6 @@ public class SundayContentHandler
       }
       
       ElementBinding e = (ElementBinding) stackItem.particle.getTerm();
-/*      if(!stackItem.ended && e.getType().isTextContentAllowed())
-      {
-         int i = start;
-         while (i < start + length)
-         {
-            if(ch[i] == 0x0a)
-            {
-               stackItem.indentation = true;
-            }
-            else
-            {
-               if (ch[i] == ' ' || ch[i] == 0x0d)
-               {
-               }
-               else
-               {
-                  stackItem.indentation = false;
-                  break;
-               }
-            }
-            ++i;
-         }
-
-         if(!stackItem.indentation)
-         {
-            if (stackItem.textContent == null)
-            {
-               stackItem.textContent = new StringBuffer();
-            }
-            stackItem.textContent.append(ch, start, length);
-         }
-      }
-*/
       // if current is ended the characters belong to its parent
       if(stackItem.ended)
       {
@@ -450,19 +417,6 @@ public class SundayContentHandler
                {
                   throw new JBossXBRuntimeException("No cursor for " + startName);
                }
-
-               // todo review
-               /*
-               if(!item.ended && cursor.isPositioned() && !cursor.getCurrentParticle().isRepeatable() && cursor.getParticle().getTerm() instanceof ChoiceBinding)
-               {
-                  endParticle(item, startName, 1);
-                  if(!item.particle.isRepeatable()) // this is for repeatable choices that should stay on the stack
-                  {
-                     pop();
-                  }
-                  continue;
-               }
-               */
 
                //int prevOccurence = cursor.getOccurence();
                ParticleBinding prevParticle = cursor.isPositioned() ? cursor.getCurrentParticle() : null;

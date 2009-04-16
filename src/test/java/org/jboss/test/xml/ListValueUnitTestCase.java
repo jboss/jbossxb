@@ -46,8 +46,6 @@ public class ListValueUnitTestCase extends AbstractJBossXBTest
 
    public void testCtor() throws Exception
    {
-      System.out.println(getName());
-      
       //SchemaBinding schema = JBossXBBuilder.build(Root.class);
       //Object o = unmarshal("ListValueUnitTestCase_" + getName() + ".xml", schema);
       Object o = unmarshal();

@@ -25,6 +25,7 @@ import junit.framework.Test;
 
 import org.jboss.test.xb.builder.object.AbstractErrorTest;
 import org.jboss.test.xb.builder.object.type.xmlenum.support.EnumNotSimple;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 
 /**
  * EnumNotSimpleUnitTestCase.
@@ -32,7 +33,7 @@ import org.jboss.test.xb.builder.object.type.xmlenum.support.EnumNotSimple;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public class EnumNotSimpleUnitTestCase extends AbstractErrorTest<RuntimeException>
+public class EnumNotSimpleUnitTestCase extends AbstractErrorTest<JBossXBRuntimeException>
 {
    public static Test suite()
    {
@@ -41,6 +42,6 @@ public class EnumNotSimpleUnitTestCase extends AbstractErrorTest<RuntimeExceptio
    
    public EnumNotSimpleUnitTestCase(String name)
    {
-      super(name, EnumNotSimple.class, RuntimeException.class);
+      super(name, EnumNotSimple.class, JBossXBRuntimeException.class);
    }
 }

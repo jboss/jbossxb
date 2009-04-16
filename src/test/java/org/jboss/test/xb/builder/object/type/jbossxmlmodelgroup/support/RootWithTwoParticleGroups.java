@@ -57,6 +57,7 @@ public class RootWithTwoParticleGroups
       this.group2 = group2;
    }
    
+   @XmlType(propOrder={"group", "e"})
    public static class GroupWrapper1
    {
       private AbstractChoice group;
@@ -82,6 +83,7 @@ public class RootWithTwoParticleGroups
       }
    }
 
+   @XmlType(propOrder={"group", "e"})
    public static class GroupWrapper2
    {
       private AbstractChoice group;

@@ -24,6 +24,7 @@ package org.jboss.test.xb.builder.object.jbossxmlvalue.support;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.xb.annotations.JBossXmlValue;
 
@@ -35,6 +36,7 @@ import org.jboss.xb.annotations.JBossXmlValue;
  */
 @XmlRootElement(name="root")
 @JBossXmlValue(ignoreEmptyString=false)
+@XmlType(propOrder={"child", "children"})
 public class MixedTypeIgnoreEmptyStringFalse extends MixedType
 {
    private List<MixedTypeIgnoreEmptyStringFalse> children;

@@ -24,17 +24,18 @@ package org.jboss.test.xb.builder.object.type.xmlenum.test;
 import junit.framework.Test;
 import org.jboss.test.xb.builder.object.AbstractErrorTest;
 import org.jboss.test.xb.builder.object.type.xmlenum.support.ignorecase.WrongKeyEnum;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 
 /**
  * Fail ignore test case enum.
  *
  * @author <a href="mailto:ales.justin@jboss.com">Ales Justin</a>
  */
-public class FailIgnoreCaseTestCase extends AbstractErrorTest<RuntimeException>
+public class FailIgnoreCaseTestCase extends AbstractErrorTest<JBossXBRuntimeException>
 {
    public FailIgnoreCaseTestCase(String name)
    {
-      super(name, WrongKeyEnum.class, RuntimeException.class);
+      super(name, WrongKeyEnum.class, JBossXBRuntimeException.class);
    }
 
    public static Test suite()

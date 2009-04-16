@@ -19,36 +19,28 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.test.xb.builder.object.jbossxmlvalue.support;
-
-
-import java.util.List;
+package org.jboss.test.xb.builder.sequencesrequireproporder.support;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
-import org.jboss.xb.annotations.JBossXmlValue;
 
 /**
- * A MixedTypeIgnoreEmptyStringTrue.
+ * A RootWithUnorderedSequenceProperty.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-@XmlRootElement(name="root")
-@JBossXmlValue(ignoreEmptyString=true)
-@XmlType(propOrder={"child", "children"})
-public class MixedTypeIgnoreEmptyStringTrue extends MixedType
+@XmlRootElement()
+public class RootWithUnorderedSequenceProperty
 {
-   private List<MixedTypeIgnoreEmptyStringTrue> children;
-
-   public List<MixedTypeIgnoreEmptyStringTrue> getChildren()
+   private UnorderedSequenceType sequence;
+   
+   public UnorderedSequenceType getSequence()
    {
-      return children;
+      return sequence;
    }
-
-   public void setChildren(List<MixedTypeIgnoreEmptyStringTrue> children)
+   
+   public void setSequence(UnorderedSequenceType sequence)
    {
-      this.children = children;
+      this.sequence = sequence;
    }
 }

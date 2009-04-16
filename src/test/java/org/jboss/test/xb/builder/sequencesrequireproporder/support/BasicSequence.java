@@ -19,36 +19,43 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.test.xb.builder.object.jbossxmlvalue.support;
-
-
-import java.util.List;
-
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
-import org.jboss.xb.annotations.JBossXmlValue;
+package org.jboss.test.xb.builder.sequencesrequireproporder.support;
 
 /**
- * A MixedTypeIgnoreEmptyStringTrue.
+ * A RootWithUnorderedSequence.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-@XmlRootElement(name="root")
-@JBossXmlValue(ignoreEmptyString=true)
-@XmlType(propOrder={"child", "children"})
-public class MixedTypeIgnoreEmptyStringTrue extends MixedType
+public class BasicSequence
 {
-   private List<MixedTypeIgnoreEmptyStringTrue> children;
 
-   public List<MixedTypeIgnoreEmptyStringTrue> getChildren()
+   private String a;
+   private String b;
+
+   public BasicSequence()
    {
-      return children;
+      super();
    }
 
-   public void setChildren(List<MixedTypeIgnoreEmptyStringTrue> children)
+   public String getA()
    {
-      this.children = children;
+      return a;
    }
+
+   public void setA(String a)
+   {
+      this.a = a;
+   }
+
+   public String getB()
+   {
+      return b;
+   }
+
+   public void setB(String b)
+   {
+      this.b = b;
+   }
+
 }

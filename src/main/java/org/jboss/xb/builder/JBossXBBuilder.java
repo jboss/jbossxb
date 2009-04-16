@@ -59,7 +59,10 @@ public class JBossXBBuilder
 {
    /** system property name to use for initialization */
    public static final String USE_UNORDERED_SEQUENCE_PROPERTY = "xb.builder.useUnorderedSequence";
-   
+
+   /** system property name to use for initialization */
+   public static final String SEQUENCES_REQUIRE_PROP_ORDER = "xb.builder.sequencesRequirePropOrder";
+
    /** The configuration */
    static Configuration configuration;
    
@@ -70,7 +73,9 @@ public class JBossXBBuilder
    static final ClassInfo OBJECT;
    
    static boolean useUnorderedSequence;
-   
+
+   static boolean sequencesRequirePropOrder;
+
    static
    {
       configuration = AccessController.doPrivileged(new PrivilegedAction<PropertyConfiguration>()
@@ -95,6 +100,20 @@ public class JBossXBBuilder
       );            
       if(useUnorderedSequenceStr != null)
          useUnorderedSequence = Boolean.parseBoolean(useUnorderedSequenceStr);
+      
+      String sequencesRequirePropOrderStr = AccessController.doPrivileged(
+            new PrivilegedAction<String>()
+            {
+               public String run()
+               {
+                  return System.getProperty(JBossXBBuilder.SEQUENCES_REQUIRE_PROP_ORDER);
+               }               
+            }
+      ); 
+      if(sequencesRequirePropOrderStr != null)
+         sequencesRequirePropOrder = Boolean.parseBoolean(sequencesRequirePropOrderStr);
+      else
+         sequencesRequirePropOrder = true;
    }
    
    public static boolean isUseUnorderedSequence()
@@ -107,6 +126,16 @@ public class JBossXBBuilder
       JBossXBBuilder.useUnorderedSequence = unorderedSequences;
    }
 
+   public static boolean isSequencesRequirePropOrder()
+   {
+      return sequencesRequirePropOrder;
+   }
+   
+   public static void setSequencesRequirePropOrder(boolean sequencesRequirePropOrder)
+   {
+      JBossXBBuilder.sequencesRequirePropOrder = sequencesRequirePropOrder;
+   }
+   
    /**
     * Create a new schema binding initializer
     * 
@@ -223,6 +252,7 @@ public class JBossXBBuilder
       
       JBossXBNoSchemaBuilder builder = new JBossXBNoSchemaBuilder(classInfo);
       builder.setUseUnorderedSequence(useUnorderedSequence);
+      builder.setSequencesRequirePropOrder(sequencesRequirePropOrder);
       builder.build(schemaBinding);
    }
    
@@ -257,6 +287,7 @@ public class JBossXBBuilder
       {
          JBossXBNoSchemaBuilder builder = new JBossXBNoSchemaBuilder(classInfo);
          builder.setUseUnorderedSequence(useUnorderedSequence);
+         builder.setSequencesRequirePropOrder(sequencesRequirePropOrder);
          binding = builder.build();
          classInfo.setAttachment(SchemaBinding.class.getName(), binding);
       }

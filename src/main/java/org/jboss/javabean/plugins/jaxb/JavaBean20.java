@@ -37,7 +37,7 @@ import org.jboss.xb.spi.BeanAdapterFactory;
  */
 @JBossXmlSchema(namespace="urn:jboss:javabean:2.0", elementFormDefault=XmlNsForm.QUALIFIED)
 @XmlRootElement(name="javabean")
-@XmlType(name="javabeanType")
+@XmlType(name="javabeanType", propOrder={"constructor", "properties"})
 @JBossXmlType(beanAdapterBuilder=JavaBeanBuilder20.class)
 public class JavaBean20 extends JavaBean
 {

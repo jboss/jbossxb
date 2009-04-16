@@ -19,36 +19,23 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.test.xb.builder.object.jbossxmlvalue.support;
+package org.jboss.test.xb.builder.sequencesrequireproporder.support;
 
-
-import java.util.List;
-
+import javax.xml.bind.annotation.XmlAccessOrder;
+import javax.xml.bind.annotation.XmlAccessorOrder;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import org.jboss.xb.annotations.JBossXmlValue;
-
 /**
- * A MixedTypeIgnoreEmptyStringTrue.
+ * A RootWithXmlAccessorOrder.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
 @XmlRootElement(name="root")
-@JBossXmlValue(ignoreEmptyString=true)
-@XmlType(propOrder={"child", "children"})
-public class MixedTypeIgnoreEmptyStringTrue extends MixedType
+@XmlType()
+@XmlAccessorOrder(XmlAccessOrder.ALPHABETICAL)
+public class RootWithXmlAccessorOrder extends BasicSequence
 {
-   private List<MixedTypeIgnoreEmptyStringTrue> children;
 
-   public List<MixedTypeIgnoreEmptyStringTrue> getChildren()
-   {
-      return children;
-   }
-
-   public void setChildren(List<MixedTypeIgnoreEmptyStringTrue> children)
-   {
-      this.children = children;
-   }
 }

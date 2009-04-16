@@ -25,6 +25,7 @@ import junit.framework.Test;
 
 import org.jboss.test.xb.builder.object.AbstractErrorTest;
 import org.jboss.test.xb.builder.object.type.xmlenum.support.EnumConstantUnconvertable;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 
 /**
  * EnumConstantUnconvertableUnitTestCase.
@@ -32,7 +33,7 @@ import org.jboss.test.xb.builder.object.type.xmlenum.support.EnumConstantUnconve
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public class EnumConstantUnconvertableUnitTestCase extends AbstractErrorTest<RuntimeException>
+public class EnumConstantUnconvertableUnitTestCase extends AbstractErrorTest<JBossXBRuntimeException>
 {
    public static Test suite()
    {
@@ -41,6 +42,6 @@ public class EnumConstantUnconvertableUnitTestCase extends AbstractErrorTest<Run
    
    public EnumConstantUnconvertableUnitTestCase(String name)
    {
-      super(name, EnumConstantUnconvertable.class, RuntimeException.class);
+      super(name, EnumConstantUnconvertable.class, JBossXBRuntimeException.class);
    }
 }

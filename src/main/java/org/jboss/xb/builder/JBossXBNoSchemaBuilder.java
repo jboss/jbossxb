@@ -178,6 +178,7 @@ public class JBossXBNoSchemaBuilder
    private ModelGroupFactory groupFactory = DefaultModelGroupFactory.INSTANCE;
    
    private boolean useUnorderedSequence;
+   private boolean sequencesRequirePropOrder;
    
    /**
     * Create a new JBossXBNoSchemaBuilder.
@@ -205,6 +206,16 @@ public class JBossXBNoSchemaBuilder
          groupFactory = UnorderedSequenceModelGroupFactory.INSTANCE;
       else
          groupFactory = DefaultModelGroupFactory.INSTANCE;
+   }
+   
+   public boolean isSequenceRequirePropOrder()
+   {
+      return sequencesRequirePropOrder;
+   }
+   
+   public void setSequencesRequirePropOrder(boolean sequencesRequirePropOrder)
+   {
+      this.sequencesRequirePropOrder = sequencesRequirePropOrder;
    }
    
    /**
@@ -1049,12 +1060,17 @@ public class JBossXBNoSchemaBuilder
       // TODO simple types/content when no properties other than @XmlValue and @XmlAttribute
       typeBinding.setSimple(false);
       ModelGroupBinding model = null;
+      boolean propOrderMissing = propertyNames.size() > 1 && determinePropertyOrder && accessOrder == XmlAccessOrder.UNDEFINED;
       if(jbossXmlType != null && !JBossXmlConstants.DEFAULT.equals(jbossXmlType.modelGroup()))
-         model = createModelGroup(jbossXmlType.modelGroup());
+         model = createModelGroup(jbossXmlType.modelGroup(), typeInfo, propOrderMissing, propertyOrder);
       else if (allBinding)
          model = new AllBinding(schemaBinding);
       else
+      {
+         if(propOrderMissing)
+            assertPropOrderNotRequired(typeInfo, propertyOrder);
          model = groupFactory.createSequence(schemaBinding);
+      }
       
       if (trace)
          log.trace(model.getGroupType() + " model group for type=" + beanInfo.getName());
@@ -1243,6 +1259,25 @@ public class JBossXBNoSchemaBuilder
          typeBinding.setSchemaBinding(schemaBinding);
 
       return typeBinding;
+   }
+
+   private void assertPropOrderNotRequired(TypeInfo typeInfo, String[] propertyOrder)
+   {
+      StringBuffer msg = new StringBuffer();
+      msg.append("Property order is not specified for type ")
+      .append(typeInfo.getName())
+      .append(" bound to a sequence. Property order can be specified using @XmlType.propOrder or @XmlAccessorOrder.");
+      if(propertyOrder != null && propertyOrder.length > 1)
+      {
+         msg.append(" List of properties:");
+         for(String name : propertyOrder)
+            msg.append(" ").append(name);
+      }
+      
+      if(sequencesRequirePropOrder && !useUnorderedSequence)
+         throw new JBossXBRuntimeException(msg.toString());
+      else
+         log.warn(msg.toString());
    }
 
    private void bindProperty(PropertyInfo property, ModelGroupBinding parentModel,
@@ -1716,10 +1751,15 @@ public class JBossXBNoSchemaBuilder
          if(group != null)
             createGroup = false;
       }
-      
+
+      TypeInfo groupType = property.getType();
+      if(groupType.isCollection())
+         groupType = ((ClassInfo)groupType).getComponentType();
+
       if(createGroup)
       {
-         group = createModelGroup(annotation.kind());
+         boolean propOrderMissing = annotation.propOrder().length == 1 && annotation.propOrder()[0].equals("") || annotation.particles().length > 0;
+         group = createModelGroup(annotation.kind(), groupType, propOrderMissing, annotation.propOrder());
          if (groupName != null)
          {
             group.setQName(groupName);
@@ -1728,10 +1768,6 @@ public class JBossXBNoSchemaBuilder
       }
       
       parentGroup.addParticle(new ParticleBinding(group, 0, 1, property.getType().isCollection()));
-
-      TypeInfo groupType = property.getType();
-      if(groupType.isCollection())
-         groupType = ((ClassInfo)groupType).getComponentType();
 
       if(annotation.particles().length == 0)
       {
@@ -1810,11 +1846,15 @@ public class JBossXBNoSchemaBuilder
       defaultNamespace = overridenDefaultNamespace;
    }
 
-   private ModelGroupBinding createModelGroup(String kind)
+   private ModelGroupBinding createModelGroup(String kind, TypeInfo type, boolean propOrderMissing, String[] propertyOrder)
    {
       ModelGroupBinding group;
       if (kind.equals(JBossXmlConstants.MODEL_GROUP_SEQUENCE))
+      {
+         if(propOrderMissing)
+            assertPropOrderNotRequired(type, propertyOrder);
          group = groupFactory.createSequence(schemaBinding);
+      }
       else if (kind.equals(JBossXmlConstants.MODEL_GROUP_UNORDERED_SEQUENCE))
          group = new UnorderedSequenceBinding(schemaBinding);
       else if (kind.equals(JBossXmlConstants.MODEL_GROUP_CHOICE))
@@ -1822,7 +1862,7 @@ public class JBossXBNoSchemaBuilder
       else if (kind.equals(JBossXmlConstants.MODEL_GROUP_ALL))
          group = new AllBinding(schemaBinding);
       else
-         throw new IllegalStateException("Unexpected JBossXmlModelGroup.kind=" + kind);
+         throw new IllegalStateException("Unexpected JBossXmlModelGroup.kind=" + kind + " for type " + type.getName());
       return group;
    }
       
@@ -1976,7 +2016,7 @@ public class JBossXBNoSchemaBuilder
          if (locations.isEmpty() == false)
             message.append('\n');
       }
-      throw new RuntimeException(message.toString(), t);
+      throw new JBossXBRuntimeException(message.toString(), t);
    }
 
    /** A location */

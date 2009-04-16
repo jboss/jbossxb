@@ -34,7 +34,7 @@ import org.jboss.xb.annotations.JBossXmlAdaptedType;
  *
  * @author <a href="mailto:ales.justin@jboss.com">Ales Justin</a>
  */
-@XmlType()
+@XmlType(propOrder={})
 @JBossXmlAdaptedType(valueAdapter=CardinalityValueAdapter.class)
 public class Cardinality extends JBossObject implements Serializable
 {

@@ -107,12 +107,12 @@ public class UnorderedSequenceAnnotationUnitTestCase extends AbstractBuilderTest
       }
    }
 
-   @JBossXmlModelGroup(name="defaultGroup")
+   @JBossXmlModelGroup(name="defaultGroup", propOrder={"a", "b"})
    public static class DefaultGroup extends BaseGroup
    {
    }
    
-   @JBossXmlModelGroup(name="orderedSequence", kind = JBossXmlConstants.MODEL_GROUP_SEQUENCE)
+   @JBossXmlModelGroup(name="orderedSequence", kind = JBossXmlConstants.MODEL_GROUP_SEQUENCE, propOrder={"a", "b"})
    public static class OrderedSequence extends BaseGroup
    {
    }

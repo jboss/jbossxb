@@ -24,6 +24,7 @@ package org.jboss.test.xb.builder.object.mc.support.model;
 import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.jboss.util.JBossStringBuilder;
 
@@ -91,6 +92,7 @@ public abstract class AbstractCallbackMetaData extends AbstractLifecycleMetaData
       flushJBossObjectCache();
    }
 
+   @XmlTransient
    public ControllerState getWhenRequiredState()
    {
       return whenRequired;

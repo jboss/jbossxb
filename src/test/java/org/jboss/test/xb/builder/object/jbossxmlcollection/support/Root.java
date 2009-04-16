@@ -27,6 +27,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.jboss.xb.annotations.JBossXmlCollection;
+import org.jboss.xb.annotations.JBossXmlConstants;
+import org.jboss.xb.annotations.JBossXmlType;
 
 
 /**
@@ -36,6 +38,7 @@ import org.jboss.xb.annotations.JBossXmlCollection;
  * @version $Revision: 1.1 $
  */
 @XmlRootElement
+@JBossXmlType(modelGroup=JBossXmlConstants.MODEL_GROUP_CHOICE)
 public class Root
 {
    private List<String> defaultList;

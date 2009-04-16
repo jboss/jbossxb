@@ -58,18 +58,22 @@ public class JBossXmlTypeUnitTestCase extends AbstractBuilderTest
    }
 
    private boolean defaultSequence;
+   private boolean sequencesRequirePropOrder;
    
    protected void setUp() throws Exception
    {
       super.setUp();
       defaultSequence = JBossXBBuilder.isUseUnorderedSequence();
       JBossXBBuilder.setUseUnorderedSequence(false);
+      sequencesRequirePropOrder = JBossXBBuilder.isSequencesRequirePropOrder();
+      JBossXBBuilder.setSequencesRequirePropOrder(false);
    }
    
    protected void tearDown() throws Exception 
    {
       super.tearDown();
       JBossXBBuilder.setUseUnorderedSequence(defaultSequence);
+      JBossXBBuilder.setSequencesRequirePropOrder(sequencesRequirePropOrder);
    }
    
    public void testModelGroupWithDefaults() throws Exception

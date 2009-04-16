@@ -21,14 +21,12 @@
 */
 package org.jboss.test.xb.builder.object.mc.support.model;
 
-import javax.xml.bind.annotation.XmlType;
 
 /**
  * Metadata for uninstall callback.
  *
  * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  */
-@XmlType
 public class UninstallCallbackMetaData extends AbstractCallbackMetaData
 {
    /** The serialVersionUID */

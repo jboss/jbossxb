@@ -21,12 +21,10 @@
  */
 package org.jboss.test.xb.builder.useunorderedsequence.test;
 
-import java.lang.reflect.Method;
-import java.net.URLClassLoader;
 
+import org.jboss.test.xb.builder.AbstractSystemPropertyInitializationTest;
 import org.jboss.xb.builder.JBossXBBuilder;
 
-import junit.framework.TestCase;
 
 /**
  * A InitializationUnitTestCase.
@@ -34,45 +32,17 @@ import junit.framework.TestCase;
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public class InitializationUnitTestCase extends TestCase
+public class InitializationUnitTestCase extends AbstractSystemPropertyInitializationTest
 {
-   private String unorderedSequenceDefaultSystemValue;
-   private ClassLoader cl;
-   
-   protected void setUp() throws Exception
+   @Override
+   protected String getPropertyGetter()
    {
-      super.setUp();
-      unorderedSequenceDefaultSystemValue = System.getProperty(JBossXBBuilder.USE_UNORDERED_SEQUENCE_PROPERTY);
-      
-      ClassLoader builderCl = JBossXBBuilder.class.getClassLoader();
-      if(builderCl == null)
-         builderCl = ClassLoader.getSystemClassLoader();      
-      assertTrue(builderCl instanceof URLClassLoader);
-      cl = new URLClassLoader(((URLClassLoader)builderCl).getURLs(), null);
-   }
-   
-   protected void tearDown() throws Exception
-   {
-      super.tearDown();
-      if(unorderedSequenceDefaultSystemValue != null)
-         System.setProperty(JBossXBBuilder.USE_UNORDERED_SEQUENCE_PROPERTY, unorderedSequenceDefaultSystemValue);
-   }
-   
-   public void testFalse() throws Exception
-   {
-      initAndAssert(false);
+      return "isUseUnorderedSequence";
    }
 
-   public void testTrue() throws Exception
+   @Override
+   protected String getPropertyName()
    {
-      initAndAssert(true);
-   }
-
-   private void initAndAssert(Boolean value) throws Exception
-   {
-      System.setProperty(JBossXBBuilder.USE_UNORDERED_SEQUENCE_PROPERTY, Boolean.toString(value));
-      Class<?> clazz = cl.loadClass(JBossXBBuilder.class.getName());
-      Method m = clazz.getMethod("isUseUnorderedSequence");
-      assertEquals(value, m.invoke(null));
+      return JBossXBBuilder.USE_UNORDERED_SEQUENCE_PROPERTY;
    }
 }

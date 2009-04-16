@@ -23,6 +23,7 @@ package org.jboss.test.xb.builder.object.mc.support.model;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import org.jboss.reflect.spi.TypeInfo;
@@ -65,6 +66,13 @@ public class AbstractValueMetaData extends JBossObject
       this.value = value;
    }
 
+   @Override
+   @XmlTransient
+   public String getClassShortName()
+   {
+      return super.getClassShortName();
+   }
+   
    public Object getValue()
    {
       return value;
@@ -76,6 +84,7 @@ public class AbstractValueMetaData extends JBossObject
       flushJBossObjectCache();
    }
 
+   @XmlTransient
    public Object getUnderlyingValue()
    {
       return value;

@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.jboss.util.JBossObject;
 import org.jboss.util.JBossStringBuilder;
@@ -51,6 +52,13 @@ public abstract class AbstractFeatureMetaData extends JBossObject
     */
    public AbstractFeatureMetaData()
    {
+   }
+   
+   @Override
+   @XmlTransient
+   public String getClassShortName()
+   {
+      return super.getClassShortName();
    }
    
    /**

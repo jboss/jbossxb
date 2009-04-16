@@ -19,36 +19,30 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.test.xb.builder.object.jbossxmlvalue.support;
+package org.jboss.test.xb.builder.sequencesrequireproporder.test;
 
 
-import java.util.List;
+import org.jboss.test.xb.builder.AbstractSystemPropertyInitializationTest;
+import org.jboss.xb.builder.JBossXBBuilder;
 
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
-
-import org.jboss.xb.annotations.JBossXmlValue;
 
 /**
- * A MixedTypeIgnoreEmptyStringTrue.
+ * A InitializationUnitTestCase.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-@XmlRootElement(name="root")
-@JBossXmlValue(ignoreEmptyString=true)
-@XmlType(propOrder={"child", "children"})
-public class MixedTypeIgnoreEmptyStringTrue extends MixedType
+public class InitializationUnitTestCase extends AbstractSystemPropertyInitializationTest
 {
-   private List<MixedTypeIgnoreEmptyStringTrue> children;
-
-   public List<MixedTypeIgnoreEmptyStringTrue> getChildren()
+   @Override
+   protected String getPropertyGetter()
    {
-      return children;
+      return "isSequencesRequirePropOrder";
    }
 
-   public void setChildren(List<MixedTypeIgnoreEmptyStringTrue> children)
+   @Override
+   protected String getPropertyName()
    {
-      this.children = children;
+      return JBossXBBuilder.SEQUENCES_REQUIRE_PROP_ORDER;
    }
 }

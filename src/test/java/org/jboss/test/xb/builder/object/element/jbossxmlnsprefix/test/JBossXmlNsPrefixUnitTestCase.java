@@ -145,12 +145,34 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       Collection<ParticleBinding> particles = group.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> particleIterator = particles.iterator();
-      ParticleBinding particle = particleIterator.next();
       
+      ParticleBinding particle;
+      ElementBinding childE = null;
+      ElementBinding rootNameE = null;
+      if(group instanceof UnorderedSequenceBinding)
+      {
+         while(particleIterator.hasNext())
+         {
+            particle = particleIterator.next();
+            e = (ElementBinding) particle.getTerm();
+            if(e.getQName().equals(new QName("ns.child", "child")))
+               childE = e;
+            else
+               rootNameE = e;
+         }
+      }
+      else
+      {
+         particle = particleIterator.next();
+         childE = (ElementBinding) particle.getTerm();
+         particle = particleIterator.next();
+         rootNameE = (ElementBinding) particle.getTerm();
+      }
+
       // child
-      e = (ElementBinding) particle.getTerm();
-      assertEquals(new QName("ns.child", "child"), e.getQName());
-      group = (ModelGroupBinding) e.getType().getParticle().getTerm();
+      assertNotNull(childE);
+      assertEquals(new QName("ns.child", "child"), childE.getQName());
+      group = (ModelGroupBinding) childE.getType().getParticle().getTerm();
       particles = group.getParticles();
       assertEquals(1, particles.size());
       particle = particles.iterator().next();
@@ -160,9 +182,8 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       assertEquals(new QName("ns.root", "name"), e.getQName());
       
       // rootName
-      particle = particleIterator.next();
-      e = (ElementBinding) particle.getTerm();
-      assertEquals(new QName("ns.root", "root-name"), e.getQName());
+      assertNotNull(rootNameE);
+      assertEquals(new QName("ns.root", "root-name"), rootNameE.getQName());
    }
 
    public void testApplyToElementFalseApplyToTypeFalse()
@@ -310,10 +331,30 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       particles = group.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> groupIterator = particles.iterator();
-      e = (ElementBinding) groupIterator.next().getTerm();
-      assertEquals(new QName("anotherNs", "count"), e.getQName());
-      e = (ElementBinding) groupIterator.next().getTerm();
-      assertEquals(new QName("anotherNs", "text"), e.getQName());
+      
+      ElementBinding countElement = null;
+      ElementBinding textElement = null;
+      if(group instanceof UnorderedSequenceBinding)
+      {
+         while(groupIterator.hasNext())
+         {
+            e = (ElementBinding) groupIterator.next().getTerm();
+            if(new QName("anotherNs", "count").equals(e.getQName()))
+               countElement = e;
+            else
+               textElement = e;
+         }
+      }
+      else
+      {
+         countElement = (ElementBinding) groupIterator.next().getTerm();
+         textElement = (ElementBinding) groupIterator.next().getTerm();
+      }
+
+      assertNotNull(countElement);
+      assertEquals(new QName("anotherNs", "count"), countElement.getQName());
+      assertNotNull(textElement);
+      assertEquals(new QName("anotherNs", "text"), textElement.getQName());
       
       assertEquals(new QName("ns", "id"), idElement.getQName());
    }
@@ -355,10 +396,30 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       particles = group.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> groupIterator = particles.iterator();
-      e = (ElementBinding) groupIterator.next().getTerm();
-      assertEquals(new QName("anotherNs", "count"), e.getQName());
-      e = (ElementBinding) groupIterator.next().getTerm();
-      assertEquals(new QName("anotherNs", "text"), e.getQName());
+      
+      ElementBinding countElement = null;
+      ElementBinding textElement = null;
+      if(group instanceof UnorderedSequenceBinding)
+      {
+         while(groupIterator.hasNext())
+         {
+            e = (ElementBinding) groupIterator.next().getTerm();
+            if(new QName("anotherNs", "count").equals(e.getQName()))
+               countElement = e;
+            else
+               textElement = e;
+         }
+      }
+      else
+      {
+         countElement = (ElementBinding) groupIterator.next().getTerm();
+         textElement = (ElementBinding) groupIterator.next().getTerm();
+      }
+
+      assertNotNull(countElement);
+      assertEquals(new QName("anotherNs", "count"), countElement.getQName());
+      assertNotNull(textElement);
+      assertEquals(new QName("anotherNs", "text"), textElement.getQName());
       
       assertEquals(new QName("ns", "id"), idElement.getQName());
    }
@@ -400,11 +461,31 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       particles = group.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> groupIterator = particles.iterator();
-      e = (ElementBinding) groupIterator.next().getTerm();
-      assertEquals(new QName("ns", "count"), e.getQName());
-      e = (ElementBinding) groupIterator.next().getTerm();
-      assertEquals(new QName("ns", "text"), e.getQName());
-      
+
+      ElementBinding countElement = null;
+      ElementBinding textElement = null;
+      if(group instanceof UnorderedSequenceBinding)
+      {
+         while(groupIterator.hasNext())
+         {
+            e = (ElementBinding) groupIterator.next().getTerm();
+            if(new QName("ns", "count").equals(e.getQName()))
+               countElement = e;
+            else
+               textElement = e;
+         }
+      }
+      else
+      {
+         countElement = (ElementBinding) groupIterator.next().getTerm();
+         textElement = (ElementBinding) groupIterator.next().getTerm();
+      }
+
+      assertNotNull(countElement);
+      assertEquals(new QName("ns", "count"), countElement.getQName());
+      assertNotNull(textElement);
+      assertEquals(new QName("ns", "text"), textElement.getQName());
+
       assertEquals(new QName("ns", "id"), idElement.getQName());
    }
 
@@ -445,11 +526,31 @@ public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
       particles = group.getParticles();
       assertEquals(2, particles.size());
       Iterator<ParticleBinding> groupIterator = particles.iterator();
-      e = (ElementBinding) groupIterator.next().getTerm();
-      assertEquals(new QName("ns", "count"), e.getQName());
-      e = (ElementBinding) groupIterator.next().getTerm();
-      assertEquals(new QName("ns", "text"), e.getQName());
       
+      ElementBinding countElement = null;
+      ElementBinding textElement = null;
+      if(group instanceof UnorderedSequenceBinding)
+      {
+         while(groupIterator.hasNext())
+         {
+            e = (ElementBinding) groupIterator.next().getTerm();
+            if(new QName("ns", "count").equals(e.getQName()))
+               countElement = e;
+            else
+               textElement = e;
+         }
+      }
+      else
+      {
+         countElement = (ElementBinding) groupIterator.next().getTerm();
+         textElement = (ElementBinding) groupIterator.next().getTerm();
+      }
+
+      assertNotNull(countElement);
+      assertEquals(new QName("ns", "count"), countElement.getQName());
+      assertNotNull(textElement);
+      assertEquals(new QName("ns", "text"), textElement.getQName());
+
       assertEquals(new QName("ns", "id"), idElement.getQName());
    }
    

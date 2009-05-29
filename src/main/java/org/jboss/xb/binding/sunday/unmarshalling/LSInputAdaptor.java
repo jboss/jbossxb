@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.Reader;
 
 import org.w3c.dom.ls.LSInput;
+import org.xml.sax.InputSource;
 
 /**
  * A simple implementation of the dom3 LSInput
@@ -67,6 +68,15 @@ public class LSInputAdaptor
    {
       this.setStringData(data);
       setEncoding(encoding);
+   }
+
+   public LSInputAdaptor(InputSource is)
+   {
+      setByteStream(is.getByteStream());
+      setCharacterStream(is.getCharacterStream());
+      setPublicId(is.getPublicId());
+      setSystemId(is.getSystemId());
+      setEncoding(is.getEncoding());
    }
 
    public String getBaseURI()

@@ -57,6 +57,9 @@
                     <exclude>org/jboss/test/xml/RepeatedElementsUnitTestCase.java</exclude> <!-- JBXB-88 -->
                     <exclude>org/jboss/test/xb/builder/object/type/jbossxmlmodelgroup/test/RepeatablePropertyAllUnmarshallingTestCase.java</exclude> <!-- JBXB-193 -->
                     <exclude>org/jboss/test/xb/builder/object/type/jbossxmlmodelgroup/test/RepeatablePropertySequenceUnmarshallingTestCase.java</exclude> <!-- unordered sequence makes it JBXB-193 -->
+
+                    <!-- below are the tests that don't depend on the setting -->
+                    <exclude>org/jboss/test/xb/validator/test/BasicBindingValidatorUnitTestCase.java</exclude>
                  </excludes>
                  <systemProperties>
                     <property>

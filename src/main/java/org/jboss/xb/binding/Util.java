@@ -45,6 +45,7 @@ import org.w3c.dom.bootstrap.DOMImplementationRegistry;
 import org.w3c.dom.ls.LSInput;
 import org.w3c.dom.ls.LSResourceResolver;
 import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
 
 /**
  * Various utilities for XML binding.
@@ -353,22 +354,16 @@ public final class Util
          log.trace("loading xsd: " + xsdURL);
 
       if(xsImpl == null)
-      {
          xsImpl = getXSImplementation();
-      }
 
       XSLoader schemaLoader = xsImpl.createXSLoader(null);
       if(schemaResolver != null)
-      {
          setResourceResolver(schemaLoader, schemaResolver);
-      }
 
       setDOMErrorHandler(schemaLoader);
       XSModel model = schemaLoader.loadURI(xsdURL);
       if(model == null)
-      {
          throw new IllegalArgumentException("Invalid URI for schema: " + xsdURL);
-      }
 
       if (trace)
          log.trace("Loaded xsd: " + xsdURL + " in " + (System.currentTimeMillis() - start) + "ms");
@@ -378,19 +373,18 @@ public final class Util
    public static XSModel loadSchema(InputStream is, String encoding, SchemaBindingResolver schemaResolver)
    {
       if(log.isTraceEnabled())
-      {
          log.trace("loading xsd from InputStream");
-      }
 
       LSInputAdaptor input = new LSInputAdaptor(is, encoding);
 
-      XSImplementation impl = getXSImplementation();
-      XSLoader schemaLoader = impl.createXSLoader(null);
-      setDOMErrorHandler(schemaLoader);
+      if(xsImpl == null)
+         xsImpl = getXSImplementation();         
+      
+      XSLoader schemaLoader = xsImpl.createXSLoader(null);
       if(schemaResolver != null)
-      {
          setResourceResolver(schemaLoader, schemaResolver);
-      }
+
+      setDOMErrorHandler(schemaLoader);
 
       return schemaLoader.load(input);
    }
@@ -398,19 +392,18 @@ public final class Util
    public static XSModel loadSchema(Reader reader, String encoding, SchemaBindingResolver schemaResolver)
    {
       if(log.isTraceEnabled())
-      {
          log.trace("loading xsd from Reader");
-      }
 
       LSInputAdaptor input = new LSInputAdaptor(reader, encoding);
 
-      XSImplementation impl = getXSImplementation();
-      XSLoader schemaLoader = impl.createXSLoader(null);
-      setDOMErrorHandler(schemaLoader);
+      if(xsImpl == null)
+         xsImpl = getXSImplementation();         
+      
+      XSLoader schemaLoader = xsImpl.createXSLoader(null);
       if(schemaResolver != null)
-      {
          setResourceResolver(schemaLoader, schemaResolver);
-      }
+
+      setDOMErrorHandler(schemaLoader);
 
       return schemaLoader.load(input);
    }
@@ -418,15 +411,35 @@ public final class Util
    public static XSModel loadSchema(String data, String encoding)
    {
       if(log.isTraceEnabled())
-      {
          log.trace("loading xsd from string");
-      }
 
       LSInputAdaptor input = new LSInputAdaptor(data, encoding);
 
-      XSImplementation impl = getXSImplementation();
-      XSLoader schemaLoader = impl.createXSLoader(null);
+      if(xsImpl == null)
+         xsImpl = getXSImplementation();         
+      
+      XSLoader schemaLoader = xsImpl.createXSLoader(null);
       setDOMErrorHandler(schemaLoader);
+
+      return schemaLoader.load(input);
+   }
+
+   public static XSModel loadSchema(InputSource is, SchemaBindingResolver schemaResolver)
+   {
+      if(log.isTraceEnabled())
+         log.trace("loading xsd from InputSource");
+
+      LSInputAdaptor input = new LSInputAdaptor(is);
+
+      if(xsImpl == null)
+         xsImpl = getXSImplementation();         
+      
+      XSLoader schemaLoader = xsImpl.createXSLoader(null);
+      if(schemaResolver != null)
+         setResourceResolver(schemaLoader, schemaResolver);
+
+      setDOMErrorHandler(schemaLoader);
+
       return schemaLoader.load(input);
    }
 

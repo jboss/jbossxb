@@ -43,7 +43,7 @@ public class WildcardBinding
 
    private QName qName;
    private SchemaBindingResolver schemaResolver;
-   private short pc;
+   private short pc = PC_STRICT;
 
    private ParticleHandler unresolvedElementHandler;
    private CharactersHandler unresolvedCharactersHandler;
@@ -270,5 +270,25 @@ public class WildcardBinding
    public boolean isElement()
    {
       return false;
+   }
+   
+   public String toString()
+   {
+      String processContent;
+      switch(pc)
+      {
+         case PC_LAX:
+            processContent = "lax";
+            break;
+         case PC_SKIP:
+            processContent = "skip";
+            break;
+         case PC_STRICT:
+            processContent = "strict";
+            break;
+         default:
+            throw new IllegalStateException("Unexpected processContents value: " + pc);
+      }
+      return "wildcard processContents=" + processContent;
    }
 }

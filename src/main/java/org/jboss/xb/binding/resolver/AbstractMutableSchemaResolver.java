@@ -37,6 +37,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingInitializer;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.builder.JBossXBBuilder;
+import org.jboss.xb.util.SchemaBindingValidator;
 import org.w3c.dom.ls.LSInput;
 import org.xml.sax.InputSource;
 
@@ -58,6 +59,9 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
    private Map<String, Boolean> schemaParseAnnotationsByUri = Collections.emptyMap();
    private Map<String, SchemaBindingInitializer> schemaInitByUri = Collections.emptyMap();
 
+   private boolean validateBinding = false;
+   private SchemaBindingValidator validator;
+
    protected AbstractMutableSchemaResolver(Logger log)
    {
       this(log, new JBossEntityResolver());
@@ -71,6 +75,54 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
       this.resolver = resolver;
    }
 
+   /**
+    * Checks whether SchemaBinding instances built from JAXB/JBossXB annotations should be validated
+    * for structural consistency with the corresponding XSD.
+    * By default the validation is turned off for performance reasons.
+    * 
+    * @return  true is validation is on.
+    */
+   public boolean isValidateBinding()
+   {
+      return validateBinding;
+   }
+   
+   /**
+    * Enables/disables validation of SchemaBinding instances built from JAXB/JBossXB annotations
+    * against the corresponding XSD schemas.
+    * 
+    * @param validateBinding
+    */
+   public void setValidateBinding(boolean validateBinding)
+   {
+      this.validateBinding = validateBinding;
+   }
+   
+   /**
+    * Returns the validator which is used to validate SchemaBinding instances if validation is enabled.
+    * By default validator is not initialized. And if validation is enabled a new instance of SchemaBindingValidator
+    * will be created and used for validation for every new SchemaBinding.
+    * 
+    * @return  user provided instance of SchemaBindingValidator or null if the user chose not too provide one
+    */
+   public SchemaBindingValidator getBindingValidator()
+   {
+      return validator;
+   }
+   
+   /**
+    * Sets the validator which should be used to validate SchemaBinding instances built from JAXB/JBossXB annotations
+    * if validation is enabled.
+    * By default validator is not initialized. And if validation is enabled a new instance of SchemaBindingValidator
+    * will be created and used for validation for every new SchemaBinding.
+    * 
+    * @param validator
+    */
+   public void setBindingValidator(SchemaBindingValidator validator)
+   {
+      this.validator = validator;
+   }
+   
    public boolean isCacheResolvedSchemas()
    {
       return cacheResolvedSchemas;
@@ -259,6 +311,18 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
                   ", classes=" + Arrays.asList(classes));
          }
          schema = JBossXBBuilder.build(classes);
+         
+         if(validateBinding)
+         {
+            InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
+            if(is != null)
+            {
+               SchemaBindingValidator validator = this.validator;
+               if(validator == null)
+                  validator = new SchemaBindingValidator();
+               validator.validate(is, schema);
+            }
+         }
       }
       else
       {
@@ -307,7 +371,7 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
             if(schemasByUri.isEmpty())
                schemasByUri = new HashMap<String, SchemaBinding>();
             schemasByUri.put(nsURI, schema);
-         }
+         }         
       }
 
       if(trace)

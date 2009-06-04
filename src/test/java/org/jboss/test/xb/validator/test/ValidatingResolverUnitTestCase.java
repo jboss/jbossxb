@@ -22,6 +22,7 @@
 package org.jboss.test.xb.validator.test;
 
 import org.jboss.test.xb.builder.AbstractBuilderTest;
+import org.jboss.test.xb.validator.support.EE2Root;
 import org.jboss.test.xb.validator.support.ValidatorTestRoot;
 import org.jboss.xb.binding.JBossXBException;
 import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
@@ -44,14 +45,14 @@ public class ValidatingResolverUnitTestCase extends AbstractBuilderTest
    public void testInvalidBinding() throws Exception
    {
       MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
-      resolver.mapURIToClass("urn:jboss:xb:test", ValidatorTestRoot.class);
+      resolver.mapURIToClass("urn:jboss:xb:test", EE2Root.class);
       String xsd = findXML("ValidatingResolverUnitTestCase.xsd");
       resolver.mapSchemaLocation("urn:jboss:xb:test", xsd);      
       resolver.setValidateBinding(true);
       
       try
       {
-         unmarshal("ValidatingResolverUnitTestCase.xml", ValidatorTestRoot.class, resolver);
+         unmarshal("ValidatingResolverUnitTestCase.xml", EE2Root.class, resolver);
          fail("Validation expected to fail");
       }
       catch(JBossXBException e)
@@ -63,5 +64,18 @@ public class ValidatingResolverUnitTestCase extends AbstractBuilderTest
             msg = "Compared elements have different names: XSD QName is {urn:jboss:xb:test}e1, ElementBinding QName is {urn:jboss:xb:test}e";
          assertEquals(msg, e.getCause().getMessage());
       }
+   }
+
+   public void testValidBinding() throws Exception
+   {
+      MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
+      resolver.mapURIToClass("urn:jboss:xb:test", ValidatorTestRoot.class);
+      String xsd = findXML("ValidatingResolverUnitTestCase.xsd");
+      resolver.mapSchemaLocation("urn:jboss:xb:test", xsd);      
+      resolver.setValidateBinding(true);
+      
+      ValidatorTestRoot root = (ValidatorTestRoot) unmarshal("ValidatingResolverUnitTestCase.xml", ValidatorTestRoot.class, resolver);
+      assertEquals("1", root.getE1());
+      assertEquals("2", root.getE2());
    }
 }

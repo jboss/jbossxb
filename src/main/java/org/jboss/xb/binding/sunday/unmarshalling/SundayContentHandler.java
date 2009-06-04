@@ -264,13 +264,16 @@ public class SundayContentHandler
          {
             String schemaLocation = atts == null ? null : Util.getSchemaLocation(atts, namespaceURI);
             // Use the dtd info if it exists and there is no schemaLocation
-            if(sawDTD && (schemaLocation == null || schemaLocation.length() == 0))
+            if(schemaLocation == null || schemaLocation.length() == 0)
             {
-               schemaLocation = dtdSystemId;
+               if(sawDTD)
+                  schemaLocation = dtdSystemId;
+               // If there is still no schemaLocation and no namespaceURI, pass in the root local name
+               // if the namespace is not null then schemaLocation should be left null and resolved by EntityResolver
+               if(schemaLocation == null && (namespaceURI == null || namespaceURI.length() == 0))
+                  schemaLocation = localName;
             }
-            // If there is still no schemaLocation, pass in the root local name
-            if(schemaLocation == null)
-               schemaLocation = localName;
+            
             schemaBinding = schemaResolver.resolve(namespaceURI, null, schemaLocation);
             if(schemaBinding != null)
             {

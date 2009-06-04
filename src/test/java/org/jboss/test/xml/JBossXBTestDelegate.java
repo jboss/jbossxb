@@ -115,6 +115,7 @@ public class JBossXBTestDelegate extends AbstractTestDelegate
       
       long start = System.currentTimeMillis();
       Unmarshaller unmarshaller = unmarshallerFactory.newUnmarshaller();
+      unmarshaller.setSchemaValidation(true);
       log.debug("Initialized parsing in " + (System.currentTimeMillis() - start) + "ms");
       try
       {

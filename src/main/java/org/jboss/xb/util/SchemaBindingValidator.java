@@ -325,6 +325,7 @@ public class SchemaBindingValidator
             ElementBinding elementBinding = schemaBinding.getElement(elementQName);
             if (elementBinding == null)
                handleError("ElementBinding " + elementQName + " is not found in the SchemaBinding.");
+            validate(xsElement.getTypeDefinition(), elementBinding.getType());
          }
       }
       finally
@@ -351,7 +352,10 @@ public class SchemaBindingValidator
    public void validate(XSTypeDefinition xsType, TypeBinding typeBinding)
    {
       if(xsType.getName() == null)
-         handleError("XSD type is anonymous but TypeBinding has QName " + typeBinding.getQName());
+      {
+         if(typeBinding.getQName() != null)
+            handleError("XSD type is anonymous but TypeBinding has QName " + typeBinding.getQName());
+      }
       else
       {
          if(excludedNs.contains(xsType.getNamespace()))

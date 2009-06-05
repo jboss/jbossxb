@@ -322,6 +322,8 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
                   validator = new SchemaBindingValidator();
                validator.validate(is, schema);
             }
+            else
+               log.warn("schema binding validation is on but skipped since XSD nsURI=" + nsURI + ", schemaLocation=" + schemaLocation + " could not be found.");
          }
       }
       else

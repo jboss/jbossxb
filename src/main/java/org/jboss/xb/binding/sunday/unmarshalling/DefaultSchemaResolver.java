@@ -21,7 +21,8 @@
  */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
-import java.util.WeakHashMap;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.jboss.logging.Logger;
 import org.jboss.util.xml.JBossEntityResolver;
@@ -39,9 +40,9 @@ public class DefaultSchemaResolver extends AbstractMutableSchemaResolver
    private static Logger log = Logger.getLogger(DefaultSchemaResolver.class);
 
    /** Namespace to JBossXBBuilder binding class */
-   private WeakHashMap<String, Class<?>> uriToClass = new WeakHashMap<String, Class<?>>();
+   private Map<String, Class<?>> uriToClass = new HashMap<String, Class<?>>();
    /** SchemaLocation to JBossXBBuilder binding class */
-   private WeakHashMap<String, Class<?>> schemaLocationToClass = new WeakHashMap<String, Class<?>>();
+   private Map<String, Class<?>> schemaLocationToClass = new HashMap<String, Class<?>>();
 
    public DefaultSchemaResolver()
    {

@@ -167,12 +167,13 @@ public class JBossXBHelper<T> implements FeatureAware
     * Get the schema resolver.
     * 
     * This implementation returns a singleton schema resolver.
+    *
+    * @return the resolver
     */
-   public MutableSchemaResolver getResolver()
+   protected MutableSchemaResolver getResolver()
    {
       SingletonSchemaResolverFactory factory = SingletonSchemaResolverFactory.getInstance();
-      MutableSchemaResolver resolver = factory.getSchemaBindingResolver();
-      return resolver;
+      return factory.getSchemaBindingResolver();
    }
 
    /**

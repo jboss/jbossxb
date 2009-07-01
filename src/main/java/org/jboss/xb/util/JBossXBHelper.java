@@ -21,6 +21,8 @@
  */
 package org.jboss.xb.util;
 
+// $Id: $
+
 import org.jboss.logging.Logger;
 import org.jboss.xb.annotations.JBossXmlSchema;
 import org.jboss.xb.binding.FeatureAware;
@@ -36,6 +38,7 @@ import org.xml.sax.InputSource;
  *
  * @param <T> the expected type
  * @author <a href="ales.justin@jboss.com">Ales Justin</a>
+ * @author <a href="thomas.diesler@jboss.com">Thomas Diesler</a>
  */
 public class JBossXBHelper<T> implements FeatureAware
 {
@@ -44,9 +47,6 @@ public class JBossXBHelper<T> implements FeatureAware
 
    /** Unmarshaller factory */
    private static final UnmarshallerFactory factory = UnmarshallerFactory.newInstance();
-
-   /** The singleton schema resolver */
-   private static MutableSchemaResolver resolver = SingletonSchemaResolverFactory.getInstance().getSchemaBindingResolver();
 
    /** The output */
    private Class<T> output;
@@ -120,9 +120,12 @@ public class JBossXBHelper<T> implements FeatureAware
     *
     * @param namespace the namespace
     * @param metadata the metadata
+    * @deprecated Use {@link #addTypeBinding(String, Class)}
     */
    public static void addClassBinding(String namespace, Class<?> metadata)
    {
+      SingletonSchemaResolverFactory factory = SingletonSchemaResolverFactory.getInstance();
+      MutableSchemaResolver resolver = factory.getSchemaBindingResolver();
       resolver.mapURIToClass(namespace, metadata);
    }
 
@@ -130,10 +133,46 @@ public class JBossXBHelper<T> implements FeatureAware
     * Remove class binding.
     *
     * @param namespace the namespace
+    * @deprecated Use {@link #removeTypeBinding(String)}
     */
    public static void removeClassBinding(String namespace)
    {
+      SingletonSchemaResolverFactory factory = SingletonSchemaResolverFactory.getInstance();
+      MutableSchemaResolver resolver = factory.getSchemaBindingResolver();
       resolver.removeURIToClassMapping(namespace);
+   }
+
+   /**
+    * Add class binding.
+    *
+    * @param namespace the namespace
+    * @param metadata the metadata
+    */
+   public void addTypeBinding(String namespace, Class<?> metadata)
+   {
+      getResolver().mapURIToClass(namespace, metadata);
+   }
+
+   /**
+    * Remove class binding.
+    *
+    * @param namespace the namespace
+    */
+   public void removeTypeBinding(String namespace)
+   {
+      getResolver().removeURIToClassMapping(namespace);
+   }
+
+   /**
+    * Get the schema resolver.
+    * 
+    * This implementation returns a singleton schema resolver.
+    */
+   public MutableSchemaResolver getResolver()
+   {
+      SingletonSchemaResolverFactory factory = SingletonSchemaResolverFactory.getInstance();
+      MutableSchemaResolver resolver = factory.getSchemaBindingResolver();
+      return resolver;
    }
 
    /**
@@ -186,7 +225,7 @@ public class JBossXBHelper<T> implements FeatureAware
       Unmarshaller unmarshaller = factory.newUnmarshaller();
       unmarshaller.setSchemaValidation(isUseSchemaValidation());
       unmarshaller.setValidation(isUseValidation());
-      Object parsed = unmarshaller.unmarshal(source, resolver);
+      Object parsed = unmarshaller.unmarshal(source, getResolver());
       if (parsed == null)
          throw new Exception("The xml " + source + " is not well formed!");
 

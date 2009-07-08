@@ -241,7 +241,8 @@ public class SchemaBindingValidator
       if(resolver == null)
       {
          resolver = this.resolver;
-         log("SchemaBinding doesn't have a resolver, the default resolver will be used");
+         if(resolver == null)
+            log("Schema resolver was not provided");
       }
       XSModel xsModel = Util.loadSchema(is, resolver);
       validate(xsModel, binding);

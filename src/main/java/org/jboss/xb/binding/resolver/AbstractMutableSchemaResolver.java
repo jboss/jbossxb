@@ -319,7 +319,7 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
             {
                SchemaBindingValidator validator = this.validator;
                if(validator == null)
-                  validator = new SchemaBindingValidator();
+                  validator = new SchemaBindingValidator(this);
                validator.validate(is, schema);
             }
             else

@@ -60,6 +60,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
@@ -106,12 +107,23 @@ public class SchemaBindingValidator
    private Set<QName> validatedTypes = new HashSet<QName>();
    private Set<QName> validatedElements = new HashSet<QName>();
 
+   private SchemaBindingResolver resolver;
+   
    private boolean loggingEnabled;
 
    public SchemaBindingValidator()
    {
       reset();
       excludeNs(Constants.NS_XML_SCHEMA);
+   }
+   
+   /**
+    * @param resolver  default schema resolver
+    */
+   public SchemaBindingValidator(SchemaBindingResolver resolver)
+   {
+      this();
+      this.resolver = resolver;
    }
    
    /**
@@ -200,6 +212,22 @@ public class SchemaBindingValidator
    }
    
    /**
+    * @return The default resolver used to resolve schemas
+    */
+   public SchemaBindingResolver getSchemaResolver()
+   {
+      return resolver;
+   }
+   
+   /**
+    * @param resolver  The default resolver used to resolve schemas
+    */
+   public void setSchemaResolver(SchemaBindingResolver resolver)
+   {
+      this.resolver = resolver;
+   }
+   
+   /**
     * This method will check that the XSD represented with InputSource and SchemaBinding are consistent.
     * The consistency is checked to certain degree and is far from 100%. Currently it checks just for basic things
     * such as the existence of type definitions, attribute and element declarations and element ordering.
@@ -209,7 +237,13 @@ public class SchemaBindingValidator
     */
    public void validate(InputSource is, SchemaBinding binding)
    {
-      XSModel xsModel = Util.loadSchema(is, binding.getSchemaResolver());
+      SchemaBindingResolver resolver = binding.getSchemaResolver();
+      if(resolver == null)
+      {
+         resolver = this.resolver;
+         log("SchemaBinding doesn't have a resolver, the default resolver will be used");
+      }
+      XSModel xsModel = Util.loadSchema(is, resolver);
       validate(xsModel, binding);
    }
    
@@ -221,10 +255,14 @@ public class SchemaBindingValidator
       if(xsdUrl == null)
          handleError("Failed to load schema from the classpath: schema/" + xsdName);
 
-      MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();
-      resolver.mapLocationToClasses(xsdName, cls);
+      MultiClassSchemaResolver multiClassResolver = new MultiClassSchemaResolver();
+      multiClassResolver.mapLocationToClasses(xsdName, cls);
       SchemaBinding binding = resolver.resolve("", null, xsdName);
 
+      SchemaBindingResolver resolver = this.resolver;
+      if(resolver == null)
+         resolver = multiClassResolver;
+      
       XSModel xsModel;
       try
       {

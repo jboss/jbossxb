@@ -24,7 +24,6 @@ package org.jboss.test.xb.validator.test;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import javax.xml.namespace.QName;
 
 import org.jboss.test.xb.builder.AbstractBuilderTest;
@@ -40,6 +39,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
+import org.jboss.xb.util.DefaultSchemaBindingValidator;
 import org.jboss.xb.util.SchemaBindingValidator;
 import org.xml.sax.InputSource;
 
@@ -60,7 +60,7 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
    private SchemaBinding schema;
    private Map<String, ErrorHandler> handlerByMsg;
 
-   SchemaBindingValidator validator = new SchemaBindingValidator()
+   SchemaBindingValidator validator = new DefaultSchemaBindingValidator()
    {
 /*      protected void log(String msg)
       {
@@ -81,7 +81,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("TypeBinding {urn:jboss:xb:test}excludedType is not found in the SchemaBinding.")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             validator.excludeType(new QName("urn:jboss:xb:test", "excludedType"));
@@ -90,7 +89,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("TypeBinding {urn:jboss:xb:test}attributesType is not found in the SchemaBinding.")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = new TypeBinding(new QName("urn:jboss:xb:test", "attributesType"));
@@ -100,7 +98,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("Attribute attr1 is not found in TypeBinding {urn:jboss:xb:test}attributesType")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = schema.getType(new QName("urn:jboss:xb:test", "attributesType"));
@@ -111,7 +108,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("TypeBinding {urn:jboss:xb:test}choiceType is not found in the SchemaBinding.")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = new TypeBinding(new QName("urn:jboss:xb:test", "choiceType"));
@@ -123,7 +119,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("ModelGroupBinding expected to have 3 particle(s) but has 0")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = schema.getType(new QName("urn:jboss:xb:test", "choiceType"));
@@ -144,7 +139,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("Compared elements have different names: XSD QName is {urn:jboss:xb:test}choice3_1, ElementBinding QName is {urn:jboss:xb:test}choice3")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = schema.getType(new QName("urn:jboss:xb:test", "choiceType"));
@@ -171,7 +165,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("TypeBinding {urn:jboss:xb:test}aComplexType is not found in the SchemaBinding.")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = new TypeBinding(new QName("urn:jboss:xb:test", "aComplexType"));
@@ -181,7 +174,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("TypeBinding {urn:jboss:xb:test}aComplexType doesn't have AnyAttributeBinding")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = schema.getType(new QName("urn:jboss:xb:test", "aComplexType"));
@@ -191,7 +183,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("TypeBinding {urn:jboss:xb:test}aComplexType doesn't contain a ParticleBinding.")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = schema.getType(new QName("urn:jboss:xb:test", "aComplexType"));
@@ -202,7 +193,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("ModelGroupBinding expected to be a sequence but was choice:")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = schema.getType(new QName("urn:jboss:xb:test", "aComplexType"));
@@ -213,7 +203,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("ModelGroupBinding expected to have 1 particle(s) but has 0")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = schema.getType(new QName("urn:jboss:xb:test", "aComplexType"));
@@ -225,7 +214,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("TermBinding expected to be a wildcard but was all:")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = schema.getType(new QName("urn:jboss:xb:test", "aComplexType"));
@@ -241,7 +229,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("Wildcard processContents doesn't match: XSD processContents is 3, WildcardBinding processContents is 1")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = schema.getType(new QName("urn:jboss:xb:test", "aComplexType"));
@@ -255,7 +242,6 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 
       new AbstractErrorHandler("XSD particle has maxOccurs unbounded but ParticleBinding of wildcard processContents=lax does not.")
       {
-         @Override
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
             TypeBinding type = schema.getType(new QName("urn:jboss:xb:test", "aComplexType"));

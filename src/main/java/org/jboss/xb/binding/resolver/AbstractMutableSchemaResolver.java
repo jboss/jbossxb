@@ -37,6 +37,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingInitializer;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.builder.JBossXBBuilder;
+import org.jboss.xb.util.DefaultSchemaBindingValidator;
 import org.jboss.xb.util.SchemaBindingValidator;
 import org.w3c.dom.ls.LSInput;
 import org.xml.sax.InputSource;
@@ -91,7 +92,7 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
     * Enables/disables validation of SchemaBinding instances built from JAXB/JBossXB annotations
     * against the corresponding XSD schemas.
     * 
-    * @param validateBinding
+    * @param validateBinding validate binding flag
     */
    public void setValidateBinding(boolean validateBinding)
    {
@@ -113,10 +114,10 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
    /**
     * Sets the validator which should be used to validate SchemaBinding instances built from JAXB/JBossXB annotations
     * if validation is enabled.
-    * By default validator is not initialized. And if validation is enabled a new instance of SchemaBindingValidator
+    * By default validator is not initialized. And if validation is enabled a new instance of DefaultSchemaBindingValidator
     * will be created and used for validation for every new SchemaBinding.
     * 
-    * @param validator
+    * @param validator the schema binding validator
     */
    public void setBindingValidator(SchemaBindingValidator validator)
    {
@@ -133,12 +134,13 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
     * schemas (which is the default) with namespace URI being the identifier of a schema.
     * False will flush the cache and make the schema resolver to resolve schemas
     * on each request.
-    * @param cacheResolvedSchemas
+    *
+    * @param cacheResolvedSchemas do we cache resolved schemas
     */
    public void setCacheResolvedSchemas(boolean cacheResolvedSchemas)
    {
       this.cacheResolvedSchemas = cacheResolvedSchemas;
-      if(!cacheResolvedSchemas)
+      if(cacheResolvedSchemas == false)
       {
          schemasByUri = Collections.emptyMap();
       }
@@ -319,7 +321,8 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
             {
                SchemaBindingValidator validator = this.validator;
                if(validator == null)
-                  validator = new SchemaBindingValidator(this);
+                  validator = new DefaultSchemaBindingValidator(this);
+
                validator.validate(is, schema);
             }
             else
@@ -345,7 +348,7 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
                baseURI = this.baseURI;
    
             Boolean processAnnotationsBoolean = schemaParseAnnotationsByUri.get(nsURI);
-            boolean processAnnotations = (processAnnotationsBoolean == null) ? true : processAnnotationsBoolean.booleanValue();
+            boolean processAnnotations = (processAnnotationsBoolean == null) || processAnnotationsBoolean;
             try
             {
                schema = XsdBinder.bind(is.getByteStream(), null, baseURI, processAnnotations);

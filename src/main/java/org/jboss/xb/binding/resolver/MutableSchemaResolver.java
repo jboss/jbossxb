@@ -42,7 +42,8 @@ public interface MutableSchemaResolver extends SchemaBindingResolver
     * passing in true will enable caching.
     * False will (possibly) flush the cache and make the schema resolver resolve schemas
     * on each request.
-    * @param cacheResolvedSchemas
+    *
+    * @param cacheResolvedSchemas cache resolved schemas flag
     */
    void setCacheResolvedSchemas(boolean cacheResolvedSchemas);
    

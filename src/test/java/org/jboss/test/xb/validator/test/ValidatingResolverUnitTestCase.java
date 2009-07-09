@@ -57,12 +57,18 @@ public class ValidatingResolverUnitTestCase extends AbstractBuilderTest
       }
       catch(JBossXBException e)
       {
-         String msg;
+         String msg = e.getCause().getMessage();
          if(JBossXBBuilder.isUseUnorderedSequence())
-            msg = "ElementBinding {urn:jboss:xb:test}e is missing: [{urn:jboss:xb:test}e2, {urn:jboss:xb:test}e1]";
+         {
+            // ordering hack
+            boolean check = "ElementBinding {urn:jboss:xb:test}e is missing: [{urn:jboss:xb:test}e2, {urn:jboss:xb:test}e1]".equals(msg);
+            check |=        "ElementBinding {urn:jboss:xb:test}e is missing: [{urn:jboss:xb:test}e1, {urn:jboss:xb:test}e2]".equals(msg);
+            assertTrue(check);
+         }
          else
-            msg = "Compared elements have different names: XSD QName is {urn:jboss:xb:test}e1, ElementBinding QName is {urn:jboss:xb:test}e";
-         assertEquals(msg, e.getCause().getMessage());
+         {
+            assertEquals("Compared elements have different names: XSD QName is {urn:jboss:xb:test}e1, ElementBinding QName is {urn:jboss:xb:test}e", msg);
+         }
       }
    }
 

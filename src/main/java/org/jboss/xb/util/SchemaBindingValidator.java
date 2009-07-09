@@ -48,4 +48,11 @@ public interface SchemaBindingValidator
     * @param qName the qname to exclude
     */
    void excludeType(QName qName);
+
+   /**
+    * Include QName.
+    *
+    * @param qName the qname to include
+    */
+   void includeType(QName qName);
 }

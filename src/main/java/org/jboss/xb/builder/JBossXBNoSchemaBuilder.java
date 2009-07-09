@@ -63,6 +63,7 @@ import org.jboss.reflect.plugins.introspection.ParameterizedClassInfo;
 import org.jboss.reflect.spi.ArrayInfo;
 import org.jboss.reflect.spi.ClassInfo;
 import org.jboss.reflect.spi.EnumInfo;
+import org.jboss.reflect.spi.FieldInfo;
 import org.jboss.reflect.spi.MethodInfo;
 import org.jboss.reflect.spi.PackageInfo;
 import org.jboss.reflect.spi.TypeInfo;
@@ -88,6 +89,8 @@ import org.jboss.xb.annotations.JBossXmlNoElements;
 import org.jboss.xb.annotations.JBossXmlNsPrefix;
 import org.jboss.xb.annotations.JBossXmlPreserveWhitespace;
 import org.jboss.xb.annotations.JBossXmlSchema;
+import org.jboss.xb.annotations.JBossXmlTransient;
+import org.jboss.xb.annotations.JBossXmlTransients;
 import org.jboss.xb.annotations.JBossXmlType;
 import org.jboss.xb.annotations.JBossXmlValue;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -179,6 +182,9 @@ public class JBossXBNoSchemaBuilder
    
    private boolean useUnorderedSequence;
    private boolean sequencesRequirePropOrder;
+
+   /** transient property names by type name */
+   private Map<String, Set<String>> jbossXmlTransients = Collections.emptyMap();
    
    /**
     * Create a new JBossXBNoSchemaBuilder.
@@ -309,6 +315,33 @@ public class JBossXBNoSchemaBuilder
          JBossXmlAdaptedType adaptedType = packageInfo.getUnderlyingAnnotation(JBossXmlAdaptedType.class);
          if (adaptedType != null)
             generateAdaptedType(adaptedType);
+         
+         JBossXmlTransient[] xmlTransients = null;
+         JBossXmlTransients transientsAnnotation = packageInfo.getUnderlyingAnnotation(JBossXmlTransients.class);
+         if(transientsAnnotation == null)
+         {
+            JBossXmlTransient transientAnnotation = packageInfo.getUnderlyingAnnotation(JBossXmlTransient.class);
+            if(transientAnnotation != null)
+               xmlTransients = new JBossXmlTransient[]{transientAnnotation};
+         }
+         else
+            xmlTransients = transientsAnnotation.value();
+
+         if(xmlTransients != null)
+         {
+            jbossXmlTransients = new HashMap<String, Set<String>>();
+            for(JBossXmlTransient xmlTransient : xmlTransients)
+            {
+               Set<String> properties;
+               if(xmlTransient.properties().length == 0)
+                  properties = Collections.emptySet();
+               else
+                  properties= new HashSet<String>(Arrays.asList(xmlTransient.properties()));
+               jbossXmlTransients.put(xmlTransient.type().getName(), properties);
+               if(trace)
+                  log.trace("JBossXmlTransient type=" + xmlTransient.type().getName() + ", properties=" + properties);
+            }
+         }
       }
    }
 
@@ -1003,6 +1036,34 @@ public class JBossXBNoSchemaBuilder
 
                if (noElements)
                {
+                  pop();
+                  continue;
+               }
+
+               ClassInfo declaringClass;
+               MethodInfo methodInfo = property.getGetter();
+               if(methodInfo == null)
+               {
+                  FieldInfo fieldInfo = property.getFieldInfo();
+                  if(fieldInfo == null)
+                  {
+                     methodInfo = property.getSetter();
+                     if(methodInfo == null)
+                        throw new JBossXBRuntimeException("Couldn't get access to getter, setter or field info for type=" + beanInfo.getName() + " property=" + property.getName());
+                     else
+                        declaringClass = methodInfo.getDeclaringClass();
+                  }
+                  else
+                     declaringClass = fieldInfo.getDeclaringClass();
+               }
+               else
+                  declaringClass = methodInfo.getDeclaringClass();
+               
+               Set<String> transientProps = jbossXmlTransients.get(declaringClass.getName());
+               if(transientProps != null && (transientProps.isEmpty() || transientProps.contains(property.getName())))
+               {
+                  if(trace)
+                     log.trace("Ignore JBossXmlTransient property for type=" + beanInfo.getName() + " property=" + property.getName());
                   pop();
                   continue;
                }

@@ -21,18 +21,12 @@
  */
 package org.jboss.xb.util;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import javax.xml.namespace.QName;
 
 import org.apache.xerces.xs.XSAttributeDeclaration;
@@ -49,10 +43,6 @@ import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
-import org.jboss.logging.Logger;
-import org.jboss.xb.binding.Constants;
-import org.jboss.xb.binding.Util;
-import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ChoiceBinding;
@@ -60,13 +50,13 @@ import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.UnorderedSequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
-import org.xml.sax.InputSource;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.jboss.xb.binding.Constants;
 
 /**
  * This class is used to check consistency between SchemaBinding instances and their corresponding XSD schemas.
@@ -96,189 +86,21 @@ import org.xml.sax.InputSource;
  * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
-public class DefaultSchemaBindingValidator implements SchemaBindingValidator
+public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidator
 {
-   private static final Logger log = Logger.getLogger(DefaultSchemaBindingValidator.class);
-
-   private static final QName WILDCARD = new QName("wildcard", "wildcard");
-
-   private Set<String> excludedNs = new HashSet<String>();
-   private Set<QName> excludedTypes = new HashSet<QName>();
-
-   private Set<QName> validatedTypes = new HashSet<QName>();
-   private Set<QName> validatedElements = new HashSet<QName>();
-
-   private SchemaBindingResolver resolver;
-
-   private boolean loggingEnabled;
-
    public DefaultSchemaBindingValidator()
    {
+      this(null);
+   }
+
+   public DefaultSchemaBindingValidator(SchemaBindingResolver resolver)
+   {
+      super(resolver);
       reset();
       excludeNs(Constants.NS_XML_SCHEMA);
    }
 
-   /**
-    * @param resolver  default schema resolver
-    */
-   public DefaultSchemaBindingValidator(SchemaBindingResolver resolver)
-   {
-      this();
-      this.resolver = resolver;
-   }
-
-   /**
-    * Resets instance variables (such as a set of validated types, elements and also loggingEnabled property).
-    * This method is required to invoked before another validation.
-    * It is called internally at the end of validate(XSModel xsSchema, SchemaBinding schemaBinding).
-    * NOTE: this method doesn't clear excluded namespaces and types.
-    */
-   public void reset()
-   {
-      loggingEnabled = log.isTraceEnabled();
-      validatedTypes.clear();
-      validatedElements.clear();
-   }
-
-   public boolean isLoggingEnabled()
-   {
-      return loggingEnabled;
-   }
-
-   public void enableLogging(boolean value)
-   {
-      loggingEnabled = value;
-   }
-
-   /**
-    * Types and elements from the namespace passed into this method will be excluded from validation.
-    *
-    * @param ns  namespace to exclude
-    */
-   public void excludeNs(String ns)
-   {
-      excludedNs.add(ns);
-   }
-
-   /**
-    * Checks if the specified namespace is excluded from validation.
-    *
-    * @param ns  the namespace to check
-    * @return  true if the namespace is excluded
-    */
-   public boolean isNsExcluded(String ns)
-   {
-      return excludedNs.contains(ns);
-   }
-
-   /**
-    * Removes the namespace from the excluded set. If the namespace has not been excluded, the method does nothing.
-    *
-    * @param ns  the namespace to remove from the excluded set.
-    */
-   public void includeNs(String ns)
-   {
-      excludedNs.remove(ns);
-   }
-
-   /**
-    * Excludes the specified type from validation.
-    *
-    * @param qName  the QName of the type to exclude from validation
-    */
-   public void excludeType(QName qName)
-   {
-      excludedTypes.add(qName);
-   }
-
-   /**
-    * Checks if the type is excluded from validation.
-    *
-    * @param qName  the QName of the type to check
-    * @return  true if the type is excluded from validation
-    */
-   public boolean isTypeExcluded(QName qName)
-   {
-      return excludedTypes.contains(qName);
-   }
-
-   /**
-    * Removes the specified type from the excluded set. If the type has not been excluded, the method does nothing.
-    *
-    * @param qName  the QName of type to remove from the excluded set.
-    */
-   public void includeType(QName qName)
-   {
-      excludedTypes.remove(qName);
-   }
-
-   /**
-    * @return The default resolver used to resolve schemas
-    */
-   public SchemaBindingResolver getSchemaResolver()
-   {
-      return resolver;
-   }
-
-   /**
-    * @param resolver  The default resolver used to resolve schemas
-    */
-   public void setSchemaResolver(SchemaBindingResolver resolver)
-   {
-      this.resolver = resolver;
-   }
-
-   /**
-    * This method will check that the XSD represented with InputSource and SchemaBinding are consistent.
-    * The consistency is checked to certain degree and is far from 100%. Currently it checks just for basic things
-    * such as the existence of type definitions, attribute and element declarations and element ordering.
-    *
-    * @param is  InputSource of the XSD
-    * @param binding  SchemaBinding
-    */
-   public void validate(InputSource is, SchemaBinding binding)
-   {
-      SchemaBindingResolver resolver = binding.getSchemaResolver();
-      if(resolver == null)
-      {
-         resolver = this.resolver;
-         if(resolver == null)
-            log("Schema resolver was not provided");
-      }
-      XSModel xsModel = Util.loadSchema(is, resolver);
-      validate(xsModel, binding);
-   }
-
-   public void validate(String xsdName, Class<?>... cls)
-   {
-      log("validate: " + xsdName + ", " + Arrays.asList(cls));
-
-      URL xsdUrl = Thread.currentThread().getContextClassLoader().getResource("schema/" + xsdName);
-      if(xsdUrl == null)
-         handleError("Failed to load schema from the classpath: schema/" + xsdName);
-
-      MultiClassSchemaResolver multiClassResolver = new MultiClassSchemaResolver();
-      multiClassResolver.mapLocationToClasses(xsdName, cls);
-      SchemaBinding binding = resolver.resolve("", null, xsdName);
-
-      SchemaBindingResolver resolver = this.resolver;
-      if(resolver == null)
-         resolver = multiClassResolver;
-
-      XSModel xsModel;
-      try
-      {
-         xsModel = Util.loadSchema(xsdUrl.openStream(), null, resolver);
-      }
-      catch (IOException e)
-      {
-         throw new IllegalStateException("Failed to read schema " + xsdName, e);
-      }
-
-      validate(xsModel, binding);
-   }
-
-   public void validate(XSModel xsSchema, SchemaBinding schemaBinding)
+   protected void validate(XSModel xsSchema, SchemaBinding schemaBinding)
    {
       try
       {
@@ -799,7 +621,7 @@ public class DefaultSchemaBindingValidator implements SchemaBindingValidator
     */
    protected void log(String msg)
    {
-      if(loggingEnabled)
+      if(isLoggingEnabled())
          log.trace(msg);
    }
 }

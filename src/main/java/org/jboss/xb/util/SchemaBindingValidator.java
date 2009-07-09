@@ -35,24 +35,64 @@ import org.xml.sax.InputSource;
 public interface SchemaBindingValidator
 {
    /**
-    * Validate schema binding.
+    * Types and elements from the namespace passed into this method will be excluded from validation.
     *
-    * @param is the input source
-    * @param binding the schema binding
+    * @param ns  namespace to exclude
     */
-   void validate(InputSource is, SchemaBinding binding);
+   void excludeNs(String ns);
 
    /**
-    * Exclude QName.
+    * Checks if the specified namespace is excluded from validation.
     *
-    * @param qName the qname to exclude
+    * @param ns  the namespace to check
+    * @return  true if the namespace is excluded
+    */
+   boolean isNsExcluded(String ns);
+
+   /**
+    * Removes the namespace from the excluded set. If the namespace has not been excluded, the method does nothing.
+    *
+    * @param ns  the namespace to remove from the excluded set.
+    */
+   void includeNs(String ns);
+
+   /**
+    * Excludes the specified type from validation.
+    *
+    * @param qName  the QName of the type to exclude from validation
     */
    void excludeType(QName qName);
 
    /**
-    * Include QName.
+    * Checks if the type is excluded from validation.
     *
-    * @param qName the qname to include
+    * @param qName  the QName of the type to check
+    * @return  true if the type is excluded from validation
+    */
+   boolean isTypeExcluded(QName qName);
+
+   /**
+    * Removes the specified type from the excluded set. If the type has not been excluded, the method does nothing.
+    *
+    * @param qName  the QName of type to remove from the excluded set.
     */
    void includeType(QName qName);
+
+   /**
+    * This method will check that the XSD represented with InputSource and SchemaBinding are consistent.
+    * The consistency is checked to certain degree and is far from 100%. Currently it checks just for basic things
+    * such as the existence of type definitions, attribute and element declarations and element ordering.
+    *
+    * @param is  InputSource of the XSD
+    * @param binding  SchemaBinding
+    */
+   void validate(InputSource is, SchemaBinding binding);
+
+   /**
+    * Validate xsd schema against classes.
+    *
+    * @param xsdName the schema name
+    * @param cls the classes to check
+    */
+   void validate(String xsdName, Class<?>... cls);
 }

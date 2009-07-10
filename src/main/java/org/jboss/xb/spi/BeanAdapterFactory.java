@@ -21,23 +21,23 @@
 */
 package org.jboss.xb.spi;
 
-import java.util.HashMap;
 import java.util.Map;
-
 import javax.xml.namespace.QName;
 
+import org.jboss.util.collection.CollectionsFactory;
 import org.jboss.xb.builder.runtime.AbstractPropertyHandler;
 
 /**
  * BeanAdapterFactory.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="ales.justin@jboss.com">Ales Justin</a>
  * @version $Revision: 1.1 $
  */
 public abstract class BeanAdapterFactory
 {
    /** The properties */
-   private Map<QName, AbstractPropertyHandler> properties;
+   private Map<QName, AbstractPropertyHandler> properties = CollectionsFactory.createLazyMap();
    
    /** The wildcard handler */
    private AbstractPropertyHandler wildcardHandler;
@@ -50,8 +50,6 @@ public abstract class BeanAdapterFactory
     */
    public AbstractPropertyHandler getPropertyHandler(QName qName)
    {
-      if (properties == null)
-         return null;
       return properties.get(qName);
    }
 
@@ -78,10 +76,9 @@ public abstract class BeanAdapterFactory
       if (propertyHandler == null)
          throw new IllegalArgumentException("Null property handler");
 
-      if (properties == null)
-         properties = new HashMap<QName, AbstractPropertyHandler>();
       properties.put(qName, propertyHandler);
    }
+
    /**
     * Get the available properties as a string
     * 
@@ -89,7 +86,7 @@ public abstract class BeanAdapterFactory
     */
    public String getAvailable()
    {
-      if (properties == null)
+      if (properties.isEmpty())
          return "<nothing>";
       else
          return properties.keySet().toString();

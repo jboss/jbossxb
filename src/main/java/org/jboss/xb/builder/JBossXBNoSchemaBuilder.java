@@ -1689,7 +1689,7 @@ public class JBossXBNoSchemaBuilder
                   {
                      BeanAdapterFactory wrapperBeanFactory = ((BeanHandler)wrapperType.getHandler()).getBeanAdapterFactory();
                      Map<QName, AbstractPropertyHandler> properties = wrapperBeanFactory.getProperties();
-                     if(!properties.containsKey(boundQName))
+                     if(properties.containsKey(boundQName) == false)
                      {
                         propertyHandler = new MapPropertyHandler(JBossXBBuilder.configuration, property, localPropertyType, true);
                         wrapperBeanFactory.addProperty(boundQName, propertyHandler);

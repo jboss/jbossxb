@@ -93,7 +93,8 @@ public abstract class ModelGroupBinding
    /**
     * Model group that is passed in as an argument to this method must be fully populated with
     * element, wildcard and child model group bindings.
-    * @param particle
+    *
+    * @param particle the particle
     */
    public void addParticle(ParticleBinding particle)
    {
@@ -232,6 +233,7 @@ public abstract class ModelGroupBinding
          return occurence;
       }
 
+      @SuppressWarnings({"UnusedDeclaration"})
       public boolean repeatElement(QName qName)
       {
          ParticleBinding particle = getCurrentParticle();
@@ -260,60 +262,59 @@ public abstract class ModelGroupBinding
       protected ElementBinding getElement(List<ParticleBinding> group, QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
       {
          ElementBinding element = null;
-         for(int i = 0; i < group.size(); ++i)
+         for (ParticleBinding nextParticle : group)
          {
-            ParticleBinding nextParticle = group.get(i);
             TermBinding item = nextParticle.getTerm();
-            if(item.isElement())
+            if (item.isElement())
             {
                ElementBinding choice = (ElementBinding)item;
-               if(qName.equals(choice.getQName()))
+               if (qName.equals(choice.getQName()))
                {
                   element = choice;
                   break;
                }
             }
-            else if(item.isModelGroup())
+            else if (item.isModelGroup())
             {
                ModelGroupBinding modelGroup = (ModelGroupBinding)item;
-               if(passedGroups.contains(modelGroup) == false) // FIX-ME ... weird set usage
+               if (passedGroups.contains(modelGroup) == false) // FIX-ME ... weird set usage
                {
-                  switch(passedGroups.size())
+                  switch (passedGroups.size())
                   {
                      case 0:
                         passedGroups = Collections.singleton(this);
                         break;
                      case 1:
-                        passedGroups = new HashSet<ModelGroupBinding.Cursor>(passedGroups);
+                        passedGroups = new HashSet<Cursor>(passedGroups);
                      default:
                         passedGroups.add(this);
                   }
 
                   ElementBinding e = modelGroup.newCursor(nextParticle).getElement(qName, atts, passedGroups, ignoreWildcards);
-                  if(e != null)
+                  if (e != null)
                   {
                      element = e;
-                     if(!qName.equals(e.getQName()))
+                     if (!qName.equals(e.getQName()))
                      {
                         throw new JBossXBRuntimeException(
-                           "There is a bug in ModelGroupBinding.Cursor.getElement(QName,Attributes) impl"
+                              "There is a bug in ModelGroupBinding.Cursor.getElement(QName,Attributes) impl"
                         );
                      }
                      break;
                   }
                }
             }
-            else if(!ignoreWildcards)
+            else if (!ignoreWildcards)
             {
                WildcardBinding wildcard = (WildcardBinding)item;
                ElementBinding e = wildcard.getElement(qName, atts);
-               if(e != null)
+               if (e != null)
                {
                   element = e;
-                  if(!qName.equals(e.getQName()))
+                  if (!qName.equals(e.getQName()))
                   {
                      throw new JBossXBRuntimeException(
-                        "There is a bug in ModelGroupBinding.Cursor.getElement(QName,Attributes) impl"
+                           "There is a bug in ModelGroupBinding.Cursor.getElement(QName,Attributes) impl"
                      );
                   }
                   break;

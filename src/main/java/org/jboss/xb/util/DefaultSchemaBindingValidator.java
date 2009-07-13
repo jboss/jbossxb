@@ -430,6 +430,9 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
 
          if(!(modelGroupBinding instanceof ChoiceBinding))
             handleError("XSD model group is choice but ModelGroupBinding is " + modelGroupBinding);
+         
+         // ordering in the choice is not important
+         all = true;
       }
       else if(xsCompositor == XSModelGroup.COMPOSITOR_ALL)
       {

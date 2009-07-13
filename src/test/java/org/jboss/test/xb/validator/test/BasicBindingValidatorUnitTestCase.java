@@ -130,14 +130,16 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
             choice.addParticle(new ParticleBinding(e));
             SequenceBinding sequence = new SequenceBinding(schema);
             choice.addParticle(new ParticleBinding(sequence));
-            e = new ElementBinding(schema, new QName("urn:jboss:xb:test", "choice3"), schema.getType(Constants.QNAME_STRING));
+            //e = new ElementBinding(schema, new QName("urn:jboss:xb:test", "choice4"), schema.getType(Constants.QNAME_STRING));
+            e = new ElementBinding(schema, new QName("urn:jboss:xb:test", "choice3_1"), schema.getType(Constants.QNAME_STRING));
             sequence.addParticle(new ParticleBinding(e));
-            e = new ElementBinding(schema, new QName("urn:jboss:xb:test", "choice4"), schema.getType(Constants.QNAME_STRING));
-            sequence.addParticle(new ParticleBinding(e));            
+            //e = new ElementBinding(schema, new QName("urn:jboss:xb:test", "choice3"), schema.getType(Constants.QNAME_STRING));
+            e = new ElementBinding(schema, new QName("urn:jboss:xb:test", "choice3_2"), schema.getType(Constants.QNAME_STRING));
+            sequence.addParticle(new ParticleBinding(e));
          }
       };
 
-      new AbstractErrorHandler("Compared elements have different names: XSD QName is {urn:jboss:xb:test}choice3_1, ElementBinding QName is {urn:jboss:xb:test}choice3")
+/*      new AbstractErrorHandler("ElementBinding {urn:jboss:xb:test}choice3 is missing: [{urn:jboss:xb:test}choice1, {urn:jboss:xb:test}choice2, {urn:jboss:xb:test}choice3_2, {urn:jboss:xb:test}choice3_1]")
       {
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {
@@ -162,7 +164,7 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
             p.setTerm(new ElementBinding(schema, new QName("urn:jboss:xb:test", "choice3_2"), schema.getType(Constants.QNAME_STRING)));
          }
       };
-
+*/
       new AbstractErrorHandler("TypeBinding {urn:jboss:xb:test}aComplexType is not found in the SchemaBinding.")
       {
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)

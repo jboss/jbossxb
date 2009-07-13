@@ -968,7 +968,7 @@ public class JBossXBNoSchemaBuilder
                if(preserveSpace != null)
                   attribute.setNormalizeSpace(preserveSpace.preserve() ? false : true);
                if (trace)
-                  log.trace("Bound attribute " + qName + " type=" + beanInfo.getName() + " property=" + property.getName() + " propertyType=" + attributeTypeInfo + ", normalizeSpace=" + attribute.isNormalizeSpace());
+                  log.trace("Bound attribute " + qName + " type=" + beanInfo.getName() + " property=" + property.getName() + " propertyType=" + attributeTypeInfo + ", normalizeSpace=" + attribute.isNormalizeSpace() + ", typeBinding=" + typeBinding.getQName());
             }
 
             // Is this any attribute

@@ -245,7 +245,10 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
       //assertEquals("Simple type expected to be " + (xsType == null ? "anonymous" : "named '" + xsQName + "'"), xsQName, typeBinding.getQName());
 
       if(!typeBinding.isSimple())
-         handleError("XSD type " + typeBinding.getQName() + " is simple but TypeBinding is not.");
+      {
+         if(typeBinding.getValueAdapter() == null)
+            handleError("XSD type " + typeBinding.getQName() + " is simple but TypeBinding is not and ValueAdapter for TypeBinding is not provided.");
+      }
       // TODO the rest of the simple type stuff?
    }
 

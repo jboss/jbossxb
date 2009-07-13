@@ -118,7 +118,7 @@ public abstract class ModelGroupBinding
     */
    public boolean mayStartWith(QName qName)
    {
-      return mayStartWith(qName, Collections.EMPTY_SET);
+      return mayStartWith(qName, Collections.<ModelGroupBinding>emptySet());
    }
 
    public abstract Cursor newCursor(ParticleBinding particle);
@@ -134,7 +134,7 @@ public abstract class ModelGroupBinding
 
    public boolean isSkip()
    {
-      return skip == null ? true : skip.booleanValue();
+      return skip == null || skip;
    }
 
    public boolean isModelGroup()
@@ -217,12 +217,12 @@ public abstract class ModelGroupBinding
 
       public List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes attrs)
       {
-         return startElement(qName, attrs, Collections.EMPTY_SET, Collections.EMPTY_LIST, true);
+         return startElement(qName, attrs, Collections.<Cursor>emptySet(), Collections.<Cursor>emptyList(), true);
       }
 
       public ElementBinding getElement(QName qName, Attributes attrs, boolean ignoreWildcards)
       {
-         return getElement(qName, attrs, Collections.EMPTY_SET, ignoreWildcards);
+         return getElement(qName, attrs, Collections.<Cursor>emptySet(), ignoreWildcards);
       }
 
       public abstract void endElement(QName qName);
@@ -262,7 +262,7 @@ public abstract class ModelGroupBinding
          ElementBinding element = null;
          for(int i = 0; i < group.size(); ++i)
          {
-            ParticleBinding nextParticle = (ParticleBinding)group.get(i);
+            ParticleBinding nextParticle = group.get(i);
             TermBinding item = nextParticle.getTerm();
             if(item.isElement())
             {
@@ -276,7 +276,7 @@ public abstract class ModelGroupBinding
             else if(item.isModelGroup())
             {
                ModelGroupBinding modelGroup = (ModelGroupBinding)item;
-               if(!passedGroups.contains(modelGroup))
+               if(passedGroups.contains(modelGroup) == false) // FIX-ME ... weird set usage
                {
                   switch(passedGroups.size())
                   {

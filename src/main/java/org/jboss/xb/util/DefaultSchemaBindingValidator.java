@@ -410,7 +410,47 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
             if(modelGroupBinding instanceof AllBinding || modelGroupBinding instanceof UnorderedSequenceBinding)
                all = true;
             else
-               handleError("ModelGroupBinding expected to be a sequence but was " + modelGroupBinding);
+            {
+               // here we're going to try to detect an extended choice wrapped by xerces into a sequence
+               boolean extendedChoice = false;
+               if(modelGroupBinding instanceof ChoiceBinding)
+               {
+                  XSObjectList particles = xsModelGroup.getParticles();
+                  // there should be two particles
+                  if(particles.getLength() == 2)
+                  {
+                     XSParticle p = (XSParticle) particles.item(0);
+                     XSTerm term = p.getTerm();
+                     // first particle must be a choice
+                     if(term.getType() == XSConstants.MODEL_GROUP)
+                     {
+                        if(((XSModelGroup)term).getCompositor() == XSModelGroup.COMPOSITOR_CHOICE)
+                        {
+                           p = (XSParticle) particles.item(1);
+                           term = p.getTerm();
+                           // second particle can be a choice or an empty sequence
+                           if(term.getType() == XSConstants.MODEL_GROUP)
+                           {
+                              XSModelGroup extensionGroup = (XSModelGroup) term;
+                              if(extensionGroup.getCompositor() == XSModelGroup.COMPOSITOR_CHOICE)
+                                 extendedChoice = true;
+                              else if(extensionGroup.getCompositor() == XSModelGroup.COMPOSITOR_SEQUENCE &&
+                                    extensionGroup.getParticles().getLength() == 0)
+                                 extendedChoice = true;
+                           }
+                        }
+                     }
+                  }
+               }
+               
+               if(extendedChoice)
+               {
+                  log(" - the sequence is treated as an extended choice");
+                  all = true;
+               }
+               else
+                  handleError("ModelGroupBinding expected to be a sequence but was " + modelGroupBinding);
+            }
          }
       }
       else if(xsCompositor == XSModelGroup.COMPOSITOR_CHOICE)

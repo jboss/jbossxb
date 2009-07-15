@@ -564,7 +564,7 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
                   for (Iterator<QName> missingNames = missing.iterator(); missingNames.hasNext();)
                      log("- " + missingNames.next());
                }
-               handleError("ModelGroupBinding expected to have " + xsParticles.getLength() + " particle(s) but has " + particleBindings.size() + ";\n" + xsParticles + " != " + particleBindings);
+               handleError("ModelGroupBinding expected to have " + xsParticles.getLength() + " particle(s) but has " + particleBindings.size());
             }
          }
       }

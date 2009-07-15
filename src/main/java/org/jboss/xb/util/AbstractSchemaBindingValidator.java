@@ -80,7 +80,6 @@ public abstract class AbstractSchemaBindingValidator implements SchemaBindingVal
     */
    public void reset()
    {
-      loggingEnabled = log.isTraceEnabled();
       validatedTypes.clear();
       validatedElements.clear();
    }

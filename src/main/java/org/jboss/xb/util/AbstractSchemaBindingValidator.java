@@ -61,6 +61,7 @@ public abstract class AbstractSchemaBindingValidator implements SchemaBindingVal
 
    protected AbstractSchemaBindingValidator()
    {
+      loggingEnabled = log.isTraceEnabled();
    }
 
    /**
@@ -73,7 +74,7 @@ public abstract class AbstractSchemaBindingValidator implements SchemaBindingVal
    }
 
    /**
-    * Resets instance variables (such as a set of validated types, elements and also loggingEnabled property).
+    * Resets instance variables (such as a set of validated types and elements).
     * This method is required to invoked before another validation.
     * It is called internally at the end of validate(XSModel xsSchema, SchemaBinding schemaBinding).
     * NOTE: this method doesn't clear excluded namespaces and types.

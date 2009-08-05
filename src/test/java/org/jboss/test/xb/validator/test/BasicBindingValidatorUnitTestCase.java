@@ -22,7 +22,6 @@
 package org.jboss.test.xb.validator.test;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import javax.xml.namespace.QName;
 

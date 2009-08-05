@@ -389,7 +389,7 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
 
       if(xsParticle.getMaxOccursUnbounded())
       {
-         if(!particleBinding.getMaxOccursUnbounded())
+         if(!particleBinding.getMaxOccursUnbounded() && !(termBinding instanceof UnorderedSequenceBinding))
             handleError("XSD particle has maxOccurs unbounded but ParticleBinding of " + particleBinding.getTerm() + " does not.");
       }
       else if(xsParticle.getMaxOccurs() != particleBinding.getMaxOccurs())
@@ -468,7 +468,7 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
             }
          }
 
-         if(!(modelGroupBinding instanceof ChoiceBinding))
+         if(!(modelGroupBinding instanceof ChoiceBinding || modelGroupBinding instanceof UnorderedSequenceBinding))
             handleError("XSD model group is choice but ModelGroupBinding is " + modelGroupBinding);
          
          // ordering in the choice is not important

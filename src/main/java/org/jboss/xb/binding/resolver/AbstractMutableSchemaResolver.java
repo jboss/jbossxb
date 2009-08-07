@@ -312,22 +312,7 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
                   ", schemaLocation=" + schemaLocation +
                   ", classes=" + Arrays.asList(classes));
          }
-         schema = JBossXBBuilder.build(classes);
-         
-         if(validateBinding)
-         {
-            InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
-            if(is != null)
-            {
-               SchemaBindingValidator validator = this.validator;
-               if(validator == null)
-                  validator = new DefaultSchemaBindingValidator(this);
-
-               validator.validate(is, schema);
-            }
-            else
-               log.warn("schema binding validation is on but skipped since XSD nsURI=" + nsURI + ", schemaLocation=" + schemaLocation + " could not be found.");
-         }
+         schema = JBossXBBuilder.build(classes);         
       }
       else
       {
@@ -382,6 +367,35 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
       if(trace)
          log.trace("resolved schema: " + schema);
 
+      // validate binding built from Java annotations
+      // to avoid recursions the validation is done after the schema binding is cached
+      if(classes != null)
+      {
+         if(validateBinding)
+         {
+            InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
+            if(is != null)
+            {
+               SchemaBindingValidator validator = this.validator;
+               if(validator == null)
+                  validator = new DefaultSchemaBindingValidator(this);
+
+               try
+               {
+                  validator.validate(is, schema);
+               }
+               catch(RuntimeException rt)
+               {
+                  // don't cache invalid schema
+                  schemasByUri.remove(nsURI);
+                  throw rt;
+               }
+            }
+            else
+               log.warn("schema binding validation is on but skipped since XSD nsURI=" + nsURI + ", schemaLocation=" + schemaLocation + " could not be found.");
+         }
+      }
+      
       return schema;
    }
 

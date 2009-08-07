@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<xsd:schema
+   targetNamespace="urn:jboss:xb:test:imported"
+   xmlns="urn:jboss:xb:test:imported"
+   elementFormDefault="qualified"
+   attributeFormDefault="unqualified"
+   xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <xsd:element name="root">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="a" type="xsd:string"/>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+</xsd:schema>

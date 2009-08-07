@@ -43,6 +43,7 @@ import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTerm;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.apache.xerces.xs.XSWildcard;
+import org.jboss.xb.binding.resolver.MutableSchemaResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ChoiceBinding;
@@ -130,6 +131,17 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
             TypeBinding typeBinding = schemaBinding.getType(typeQName);
             if (typeBinding == null)
             {
+               SchemaBindingResolver resolver = getSchemaResolver();
+               if(resolver != null)
+               {
+                  SchemaBinding foreignSchema = resolver.resolve(typeQName.getNamespaceURI(), null, null);
+                  if(foreignSchema != null && foreignSchema != schemaBinding)
+                     typeBinding = foreignSchema.getType(typeQName);
+               }
+            }
+            
+            if (typeBinding == null)
+            {
                boolean ignoreIfNotFound = false;
                if (xsType.getTypeCategory() == XSTypeDefinition.SIMPLE_TYPE)
                {
@@ -185,6 +197,18 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
                continue;
             QName elementQName = new QName(xsElement.getNamespace(), xsElement.getName());
             ElementBinding elementBinding = schemaBinding.getElement(elementQName);
+            
+            if (elementBinding == null)
+            {
+               SchemaBindingResolver resolver = getSchemaResolver();
+               if (resolver != null)
+               {
+                  SchemaBinding foreignSchema = resolver.resolve(elementQName.getNamespaceURI(), null, null);
+                  if (foreignSchema != null && foreignSchema != schemaBinding)
+                     elementBinding = foreignSchema.getElement(elementQName);
+               }
+            }
+            
             if (elementBinding == null)
                handleError("ElementBinding " + elementQName + " is not found in the SchemaBinding.");
             validate(xsElement.getTypeDefinition(), elementBinding.getType());

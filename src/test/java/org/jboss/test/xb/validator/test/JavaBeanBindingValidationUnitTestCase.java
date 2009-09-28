@@ -23,6 +23,8 @@ package org.jboss.test.xb.validator.test;
 
 import java.io.InputStream;
 
+import javax.xml.namespace.QName;
+
 import org.jboss.javabean.plugins.jaxb.JavaBean10;
 import org.jboss.javabean.plugins.jaxb.JavaBean20;
 import org.jboss.test.xb.builder.AbstractBuilderTest;
@@ -51,6 +53,7 @@ public class JavaBeanBindingValidationUnitTestCase extends AbstractBuilderTest
       InputSource xsdIs = new InputSource(xsd);
       SchemaBinding schema = JBossXBBuilder.build(JavaBean10.class);      
       DefaultSchemaBindingValidator validator = new DefaultSchemaBindingValidator();
+      validator.excludeType(new QName("urn:jboss:javabean:1.0", "valueType"));
       validator.validate(xsdIs, schema);
    }
 
@@ -61,6 +64,7 @@ public class JavaBeanBindingValidationUnitTestCase extends AbstractBuilderTest
       InputSource xsdIs = new InputSource(xsd);
       SchemaBinding schema = JBossXBBuilder.build(JavaBean20.class);      
       DefaultSchemaBindingValidator validator = new DefaultSchemaBindingValidator();
+      validator.excludeType(new QName("urn:jboss:javabean:2.0", "valueType"));
       validator.validate(xsdIs, schema);
    }
 }

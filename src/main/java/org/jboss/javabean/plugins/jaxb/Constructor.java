@@ -28,6 +28,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
+import org.jboss.xb.annotations.JBossXmlConstants;
+import org.jboss.xb.annotations.JBossXmlType;
+
 /**
  * Constructor.
  *
@@ -36,6 +39,7 @@ import javax.xml.bind.annotation.XmlType;
  * @version $Revision: 1.1 $
  */
 @XmlType(name="constructorType")
+@JBossXmlType(modelGroup = JBossXmlConstants.MODEL_GROUP_UNORDERED_SEQUENCE)
 public class Constructor
 {
    private String factoryClass;

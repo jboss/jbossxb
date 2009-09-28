@@ -73,11 +73,11 @@ $Id: javabean_1_0.xsd 60371 2007-02-07 11:48:07Z alesj $
       <xsd:complexContent>
          <xsd:extension base="valueType">
             <xsd:sequence>
-            <xsd:any namespace="##other" processContents="strict">
-               <xsd:annotation>
-                  <xsd:documentation>An extension value</xsd:documentation>
-               </xsd:annotation>
-            </xsd:any>
+               <xsd:any namespace="##other" processContents="strict">
+                  <xsd:annotation>
+                     <xsd:documentation>An extension value</xsd:documentation>
+                  </xsd:annotation>
+               </xsd:any>
             </xsd:sequence>
          </xsd:extension>
       </xsd:complexContent>

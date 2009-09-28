@@ -104,11 +104,20 @@ $Id: javabean_1_0.xsd 59176 2006-12-20 11:56:02Z alesj $
          </xsd:documentation>
       </xsd:annotation>
       <xsd:complexContent>
-         <xsd:extension base="valueType"/>
-         <xsd:attribute name="name" type="xsd:token"/>
+         <xsd:extension base="valueType">
+            <xsd:sequence>
+               <xsd:any namespace="##other" processContents="strict">
+                  <xsd:annotation>
+                     <xsd:documentation>An extension value</xsd:documentation>
+                  </xsd:annotation>
+               </xsd:any>
+            </xsd:sequence>
+            <xsd:attribute name="name" type="xsd:token"/>
+         </xsd:extension>
       </xsd:complexContent>
    </xsd:complexType>
-   
+
+<!-- This type is not used in the schema and there is no corresponding Java type
    <xsd:complexType name="parameterType" mixed="true">
       <xsd:annotation>
          <xsd:documentation>
@@ -130,10 +139,12 @@ $Id: javabean_1_0.xsd 59176 2006-12-20 11:56:02Z alesj $
          </xsd:documentation>
       </xsd:annotation>
       <xsd:complexContent>
-         <xsd:extension base="valueType"/>
-         <xsd:attribute name="paramClass" type="classNameType"/>
+         <xsd:extension base="valueType">
+            <xsd:attribute name="paramClass" type="classNameType"/>
+         </xsd:extension>
       </xsd:complexContent>
    </xsd:complexType>
+-->
 
    <xsd:simpleType name="classNameType">
       <xsd:annotation>

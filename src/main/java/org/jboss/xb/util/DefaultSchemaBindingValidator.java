@@ -223,14 +223,17 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
    public void validate(XSElementDeclaration xsElement, ElementBinding elementBinding)
    {
       QName xsQName = new QName(xsElement.getNamespace(), xsElement.getName());
-      if(xsQName.equals(elementBinding.getQName()))
-         handleError("Compared elements have difference names: XSD QName is " + xsQName + ", ElementBinding QName is " + elementBinding.getQName());
+      if(!xsQName.equals(elementBinding.getQName()))
+         handleError("Compared elements have different names: XSD QName is " + xsQName + ", ElementBinding QName is " + elementBinding.getQName());
 
       log("element " + xsQName);
 
-      if(validatedElements.contains(xsQName))
-         return;
-      validatedElements.add(xsQName);
+      if(xsElement.getScope() == XSConstants.SCOPE_GLOBAL)
+      {
+         if(validatedElements.contains(xsQName))
+            return;
+         validatedElements.add(xsQName);
+      }
 
       validate(xsElement.getTypeDefinition(), elementBinding.getType());
    }
@@ -248,11 +251,9 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
             return;
 
          QName xsQName = new QName(xsType.getNamespace(), xsType.getName());
-         if(!xsQName.equals(typeBinding.getQName()))
-            handleError("Compared types have different names: XSD QName is " + xsQName + ", TypeBinding QName is " + typeBinding.getQName());
-
          if(validatedTypes.contains(xsQName) || excludedTypes.contains(xsQName))
             return;
+
          validatedTypes.add(xsQName);
       }
 
@@ -282,6 +283,20 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
 
       log("complex type " + xsQName);
 
+      if(typeBinding.isSimple() &&
+         typeBinding.getQName() != null &&
+         Constants.NS_XML_SCHEMA.equals(typeBinding.getQName().getNamespaceURI()))
+      {
+         // perhaps the complex xsd type is equivalent to the built-in simple type
+         if(xsType.getAttributeUses().getLength() == 0 &&
+            xsType.getAttributeWildcard() == null &&
+            xsType.getParticle() == null)
+         {
+            log(xsQName == null ? "Anonymous" : xsQName + " type is assumed to be equivalent to " + typeBinding.getQName());
+            return;
+         }
+      }
+      
       if(xsQName == null && typeBinding.getQName() != null ||
             xsQName != null && !xsQName.equals(typeBinding.getQName()))
          handleError("Compared complex types have different names: XSD QName is " + xsQName + ", TypeBindign QName is " + typeBinding.getQName());
@@ -336,6 +351,7 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
          handleError("ParticleBinding doesn't contain a TermBinding.");
       short xsTermType = xsTerm.getType();
       String termStr = null;
+      boolean maxOccursUnbounded = particleBinding.getMaxOccursUnbounded();
       if(xsTermType == XSConstants.MODEL_GROUP)
       {
          termStr = "sequence";
@@ -359,7 +375,7 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
                handleError("TermBinding expected to be a " + termStr + " but was " + termBinding);
          }
          else
-            validate(xsModelGroup, (ModelGroupBinding) termBinding);
+            validate(xsModelGroup, particleBinding);
       }
       else if(xsTermType == XSConstants.ELEMENT_DECLARATION)
       {
@@ -371,28 +387,34 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
          {
             // TODO sometimes XB wraps (maybe unnecessarily) repeatable elements into a sequence.
             // the same xml structure can be described differently in xsd
-            if (/*(xsParticle.getMaxOccursUnbounded() || xsParticle.getMaxOccurs() > 1) &&*/
-                  termBinding instanceof SequenceBinding)
+            // There is a weird array binding structure in XB
+            TermBinding t = termBinding;
+            while (/*(xsParticle.getMaxOccursUnbounded() || xsParticle.getMaxOccurs() > 1) &&*/
+                  t instanceof SequenceBinding)
             {
-               SequenceBinding seq = (SequenceBinding) termBinding;
+               SequenceBinding seq = (SequenceBinding) t;
                Collection<ParticleBinding> particles = seq.getParticles();
                if(particles.size() == 1)
                {
                   ParticleBinding particle = particles.iterator().next();
-                  if(particle.getTerm().isElement())
+                  if(particle.getMaxOccursUnbounded())
+                     maxOccursUnbounded = true;
+                  t = particle.getTerm();
+                  if(t.isElement())
                   {
                      particleBinding = particle;
-                     termBinding = particle.getTerm();
+                     termBinding = t;
                   }
                }
+               else
+                  break;
             }
 
             if(!termBinding.isElement())
                handleError("TermBinding expected to be element " + termStr + " but was " + termBinding);
          }
 
-         if(!xsElementName.equals(((ElementBinding)termBinding).getQName()))
-            handleError("Compared elements have different names: XSD QName is " + xsElementName + ", ElementBinding QName is " + ((ElementBinding)termBinding).getQName());
+         validate(xsElement, (ElementBinding)termBinding);
       }
       else if(xsTermType == XSConstants.WILDCARD)
       {
@@ -413,16 +435,17 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
 
       if(xsParticle.getMaxOccursUnbounded())
       {
-         if(!particleBinding.getMaxOccursUnbounded() && !(termBinding instanceof UnorderedSequenceBinding))
-            handleError("XSD particle has maxOccurs unbounded but ParticleBinding of " + particleBinding.getTerm() + " does not.");
+         if(!maxOccursUnbounded && !(termBinding instanceof UnorderedSequenceBinding))
+            handleError("XSD particle of " + termStr + " has maxOccurs unbounded but ParticleBinding of " + particleBinding.getTerm() + " does not.");
       }
       else if(xsParticle.getMaxOccurs() != particleBinding.getMaxOccurs())
          handleError("maxOccurs for particle of " + particleBinding.getTerm() + " don't match: XSD maxOccurs=" + xsParticle.getMaxOccurs() +
                ", ParticleBinding maxOccurs=" + particleBinding.getMaxOccurs());
    }
 
-   public void validate(XSModelGroup xsModelGroup, ModelGroupBinding modelGroupBinding)
+   public void validate(XSModelGroup xsModelGroup, ParticleBinding groupParticle)
    {
+      ModelGroupBinding modelGroupBinding = (ModelGroupBinding) groupParticle.getTerm();
       short xsCompositor = xsModelGroup.getCompositor();
       boolean all = false;
       if(xsCompositor == XSModelGroup.COMPOSITOR_SEQUENCE)
@@ -523,7 +546,7 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
             xsElementParticles = new HashMap<QName, XSParticle>();
             flatten(xsModelGroup, xsElementParticles);
             elementParticles = new HashMap<QName, ParticleBinding>();
-            flatten(modelGroupBinding, elementParticles);
+            flatten(groupParticle, elementParticles);
 
             if(xsElementParticles.size() != elementParticles.size())
             {
@@ -651,13 +674,21 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
       }
    }
 
-   private void flatten(ModelGroupBinding group, Map<QName, ParticleBinding> elementParticles)
+   private void flatten(ParticleBinding groupParticle, Map<QName, ParticleBinding> elementParticles)
    {
+      TermBinding groupTerm = groupParticle.getTerm();
+      if(!(groupTerm instanceof ModelGroupBinding))
+         throw new IllegalStateException("The term is expected to be a model group but was " + groupTerm);
+      
+      ModelGroupBinding group = (ModelGroupBinding) groupTerm;
+      boolean forceUnbounded = groupParticle.getMaxOccursUnbounded() && group.getParticles().size() == 1;
       Iterator<ParticleBinding> i = group.getParticles().iterator();
       while(i.hasNext())
       {
          ParticleBinding particle = i.next();
          TermBinding term = particle.getTerm();
+         if(forceUnbounded && !particle.getMaxOccursUnbounded())
+            particle = new ParticleBinding(term, particle.getMinOccurs(), particle.getMaxOccurs(), true);
          if(term.isElement())
          {
             ElementBinding element = (ElementBinding) term;
@@ -668,7 +699,7 @@ public class DefaultSchemaBindingValidator extends AbstractSchemaBindingValidato
          else
          {
             ModelGroupBinding modelGroup = (ModelGroupBinding) term;
-            flatten(modelGroup, elementParticles);
+            flatten(particle, elementParticles);
          }
       }
    }

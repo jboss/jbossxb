@@ -241,7 +241,7 @@ public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
          }
       };
 
-      new AbstractErrorHandler("XSD particle has maxOccurs unbounded but ParticleBinding of wildcard processContents=lax does not.")
+      new AbstractErrorHandler("XSD particle of wildcard has maxOccurs unbounded but ParticleBinding of wildcard processContents=lax does not.")
       {
          public void handle(SchemaBindingValidator validator, SchemaBinding schema)
          {

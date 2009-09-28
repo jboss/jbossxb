@@ -1674,7 +1674,7 @@ public class JBossXBNoSchemaBuilder
                   elementBinding.setValueAdapter(valueAdapter);
 
                   // Bind it to the model
-                  ParticleBinding particle = new ParticleBinding(elementBinding, 0, 1, isCol);
+                  ParticleBinding particle = new ParticleBinding(elementBinding, 0, 1, false);
                   if (required == false)
                      particle.setMinOccurs(0);
 

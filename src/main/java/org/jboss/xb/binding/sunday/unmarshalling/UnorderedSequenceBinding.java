@@ -178,7 +178,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
          }
          
          @Override
-         protected List<Cursor> startElement(QName qName, Attributes atts, Set<Cursor> passedGroups, List<Cursor> groupStack, boolean required)
+         protected List<Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, List<Cursor> groupStack, boolean required)
          {
             if(trace)
             {
@@ -207,12 +207,12 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                      switch(passedGroups.size())
                      {
                         case 0:
-                           passedGroups = Collections.singleton((ModelGroupBinding.Cursor)this);
+                           passedGroups = Collections.singleton((ModelGroupBinding)UnorderedSequenceBinding.this);
                            break;
                         case 1:
-                           passedGroups = new HashSet<ModelGroupBinding.Cursor>(passedGroups);
+                           passedGroups = new HashSet<ModelGroupBinding>(passedGroups);
                         default:
-                           passedGroups.add(this);
+                           passedGroups.add(UnorderedSequenceBinding.this);
                      }
 
                      int groupStackSize = groupStack.size();
@@ -265,12 +265,12 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                   switch (passedGroups.size())
                   {
                      case 0 :
-                        passedGroups = Collections.singleton((ModelGroupBinding.Cursor) this);
+                        passedGroups = Collections.singleton((ModelGroupBinding) UnorderedSequenceBinding.this);
                         break;
                      case 1 :
-                        passedGroups = new HashSet<ModelGroupBinding.Cursor>(passedGroups);
+                        passedGroups = new HashSet<ModelGroupBinding>(passedGroups);
                      default :
-                        passedGroups.add(this);
+                        passedGroups.add(UnorderedSequenceBinding.this);
                   }
 
                   int groupStackSize = groupStack.size();

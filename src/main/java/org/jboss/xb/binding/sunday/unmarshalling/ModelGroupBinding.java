@@ -188,7 +188,6 @@ public abstract class ModelGroupBinding
    public abstract String getGroupType();
    
    // Inner
-
    public abstract class Cursor
    {
       protected final ParticleBinding particle;
@@ -218,7 +217,7 @@ public abstract class ModelGroupBinding
 
       public List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes attrs)
       {
-         return startElement(qName, attrs, Collections.<Cursor>emptySet(), Collections.<Cursor>emptyList(), true);
+         return startElement(qName, attrs, Collections.<ModelGroupBinding>emptySet(), Collections.<Cursor>emptyList(), true);
       }
 
       public ElementBinding getElement(QName qName, Attributes attrs, boolean ignoreWildcards)
@@ -253,8 +252,8 @@ public abstract class ModelGroupBinding
 
       protected abstract List<ModelGroupBinding.Cursor> startElement(QName qName,
                                            Attributes atts,
-                                           Set<ModelGroupBinding.Cursor> passedGroups,
-                                           List<ModelGroupBinding.Cursor> groupStack,
+                                           Set<ModelGroupBinding> passedGroups,
+                                           List<Cursor> groupStack,
                                            boolean required);
 
       protected abstract ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards);

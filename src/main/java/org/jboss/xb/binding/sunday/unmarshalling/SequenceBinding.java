@@ -97,7 +97,7 @@ public class SequenceBinding
                   "The cursor has not been positioned yet for " + SequenceBinding.this.toString()
                );
             }
-            return (ParticleBinding)sequence.get(pos);
+            return sequence.get(pos);
          }
 
          public ElementBinding getElement()
@@ -136,7 +136,7 @@ public class SequenceBinding
             return wildcardContent;
          }
          
-         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
+         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
          {
             if(trace)
             {
@@ -162,9 +162,9 @@ public class SequenceBinding
             // since the cursor is going to be thrown away in case the element has not been found
             while(i < sequence.size() - 1)
             {
-               ParticleBinding particle = (ParticleBinding)sequence.get(++i);
-               Object item = particle.getTerm();
-               if(item instanceof ElementBinding)
+               ParticleBinding particle = sequence.get(++i);
+               TermBinding item = particle.getTerm();
+               if(item.isElement())
                {
                   ElementBinding element = (ElementBinding)item;
                   if(qName.equals(element.getQName()))
@@ -203,7 +203,7 @@ public class SequenceBinding
                      }
                   }
                }
-               else if(item instanceof ModelGroupBinding)
+               else if(item.isModelGroup())
                {
                   ModelGroupBinding modelGroup = (ModelGroupBinding)item;
                   if(!passedGroups.contains(modelGroup))
@@ -211,12 +211,12 @@ public class SequenceBinding
                      switch(passedGroups.size())
                      {
                         case 0:
-                           passedGroups = Collections.singleton((ModelGroupBinding.Cursor)this);
+                           passedGroups = Collections.singleton((ModelGroupBinding)SequenceBinding.this);
                            break;
                         case 1:
-                           passedGroups = new HashSet<ModelGroupBinding.Cursor>(passedGroups);
+                           passedGroups = new HashSet<ModelGroupBinding>(passedGroups);
                         default:
-                           passedGroups.add(this);
+                           passedGroups.add(SequenceBinding.this);
                      }
 
                      int groupStackSize = groupStack.size();
@@ -270,7 +270,7 @@ public class SequenceBinding
                      }
                   }
                }
-               else if(item instanceof WildcardBinding)
+               else if(item.isWildcard())
                {
                   WildcardBinding wildcard = (WildcardBinding)item;
                   element = wildcard.getElement(qName, atts);

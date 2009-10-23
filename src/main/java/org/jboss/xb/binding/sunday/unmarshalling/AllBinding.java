@@ -119,9 +119,9 @@ public class AllBinding
             return false;
          }
          
-         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
+         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
          {
-            ParticleBinding particle = (ParticleBinding)elements.get(qName);
+            ParticleBinding particle = elements.get(qName);
             if(particle != null)
             {
                if(curParticle == particle)
@@ -140,7 +140,7 @@ public class AllBinding
 
          protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
          {
-            ParticleBinding particle = (ParticleBinding)elements.get(qName);
+            ParticleBinding particle = elements.get(qName);
             return particle == null ? null : (ElementBinding)particle.getTerm();
          }
       };

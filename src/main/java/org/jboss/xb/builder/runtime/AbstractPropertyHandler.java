@@ -113,7 +113,7 @@ public abstract class AbstractPropertyHandler extends AttributeHandler
       ValueAdapter valueAdapter = binding.getValueAdapter();
       if (valueAdapter != null)
          value = valueAdapter.cast(value, null);
-      
+
       BeanAdapter parent = (BeanAdapter) owner;
       doHandle(parent, value, attrName);
    }

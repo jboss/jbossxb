@@ -117,7 +117,7 @@ public class ChoiceBinding
             return wildcardContent;
          }
          
-         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
+         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
          {
             if(trace)
             {
@@ -147,12 +147,12 @@ public class ChoiceBinding
                         switch(passedGroups.size())
                         {
                            case 0:
-                              passedGroups = Collections.singleton((ModelGroupBinding.Cursor)this);
+                              passedGroups = Collections.singleton((ModelGroupBinding)ChoiceBinding.this);
                               break;
                            case 1:
-                              passedGroups = new HashSet<ModelGroupBinding.Cursor>(passedGroups);
+                              passedGroups = new HashSet<ModelGroupBinding>(passedGroups);
                            default:
-                              passedGroups.add(this);
+                              passedGroups.add(ChoiceBinding.this);
                         }
 
                         int groupStackSize = groupStack.size();
@@ -209,12 +209,12 @@ public class ChoiceBinding
                      switch(passedGroups.size())
                      {
                         case 0:
-                           passedGroups = Collections.singleton((ModelGroupBinding.Cursor)this);
+                           passedGroups = Collections.singleton((ModelGroupBinding)ChoiceBinding.this);
                            break;
                         case 1:
-                           passedGroups = new HashSet<ModelGroupBinding.Cursor>(passedGroups);
+                           passedGroups = new HashSet<ModelGroupBinding>(passedGroups);
                         default:
-                           passedGroups.add(this);
+                           passedGroups.add(ChoiceBinding.this);
                      }
 
                      int groupStackSize = groupStack.size();
@@ -260,9 +260,9 @@ public class ChoiceBinding
       boolean result = false;
       for(int i = 0; i < choices.size(); ++i)
       {
-         ParticleBinding particle = (ParticleBinding)choices.get(i);
-         Object item = particle.getTerm();
-         if(item instanceof ElementBinding)
+         ParticleBinding particle = choices.get(i);
+         TermBinding item = particle.getTerm();
+         if(item.isElement())
          {
             ElementBinding element = (ElementBinding)item;
             if(qName.equals(element.getQName()))
@@ -271,7 +271,7 @@ public class ChoiceBinding
                break;
             }
          }
-         else if(item instanceof ModelGroupBinding)
+         else if(item.isModelGroup())
          {
             ModelGroupBinding modelGroup = (ModelGroupBinding)item;
             if(!set.contains(modelGroup))

@@ -25,6 +25,7 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 
 import org.jboss.logging.Logger;
+import org.jboss.xb.binding.group.ValueList;
 import org.xml.sax.Attributes;
 
 /**
@@ -59,6 +60,13 @@ public class DefaultWildcardHandler implements ParticleHandler
    public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle,
          ParticleBinding parentParticle)
    {
+      if(parent instanceof ValueList)
+      {
+         ValueList valueList = (ValueList)parent;
+         valueList.getInitializer().addTermValue(elementName, particle, this, valueList, o, parentParticle);
+         return;
+      }
+
       ElementBinding element = (ElementBinding) particle.getTerm();
       ElementBinding parentElement = (ElementBinding) parentParticle.getTerm();
       setParent(parent, o, elementName, element, parentElement);

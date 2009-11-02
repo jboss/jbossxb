@@ -174,7 +174,6 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
    
    private static class ArrayListFactory implements CollectionFactory
    {
-      @SuppressWarnings("unchecked")
       public Collection<Object> createCollection()
       {
          return new ArrayList<Object>();
@@ -183,7 +182,6 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
    
    private static class HashSetFactory implements CollectionFactory
    {
-      @SuppressWarnings("unchecked")
       public Collection<Object> createCollection()
       {
          return new HashSet<Object>();

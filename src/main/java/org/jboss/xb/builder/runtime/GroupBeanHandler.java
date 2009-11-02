@@ -91,7 +91,7 @@ public class GroupBeanHandler extends BeanHandler
          }
       }
 
-      if(groupValue == null)
+      if(groupValue == null || particle.isRepeatable())
          return super.startParticle(parent, qName, particle, attrs, nsCtx);
       else
          return new SingletonBeanAdapter(this.getBeanAdapterFactory(), groupValue);

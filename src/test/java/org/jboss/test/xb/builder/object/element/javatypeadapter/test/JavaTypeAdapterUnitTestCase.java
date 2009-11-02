@@ -24,6 +24,7 @@ package org.jboss.test.xb.builder.object.element.javatypeadapter.test;
 import java.util.Map;
 
 import org.jboss.test.xb.builder.AbstractBuilderTest;
+import org.jboss.test.xb.builder.object.element.javatypeadapter.support.MyHashMapTypeRoot;
 import org.jboss.test.xb.builder.object.element.javatypeadapter.support.Root;
 
 
@@ -45,6 +46,17 @@ public class JavaTypeAdapterUnitTestCase extends AbstractBuilderTest
    {
       Root root = unmarshalObject(Root.class);
       Map<Integer, String> map = root.getMap();
+      assertNotNull(map);
+      assertEquals(3, map.size());
+      assertEquals("value1", map.get(1));
+      assertEquals("value22", map.get(22));
+      assertEquals("value333", map.get(333));
+   }
+
+   public void testMyHashMapType() throws Exception
+   {
+      MyHashMapTypeRoot root = unmarshalObject(MyHashMapTypeRoot.class);
+      Map<?, ?> map = root.getMap();
       assertNotNull(map);
       assertEquals(3, map.size());
       assertEquals("value1", map.get(1));

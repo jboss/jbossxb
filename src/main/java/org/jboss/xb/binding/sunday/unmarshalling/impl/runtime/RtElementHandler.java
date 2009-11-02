@@ -260,7 +260,12 @@ public class RtElementHandler
             }
          }
 
-         if(tryPut(owner, o, qName, term, trace))
+         if(owner instanceof ValueList)
+         {
+            ValueList valueList = (ValueList)owner;
+            valueList.getInitializer().addTermValue(qName, particle, this, valueList, o, parentParticle);
+         }
+         else if(tryPut(owner, o, qName, term, trace))
          {
          }
          else if(tryAdd(owner, o, qName, term, wildcard, trace))
@@ -317,10 +322,20 @@ public class RtElementHandler
             }
             else
             {*/
+
+            if(particle.isRepeatable() && !(o instanceof Collection))
+            {
+               RtUtil.add(owner, o, propName, colType,
+                     term.getSchema().isIgnoreUnresolvedFieldOrClass(),
+                     term.getValueAdapter()
+                  );               
+            }
+            else
+            {
                RtUtil.set(owner, o, propName, colType,
                      term.getSchema().isIgnoreUnresolvedFieldOrClass(),
                      term.getValueAdapter());
-            //}
+            }
          }
       }
    }
@@ -334,19 +349,19 @@ public class RtElementHandler
       }
 
       boolean trace = log.isTraceEnabled();
-      if(trace)
+      if(o instanceof ValueList)
       {
-         log.trace("endParticle " + elementName + " object=" + o + " term=" + term);
+         if(trace)
+            log.trace("endParticle " + particle.getTerm() + " valueList");
+         ValueList valueList = (ValueList)o;
+         o = valueList.getHandler().newInstance(particle, valueList);
       }
-
-      if(o instanceof GenericValueContainer)
+      else if(o instanceof GenericValueContainer)
       {
          try
          {
             if(trace)
-            {
                log.trace("endParticle " + elementName + " instantiate()");
-            }
             o = ((GenericValueContainer)o).instantiate();
          }
          catch(JBossXBRuntimeException e)
@@ -360,6 +375,10 @@ public class RtElementHandler
                ": " + e.getMessage(), e
             );
          }
+      }
+      else if(trace)
+      {
+         log.trace("endParticle " + elementName + " object=" + o + " term=" + term);
       }
 
       return o;

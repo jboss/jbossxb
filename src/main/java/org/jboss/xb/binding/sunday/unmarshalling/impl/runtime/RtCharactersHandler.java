@@ -27,11 +27,13 @@ import javax.xml.namespace.QName;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.group.ValueList;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.util.Classes;
 
@@ -124,14 +126,38 @@ public class RtCharactersHandler
 
    public void setValue(QName qName, ElementBinding element, Object owner, Object value)
    {
-      //todo: assert if type is not null it must simple...
+      //TODO: assert if type is not null it must simple...
 
-      if(owner == null) // todo: owner should never be null
+      if(owner == null) // TODO: owner should never be null
       {
          return;
       }
       
-      if (owner instanceof MapEntry)
+      if(owner instanceof ValueList)
+      {
+         ValueList valueList = (ValueList)owner;
+         TypeBinding type = element.getType();
+         if(type.isSimple())
+         {
+            valueList.getInitializer().addTermValue(qName,
+               new ParticleBinding(element), // TODO
+               this,
+               valueList,
+               value,
+               null
+            );
+         }
+         else
+         {
+            valueList.getInitializer().addTextValue(qName,
+               new ParticleBinding(element),
+               this,
+               valueList,
+               value
+            );
+         }
+      }
+      else if (owner instanceof MapEntry)
       {
          TypeBinding type = element.getType();
          CharactersMetaData characters = type.getCharactersMetaData();

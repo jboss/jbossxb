@@ -249,7 +249,9 @@ public class WildcardBinding
       type.setSimpleType(unresolvedCharactersHandler);
       type.setParticle(new ParticleBinding(sequence, 1, 0, true));
 
-      return new ElementBinding(schema, qName, type);
+      ElementBinding element = new ElementBinding(schema, qName, type);
+      element.setRepeatableHandler(repeatableHandler);
+      return element;
    }
 
    public boolean isSkip()

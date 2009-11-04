@@ -95,6 +95,7 @@ import org.jboss.xb.annotations.JBossXmlType;
 import org.jboss.xb.annotations.JBossXmlValue;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.SimpleTypeBindings;
+import org.jboss.xb.binding.sunday.unmarshalling.CollectionRepeatableParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AnyAttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
@@ -107,6 +108,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
@@ -1620,12 +1622,15 @@ public class JBossXBNoSchemaBuilder
          }
          else
          {
+            RepeatableParticleHandler repeatableHandler = null;
             XBValueAdapter valueAdapter = null;
             XmlJavaTypeAdapter xmlTypeAdapter = property.getUnderlyingAnnotation(XmlJavaTypeAdapter.class);
             if (xmlTypeAdapter != null)
             {
                valueAdapter = new XBValueAdapter(xmlTypeAdapter.value(), propertyType.getTypeInfoFactory());
                localPropertyType = valueAdapter.getAdaptedTypeInfo();
+               if(localPropertyType.isCollection())
+                  repeatableHandler = CollectionRepeatableParticleHandler.INSTANCE;
             }
 
             ModelGroupBinding targetGroup = localModel;
@@ -1750,6 +1755,8 @@ public class JBossXBNoSchemaBuilder
                ElementBinding elementBinding = createElementBinding(localPropertyType, elementType, propertyQName, false);
                elementBinding.setNillable(nillable);
                elementBinding.setValueAdapter(valueAdapter);
+               if(repeatableHandler != null)
+                  elementBinding.setRepeatableHandler(repeatableHandler);
 
                JBossXmlPreserveWhitespace preserveSpace = property.getUnderlyingAnnotation(JBossXmlPreserveWhitespace.class);
                if (preserveSpace != null)

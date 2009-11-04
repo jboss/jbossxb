@@ -57,6 +57,7 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.sunday.xop.XOPIncludeHandler;
+import org.jboss.xb.binding.group.ValueListRepeatableParticleHandler;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ClassMetaData;
@@ -976,6 +977,7 @@ public class XsdBinder
 
    private void bindParticle(XSParticle particle)
    {
+      ParticleBinding particleBinding = null;
       XSTerm term = particle.getTerm();
       switch(term.getType())
       {
@@ -986,7 +988,7 @@ public class XsdBinder
             {
                ModelGroupBinding groupBinding = bindModelGroup(modelGroup);
 
-               ParticleBinding particleBinding = new ParticleBinding(groupBinding);
+               particleBinding = new ParticleBinding(groupBinding);
                particleBinding.setMaxOccursUnbounded(particle.getMaxOccursUnbounded());
                particleBinding.setMinOccurs(particle.getMinOccurs());
                particleBinding.setMaxOccurs(particle.getMaxOccurs());
@@ -1020,10 +1022,10 @@ public class XsdBinder
             }
             break;
          case XSConstants.WILDCARD:
-            bindWildcard(particle);
+            particleBinding = bindWildcard(particle);
             break;
          case XSConstants.ELEMENT_DECLARATION:
-            bindElement(
+            particleBinding = bindElement(
                (XSElementDeclaration)term,
                particle.getMinOccurs(),
                particle.getMaxOccurs(),
@@ -1033,6 +1035,9 @@ public class XsdBinder
          default:
             throw new IllegalStateException("Unexpected term type: " + term.getType());
       }
+      
+      if(particleBinding != null)
+         particleBinding.getTerm().setRepeatableHandler(ValueListRepeatableParticleHandler.INSTANCE);
    }
 
    private ModelGroupBinding bindModelGroup(XSModelGroup modelGroup)
@@ -1069,7 +1074,7 @@ public class XsdBinder
       return groupBinding;
    }
 
-   private void bindWildcard(XSParticle particle)
+   private ParticleBinding bindWildcard(XSParticle particle)
    {
       WildcardBinding binding = new WildcardBinding(schema);
 
@@ -1096,6 +1101,7 @@ public class XsdBinder
             customizeTerm(annotation, binding, trace);
          }
       }
+      return particleBinding;
    }
 
    private ParticleBinding bindElement(XSElementDeclaration elementDec,

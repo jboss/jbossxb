@@ -309,20 +309,9 @@ public class RtElementHandler
             }
 
             if (trace)
-            {
                log.trace("setParent " + qName + " metadata set " + propName);
-            }
 
-            /*if(particle.isRepeatable())
-            {
-               RtUtil.add(owner, o, propName, colType,
-                  term.getSchema().isIgnoreUnresolvedFieldOrClass(),
-                  term.getValueAdapter()
-               );
-            }
-            else
-            {*/
-
+            // TODO with RepeatableParticleHandler.NOOP check for Collection should be commented out
             if(particle.isRepeatable() && !(o instanceof Collection))
             {
                RtUtil.add(owner, o, propName, colType,

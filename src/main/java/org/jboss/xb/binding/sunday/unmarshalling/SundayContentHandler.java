@@ -66,7 +66,6 @@ public class SundayContentHandler
    private NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
    private ParticleHandler defParticleHandler = DefaultHandlers.ELEMENT_HANDLER;
-   private RepeatableParticleHandler defRepeatableHandler = RepeatableParticleHandler.VALUE_LIST;
 
    private UnmarshallingContextImpl ctx = new UnmarshallingContextImpl();
    // DTD information frm startDTD
@@ -592,9 +591,10 @@ public class SundayContentHandler
                );
             }
 
-            element = new ElementBinding(schemaBinding, startName, xsiTypeBinding);
+            ElementBinding xsiElement = new ElementBinding(schemaBinding, startName, xsiTypeBinding);
+            xsiElement.setRepeatableHandler(element.getRepeatableHandler());
             particle =
-               new ParticleBinding(element,
+               new ParticleBinding(xsiElement,
                   particle.getMinOccurs(),
                   particle.getMaxOccurs(),
                   particle.getMaxOccursUnbounded()
@@ -805,7 +805,9 @@ public class SundayContentHandler
    {
       if(trace)
          log.trace(" start repeatable (" + stack.size() + "): " + particle.getTerm());
-      return defRepeatableHandler.startRepeatableParticle(parent, startName, particle);
+      RepeatableParticleHandler repeatableHandler = particle.getTerm().getRepeatableHandler();
+      // the way it is now it's never null
+      return repeatableHandler.startRepeatableParticle(parent, startName, particle);
    }
 
    private void endRepeatableParticle(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
@@ -813,7 +815,9 @@ public class SundayContentHandler
       if (trace)
          log.trace(" end repeatable (" + stack.size() + "): " + particle.getTerm());
 
-      defRepeatableHandler.endRepeatableParticle(parent, o, elementName, particle, parentParticle);
+      RepeatableParticleHandler repeatableHandler = particle.getTerm().getRepeatableHandler();
+      // the way it is now it's never null
+      repeatableHandler.endRepeatableParticle(parent, o, elementName, particle, parentParticle);
    }
 
    private void endParticle(QName qName, StackItem item, StackItem parentItem)
@@ -841,7 +845,10 @@ public class SundayContentHandler
          if(parentItem.repeatableParticleValue == null)
             setParent(handler, parentItem.o, o, qName, modelGroupParticle, parentParticle);
          else
-            defRepeatableHandler.addTermValue(parentItem.o, parentItem.repeatableParticleValue, o, qName, modelGroupParticle, parentParticle, handler);
+         {
+            RepeatableParticleHandler repeatableHandler = modelGroupParticle.getTerm().getRepeatableHandler();
+            repeatableHandler.addTermValue(parentItem.repeatableParticleValue, o, qName, modelGroupParticle, parentParticle, handler);
+         }
       }
    }
 
@@ -1133,7 +1140,10 @@ public class SundayContentHandler
             if(parentItem.repeatableParticleValue == null)
                setParent(handler, parent, o, endName, particle, parentParticle);
             else
-               defRepeatableHandler.addTermValue(parent, parentItem.repeatableParticleValue, o, endName, particle, parentParticle, handler);
+            {
+               RepeatableParticleHandler repeatableHandler = particle.getTerm().getRepeatableHandler();
+               repeatableHandler.addTermValue(parentItem.repeatableParticleValue, o, endName, particle, parentParticle, handler);
+            }
          }
          else if(parentParticle != null && hasWildcard && stack.size() > 1)
          {

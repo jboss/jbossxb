@@ -56,4 +56,6 @@ public class DefaultHandlers
    public static CharactersHandler CHARACTERS_HANDLER = RtCharactersHandler.INSTANCE;
 
    public static ParticleHandler XOP_HANDLER = new XOPElementHandler();
+   
+   public static RepeatableParticleHandler REPEATABLE_HANDLER = NoopRepeatableParticleHandler.INSTANCE;
 }

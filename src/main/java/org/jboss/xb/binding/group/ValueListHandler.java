@@ -198,7 +198,8 @@ public interface ValueListHandler
                      if(childParticle.isRepeatable())
                      {
                         TermBinding term = childParticle.getTerm();
-                        if(!(o instanceof GenericValueContainer) &&
+/* Has to be commented for the NOOP RepeatableParticleHandler
+ *                         if(!(o instanceof GenericValueContainer) &&
                               term.getAddMethodMetaData() == null &&
                               term.getMapEntryMetaData() == null &&
                               term.getPutMethodMetaData() == null)
@@ -206,7 +207,7 @@ public interface ValueListHandler
                            pHandler.setParent(o, valueEntry.value, valueEntry.qName, childParticle, particle);
                         }
                         else
-                        {
+*/                        {
                            Collection<?> col = (Collection<?>)valueEntry.value;
                            for(Iterator<?> iter = col.iterator(); iter.hasNext();)
                            {

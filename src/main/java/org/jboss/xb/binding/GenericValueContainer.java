@@ -24,6 +24,7 @@ package org.jboss.xb.binding;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtUtil;
@@ -54,7 +55,10 @@ public interface GenericValueContainer
 
             public void addChild(QName name, Object value)
             {
-               items.add(value);
+               if(value != null && Collection.class.isAssignableFrom(value.getClass()))
+                  items.addAll((Collection<? extends Object>) value);
+               else
+                  items.add(value);
             }
 
             public Object instantiate()

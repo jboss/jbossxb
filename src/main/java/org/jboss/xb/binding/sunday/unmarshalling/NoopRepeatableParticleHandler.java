@@ -21,22 +21,28 @@
 */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
-
 import javax.xml.namespace.QName;
 
-
-
 /**
- * A RepeatableParticleHandler.
  * 
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public interface RepeatableParticleHandler
+public class NoopRepeatableParticleHandler implements RepeatableParticleHandler
 {
-   Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle);
+   public static final NoopRepeatableParticleHandler INSTANCE = new NoopRepeatableParticleHandler();
    
-   void addTermValue(Object particleValue, Object termValue, QName elementName, ParticleBinding particle, ParticleBinding parentParticle, ParticleHandler handler);
-   
-   void endRepeatableParticle(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle);
+   public Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle)
+   {
+      return null;
+   }
+
+   public void endRepeatableParticle(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
+   {
+   }
+
+   public void addTermValue(Object particleValue, Object termValue, QName elementName,
+         ParticleBinding particle, ParticleBinding parentParticle, ParticleHandler handler)
+   {
+   }
 }

@@ -81,22 +81,7 @@ public class BeanHandler extends DefaultElementHandler
    {
       return beanAdapterFactory;
    }
-/*
-   @Override
-   public Object startElement(Object parent, QName qName, ElementBinding element)
-   {
-      if (trace)
-         log.trace(" startElement " + qName + " bean=" + name + " parent=" + BuilderUtil.toDebugString(parent));
-      try
-      {
-         return beanAdapterFactory.newInstance();
-      }
-      catch (Throwable t)
-      {
-         throw new RuntimeException("QName " + qName + " error invoking beanAdapterFactory.newInstance() for bean=" + name, t);
-      }
-   }
-*/
+
    @Override
    public Object startParticle(Object parent,
          QName elementName,
@@ -184,40 +169,12 @@ public class BeanHandler extends DefaultElementHandler
          return;
       }
 
-      if(particle.isRepeatable() && !(propertyHandler instanceof PropertyHandler) &&
-            o != null && java.util.Collection.class.isAssignableFrom(o.getClass()))
-      {
-         // TODO this is not optimal!
-         // repeatable particles are collected into java.util.Collection
-         for (Object item : (java.util.Collection<?>) o)
-         {
-            if (valueAdapter != null)
-            {
-               item = valueAdapter.cast(item, null/*propertyHandler.getPropertyType().getType()*/);
-            }
-            propertyHandler.doHandle(beanAdapter, item, qName);
-         }
-      }
-      else
-      {
-         // TODO looks like value adapter should be used earlier in the stack
-         if(valueAdapter != null)
-         {
-            o = valueAdapter.cast(o, null/*propertyHandler.getPropertyType().getType()*/);
-         }
-         propertyHandler.doHandle(beanAdapter, o, qName);
-      }
+      // TODO looks like value adapter should be used earlier in the stack
+      if(valueAdapter != null)
+         o = valueAdapter.cast(o, null/*propertyHandler.getPropertyType().getType()*/);
+      propertyHandler.doHandle(beanAdapter, o, qName);
    }
 
-/*   @Override
-   public Object endElement(Object o, QName qName, ElementBinding element)
-   {
-      if (trace)
-         log.trace("endElement " + qName + " o=" + BuilderUtil.toDebugString(o));
-      BeanAdapter beanAdapter = (BeanAdapter) o;
-      return beanAdapter.getValue();
-   }
-*/
    @Override
    public Object endParticle(Object o, QName qName, ParticleBinding particle)
    {

@@ -43,7 +43,6 @@ public interface RepeatableParticleHandler
 {
    RepeatableParticleHandler VALUE_LIST = new RepeatableParticleHandler()
    {
-      @Override
       public Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle)
       {
          TermBinding term = particle.getTerm();
@@ -66,7 +65,6 @@ public interface RepeatableParticleHandler
          return null;
       }      
 
-      @Override
       public void endRepeatableParticle(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
       {
          if (o == null)
@@ -109,7 +107,6 @@ public interface RepeatableParticleHandler
          }
       }
 
-      @Override
       public void addTermValue(Object parent, Object particleValue, Object termValue, QName elementName,
             ParticleBinding particle, ParticleBinding parentParticle, ParticleHandler handler)
       {
@@ -123,18 +120,15 @@ public interface RepeatableParticleHandler
 
    RepeatableParticleHandler NOOP = new RepeatableParticleHandler()
    {
-      @Override
       public Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle)
       {
          return null;
       }
 
-      @Override
       public void endRepeatableParticle(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
       {
       }
 
-      @Override
       public void addTermValue(Object parent, Object particleValue, Object termValue, QName elementName,
             ParticleBinding particle, ParticleBinding parentParticle, ParticleHandler handler)
       {
@@ -143,13 +137,11 @@ public interface RepeatableParticleHandler
 
    RepeatableParticleHandler LIST = new RepeatableParticleHandler()
    {
-      @Override
       public Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle)
       {
          return new ArrayList<Object>();
       }
 
-      @Override
       public void endRepeatableParticle(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
       {
          if(o == null)
@@ -173,7 +165,6 @@ public interface RepeatableParticleHandler
          handler.setParent(parent, o, elementName, particle, parentParticle);
       }
 
-      @Override
       public void addTermValue(Object parent, Object particleValue, Object termValue, QName elementName,
             ParticleBinding particle, ParticleBinding parentParticle, ParticleHandler handler)
       {

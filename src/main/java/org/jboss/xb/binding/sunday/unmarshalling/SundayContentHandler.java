@@ -203,7 +203,7 @@ public class SundayContentHandler
          {
             if(!item.ended) // could be ended if it's a choice
             {
-               endParticle(endName, item, stack.peek1());
+               endParticle(item, stack.peek1());
             }
 
             ParticleBinding currentParticle = item.cursor.getCurrentParticle();
@@ -446,7 +446,7 @@ public class SundayContentHandler
                if(newCursors.isEmpty())
                {
                   if(!item.ended)
-                     endParticle(startName, item, stack.peek1());
+                     endParticle(item, stack.peek1());
                                     
                   StackItem poped = pop();
                   if(!poped.particle.isRepeatable() && stack.peek().cursor == null)
@@ -731,7 +731,7 @@ public class SundayContentHandler
 
          StackItem item = parentItem;
          parentItem = stack.peek(--stackIndex);
-         endParticle(startName, item, parentItem);
+         endParticle(item, parentItem);
       }
 
       if(!parentParticle.isRepeatable())
@@ -785,7 +785,7 @@ public class SundayContentHandler
       // todo startName is wrong here
       StackItem item = parentItem;
       parentItem = stack.peek(stackIndex - 1);
-      endParticle(startName, item, parentItem);
+      endParticle(item, parentItem);
 
       ParticleHandler handler = getHandler(item.particle);
       item.reset();
@@ -820,7 +820,7 @@ public class SundayContentHandler
       repeatableHandler.endRepeatableParticle(parent, o, elementName, particle, parentParticle);
    }
 
-   private void endParticle(QName qName, StackItem item, StackItem parentItem)
+   private void endParticle(StackItem item, StackItem parentItem)
    {
       if(item.ended)
       {
@@ -830,7 +830,7 @@ public class SundayContentHandler
       ParticleBinding modelGroupParticle = item.particle;
       ParticleHandler handler = item.handler;//getHandler(modelGroupParticle);
 
-      Object o = handler.endParticle(item.o, qName, modelGroupParticle);
+      Object o = handler.endParticle(item.o, item.qName, modelGroupParticle);
 
       item.ended = true;
 
@@ -843,11 +843,11 @@ public class SundayContentHandler
             parentParticle = parentItem.particle;
          
          if(parentItem.repeatableParticleValue == null)
-            setParent(handler, parentItem.o, o, qName, modelGroupParticle, parentParticle);
+            setParent(handler, parentItem.o, o, item.qName, modelGroupParticle, parentParticle);
          else
          {
             RepeatableParticleHandler repeatableHandler = modelGroupParticle.getTerm().getRepeatableHandler();
-            repeatableHandler.addTermValue(parentItem.repeatableParticleValue, o, qName, modelGroupParticle, parentParticle, handler);
+            repeatableHandler.addTermValue(parentItem.repeatableParticleValue, o, item.qName, modelGroupParticle, parentParticle, handler);
          }
       }
    }

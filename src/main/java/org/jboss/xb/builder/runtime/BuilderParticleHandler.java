@@ -44,9 +44,6 @@ public class BuilderParticleHandler implements ParticleHandler
    
    public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs, NamespaceContext nsCtx)
    {
-      TermBinding term = particle.getTerm();
-      if (term instanceof ArraySequenceBinding)
-         return new ArrayWrapper(parent, elementName);
       return parent;
    }
 
@@ -67,35 +64,12 @@ public class BuilderParticleHandler implements ParticleHandler
          }
          
          if(particleHandler != null)
-         {
-            if (parent != null && parent instanceof ArrayWrapper)
-            {
-               ArrayWrapper wrapper = (ArrayWrapper) parent;
-               wrapper.add(o);
-               wrapper.setChildParticle(particle);
-               wrapper.setParentParticle(parentParticle);
-               return;
-            }
-
             particleHandler.setParent(parent, o, elementName, particle, parentParticle);
-         }
       }
    }
 
    public Object endParticle(Object o, QName elementName, ParticleBinding particle)
    {
-      TermBinding term = particle.getTerm();
-      if (term instanceof ArraySequenceBinding)
-      {
-         ArrayWrapper wrapper = (ArrayWrapper) o;
-         Object parent = wrapper.getParent();
-         ParticleBinding childParticle = wrapper.getChildParticle();
-         ParticleBinding parentParticle = wrapper.getParentParticle();
-         ElementBinding elementBinding = (ElementBinding) parentParticle.getTerm();
-         ParticleHandler particleHandler = elementBinding.getType().getHandler();
-         particleHandler.setParent(parent, wrapper, wrapper.getElementName(), childParticle, parentParticle);
-         return parent;
-      }
       return o;
    }
 }

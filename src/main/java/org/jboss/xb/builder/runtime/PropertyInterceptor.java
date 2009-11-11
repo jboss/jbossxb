@@ -74,11 +74,6 @@ public class PropertyInterceptor extends DefaultElementInterceptor
          log.trace("setParent " + qName + " parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(child) +" property=" + propertyInfo.getName());
       try
       {
-         if (propertyType.isArray())
-         {
-            ArrayWrapper wrapper = (ArrayWrapper) child;
-            child = wrapper.getArray(propertyType);
-         }
          BeanAdapter beanAdapter = (BeanAdapter) parent;
          beanAdapter.set(propertyInfo, child);
       }

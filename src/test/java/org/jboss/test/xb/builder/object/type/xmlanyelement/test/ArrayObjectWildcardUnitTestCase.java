@@ -34,12 +34,10 @@ import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
-import org.jboss.xb.builder.runtime.ArraySequenceBinding;
 import org.jboss.xb.builder.runtime.PropertyWildcardHandler;
 
 /**
@@ -84,10 +82,6 @@ public class ArrayObjectWildcardUnitTestCase extends AbstractBuilderTest
       assertNotNull(particle);
       TermBinding term = particle.getTerm();
       assertNotNull(term);
-      term = assertSingleSequence(term);
-      assertTrue(term instanceof ArraySequenceBinding);
-      term = assertSingleSequence(term);
-      assertTrue(term instanceof SequenceBinding);
       term = assertSingleSequence(term);
       assertTrue(term instanceof WildcardBinding);
       WildcardBinding wildcardBinding = type.getWildcard();

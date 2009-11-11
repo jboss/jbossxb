@@ -117,7 +117,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.builder.runtime.AbstractPropertyHandler;
 import org.jboss.xb.builder.runtime.AnyAttributePropertyHandler;
-import org.jboss.xb.builder.runtime.ArraySequenceBinding;
+import org.jboss.xb.builder.runtime.ArrayWrapperRepeatableParticleHandler;
 import org.jboss.xb.builder.runtime.BeanHandler;
 import org.jboss.xb.builder.runtime.BuilderParticleHandler;
 import org.jboss.xb.builder.runtime.BuilderSimpleParticleHandler;
@@ -1241,7 +1241,6 @@ public class JBossXBNoSchemaBuilder
          // Setup any new model and determine the wildcard type
          if (wildcardType.isArray())
          {
-            localModel = createArray(localModel);
             type = ((ArrayInfo) wildcardType).getComponentType();
             if (trace)
                log.trace("Wildcard " + wildcardProperty.getName() + " is an array of type " + type.getName());
@@ -1274,8 +1273,15 @@ public class JBossXBNoSchemaBuilder
          particleBinding.setMinOccurs(0);
          particleBinding.setMaxOccurs(1);
          localModel.addParticle(particleBinding);
-         typeBinding.getWildcard().setWildcardHandler((ParticleHandler) wildcardHandler);
+
+         wildcard.setWildcardHandler((ParticleHandler) wildcardHandler);
          beanAdapterFactory.setWildcardHandler(wildcardHandler);
+         
+         if(wildcardType.isArray())
+         {
+            particleBinding.setMaxOccursUnbounded(true);
+            wildcard.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(beanAdapterFactory));
+         }
       }
 
       JBossXmlChildWildcard childWildcard = typeInfo.getUnderlyingAnnotation(JBossXmlChildWildcard.class);
@@ -1362,13 +1368,7 @@ public class JBossXBNoSchemaBuilder
       XmlType propertyXmlType = null;
       JBossXmlModelGroup propertyXmlModelGroup = null;
       // Setup any new model
-      if (propertyType.isArray())
-      {
-         if (trace)
-            log.trace("Property " + property.getName() + " is an array");
-         localModel = createArray(localModel);
-      }
-      else if (propertyType.isCollection())
+      if (propertyType.isCollection())
       {
          if (trace)
             log.trace("Property " + property.getName() + " is a collection");
@@ -1437,8 +1437,9 @@ public class JBossXBNoSchemaBuilder
          String wrapperNamespace = xmlWrapper.namespace();
          String wrapperName = xmlWrapper.name();
          QName wrapperQName = generateXmlName(property.getName(), elementForm, wrapperNamespace, wrapperName);
-         localModel = bindXmlElementWrapper(propertyType, localModel, xmlWrapper, wrapperQName);
+         localModel = bindXmlElementWrapper(beanAdapterFactory, propertyType, localModel, xmlWrapper, wrapperQName);
          beanAdapterFactory.addProperty(wrapperQName, new PropertyHandler(property, propertyType));
+
          if (trace)
             log.trace("Added property " + wrapperQName + " for type=" + property.getBeanInfo().getName() + " property="
                   + property.getName() + " as a wrapper element");
@@ -1454,6 +1455,10 @@ public class JBossXBNoSchemaBuilder
          particleBinding.setMaxOccursUnbounded(true);
          localModel.addParticle(particleBinding);
          localModel = choice;
+
+         if(xmlWrapper == null && propertyType.isArray())
+            choice.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(beanAdapterFactory));
+
          if (trace)
             log.trace("XmlElements seen adding choice for type=" + property.getBeanInfo().getName() + " property=" + property.getName());
       }
@@ -1711,10 +1716,10 @@ public class JBossXBNoSchemaBuilder
                else
                   propertyHandler = new PropertyHandler(property, localPropertyType);
             }
+            else if(elements.length > 1 && propertyType.isArray())
+               propertyHandler = new PropertyHandler(property, propertyType);
             else
-            {
                propertyHandler = new PropertyHandler(property, localPropertyType);
-            }
 
             ParticleBinding particle;
             if(Element.class.getName().equals(propertyType.getName()))
@@ -1756,8 +1761,15 @@ public class JBossXBNoSchemaBuilder
                elementBinding.setNillable(nillable);
                elementBinding.setValueAdapter(valueAdapter);
                if(repeatableHandler != null)
+               {
                   elementBinding.setRepeatableHandler(repeatableHandler);
-
+               }
+               else if(elements.length == 1 && propertyType.isArray() && xmlWrapper == null)
+               {
+                  isCol = true;
+                  elementBinding.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(beanAdapterFactory));
+               }
+               
                JBossXmlPreserveWhitespace preserveSpace = property.getUnderlyingAnnotation(JBossXmlPreserveWhitespace.class);
                if (preserveSpace != null)
                {
@@ -1933,7 +1945,7 @@ public class JBossXBNoSchemaBuilder
       return group;
    }
       
-   private SequenceBinding bindXmlElementWrapper(TypeInfo propertyType, ModelGroupBinding parentModel, XmlElementWrapper annotation, QName wrapperQName)
+   private SequenceBinding bindXmlElementWrapper(BeanAdapterFactory beanAdapterFactory, TypeInfo propertyType, ModelGroupBinding parentModel, XmlElementWrapper annotation, QName wrapperQName)
    {
       TypeBinding wrapperType = new TypeBinding();
       SequenceBinding seq = new SequenceBinding(schemaBinding);
@@ -1945,8 +1957,12 @@ public class JBossXBNoSchemaBuilder
       ElementBinding wrapperElement = createElementBinding(propertyType, wrapperType, wrapperQName, false);
       wrapperElement.setNillable(annotation.nillable());
       wrapperElement.setSkip(Boolean.TRUE);
-      particle = new ParticleBinding(wrapperElement, annotation.required() ? 1 : 0, 1, propertyType.isCollection());
+      particle = new ParticleBinding(wrapperElement, annotation.required() ? 1 : 0, 1, propertyType.isCollection() || propertyType.isArray());
       parentModel.addParticle(particle);
+      
+      if(propertyType.isArray())
+         wrapperElement.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(beanAdapterFactory));
+      
       return seq;
    }
 
@@ -1963,27 +1979,6 @@ public class JBossXBNoSchemaBuilder
          throw new RuntimeException("Error creating BeanAdapterFactory for "
                + beanAdapterBuilderClass.getName(), t);
       }
-   }
-
-   /**
-    * Create an array
-    * 
-    * @param localModel the current model
-    * @return the new local model
-    */
-   private ModelGroupBinding createArray(ModelGroupBinding localModel)
-   {
-      SequenceBinding sequenceBinding = new SequenceBinding(schemaBinding);
-      sequenceBinding.setHandler(BuilderParticleHandler.INSTANCE);
-      ArraySequenceBinding arraySequenceBinding = new ArraySequenceBinding(schemaBinding);
-      arraySequenceBinding.setHandler(BuilderParticleHandler.INSTANCE);
-      ParticleBinding particle = new ParticleBinding(sequenceBinding);
-      particle.setMinOccurs(0);
-      particle.setMaxOccursUnbounded(true);
-      arraySequenceBinding.addParticle(particle);
-      particle = new ParticleBinding(arraySequenceBinding);
-      localModel.addParticle(particle);
-      return sequenceBinding;
    }
 
    /**

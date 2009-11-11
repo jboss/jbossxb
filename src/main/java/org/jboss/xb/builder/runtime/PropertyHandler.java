@@ -52,11 +52,6 @@ public class PropertyHandler extends AbstractPropertyHandler
    {
       try
       {
-         if (propertyType.isArray())
-         {
-            ArrayWrapper wrapper = (ArrayWrapper) child;
-            child = wrapper.getArray(propertyType);
-         }
          BeanAdapter beanAdapter = (BeanAdapter) parent;
          beanAdapter.set(propertyInfo, child);
       }

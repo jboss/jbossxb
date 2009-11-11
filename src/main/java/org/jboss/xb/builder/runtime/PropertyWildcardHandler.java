@@ -58,15 +58,6 @@ public class PropertyWildcardHandler extends PropertyHandler implements Particle
 
    public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
    {
-      if (parent != null && parent instanceof ArrayWrapper)
-      {
-         ArrayWrapper wrapper = (ArrayWrapper) parent;
-         wrapper.add(o);
-         wrapper.setChildParticle(particle);
-         wrapper.setParentParticle(parentParticle);
-         return;
-      }
-
       BeanAdapter beanAdapter = (BeanAdapter) parent;
       AbstractPropertyHandler propertyHandler = beanAdapter.getPropertyHandler(elementName);
       if (propertyHandler != null)

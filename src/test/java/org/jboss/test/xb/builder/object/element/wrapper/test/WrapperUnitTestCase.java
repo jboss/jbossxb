@@ -69,4 +69,15 @@ public class WrapperUnitTestCase extends AbstractBuilderTest
       assertEquals(new Float(1.1), items[2]);
       assertEquals(new MyNumber("123456789"), items[3]);
    }
+
+   public void testFoo5Wrapper() throws Exception
+   {
+      Foo4 foo = unmarshalObject(Foo4.class);
+      Number[] items = foo.getItems();
+      assertEquals(4, items.length);
+      assertEquals(1, items[0]);
+      assertEquals(2, items[1]);
+      assertEquals(new Float(1.1), items[2]);
+      assertEquals(new MyNumber("123456789"), items[3]);
+   }
 }

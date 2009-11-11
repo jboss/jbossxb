@@ -132,38 +132,13 @@ public class BeanHandler extends DefaultElementHandler
          valueAdapter = ((ElementBinding)term).getValueAdapter();
       }
 
-      if (parent != null && parent instanceof ArrayWrapper)
-      {
-         ArrayWrapper wrapper = (ArrayWrapper) parent;
-         wrapper.add(o);
-         wrapper.setChildParticle(particle);
-         wrapper.setParentParticle(parentParticle);
-         return;
-      }
-
-      BeanAdapter beanAdapter;
-      if (parent instanceof ArrayWrapper)
-         beanAdapter = (BeanAdapter) ((ArrayWrapper) parent).getParent();
-      else
-         beanAdapter = (BeanAdapter) parent;
+      BeanAdapter beanAdapter = (BeanAdapter) parent;
       AbstractPropertyHandler propertyHandler = beanAdapter.getPropertyHandler(qName);
       if (propertyHandler == null)
       {
-         AbstractPropertyHandler wildcardHandler = beanAdapter.getWildcardHandler();
-         if (wildcardHandler != null)
-         {
-            if (o != null && o instanceof ArrayWrapper)
-            {
-               ArrayWrapper wrapper = (ArrayWrapper) o;
-               wildcardHandler.doHandle(beanAdapter, wrapper, wrapper.getElementName());
-               return;
-            }
-         }
          TermBinding element = term;
          if (element.getSchema().isStrictSchema())
-         {
             throw new RuntimeException("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o) + " available=" + beanAdapter.getAvailable());
-         }
          if (trace)
             log.trace("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o));
          return;

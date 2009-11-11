@@ -187,8 +187,14 @@ public class SundayContentHandler
                   StackItem parentItem = stack.peek();
                   if(parentItem.repeatableParticleValue != null)
                   {
-                     endRepeatableParticle(parentItem.o, parentItem.repeatableParticleValue, item.qName, item.particle, parentItem.particle);
-                     parentItem.repeatableParticleValue = null;
+                     // TODO this has to be done for every endRepeatableParticle
+                     StackItem notSkippedParent = parentItem;
+                     if(parentItem.particle.getTerm().isSkip())
+                        notSkippedParent = stack.peek1();
+                     int i = stack.size() - 2;
+                     while(notSkippedParent.particle.getTerm().isSkip() && i >= 0)
+                        notSkippedParent = stack.peek(i--);
+                     endRepeatableParticle(parentItem, item.qName, item.particle, notSkippedParent.particle);
                   }
                }
             }
@@ -210,9 +216,7 @@ public class SundayContentHandler
             TermBinding term = currentParticle.getTerm();
             if(item.repeatableParticleValue != null /* && currentParticle.isRepeatable()*/ && term.isWildcard())
             {
-               StackItem parentItem = stack.peek1();
-               endRepeatableParticle(parentItem.o, item.repeatableParticleValue, item.qName, currentParticle, parentItem.particle);
-               item.repeatableParticleValue = null;
+               endRepeatableParticle(item, item.qName, currentParticle, item.particle);
             }
 
             pop();
@@ -221,8 +225,7 @@ public class SundayContentHandler
                StackItem parentItem = stack.peek();
                if(parentItem.repeatableParticleValue != null)
                {
-                  endRepeatableParticle(parentItem.o, parentItem.repeatableParticleValue, item.qName, item.particle, parentItem.particle);
-                  parentItem.repeatableParticleValue = null;
+                  endRepeatableParticle(parentItem, item.qName, item.particle, parentItem.particle);
                }
             }
          }
@@ -325,8 +328,7 @@ public class SundayContentHandler
                            pop();
                            if(parentItem.repeatableParticleValue != null)
                            {
-                              endRepeatableParticle(parentItem.o, parentItem.repeatableParticleValue, item.qName, item.particle, parentItem.particle);
-                              parentItem.repeatableParticleValue = null;
+                              endRepeatableParticle(parentItem, item.qName, item.particle, parentItem.particle);
                            }
                            continue;
                         }
@@ -349,8 +351,7 @@ public class SundayContentHandler
                         StackItem parentItem = stack.peek();
                         if(parentItem.repeatableParticleValue != null)
                         {
-                           endRepeatableParticle(parentItem.o, parentItem.repeatableParticleValue, item.qName, item.particle, parentItem.particle);
-                           parentItem.repeatableParticleValue = null;
+                           endRepeatableParticle(parentItem, item.qName, item.particle, parentItem.particle);
                         }
                      }
                      continue;
@@ -420,12 +421,12 @@ public class SundayContentHandler
                         ParticleBinding modelGroupParticle = cursor.getParticle();
                         if(modelGroupParticle.isRepeatable())
                         {
-                           stack.peek().repeatableParticleValue = startRepeatableParticle(o, startName, modelGroupParticle);
+                           startRepeatableParticle(stack.peek(), o, startName, modelGroupParticle);
                         }
 
                         handler = getHandler(modelGroupParticle);
                         o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
-                        push(startName, cursor, o, handler, parentType);
+                        push(startName, cursor, o, handler, parentType);                        
                      }
                      particle = cursor.getCurrentParticle();
                   }
@@ -492,14 +493,12 @@ public class SundayContentHandler
                      if(item.repeatableParticleValue != null &&
                            prevParticle != null && prevParticle.isRepeatable() && prevParticle.getTerm().isModelGroup())
                      {
-                        StackItem parentItem = stack.peek1();
-                        endRepeatableParticle(parentItem.o, item.repeatableParticleValue, item.qName, prevParticle, parentItem.particle);
-                        item.repeatableParticleValue = null;
+                        endRepeatableParticle(item, item.qName, prevParticle, item.particle);
                      }
 
                      if(newCursors.size() > 1 && curParticle.isRepeatable())
                      {
-                        stack.peek().repeatableParticleValue = startRepeatableParticle(stack.peek1().o, startName, curParticle);
+                        startRepeatableParticle(stack.peek1(), stack.peek1().o, startName, curParticle);
                      }
                   }
                   else
@@ -548,7 +547,7 @@ public class SundayContentHandler
 
             if(!repeatedParticle && particle.isRepeatable())
             {
-               stack.peek().repeatableParticleValue = startRepeatableParticle(parent, startName, particle);
+               startRepeatableParticle(stack.peek(), parent, startName, particle);
             }
             particle = new ParticleBinding(element/*, particle.getMinOccurs(), particle.getMaxOccurs(), particle.getMaxOccursUnbounded()*/);
          }
@@ -603,7 +602,7 @@ public class SundayContentHandler
 
          if(!repeated && particle.isRepeatable())
          {
-            stack.peek().repeatableParticleValue = startRepeatableParticle(parent, startName, particle);
+            startRepeatableParticle(stack.peek(), parent, startName, particle);
          }
 
          TypeBinding type = element.getType();
@@ -801,23 +800,29 @@ public class SundayContentHandler
       }
    }
 
-   private Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle)
+   private void startRepeatableParticle(StackItem parentItem, Object parent, QName startName, ParticleBinding particle)
    {
       if(trace)
          log.trace(" start repeatable (" + stack.size() + "): " + particle.getTerm());
       RepeatableParticleHandler repeatableHandler = particle.getTerm().getRepeatableHandler();
       // the way it is now it's never null
-      return repeatableHandler.startRepeatableParticle(parent, startName, particle);
+      Object repeatableContainer = repeatableHandler.startRepeatableParticle(parent, startName, particle);
+      if(repeatableContainer != null)
+      {
+         parentItem.repeatableParticleValue = repeatableContainer;
+         parentItem.repeatableHandler = repeatableHandler;
+      }
    }
 
-   private void endRepeatableParticle(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
+   private void endRepeatableParticle(StackItem parentItem, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
    {
       if (trace)
          log.trace(" end repeatable (" + stack.size() + "): " + particle.getTerm());
-
-      RepeatableParticleHandler repeatableHandler = particle.getTerm().getRepeatableHandler();
+      RepeatableParticleHandler repeatableHandler = parentItem.repeatableHandler; //particle.getTerm().getRepeatableHandler();
       // the way it is now it's never null
-      repeatableHandler.endRepeatableParticle(parent, o, elementName, particle, parentParticle);
+      repeatableHandler.endRepeatableParticle(parentItem.o, parentItem.repeatableParticleValue, elementName, particle, parentParticle);
+      parentItem.repeatableParticleValue = null;
+      parentItem.repeatableHandler = null;
    }
 
    private void endParticle(StackItem item, StackItem parentItem)
@@ -838,7 +843,7 @@ public class SundayContentHandler
       //item = (StackItem)stack.peek(parentStackPos);
       if(parentItem.o != null)
       {
-         ParticleBinding parentParticle = getParentParticle();//item.particle;
+         ParticleBinding parentParticle = getNotSkippedParent().particle;//item.particle;
          if(parentParticle == null)
             parentParticle = parentItem.particle;
          
@@ -846,8 +851,8 @@ public class SundayContentHandler
             setParent(handler, parentItem.o, o, item.qName, modelGroupParticle, parentParticle);
          else
          {
-            RepeatableParticleHandler repeatableHandler = modelGroupParticle.getTerm().getRepeatableHandler();
-            repeatableHandler.addTermValue(parentItem.repeatableParticleValue, o, item.qName, modelGroupParticle, parentParticle, handler);
+            //RepeatableParticleHandler repeatableHandler = modelGroupParticle.getTerm().getRepeatableHandler();
+            parentItem.repeatableHandler.addTermValue(parentItem.repeatableParticleValue, o, item.qName, modelGroupParticle, parentParticle, handler);
          }
       }
    }
@@ -932,22 +937,22 @@ public class SundayContentHandler
       }
    }
    
-   private ParticleBinding getParentParticle()
+   private StackItem getNotSkippedParent()
    {
       StackItem item = stack.peek1();
       if(item == null)
          return null;
       
       ParticleBinding particle = item.particle;
-      if(!particle.getTerm().isSkip())
-         return particle;
+      if(!particle.getTerm().isSkip() || item.repeatableParticleValue != null)
+         return item;
       
       for(int i = stack.size() - 3; i >= 0; --i)
       {
          item = stack.peek(i);
          particle = item.particle;
-         if(!particle.getTerm().isSkip())
-            return particle;
+         if(!particle.getTerm().isSkip() || item.repeatableParticleValue != null)
+            return item;
       }
       return null;
    }
@@ -1061,7 +1066,7 @@ public class SundayContentHandler
                   {
                      ctx.parent = o;
                      ctx.particle = particle;
-                     ctx.parentParticle = getParentParticle();
+                     ctx.parentParticle = getNotSkippedParent().particle;
                      unmarshalled = beforeSetParent.beforeSetParent(unmarshalled, ctx);
                      ctx.clear();
                   }
@@ -1118,7 +1123,10 @@ public class SundayContentHandler
 
       if(allInterceptors == 0)
       {
-         ParticleBinding parentParticle = getParentParticle();
+         StackItem notSkippedParentItem = getNotSkippedParent();
+         if(notSkippedParentItem != null)
+         {
+         ParticleBinding parentParticle = notSkippedParentItem.particle;
          boolean hasWildcard = false;
          if (parentParticle != null && parentParticle.getTerm().isElement())
          {
@@ -1137,12 +1145,11 @@ public class SundayContentHandler
 
          if(parent != null)
          {
-            if(parentItem.repeatableParticleValue == null)
+            if(notSkippedParentItem.repeatableParticleValue == null)
                setParent(handler, parent, o, endName, particle, parentParticle);
             else
             {
-               RepeatableParticleHandler repeatableHandler = particle.getTerm().getRepeatableHandler();
-               repeatableHandler.addTermValue(parentItem.repeatableParticleValue, o, endName, particle, parentParticle, handler);
+               notSkippedParentItem.repeatableHandler.addTermValue(notSkippedParentItem.repeatableParticleValue, o, endName, particle, parentParticle, handler);
             }
          }
          else if(parentParticle != null && hasWildcard && stack.size() > 1)
@@ -1158,6 +1165,7 @@ public class SundayContentHandler
 
             if(trace)
                log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
+         }
          }
       }
       else
@@ -1282,6 +1290,7 @@ public class SundayContentHandler
       boolean ignoreCharacters;
       Object o;
       Object repeatableParticleValue;
+      RepeatableParticleHandler repeatableHandler;
       StringBuffer textContent;
       Boolean indentation;
       boolean ignorableCharacters = true;

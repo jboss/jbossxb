@@ -501,7 +501,6 @@ public class JBossXBNoSchemaBuilder
     * @param typeInfo the type info
     * @return the type binding
     */
-   @SuppressWarnings("unchecked")
    protected TypeBinding resolveTypeBinding(TypeInfo typeInfo)
    {
       if (trace)
@@ -1238,24 +1237,32 @@ public class JBossXBNoSchemaBuilder
          TypeInfo wildcardType = wildcardProperty.getType();
          TypeInfo type = wildcardType;
 
+         WildcardBinding wildcard = new WildcardBinding(schemaBinding);
+         ParticleBinding particleBinding = new ParticleBinding(wildcard);
+         localModel.addParticle(particleBinding);
+         particleBinding.setMinOccurs(0);
+
          // Setup any new model and determine the wildcard type
          if (wildcardType.isArray())
          {
+            particleBinding.setMaxOccursUnbounded(true);
+            wildcard.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(beanAdapterFactory));
             type = ((ArrayInfo) wildcardType).getComponentType();
             if (trace)
                log.trace("Wildcard " + wildcardProperty.getName() + " is an array of type " + type.getName());
          }
          else if (wildcardType.isCollection())
          {
-            localModel = createCollection(localModel);
+            particleBinding.setMaxOccursUnbounded(true);
             type = ((ClassInfo)wildcardProperty.getType()).getComponentType();
             if (trace)
                log.trace("Wildcard " + wildcardProperty.getName() + " is a collection of type " + type.getName());
          }
+         else
+            particleBinding.setMaxOccurs(1);
 
          XmlAnyElement xmlAnyElement = wildcardProperty.getUnderlyingAnnotation(XmlAnyElement.class);
          boolean isLax = xmlAnyElement == null ? true : xmlAnyElement.lax();
-         WildcardBinding wildcard = new WildcardBinding(schemaBinding);
          if (isLax)
             wildcard.setProcessContents((short) 3); // Lax
          else
@@ -1268,20 +1275,8 @@ public class JBossXBNoSchemaBuilder
             wildcard.setUnresolvedCharactersHandler(DOMHandler.INSTANCE);
          }
 
-         // Bind the particle to the model
-         ParticleBinding particleBinding = new ParticleBinding(wildcard);
-         particleBinding.setMinOccurs(0);
-         particleBinding.setMaxOccurs(1);
-         localModel.addParticle(particleBinding);
-
          wildcard.setWildcardHandler((ParticleHandler) wildcardHandler);
-         beanAdapterFactory.setWildcardHandler(wildcardHandler);
-         
-         if(wildcardType.isArray())
-         {
-            particleBinding.setMaxOccursUnbounded(true);
-            wildcard.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(beanAdapterFactory));
-         }
+         beanAdapterFactory.setWildcardHandler(wildcardHandler);         
       }
 
       JBossXmlChildWildcard childWildcard = typeInfo.getUnderlyingAnnotation(JBossXmlChildWildcard.class);
@@ -1982,29 +1977,11 @@ public class JBossXBNoSchemaBuilder
    }
 
    /**
-    * Create a collection
-    * 
-    * @param localModel the current model
-    * @return the new local model
-    */
-   private ModelGroupBinding createCollection(ModelGroupBinding localModel)
-   {
-      SequenceBinding sequenceBinding = new SequenceBinding(schemaBinding);
-      sequenceBinding.setHandler(BuilderParticleHandler.INSTANCE);
-      ParticleBinding particle = new ParticleBinding(sequenceBinding);
-      particle.setMinOccurs(0);
-      particle.setMaxOccursUnbounded(true);
-      localModel.addParticle(particle);
-      return sequenceBinding;
-   }
-
-   /**
     * Add a namespace to the schema
     * 
     * @param namespace the namespace
     * @param erase whether to erase if there was only the default namespace
     */
-   @SuppressWarnings("unchecked")
    private void addNamespace(String namespace, boolean erase)
    {
       Set<String> namespaces = schemaBinding.getNamespaces();
@@ -2123,10 +2100,6 @@ public class JBossXBNoSchemaBuilder
             throw new IllegalStateException("Failed to create an instance of " + adapterImplClass.getName(), e);
          }
 
-//         ClassInfo adapterImplInfo = (ClassInfo) factory.getTypeInfo(adapterImplClass);
-//         ClassInfo xmlAdapterInfo = adapterImplInfo.getGenericSuperclass();
-//         TypeInfo type = xmlAdapterInfo.getActualTypeArguments()[0];
-         
          adaptedType = ((ParameterizedType)adapterImplClass.getGenericSuperclass()).getActualTypeArguments()[0];
          adaptedTypeInfo = factory.getTypeInfo(adaptedType);
       }

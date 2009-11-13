@@ -272,6 +272,21 @@ public class AbstractBuilderTest extends AbstractTestCaseWithSetup
       Collection<ParticleBinding> particles = sequence.getParticles();
       assertTrue(particles.size() == 1);
       ParticleBinding particle = particles.iterator().next();
+      assertFalse(particle.getMaxOccursUnbounded());
+      term = particle.getTerm();
+      assertNotNull(term);
+      return term;
+   }
+
+   protected TermBinding assertSingleRepeatableSequence(TermBinding term)
+   {
+      assertNotNull(term);
+      assertTrue(term instanceof SequenceBinding || term instanceof UnorderedSequenceBinding);
+      ModelGroupBinding sequence = (ModelGroupBinding) term;
+      Collection<ParticleBinding> particles = sequence.getParticles();
+      assertTrue(particles.size() == 1);
+      ParticleBinding particle = particles.iterator().next();
+      assertTrue(particle.getMaxOccursUnbounded());
       term = particle.getTerm();
       assertNotNull(term);
       return term;

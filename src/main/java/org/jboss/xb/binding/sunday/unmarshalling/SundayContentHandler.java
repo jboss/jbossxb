@@ -517,8 +517,8 @@ public class SundayContentHandler
 
          ElementBinding element = (ElementBinding)particle.getTerm();
 
-         // todo xsi:type support should be implemented in a better way
-         String xsiType = atts.getValue("xsi:type");
+         // TODO xsi:type support should be implemented in a better way
+         String xsiType = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "type");
          if(xsiType != null)
          {
             if(trace)
@@ -610,7 +610,7 @@ public class SundayContentHandler
             }
          }
 
-         String nil = atts.getValue("xsi:nil");
+         String nil = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "nil");
          if(nil == null || !("1".equals(nil) || "true".equals(nil)))
          {
             o = handler.startParticle(parent, startName, particle, atts, nsRegistry);

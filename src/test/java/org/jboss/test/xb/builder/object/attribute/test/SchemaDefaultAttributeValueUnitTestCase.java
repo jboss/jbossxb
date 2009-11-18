@@ -22,12 +22,20 @@
 package org.jboss.test.xb.builder.object.attribute.test;
 
 
+import javax.xml.namespace.QName;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.attribute.support.DefaultAttribute;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingInitializer;
+import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.builder.runtime.BeanHandler;
 
 /**
  * A SchemaDefaultAttributeValueUnitTestCase.
@@ -75,6 +83,56 @@ public class SchemaDefaultAttributeValueUnitTestCase extends AbstractBuilderTest
       // entity resolution inside schemaBindingResolver is used only for nsURI to class resolution (by XsdBinder)
       // and is not related to SAX parser entity resolution and XML validation.
 
+      String xml = findXML("SchemaDefaultAttributeValue.xml");
+      Object result = unmarshaller.unmarshal(xml, schemaBindingResolver);
+      
+      assertNotNull(result);
+      assertTrue(result instanceof DefaultAttribute);
+      DefaultAttribute da = (DefaultAttribute) result;
+      assertEquals(new Integer(123), da.getAttribute());
+   }
+   
+   /**
+    * This test demonstrates unmarshalling with default attribute values not added by the sax parser
+    * 
+    * @throws Exception
+    */
+   public void testValidationDisabled() throws Exception
+   {
+      UnmarshallerFactory unmarshallerFactory = UnmarshallerFactory.newInstance();
+      Unmarshaller unmarshaller = unmarshallerFactory.newUnmarshaller();
+      
+      // this is to make the SAX parser parse the XSD as well and include default attribute values in the startElement
+      //unmarshaller.setSchemaValidation(true);
+
+      JBossEntityResolver xmlResolver = new JBossEntityResolver();
+      xmlResolver.registerLocalEntity("http://www.hostame.org/SchemaDefaultAttributeValue.xsd", "org/jboss/test/xb/builder/object/attribute/test/SchemaDefaultAttributeValue.xsd");
+      unmarshaller.setEntityResolver(xmlResolver);
+      
+      MultiClassSchemaResolver schemaBindingResolver = new MultiClassSchemaResolver();
+      schemaBindingResolver.mapURIToClass("xb:test:default-attribute", DefaultAttribute.class);
+
+      // add the default constraint to the attribute
+      schemaBindingResolver.mapSchemaInitializer("xb:test:default-attribute",
+         new SchemaBindingInitializer()
+         {
+            @Override
+            public SchemaBinding init(SchemaBinding schema)
+            {
+               ElementBinding element = schema.getElement(new QName("xb:test:default-attribute", "default-attribute"));
+               assertNotNull(element);
+               TypeBinding type = element.getType();
+               AttributeBinding attribute = type.getAttribute(new QName("attribute"));
+               assertNotNull(attribute);
+               attribute.setDefaultConstraint("123");
+               // with this kind attributes handler this has to be done...
+               BeanHandler handler = (BeanHandler) type.getHandler();
+               handler.getAttributesHandler().addAttribute(attribute);
+               return schema;
+            }
+         }
+      );
+      
       String xml = findXML("SchemaDefaultAttributeValue.xml");
       Object result = unmarshaller.unmarshal(xml, schemaBindingResolver);
       

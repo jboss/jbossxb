@@ -25,10 +25,12 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultElementHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.AttributesHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.RegisteredAttributesHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 import org.jboss.xb.spi.BeanAdapter;
@@ -41,7 +43,7 @@ import org.xml.sax.Attributes;
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @version $Revision: 1.1 $
  */
-public class BeanHandler extends DefaultElementHandler
+public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHandler
 {
    /** The log */
    private final Logger log = Logger.getLogger(getClass());
@@ -55,6 +57,8 @@ public class BeanHandler extends DefaultElementHandler
    /** The BeanAdapter */
    private BeanAdapterFactory beanAdapterFactory;
    
+   private RegisteredAttributesHandler attrsHandler = new RegisteredAttributesHandler();
+
    /**
     * Create a new bean info element handler
     * 
@@ -102,11 +106,11 @@ public class BeanHandler extends DefaultElementHandler
          throw new RuntimeException("QName " + elementName + " error invoking beanAdapterFactory.newInstance() for bean=" + name, t);
       }
 
-      if (o != null && particle.getTerm().isElement())
+      TermBinding term = particle.getTerm();
+      if (o != null && term.isElement())
       {
-         ElementBinding element = (ElementBinding) particle.getTerm();
-         attrs = element.getType().expandWithDefaultAttributes(attrs);
-         attributes(o, elementName, element, attrs, nsCtx);
+         ElementBinding element = (ElementBinding) term;
+         attrsHandler.attributes(o, elementName, element.getType(), attrs, nsCtx);
       }
       return o;
    }
@@ -158,5 +162,10 @@ public class BeanHandler extends DefaultElementHandler
 
       BeanAdapter beanAdapter = (BeanAdapter) o;
       return beanAdapter.getValue();
+   }
+
+   public RegisteredAttributesHandler getAttributesHandler()
+   {
+      return attrsHandler;
    }
 }

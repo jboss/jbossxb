@@ -106,6 +106,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.DefaultElementHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultElementInterceptor;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.NoopParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
@@ -970,6 +971,8 @@ public class JBossXBNoSchemaBuilder
                   attribute.setNormalizeSpace(preserveSpace.preserve() ? false : true);
                if (trace)
                   log.trace("Bound attribute " + qName + " type=" + beanInfo.getName() + " property=" + property.getName() + " propertyType=" + attributeTypeInfo + ", normalizeSpace=" + attribute.isNormalizeSpace() + ", typeBinding=" + typeBinding.getQName());
+               
+               handler.getAttributesHandler().addAttribute(attribute);
             }
 
             // Is this any attribute
@@ -989,6 +992,8 @@ public class JBossXBNoSchemaBuilder
                   anyAttribute.setNormalizeSpace(preserveSpace.preserve() ? false : true);
                if (trace)
                   log.trace("Bound any attribute type=" + beanInfo.getName() + " property=" + property.getName() + ", normalizeSpace=" + anyAttribute.isNormalizeSpace());
+               
+               handler.getAttributesHandler().setAnyAttribute(anyAttribute);
             }
             
             // Are we determining the property order?
@@ -1084,19 +1089,6 @@ public class JBossXBNoSchemaBuilder
             propertyOrder = propertyNames.toArray(new String[propertyNames.size()]);
          }
       }
-
-      // No value property, see if we have a default one
-      //if (valueProperty == null)
-      //{
-      //   try
-      //   {
-      //      valueProperty = beanInfo.getProperty("value");
-      //   }
-      //   catch (Exception ignored)
-      //   {
-            // Nope.
-      //   }
-      //}
 
       // Bind the value
       if (valueProperty != null)
@@ -1529,19 +1521,25 @@ public class JBossXBNoSchemaBuilder
                {
                   BeanInfo wrapperInfo = JBossXBBuilder.configuration.getBeanInfo(groupText.wrapper());
                   TypeBinding wrapperTypeBinding = resolveTypeBinding(wrapperInfo.getClassInfo());
-                  // Steal the attributes
-                  Collection<AttributeBinding> otherAttributes = wrapperTypeBinding.getAttributes();
-                  if (otherAttributes != null)
-                  {
-                     for (AttributeBinding other : otherAttributes)
-                        elementTypeBinding.addAttribute(other);
-                  }
+
                   ParticleHandler particleHandler = wrapperTypeBinding.getHandler();
                   if (particleHandler instanceof BeanHandler == false)
                      throw new IllegalStateException("Cannot wrap " + wrapperInfo.getName() + " not a bean type " + particleHandler);
                   BeanHandler beanHandler = (BeanHandler) particleHandler;
                   WrapperBeanAdapterFactory wrapperFactory = new WrapperBeanAdapterFactory(beanHandler.getBeanAdapterFactory(), propertyType.getType());
-                  elementTypeBinding.setHandler(new BeanHandler(wrapperInfo.getName(), wrapperFactory));
+                  BeanHandler wrapperHandler = new BeanHandler(wrapperInfo.getName(), wrapperFactory);
+
+                  // Steal the attributes
+                  Collection<AttributeBinding> otherAttributes = wrapperTypeBinding.getAttributes();
+                  if (otherAttributes != null)
+                  {
+                     for (AttributeBinding other : otherAttributes)
+                     {
+                        elementTypeBinding.addAttribute(other);
+                        wrapperHandler.getAttributesHandler().addAttribute(other);
+                     }
+                  }
+                  elementTypeBinding.setHandler(wrapperHandler);
                   elementTypeBinding.setSimpleType(wrapperTypeBinding.getSimpleType());
                }
                else
@@ -1947,7 +1945,7 @@ public class JBossXBNoSchemaBuilder
       seq.setHandler(BuilderParticleHandler.INSTANCE);
       ParticleBinding particle = new ParticleBinding(seq);
       wrapperType.setParticle(particle);
-      wrapperType.setHandler(new DefaultElementHandler());
+      wrapperType.setHandler(NoopParticleHandler.INSTANCE);
 
       ElementBinding wrapperElement = createElementBinding(propertyType, wrapperType, wrapperQName, false);
       wrapperElement.setNillable(annotation.nillable());
@@ -2204,6 +2202,7 @@ public class JBossXBNoSchemaBuilder
                AttributeBinding keyBinding = new AttributeBinding(schemaBinding, attrQName, attributeType, attributeHandler);
                keyBinding.setRequired(true);
                entryType.addAttribute(keyBinding);
+               entryHandler.getAttributesHandler().addAttribute(keyBinding);
             }
 
             if(valueAttribute != null)
@@ -2214,6 +2213,7 @@ public class JBossXBNoSchemaBuilder
                AttributeBinding valueBinding = new AttributeBinding(schemaBinding, attrQName, attributeType, attributeHandler);
                valueBinding.setRequired(true);
                entryType.addAttribute(valueBinding);
+               entryHandler.getAttributesHandler().addAttribute(valueBinding);
             }
             else if(valueElement == null)
             {

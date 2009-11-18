@@ -385,8 +385,8 @@ public class SundayContentHandler
                   }
 
                   cursor = modelGroup.newCursor(typeParticle);
-                  List<ModelGroupBinding.Cursor> newCursors = cursor.startElement(startName, atts);
-                  if(newCursors.isEmpty())
+                  ModelGroupBinding.Cursor newCursor = cursor.startElement(startName, atts);
+                  if(newCursor == null)
                   {
                      throw new JBossXBRuntimeException(startName +
                         " not found as a child of " +
@@ -398,23 +398,21 @@ public class SundayContentHandler
                      flushIgnorableCharacters();
 
                      Object o = item.o;
-                     // push all except the last one
-                     for(int i = newCursors.size() - 1; i >= 0; --i)
+                     while(newCursor != null)
                      {
-                        cursor = newCursors.get(i);
-
+                        cursor = newCursor;
                         ParticleBinding modelGroupParticle = cursor.getParticle();
                         if(modelGroupParticle.isRepeatable())
-                        {
                            startRepeatableParticle(stack.peek(), o, startName, modelGroupParticle);
-                        }
 
                         handler = getHandler(modelGroupParticle);
                         o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
-                        push(startName, cursor, o, handler, parentType);                        
+                        push(startName, cursor, o, handler, parentType);
+                        
+                        newCursor = newCursor.getNext();
                      }
                      particle = cursor.getCurrentParticle();
-                  }
+                  }                  
                }
                break;
             }
@@ -422,14 +420,11 @@ public class SundayContentHandler
             {
                cursor = item.cursor;
                if(cursor == null)
-               {
                   throw new JBossXBRuntimeException("No cursor for " + startName);
-               }
 
-               //int prevOccurence = cursor.getOccurence();
                ParticleBinding prevParticle = cursor.isPositioned() ? cursor.getCurrentParticle() : null;
-               List<ModelGroupBinding.Cursor> newCursors = cursor.startElement(startName, atts);
-               if(newCursors.isEmpty())
+               ModelGroupBinding.Cursor newCursor = cursor.startElement(startName, atts);               
+               if(newCursor == null)
                {
                   if(!item.ended)
                      endParticle(item, stack.peek1());
@@ -450,11 +445,9 @@ public class SundayContentHandler
                   if(item.ended) // for repeatable choices
                   {
                      if(!item.particle.isRepeatable())
-                     {
                         throw new JBossXBRuntimeException("The particle expected to be repeatable but it's not: " + item.particle.getTerm());
-                     }
-                     item.reset();
                      
+                     item.reset();                     
                      handler = getHandler(item.particle);
                      item.o = handler.startParticle(stack.peek1().o, startName, item.particle, atts, nsRegistry);
                   }
@@ -468,7 +461,7 @@ public class SundayContentHandler
                         endRepeatableParticle(item, item.qName, prevParticle, item.particle);
                      }
 
-                     if(newCursors.size() > 1 && curParticle.isRepeatable())
+                     if(newCursor.getNext() != null && curParticle.isRepeatable())
                      {
                         startRepeatableParticle(stack.peek1(), stack.peek1().o, startName, curParticle);
                      }
@@ -481,16 +474,18 @@ public class SundayContentHandler
                   // push all except the last one
                   parentType = item.parentType;
                   Object o = item.o;
-                  for(int i = newCursors.size() - 2; i >= 0; --i)
+                  cursor = newCursor;
+                  newCursor = newCursor.getNext();
+                  while(newCursor != null)
                   {
-                     cursor = newCursors.get(i);
-
+                     cursor = newCursor;
                      ParticleBinding modelGroupParticle = cursor.getParticle();
                      handler = getHandler(modelGroupParticle);
                      o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
                      push(startName, cursor, o, handler, parentType);
+                     
+                     newCursor = newCursor.getNext();
                   }
-                  cursor = newCursors.get(0);
                   particle = cursor.getCurrentParticle();
                   break;
                }

@@ -194,6 +194,8 @@ public abstract class ModelGroupBinding
       protected final boolean trace = log.isTraceEnabled();
       protected int occurence;
 
+      protected Cursor next;
+      
       protected Cursor(ParticleBinding particle)
       {
          this.particle = particle;
@@ -209,15 +211,20 @@ public abstract class ModelGroupBinding
          return (ModelGroupBinding)particle.getTerm();
       }
 
+      public Cursor getNext()
+      {
+         return next;
+      }
+      
       public abstract ParticleBinding getCurrentParticle();
 
       public abstract ElementBinding getElement();
 
       public abstract boolean isPositioned();
 
-      public List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes attrs)
+      public ModelGroupBinding.Cursor startElement(QName qName, Attributes attrs)
       {
-         return startElement(qName, attrs, Collections.<ModelGroupBinding>emptySet(), Collections.<Cursor>emptyList(), true);
+         return startElement(qName, attrs, Collections.<ModelGroupBinding>emptySet(), true);
       }
 
       public ElementBinding getElement(QName qName, Attributes attrs, boolean ignoreWildcards)
@@ -232,7 +239,6 @@ public abstract class ModelGroupBinding
          return occurence;
       }
 
-      @SuppressWarnings({"UnusedDeclaration"})
       public boolean repeatElement(QName qName)
       {
          ParticleBinding particle = getCurrentParticle();
@@ -250,11 +256,10 @@ public abstract class ModelGroupBinding
       
       // Protected
 
-      protected abstract List<ModelGroupBinding.Cursor> startElement(QName qName,
-                                           Attributes atts,
-                                           Set<ModelGroupBinding> passedGroups,
-                                           List<Cursor> groupStack,
-                                           boolean required);
+      protected abstract ModelGroupBinding.Cursor startElement(QName qName,
+            Attributes atts,
+            Set<ModelGroupBinding> passedGroups,
+            boolean required);
 
       protected abstract ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards);
 

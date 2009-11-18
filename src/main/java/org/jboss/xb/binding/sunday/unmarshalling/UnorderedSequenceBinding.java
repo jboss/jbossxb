@@ -176,9 +176,9 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
          {
             return wildcardContent;
          }
-         
+
          @Override
-         protected List<Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, List<Cursor> groupStack, boolean required)
+         protected Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)
          {
             if(trace)
             {
@@ -187,6 +187,8 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                log.trace(sb.toString());
             }
 
+            next = null;
+            
             if(curParticle != null &&
                   (curParticle.getMaxOccursUnbounded() || occurence < curParticle.getMinOccurs() || occurence < curParticle.getMaxOccurs()))
             {
@@ -194,10 +196,9 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                if(term.isElement() && ((ElementBinding)term).getQName().equals(qName))
                {
                   ++occurence;
-                  groupStack = addItem(groupStack, this);
                   if(trace)
                      log.trace("found " + qName + " in " + getModelGroup());
-                  return groupStack;
+                  return this;
                }
                else if(term.isModelGroup())
                {
@@ -215,32 +216,17 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                            passedGroups.add(UnorderedSequenceBinding.this);
                      }
 
-                     int groupStackSize = groupStack.size();
-                     groupStack = modelGroup.newCursor(curParticle).startElement(
-                        qName, atts, passedGroups, groupStack, curParticle.isRequired(occurence)
+                     next = modelGroup.newCursor(curParticle).startElement(
+                        qName, atts, passedGroups, curParticle.isRequired(occurence)
                      );
 
-                     if(groupStackSize != groupStack.size())
+                     if(next != null)
                      {
                         ++occurence;
-                        groupStack = addItem(groupStack, this);
-                        return groupStack;
+                        return this;
                      }
                   }
                }
-               // wildcard should probably be checked last even though it is repeatable
-               /*
-               else
-               {
-                  WildcardBinding wildcard = (WildcardBinding) term;
-                  ElementBinding e = wildcard.getElement(name, atts);
-                  if(e != null)
-                  {
-                     ++occurence;
-                     groupStack = addItem(groupStack, this);
-                     wildcardContent = true;
-                  }
-               }*/
             }
             
             wildcardContent = false;
@@ -251,10 +237,9 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
             {
                ++occurence;
                element = (ElementBinding) curParticle.getTerm();
-               groupStack = addItem(groupStack, this);
                if (trace)
                   log.trace("found " + qName + " in " + getModelGroup());
-               return groupStack;
+               return this;
             }
 
             for (ParticleBinding particle : groupParticles)
@@ -273,16 +258,14 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                         passedGroups.add(UnorderedSequenceBinding.this);
                   }
 
-                  int groupStackSize = groupStack.size();
-                  groupStack = modelGroup.newCursor(particle).startElement(qName, atts, passedGroups, groupStack, particle.isRequired(occurence));
+                  next = modelGroup.newCursor(particle).startElement(qName, atts, passedGroups, particle.isRequired(occurence));
 
-                  if (groupStackSize != groupStack.size())
+                  if (next != null)
                   {
                      ++occurence;
                      element = null;
                      curParticle = particle;
-                     groupStack = addItem(groupStack, this);
-                     return groupStack;
+                     return this;
                   }
                }
             }
@@ -297,12 +280,11 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                   curParticle = particle;
                   element = e;
                   wildcardContent = true;
-                  groupStack = addItem(groupStack, this);
-                  return groupStack;
+                  return this;
                }
             }
             
-            return groupStack;
+            return null;
          }
       };
    }

@@ -116,8 +116,8 @@ public class ChoiceBinding
          {
             return wildcardContent;
          }
-         
-         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
+
+         protected ModelGroupBinding.Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)
          {
             if(trace)
             {
@@ -126,6 +126,8 @@ public class ChoiceBinding
                log.trace(sb.toString());
             }
 
+            next = null;
+            
             if(currentParticle != null)
             {
                boolean repeated = false;
@@ -155,10 +157,9 @@ public class ChoiceBinding
                               passedGroups.add(ChoiceBinding.this);
                         }
 
-                        int groupStackSize = groupStack.size();
                         boolean isRequired = occurence == 0 ? false : currentParticle.isRequired(occurence);
-                        groupStack = modelGroup.newCursor(currentParticle).startElement(qName, atts, passedGroups, groupStack, isRequired);
-                        repeated = groupStackSize != groupStack.size();
+                        next = modelGroup.newCursor(currentParticle).startElement(qName, atts, passedGroups, isRequired);
+                        repeated = next != null;
                      }
                   }
                   else if(item.isWildcard())
@@ -172,9 +173,9 @@ public class ChoiceBinding
                if(repeated)
                {
                   ++occurence;
-                  groupStack = addItem(groupStack, this);                  
                   if(trace)
                      log.trace("repeated " + qName + " in " + getModelGroup() + ", occurence=" + occurence + ", term=" + currentParticle.getTerm());
+                  return this;
                }
                else
                {
@@ -184,7 +185,7 @@ public class ChoiceBinding
                   occurence = 0;
                }
                
-               return groupStack;
+               return null;
             }
 
             for(int i = 0; i < choices.size(); ++i)
@@ -217,10 +218,9 @@ public class ChoiceBinding
                            passedGroups.add(ChoiceBinding.this);
                      }
 
-                     int groupStackSize = groupStack.size();
                      boolean isRequired = occurence == 0 ? false : particle.isRequired(occurence);
-                     groupStack = modelGroup.newCursor(particle).startElement(qName, atts, passedGroups, groupStack, isRequired);
-                     found = groupStackSize != groupStack.size();
+                     next = modelGroup.newCursor(particle).startElement(qName, atts, passedGroups, isRequired);
+                     found = next != null;
                   }
                }
                else if(item.isWildcard())
@@ -238,14 +238,13 @@ public class ChoiceBinding
                {
                   occurence = 1;
                   currentParticle = particle;
-                  groupStack = addItem(groupStack, this);
                   if(trace)
                      log.trace("found " + qName + " in " + getModelGroup() + ", term=" + currentParticle.getTerm());
-                  break;
+                  return this;
                }
             }
 
-            return groupStack;
+            return null;
          }
 
          protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)

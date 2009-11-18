@@ -135,8 +135,8 @@ public class SequenceBinding
          {
             return wildcardContent;
          }
-         
-         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
+
+         protected ModelGroupBinding.Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)
          {
             if(trace)
             {
@@ -145,6 +145,7 @@ public class SequenceBinding
                log.trace(sb.toString());
             }
 
+            next = null;
             wildcardContent = false;
             int i = pos;
             if(pos >= 0)
@@ -178,14 +179,13 @@ public class SequenceBinding
                         pos = i;
                         occurence = 1;
                      }
-                     groupStack = addItem(groupStack, this);
                      this.element = element;
 
                      if(trace)
                      {
                         log.trace("found " + qName + " in " + getModelGroup());
                      }
-                     break;
+                     return this;
                   }
 
                   if(i != pos && particle.getMinOccurs() > 0)
@@ -219,12 +219,11 @@ public class SequenceBinding
                            passedGroups.add(SequenceBinding.this);
                      }
 
-                     int groupStackSize = groupStack.size();
-                     groupStack = modelGroup.newCursor(particle).startElement(
-                        qName, atts, passedGroups, groupStack, particle.isRequired(occurence)
+                     next = modelGroup.newCursor(particle).startElement(
+                        qName, atts, passedGroups, particle.isRequired(occurence)
                      );
 
-                     if(groupStackSize != groupStack.size())
+                     if(next != null)
                      {
                         if(pos != i)
                         {
@@ -235,9 +234,9 @@ public class SequenceBinding
                         {
                            ++occurence;
                         }
-                        groupStack = addItem(groupStack, this);
+                        
                         element = null;
-                        break;
+                        return this;
                      }
 
                      if(i != pos && particle.isRequired())
@@ -285,9 +284,8 @@ public class SequenceBinding
                      {
                         ++occurence;
                      }
-                     groupStack = addItem(groupStack, this);
                      wildcardContent = true;
-                     break;
+                     return this;
                   }
 
                   if(i != pos && particle.getMinOccurs() > 0)
@@ -311,7 +309,7 @@ public class SequenceBinding
                log.trace(qName + " not found in " + getModelGroup());
             }
 
-            return groupStack;
+            return null;
          }
 
          protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)

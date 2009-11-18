@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Collection;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -118,8 +117,8 @@ public class AllBinding
          {
             return false;
          }
-         
-         protected List<ModelGroupBinding.Cursor> startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, List<ModelGroupBinding.Cursor> groupStack, boolean required)
+
+         protected ModelGroupBinding.Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)
          {
             ParticleBinding particle = elements.get(qName);
             if(particle != null)
@@ -133,9 +132,9 @@ public class AllBinding
                   curParticle = particle;
                   occurence = 1;
                }
-               groupStack = addItem(groupStack, this);
+               return this;
             }
-            return groupStack;
+            return null;
          }
 
          protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)

@@ -113,44 +113,16 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
    {
       return new Cursor(particle)
       {
-         private ElementBinding element;
          private ParticleBinding curParticle;
          private int occurence;
-         private boolean wildcardContent;
-
-         @Override
-         public void endElement(QName name)
-         {
-            ElementBinding element = getElement();
-            if(element == null || !element.getQName().equals(qName))
-            {
-               throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
-                  " since the current element is " + (element == null ? "null" : element.getQName().toString())
-               );
-            }
-
-            if(trace)
-               log.trace("endElement " + qName + " in " + getModelGroup());
-         }
+         private ElementBinding wildcardContent;
 
          @Override
          public ParticleBinding getCurrentParticle()
          {
             if(curParticle == null)
-            {
                throw new JBossXBRuntimeException("The cursor in all group has not been positioned yet!");
-            }
             return curParticle;
-         }
-
-         @Override
-         public ElementBinding getElement()
-         {
-            if(curParticle == null)
-            {
-               throw new JBossXBRuntimeException("The cursor in all group has not been positioned yet!");
-            }
-            return element;
          }
 
          @Override
@@ -174,6 +146,14 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
          @Override
          public boolean isWildcardContent()
          {
+            return wildcardContent != null;
+         }
+
+         @Override
+         public ElementBinding getWildcardContent()
+         {
+            if(curParticle == null)
+               throw new JBossXBRuntimeException("The cursor in all group has not been positioned yet!");
             return wildcardContent;
          }
 
@@ -197,7 +177,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                {
                   ++occurence;
                   if(trace)
-                     log.trace("found " + qName + " in " + getModelGroup());
+                     log.trace("found " + qName + " in " + UnorderedSequenceBinding.this);
                   return this;
                }
                else if(term.isModelGroup())
@@ -229,16 +209,15 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                }
             }
             
-            wildcardContent = false;
+            wildcardContent = null;
             occurence = 0;
 
             curParticle = elementParticles.get(qName);
             if (curParticle != null)
             {
                ++occurence;
-               element = (ElementBinding) curParticle.getTerm();
                if (trace)
-                  log.trace("found " + qName + " in " + getModelGroup());
+                  log.trace("found " + qName + " in " + UnorderedSequenceBinding.this);
                return this;
             }
 
@@ -263,7 +242,6 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                   if (next != null)
                   {
                      ++occurence;
-                     element = null;
                      curParticle = particle;
                      return this;
                   }
@@ -273,13 +251,11 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
             for (ParticleBinding particle : wildcardParticles)
             {
                WildcardBinding wildcard = (WildcardBinding) particle.getTerm();
-               ElementBinding e = wildcard.getElement(qName, atts);
-               if (e != null)
+               wildcardContent = wildcard.getElement(qName, atts);
+               if (wildcardContent != null)
                {
                   ++occurence;
                   curParticle = particle;
-                  element = e;
-                  wildcardContent = true;
                   return this;
                }
             }

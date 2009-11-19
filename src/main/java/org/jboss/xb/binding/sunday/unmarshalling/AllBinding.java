@@ -93,29 +93,19 @@ public class AllBinding
             return curParticle;
          }
 
-         public ElementBinding getElement()
-         {
-            return (ElementBinding)getCurrentParticle().getTerm();
-         }
-
          public boolean isPositioned()
          {
             return curParticle != null;
          }
 
-         public void endElement(QName qName)
-         {
-            if(curParticle == null || !getElement().getQName().equals(qName))
-            {
-               throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
-                  " since the current element is " + (curParticle == null ? null : getElement().getQName())
-               );
-            }
-         }
-
          public boolean isWildcardContent()
          {
             return false;
+         }
+
+         public ElementBinding getWildcardContent()
+         {
+            throw new UnsupportedOperationException("Model group 'all' can contain only elements.");
          }
 
          protected ModelGroupBinding.Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)

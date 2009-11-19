@@ -77,8 +77,7 @@ public class ChoiceBinding
       return new Cursor(particle)
       {
          private ParticleBinding currentParticle;
-         private ElementBinding element;
-         private boolean wildcardContent;
+         private ElementBinding wildcardContent;
          
          public ParticleBinding getCurrentParticle()
          {
@@ -87,33 +86,20 @@ public class ChoiceBinding
             return currentParticle;
          }
 
-         public ElementBinding getElement()
-         {
-            if(currentParticle == null)
-               throw new JBossXBRuntimeException("The cursor has not been positioned yet! startElement should be called.");
-            return element;
-         }
-
          public boolean isPositioned()
          {
             return currentParticle != null;
          }
 
-         public void endElement(QName qName)
-         {
-            if(element == null || !element.getQName().equals(qName))
-            {
-               throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
-                  " since the current element is " + (element == null ? "null" : element.getQName().toString())
-               );
-            }
-
-            if(trace)
-               log.trace("endElement " + qName + " in " + getModelGroup());
-         }
-
          public boolean isWildcardContent()
          {
+            return wildcardContent != null;
+         }
+
+         public ElementBinding getWildcardContent()
+         {
+            if(currentParticle == null)
+               throw new JBossXBRuntimeException("The cursor has not been positioned yet! startElement should be called.");
             return wildcardContent;
          }
 
@@ -165,8 +151,8 @@ public class ChoiceBinding
                   else if(item.isWildcard())
                   {
                      WildcardBinding wildcard = (WildcardBinding)item;
-                     element = wildcard.getElement(qName, atts);
-                     repeated = element != null;
+                     wildcardContent = wildcard.getElement(qName, atts);
+                     repeated = wildcardContent != null;
                   }
                }
 
@@ -174,14 +160,13 @@ public class ChoiceBinding
                {
                   ++occurence;
                   if(trace)
-                     log.trace("repeated " + qName + " in " + getModelGroup() + ", occurence=" + occurence + ", term=" + currentParticle.getTerm());
+                     log.trace("repeated " + qName + " in " + ChoiceBinding.this + ", occurence=" + occurence + ", term=" + currentParticle.getTerm());
                   return this;
                }
                else
                {
-                  wildcardContent = false;
+                  wildcardContent = null;
                   currentParticle = null;
-                  element = null;
                   occurence = 0;
                }
                
@@ -197,10 +182,7 @@ public class ChoiceBinding
                {
                   ElementBinding element = (ElementBinding)item;
                   if(qName.equals(element.getQName()))
-                  {
                      found = true;
-                     this.element = element;
-                  }
                }
                else if(item.isModelGroup())
                {
@@ -226,12 +208,9 @@ public class ChoiceBinding
                else if(item.isWildcard())
                {
                   WildcardBinding wildcard = (WildcardBinding)item;
-                  element = wildcard.getElement(qName, atts);
-                  if(element != null)
-                  {
+                  wildcardContent = wildcard.getElement(qName, atts);
+                  if(wildcardContent != null)
                      found = true;
-                     wildcardContent = true;
-                  }
                }
                
                if(found)
@@ -239,7 +218,7 @@ public class ChoiceBinding
                   occurence = 1;
                   currentParticle = particle;
                   if(trace)
-                     log.trace("found " + qName + " in " + getModelGroup() + ", term=" + currentParticle.getTerm());
+                     log.trace("found " + qName + " in " + ChoiceBinding.this + ", term=" + currentParticle.getTerm());
                   return this;
                }
             }

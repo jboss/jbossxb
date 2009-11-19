@@ -86,53 +86,29 @@ public class SequenceBinding
       return new Cursor(particle)
       {
          private int pos = -1;
-         private ElementBinding element;
-         private boolean wildcardContent;
+         private ElementBinding wildcardContent;
 
          public ParticleBinding getCurrentParticle()
          {
             if(pos < 0)
-            {
-               throw new JBossXBRuntimeException(
-                  "The cursor has not been positioned yet for " + SequenceBinding.this.toString()
-               );
-            }
+               throw new JBossXBRuntimeException("The cursor has not been positioned yet for " + SequenceBinding.this);
             return sequence.get(pos);
-         }
-
-         public ElementBinding getElement()
-         {
-            if(pos < 0)
-            {
-               throw new JBossXBRuntimeException(
-                     "The cursor has not been positioned yet for " + SequenceBinding.this.toString()
-               );
-            }
-            return element;
          }
 
          public boolean isPositioned()
          {
             return pos != -1;
          }
-
-         public void endElement(QName qName)
-         {
-            if(element == null || !element.getQName().equals(qName))
-            {
-               throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
-                  " since the current element is " + (element == null ? "null" : element.getQName().toString())
-               );
-            }
-
-            if(trace)
-            {
-               log.trace("endElement " + qName + " in " + getModelGroup());
-            }
-         }
          
          public boolean isWildcardContent()
          {
+            return wildcardContent != null;
+         }
+
+         public ElementBinding getWildcardContent()
+         {
+            if(pos < 0)
+               throw new JBossXBRuntimeException("The cursor has not been positioned yet for " + SequenceBinding.this);
             return wildcardContent;
          }
 
@@ -146,7 +122,7 @@ public class SequenceBinding
             }
 
             next = null;
-            wildcardContent = false;
+            wildcardContent = null;
             int i = pos;
             if(pos >= 0)
             {
@@ -179,11 +155,10 @@ public class SequenceBinding
                         pos = i;
                         occurence = 1;
                      }
-                     this.element = element;
 
                      if(trace)
                      {
-                        log.trace("found " + qName + " in " + getModelGroup());
+                        log.trace("found " + qName + " in " + SequenceBinding.this);
                      }
                      return this;
                   }
@@ -235,7 +210,6 @@ public class SequenceBinding
                            ++occurence;
                         }
                         
-                        element = null;
                         return this;
                      }
 
@@ -272,8 +246,8 @@ public class SequenceBinding
                else if(item.isWildcard())
                {
                   WildcardBinding wildcard = (WildcardBinding)item;
-                  element = wildcard.getElement(qName, atts);
-                  if(element != null)
+                  wildcardContent = wildcard.getElement(qName, atts);
+                  if(wildcardContent != null)
                   {
                      if(pos != i)
                      {
@@ -284,7 +258,6 @@ public class SequenceBinding
                      {
                         ++occurence;
                      }
-                     wildcardContent = true;
                      return this;
                   }
 
@@ -306,7 +279,7 @@ public class SequenceBinding
 
             if(trace && i == sequence.size())
             {
-               log.trace(qName + " not found in " + getModelGroup());
+               log.trace(qName + " not found in " + SequenceBinding.this);
             }
 
             return null;

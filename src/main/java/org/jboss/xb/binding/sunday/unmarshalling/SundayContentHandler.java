@@ -500,7 +500,7 @@ public class SundayContentHandler
             (repeated ? stack.peek1().o : stack.peek().o);
          if(particle.getTerm().isWildcard())
          {
-            ElementBinding element = cursor.getElement();
+            ElementBinding element = cursor.getWildcardContent();
             if(element == null)
                throw new JBossXBRuntimeException("Failed to resolve element " + startName + " for wildcard.");
 

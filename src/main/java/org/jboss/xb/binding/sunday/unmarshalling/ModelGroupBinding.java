@@ -199,16 +199,13 @@ public abstract class ModelGroupBinding
       protected Cursor(ParticleBinding particle)
       {
          this.particle = particle;
+         if(particle.getTerm() != ModelGroupBinding.this)
+            throw new IllegalStateException();
       }
 
       public ParticleBinding getParticle()
       {
          return particle;
-      }
-
-      public ModelGroupBinding getModelGroup()
-      {
-         return (ModelGroupBinding)particle.getTerm();
       }
 
       public Cursor getNext()
@@ -218,7 +215,9 @@ public abstract class ModelGroupBinding
       
       public abstract ParticleBinding getCurrentParticle();
 
-      public abstract ElementBinding getElement();
+      public abstract boolean isWildcardContent();
+
+      public abstract ElementBinding getWildcardContent();
 
       public abstract boolean isPositioned();
 
@@ -232,7 +231,21 @@ public abstract class ModelGroupBinding
          return getElement(qName, attrs, Collections.<Cursor>emptySet(), ignoreWildcards);
       }
 
-      public abstract void endElement(QName qName);
+      public void endElement(QName qName)
+      {
+         TermBinding term = getCurrentParticle().getTerm();
+         ElementBinding element = term.isWildcard() ? getWildcardContent() : (ElementBinding) term;
+         if(element == null || !element.getQName().equals(qName))
+         {
+            throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
+               " since the current element is " + (element == null ? "null" : element.getQName().toString())
+            );
+         }
+
+         if(trace)
+            log.trace("endElement " + qName + " in " + ModelGroupBinding.this);
+      }
+
 
       public int getOccurence()
       {
@@ -251,9 +264,7 @@ public abstract class ModelGroupBinding
          }
          return false;
       }
-      
-      public abstract boolean isWildcardContent();
-      
+
       // Protected
 
       protected abstract ModelGroupBinding.Cursor startElement(QName qName,

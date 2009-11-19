@@ -116,7 +116,6 @@ public class SchemaDefaultAttributeValueUnitTestCase extends AbstractBuilderTest
       schemaBindingResolver.mapSchemaInitializer("xb:test:default-attribute",
          new SchemaBindingInitializer()
          {
-            @Override
             public SchemaBinding init(SchemaBinding schema)
             {
                ElementBinding element = schema.getElement(new QName("xb:test:default-attribute", "default-attribute"));

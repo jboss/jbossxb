@@ -58,7 +58,6 @@ public class ArrayWrapperRepeatableParticleHandler implements RepeatableParticle
       this.beanAdapterFactory = beanAdapterFactory;
    }
    
-   @Override
    public void addTermValue(Object particleValue, Object termValue, QName elementName, ParticleBinding particle,
          ParticleBinding parentParticle, ParticleHandler handler)
    {
@@ -75,7 +74,6 @@ public class ArrayWrapperRepeatableParticleHandler implements RepeatableParticle
          log.trace("added " + elementName + " " + termValue);
    }
 
-   @Override
    public void endRepeatableParticle(Object parent, Object o, QName elementName, ParticleBinding particle,
          ParticleBinding parentParticle)
    {
@@ -106,7 +104,6 @@ public class ArrayWrapperRepeatableParticleHandler implements RepeatableParticle
       propertyHandler.doHandle(parent, o, elementName);
    }
 
-   @Override
    public Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle)
    {
       if(trace)

@@ -36,19 +36,16 @@ public class NoopParticleHandler implements ParticleHandler
 {
    public static final NoopParticleHandler INSTANCE = new NoopParticleHandler();
    
-   @Override
    public Object endParticle(Object o, QName elementName, ParticleBinding particle)
    {
       return o;
    }
 
-   @Override
    public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle,
          ParticleBinding parentParticle)
    {
    }
 
-   @Override
    public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs,
          NamespaceContext nsCtx)
    {

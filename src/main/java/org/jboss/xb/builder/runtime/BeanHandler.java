@@ -25,7 +25,6 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.sunday.unmarshalling.AttributesHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
@@ -86,7 +85,6 @@ public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHa
       return beanAdapterFactory;
    }
 
-   @Override
    public Object startParticle(Object parent,
          QName elementName,
          ParticleBinding particle,
@@ -115,7 +113,6 @@ public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHa
       return o;
    }
 
-   @Override
    public void setParent(Object parent, Object o, QName qName,  ParticleBinding particle, ParticleBinding parentParticle)
    {
       if (trace)
@@ -154,7 +151,6 @@ public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHa
       propertyHandler.doHandle(beanAdapter, o, qName);
    }
 
-   @Override
    public Object endParticle(Object o, QName qName, ParticleBinding particle)
    {
       if (trace)

@@ -231,7 +231,7 @@ public abstract class ModelGroupBinding
          return getElement(qName, attrs, Collections.<Cursor>emptySet(), ignoreWildcards);
       }
 
-      public void endElement(QName qName)
+/*      public void endElement(QName qName)
       {
          TermBinding term = getCurrentParticle().getTerm();
          ElementBinding element = term.isWildcard() ? getWildcardContent() : (ElementBinding) term;
@@ -245,7 +245,7 @@ public abstract class ModelGroupBinding
          if(trace)
             log.trace("endElement " + qName + " in " + ModelGroupBinding.this);
       }
-
+*/
 
       public int getOccurence()
       {

@@ -21,11 +21,9 @@
   */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.xml.namespace.QName;
@@ -124,11 +122,6 @@ public abstract class ModelGroupBinding
 
    public abstract Cursor newCursor(ParticleBinding particle);
 
-   public Object clone() throws CloneNotSupportedException
-   {
-      return super.clone();
-   }
-
    // Protected
 
    protected abstract boolean mayStartWith(QName qName, Set<ModelGroupBinding> set);
@@ -186,21 +179,24 @@ public abstract class ModelGroupBinding
    }
 
    public abstract String getGroupType();
-   
+
    // Inner
    public abstract class Cursor
    {
-      protected final ParticleBinding particle;
       protected final boolean trace = log.isTraceEnabled();
+      protected final ParticleBinding particle;
       protected int occurence;
+
+      protected ParticleBinding currentParticle;
+      protected ElementBinding wildcardContent;
 
       protected Cursor next;
       
       protected Cursor(ParticleBinding particle)
       {
-         this.particle = particle;
          if(particle.getTerm() != ModelGroupBinding.this)
-            throw new IllegalStateException();
+            throw new IllegalStateException("Particle term " + particle.getTerm() + " is not the model group " + ModelGroupBinding.this);
+         this.particle = particle;
       }
 
       public ParticleBinding getParticle()
@@ -213,13 +209,20 @@ public abstract class ModelGroupBinding
          return next;
       }
       
-      public abstract ParticleBinding getCurrentParticle();
+      public ParticleBinding getCurrentParticle()
+      {
+         return currentParticle;
+      }
 
-      public abstract boolean isWildcardContent();
+      public boolean isWildcardContent()
+      {
+         return wildcardContent != null;
+      }
 
-      public abstract ElementBinding getWildcardContent();
-
-      public abstract boolean isPositioned();
+      public ElementBinding getWildcardContent()
+      {
+         return wildcardContent;
+      }
 
       public ModelGroupBinding.Cursor startElement(QName qName, Attributes attrs)
       {
@@ -247,22 +250,51 @@ public abstract class ModelGroupBinding
       }
 */
 
-      public int getOccurence()
+      public boolean repeatTerm(QName qName, Attributes atts)
       {
-         return occurence;
-      }
+         if(currentParticle == null)
+            throw new IllegalStateException("The cursor has not been positioned yet!");
+         
+         boolean repeated = false;
+         if(currentParticle.getMaxOccursUnbounded() ||
+            occurence < currentParticle.getMinOccurs() ||
+            occurence < currentParticle.getMaxOccurs())
+         {
+            TermBinding item = currentParticle.getTerm();
+            if(item.isElement())
+            {
+               ElementBinding element = (ElementBinding)item;
+               repeated = qName.equals(element.getQName());
+            }
+            else if(item.isModelGroup())
+            {
+               ModelGroupBinding modelGroup = (ModelGroupBinding)item;
+               boolean isRequired = occurence == 0 ? false : currentParticle.isRequired(occurence);
+               next = modelGroup.newCursor(currentParticle).startElement(qName, atts, Collections.<ModelGroupBinding>emptySet(), isRequired);
+               repeated = next != null;
+            }
+            else if(item.isWildcard())
+            {
+               WildcardBinding wildcard = (WildcardBinding)item;
+               wildcardContent = wildcard.getElement(qName, atts);
+               repeated = wildcardContent != null;
+            }
+         }
 
-      public boolean repeatElement(QName qName)
-      {
-         ParticleBinding particle = getCurrentParticle();
-         if(particle.getMaxOccursUnbounded() ||
-            occurence < particle.getMinOccurs() ||
-            occurence < particle.getMaxOccurs())
+         if(repeated)
          {
             ++occurence;
-            return true;
+            if(trace)
+               log.trace("repeated " + qName + " in " + ModelGroupBinding.this + ", occurence=" + occurence + ", term=" + currentParticle.getTerm());
          }
-         return false;
+         else
+         {
+            wildcardContent = null;
+            currentParticle = null;
+            occurence = 0;
+         }
+
+         return repeated;
       }
 
       // Protected
@@ -272,12 +304,10 @@ public abstract class ModelGroupBinding
             Set<ModelGroupBinding> passedGroups,
             boolean required);
 
-      protected abstract ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards);
-
-      protected ElementBinding getElement(List<ParticleBinding> group, QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
+      protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
       {
          ElementBinding element = null;
-         for (ParticleBinding nextParticle : group)
+         for (ParticleBinding nextParticle : getParticles())
          {
             TermBinding item = nextParticle.getTerm();
             if (item.isElement())
@@ -337,21 +367,6 @@ public abstract class ModelGroupBinding
             }
          }
          return element;
-      }
-
-      protected List<ModelGroupBinding.Cursor> addItem(List<ModelGroupBinding.Cursor> list, ModelGroupBinding.Cursor o)
-      {
-         switch(list.size())
-         {
-            case 0:
-               list = Collections.singletonList(o);
-               break;
-            case 1:
-               list = new ArrayList<ModelGroupBinding.Cursor>(list);
-            default:
-               list.add(o);
-         }
-         return list;
       }
    }
 }

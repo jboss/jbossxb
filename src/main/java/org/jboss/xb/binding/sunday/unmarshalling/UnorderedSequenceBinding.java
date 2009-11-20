@@ -113,50 +113,6 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
    {
       return new Cursor(particle)
       {
-         private ParticleBinding curParticle;
-         private int occurence;
-         private ElementBinding wildcardContent;
-
-         @Override
-         public ParticleBinding getCurrentParticle()
-         {
-            if(curParticle == null)
-               throw new JBossXBRuntimeException("The cursor in all group has not been positioned yet!");
-            return curParticle;
-         }
-
-         @Override
-         protected ElementBinding getElement(QName name, Attributes atts, Set<Cursor> passedGroups, boolean ignoreWildcards)
-         {
-            return getElement((List<ParticleBinding>) getParticles(), name, atts, passedGroups, ignoreWildcards);
-         }
-
-         @Override
-         public int getOccurence()
-         {
-            return occurence;
-         }
-
-         @Override
-         public boolean isPositioned()
-         {
-            return curParticle != null;
-         }
-
-         @Override
-         public boolean isWildcardContent()
-         {
-            return wildcardContent != null;
-         }
-
-         @Override
-         public ElementBinding getWildcardContent()
-         {
-            if(curParticle == null)
-               throw new JBossXBRuntimeException("The cursor in all group has not been positioned yet!");
-            return wildcardContent;
-         }
-
          @Override
          protected Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)
          {
@@ -169,53 +125,13 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
 
             next = null;
             
-            if(curParticle != null &&
-                  (curParticle.getMaxOccursUnbounded() || occurence < curParticle.getMinOccurs() || occurence < curParticle.getMaxOccurs()))
+            if(currentParticle != null && repeatTerm(qName, atts))
+               return this;               
+
+            currentParticle = elementParticles.get(qName);
+            if (currentParticle != null)
             {
-               TermBinding term = curParticle.getTerm();
-               if(term.isElement() && ((ElementBinding)term).getQName().equals(qName))
-               {
-                  ++occurence;
-                  if(trace)
-                     log.trace("found " + qName + " in " + UnorderedSequenceBinding.this);
-                  return this;
-               }
-               else if(term.isModelGroup())
-               {
-                  ModelGroupBinding modelGroup = (ModelGroupBinding)term;
-                  if(!passedGroups.contains(modelGroup))
-                  {
-                     switch(passedGroups.size())
-                     {
-                        case 0:
-                           passedGroups = Collections.singleton((ModelGroupBinding)UnorderedSequenceBinding.this);
-                           break;
-                        case 1:
-                           passedGroups = new HashSet<ModelGroupBinding>(passedGroups);
-                        default:
-                           passedGroups.add(UnorderedSequenceBinding.this);
-                     }
-
-                     next = modelGroup.newCursor(curParticle).startElement(
-                        qName, atts, passedGroups, curParticle.isRequired(occurence)
-                     );
-
-                     if(next != null)
-                     {
-                        ++occurence;
-                        return this;
-                     }
-                  }
-               }
-            }
-            
-            wildcardContent = null;
-            occurence = 0;
-
-            curParticle = elementParticles.get(qName);
-            if (curParticle != null)
-            {
-               ++occurence;
+               occurence = 1;
                if (trace)
                   log.trace("found " + qName + " in " + UnorderedSequenceBinding.this);
                return this;
@@ -241,8 +157,8 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
 
                   if (next != null)
                   {
-                     ++occurence;
-                     curParticle = particle;
+                     occurence = 1;
+                     currentParticle = particle;
                      return this;
                   }
                }
@@ -254,8 +170,8 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
                wildcardContent = wildcard.getElement(qName, atts);
                if (wildcardContent != null)
                {
-                  ++occurence;
-                  curParticle = particle;
+                  occurence = 1;
+                  currentParticle = particle;
                   return this;
                }
             }

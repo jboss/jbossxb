@@ -82,48 +82,19 @@ public class AllBinding
    {
       return new Cursor(particle)
       {
-         private ParticleBinding curParticle;
-
-         public ParticleBinding getCurrentParticle()
-         {
-            if(curParticle == null)
-            {
-               throw new JBossXBRuntimeException("The cursor in all group has not been positioned yet!");
-            }
-            return curParticle;
-         }
-
-         public boolean isPositioned()
-         {
-            return curParticle != null;
-         }
-
-         public boolean isWildcardContent()
-         {
-            return false;
-         }
-
-         public ElementBinding getWildcardContent()
-         {
-            throw new UnsupportedOperationException("Model group 'all' can contain only elements.");
-         }
-
          protected ModelGroupBinding.Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)
          {
+            if(currentParticle != null && repeatTerm(qName, atts))
+               throw new IllegalStateException("maxOccurs in all model group can only be 1: " + qName);
+
             ParticleBinding particle = elements.get(qName);
             if(particle != null)
             {
-               if(curParticle == particle)
-               {
-                  ++occurence;
-               }
-               else
-               {
-                  curParticle = particle;
-                  occurence = 1;
-               }
+               currentParticle = particle;
+               occurence = 1;
                return this;
-            }
+            }               
+
             return null;
          }
 

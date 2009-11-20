@@ -69,40 +69,13 @@ public class ChoiceBinding
 
    public Collection<ParticleBinding> getParticles()
    {
-      return Collections.unmodifiableCollection(choices);
+      return choices;
    }
 
    public Cursor newCursor(ParticleBinding particle)
    {
       return new Cursor(particle)
-      {
-         private ParticleBinding currentParticle;
-         private ElementBinding wildcardContent;
-         
-         public ParticleBinding getCurrentParticle()
-         {
-            if(currentParticle == null)
-               throw new JBossXBRuntimeException("The cursor has not been positioned yet! startElement should be called.");
-            return currentParticle;
-         }
-
-         public boolean isPositioned()
-         {
-            return currentParticle != null;
-         }
-
-         public boolean isWildcardContent()
-         {
-            return wildcardContent != null;
-         }
-
-         public ElementBinding getWildcardContent()
-         {
-            if(currentParticle == null)
-               throw new JBossXBRuntimeException("The cursor has not been positioned yet! startElement should be called.");
-            return wildcardContent;
-         }
-
+      {         
          protected ModelGroupBinding.Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)
          {
             if(trace)
@@ -116,63 +89,12 @@ public class ChoiceBinding
             
             if(currentParticle != null)
             {
-               boolean repeated = false;
-               if(currentParticle.getMaxOccursUnbounded() ||
-                  occurence < currentParticle.getMinOccurs() ||
-                  occurence < currentParticle.getMaxOccurs())
-               {
-                  TermBinding item = currentParticle.getTerm();
-                  if(item.isElement())
-                  {
-                     ElementBinding element = (ElementBinding)item;
-                     repeated = qName.equals(element.getQName());
-                  }
-                  else if(item.isModelGroup())
-                  {
-                     ModelGroupBinding modelGroup = (ModelGroupBinding)item;
-                     if(!passedGroups.contains(modelGroup))
-                     {
-                        switch(passedGroups.size())
-                        {
-                           case 0:
-                              passedGroups = Collections.singleton((ModelGroupBinding)ChoiceBinding.this);
-                              break;
-                           case 1:
-                              passedGroups = new HashSet<ModelGroupBinding>(passedGroups);
-                           default:
-                              passedGroups.add(ChoiceBinding.this);
-                        }
-
-                        boolean isRequired = occurence == 0 ? false : currentParticle.isRequired(occurence);
-                        next = modelGroup.newCursor(currentParticle).startElement(qName, atts, passedGroups, isRequired);
-                        repeated = next != null;
-                     }
-                  }
-                  else if(item.isWildcard())
-                  {
-                     WildcardBinding wildcard = (WildcardBinding)item;
-                     wildcardContent = wildcard.getElement(qName, atts);
-                     repeated = wildcardContent != null;
-                  }
-               }
-
-               if(repeated)
-               {
-                  ++occurence;
-                  if(trace)
-                     log.trace("repeated " + qName + " in " + ChoiceBinding.this + ", occurence=" + occurence + ", term=" + currentParticle.getTerm());
+               if(repeatTerm(qName, atts))
                   return this;
-               }
                else
-               {
-                  wildcardContent = null;
-                  currentParticle = null;
-                  occurence = 0;
-               }
-               
-               return null;
+                  return null;
             }
-
+            
             for(int i = 0; i < choices.size(); ++i)
             {
                boolean found = false;
@@ -224,11 +146,6 @@ public class ChoiceBinding
             }
 
             return null;
-         }
-
-         protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
-         {
-            return getElement(choices, qName, atts, passedGroups, ignoreWildcards);
          }
       };
    }

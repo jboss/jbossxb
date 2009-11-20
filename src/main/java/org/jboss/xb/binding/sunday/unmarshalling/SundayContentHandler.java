@@ -303,7 +303,7 @@ public class SundayContentHandler
                      if(item.particle.isRepeatable())
                      {
                         StackItem parentItem = stack.peek1();
-                        if(parentItem.cursor.repeatElement(startName))
+                        if(parentItem.cursor.repeatTerm(startName, atts))
                         {
                            item.reset();
                            particle = item.particle;
@@ -422,7 +422,7 @@ public class SundayContentHandler
                if(cursor == null)
                   throw new JBossXBRuntimeException("No cursor for " + startName);
 
-               ParticleBinding prevParticle = cursor.isPositioned() ? cursor.getCurrentParticle() : null;
+               ParticleBinding prevParticle = cursor.getCurrentParticle();
                ModelGroupBinding.Cursor newCursor = cursor.startElement(startName, atts);               
                if(newCursor == null)
                {

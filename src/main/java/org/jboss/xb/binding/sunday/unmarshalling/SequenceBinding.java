@@ -78,7 +78,7 @@ public class SequenceBinding
 
    public Collection<ParticleBinding> getParticles()
    {
-      return Collections.unmodifiableCollection(sequence);
+      return sequence;
    }
 
    public Cursor newCursor(ParticleBinding particle)
@@ -86,31 +86,6 @@ public class SequenceBinding
       return new Cursor(particle)
       {
          private int pos = -1;
-         private ElementBinding wildcardContent;
-
-         public ParticleBinding getCurrentParticle()
-         {
-            if(pos < 0)
-               throw new JBossXBRuntimeException("The cursor has not been positioned yet for " + SequenceBinding.this);
-            return sequence.get(pos);
-         }
-
-         public boolean isPositioned()
-         {
-            return pos != -1;
-         }
-         
-         public boolean isWildcardContent()
-         {
-            return wildcardContent != null;
-         }
-
-         public ElementBinding getWildcardContent()
-         {
-            if(pos < 0)
-               throw new JBossXBRuntimeException("The cursor has not been positioned yet for " + SequenceBinding.this);
-            return wildcardContent;
-         }
 
          protected ModelGroupBinding.Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)
          {
@@ -122,21 +97,16 @@ public class SequenceBinding
             }
 
             next = null;
-            wildcardContent = null;
-            int i = pos;
-            if(pos >= 0)
-            {
-               ParticleBinding particle = getCurrentParticle();
-               if(particle.getMaxOccursUnbounded() ||
-                  occurence < particle.getMinOccurs() ||
-                  occurence < particle.getMaxOccurs())
-               {
-                  --i;
-               }
-            }
 
+            // if positioned try repeating
+            if(currentParticle != null && repeatTerm(qName, atts))
+               return this;
+            
+            // this will be the first occurence
+            
             // i update pos only if the element has been found, though it seems to be irrelevant
             // since the cursor is going to be thrown away in case the element has not been found
+            int i = pos;
             while(i < sequence.size() - 1)
             {
                ParticleBinding particle = sequence.get(++i);
@@ -146,24 +116,16 @@ public class SequenceBinding
                   ElementBinding element = (ElementBinding)item;
                   if(qName.equals(element.getQName()))
                   {
-                     if(pos == i)
-                     {
-                        ++occurence;
-                     }
-                     else
-                     {
-                        pos = i;
-                        occurence = 1;
-                     }
+                     pos = i;
+                     occurence = 1;
+                     currentParticle = particle;
 
                      if(trace)
-                     {
                         log.trace("found " + qName + " in " + SequenceBinding.this);
-                     }
                      return this;
                   }
 
-                  if(i != pos && particle.getMinOccurs() > 0)
+                  if(particle.getMinOccurs() > 0)
                   {
                      if(required)
                      {
@@ -200,20 +162,13 @@ public class SequenceBinding
 
                      if(next != null)
                      {
-                        if(pos != i)
-                        {
-                           pos = i;
-                           occurence = 1;
-                        }
-                        else
-                        {
-                           ++occurence;
-                        }
-                        
+                        pos = i;
+                        occurence = 1;
+                        currentParticle = particle;
                         return this;
                      }
 
-                     if(i != pos && particle.isRequired())
+                     if(particle.isRequired())
                      {
                         if(required)
                         {
@@ -228,7 +183,7 @@ public class SequenceBinding
                         }
                      }
                   }
-                  else if(i != pos && particle.isRequired())
+                  else if(particle.isRequired())
                   {
                      if(required)
                      {
@@ -249,19 +204,13 @@ public class SequenceBinding
                   wildcardContent = wildcard.getElement(qName, atts);
                   if(wildcardContent != null)
                   {
-                     if(pos != i)
-                     {
-                        pos = i;
-                        occurence = 1;
-                     }
-                     else
-                     {
-                        ++occurence;
-                     }
+                     pos = i;
+                     occurence = 1;
+                     currentParticle = particle;
                      return this;
                   }
 
-                  if(i != pos && particle.getMinOccurs() > 0)
+                  if(particle.getMinOccurs() > 0)
                   {
                      if(required)
                      {
@@ -278,16 +227,9 @@ public class SequenceBinding
             }
 
             if(trace && i == sequence.size())
-            {
                log.trace(qName + " not found in " + SequenceBinding.this);
-            }
 
             return null;
-         }
-
-         protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
-         {
-            return getElement(sequence, qName, atts, passedGroups, ignoreWildcards);
          }
       };
    }

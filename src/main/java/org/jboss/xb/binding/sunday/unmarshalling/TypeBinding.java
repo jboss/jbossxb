@@ -151,7 +151,7 @@ public class TypeBinding
       if(particle != null)
       {
          ModelGroupBinding modelGroup = (ModelGroupBinding)particle.getTerm();
-         element = modelGroup.newCursor(particle).getElement(name, null, ignoreWildcards);
+         element = modelGroup.getElement(name, null, ignoreWildcards);
       }
 
       if(element == null && !ignoreWildcards && wildcard != null)

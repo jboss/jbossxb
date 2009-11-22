@@ -23,9 +23,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Collection;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -81,215 +79,184 @@ public class SequenceBinding
       return sequence;
    }
 
-   public Cursor newCursor(ParticleBinding particle)
+   public ModelGroupPosition newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
    {
-      return new Cursor(particle)
-      {
-         private int pos = -1;
-
-         protected ModelGroupBinding.Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)
-         {
-            if(trace)
-            {
-               StringBuffer sb = new StringBuffer();
-               sb.append("startElement ").append(qName).append(" in ").append(SequenceBinding.this.toString());
-               log.trace(sb.toString());
-            }
-
-            next = null;
-
-            // if positioned try repeating
-            if(currentParticle != null && repeatTerm(qName, atts))
-               return this;
-            
-            // this will be the first occurence
-            
-            // i update pos only if the element has been found, though it seems to be irrelevant
-            // since the cursor is going to be thrown away in case the element has not been found
-            int i = pos;
-            while(i < sequence.size() - 1)
-            {
-               ParticleBinding particle = sequence.get(++i);
-               TermBinding item = particle.getTerm();
-               if(item.isElement())
-               {
-                  ElementBinding element = (ElementBinding)item;
-                  if(qName.equals(element.getQName()))
-                  {
-                     pos = i;
-                     occurence = 1;
-                     currentParticle = particle;
-
-                     if(trace)
-                        log.trace("found " + qName + " in " + SequenceBinding.this);
-                     return this;
-                  }
-
-                  if(particle.getMinOccurs() > 0)
-                  {
-                     if(required)
-                     {
-                        StringBuffer sb = new StringBuffer(250);
-                        sb.append(qName).append(" cannot appear in this position in group ")
-                        .append(SequenceBinding.this.toString());
-                        throw new JBossXBRuntimeException(sb.toString());
-                     }
-                     else
-                     {
-                        break;
-                     }
-                  }
-               }
-               else if(item.isModelGroup())
-               {
-                  ModelGroupBinding modelGroup = (ModelGroupBinding)item;
-                  if(!passedGroups.contains(modelGroup))
-                  {
-                     switch(passedGroups.size())
-                     {
-                        case 0:
-                           passedGroups = Collections.singleton((ModelGroupBinding)SequenceBinding.this);
-                           break;
-                        case 1:
-                           passedGroups = new HashSet<ModelGroupBinding>(passedGroups);
-                        default:
-                           passedGroups.add(SequenceBinding.this);
-                     }
-
-                     next = modelGroup.newCursor(particle).startElement(
-                        qName, atts, passedGroups, particle.isRequired(occurence)
-                     );
-
-                     if(next != null)
-                     {
-                        pos = i;
-                        occurence = 1;
-                        currentParticle = particle;
-                        return this;
-                     }
-
-                     if(particle.isRequired())
-                     {
-                        if(required)
-                        {
-                           throw new JBossXBRuntimeException("Requested element " + qName +
-                              " is not allowed in this position in the sequence. A model group with minOccurs=" +
-                              particle.getMinOccurs() + " that doesn't contain this element must follow."
-                           );
-                        }
-                        else
-                        {
-                           break;
-                        }
-                     }
-                  }
-                  else if(particle.isRequired())
-                  {
-                     if(required)
-                     {
-                        throw new JBossXBRuntimeException("Requested element " + qName +
-                           " is not allowed in this position in the sequence. A model group with minOccurs=" +
-                           particle.getMinOccurs() + " that doesn't contain this element must follow."
-                        );
-                     }
-                     else
-                     {
-                        break;
-                     }
-                  }
-               }
-               else if(item.isWildcard())
-               {
-                  WildcardBinding wildcard = (WildcardBinding)item;
-                  wildcardContent = wildcard.getElement(qName, atts);
-                  if(wildcardContent != null)
-                  {
-                     pos = i;
-                     occurence = 1;
-                     currentParticle = particle;
-                     return this;
-                  }
-
-                  if(particle.getMinOccurs() > 0)
-                  {
-                     if(required)
-                     {
-                        throw new JBossXBRuntimeException("Requested element " + qName +
-                           " is not allowed in this position in the sequence."
-                        );
-                     }
-                     else
-                     {
-                        break;
-                     }
-                  }
-               }
-            }
-
-            if(trace && i == sequence.size())
-               log.trace(qName + " not found in " + SequenceBinding.this);
-
-            return null;
-         }
-      };
-   }
-
-   protected boolean mayStartWith(QName qName, Set<ModelGroupBinding> set)
-   {
-      boolean result = false;
       for(int i = 0; i < sequence.size(); ++i)
       {
-         ParticleBinding particle = (ParticleBinding)sequence.get(i);
-         Object item = particle.getTerm();
-         if(item instanceof ElementBinding)
+         ParticleBinding particle = sequence.get(i);
+         TermBinding term = particle.getTerm();
+         if(term.isElement())
          {
-            ElementBinding element = (ElementBinding)item;
+            ElementBinding element = (ElementBinding)term;
             if(qName.equals(element.getQName()))
-            {
-               result = true;
-               break;
-            }
-
-            if(particle.getMinOccurs() > 0)
-            {
-               break;
-            }
+               return new SequencePosition(qName, seqParticle, i, particle);
          }
-         else if(item instanceof ModelGroupBinding)
+         else if(term.isModelGroup())
          {
-            ModelGroupBinding modelGroup = (ModelGroupBinding)item;
-            if(!set.contains(modelGroup))
-            {
-               switch(set.size())
-               {
-                  case 0:
-                     set = Collections.singleton((ModelGroupBinding)this);
-                     break;
-                  case 1:
-                     set = new HashSet<ModelGroupBinding>(set);
-                  default:
-                     set.add(this);
-               }
-
-               result = modelGroup.mayStartWith(qName, set);
-
-               if(result || particle.getMinOccurs() > 0)
-               {
-                  break;
-               }
-            }
-            else if(particle.getMinOccurs() > 0)
-            {
-               break;
-            }
+            ModelGroupBinding modelGroup = (ModelGroupBinding)term;
+            ModelGroupPosition next = modelGroup.newPosition(qName, attrs, particle);
+            if(next != null)
+               return new SequencePosition(qName, seqParticle, i, particle, next);
+         }
+         else if(term.isWildcard())
+         {
+            WildcardBinding wildcard = (WildcardBinding)term;
+            ElementBinding wildcardContent = wildcard.getElement(qName, attrs);
+            if(wildcardContent != null)
+               return new SequencePosition(qName, seqParticle, i, particle, wildcardContent);
+         }
+         
+         if(particle.isRequired())
+         {
+/*            StringBuffer sb = new StringBuffer(250);
+            sb.append(qName).append(" cannot appear in this position in group ")
+            .append(SequenceBinding.this.toString());
+            throw new JBossXBRuntimeException(sb.toString());
+*/            break;
          }
       }
-      return result;
+      
+      return null;
    }
 
    @Override
    public String getGroupType()
    {
       return "sequence";
+   }
+   
+   private final class SequencePosition extends ModelGroupPosition
+   {
+      private int pos = -1;
+
+      protected SequencePosition(QName qName, ParticleBinding particle, int pos, ParticleBinding currentParticle)
+      {
+         super(qName, particle, currentParticle);
+         this.pos = pos;
+      }
+
+      protected SequencePosition(QName qName, ParticleBinding particle, int pos, ParticleBinding currentParticle, ModelGroupPosition next)
+      {
+         super(qName, particle, currentParticle, next);
+         this.pos = pos;
+      }
+
+      protected SequencePosition(QName qName, ParticleBinding particle, int pos, ParticleBinding currentParticle, ElementBinding wildcardContent)
+      {
+         super(qName, particle, currentParticle, wildcardContent);
+         this.pos = pos;
+      }
+
+      protected ModelGroupBinding.ModelGroupPosition startElement(QName qName, Attributes atts, boolean required)
+      {
+         if(trace)
+         {
+            StringBuffer sb = new StringBuffer();
+            sb.append("startElement ").append(qName).append(" in ").append(SequenceBinding.this.toString());
+            log.trace(sb.toString());
+         }
+
+         next = null;
+
+         // if positioned try repeating
+         if(currentParticle != null && repeatTerm(qName, atts))
+            return this;
+         
+         // this will be the first occurrence
+         
+         int i = pos;
+         while(i < sequence.size() - 1)
+         {
+            ParticleBinding particle = sequence.get(++i);
+            TermBinding item = particle.getTerm();
+            if(item.isElement())
+            {
+               ElementBinding element = (ElementBinding)item;
+               if(qName.equals(element.getQName()))
+               {
+                  pos = i;
+                  occurrence = 1;
+                  currentParticle = particle;
+
+                  if(trace)
+                     log.trace("found " + qName + " in " + SequenceBinding.this);
+                  return this;
+               }
+
+               if(particle.getMinOccurs() > 0)
+               {
+                  if(required)
+                  {
+                     StringBuffer sb = new StringBuffer(250);
+                     sb.append(qName).append(" cannot appear in this position in group ")
+                     .append(SequenceBinding.this.toString());
+                     throw new JBossXBRuntimeException(sb.toString());
+                  }
+                  else
+                  {
+                     break;
+                  }
+               }
+            }
+            else if(item.isModelGroup())
+            {
+               ModelGroupBinding modelGroup = (ModelGroupBinding) item;
+               next = modelGroup.newPosition(qName, atts, particle);
+
+               if (next != null)
+               {
+                  pos = i;
+                  occurrence = 1;
+                  currentParticle = particle;
+                  return this;
+               }
+
+               if (particle.isRequired())
+               {
+                  if (required)
+                  {
+                     throw new JBossXBRuntimeException("Requested element " + qName
+                           + " is not allowed in this position in the sequence. A model group with minOccurs="
+                           + particle.getMinOccurs() + " that doesn't contain this element must follow.");
+                  }
+                  else
+                  {
+                     break;
+                  }
+               }
+            }
+            else if(item.isWildcard())
+            {
+               WildcardBinding wildcard = (WildcardBinding)item;
+               wildcardContent = wildcard.getElement(qName, atts);
+               if(wildcardContent != null)
+               {
+                  pos = i;
+                  occurrence = 1;
+                  currentParticle = particle;
+                  return this;
+               }
+
+               if(particle.getMinOccurs() > 0)
+               {
+                  if(required)
+                  {
+                     throw new JBossXBRuntimeException("Requested element " + qName +
+                        " is not allowed in this position in the sequence."
+                     );
+                  }
+                  else
+                  {
+                     break;
+                  }
+               }
+            }
+         }
+
+         if(trace && i == sequence.size())
+            log.trace(qName + " not found in " + SequenceBinding.this);
+
+         return null;
+      }
    }
 }

@@ -75,45 +75,53 @@ public class AllBinding
 
    public Collection<ParticleBinding> getParticles()
    {
-      return Collections.unmodifiableCollection(elements.values());
+      return elements.values();
    }
 
-   public Cursor newCursor(ParticleBinding particle)
+   public ModelGroupPosition newPosition(QName qName, Attributes attrs, ParticleBinding allParticle)
    {
-      return new Cursor(particle)
+      ParticleBinding particle = elements.get(qName);
+      if(particle != null)
       {
-         protected ModelGroupBinding.Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)
-         {
-            if(currentParticle != null && repeatTerm(qName, atts))
-               throw new IllegalStateException("maxOccurs in all model group can only be 1: " + qName);
+         return new AllPosition(qName, allParticle, particle);
+      }               
 
-            ParticleBinding particle = elements.get(qName);
-            if(particle != null)
-            {
-               currentParticle = particle;
-               occurence = 1;
-               return this;
-            }               
-
-            return null;
-         }
-
-         protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
-         {
-            ParticleBinding particle = elements.get(qName);
-            return particle == null ? null : (ElementBinding)particle.getTerm();
-         }
-      };
-   }
-
-   protected boolean mayStartWith(QName qName, Set<ModelGroupBinding> set)
-   {
-      return elements.containsKey(qName);
+      return null;
    }
 
    @Override
    public String getGroupType()
    {
       return "all";
+   }
+   
+   private final class AllPosition extends ModelGroupPosition
+   {
+      private AllPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
+      {
+         super(name, particle, currentParticle);
+      }
+
+      protected ModelGroupBinding.ModelGroupPosition startElement(QName qName, Attributes atts, boolean required)
+      {
+         if(currentParticle != null && repeatTerm(qName, atts))
+            throw new IllegalStateException("maxOccurs in all model group can only be 1: " + qName);
+
+         ParticleBinding particle = elements.get(qName);
+         if(particle != null)
+         {
+            currentParticle = particle;
+            occurrence = 1;
+            return this;
+         }               
+
+         return null;
+      }
+
+      protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.ModelGroupPosition> passedGroups, boolean ignoreWildcards)
+      {
+         ParticleBinding particle = elements.get(qName);
+         return particle == null ? null : (ElementBinding)particle.getTerm();
+      }
    }
 }

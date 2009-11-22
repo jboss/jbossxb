@@ -22,14 +22,10 @@
 package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 import javax.xml.namespace.QName;
 
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.xml.sax.Attributes;
 
 /**
@@ -38,7 +34,6 @@ import org.xml.sax.Attributes;
  */
 public abstract class ModelGroupBinding
    extends TermBinding
-   implements Cloneable
 {
    protected final Logger log = Logger.getLogger(getClass());
 
@@ -109,22 +104,36 @@ public abstract class ModelGroupBinding
       return requiredParticle;
    }
 
-   /**
-    * This method is not actually used during parsing. It's here only for internal tests.
-    *
-    * @param qName an element name
-    * @return true if the model group may start with the specified element
-    */
-   public boolean mayStartWith(QName qName)
+   public abstract ModelGroupPosition newPosition(QName qName, Attributes attrs, ParticleBinding particle);
+
+   public ElementBinding getElement(QName qName, Attributes attrs, boolean ignoreWildcards)
    {
-      return mayStartWith(qName, Collections.<ModelGroupBinding>emptySet());
+      ElementBinding element = null;
+      for (ParticleBinding nextParticle : getParticles())
+      {
+         TermBinding item = nextParticle.getTerm();
+         if (item.isElement())
+         {
+            ElementBinding choice = (ElementBinding)item;
+            if (qName.equals(choice.getQName()))
+               element = choice;
+         }
+         else if (item.isModelGroup())
+         {
+            ModelGroupBinding modelGroup = (ModelGroupBinding) item;
+            element = modelGroup.getElement(qName, attrs, ignoreWildcards);
+         }
+         else if (!ignoreWildcards)
+         {
+            WildcardBinding wildcard = (WildcardBinding)item;
+            element = wildcard.getElement(qName, attrs);
+         }
+         
+         if (element != null)
+            break;
+      }
+      return element;
    }
-
-   public abstract Cursor newCursor(ParticleBinding particle);
-
-   // Protected
-
-   protected abstract boolean mayStartWith(QName qName, Set<ModelGroupBinding> set);
 
    public boolean isSkip()
    {
@@ -181,22 +190,56 @@ public abstract class ModelGroupBinding
    public abstract String getGroupType();
 
    // Inner
-   public abstract class Cursor
+   public abstract class ModelGroupPosition extends SundayContentHandler.Position
    {
       protected final boolean trace = log.isTraceEnabled();
-      protected final ParticleBinding particle;
-      protected int occurence;
+      protected int occurrence;
 
       protected ParticleBinding currentParticle;
       protected ElementBinding wildcardContent;
 
-      protected Cursor next;
+      protected ModelGroupPosition next;
       
-      protected Cursor(ParticleBinding particle)
+      protected ModelGroupPosition(QName qName, ParticleBinding particle)
       {
+         super(qName, particle);
+         this.cursor = this;
          if(particle.getTerm() != ModelGroupBinding.this)
             throw new IllegalStateException("Particle term " + particle.getTerm() + " is not the model group " + ModelGroupBinding.this);
          this.particle = particle;
+      }
+
+      protected ModelGroupPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
+      {
+         this(name, particle);
+         this.currentParticle = currentParticle;
+         occurrence = 1; 
+      }
+
+      protected ModelGroupPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, ModelGroupPosition next)
+      {
+         this(name, particle);
+         this.currentParticle = currentParticle;
+         this.next = next;
+         occurrence = 1;
+      }
+
+      protected ModelGroupPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, ElementBinding wildcardContent)
+      {
+         this(name, particle);
+         this.currentParticle = currentParticle;
+         this.wildcardContent = wildcardContent;
+         occurrence = 1;
+      }
+
+      protected boolean isElement()
+      {
+         return false;
+      }
+      
+      protected boolean isModelGroup()
+      {
+         return true;
       }
 
       public ParticleBinding getParticle()
@@ -204,7 +247,7 @@ public abstract class ModelGroupBinding
          return particle;
       }
 
-      public Cursor getNext()
+      public ModelGroupPosition getNext()
       {
          return next;
       }
@@ -224,31 +267,10 @@ public abstract class ModelGroupBinding
          return wildcardContent;
       }
 
-      public ModelGroupBinding.Cursor startElement(QName qName, Attributes attrs)
+      public ModelGroupBinding.ModelGroupPosition startElement(QName qName, Attributes attrs)
       {
-         return startElement(qName, attrs, Collections.<ModelGroupBinding>emptySet(), true);
+         return startElement(qName, attrs, true);
       }
-
-      public ElementBinding getElement(QName qName, Attributes attrs, boolean ignoreWildcards)
-      {
-         return getElement(qName, attrs, Collections.<Cursor>emptySet(), ignoreWildcards);
-      }
-
-/*      public void endElement(QName qName)
-      {
-         TermBinding term = getCurrentParticle().getTerm();
-         ElementBinding element = term.isWildcard() ? getWildcardContent() : (ElementBinding) term;
-         if(element == null || !element.getQName().equals(qName))
-         {
-            throw new JBossXBRuntimeException("Failed to process endElement for " + qName +
-               " since the current element is " + (element == null ? "null" : element.getQName().toString())
-            );
-         }
-
-         if(trace)
-            log.trace("endElement " + qName + " in " + ModelGroupBinding.this);
-      }
-*/
 
       public boolean repeatTerm(QName qName, Attributes atts)
       {
@@ -257,8 +279,8 @@ public abstract class ModelGroupBinding
          
          boolean repeated = false;
          if(currentParticle.getMaxOccursUnbounded() ||
-            occurence < currentParticle.getMinOccurs() ||
-            occurence < currentParticle.getMaxOccurs())
+            occurrence < currentParticle.getMinOccurs() ||
+            occurrence < currentParticle.getMaxOccurs())
          {
             TermBinding item = currentParticle.getTerm();
             if(item.isElement())
@@ -269,8 +291,7 @@ public abstract class ModelGroupBinding
             else if(item.isModelGroup())
             {
                ModelGroupBinding modelGroup = (ModelGroupBinding)item;
-               boolean isRequired = occurence == 0 ? false : currentParticle.isRequired(occurence);
-               next = modelGroup.newCursor(currentParticle).startElement(qName, atts, Collections.<ModelGroupBinding>emptySet(), isRequired);
+               next = modelGroup.newPosition(qName, atts, currentParticle);
                repeated = next != null;
             }
             else if(item.isWildcard())
@@ -283,90 +304,20 @@ public abstract class ModelGroupBinding
 
          if(repeated)
          {
-            ++occurence;
+            ++occurrence;
             if(trace)
-               log.trace("repeated " + qName + " in " + ModelGroupBinding.this + ", occurence=" + occurence + ", term=" + currentParticle.getTerm());
+               log.trace("repeated " + qName + " in " + ModelGroupBinding.this + ", occurence=" + occurrence + ", term=" + currentParticle.getTerm());
          }
          else
          {
             wildcardContent = null;
             currentParticle = null;
-            occurence = 0;
+            occurrence = 0;
          }
 
          return repeated;
       }
 
-      // Protected
-
-      protected abstract ModelGroupBinding.Cursor startElement(QName qName,
-            Attributes atts,
-            Set<ModelGroupBinding> passedGroups,
-            boolean required);
-
-      protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.Cursor> passedGroups, boolean ignoreWildcards)
-      {
-         ElementBinding element = null;
-         for (ParticleBinding nextParticle : getParticles())
-         {
-            TermBinding item = nextParticle.getTerm();
-            if (item.isElement())
-            {
-               ElementBinding choice = (ElementBinding)item;
-               if (qName.equals(choice.getQName()))
-               {
-                  element = choice;
-                  break;
-               }
-            }
-            else if (item.isModelGroup())
-            {
-               ModelGroupBinding modelGroup = (ModelGroupBinding)item;
-               if (passedGroups.contains(modelGroup) == false) // FIX-ME ... weird set usage
-               {
-                  switch (passedGroups.size())
-                  {
-                     case 0:
-                        passedGroups = Collections.singleton(this);
-                        break;
-                     case 1:
-                        passedGroups = new HashSet<Cursor>(passedGroups);
-                     default:
-                        passedGroups.add(this);
-                  }
-
-                  ElementBinding e = modelGroup.newCursor(nextParticle).getElement(qName, atts, passedGroups, ignoreWildcards);
-                  if (e != null)
-                  {
-                     element = e;
-                     if (!qName.equals(e.getQName()))
-                     {
-                        throw new JBossXBRuntimeException(
-                              "There is a bug in ModelGroupBinding.Cursor.getElement(QName,Attributes) impl"
-                        );
-                     }
-                     break;
-                  }
-               }
-            }
-            else if (!ignoreWildcards)
-            {
-               WildcardBinding wildcard = (WildcardBinding)item;
-               ElementBinding e = wildcard.getElement(qName, atts);
-               if (e != null)
-               {
-                  element = e;
-                  if (!qName.equals(e.getQName()))
-                  {
-                     throw new JBossXBRuntimeException(
-                           "There is a bug in ModelGroupBinding.Cursor.getElement(QName,Attributes) impl"
-                     );
-                  }
-                  break;
-               }
-            }
-         }
-         return element;
-      }
+      protected abstract ModelGroupBinding.ModelGroupPosition startElement(QName qName, Attributes atts, boolean required);
    }
 }

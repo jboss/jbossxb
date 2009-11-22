@@ -25,10 +25,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.namespace.QName;
 
@@ -97,93 +95,107 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
          allParticles.addAll(elementParticles.values());
          allParticles.addAll(groupParticles);
          allParticles.addAll(wildcardParticles);
-         allParticles = Collections.unmodifiableList(allParticles);
       }
       return allParticles;
    }
 
-   @Override
-   protected boolean mayStartWith(QName name, Set<ModelGroupBinding> set)
+   public ModelGroupPosition newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
    {
-      throw new UnsupportedOperationException();
-   }
+      ParticleBinding currentParticle = elementParticles.get(qName);
+      if (currentParticle != null)
+         return new UnorderedSequencePosition(qName, seqParticle, currentParticle);
 
-   @Override
-   public Cursor newCursor(ParticleBinding particle)
-   {
-      return new Cursor(particle)
+      for (ParticleBinding particle : groupParticles)
       {
-         @Override
-         protected Cursor startElement(QName qName, Attributes atts, Set<ModelGroupBinding> passedGroups, boolean required)
-         {
-            if(trace)
-            {
-               StringBuffer sb = new StringBuffer();
-               sb.append("startElement ").append(qName).append(" in ").append(UnorderedSequenceBinding.this.toString());
-               log.trace(sb.toString());
-            }
+         ModelGroupBinding modelGroup = (ModelGroupBinding) particle.getTerm();
+         ModelGroupPosition next = modelGroup.newPosition(qName, attrs, particle);
+         if (next != null)
+            return new UnorderedSequencePosition(qName, seqParticle, particle, next);
+      }
 
-            next = null;
-            
-            if(currentParticle != null && repeatTerm(qName, atts))
-               return this;               
-
-            currentParticle = elementParticles.get(qName);
-            if (currentParticle != null)
-            {
-               occurence = 1;
-               if (trace)
-                  log.trace("found " + qName + " in " + UnorderedSequenceBinding.this);
-               return this;
-            }
-
-            for (ParticleBinding particle : groupParticles)
-            {
-               ModelGroupBinding modelGroup = (ModelGroupBinding) particle.getTerm();
-               if (!passedGroups.contains(modelGroup))
-               {
-                  switch (passedGroups.size())
-                  {
-                     case 0 :
-                        passedGroups = Collections.singleton((ModelGroupBinding) UnorderedSequenceBinding.this);
-                        break;
-                     case 1 :
-                        passedGroups = new HashSet<ModelGroupBinding>(passedGroups);
-                     default :
-                        passedGroups.add(UnorderedSequenceBinding.this);
-                  }
-
-                  next = modelGroup.newCursor(particle).startElement(qName, atts, passedGroups, particle.isRequired(occurence));
-
-                  if (next != null)
-                  {
-                     occurence = 1;
-                     currentParticle = particle;
-                     return this;
-                  }
-               }
-            }
-
-            for (ParticleBinding particle : wildcardParticles)
-            {
-               WildcardBinding wildcard = (WildcardBinding) particle.getTerm();
-               wildcardContent = wildcard.getElement(qName, atts);
-               if (wildcardContent != null)
-               {
-                  occurence = 1;
-                  currentParticle = particle;
-                  return this;
-               }
-            }
-            
-            return null;
-         }
-      };
+      for (ParticleBinding particle : wildcardParticles)
+      {
+         WildcardBinding wildcard = (WildcardBinding) particle.getTerm();
+         ElementBinding wildcardContent = wildcard.getElement(qName, attrs);
+         if (wildcardContent != null)
+            return new UnorderedSequencePosition(qName, seqParticle, particle, wildcardContent);
+      }
+      return null;
    }
-
+   
    @Override
    public String getGroupType()
    {
       return "unordered_sequence";
+   }
+   
+   private final class UnorderedSequencePosition extends ModelGroupPosition
+   {
+      private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
+      {
+         super(name, particle, currentParticle);
+      }
+
+      private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, ModelGroupPosition next)
+      {
+         super(name, particle, currentParticle, next);
+      }
+
+      private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, ElementBinding wildcardContent)
+      {
+         super(name, particle, currentParticle, wildcardContent);
+      }
+
+      @Override
+      protected ModelGroupPosition startElement(QName qName, Attributes atts, boolean required)
+      {
+         if(trace)
+         {
+            StringBuffer sb = new StringBuffer();
+            sb.append("startElement ").append(qName).append(" in ").append(UnorderedSequenceBinding.this.toString());
+            log.trace(sb.toString());
+         }
+
+         next = null;
+         
+         if(currentParticle != null && repeatTerm(qName, atts))
+            return this;               
+
+         currentParticle = elementParticles.get(qName);
+         if (currentParticle != null)
+         {
+            occurrence = 1;
+            if (trace)
+               log.trace("found " + qName + " in " + UnorderedSequenceBinding.this);
+            return this;
+         }
+
+         for (ParticleBinding particle : groupParticles)
+         {
+            ModelGroupBinding modelGroup = (ModelGroupBinding) particle.getTerm();
+            next = modelGroup.newPosition(qName, atts, particle);
+
+            if (next != null)
+            {
+               occurrence = 1;
+               currentParticle = particle;
+               return this;
+            }
+         }
+
+         for (ParticleBinding particle : wildcardParticles)
+         {
+            WildcardBinding wildcard = (WildcardBinding) particle.getTerm();
+            wildcardContent = wildcard.getElement(qName, atts);
+            if (wildcardContent != null)
+            {
+               occurrence = 1;
+               currentParticle = particle;
+               return this;
+            }
+         }
+         
+         return null;
+      }
    }
 }

@@ -80,28 +80,31 @@ public class ArrayWrapperRepeatableParticleHandler implements RepeatableParticle
       if(trace)
          log.trace("endRepeatableParticle " + elementName);
 
-      AbstractPropertyHandler propertyHandler = beanAdapterFactory.getPropertyHandler(elementName);
+      QName qName = particle.getTerm().getQName();
+      if(qName == null)
+         qName = elementName;
+      AbstractPropertyHandler propertyHandler = beanAdapterFactory.getPropertyHandler(qName);
       if (propertyHandler == null)
       {
          AbstractPropertyHandler wildcardHandler = beanAdapterFactory.getWildcardHandler();
          if (wildcardHandler != null && o != null)
          {
             o = toArray((List<Object>) o, (ArrayInfo) wildcardHandler.getPropertyType());
-            wildcardHandler.doHandle(parent, o, elementName);
+            wildcardHandler.doHandle(parent, o, qName);
             return;
          }
 
          if (particle.getTerm().getSchema().isStrictSchema())
-            throw new RuntimeException("QName " + elementName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o) + " available=" + beanAdapterFactory.getAvailable());
+            throw new RuntimeException("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o) + " available=" + beanAdapterFactory.getAvailable());
 
          if (trace)
-            log.trace("QName " + elementName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o));
+            log.trace("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o));
          
          return;
       }
 
       o = toArray((List<Object>) o, (ArrayInfo) propertyHandler.getPropertyType());
-      propertyHandler.doHandle(parent, o, elementName);
+      propertyHandler.doHandle(parent, o, qName);
    }
 
    public Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle)

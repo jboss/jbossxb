@@ -44,7 +44,6 @@ public class ElementBinding
 {
    protected List<ElementInterceptor> interceptors = Collections.emptyList();
 
-   protected QName qName;
    protected TypeBinding typeBinding;
    protected boolean nillable;
    protected Boolean normalizeSpace;
@@ -54,24 +53,20 @@ public class ElementBinding
    public ElementBinding(SchemaBinding schema, QName qName, TypeBinding typeBinding)
    {
       super(schema);
-      this.qName = qName;
       this.typeBinding = typeBinding;
-
-      if(qName == null)
-      {
-         throw new JBossXBRuntimeException("Each element must have a non-null QName!");
-      }
+      setQName(qName);
    }
 
    protected ElementBinding()
    {
    }
-   
-   public QName getQName()
-   {
-      return qName;
-   }
 
+   public void setQName(QName qName)
+   {
+      if(qName == null)
+         throw new JBossXBRuntimeException("Each element must have a non-null QName!");
+      this.qName = qName;
+   }
    public List<ElementInterceptor> getInterceptors()
    {
       return interceptors;

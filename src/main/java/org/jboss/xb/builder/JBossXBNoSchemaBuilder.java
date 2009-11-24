@@ -1355,7 +1355,7 @@ public class JBossXBNoSchemaBuilder
       XmlType propertyXmlType = null;
       JBossXmlModelGroup propertyXmlModelGroup = null;
       // Setup any new model
-      if (propertyType.isCollection())
+      if (propertyType.isCollection() || propertyType.isArray())
       {
          if (trace)
             log.trace("Property " + property.getName() + " is a collection");
@@ -1439,7 +1439,10 @@ public class JBossXBNoSchemaBuilder
          choice.setHandler(BuilderParticleHandler.INSTANCE);
          ParticleBinding particleBinding = new ParticleBinding(choice);
          particleBinding.setMinOccurs(0);
-         particleBinding.setMaxOccursUnbounded(true);
+         // WARN normally maxOccursUnbounded should be set to true in this case
+         // but I make an exception for case like in org.jboss.test.xb.builder.repeatableterms.support.Sequence
+         if(propertyType.isCollection() || propertyType.isArray())
+            particleBinding.setMaxOccursUnbounded(true);
          localModel.addParticle(particleBinding);
          localModel = choice;
 
@@ -1825,62 +1828,72 @@ public class JBossXBNoSchemaBuilder
       }
 
       TypeInfo groupType = property.getType();
-      if(groupType.isCollection())
+      boolean repeatable = false;
+      if(groupType.isCollection() || groupType.isArray())
+      {
          groupType = ((ClassInfo)groupType).getComponentType();
+         repeatable = true;
+      }
 
       if(createGroup)
       {
          boolean propOrderMissing = annotation.propOrder().length == 1 && annotation.propOrder()[0].equals("") || annotation.particles().length > 0;
-         group = createModelGroup(annotation.kind(), groupType, propOrderMissing, annotation.propOrder());
-         if (groupName != null)
+         
+         if(annotation.particles().length == 0)
          {
-            group.setQName(groupName);
-            schemaBinding.addGroup(group.getQName(), group);
-         }
-      }
-      
-      parentGroup.addParticle(new ParticleBinding(group, 0, 1, property.getType().isCollection()));
-
-      if(annotation.particles().length == 0)
-      {
-         if(createGroup)
-         {
-            group.setSkip(Boolean.FALSE);
-
             // handler for the model group members
             BeanInfo groupBeanInfo = JBossXBBuilder.configuration.getBeanInfo(groupType);
             BeanAdapterFactory propBeanAdapterFactory = createAdapterFactory(DefaultBeanAdapterBuilder.class, groupBeanInfo, null);
             BeanHandler propHandler = new GroupBeanHandler(groupBeanInfo.getName(), propBeanAdapterFactory);
-            group.setHandler(propHandler);
 
             String[] memberOrder = annotation.propOrder();
             if (memberOrder.length == 0 || memberOrder[0].length() == 0)
             {
                List<String> propNames = new ArrayList<String>();
                for (PropertyInfo prop : groupBeanInfo.getProperties())
+               {
+                  if ("class".equals(prop.getName()))
+                     continue;
                   propNames.add(prop.getName());
+               }
                memberOrder = propNames.toArray(new String[propNames.size()]);
             }
 
             if (trace)
                log.trace("Property order for " + annotation.kind() + " property " + property.getName() + ": " + Arrays.asList(memberOrder));
 
+            group = createModelGroup(annotation.kind(), groupType, memberOrder.length > 1 && propOrderMissing, annotation.propOrder());
+            group.setSkip(Boolean.FALSE);
+            group.setHandler(propHandler);
+
             // bind model group members
             for (String memberPropName : memberOrder)
             {
-               if ("class".equals(memberPropName))
-                  continue;
-
                PropertyInfo memberProp = groupBeanInfo.getProperty(memberPropName);
                push(groupType, memberPropName);
                bindProperty(memberProp, group, propBeanAdapterFactory, memberOrder, false);
                pop();
             }
          }
-         
+         else
+            group = createModelGroup(annotation.kind(), groupType, propOrderMissing, annotation.propOrder());
+            
+         if (groupName != null)
+         {
+            group.setQName(groupName);
+            schemaBinding.addGroup(group.getQName(), group);
+         }
+
+         if(property.getType().isArray())
+            group.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(beanAdapterFactory));
+      }
+      
+      parentGroup.addParticle(new ParticleBinding(group, 0, 1, repeatable));
+
+      if(annotation.particles().length == 0)
+      {
          if(group.getQName() == null)
             throw new JBossXBRuntimeException("To be bound a group must have a non-null QName. Bean " + property.getBeanInfo().getName() + ", property=" + property.getName());
-
          beanAdapterFactory.addProperty(group.getQName(), propertyHandler);
       }
       else
@@ -1914,7 +1927,7 @@ public class JBossXBNoSchemaBuilder
                typeBinding.pushInterceptor(memberQName, ChildCollectionInterceptor.SINGLETON);
          }
       }
-      
+
       defaultNamespace = overridenDefaultNamespace;
    }
 
@@ -1952,7 +1965,7 @@ public class JBossXBNoSchemaBuilder
       wrapperElement.setSkip(Boolean.TRUE);
       particle = new ParticleBinding(wrapperElement, annotation.required() ? 1 : 0, 1, propertyType.isCollection() || propertyType.isArray());
       parentModel.addParticle(particle);
-      
+
       if(propertyType.isArray())
          wrapperElement.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(beanAdapterFactory));
       

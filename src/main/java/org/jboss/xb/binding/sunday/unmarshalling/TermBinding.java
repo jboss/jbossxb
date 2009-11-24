@@ -21,6 +21,8 @@
   */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
+import javax.xml.namespace.QName;
+
 import org.jboss.xb.binding.metadata.ClassMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.MapEntryMetaData;
@@ -36,7 +38,8 @@ import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
 public abstract class TermBinding
 {
    protected SchemaBinding schema;
-
+   protected QName qName;
+   
    protected ClassMetaData classMetaData;
    protected PropertyMetaData propertyMetaData;
    protected MapEntryMetaData mapEntryMetaData;
@@ -60,7 +63,16 @@ public abstract class TermBinding
    {
    }
    
-   
+   public QName getQName()
+   {
+      return this.qName;
+   }
+
+   public void setQName(QName name)
+   {
+      qName = name;
+   }
+
    public ClassMetaData getClassMetaData()
    {
       return classMetaData;

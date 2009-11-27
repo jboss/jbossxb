@@ -124,13 +124,7 @@ public abstract class NonElementPosition extends SundayContentHandler.Position
             ElementBinding element = (ElementBinding)item;
             repeated = qName.equals(element.getQName());
          }
-/*         else if(item.isWildcard())
-         {
-            WildcardBinding wildcard = (WildcardBinding)item;
-            wildcardContent = wildcard.getElement(qName, atts);
-            repeated = wildcardContent != null;
-         }
-*/         else
+         else
          {
             NonElementTermBinding ne = (NonElementTermBinding)item;
             next = ne.newPosition(qName, atts, currentParticle);

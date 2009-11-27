@@ -69,7 +69,7 @@ public class ChoiceBinding
       return choices;
    }
 
-   public ModelGroupPosition newPosition(QName qName, Attributes attrs, ParticleBinding choiceParticle)
+   public NonElementPosition newPosition(QName qName, Attributes attrs, ParticleBinding choiceParticle)
    {
       for(int i = 0; i < choices.size(); ++i)
       {
@@ -81,19 +81,12 @@ public class ChoiceBinding
             if(qName.equals(element.getQName()))
                return new ChoicePosition(qName, choiceParticle, particle);
          }
-         else if(item.isModelGroup())
+         else
          {
-            ModelGroupBinding modelGroup = (ModelGroupBinding)item;
-            ModelGroupPosition next = modelGroup.newPosition(qName, attrs, particle);
+            NonElementTermBinding ne = (NonElementTermBinding)item;
+            NonElementPosition next = ne.newPosition(qName, attrs, particle);
             if(next != null)
                return new ChoicePosition(qName, choiceParticle, particle, next);
-         }
-         else if(item.isWildcard())
-         {
-            WildcardBinding wildcard = (WildcardBinding)item;
-            ElementBinding wildcardContent = wildcard.getElement(qName, attrs);
-            if(wildcardContent != null)
-               return new ChoicePosition(qName, choiceParticle, particle, wildcardContent);
          }
       }
 
@@ -106,14 +99,14 @@ public class ChoiceBinding
       return "choice";
    }
    
-   private final class ChoicePosition extends ModelGroupPosition
+   private final class ChoicePosition extends NonElementPosition
    {
       private ChoicePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
       {
          super(name, particle, currentParticle);
       }
 
-      private ChoicePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, ModelGroupPosition next)
+      private ChoicePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, NonElementPosition next)
       {
          super(name, particle, currentParticle, next);
       }
@@ -123,7 +116,7 @@ public class ChoiceBinding
          super(name, particle, currentParticle, wildcardContent);
       }
 
-      protected ModelGroupBinding.ModelGroupPosition startElement(QName qName, Attributes atts, boolean required)
+      protected NonElementPosition startElement(QName qName, Attributes atts, boolean required)
       {
          if(trace)
          {
@@ -153,18 +146,11 @@ public class ChoiceBinding
                if(qName.equals(element.getQName()))
                   found = true;
             }
-            else if(item.isModelGroup())
+            else
             {
-               ModelGroupBinding modelGroup = (ModelGroupBinding)item;
-               next = modelGroup.newPosition(qName, atts, particle);
+               NonElementTermBinding ne = (NonElementTermBinding)item;
+               next = ne.newPosition(qName, atts, particle);
                found = next != null;
-            }
-            else if(item.isWildcard())
-            {
-               WildcardBinding wildcard = (WildcardBinding)item;
-               wildcardContent = wildcard.getElement(qName, atts);
-               if(wildcardContent != null)
-                  found = true;
             }
             
             if(found)

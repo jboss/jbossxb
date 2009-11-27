@@ -57,7 +57,6 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
-import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
 import org.jboss.xb.util.DomCharactersHandler;
 import org.jboss.xb.util.DomLocalMarshaller;
 import org.jboss.xb.util.DomParticleHandler;
@@ -274,7 +273,32 @@ public class WildcardUnresolvedElementsUnitTestCase
       }
       else
       {
-         unresolvedElementHandler = DomParticleHandler.INSTANCE;
+         unresolvedElementHandler = new DomParticleHandler()
+         {
+            public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle,
+                  ParticleBinding parentParticle)
+            {
+               if (parent instanceof Element)
+               {
+                  ((Element) parent).appendChild((Element) o);
+               }
+               else
+               {
+                  ArrayOfAny arr = (ArrayOfAny)parent;
+                  Object[] any = arr.get_any();
+                  if(any == null)
+                     any = new Object[1];
+                  else
+                  {
+                     Object[] tmp = any;
+                     any = new Object[any.length + 1];
+                     System.arraycopy(tmp, 0, any, 0, tmp.length);
+                  }
+                  arr.set_any(any);
+                  any[any.length - 1] = o;
+               }
+            }
+         };
          unresolvedCharactersHandler = DomCharactersHandler.INSTANCE;
       }
 
@@ -866,7 +890,6 @@ public class WildcardUnresolvedElementsUnitTestCase
    }
 
    public static class GenericElementHandler
-      extends RtElementHandler
       implements ParticleHandler
    {
       public Object startParticle(Object parent,
@@ -905,7 +928,18 @@ public class WildcardUnresolvedElementsUnitTestCase
          }
          else
          {
-            super.setParent(parent, o, elementName, particle, parentParticle);
+            ArrayOfAny arr = (ArrayOfAny)parent;
+            Object[] any = arr.get_any();
+            if(any == null)
+               any = new Object[1];
+            else
+            {
+               Object[] tmp = any;
+               any = new Object[any.length + 1];
+               System.arraycopy(tmp, 0, any, 0, tmp.length);
+            }
+            arr.set_any(any);
+            any[any.length - 1] = o;
          }
       }
    }

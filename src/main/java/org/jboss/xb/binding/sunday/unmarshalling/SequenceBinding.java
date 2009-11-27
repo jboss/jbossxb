@@ -79,7 +79,7 @@ public class SequenceBinding
       return sequence;
    }
 
-   public ModelGroupPosition newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
+   public NonElementPosition newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
    {
       for(int i = 0; i < sequence.size(); ++i)
       {
@@ -91,19 +91,12 @@ public class SequenceBinding
             if(qName.equals(element.getQName()))
                return new SequencePosition(qName, seqParticle, i, particle);
          }
-         else if(term.isModelGroup())
+         else
          {
-            ModelGroupBinding modelGroup = (ModelGroupBinding)term;
-            ModelGroupPosition next = modelGroup.newPosition(qName, attrs, particle);
+            NonElementTermBinding ne = (NonElementTermBinding)term;
+            NonElementPosition next = ne.newPosition(qName, attrs, particle);
             if(next != null)
                return new SequencePosition(qName, seqParticle, i, particle, next);
-         }
-         else if(term.isWildcard())
-         {
-            WildcardBinding wildcard = (WildcardBinding)term;
-            ElementBinding wildcardContent = wildcard.getElement(qName, attrs);
-            if(wildcardContent != null)
-               return new SequencePosition(qName, seqParticle, i, particle, wildcardContent);
          }
          
          if(particle.isRequired())
@@ -125,7 +118,7 @@ public class SequenceBinding
       return "sequence";
    }
    
-   private final class SequencePosition extends ModelGroupPosition
+   private final class SequencePosition extends NonElementPosition
    {
       private int pos = -1;
 
@@ -135,7 +128,7 @@ public class SequenceBinding
          this.pos = pos;
       }
 
-      protected SequencePosition(QName qName, ParticleBinding particle, int pos, ParticleBinding currentParticle, ModelGroupPosition next)
+      protected SequencePosition(QName qName, ParticleBinding particle, int pos, ParticleBinding currentParticle, NonElementPosition next)
       {
          super(qName, particle, currentParticle, next);
          this.pos = pos;
@@ -147,7 +140,7 @@ public class SequenceBinding
          this.pos = pos;
       }
 
-      protected ModelGroupBinding.ModelGroupPosition startElement(QName qName, Attributes atts, boolean required)
+      protected NonElementPosition startElement(QName qName, Attributes atts, boolean required)
       {
          if(trace)
          {
@@ -198,10 +191,10 @@ public class SequenceBinding
                   }
                }
             }
-            else if(item.isModelGroup())
+            else
             {
-               ModelGroupBinding modelGroup = (ModelGroupBinding) item;
-               next = modelGroup.newPosition(qName, atts, particle);
+               NonElementTermBinding ne = (NonElementTermBinding) item;
+               next = ne.newPosition(qName, atts, particle);
 
                if (next != null)
                {
@@ -218,32 +211,6 @@ public class SequenceBinding
                      throw new JBossXBRuntimeException("Requested element " + qName
                            + " is not allowed in this position in the sequence. A model group with minOccurs="
                            + particle.getMinOccurs() + " that doesn't contain this element must follow.");
-                  }
-                  else
-                  {
-                     break;
-                  }
-               }
-            }
-            else if(item.isWildcard())
-            {
-               WildcardBinding wildcard = (WildcardBinding)item;
-               wildcardContent = wildcard.getElement(qName, atts);
-               if(wildcardContent != null)
-               {
-                  pos = i;
-                  occurrence = 1;
-                  currentParticle = particle;
-                  return this;
-               }
-
-               if(particle.getMinOccurs() > 0)
-               {
-                  if(required)
-                  {
-                     throw new JBossXBRuntimeException("Requested element " + qName +
-                        " is not allowed in this position in the sequence."
-                     );
                   }
                   else
                   {

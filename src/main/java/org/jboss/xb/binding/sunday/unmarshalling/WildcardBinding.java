@@ -33,7 +33,7 @@ import org.xml.sax.Attributes;
  * @version <tt>$Revision$</tt>
  */
 public class WildcardBinding
-   extends TermBinding
+   extends TermBinding implements NonElementTermBinding
 {
    private static final Logger log = Logger.getLogger(WildcardBinding.class);
 
@@ -219,9 +219,9 @@ public class WildcardBinding
          }
       }
 
-      // todo this stuff could be cached
+      // TODO this stuff could be cached
       // the 'this' wildcard could be reused
-      // the reason it is overriden is to eliminate its wildcardHandler
+      // the reason it is overridden is to eliminate its wildcardHandler
       // which is not initialized in the new one
       WildcardBinding unresolvedWildcard = new WildcardBinding(schema);
       unresolvedWildcard.pc = PC_LAX;
@@ -243,9 +243,17 @@ public class WildcardBinding
       return element;
    }
 
+   public NonElementPosition newPosition(QName qName, Attributes attrs, ParticleBinding particle)
+   {
+      ElementBinding wildcardContent = getElement(qName, attrs);
+      if(wildcardContent != null)
+         return new WildcardPosition(qName, particle, new ParticleBinding(wildcardContent), wildcardContent);
+      return null;
+   }
+   
    public boolean isSkip()
    {
-      return skip == null ? false : skip.booleanValue();
+      return skip == null ? true : skip.booleanValue();
    }
 
    public boolean isModelGroup()
@@ -281,5 +289,33 @@ public class WildcardBinding
             throw new IllegalStateException("Unexpected processContents value: " + pc);
       }
       return "wildcard processContents=" + processContent;
+   }
+   
+   private final class WildcardPosition extends NonElementPosition
+   {
+      protected WildcardPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle,
+            ElementBinding wildcardContent)
+      {
+         super(name, particle, currentParticle, wildcardContent);
+      }
+
+      @Override
+      protected NonElementPosition startElement(QName name, Attributes atts, boolean required)
+      {
+         // if positioned try repeating
+         if(currentParticle != null && repeatTerm(qName, atts))
+            return this;
+
+         wildcardContent = getElement(name, atts);
+         if(wildcardContent != null)
+         {
+            currentParticle = new ParticleBinding(wildcardContent);
+            occurrence = 1;
+            return this;
+         }
+
+         return null;
+      }
+      
    }
 }

@@ -199,10 +199,6 @@ public class SundayContentHandler
             if(!position.ended) // could be ended if it's a choice
                endParticle(position);
 
-            ParticleBinding currentParticle = position.cursor.getCurrentParticle();
-            if(position.repeatableParticleValue != null && currentParticle.isRepeatable() && currentParticle.getTerm().isWildcard())
-               endRepeatableParticle(position, position.qName, currentParticle, position.particle);
-
             if(position.particle.isRepeatable())
             {
                Position parentPosition = stack.peek1();
@@ -240,7 +236,7 @@ public class SundayContentHandler
       boolean repeated = false;
       boolean repeatedParticle = false;
       Position position = null;
-      ModelGroupBinding.ModelGroupPosition groupPosition = null; // used only when particle is a wildcard
+      NonElementPosition groupPosition = null; // used only when particle is a wildcard
       SchemaBinding schemaBinding = schema;
 
       atts = preprocessAttributes(atts);
@@ -373,7 +369,7 @@ public class SundayContentHandler
                      );
                   }
 
-                  ModelGroupBinding.ModelGroupPosition newPosition = modelGroup.newPosition(startName, atts, typeParticle);
+                  NonElementPosition newPosition = modelGroup.newPosition(startName, atts, typeParticle);
                   if(newPosition == null)
                   {
                      throw new JBossXBRuntimeException(startName +
@@ -393,7 +389,7 @@ public class SundayContentHandler
                         if(modelGroupParticle.isRepeatable())
                            startRepeatableParticle(stack.peek(), o, startName, modelGroupParticle);
 
-                        handler = getHandler(modelGroupParticle);
+                        handler = getHandler(modelGroupParticle.getTerm());
                         o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
                         push(groupPosition, o, handler, parentType);
                         
@@ -411,7 +407,7 @@ public class SundayContentHandler
                   throw new JBossXBRuntimeException("No cursor for " + startName);
 
                ParticleBinding prevParticle = groupPosition.getCurrentParticle();
-               ModelGroupBinding.ModelGroupPosition newPosition = groupPosition.startElement(startName, atts);               
+               NonElementPosition newPosition = groupPosition.startElement(startName, atts);               
                if(newPosition == null)
                {
                   if(!position.ended)
@@ -436,7 +432,7 @@ public class SundayContentHandler
                         throw new JBossXBRuntimeException("The particle expected to be repeatable but it's not: " + position.particle.getTerm());
                      
                      position.reset();                     
-                     handler = getHandler(position.particle);
+                     handler = getHandler(position.particle.getTerm());
                      position.o = handler.startParticle(stack.peek1().o, startName, position.particle, atts, nsRegistry);
                   }
                   
@@ -468,7 +464,7 @@ public class SundayContentHandler
                   {
                      groupPosition = newPosition;
                      ParticleBinding modelGroupParticle = groupPosition.getParticle();
-                     handler = getHandler(modelGroupParticle);
+                     handler = getHandler(modelGroupParticle.getTerm());
                      o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
                      push(groupPosition, o, handler, parentType);
                      
@@ -486,17 +482,6 @@ public class SundayContentHandler
       {
          Object parent = stack.isEmpty() ? null :
             (repeated ? stack.peek1().o : stack.peek().o);
-         if(particle.getTerm().isWildcard())
-         {
-            ElementBinding element = groupPosition.getWildcardContent();
-            if(element == null)
-               throw new JBossXBRuntimeException("Failed to resolve element " + startName + " for wildcard.");
-
-            if(!repeatedParticle && particle.isRepeatable())
-               startRepeatableParticle(stack.peek(), parent, startName, particle);
-
-            particle = new ParticleBinding(element);
-         }
 
          ElementBinding element = (ElementBinding)particle.getTerm();
 
@@ -638,9 +623,16 @@ public class SundayContentHandler
       }
    }
 
-   private ParticleHandler getHandler(ParticleBinding modelGroupParticle)
+   private ParticleHandler getHandler(TermBinding term)
    {
-      ParticleHandler handler = ((ModelGroupBinding)modelGroupParticle.getTerm()).getHandler();
+      ParticleHandler handler = null;
+      if(term.isModelGroup())
+         handler = ((ModelGroupBinding)term).getHandler();
+      else if(term.isWildcard())
+         //handler = ((WildcardBinding)term).getWildcardHandler();
+         handler = NoopParticleHandler.INSTANCE;
+      else
+         throw new IllegalArgumentException("Unexpected term " + term);
       return handler == null ? defParticleHandler : handler;
    }
 
@@ -665,7 +657,7 @@ public class SundayContentHandler
          {
             endParticle(position, stackIndex - 1);
 
-            ParticleHandler handler = getHandler(position.particle);
+            ParticleHandler handler = getHandler(position.particle.getTerm());
             position.reset();
             parentPosition = stack.peek(stackIndex - 1);
             position.o = handler.startParticle(parentPosition.o, position.qName, position.particle, null, nsRegistry);
@@ -673,11 +665,6 @@ public class SundayContentHandler
             break;
          }
 
-         // wildcards are not on the stack
-         ParticleBinding currentParticle = parentPosition.cursor.getCurrentParticle();
-         if(currentParticle.getTerm().isWildcard() && currentParticle.isRepeatable())
-            break;
-         
          parentPosition = stack.peek(--stackIndex);
          endParticle(position, stackIndex);
       }
@@ -734,7 +721,7 @@ public class SundayContentHandler
       {
          parentPosition = position;
          position = stack.peek(stackIndex);
-         ParticleHandler handler = getHandler(position.particle);
+         ParticleHandler handler = getHandler(position.particle.getTerm());
          position.reset();
          position.o = handler.startParticle(parentPosition.o, position.qName, position.particle, null, nsRegistry);
       }
@@ -897,14 +884,23 @@ public class SundayContentHandler
       if(!particle.getTerm().isSkip() || position.repeatableParticleValue != null)
          return position;
       
+      Position wildcardPosition = null;
+      if(particle.getTerm().isWildcard())
+         wildcardPosition = position;
+
       for(int i = stack.size() - 3; i >= 0; --i)
       {
          position = stack.peek(i);
          particle = position.particle;
          if(!particle.getTerm().isSkip() || position.repeatableParticleValue != null)
             return position;
+         else if(wildcardPosition != null)
+            return wildcardPosition;
+
+         if(particle.getTerm().isWildcard())
+            wildcardPosition = position;
       }
-      return null;
+      return wildcardPosition;
    }
 
    private Position getNotSkippedParent(int i)
@@ -1066,7 +1062,7 @@ public class SundayContentHandler
 
       Position parentPosition = stack.size() == 1 ? null : stack.peek1();
       Object parent = parentPosition == null ? null : parentPosition.o;
-      ParticleHandler handler = stack.peek().handler;
+      ParticleHandler handler = position.handler;
       
       o = handler.endParticle(o, endName, particle);
 
@@ -1087,46 +1083,39 @@ public class SundayContentHandler
       if(allInterceptors == 0)
       {
          Position notSkippedParent = getNotSkippedParent();
-         if(notSkippedParent != null)
+         if (notSkippedParent != null)
          {
-         ParticleBinding parentParticle = notSkippedParent.particle;
-         boolean hasWildcard = false;
-         if (parentParticle != null && parentParticle.getTerm().isElement())
-         {
-            WildcardBinding wildcard = ((ElementBinding) parentParticle.getTerm()).getType().getWildcard();
-            if (wildcard != null)
+            ParticleBinding parentParticle = notSkippedParent.particle;
+            TermBinding parentTerm = parentParticle.getTerm();
+            if (parentTerm.isWildcard())
             {
-               hasWildcard = true;
-               if(parentPosition.cursor.isWildcardContent())
+               ParticleHandler wh = ((WildcardBinding) parentTerm).getWildcardHandler();
+               if (wh != null)
+                  handler = wh;
+            }
+
+            if (parent != null)
+            {
+               if (notSkippedParent.repeatableParticleValue == null)
+                  setParent(handler, parent, o, endName, particle, parentParticle);
+               else
+                  notSkippedParent.repeatableHandler.addTermValue(notSkippedParent.repeatableParticleValue, o, endName,
+                        particle, parentParticle, handler);
+            }
+            else if (parentTerm.isWildcard() && stack.size() > 1)
+            {
+               // the parent has anyType, so it gets the value of its child
+               for (int i = stack.size() - 2; i >= 0; --i)
                {
-                  ParticleHandler wh = wildcard.getWildcardHandler();
-                  if(wh != null)
-                     handler = wh;
+                  Position peeked = stack.peek(i);
+                  peeked.o = o;
+                  if (peeked.isElement())
+                     break;
                }
-            }
-         }
 
-         if(parent != null)
-         {
-            if(notSkippedParent.repeatableParticleValue == null)
-               setParent(handler, parent, o, endName, particle, parentParticle);
-            else
-               notSkippedParent.repeatableHandler.addTermValue(notSkippedParent.repeatableParticleValue, o, endName, particle, parentParticle, handler);
-         }
-         else if(parentParticle != null && hasWildcard && stack.size() > 1)
-         {
-            // the parent has anyType, so it gets the value of its child
-            for(int i = stack.size() - 2; i >= 0; --i)
-            {
-               Position peeked = stack.peek(i);
-               peeked.o = o;
-               if(peeked.isElement())
-                  break;
+               if (trace)
+                  log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
             }
-
-            if(trace)
-               log.trace("Value of " + endName + " " + o + " is promoted as the value of its parent element.");
-         }
          }
       }
       else
@@ -1209,7 +1198,7 @@ public class SundayContentHandler
          log.trace("pushed[" + (stack.size() - 1) + "] " + particle.getTerm().getQName() + "=" + o);
    }
 
-   private void push(ModelGroupBinding.ModelGroupPosition position, Object o, ParticleHandler handler, TypeBinding parentType)
+   private void push(NonElementPosition position, Object o, ParticleHandler handler, TypeBinding parentType)
    {
       position.o = o;
       position.handler = handler;
@@ -1231,8 +1220,9 @@ public class SundayContentHandler
 
    public static class Position
    {
+      protected boolean trace;
       final QName qName;
-      ModelGroupBinding.ModelGroupPosition cursor;
+      NonElementPosition cursor;
       ParticleBinding particle;
       ParticleBinding nonXsiParticle;
       ParticleHandler handler;

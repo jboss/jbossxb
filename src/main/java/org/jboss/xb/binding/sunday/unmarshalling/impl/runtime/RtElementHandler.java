@@ -248,7 +248,7 @@ public class RtElementHandler
 
          // the wildcard this element is a content of
          WildcardBinding wildcard = null;
-         if(parentTerm != null && !parentTerm.isModelGroup())
+         if(parentTerm != null && parentTerm.isElement())
          {
             ElementBinding parentElement = (ElementBinding)parentTerm;
             TypeBinding parentType = parentElement.getType();
@@ -392,7 +392,7 @@ public class RtElementHandler
       ClassMetaData classMetaData = term.getClassMetaData();
       MapEntryMetaData mapEntryMetaData = term.getMapEntryMetaData();
 
-      if(!term.isModelGroup())
+      if(term.isElement())
       {
          TypeBinding type = ((ElementBinding)term).getType();
          if(type.isSimple() ||
@@ -411,7 +411,7 @@ public class RtElementHandler
       // if addMethod is specified, it's probably some collection field
       // but should not be set as a property. Instead, items are added to it using the addMethod
       ElementBinding arrayItem = null;
-      if(!term.isModelGroup())
+      if(term.isElement())
       {
          TypeBinding type = ((ElementBinding)term).getType();
          if(type.getAttributes().isEmpty())
@@ -686,13 +686,10 @@ public class RtElementHandler
          }
 
          Class<?> cls;
-         if (term.isModelGroup())
+         if (!term.isElement())
          {
             if (classMetaData == null)
-            {
-               throw new JBossXBRuntimeException(
-                     "Model groups should be annotated with 'class' annotation to be bound.");
-            }
+               throw new JBossXBRuntimeException("Model groups should be annotated with 'class' annotation to be bound.");
             cls = loadClassForTerm(classMetaData.getImpl(), term.getSchema().isIgnoreUnresolvedFieldOrClass(), elementName);
          }
          else

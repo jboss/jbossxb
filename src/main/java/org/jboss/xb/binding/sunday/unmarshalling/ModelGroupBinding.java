@@ -33,7 +33,7 @@ import org.xml.sax.Attributes;
  * @version <tt>$Revision$</tt>
  */
 public abstract class ModelGroupBinding
-   extends TermBinding
+   extends TermBinding implements NonElementTermBinding
 {
    protected final Logger log = Logger.getLogger(getClass());
 
@@ -75,8 +75,6 @@ public abstract class ModelGroupBinding
    {
       return requiredParticle;
    }
-
-   public abstract ModelGroupPosition newPosition(QName qName, Attributes attrs, ParticleBinding particle);
 
    public ElementBinding getElement(QName qName, Attributes attrs, boolean ignoreWildcards)
    {
@@ -160,136 +158,4 @@ public abstract class ModelGroupBinding
    }
 
    public abstract String getGroupType();
-
-   // Inner
-   public abstract class ModelGroupPosition extends SundayContentHandler.Position
-   {
-      protected final boolean trace = log.isTraceEnabled();
-      protected int occurrence;
-
-      protected ParticleBinding currentParticle;
-      protected ElementBinding wildcardContent;
-
-      protected ModelGroupPosition next;
-      
-      protected ModelGroupPosition(QName qName, ParticleBinding particle)
-      {
-         super(qName, particle);
-         this.cursor = this;
-         if(particle.getTerm() != ModelGroupBinding.this)
-            throw new IllegalStateException("Particle term " + particle.getTerm() + " is not the model group " + ModelGroupBinding.this);
-         this.particle = particle;
-      }
-
-      protected ModelGroupPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
-      {
-         this(name, particle);
-         this.currentParticle = currentParticle;
-         occurrence = 1; 
-      }
-
-      protected ModelGroupPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, ModelGroupPosition next)
-      {
-         this(name, particle);
-         this.currentParticle = currentParticle;
-         this.next = next;
-         occurrence = 1;
-      }
-
-      protected ModelGroupPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, ElementBinding wildcardContent)
-      {
-         this(name, particle);
-         this.currentParticle = currentParticle;
-         this.wildcardContent = wildcardContent;
-         occurrence = 1;
-      }
-
-      protected boolean isElement()
-      {
-         return false;
-      }
-      
-      protected boolean isModelGroup()
-      {
-         return true;
-      }
-
-      public ParticleBinding getParticle()
-      {
-         return particle;
-      }
-
-      public ModelGroupPosition getNext()
-      {
-         return next;
-      }
-      
-      public ParticleBinding getCurrentParticle()
-      {
-         return currentParticle;
-      }
-
-      public boolean isWildcardContent()
-      {
-         return wildcardContent != null;
-      }
-
-      public ElementBinding getWildcardContent()
-      {
-         return wildcardContent;
-      }
-
-      public ModelGroupBinding.ModelGroupPosition startElement(QName qName, Attributes attrs)
-      {
-         return startElement(qName, attrs, true);
-      }
-
-      public boolean repeatTerm(QName qName, Attributes atts)
-      {
-         if(currentParticle == null)
-            throw new IllegalStateException("The cursor has not been positioned yet!");
-         
-         boolean repeated = false;
-         if(currentParticle.getMaxOccursUnbounded() ||
-            occurrence < currentParticle.getMinOccurs() ||
-            occurrence < currentParticle.getMaxOccurs())
-         {
-            TermBinding item = currentParticle.getTerm();
-            if(item.isElement())
-            {
-               ElementBinding element = (ElementBinding)item;
-               repeated = qName.equals(element.getQName());
-            }
-            else if(item.isModelGroup())
-            {
-               ModelGroupBinding modelGroup = (ModelGroupBinding)item;
-               next = modelGroup.newPosition(qName, atts, currentParticle);
-               repeated = next != null;
-            }
-            else if(item.isWildcard())
-            {
-               WildcardBinding wildcard = (WildcardBinding)item;
-               wildcardContent = wildcard.getElement(qName, atts);
-               repeated = wildcardContent != null;
-            }
-         }
-
-         if(repeated)
-         {
-            ++occurrence;
-            if(trace)
-               log.trace("repeated " + qName + " in " + ModelGroupBinding.this + ", occurence=" + occurrence + ", term=" + currentParticle.getTerm());
-         }
-         else
-         {
-            wildcardContent = null;
-            currentParticle = null;
-            occurrence = 0;
-         }
-
-         return repeated;
-      }
-
-      protected abstract ModelGroupBinding.ModelGroupPosition startElement(QName qName, Attributes atts, boolean required);
-   }
 }

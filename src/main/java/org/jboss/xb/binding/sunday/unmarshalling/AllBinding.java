@@ -21,7 +21,6 @@
   */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
-import java.util.Set;
 import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
@@ -78,7 +77,7 @@ public class AllBinding
       return elements.values();
    }
 
-   public ModelGroupPosition newPosition(QName qName, Attributes attrs, ParticleBinding allParticle)
+   public NonElementPosition newPosition(QName qName, Attributes attrs, ParticleBinding allParticle)
    {
       ParticleBinding particle = elements.get(qName);
       if(particle != null)
@@ -95,14 +94,14 @@ public class AllBinding
       return "all";
    }
    
-   private final class AllPosition extends ModelGroupPosition
+   private final class AllPosition extends NonElementPosition
    {
       private AllPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
       {
          super(name, particle, currentParticle);
       }
 
-      protected ModelGroupBinding.ModelGroupPosition startElement(QName qName, Attributes atts, boolean required)
+      protected NonElementPosition startElement(QName qName, Attributes atts, boolean required)
       {
          if(currentParticle != null && repeatTerm(qName, atts))
             throw new IllegalStateException("maxOccurs in all model group can only be 1: " + qName);
@@ -116,12 +115,6 @@ public class AllBinding
          }               
 
          return null;
-      }
-
-      protected ElementBinding getElement(QName qName, Attributes atts, Set<ModelGroupBinding.ModelGroupPosition> passedGroups, boolean ignoreWildcards)
-      {
-         ParticleBinding particle = elements.get(qName);
-         return particle == null ? null : (ElementBinding)particle.getTerm();
       }
    }
 }

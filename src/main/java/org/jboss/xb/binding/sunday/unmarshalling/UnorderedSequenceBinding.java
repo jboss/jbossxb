@@ -99,7 +99,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
       return allParticles;
    }
 
-   public ModelGroupPosition newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
+   public NonElementPosition newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
    {
       ParticleBinding currentParticle = elementParticles.get(qName);
       if (currentParticle != null)
@@ -107,19 +107,20 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
 
       for (ParticleBinding particle : groupParticles)
       {
-         ModelGroupBinding modelGroup = (ModelGroupBinding) particle.getTerm();
-         ModelGroupPosition next = modelGroup.newPosition(qName, attrs, particle);
+         NonElementTermBinding term = (NonElementTermBinding) particle.getTerm();
+         NonElementPosition next = term.newPosition(qName, attrs, particle);
          if (next != null)
             return new UnorderedSequencePosition(qName, seqParticle, particle, next);
       }
 
       for (ParticleBinding particle : wildcardParticles)
       {
-         WildcardBinding wildcard = (WildcardBinding) particle.getTerm();
-         ElementBinding wildcardContent = wildcard.getElement(qName, attrs);
-         if (wildcardContent != null)
-            return new UnorderedSequencePosition(qName, seqParticle, particle, wildcardContent);
+         NonElementTermBinding term = (NonElementTermBinding) particle.getTerm();
+         NonElementPosition next = term.newPosition(qName, attrs, particle);
+         if (next != null)
+            return new UnorderedSequencePosition(qName, seqParticle, particle, next);
       }
+
       return null;
    }
    
@@ -129,14 +130,14 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
       return "unordered_sequence";
    }
    
-   private final class UnorderedSequencePosition extends ModelGroupPosition
+   private final class UnorderedSequencePosition extends NonElementPosition
    {
       private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
       {
          super(name, particle, currentParticle);
       }
 
-      private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, ModelGroupPosition next)
+      private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, NonElementPosition next)
       {
          super(name, particle, currentParticle, next);
       }
@@ -147,7 +148,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
       }
 
       @Override
-      protected ModelGroupPosition startElement(QName qName, Attributes atts, boolean required)
+      protected NonElementPosition startElement(QName qName, Attributes atts, boolean required)
       {
          if(trace)
          {
@@ -172,8 +173,8 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
 
          for (ParticleBinding particle : groupParticles)
          {
-            ModelGroupBinding modelGroup = (ModelGroupBinding) particle.getTerm();
-            next = modelGroup.newPosition(qName, atts, particle);
+            NonElementTermBinding term = (NonElementTermBinding) particle.getTerm();
+            next = term.newPosition(qName, atts, particle);
 
             if (next != null)
             {
@@ -185,16 +186,17 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
 
          for (ParticleBinding particle : wildcardParticles)
          {
-            WildcardBinding wildcard = (WildcardBinding) particle.getTerm();
-            wildcardContent = wildcard.getElement(qName, atts);
-            if (wildcardContent != null)
+            NonElementTermBinding term = (NonElementTermBinding) particle.getTerm();
+            next = term.newPosition(qName, atts, particle);
+
+            if (next != null)
             {
                occurrence = 1;
                currentParticle = particle;
                return this;
             }
          }
-         
+
          return null;
       }
    }

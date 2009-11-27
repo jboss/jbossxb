@@ -67,8 +67,8 @@ public class DefaultWildcardHandler implements ParticleHandler
          return;
       }
 
-      ElementBinding element = (ElementBinding) particle.getTerm();
-      ElementBinding parentElement = (ElementBinding) parentParticle.getTerm();
+      ElementBinding element = particle.getTerm().isElement() ? (ElementBinding) particle.getTerm() : null;
+      ElementBinding parentElement = parentParticle.getTerm().isElement() ? (ElementBinding) parentParticle.getTerm() : null;
       setParent(parent, o, elementName, element, parentElement);
    }
 }

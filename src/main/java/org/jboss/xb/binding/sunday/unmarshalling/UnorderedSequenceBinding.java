@@ -142,11 +142,6 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
          super(name, particle, currentParticle, next);
       }
 
-      private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, ElementBinding wildcardContent)
-      {
-         super(name, particle, currentParticle, wildcardContent);
-      }
-
       @Override
       protected NonElementPosition startElement(QName qName, Attributes atts, boolean required)
       {

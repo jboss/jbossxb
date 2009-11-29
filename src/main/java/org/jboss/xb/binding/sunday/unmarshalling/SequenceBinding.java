@@ -134,12 +134,6 @@ public class SequenceBinding
          this.pos = pos;
       }
 
-      protected SequencePosition(QName qName, ParticleBinding particle, int pos, ParticleBinding currentParticle, ElementBinding wildcardContent)
-      {
-         super(qName, particle, currentParticle, wildcardContent);
-         this.pos = pos;
-      }
-
       protected NonElementPosition startElement(QName qName, Attributes atts, boolean required)
       {
          if(trace)

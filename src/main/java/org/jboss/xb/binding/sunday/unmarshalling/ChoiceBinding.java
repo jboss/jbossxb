@@ -111,11 +111,6 @@ public class ChoiceBinding
          super(name, particle, currentParticle, next);
       }
 
-      private ChoicePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, ElementBinding wildcardContent)
-      {
-         super(name, particle, currentParticle, wildcardContent);
-      }
-
       protected NonElementPosition startElement(QName qName, Attributes atts, boolean required)
       {
          if(trace)

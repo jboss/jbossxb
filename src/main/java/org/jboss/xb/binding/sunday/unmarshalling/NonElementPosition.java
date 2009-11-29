@@ -32,10 +32,7 @@ import org.xml.sax.Attributes;
 public abstract class NonElementPosition extends SundayContentHandler.Position
 {
    protected int occurrence;
-
    protected ParticleBinding currentParticle;
-   protected ElementBinding wildcardContent;
-
    protected NonElementPosition next;
    
    protected NonElementPosition(QName qName, ParticleBinding particle)
@@ -56,14 +53,6 @@ public abstract class NonElementPosition extends SundayContentHandler.Position
       this(name, particle);
       this.currentParticle = currentParticle;
       this.next = next;
-      occurrence = 1;
-   }
-
-   protected NonElementPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, ElementBinding wildcardContent)
-   {
-      this(name, particle);
-      this.currentParticle = currentParticle;
-      this.wildcardContent = wildcardContent;
       occurrence = 1;
    }
 
@@ -90,16 +79,6 @@ public abstract class NonElementPosition extends SundayContentHandler.Position
    public ParticleBinding getCurrentParticle()
    {
       return currentParticle;
-   }
-
-   public boolean isWildcardContent()
-   {
-      return wildcardContent != null;
-   }
-
-   public ElementBinding getWildcardContent()
-   {
-      return wildcardContent;
    }
 
    public NonElementPosition startElement(QName qName, Attributes attrs)
@@ -137,7 +116,6 @@ public abstract class NonElementPosition extends SundayContentHandler.Position
       }
       else
       {
-         wildcardContent = null;
          currentParticle = null;
          occurrence = 0;
       }

@@ -94,8 +94,7 @@ public class SequenceBinding
          }
          else
          {
-            NonElementTermBinding ne = (NonElementTermBinding)term;
-            Position next = ne.newPosition(qName, attrs, particle);
+            Position next = term.newPosition(qName, attrs, particle);
             if(next != null)
                return new SequencePosition(qName, seqParticle, i, particle, next);
          }
@@ -156,10 +155,10 @@ public class SequenceBinding
          while(i < sequence.size() - 1)
          {
             ParticleBinding particle = sequence.get(++i);
-            TermBinding item = particle.getTerm();
-            if(item.isElement())
+            TermBinding term = particle.getTerm();
+            if(term.isElement())
             {
-               ElementBinding element = (ElementBinding)item;
+               ElementBinding element = (ElementBinding)term;
                if(qName.equals(element.getQName()))
                {
                   pos = i;
@@ -188,8 +187,7 @@ public class SequenceBinding
             }
             else
             {
-               NonElementTermBinding ne = (NonElementTermBinding) item;
-               next = ne.newPosition(qName, atts, particle);
+               next = term.newPosition(qName, atts, particle);
 
                if (next != null)
                {

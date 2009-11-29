@@ -35,7 +35,7 @@ import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public abstract class TermBinding
+public abstract class TermBinding implements NonElementTermBinding
 {
    protected SchemaBinding schema;
    protected QName qName;

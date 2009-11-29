@@ -33,7 +33,7 @@ import org.xml.sax.Attributes;
  * @version <tt>$Revision$</tt>
  */
 public abstract class ModelGroupBinding
-   extends TermBinding implements NonElementTermBinding
+   extends TermBinding
 {
    protected final Logger log = Logger.getLogger(getClass());
 

@@ -42,7 +42,7 @@ import org.xml.sax.Attributes;
  * @version <tt>$Revision$</tt>
  */
 public class ElementBinding
-   extends TermBinding implements NonElementTermBinding
+   extends TermBinding
 {
    protected List<ElementInterceptor> interceptors = Collections.emptyList();
 

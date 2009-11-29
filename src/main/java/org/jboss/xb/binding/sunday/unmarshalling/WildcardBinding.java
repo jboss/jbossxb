@@ -34,7 +34,7 @@ import org.xml.sax.Attributes;
  * @version <tt>$Revision$</tt>
  */
 public class WildcardBinding
-   extends TermBinding implements NonElementTermBinding
+   extends TermBinding
 {
    private static final Logger log = Logger.getLogger(WildcardBinding.class);
 

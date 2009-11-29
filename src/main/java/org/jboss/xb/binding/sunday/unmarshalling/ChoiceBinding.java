@@ -76,17 +76,16 @@ public class ChoiceBinding
       for(int i = 0; i < choices.size(); ++i)
       {
          ParticleBinding particle = (ParticleBinding)choices.get(i);
-         TermBinding item = particle.getTerm();
-         if(item.isElement())
+         TermBinding term = particle.getTerm();
+         if(term.isElement())
          {
-            ElementBinding element = (ElementBinding)item;
+            ElementBinding element = (ElementBinding)term;
             if(qName.equals(element.getQName()))
                return new ChoicePosition(qName, choiceParticle, particle);
          }
          else
          {
-            NonElementTermBinding ne = (NonElementTermBinding)item;
-            Position next = ne.newPosition(qName, attrs, particle);
+            Position next = term.newPosition(qName, attrs, particle);
             if(next != null)
                return new ChoicePosition(qName, choiceParticle, particle, next);
          }
@@ -136,17 +135,16 @@ public class ChoiceBinding
          {
             boolean found = false;
             ParticleBinding particle = (ParticleBinding)choices.get(i);
-            TermBinding item = particle.getTerm();
-            if(item.isElement())
+            TermBinding term = particle.getTerm();
+            if(term.isElement())
             {
-               ElementBinding element = (ElementBinding)item;
+               ElementBinding element = (ElementBinding)term;
                if(qName.equals(element.getQName()))
                   found = true;
             }
             else
             {
-               NonElementTermBinding ne = (NonElementTermBinding)item;
-               next = ne.newPosition(qName, atts, particle);
+               next = term.newPosition(qName, atts, particle);
                found = next != null;
             }
             

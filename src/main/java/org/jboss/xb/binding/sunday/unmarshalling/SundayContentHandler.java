@@ -518,9 +518,7 @@ public class SundayContentHandler
 
          handler = type.getHandler();         
          if(handler == null)
-         {
             handler = defParticleHandler;
-         }
 
          List<ElementInterceptor> localInterceptors = parentType == null ? Collections.EMPTY_LIST : parentType.getInterceptors(startName);         
          List<ElementInterceptor> interceptors = element.getInterceptors();
@@ -554,13 +552,9 @@ public class SundayContentHandler
 
          String nil = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "nil");
          if(nil == null || !("1".equals(nil) || "true".equals(nil)))
-         {
             o = handler.startParticle(parent, startName, particle, atts, nsRegistry);
-         }
          else
-         {
             o = NIL;
-         }
       }
       else
       {
@@ -1241,16 +1235,15 @@ public class SundayContentHandler
             occurrence < currentParticle.getMinOccurs() ||
             occurrence < currentParticle.getMaxOccurs())
          {
-            TermBinding item = currentParticle.getTerm();
-            if(item.isElement())
+            TermBinding term = currentParticle.getTerm();
+            if(term.isElement())
             {
-               ElementBinding element = (ElementBinding)item;
+               ElementBinding element = (ElementBinding)term;
                repeated = qName.equals(element.getQName());
             }
             else
             {
-               NonElementTermBinding ne = (NonElementTermBinding)item;
-               next = ne.newPosition(qName, atts, currentParticle);
+               next = term.newPosition(qName, atts, currentParticle);
                repeated = next != null;
             }
          }

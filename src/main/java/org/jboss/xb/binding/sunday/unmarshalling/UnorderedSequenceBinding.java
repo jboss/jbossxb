@@ -108,16 +108,14 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
 
       for (ParticleBinding particle : groupParticles)
       {
-         NonElementTermBinding term = (NonElementTermBinding) particle.getTerm();
-         Position next = term.newPosition(qName, attrs, particle);
+         Position next = particle.getTerm().newPosition(qName, attrs, particle);
          if (next != null)
             return new UnorderedSequencePosition(qName, seqParticle, particle, next);
       }
 
       for (ParticleBinding particle : wildcardParticles)
       {
-         NonElementTermBinding term = (NonElementTermBinding) particle.getTerm();
-         Position next = term.newPosition(qName, attrs, particle);
+         Position next = particle.getTerm().newPosition(qName, attrs, particle);
          if (next != null)
             return new UnorderedSequencePosition(qName, seqParticle, particle, next);
       }
@@ -169,8 +167,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
 
          for (ParticleBinding particle : groupParticles)
          {
-            NonElementTermBinding term = (NonElementTermBinding) particle.getTerm();
-            next = term.newPosition(qName, atts, particle);
+            next = particle.getTerm().newPosition(qName, atts, particle);
 
             if (next != null)
             {
@@ -182,8 +179,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
 
          for (ParticleBinding particle : wildcardParticles)
          {
-            NonElementTermBinding term = (NonElementTermBinding) particle.getTerm();
-            next = term.newPosition(qName, atts, particle);
+            next = particle.getTerm().newPosition(qName, atts, particle);
 
             if (next != null)
             {

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Collection;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
 import org.xml.sax.Attributes;
 
 
@@ -79,7 +80,7 @@ public class SequenceBinding
       return sequence;
    }
 
-   public NonElementPosition newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
+   public Position newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
    {
       for(int i = 0; i < sequence.size(); ++i)
       {
@@ -94,7 +95,7 @@ public class SequenceBinding
          else
          {
             NonElementTermBinding ne = (NonElementTermBinding)term;
-            NonElementPosition next = ne.newPosition(qName, attrs, particle);
+            Position next = ne.newPosition(qName, attrs, particle);
             if(next != null)
                return new SequencePosition(qName, seqParticle, i, particle, next);
          }
@@ -128,7 +129,7 @@ public class SequenceBinding
          this.pos = pos;
       }
 
-      protected SequencePosition(QName qName, ParticleBinding particle, int pos, ParticleBinding currentParticle, NonElementPosition next)
+      protected SequencePosition(QName qName, ParticleBinding particle, int pos, ParticleBinding currentParticle, Position next)
       {
          super(qName, particle, currentParticle, next);
          this.pos = pos;

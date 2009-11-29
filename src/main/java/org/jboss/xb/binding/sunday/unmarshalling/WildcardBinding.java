@@ -26,6 +26,7 @@ import org.jboss.logging.Logger;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.ObjectLocalMarshaller;
 import org.jboss.xb.binding.Util;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
 import org.xml.sax.Attributes;
 
 /**
@@ -243,7 +244,7 @@ public class WildcardBinding
       return element;
    }
 
-   public NonElementPosition newPosition(QName qName, Attributes attrs, ParticleBinding particle)
+   public Position newPosition(QName qName, Attributes attrs, ParticleBinding particle)
    {
       ElementBinding wildcardContent = getElement(qName, attrs);
       if(wildcardContent != null)
@@ -299,7 +300,7 @@ public class WildcardBinding
       }
 
       @Override
-      protected NonElementPosition startElement(QName name, Attributes atts, boolean required)
+      protected Position startElement(QName name, Attributes atts, boolean required)
       {
          // if positioned try repeating
          if(currentParticle != null && repeatTerm(qName, atts))

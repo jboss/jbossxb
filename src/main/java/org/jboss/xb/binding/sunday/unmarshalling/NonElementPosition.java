@@ -23,7 +23,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
 
-import org.xml.sax.Attributes;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
 
 /**
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
@@ -31,9 +31,7 @@ import org.xml.sax.Attributes;
  */
 public abstract class NonElementPosition extends SundayContentHandler.Position
 {
-   protected int occurrence;
    protected ParticleBinding currentParticle;
-   protected NonElementPosition next;
    
    protected NonElementPosition(QName qName, ParticleBinding particle)
    {
@@ -45,15 +43,13 @@ public abstract class NonElementPosition extends SundayContentHandler.Position
    {
       this(name, particle);
       this.currentParticle = currentParticle;
-      occurrence = 1; 
    }
 
-   protected NonElementPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, NonElementPosition next)
+   protected NonElementPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
    {
       this(name, particle);
       this.currentParticle = currentParticle;
       this.next = next;
-      occurrence = 1;
    }
 
    protected boolean isElement()
@@ -65,63 +61,14 @@ public abstract class NonElementPosition extends SundayContentHandler.Position
    {
       return true;
    }
-
-   public ParticleBinding getParticle()
-   {
-      return particle;
-   }
-
-   public NonElementPosition getNext()
-   {
-      return next;
-   }
    
    public ParticleBinding getCurrentParticle()
    {
       return currentParticle;
    }
 
-   public NonElementPosition startElement(QName qName, Attributes attrs)
+   public void setCurrentParticle(ParticleBinding currentParticle)
    {
-      return startElement(qName, attrs, true);
+      this.currentParticle = currentParticle;
    }
-
-   public boolean repeatTerm(QName qName, Attributes atts)
-   {
-      if(currentParticle == null)
-         throw new IllegalStateException("The cursor has not been positioned yet!");
-      
-      boolean repeated = false;
-      if(currentParticle.getMaxOccursUnbounded() ||
-         occurrence < currentParticle.getMinOccurs() ||
-         occurrence < currentParticle.getMaxOccurs())
-      {
-         TermBinding item = currentParticle.getTerm();
-         if(item.isElement())
-         {
-            ElementBinding element = (ElementBinding)item;
-            repeated = qName.equals(element.getQName());
-         }
-         else
-         {
-            NonElementTermBinding ne = (NonElementTermBinding)item;
-            next = ne.newPosition(qName, atts, currentParticle);
-            repeated = next != null;
-         }
-      }
-
-      if(repeated)
-      {
-         ++occurrence;
-      }
-      else
-      {
-         currentParticle = null;
-         occurrence = 0;
-      }
-
-      return repeated;
-   }
-
-   protected abstract NonElementPosition startElement(QName qName, Attributes atts, boolean required);
 }

@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
 import javax.xml.namespace.QName;
+
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
 import org.xml.sax.Attributes;
 
 
@@ -69,7 +71,7 @@ public class ChoiceBinding
       return choices;
    }
 
-   public NonElementPosition newPosition(QName qName, Attributes attrs, ParticleBinding choiceParticle)
+   public Position newPosition(QName qName, Attributes attrs, ParticleBinding choiceParticle)
    {
       for(int i = 0; i < choices.size(); ++i)
       {
@@ -84,7 +86,7 @@ public class ChoiceBinding
          else
          {
             NonElementTermBinding ne = (NonElementTermBinding)item;
-            NonElementPosition next = ne.newPosition(qName, attrs, particle);
+            Position next = ne.newPosition(qName, attrs, particle);
             if(next != null)
                return new ChoicePosition(qName, choiceParticle, particle, next);
          }
@@ -106,12 +108,12 @@ public class ChoiceBinding
          super(name, particle, currentParticle);
       }
 
-      private ChoicePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, NonElementPosition next)
+      private ChoicePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
       {
          super(name, particle, currentParticle, next);
       }
 
-      protected NonElementPosition startElement(QName qName, Attributes atts, boolean required)
+      protected Position startElement(QName qName, Attributes atts, boolean required)
       {
          if(trace)
          {

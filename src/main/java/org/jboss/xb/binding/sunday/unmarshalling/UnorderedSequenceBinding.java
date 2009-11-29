@@ -31,6 +31,7 @@ import java.util.Map;
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
 import org.xml.sax.Attributes;
 
 /**
@@ -99,7 +100,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
       return allParticles;
    }
 
-   public NonElementPosition newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
+   public Position newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
    {
       ParticleBinding currentParticle = elementParticles.get(qName);
       if (currentParticle != null)
@@ -108,7 +109,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
       for (ParticleBinding particle : groupParticles)
       {
          NonElementTermBinding term = (NonElementTermBinding) particle.getTerm();
-         NonElementPosition next = term.newPosition(qName, attrs, particle);
+         Position next = term.newPosition(qName, attrs, particle);
          if (next != null)
             return new UnorderedSequencePosition(qName, seqParticle, particle, next);
       }
@@ -116,7 +117,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
       for (ParticleBinding particle : wildcardParticles)
       {
          NonElementTermBinding term = (NonElementTermBinding) particle.getTerm();
-         NonElementPosition next = term.newPosition(qName, attrs, particle);
+         Position next = term.newPosition(qName, attrs, particle);
          if (next != null)
             return new UnorderedSequencePosition(qName, seqParticle, particle, next);
       }
@@ -137,13 +138,13 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
          super(name, particle, currentParticle);
       }
 
-      private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, NonElementPosition next)
+      private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
       {
          super(name, particle, currentParticle, next);
       }
 
       @Override
-      protected NonElementPosition startElement(QName qName, Attributes atts, boolean required)
+      protected Position startElement(QName qName, Attributes atts, boolean required)
       {
          if(trace)
          {

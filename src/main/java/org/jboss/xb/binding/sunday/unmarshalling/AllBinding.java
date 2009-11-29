@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Collection;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
 import org.xml.sax.Attributes;
 
 
@@ -77,7 +78,7 @@ public class AllBinding
       return elements.values();
    }
 
-   public NonElementPosition newPosition(QName qName, Attributes attrs, ParticleBinding allParticle)
+   public Position newPosition(QName qName, Attributes attrs, ParticleBinding allParticle)
    {
       ParticleBinding particle = elements.get(qName);
       if(particle != null)
@@ -101,7 +102,7 @@ public class AllBinding
          super(name, particle, currentParticle);
       }
 
-      protected NonElementPosition startElement(QName qName, Attributes atts, boolean required)
+      protected Position startElement(QName qName, Attributes atts, boolean required)
       {
          if(currentParticle != null && repeatTerm(qName, atts))
             throw new IllegalStateException("maxOccurs in all model group can only be 1: " + qName);

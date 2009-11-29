@@ -33,14 +33,16 @@ import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
+import org.xml.sax.Attributes;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
 public class ElementBinding
-   extends TermBinding
+   extends TermBinding implements NonElementTermBinding
 {
    protected List<ElementInterceptor> interceptors = Collections.emptyList();
 
@@ -206,5 +208,10 @@ public class ElementBinding
    public String toString()
    {
       return super.toString() + "(" + qName + ", type=" + typeBinding.getQName() + ")";
+   }
+
+   public Position newPosition(QName name, Attributes attrs, ParticleBinding particle)
+   {
+      return null;
    }
 }

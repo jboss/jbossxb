@@ -23,6 +23,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
 
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
 import org.xml.sax.Attributes;
 
 /**
@@ -33,5 +34,5 @@ import org.xml.sax.Attributes;
  */
 public interface NonElementTermBinding
 {
-   NonElementPosition newPosition(QName qName, Attributes attrs, ParticleBinding particle);
+   Position newPosition(QName qName, Attributes attrs, ParticleBinding particle);
 }

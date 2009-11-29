@@ -234,9 +234,7 @@ public class SundayContentHandler
       ParticleHandler handler = null;
       TypeBinding parentType = null;
       boolean repeated = false;
-      boolean repeatedParticle = false;
       Position position = null;
-      NonElementPosition groupPosition = null; // used only when particle is a wildcard
       SchemaBinding schemaBinding = schema;
 
       atts = preprocessAttributes(atts);
@@ -287,8 +285,8 @@ public class SundayContentHandler
                   {
                      if(position.particle.isRepeatable())
                      {
-                        Position parentPosition = stack.peek1();
-                        if(parentPosition.cursor.repeatTerm(startName, atts))
+                        NonElementPosition parentPosition = (NonElementPosition) stack.peek1();
+                        if(parentPosition.repeatTerm(startName, atts))
                         {
                            position.reset();
                            particle = position.particle;
@@ -381,17 +379,18 @@ public class SundayContentHandler
                   {
                      flushIgnorableCharacters();
 
+                     NonElementPosition groupPosition = null;
                      Object o = position.o;
                      while(newPosition != null)
                      {
                         groupPosition = newPosition;
-                        ParticleBinding modelGroupParticle = groupPosition.getParticle();
-                        if(modelGroupParticle.isRepeatable())
-                           startRepeatableParticle(stack.peek(), o, startName, modelGroupParticle);
+                        ParticleBinding groupParticle = newPosition.getParticle();
+                        if(groupParticle.isRepeatable())
+                           startRepeatableParticle(stack.peek(), o, startName, groupParticle);
 
-                        handler = getHandler(modelGroupParticle.getTerm());
-                        o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
-                        push(groupPosition, o, handler, parentType);
+                        handler = getHandler(groupParticle.getTerm());
+                        o = handler.startParticle(o, startName, groupParticle, atts, nsRegistry);
+                        push(newPosition, o, handler, parentType);
                         
                         newPosition = newPosition.getNext();
                      }
@@ -402,9 +401,7 @@ public class SundayContentHandler
             }
             else
             {
-               groupPosition = position.cursor;
-               if(groupPosition == null)
-                  throw new JBossXBRuntimeException("No cursor for " + startName);
+               NonElementPosition groupPosition = (NonElementPosition) position;
 
                ParticleBinding prevParticle = groupPosition.getCurrentParticle();
                NonElementPosition newPosition = groupPosition.startElement(startName, atts);               
@@ -449,10 +446,6 @@ public class SundayContentHandler
                      {
                         startRepeatableParticle(position, position.o, startName, curParticle);
                      }
-                  }
-                  else
-                  {
-                     repeatedParticle = true;
                   }
 
                   // push all except the last one
@@ -1222,7 +1215,6 @@ public class SundayContentHandler
    {
       protected boolean trace;
       final QName qName;
-      NonElementPosition cursor;
       ParticleBinding particle;
       ParticleBinding nonXsiParticle;
       ParticleHandler handler;
@@ -1236,20 +1228,6 @@ public class SundayContentHandler
       boolean ignorableCharacters = true;
       boolean ended;
 
-/*      public StackItem(QName qName, ModelGroupBinding.Cursor cursor)
-      {
-         if (cursor == null)
-            throw new IllegalArgumentException("Null cursor");
-         // this is modelgroup particle
-         this.cursor = cursor;
-         
-         if(qName == null)
-            throw new IllegalArgumentException("Null qName");
-         this.qName = qName;
-         
-         this.particle = cursor.getParticle();
-      }
-*/
       public Position(QName qName, ParticleBinding particle)
       {
          if (particle == null)

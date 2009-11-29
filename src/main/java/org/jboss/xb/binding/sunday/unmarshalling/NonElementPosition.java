@@ -41,7 +41,6 @@ public abstract class NonElementPosition extends SundayContentHandler.Position
    protected NonElementPosition(QName qName, ParticleBinding particle)
    {
       super(qName, particle);
-      this.cursor = this;
       this.particle = particle;
    }
 

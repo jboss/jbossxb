@@ -104,7 +104,8 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
    {
       ParticleBinding currentParticle = elementParticles.get(qName);
       if (currentParticle != null)
-         return new UnorderedSequencePosition(qName, seqParticle, currentParticle);
+         return new UnorderedSequencePosition(qName, seqParticle, currentParticle,
+               currentParticle.getTerm().newPosition(qName, attrs, currentParticle));
 
       for (ParticleBinding particle : groupParticles)
       {
@@ -159,6 +160,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
          currentParticle = elementParticles.get(qName);
          if (currentParticle != null)
          {
+            next = currentParticle.getTerm().newPosition(qName, atts, currentParticle);
             occurrence = 1;
             if (trace)
                log.trace("found " + qName + " in " + UnorderedSequenceBinding.this);

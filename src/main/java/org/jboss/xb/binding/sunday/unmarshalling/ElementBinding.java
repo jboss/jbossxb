@@ -207,11 +207,14 @@ public class ElementBinding
    
    public String toString()
    {
-      return super.toString() + "(" + qName + ", type=" + typeBinding.getQName() + ")";
+      return "element(" + qName + ", type=" + typeBinding.getQName() + ")";
    }
 
    public Position newPosition(QName name, Attributes attrs, ParticleBinding particle)
    {
-      return null;
+      if(!qName.equals(name))
+         return null;
+      
+      return new Position(name, particle);
    }
 }

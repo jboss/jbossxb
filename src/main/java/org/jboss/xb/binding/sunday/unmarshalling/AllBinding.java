@@ -83,8 +83,9 @@ public class AllBinding
       ParticleBinding particle = elements.get(qName);
       if(particle != null)
       {
-         return new AllPosition(qName, allParticle, particle);
-      }               
+         Position next = particle.getTerm().newPosition(qName, attrs, particle);
+         return new AllPosition(qName, allParticle, particle, next);
+      }
 
       return null;
    }
@@ -97,9 +98,9 @@ public class AllBinding
    
    private final class AllPosition extends NonElementPosition
    {
-      private AllPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
+      private AllPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
       {
-         super(name, particle, currentParticle);
+         super(name, particle, currentParticle, next);
       }
 
       protected Position startElement(QName qName, Attributes atts, boolean required)
@@ -107,11 +108,13 @@ public class AllBinding
          if(currentParticle != null && repeatTerm(qName, atts))
             throw new IllegalStateException("maxOccurs in all model group can only be 1: " + qName);
 
+         next = null;
          ParticleBinding particle = elements.get(qName);
          if(particle != null)
          {
+            next = particle.getTerm().newPosition(qName, atts, particle);
             currentParticle = particle;
-            occurrence = 1;
+            occurrence = 1;            
             return this;
          }               
 

@@ -372,12 +372,12 @@ public class SundayContentHandler
                   {
                      flushIgnorableCharacters();
 
-                     Position groupPosition = null;
                      Object o = position.o;
-                     while(newPosition != null)
+                     while(newPosition.getNext() != null)
                      {
-                        groupPosition = newPosition;
                         ParticleBinding groupParticle = newPosition.getParticle();
+                        if(groupParticle.getTerm().isElement())
+                           throw new IllegalStateException();
                         if(groupParticle.isRepeatable())
                            startRepeatableParticle(stack.peek(), o, startName, groupParticle);
 
@@ -387,7 +387,10 @@ public class SundayContentHandler
                         
                         newPosition = newPosition.getNext();
                      }
-                     particle = groupPosition.getCurrentParticle();
+
+                     particle = newPosition.getParticle();
+                     if(!particle.getTerm().isElement())
+                        throw new IllegalStateException();
                   }                  
                }
                break;
@@ -423,7 +426,7 @@ public class SundayContentHandler
                         endRepeatableParticle(position, position.qName, prevParticle, position.particle);
                      }
 
-                     if(newPosition.getNext() != null && curParticle.isRepeatable())
+                     if(newPosition.getNext() != null && curParticle.isRepeatable() && !curParticle.getTerm().isElement())
                      {
                         startRepeatableParticle(position, position.o, startName, curParticle);
                      }
@@ -432,19 +435,29 @@ public class SundayContentHandler
                   // push all except the last one
                   parentType = position.parentType;
                   Object o = position.o;
-                  Position groupPosition = newPosition;
+                  particle = newPosition.getCurrentParticle();
                   newPosition = newPosition.getNext();
-                  while(newPosition != null)
+                  if(newPosition != null)
                   {
-                     groupPosition = newPosition;
-                     ParticleBinding modelGroupParticle = groupPosition.getParticle();
-                     handler = getHandler(modelGroupParticle.getTerm());
-                     o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
-                     push(groupPosition, o, handler, parentType);
-                     
-                     newPosition = newPosition.getNext();
+                     while (newPosition.getNext() != null)
+                     {
+                        ParticleBinding modelGroupParticle = newPosition.getParticle();
+                        if(modelGroupParticle.getTerm().isElement())
+                           throw new IllegalStateException();
+                        handler = getHandler(modelGroupParticle.getTerm());
+                        o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
+                        push(newPosition, o, handler, parentType);
+
+                        newPosition = newPosition.getNext();
+                     }
                   }
-                  particle = groupPosition.getCurrentParticle();
+
+                  if(newPosition != null)
+                     particle = newPosition.getParticle();
+
+                  if(!particle.getTerm().isElement())
+                     throw new IllegalStateException();
+
                   break;
                }
             }
@@ -506,9 +519,7 @@ public class SundayContentHandler
          }
 
          if(!repeated && particle.isRepeatable())
-         {
             startRepeatableParticle(stack.peek(), parent, startName, particle);
-         }
 
          TypeBinding type = element.getType();
          if(type == null)
@@ -706,7 +717,7 @@ public class SundayContentHandler
       if(repeatableContainer != null)
       {
          if(parentPosition.repeatableParticleValue != null)
-            throw new IllegalStateException();
+            throw new IllegalStateException("Previous repeatable particle hasn't been ended yet!");
          parentPosition.repeatableParticleValue = repeatableContainer;
          parentPosition.repeatableHandler = repeatableHandler;
       }
@@ -1229,7 +1240,7 @@ public class SundayContentHandler
          ParticleBinding currentParticle = getCurrentParticle();
          if(currentParticle == null)
             throw new IllegalStateException("The cursor has not been positioned yet!");
-         
+
          boolean repeated = false;
          if(currentParticle.getMaxOccursUnbounded() ||
             occurrence < currentParticle.getMinOccurs() ||

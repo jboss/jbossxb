@@ -244,11 +244,15 @@ public class WildcardBinding
       return element;
    }
 
-   public Position newPosition(QName qName, Attributes attrs, ParticleBinding particle)
+   public Position newPosition(QName qName, Attributes attrs, ParticleBinding wildcardParticle)
    {
       ElementBinding wildcardContent = getElement(qName, attrs);
       if(wildcardContent != null)
-         return new WildcardPosition(qName, particle, new ParticleBinding(wildcardContent));
+      {
+         ParticleBinding particle = new ParticleBinding(wildcardContent);
+         Position next = wildcardContent.newPosition(qName, attrs, particle);
+         return new WildcardPosition(qName, wildcardParticle, particle, next);
+      }
       return null;
    }
    
@@ -294,9 +298,9 @@ public class WildcardBinding
    
    private final class WildcardPosition extends NonElementPosition
    {
-      protected WildcardPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
+      protected WildcardPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
       {
-         super(name, particle, currentParticle);
+         super(name, particle, currentParticle, next);
       }
 
       @Override
@@ -306,10 +310,12 @@ public class WildcardBinding
          if(currentParticle != null && repeatTerm(qName, atts))
             return this;
 
+         next = null;
          ElementBinding wildcardContent = getElement(name, atts);
          if(wildcardContent != null)
          {
             currentParticle = new ParticleBinding(wildcardContent);
+            next = wildcardContent.newPosition(name, atts, currentParticle);
             occurrence = 1;
             return this;
          }

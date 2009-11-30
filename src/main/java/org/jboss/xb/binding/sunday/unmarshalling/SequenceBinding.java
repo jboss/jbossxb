@@ -85,19 +85,9 @@ public class SequenceBinding
       for(int i = 0; i < sequence.size(); ++i)
       {
          ParticleBinding particle = sequence.get(i);
-         TermBinding term = particle.getTerm();
-         if(term.isElement())
-         {
-            ElementBinding element = (ElementBinding)term;
-            if(qName.equals(element.getQName()))
-               return new SequencePosition(qName, seqParticle, i, particle);
-         }
-         else
-         {
-            Position next = term.newPosition(qName, attrs, particle);
-            if(next != null)
-               return new SequencePosition(qName, seqParticle, i, particle, next);
-         }
+         Position next = particle.getTerm().newPosition(qName, attrs, particle);
+         if(next != null)
+            return new SequencePosition(qName, seqParticle, i, particle, next);
          
          if(particle.isRequired())
          {
@@ -155,60 +145,27 @@ public class SequenceBinding
          while(i < sequence.size() - 1)
          {
             ParticleBinding particle = sequence.get(++i);
-            TermBinding term = particle.getTerm();
-            if(term.isElement())
+            next = particle.getTerm().newPosition(qName, atts, particle);
+
+            if (next != null)
             {
-               ElementBinding element = (ElementBinding)term;
-               if(qName.equals(element.getQName()))
-               {
-                  pos = i;
-                  occurrence = 1;
-                  currentParticle = particle;
-
-                  if(trace)
-                     log.trace("found " + qName + " in " + SequenceBinding.this);
-                  return this;
-               }
-
-               if(particle.getMinOccurs() > 0)
-               {
-                  if(required)
-                  {
-                     StringBuffer sb = new StringBuffer(250);
-                     sb.append(qName).append(" cannot appear in this position in group ")
-                     .append(SequenceBinding.this.toString());
-                     throw new JBossXBRuntimeException(sb.toString());
-                  }
-                  else
-                  {
-                     break;
-                  }
-               }
+               pos = i;
+               occurrence = 1;
+               currentParticle = particle;
+               return this;
             }
-            else
+
+            if (particle.isRequired())
             {
-               next = term.newPosition(qName, atts, particle);
-
-               if (next != null)
+               if (required)
                {
-                  pos = i;
-                  occurrence = 1;
-                  currentParticle = particle;
-                  return this;
+                  throw new JBossXBRuntimeException("Requested element " + qName
+                        + " is not allowed in this position in the sequence. A model group with minOccurs="
+                        + particle.getMinOccurs() + " that doesn't contain this element must follow.");
                }
-
-               if (particle.isRequired())
+               else
                {
-                  if (required)
-                  {
-                     throw new JBossXBRuntimeException("Requested element " + qName
-                           + " is not allowed in this position in the sequence. A model group with minOccurs="
-                           + particle.getMinOccurs() + " that doesn't contain this element must follow.");
-                  }
-                  else
-                  {
-                     break;
-                  }
+                  break;
                }
             }
          }

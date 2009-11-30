@@ -226,9 +226,6 @@ public class SundayContentHandler
                             XSTypeDefinition xercesType)
    {
       QName startName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
-      ParticleBinding particle = null;
-      ParticleHandler handler = null;
-      TypeBinding parentType = null;
       boolean repeated = false;
       Position position = null;
       SchemaBinding schemaBinding = schema;
@@ -237,11 +234,11 @@ public class SundayContentHandler
       
       if(stack.isEmpty())
       {
+         ParticleBinding particle = null;
          if(schemaBinding != null)
-         {
             particle = schemaBinding.getElementParticle(startName);
-         }
-         else if(schemaResolver != null)
+         
+         if(particle == null && schemaResolver != null)
          {
             String schemaLocation = atts == null ? null : Util.getSchemaLocation(atts, namespaceURI);
             // Use the dtd info if it exists and there is no schemaLocation
@@ -261,10 +258,18 @@ public class SundayContentHandler
             else
                throw new JBossXBRuntimeException("Failed to resolve schema nsURI=" + namespaceURI + " location=" + schemaLocation);
          }
-         else
+
+         if(particle == null)
          {
-            throw new JBossXBRuntimeException("Neither schema binding nor schema binding resolver is available!");
+            StringBuffer sb = new StringBuffer();
+            sb.append("Failed to resolve global element ");
+            sb.append(startName);
+            if(schemaBinding == null && schemaResolver == null)
+               sb.append(". Neither SchemaBinding nor SchemaBindingResolver are available.");
+            throw new JBossXBRuntimeException(sb.toString());
          }
+         
+         position = new Position(startName, particle);
       }
       else
       {
@@ -285,8 +290,6 @@ public class SundayContentHandler
                         if(parentPosition.repeatTerm(startName, atts))
                         {
                            position.reset();
-                           particle = position.particle;
-                           parentType = position.parentType;
                            repeated = true;
                         }
                         else
@@ -300,8 +303,6 @@ public class SundayContentHandler
                      else
                      {
                         position.reset();
-                        particle = position.particle;
-                        parentType = position.parentType;
                         repeated = true;
                         endRepeatableParent(startName);
                      }
@@ -320,7 +321,7 @@ public class SundayContentHandler
                }
                else
                {
-                  parentType = element.getType();
+                  TypeBinding parentType = element.getType();
                   ParticleBinding typeParticle = parentType.getParticle();
                   ModelGroupBinding modelGroup = typeParticle == null ? null : (ModelGroupBinding)typeParticle.getTerm();
                   if(modelGroup == null)
@@ -329,18 +330,7 @@ public class SundayContentHandler
                      {
                         TypeBinding anyUriType = schema.getType(Constants.QNAME_ANYURI);
                         if(anyUriType == null)
-                        {
                            log.warn("Type " + Constants.QNAME_ANYURI + " not bound.");
-                        }
-
-                        TypeBinding xopIncludeType = new TypeBinding(new QName(Constants.NS_XOP_INCLUDE, "Include"));
-                        xopIncludeType.setSchemaBinding(schema);
-                        xopIncludeType.addAttribute(new QName("href"), anyUriType, DefaultHandlers.ATTRIBUTE_HANDLER);
-                        xopIncludeType.setHandler(new XOPIncludeHandler(parentType, schema.getXopUnmarshaller()));
-
-                        ElementBinding xopInclude = new ElementBinding(schema, Constants.QNAME_XOP_INCLUDE, xopIncludeType);
-
-                        particle = new ParticleBinding(xopInclude);
                         
                         ElementBinding parentElement = (ElementBinding) position.particle.getTerm();
                         parentElement.setXopUnmarshaller(schema.getXopUnmarshaller());
@@ -349,6 +339,14 @@ public class SundayContentHandler
                         position.handler = DefaultHandlers.XOP_HANDLER;
                         position.ignoreCharacters = true;
                         position.o = position.handler.startParticle(stack.peek().o, startName, stack.peek().particle, null, nsRegistry);
+                        
+                        TypeBinding xopIncludeType = new TypeBinding(new QName(Constants.NS_XOP_INCLUDE, "Include"));
+                        xopIncludeType.setSchemaBinding(schema);
+                        xopIncludeType.addAttribute(new QName("href"), anyUriType, DefaultHandlers.ATTRIBUTE_HANDLER);
+                        xopIncludeType.setHandler(new XOPIncludeHandler(parentType, schema.getXopUnmarshaller()));
+
+                        ElementBinding xopInclude = new ElementBinding(schema, Constants.QNAME_XOP_INCLUDE, xopIncludeType);
+                        position = new Position(startName, new ParticleBinding(xopInclude));
                         break;
                      }
 
@@ -375,21 +373,22 @@ public class SundayContentHandler
                      Object o = position.o;
                      while(newPosition.getNext() != null)
                      {
-                        ParticleBinding groupParticle = newPosition.getParticle();
-                        if(groupParticle.getTerm().isElement())
-                           throw new IllegalStateException();
-                        if(groupParticle.isRepeatable())
-                           startRepeatableParticle(stack.peek(), o, startName, groupParticle);
+                        if(newPosition.particle.isRepeatable())
+                           startRepeatableParticle(stack.peek(), o, startName, newPosition.particle);
 
-                        handler = getHandler(groupParticle.getTerm());
-                        o = handler.startParticle(o, startName, groupParticle, atts, nsRegistry);
-                        push(newPosition, o, handler, parentType);
+                        ParticleHandler handler = getHandler(newPosition.particle.getTerm());
+                        o = handler.startParticle(o, newPosition.qName, newPosition.particle, atts, nsRegistry);
+                        newPosition.o = o;
+                        newPosition.handler = handler;
+                        newPosition.parentType = parentType;
+                        stack.push(newPosition);
                         
                         newPosition = newPosition.getNext();
                      }
 
-                     particle = newPosition.getParticle();
-                     if(!particle.getTerm().isElement())
+                     position = newPosition;
+                     position.parentType = parentType;
+                     if(!position.particle.getTerm().isElement())
                         throw new IllegalStateException();
                   }                  
                }
@@ -433,29 +432,23 @@ public class SundayContentHandler
                   }
 
                   // push all except the last one
-                  parentType = position.parentType;
                   Object o = position.o;
-                  particle = newPosition.getCurrentParticle();
                   newPosition = newPosition.getNext();
-                  if(newPosition != null)
+                  while (newPosition.getNext() != null)
                   {
-                     while (newPosition.getNext() != null)
-                     {
-                        ParticleBinding modelGroupParticle = newPosition.getParticle();
-                        if(modelGroupParticle.getTerm().isElement())
-                           throw new IllegalStateException();
-                        handler = getHandler(modelGroupParticle.getTerm());
-                        o = handler.startParticle(o, startName, modelGroupParticle, atts, nsRegistry);
-                        push(newPosition, o, handler, parentType);
+                     ParticleHandler handler = getHandler(newPosition.particle.getTerm());
+                     o = handler.startParticle(o, position.qName, newPosition.particle, atts, nsRegistry);
+                     newPosition.o = o;
+                     newPosition.handler = handler;
+                     newPosition.parentType = position.parentType;
+                     stack.push(newPosition);
 
-                        newPosition = newPosition.getNext();
-                     }
+                     newPosition = newPosition.getNext();
                   }
 
-                  if(newPosition != null)
-                     particle = newPosition.getParticle();
-
-                  if(!particle.getTerm().isElement())
+                  newPosition.parentType = position.parentType;
+                  position = newPosition;
+                  if(!position.particle.getTerm().isElement())
                      throw new IllegalStateException();
 
                   break;
@@ -464,142 +457,102 @@ public class SundayContentHandler
          }
       }
 
-      Object o = null;
-      if(particle != null)
+      Object parent = stack.isEmpty() ? null : (repeated ? stack.peek1().o : stack.peek().o);
+
+      ElementBinding element = (ElementBinding) position.particle.getTerm();
+
+      // TODO xsi:type support should be implemented in a better way
+      String xsiType = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "type");
+      if (xsiType != null)
       {
-         Object parent = stack.isEmpty() ? null :
-            (repeated ? stack.peek1().o : stack.peek().o);
+         if (trace)
+            log.trace(element.getQName() + " uses xsi:type " + xsiType);
 
-         ElementBinding element = (ElementBinding)particle.getTerm();
+         if (position != null && position.nonXsiParticle == null)
+            position.nonXsiParticle = position.particle;
 
-         // TODO xsi:type support should be implemented in a better way
-         String xsiType = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "type");
-         if(xsiType != null)
+         String xsiTypePrefix;
+         String xsiTypeLocal;
+         int colon = xsiType.indexOf(':');
+         if (colon == -1)
          {
-            if(trace)
-               log.trace(element.getQName() + " uses xsi:type " + xsiType);
-
-            if(position != null && position.nonXsiParticle == null)
-               position.nonXsiParticle = particle;
-            
-            String xsiTypePrefix;
-            String xsiTypeLocal;
-            int colon = xsiType.indexOf(':');
-            if(colon == -1)
-            {
-               xsiTypePrefix = "";
-               xsiTypeLocal = xsiType;
-            }
-            else
-            {
-               xsiTypePrefix = xsiType.substring(0, colon);
-               xsiTypeLocal = xsiType.substring(colon + 1);
-            }
-
-            String xsiTypeNs = nsRegistry.getNamespaceURI(xsiTypePrefix);
-            QName xsiTypeQName = new QName(xsiTypeNs, xsiTypeLocal);
-
-            TypeBinding xsiTypeBinding = schemaBinding.getType(xsiTypeQName);
-            if(xsiTypeBinding == null)
-            {
-               throw new JBossXBRuntimeException("Type binding not found for type " +
-                  xsiTypeQName +
-                  " specified with xsi:type for element " + startName
-               );
-            }
-
-            ElementBinding xsiElement = new ElementBinding(schemaBinding, startName, xsiTypeBinding);
-            xsiElement.setRepeatableHandler(element.getRepeatableHandler());
-            particle =
-               new ParticleBinding(xsiElement,
-                  particle.getMinOccurs(),
-                  particle.getMaxOccurs(),
-                  particle.getMaxOccursUnbounded()
-               );
+            xsiTypePrefix = "";
+            xsiTypeLocal = xsiType;
          }
-
-         if(!repeated && particle.isRepeatable())
-            startRepeatableParticle(stack.peek(), parent, startName, particle);
-
-         TypeBinding type = element.getType();
-         if(type == null)
-         {
-            throw new JBossXBRuntimeException("No type for element " + element);
-         }
-
-         handler = type.getHandler();         
-         if(handler == null)
-            handler = defParticleHandler;
-
-         List<ElementInterceptor> localInterceptors = parentType == null ? Collections.EMPTY_LIST : parentType.getInterceptors(startName);         
-         List<ElementInterceptor> interceptors = element.getInterceptors();
-         if(interceptors.size() + localInterceptors.size() > 0)
-         {
-            if (repeated)
-               pop();
-
-            for (int i = 0; i < localInterceptors.size(); ++i)
-            {
-               ElementInterceptor interceptor = localInterceptors.get(i);
-               parent = interceptor.startElement(parent, startName, type);
-               push(startName, particle, parent, handler, parentType);
-               interceptor.attributes(parent, startName, type, atts, nsRegistry);
-            }
-
-            for (int i = 0; i < interceptors.size(); ++i)
-            {
-               ElementInterceptor interceptor = interceptors.get(i);
-               parent = interceptor.startElement(parent, startName, type);
-               push(startName, particle, parent, handler, parentType);
-               interceptor.attributes(parent, startName, type, atts, nsRegistry);
-            }
-
-            if (repeated)
-            {
-               // to have correct endRepeatableParticle calls
-               stack.push(position);
-            }
-         }
-
-         String nil = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "nil");
-         if(nil == null || !("1".equals(nil) || "true".equals(nil)))
-            o = handler.startParticle(parent, startName, particle, atts, nsRegistry);
          else
-            o = NIL;
-      }
-      else
-      {
-         ElementBinding parentBinding = null;
-         if(!stack.isEmpty())
          {
-            ParticleBinding stackParticle = repeated ? stack.peek1().particle : stack.peek().particle;
-            if(stackParticle != null)
-               parentBinding = (ElementBinding)stackParticle.getTerm();
+            xsiTypePrefix = xsiType.substring(0, colon);
+            xsiTypeLocal = xsiType.substring(colon + 1);
          }
 
-         if(parentBinding != null && parentBinding.getSchema() != null)
-            schemaBinding = parentBinding.getSchema();
+         String xsiTypeNs = nsRegistry.getNamespaceURI(xsiTypePrefix);
+         QName xsiTypeQName = new QName(xsiTypeNs, xsiTypeLocal);
 
-         String msg = "Element " +
-            startName +
-            " is not bound " +
-            (parentBinding == null ? "as a global element." : "in type " + parentBinding.getType().getQName());
-         if(schemaBinding != null && schemaBinding.isStrictSchema())
-            throw new JBossXBRuntimeException(msg);
-         else if(trace)
-            log.trace(msg);
+         TypeBinding xsiTypeBinding = schemaBinding.getType(xsiTypeQName);
+         if (xsiTypeBinding == null)
+         {
+            throw new JBossXBRuntimeException("Type binding not found for type " + xsiTypeQName
+                  + " specified with xsi:type for element " + startName);
+         }
+
+         ElementBinding xsiElement = new ElementBinding(schemaBinding, startName, xsiTypeBinding);
+         xsiElement.setRepeatableHandler(element.getRepeatableHandler());
+
+         position.particle = new ParticleBinding(xsiElement, position.particle.getMinOccurs(), position.particle
+               .getMaxOccurs(), position.particle.getMaxOccursUnbounded());
       }
 
-      if(repeated)
+      if (!repeated && position.particle.isRepeatable())
+         startRepeatableParticle(stack.peek(), parent, startName, position.particle);
+
+      TypeBinding type = element.getType();
+      if (type == null)
+         throw new JBossXBRuntimeException("No type for element " + element);
+
+      position.handler = type.getHandler();
+      if (position.handler == null)
+         position.handler = defParticleHandler;
+
+      List<ElementInterceptor> localInterceptors = position.parentType == null
+            ? Collections.EMPTY_LIST
+            : position.parentType.getInterceptors(startName);
+      List<ElementInterceptor> interceptors = element.getInterceptors();
+      if (interceptors.size() + localInterceptors.size() > 0)
       {
-         position.o = o;
-         // in case of collection of abstract types
-         position.particle = particle;
+         if (repeated)
+            pop();
+
+         for (int i = 0; i < localInterceptors.size(); ++i)
+         {
+            ElementInterceptor interceptor = localInterceptors.get(i);
+            parent = interceptor.startElement(parent, startName, type);
+            push(startName, position.particle, parent, position.handler, position.parentType);
+            interceptor.attributes(parent, startName, type, atts, nsRegistry);
+         }
+
+         for (int i = 0; i < interceptors.size(); ++i)
+         {
+            ElementInterceptor interceptor = interceptors.get(i);
+            parent = interceptor.startElement(parent, startName, type);
+            push(startName, position.particle, parent, position.handler, position.parentType);
+            interceptor.attributes(parent, startName, type, atts, nsRegistry);
+         }
+
+         if (repeated)
+         {
+            // to have correct endRepeatableParticle calls
+            stack.push(position);
+         }
       }
+
+      String nil = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "nil");
+      if (nil == null || !("1".equals(nil) || "true".equals(nil)))
+         position.o = position.handler.startParticle(parent, startName, position.particle, atts, nsRegistry);
       else
-      {
-         push(startName, particle, o, handler, parentType);
-      }
+         position.o = NIL;
+
+      if (!repeated)
+         stack.push(position);
    }
 
    private ParticleHandler getHandler(TermBinding term)
@@ -1150,16 +1103,6 @@ public class SundayContentHandler
       stack.push(position);
       if(trace)
          log.trace("pushed[" + (stack.size() - 1) + "] " + particle.getTerm().getQName() + "=" + o);
-   }
-
-   private void push(Position position, Object o, ParticleHandler handler, TypeBinding parentType)
-   {
-      position.o = o;
-      position.handler = handler;
-      position.parentType = parentType;
-      stack.push(position);
-      if(trace)
-         log.trace("pushed[" + (stack.size() - 1) + "] " + position + ", o=" + o);
    }
 
    private Position pop()

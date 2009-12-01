@@ -24,8 +24,6 @@ package org.jboss.xb.binding;
 import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
@@ -42,6 +40,7 @@ import javax.xml.namespace.QName;
 
 import org.jboss.logging.Logger;
 import org.jboss.util.Base64;
+import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 
 
 /**
@@ -954,6 +953,20 @@ public final class SimpleTypeBindings
       for(int i = 0; i < total; ++i)
       {
          Object o = unmarshal(itemType, tokenizer.nextToken(), nsCtx);
+         list.add(o);
+      }
+      return list;
+   }
+
+   public static List<Object> unmarshalList(String itemType, String value, NamespaceContext nsCtx, ValueAdapter adapter)
+   {
+      StringTokenizer tokenizer = new StringTokenizer(value);
+      int total = tokenizer.countTokens();
+      List<Object> list = new ArrayList<Object>(total);
+      for(int i = 0; i < total; ++i)
+      {
+         Object o = unmarshal(itemType, tokenizer.nextToken(), nsCtx);
+         o = adapter.cast(o, null);
          list.add(o);
       }
       return list;

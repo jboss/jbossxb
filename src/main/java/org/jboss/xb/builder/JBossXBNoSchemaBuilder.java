@@ -112,6 +112,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SimpleTypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.UnorderedSequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
@@ -960,8 +961,19 @@ public class JBossXBNoSchemaBuilder
                if (jbossXmlAttribute != null && jbossXmlAttribute.type() != Object.class)
                   attributeTypeInfo = attributeTypeInfo.getTypeInfoFactory().getTypeInfo(jbossXmlAttribute.type());
                TypeBinding attributeType = resolveTypeBinding(attributeTypeInfo);
+               
                // Create the attribute handler
-               AttributeHandler attributeHandler = new PropertyHandler(property, attributeTypeInfo);
+               AttributeHandler attributeHandler = null;
+               if(attributeTypeInfo.isCollection() || attributeTypeInfo.isArray())
+               {
+                  TypeBinding itemType = attributeType;
+                  attributeType = new SimpleTypeBinding(null);
+                  attributeType.setSchemaBinding(schemaBinding);
+                  attributeType.setItemType(itemType);
+               }
+
+               attributeHandler = new PropertyHandler(property, attributeTypeInfo);
+               
                // Create the attributre and bind it to the type
                AttributeBinding attribute = new AttributeBinding(schemaBinding, qName, attributeType, attributeHandler);
                attribute.setRequired(xmlAttribute.required());

@@ -21,11 +21,18 @@
 */
 package org.jboss.test.xb.builder.object.attribute.test;
 
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 
-import org.jboss.test.xb.builder.AbstractBuilderTest;
-import org.jboss.test.xb.builder.object.attribute.support.SimpleAttribute;
+import junit.framework.Test;
+
+import org.jboss.test.xb.builder.object.attribute.support.IntegerListAttribute;
+import org.jboss.test.xb.builder.object.attribute.support.QualifierPoint;
+import org.jboss.test.xb.builder.object.attribute.support.QualifierPointListAttribute;
 import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
@@ -34,44 +41,29 @@ import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 
 /**
- * AbstractAttributeTest.
- *
- * @param <T> the simple type
- * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * IntegerListUnitTestCase.
+ * 
+ * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public abstract class AbstractAttributeTest<T> extends AbstractBuilderTest
+public class QualifierPointListUnitTestCase extends AbstractAttributeTest<List<QualifierPoint>>
 {
-   /** The root class */
-   protected Class<?> root;
-
-   /** The expected value */
-   protected T expected;
+   public static Test suite()
+   {
+      return suite(QualifierPointListUnitTestCase.class);
+   }
    
-   public AbstractAttributeTest(String name, Class<?> root, T expected)
+   public QualifierPointListUnitTestCase(String name)
    {
-      super(name);
-      this.root = root;
-      this.expected = expected;
+      super(name, QualifierPointListAttribute.class, Arrays.asList(new QualifierPoint[]{QualifierPoint.METHOD, QualifierPoint.PROPERTY, QualifierPoint.CONSTRUCTOR}));
    }
-
-   @SuppressWarnings("unchecked")
-   public void testUnmarshal() throws Exception
-   {
-      SimpleAttribute<?> result = (SimpleAttribute<?>) unmarshalObject(root);
-      T actual = (T) result.getAttribute();
-      assertEquals(expected, actual);
-   }
-
+   
+   @Override
    public void testSimpleAttribute() throws Exception
    {
       SchemaBinding schemaBinding = JBossXBBuilder.build(root);
       assertNotNull(schemaBinding);
 
-      QName qName = SimpleTypeBindings.typeQName(expected.getClass());
-      assertNotNull(qName);
-      TypeBinding expectedTypeBinding = schemaBinding.getType(qName);
-      
       QName elementName = new QName(XMLConstants.NULL_NS_URI, JBossXBBuilder.generateXMLNameFromJavaName(root.getSimpleName(), true, true));
       ElementBinding elementBinding = schemaBinding.getElement(elementName);
       assertNotNull(elementBinding);
@@ -81,6 +73,8 @@ public abstract class AbstractAttributeTest<T> extends AbstractBuilderTest
       AttributeBinding attribute = typeBinding.getAttribute(attributeName);
       assertNotNull(attribute);
       TypeBinding attributeType = attribute.getType();
-      assertTrue("Expected " + expectedTypeBinding + " got " + attributeType, expectedTypeBinding == attributeType);
+      TypeBinding itemType = attributeType.getItemType();
+      assertNotNull(itemType);
+      assertTrue(itemType.getValueAdapter() != null);
    }
 }

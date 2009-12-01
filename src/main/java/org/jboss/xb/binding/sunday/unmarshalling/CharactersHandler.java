@@ -80,34 +80,39 @@ public abstract class CharactersHandler
       if(itemType != null)
       {
          QName itemTypeQName = itemType.getQName();
-         if(itemTypeQName != null && Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
+         ValueAdapter adapter = itemType.getValueAdapter();
+         
+         if(itemTypeQName == null || !Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
          {
-            List<?> list = SimpleTypeBindings.unmarshalList(itemTypeQName.getLocalPart(), value, nsCtx);
-            if(typeBinding.getSchemaBinding().isUnmarshalListsToArrays())
+            if(adapter == null)
+               throw new JBossXBRuntimeException(
+                     "Only list types with item type from " + Constants.NS_XML_SCHEMA +
+                     " namespace are supported currently."
+                  );
+            else
+               itemTypeQName = Constants.QNAME_STRING;
+         }
+         
+         if(adapter == null)
+            adapter = ValueAdapter.NOOP;
+
+         List<?> list = SimpleTypeBindings.unmarshalList(itemTypeQName.getLocalPart(), value, nsCtx, adapter);
+         if (typeBinding.getSchemaBinding().isUnmarshalListsToArrays())
+         {
+            if (list.isEmpty())
             {
-               if(list.isEmpty())
-               {
-                  Class<?> compType = SimpleTypeBindings.classForType(itemTypeQName.getLocalPart(), true);
-                  o = Array.newInstance(compType, 0);
-               }
-               else
-               {
-                  Class<?> compType = list.get(0).getClass();
-                  o = list.toArray((Object[])Array.newInstance(compType, list.size()));
-               }
+               Class<?> compType = SimpleTypeBindings.classForType(itemTypeQName.getLocalPart(), true);
+               o = Array.newInstance(compType, 0);
             }
             else
             {
-               o = list;
+               Class<?> compType = list.get(0).getClass();
+               o = list.toArray((Object[]) Array.newInstance(compType, list.size()));
             }
          }
          else
          {
-            // todo
-            throw new JBossXBRuntimeException(
-               "Only list types with item type from " + Constants.NS_XML_SCHEMA +
-               " namespace are supported currently."
-            );
+            o = list;
          }
       }
       else if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))

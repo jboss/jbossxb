@@ -65,8 +65,6 @@ public class SundayContentHandler
    private Object root;
    private NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
-   private ParticleHandler defParticleHandler = DefaultHandlers.ELEMENT_HANDLER;
-
    private UnmarshallingContextImpl ctx = new UnmarshallingContextImpl();
    // DTD information frm startDTD
    private String dtdRootName;
@@ -338,7 +336,7 @@ public class SundayContentHandler
                         flushIgnorableCharacters();
                         position.handler = DefaultHandlers.XOP_HANDLER;
                         position.ignoreCharacters = true;
-                        position.o = position.handler.startParticle(stack.peek().o, startName, stack.peek().particle, null, nsRegistry);
+                        position.startParticle(position.o, null, nsRegistry);
                         
                         TypeBinding xopIncludeType = new TypeBinding(new QName(Constants.NS_XOP_INCLUDE, "Include"));
                         xopIncludeType.setSchemaBinding(schema);
@@ -376,13 +374,9 @@ public class SundayContentHandler
                         if(newPosition.particle.isRepeatable())
                            startRepeatableParticle(stack.peek(), o, startName, newPosition.particle);
 
-                        ParticleHandler handler = getHandler(newPosition.particle.getTerm());
-                        o = handler.startParticle(o, newPosition.qName, newPosition.particle, atts, nsRegistry);
-                        newPosition.o = o;
-                        newPosition.handler = handler;
+                        o = newPosition.startParticle(o, atts, nsRegistry);
                         newPosition.parentType = parentType;
-                        stack.push(newPosition);
-                        
+                        stack.push(newPosition);                        
                         newPosition = newPosition.getNext();
                      }
 
@@ -436,13 +430,9 @@ public class SundayContentHandler
                   newPosition = newPosition.getNext();
                   while (newPosition.getNext() != null)
                   {
-                     ParticleHandler handler = getHandler(newPosition.particle.getTerm());
-                     o = handler.startParticle(o, position.qName, newPosition.particle, atts, nsRegistry);
-                     newPosition.o = o;
-                     newPosition.handler = handler;
+                     o = newPosition.startParticle(o, atts, nsRegistry);
                      newPosition.parentType = position.parentType;
                      stack.push(newPosition);
-
                      newPosition = newPosition.getNext();
                   }
 
@@ -456,8 +446,6 @@ public class SundayContentHandler
             }
          }
       }
-
-      Object parent = stack.isEmpty() ? null : (repeated ? stack.peek1().o : stack.peek().o);
 
       ElementBinding element = (ElementBinding) position.particle.getTerm();
 
@@ -502,6 +490,7 @@ public class SundayContentHandler
                .getMaxOccurs(), position.particle.getMaxOccursUnbounded());
       }
 
+      Object parent = stack.isEmpty() ? null : (repeated ? stack.peek1().o : stack.peek().o);
       if (!repeated && position.particle.isRepeatable())
          startRepeatableParticle(stack.peek(), parent, startName, position.particle);
 
@@ -511,7 +500,7 @@ public class SundayContentHandler
 
       position.handler = type.getHandler();
       if (position.handler == null)
-         position.handler = defParticleHandler;
+         position.handler = DefaultHandlers.ELEMENT_HANDLER;
 
       List<ElementInterceptor> localInterceptors = position.parentType == null
             ? Collections.EMPTY_LIST
@@ -547,25 +536,12 @@ public class SundayContentHandler
 
       String nil = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "nil");
       if (nil == null || !("1".equals(nil) || "true".equals(nil)))
-         position.o = position.handler.startParticle(parent, startName, position.particle, atts, nsRegistry);
+         position.startParticle(parent, atts, nsRegistry);
       else
          position.o = NIL;
 
       if (!repeated)
          stack.push(position);
-   }
-
-   private ParticleHandler getHandler(TermBinding term)
-   {
-      ParticleHandler handler = null;
-      if(term.isModelGroup())
-         handler = ((ModelGroupBinding)term).getHandler();
-      else if(term.isWildcard())
-         //handler = ((WildcardBinding)term).getWildcardHandler();
-         handler = NoopParticleHandler.INSTANCE;
-      else
-         throw new IllegalArgumentException("Unexpected term " + term);
-      return handler == null ? defParticleHandler : handler;
    }
 
    private void endRepeatableParent(QName startName)
@@ -588,12 +564,9 @@ public class SundayContentHandler
          if(position.particle.isRepeatable())
          {
             endParticle(position, stackIndex - 1);
-
-            ParticleHandler handler = getHandler(position.particle.getTerm());
-            position.reset();
             parentPosition = stack.peek(stackIndex - 1);
-            position.o = handler.startParticle(parentPosition.o, position.qName, position.particle, null, nsRegistry);
-
+            position.reset();
+            position.startParticle(parentPosition.o, null, nsRegistry);
             break;
          }
 
@@ -653,9 +626,8 @@ public class SundayContentHandler
       {
          parentPosition = position;
          position = stack.peek(stackIndex);
-         ParticleHandler handler = getHandler(position.particle.getTerm());
          position.reset();
-         position.o = handler.startParticle(parentPosition.o, position.qName, position.particle, null, nsRegistry);
+         position.startParticle(parentPosition.o, null, nsRegistry);
       }
    }
 
@@ -1225,6 +1197,14 @@ public class SundayContentHandler
          throw new UnsupportedOperationException();
       }
 
+      public Object startParticle(Object parent, Attributes atts, NamespaceRegistry nsRegistry)
+      {
+         if(handler == null)
+            handler = getHandler(particle.getTerm());
+         o = handler.startParticle(parent, qName, particle, atts, nsRegistry);
+         return o;
+      }
+      
       public void endParticle()
       {
          o = handler.endParticle(o, qName, particle);
@@ -1246,6 +1226,19 @@ public class SundayContentHandler
          
          if(nonXsiParticle != null)
             particle = nonXsiParticle;
+      }
+      
+      private ParticleHandler getHandler(TermBinding term)
+      {
+         ParticleHandler handler = null;
+         if(term.isModelGroup())
+            handler = ((ModelGroupBinding)term).getHandler();
+         else if(term.isWildcard())
+            //handler = ((WildcardBinding)term).getWildcardHandler();
+            handler = NoopParticleHandler.INSTANCE;
+         else
+            throw new IllegalArgumentException("Unexpected term " + term);
+         return handler == null ? DefaultHandlers.ELEMENT_HANDLER : handler;
       }
    }
 

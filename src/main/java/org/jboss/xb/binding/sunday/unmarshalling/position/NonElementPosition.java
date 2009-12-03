@@ -19,45 +19,40 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-package org.jboss.xb.binding.sunday.unmarshalling;
+package org.jboss.xb.binding.sunday.unmarshalling.position;
 
 import javax.xml.namespace.QName;
 
-import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 
 /**
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public abstract class NonElementPosition extends SundayContentHandler.Position
+public abstract class NonElementPosition extends AbstractPosition
 {
    protected ParticleBinding currentParticle;
-   
-   protected NonElementPosition(QName qName, ParticleBinding particle)
-   {
-      super(qName, particle);
-      this.particle = particle;
-   }
 
    protected NonElementPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
    {
-      this(name, particle);
+      super(name, particle);
+      this.particle = particle;
       this.currentParticle = currentParticle;
    }
 
    protected NonElementPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
    {
-      this(name, particle);
+      this(name, particle, currentParticle);
       this.currentParticle = currentParticle;
       this.next = next;
    }
 
-   protected boolean isElement()
+   public boolean isElement()
    {
       return false;
    }
    
-   protected boolean isModelGroup()
+   public boolean isModelGroup()
    {
       return true;
    }
@@ -70,5 +65,9 @@ public abstract class NonElementPosition extends SundayContentHandler.Position
    public void setCurrentParticle(ParticleBinding currentParticle)
    {
       this.currentParticle = currentParticle;
+   }
+   
+   public void characters(char[] ch, int start, int length)
+   {
    }
 }

@@ -27,7 +27,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import javax.xml.namespace.QName;
 
-import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
+import org.jboss.xb.binding.sunday.unmarshalling.position.NonElementPosition;
+import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
 import org.xml.sax.Attributes;
 
 

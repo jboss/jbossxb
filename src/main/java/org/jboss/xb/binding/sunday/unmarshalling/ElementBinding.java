@@ -33,7 +33,8 @@ import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
-import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
+import org.jboss.xb.binding.sunday.unmarshalling.position.ElementPosition;
+import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 import org.xml.sax.Attributes;
 
@@ -215,6 +216,6 @@ public class ElementBinding
       if(!qName.equals(name))
          return null;
       
-      return new Position(name, particle);
+      return new ElementPosition(name, particle);
    }
 }

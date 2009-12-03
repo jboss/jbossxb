@@ -19,11 +19,11 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-package org.jboss.xb.binding.sunday.unmarshalling;
+package org.jboss.xb.binding.sunday.unmarshalling.position;
 
 import javax.xml.namespace.QName;
 
-import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.Position;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.xml.sax.Attributes;
 
 /**
@@ -32,7 +32,7 @@ import org.xml.sax.Attributes;
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public interface NonElementTermBinding
+public interface PositionFactory
 {
    Position newPosition(QName qName, Attributes attrs, ParticleBinding particle);
 }

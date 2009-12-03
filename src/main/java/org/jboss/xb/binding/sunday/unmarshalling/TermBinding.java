@@ -30,12 +30,13 @@ import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
+import org.jboss.xb.binding.sunday.unmarshalling.position.PositionFactory;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public abstract class TermBinding implements NonElementTermBinding
+public abstract class TermBinding implements PositionFactory
 {
    protected SchemaBinding schema;
    protected QName qName;

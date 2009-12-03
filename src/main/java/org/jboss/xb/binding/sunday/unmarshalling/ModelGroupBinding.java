@@ -25,7 +25,6 @@ import java.util.Collection;
 
 import javax.xml.namespace.QName;
 
-import org.jboss.logging.Logger;
 import org.xml.sax.Attributes;
 
 /**
@@ -35,8 +34,6 @@ import org.xml.sax.Attributes;
 public abstract class ModelGroupBinding
    extends TermBinding
 {
-   protected final Logger log = Logger.getLogger(getClass());
-
    protected boolean requiredParticle;
    protected ParticleHandler handler = DefaultHandlers.MODEL_GROUP_HANDLER;
 

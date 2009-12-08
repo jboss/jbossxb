@@ -23,11 +23,11 @@ package org.jboss.xb.binding.sunday.unmarshalling.position;
 
 import javax.xml.namespace.QName;
 
-import org.jboss.xb.binding.NamespaceRegistry;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.StackImpl;
 import org.xml.sax.Attributes;
 
 /**
@@ -38,6 +38,8 @@ import org.xml.sax.Attributes;
  */
 public interface Position
 {
+   void setStack(StackImpl stack);
+   
    QName getQName();
    
    ParticleBinding getParticle();
@@ -78,12 +80,8 @@ public interface Position
    
    void reset();
    
-   Position startElement(QName qName, Attributes attrs);
+   Position nextPosition(QName qName, Attributes attrs);
 
-   Object startParticle(Object parent, Attributes atts, NamespaceRegistry nsRegistry);
-   
-   void endParticle();
-   
    boolean repeatTerm(QName qName, Attributes atts);
    
    ParticleBinding getCurrentParticle();
@@ -93,4 +91,10 @@ public interface Position
    void flushIgnorableCharacters();
    
    void characters(char[] ch, int start, int length);
+   
+   Object initValue(Object parent, Attributes atts);
+   
+   Position startParticle(QName startName, Attributes atts);
+   
+   void endParticle();
 }

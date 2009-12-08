@@ -25,7 +25,6 @@ import javax.xml.namespace.QName;
 
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.NamespaceRegistry;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
@@ -35,6 +34,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.StackImpl;
 import org.xml.sax.Attributes;
 
 /**
@@ -47,7 +47,8 @@ public abstract class AbstractPosition implements Position
 {
    protected final Logger log = Logger.getLogger(getClass());
    protected boolean trace;
-   
+
+   protected StackImpl stack;
    protected final QName qName;
    protected ParticleBinding particle;
    protected ParticleHandler handler;
@@ -73,6 +74,11 @@ public abstract class AbstractPosition implements Position
       this.occurrence = 1;
    }
 
+   public void setStack(StackImpl stack)
+   {
+      this.stack = stack;
+   }
+   
    public QName getQName()
    {
       return qName;
@@ -215,7 +221,7 @@ public abstract class AbstractPosition implements Position
       return repeated;
    }
 
-   public Position startElement(QName qName, Attributes attrs)
+   public Position nextPosition(QName qName, Attributes attrs)
    {
       return startElement(qName, attrs, true);
    }
@@ -225,20 +231,14 @@ public abstract class AbstractPosition implements Position
       throw new UnsupportedOperationException();
    }
 
-   public Object startParticle(Object parent, Attributes atts, NamespaceRegistry nsRegistry)
+   public Object initValue(Object parent, Attributes atts)
    {
       if(handler == null)
          handler = getHandler(particle.getTerm());
-      o = handler.startParticle(parent, qName, particle, atts, nsRegistry);
+      o = handler.startParticle(parent, qName, particle, atts, stack.nsRegistry);
       return o;
    }
-   
-   public void endParticle()
-   {
-      o = handler.endParticle(o, qName, particle);
-      ended = true;
-   }
- 
+
    public void reset()
    {
       if(!ended)

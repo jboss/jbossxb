@@ -26,7 +26,6 @@ import javax.xml.namespace.QName;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
-import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.NoopParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
@@ -127,63 +126,6 @@ public abstract class AbstractPosition implements Position
    public boolean isElement()
    {
       return false;
-   }
-
-   public void setCurrentParticle(ParticleBinding currentParticle)
-   {
-      this.particle = currentParticle;
-   }
-
-   public ParticleBinding getCurrentParticle()
-   {
-      return particle;
-   }
-   
-   public boolean repeatTerm(QName qName, Attributes atts)
-   {
-      ParticleBinding currentParticle = getCurrentParticle();
-      if(currentParticle == null)
-         throw new IllegalStateException("The cursor has not been positioned yet!");
-
-      boolean repeated = false;
-      if(currentParticle.getMaxOccursUnbounded() ||
-         occurrence < currentParticle.getMinOccurs() ||
-         occurrence < currentParticle.getMaxOccurs())
-      {
-         TermBinding term = currentParticle.getTerm();
-         if(term.isElement())
-         {
-            ElementBinding element = (ElementBinding)term;
-            repeated = qName.equals(element.getQName());
-         }
-         else
-         {
-            next = term.newPosition(qName, atts, currentParticle);
-            repeated = next != null;
-         }
-      }
-
-      if(repeated)
-      {
-         ++occurrence;
-      }
-      else
-      {
-         setCurrentParticle(null);
-         occurrence = 0;
-      }
-
-      return repeated;
-   }
-
-   public Position nextPosition(QName qName, Attributes attrs)
-   {
-      return startElement(qName, attrs, false);
-   }
-
-   protected Position startElement(QName qName, Attributes atts, boolean required)
-   {
-      throw new UnsupportedOperationException();
    }
 
    public Object initValue(Object parent, Attributes atts)

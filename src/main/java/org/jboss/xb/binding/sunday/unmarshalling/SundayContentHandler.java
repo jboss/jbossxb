@@ -197,8 +197,6 @@ public class SundayContentHandler
                             XSTypeDefinition xercesType)
    {
       QName startName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
-      boolean repeated = false;
-      Position position = null;
       SchemaBinding schemaBinding = schema;
 
       atts = preprocessAttributes(atts);
@@ -240,24 +238,21 @@ public class SundayContentHandler
             throw new JBossXBRuntimeException(sb.toString());
          }
          
-         position = new ElementPosition(startName, particle);
-      }
-      else
-      {
-         while(!stack.isEmpty())
-         {
-            Position peek = stack.current();
-            position = peek.startParticle(startName, atts);            
-            if(!position.isEnded())
-            {
-               repeated = position == peek;
-               break;
-            }
-            stack.pop();
-         }
+         new ElementPosition(startName, particle).push(stack, atts, false);
+         return;
       }
 
-      ((ElementPosition)position).push(stack, atts, repeated);
+      while (!stack.isEmpty())
+      {
+         Position current = stack.current();
+         ElementPosition next = current.startParticle(startName, atts);
+         if (next != null)
+         {
+            next.push(stack, atts, current == next);
+            break;
+         }
+         stack.pop();
+      }
    }
 
    public void startPrefixMapping(String prefix, String uri)

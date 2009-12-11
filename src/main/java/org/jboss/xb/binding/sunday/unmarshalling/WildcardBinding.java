@@ -252,7 +252,7 @@ public class WildcardBinding
       {
          ParticleBinding particle = new ParticleBinding(wildcardContent);
          Position next = wildcardContent.newPosition(qName, attrs, particle);
-         return new WildcardPosition(qName, wildcardParticle, particle, next);
+         return new WildcardPosition(qName, wildcardParticle, next);
       }
       return null;
    }
@@ -299,58 +299,33 @@ public class WildcardBinding
    
    private final class WildcardPosition extends NonElementPosition
    {
-      protected WildcardPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
+      protected WildcardPosition(QName name, ParticleBinding particle, Position next)
       {
-         super(name, particle, currentParticle, next);
+         super(name, particle, next);
       }
 
-      @Override
-      protected Position startElement(QName name, Attributes atts, boolean required)
+      public Position nextPosition(QName name, Attributes atts)
       {
-         // if positioned try repeating
-         if(currentParticle != null)
+         if (particle.getMaxOccursUnbounded() || occurrence < particle.getMinOccurs()
+               || occurrence < particle.getMaxOccurs())
          {
-            if(particle.getMaxOccursUnbounded() ||
-               occurrence < particle.getMinOccurs() ||
-               occurrence < particle.getMaxOccurs())
+            ElementBinding wildcardContent = getElement(name, atts);
+            if (wildcardContent != null)
             {
-               ElementBinding wildcardContent = getElement(name, atts);
-               if(wildcardContent != null)
-               {
-                  currentParticle = new ParticleBinding(wildcardContent);
-                  next = wildcardContent.newPosition(name, atts, currentParticle);
-                  ++occurrence;
-                  
-                  endParticle();
-                  //o = initValue(stack.parent().getValue(), atts);
-                  ended = false;
+               ParticleBinding wildcardParticle = new ParticleBinding(wildcardContent);
+               next = wildcardContent.newPosition(name, atts, wildcardParticle);
+               ++occurrence;
 
-                  return this;
-               }
+               endParticle();
+               //o = initValue(stack.parent().getValue(), atts);
+               ended = false;
+
+               return this;
             }
-
-            endParticle();
-            if(particle.isRepeatable() && repeatableParticleValue != null)
-               endRepeatableParticle(stack.parent());
-
-            currentParticle = null;
-            occurrence = 0;
-            
-            return null;
          }
 
-         next = null;
-         ElementBinding wildcardContent = getElement(name, atts);
-         if(wildcardContent != null)
-         {
-            currentParticle = new ParticleBinding(wildcardContent);
-            next = wildcardContent.newPosition(name, atts, currentParticle);
-            occurrence = 1;
-            return this;
-         }
-
+         nextNotFound();
          return null;
       }
-      
    }
 }

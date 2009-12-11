@@ -79,7 +79,7 @@ public class ChoiceBinding
          ParticleBinding particle = (ParticleBinding)choices.get(i);
          Position next = particle.getTerm().newPosition(qName, attrs, particle);
          if(next != null)
-            return new ChoicePosition(qName, choiceParticle, particle, next);
+            return new ChoicePosition(qName, choiceParticle, next);
       }
 
       return null;
@@ -93,12 +93,12 @@ public class ChoiceBinding
    
    private final class ChoicePosition extends NonElementPosition
    {
-      private ChoicePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
+      private ChoicePosition(QName name, ParticleBinding particle, Position next)
       {
-         super(name, particle, currentParticle, next);
+         super(name, particle, next);
       }
 
-      protected Position startElement(QName qName, Attributes atts, boolean required)
+      public Position nextPosition(QName qName, Attributes atts)
       {
          if(trace)
          {
@@ -107,62 +107,30 @@ public class ChoiceBinding
             log.trace(sb.toString());
          }
 
-         next = null;
-
-         if(currentParticle != null)
+         if (particle.getMaxOccursUnbounded() || occurrence < particle.getMinOccurs() || occurrence < particle.getMaxOccurs())
          {
-            if(particle.getMaxOccursUnbounded() ||
-               occurrence < particle.getMinOccurs() ||
-               occurrence < particle.getMaxOccurs())
+            for (int i = 0; i < choices.size(); ++i)
             {
-               for(int i = 0; i < choices.size(); ++i)
+               ParticleBinding choice = (ParticleBinding) choices.get(i);
+               TermBinding term = choice.getTerm();
+               next = term.newPosition(qName, atts, choice);
+
+               if (next != null)
                {
-                  ParticleBinding choice = (ParticleBinding)choices.get(i);
-                  TermBinding term = choice.getTerm();
-                  next = term.newPosition(qName, atts, choice);
+                  ++occurrence;
 
-                  if(next != null)
-                  {
-                     ++occurrence;
-                     currentParticle = choice;
-                     
-                     endParticle();
-                     o = initValue(stack.parent().getValue(), atts);
-                     ended = false;
+                  endParticle();
+                  o = initValue(stack.parent().getValue(), atts);
+                  ended = false;
 
-                     if(trace)
-                        log.trace("found " + qName + " in " + ChoiceBinding.this + ", term=" + currentParticle.getTerm());
-                     return this;
-                  }
+                  if (trace)
+                     log.trace("found " + qName + " in " + ChoiceBinding.this + ", term=" + choice.getTerm());
+                  return this;
                }
             }
-
-            endParticle();
-            if(particle.isRepeatable() && repeatableParticleValue != null)
-               endRepeatableParticle(stack.parent());
-
-            currentParticle = null;
-            occurrence = 0;
-            
-            return null;
-         }
-         
-         for(int i = 0; i < choices.size(); ++i)
-         {
-            ParticleBinding particle = (ParticleBinding)choices.get(i);
-            TermBinding term = particle.getTerm();
-            next = term.newPosition(qName, atts, particle);
-
-            if(next != null)
-            {
-               occurrence = 1;
-               currentParticle = particle;
-               if(trace)
-                  log.trace("found " + qName + " in " + ChoiceBinding.this + ", term=" + currentParticle.getTerm());
-               return this;
-            }
          }
 
+         nextNotFound();
          return null;
       }
    }

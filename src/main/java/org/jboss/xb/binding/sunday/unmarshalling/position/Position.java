@@ -61,17 +61,11 @@ public interface Position
    
    Position nextPosition(QName qName, Attributes attrs);
 
-   boolean repeatTerm(QName qName, Attributes atts);
-   
-   ParticleBinding getCurrentParticle();
-   
-   void setCurrentParticle(ParticleBinding currentParticle);
-   
    void characters(char[] ch, int start, int length);
    
    Object initValue(Object parent, Attributes atts);
    
-   Position startParticle(QName startName, Attributes atts);
+   ElementPosition startParticle(QName startName, Attributes atts);
    
    void endParticle();
    

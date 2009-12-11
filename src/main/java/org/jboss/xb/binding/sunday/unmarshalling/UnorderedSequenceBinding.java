@@ -105,21 +105,21 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
    {
       ParticleBinding currentParticle = elementParticles.get(qName);
       if (currentParticle != null)
-         return new UnorderedSequencePosition(qName, seqParticle, currentParticle,
+         return new UnorderedSequencePosition(qName, seqParticle,
                currentParticle.getTerm().newPosition(qName, attrs, currentParticle));
 
       for (ParticleBinding particle : groupParticles)
       {
          Position next = particle.getTerm().newPosition(qName, attrs, particle);
          if (next != null)
-            return new UnorderedSequencePosition(qName, seqParticle, particle, next);
+            return new UnorderedSequencePosition(qName, seqParticle, next);
       }
 
       for (ParticleBinding particle : wildcardParticles)
       {
          Position next = particle.getTerm().newPosition(qName, attrs, particle);
          if (next != null)
-            return new UnorderedSequencePosition(qName, seqParticle, particle, next);
+            return new UnorderedSequencePosition(qName, seqParticle, next);
       }
 
       return null;
@@ -133,13 +133,12 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
    
    private final class UnorderedSequencePosition extends NonElementPosition
    {
-      private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
+      private UnorderedSequencePosition(QName name, ParticleBinding particle, Position next)
       {
-         super(name, particle, currentParticle, next);
+         super(name, particle, next);
       }
 
-      @Override
-      protected Position startElement(QName qName, Attributes atts, boolean required)
+      public Position nextPosition(QName qName, Attributes atts)
       {
          if(trace)
          {
@@ -148,17 +147,11 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
             log.trace(sb.toString());
          }
 
-         boolean repeating = currentParticle != null;
-
-         next = null;
-         currentParticle = elementParticles.get(qName);
-         if (currentParticle != null)
+         ParticleBinding element = elementParticles.get(qName);
+         if (element != null)
          {
-            next = currentParticle.getTerm().newPosition(qName, atts, currentParticle);
-            if(repeating)
-               ++occurrence;
-            else
-               occurrence = 1;
+            next = element.getTerm().newPosition(qName, atts, element);
+            // TODO occurrence here is not used ++occurrence;
             if (trace)
                log.trace("found " + qName + " in " + UnorderedSequenceBinding.this);
             return this;
@@ -167,14 +160,9 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
          for (ParticleBinding particle : groupParticles)
          {
             next = particle.getTerm().newPosition(qName, atts, particle);
-
             if (next != null)
             {
-               if(repeating)
-                  ++occurrence;
-               else
-                  occurrence = 1;
-               currentParticle = particle;
+               //++occurrence;
                return this;
             }
          }
@@ -182,28 +170,14 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
          for (ParticleBinding particle : wildcardParticles)
          {
             next = particle.getTerm().newPosition(qName, atts, particle);
-
             if (next != null)
             {
-               if(repeating)
-                  ++occurrence;
-               else
-                  occurrence = 1;
-               currentParticle = particle;
+               //++occurrence;
                return this;
             }
          }
 
-         if(repeating)
-         {
-            endParticle();
-            if(particle.isRepeatable() && repeatableParticleValue != null)
-               endRepeatableParticle(stack.parent());
-
-            currentParticle = null;
-            occurrence = 0;
-         }
-         
+         nextNotFound();
          return null;
       }
    }

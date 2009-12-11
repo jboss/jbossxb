@@ -24,10 +24,8 @@ package org.jboss.xb.binding.sunday.unmarshalling.position;
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.UnmarshallingContextImpl;
 import org.xml.sax.Attributes;
 
@@ -37,13 +35,10 @@ import org.xml.sax.Attributes;
  */
 public abstract class NonElementPosition extends AbstractPosition
 {
-   protected ParticleBinding currentParticle;
-
-   protected NonElementPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
+   protected NonElementPosition(QName name, ParticleBinding particle, Position next)
    {
       super(name, particle);
       this.particle = particle;
-      this.currentParticle = currentParticle;
       this.next = next;
    }
 
@@ -52,16 +47,6 @@ public abstract class NonElementPosition extends AbstractPosition
       return false;
    }
 
-   public ParticleBinding getCurrentParticle()
-   {
-      return currentParticle;
-   }
-
-   public void setCurrentParticle(ParticleBinding currentParticle)
-   {
-      this.currentParticle = currentParticle;
-   }
-   
    public void characters(char[] ch, int start, int length)
    {
    }
@@ -122,63 +107,36 @@ public abstract class NonElementPosition extends AbstractPosition
                parentPosition.getParticle(), handler);
    }
    
-   public Position startParticle(QName startName, Attributes atts)
+   public ElementPosition startParticle(QName startName, Attributes atts)
    {
-      ParticleBinding prevParticle = currentParticle;
-      Position newPosition = nextPosition(startName, atts);               
-      if(newPosition == null)
+      if (nextPosition(startName, atts) == null)
+         return null;
+
+      // push all except the last one
+      Object value = o;
+      Position newPosition = next;
+      while (newPosition.getNext() != null)
       {
-         if(!ended)
-         {
-            endParticle();
-            
-            if(!particle.isRepeatable() && stack.parent().isElement())
-            {
-               TermBinding t = particle.getTerm();
-               StringBuffer sb = new StringBuffer(250);
-               sb.append(startName).append(" cannot appear in this position. Expected content of ")
-               .append(((ElementBinding)stack.parent().getParticle().getTerm()).getQName())
-               .append(" is ").append(t);
-               throw new JBossXBRuntimeException(sb.toString());
-            }
-         }
-         return this;
-      }
-      else
-      {
-         if(currentParticle != prevParticle)
-         {
-            if(repeatableParticleValue != null &&
-                  prevParticle != null && prevParticle.isRepeatable() && prevParticle.getTerm().isModelGroup())
-            {
-               if (trace)
-                  log.trace(" end repeatable " + particle.getTerm());
+         if (newPosition.getParticle().isRepeatable())
+            newPosition.startRepeatableParticle(value);
 
-               // the way it is now it's never null
-               repeatableHandler.endRepeatableParticle(o, repeatableParticleValue, qName, prevParticle, particle);
-               repeatableParticleValue = null;
-               repeatableHandler = null;
-            }
-         }
-
-         // push all except the last one
-         Object value = o;
-         newPosition = newPosition.getNext();
-         while (newPosition.getNext() != null)
-         {
-            if(newPosition.getParticle().isRepeatable())
-               newPosition.startRepeatableParticle(value);
-
-            stack.push(newPosition);
-            value = newPosition.initValue(value, atts);
-            newPosition.setParentType(parentType);
-            newPosition = newPosition.getNext();
-         }
-
+         stack.push(newPosition);
+         value = newPosition.initValue(value, atts);
          newPosition.setParentType(parentType);
-         if(!newPosition.isElement())
-            throw new IllegalStateException();
-         return newPosition;
+         newPosition = newPosition.getNext();
       }
+
+      newPosition.setParentType(parentType);
+      return (ElementPosition) newPosition;
+   }
+
+   protected void nextNotFound()
+   {
+      endParticle();
+      if(particle.isRepeatable() && repeatableParticleValue != null)
+         endRepeatableParticle(stack.parent());
+
+      next = null;
+      occurrence = 0;
    }
 }

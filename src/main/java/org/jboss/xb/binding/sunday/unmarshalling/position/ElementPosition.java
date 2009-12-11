@@ -121,7 +121,116 @@ public class ElementPosition extends AbstractPosition
    {
       return this.textContent;
    }
-   
+
+   public Position nextPosition(QName startName, Attributes atts)
+   {
+      if (ended) // this is about repeating itself
+      {
+         if (!qName.equals(startName))
+         {
+            if (particle.isRepeatable() && repeatableParticleValue != null)
+               endRepeatableParticle(stack.parent());
+            return null;
+         }
+
+         if (particle.isRepeatable())
+         {
+            if (particle.getMaxOccursUnbounded() || occurrence < particle.getMinOccurs()
+                  || occurrence < particle.getMaxOccurs())
+            {
+               reset();
+               ++occurrence;
+               return this;
+            }
+            else if (repeatableParticleValue != null)
+               endRepeatableParticle(stack.parent());
+            return null;
+         }
+
+         // it's not repeatable but it re-appeared
+         // it probably has a repeatable parent
+         reset();
+         occurrence = 0;
+         endRepeatableParent();
+         return this;
+      }
+      
+      // this is locating the next child
+      ElementBinding element = (ElementBinding) particle.getTerm();
+      TypeBinding parentType = element.getType();
+      ParticleBinding typeParticle = parentType.getParticle();
+      ModelGroupBinding modelGroup = typeParticle == null ? null : (ModelGroupBinding) typeParticle.getTerm();
+      if (modelGroup == null)
+      {
+         if (startName.equals(Constants.QNAME_XOP_INCLUDE))
+         {
+            SchemaBinding schema = element.getSchema();
+            TypeBinding anyUriType = schema.getType(Constants.QNAME_ANYURI);
+            if (anyUriType == null)
+               log.warn("Type " + Constants.QNAME_ANYURI + " not bound.");
+
+            ElementBinding parentElement = (ElementBinding) particle.getTerm();
+            parentElement.setXopUnmarshaller(schema.getXopUnmarshaller());
+
+            flushIgnorableCharacters();
+            handler = DefaultHandlers.XOP_HANDLER;
+            ignoreCharacters = true;
+            initValue(o, null);
+
+            TypeBinding xopIncludeType = new TypeBinding(new QName(Constants.NS_XOP_INCLUDE, "Include"));
+            xopIncludeType.setSchemaBinding(schema);
+            xopIncludeType.addAttribute(new QName("href"), anyUriType, DefaultHandlers.ATTRIBUTE_HANDLER);
+            xopIncludeType.setHandler(new XOPIncludeHandler(parentType, schema.getXopUnmarshaller()));
+
+            ElementBinding xopInclude = new ElementBinding(schema, Constants.QNAME_XOP_INCLUDE, xopIncludeType);
+            next = new ElementPosition(startName, new ParticleBinding(xopInclude));
+            return next;
+         }
+
+         QName typeName = parentType.getQName();
+         throw new JBossXBRuntimeException((typeName == null ? "Anonymous" : typeName.toString()) + " type of element "
+               + qName + " should be complex and contain " + startName + " as a child element.");
+      }
+
+      if (next != null)
+      {
+         if (particle.getMaxOccursUnbounded() || occurrence < particle.getMinOccurs()
+               || occurrence < particle.getMaxOccurs())
+         {
+            // this increase is actually ahead of its time, it may fail to locate the element
+            // but in the current impl it doesn't matter
+            ++occurrence;
+         }
+         else
+         {
+            throw new JBossXBRuntimeException(startName + " cannot appear in this position. Expected content of "
+                  + qName + " is " + modelGroup);
+         }
+      }
+
+      next = modelGroup.newPosition(startName, atts, typeParticle);
+      if (next == null)
+         throw new JBossXBRuntimeException(startName + " not found as a child of " + qName + " in " + modelGroup);
+
+      flushIgnorableCharacters();
+
+      Object value = o;
+      Position newPosition = next;
+      while (newPosition.getNext() != null)
+      {
+         if (newPosition.getParticle().isRepeatable())
+            newPosition.startRepeatableParticle(value);
+
+         stack.push(newPosition);
+         value = newPosition.initValue(value, atts);
+         newPosition.setParentType(parentType);
+         newPosition = newPosition.getNext();
+      }
+
+      newPosition.setParentType(parentType);
+      return (ElementPosition) newPosition;
+   }
+
    public void characters(char[] ch, int start, int length)
    {
       ElementBinding e = (ElementBinding) particle.getTerm();
@@ -409,113 +518,9 @@ public class ElementPosition extends AbstractPosition
       ended = true;
    }
    
-   public Position startParticle(QName startName, Attributes atts)
+   public ElementPosition startParticle(QName startName, Attributes atts)
    {
-      if(ended)
-      {
-         if(qName.equals(startName))
-         {
-            if(particle.isRepeatable())
-            {
-               Position parentPosition = stack.parent();
-               if(parentPosition.repeatTerm(startName, atts))
-                  reset();
-               else if(repeatableParticleValue != null)
-                  endRepeatableParticle(parentPosition);
-            }
-            else
-            {
-               reset();
-               occurrence = 0;
-               endRepeatableParent();
-            }
-         }
-         else if(particle.isRepeatable())
-         {
-            if(repeatableParticleValue != null)
-               endRepeatableParticle(stack.parent());
-         }
-         return this;
-      }
-      
-      ElementBinding element = (ElementBinding) particle.getTerm();
-      TypeBinding parentType = element.getType();
-      ParticleBinding typeParticle = parentType.getParticle();
-      ModelGroupBinding modelGroup = typeParticle == null ? null : (ModelGroupBinding) typeParticle.getTerm();
-      if (modelGroup == null)
-      {
-         if (startName.equals(Constants.QNAME_XOP_INCLUDE))
-         {
-            SchemaBinding schema = element.getSchema();
-            TypeBinding anyUriType = schema.getType(Constants.QNAME_ANYURI);
-            if (anyUriType == null)
-               log.warn("Type " + Constants.QNAME_ANYURI + " not bound.");
-
-            ElementBinding parentElement = (ElementBinding) particle.getTerm();
-            parentElement.setXopUnmarshaller(schema.getXopUnmarshaller());
-
-            flushIgnorableCharacters();
-            handler = DefaultHandlers.XOP_HANDLER;
-            ignoreCharacters = true;
-            initValue(o, null);
-
-            TypeBinding xopIncludeType = new TypeBinding(new QName(Constants.NS_XOP_INCLUDE, "Include"));
-            xopIncludeType.setSchemaBinding(schema);
-            xopIncludeType.addAttribute(new QName("href"), anyUriType, DefaultHandlers.ATTRIBUTE_HANDLER);
-            xopIncludeType.setHandler(new XOPIncludeHandler(parentType, schema.getXopUnmarshaller()));
-
-            ElementBinding xopInclude = new ElementBinding(schema, Constants.QNAME_XOP_INCLUDE, xopIncludeType);
-            next = new ElementPosition(startName, new ParticleBinding(xopInclude));
-            return next;
-         }
-
-         QName typeName = parentType.getQName();
-         throw new JBossXBRuntimeException((typeName == null ? "Anonymous" : typeName.toString()) + " type of element "
-               + qName + " should be complex and contain " + startName + " as a child element.");
-      }
-
-      if (next != null)
-      {
-         if (particle.getMaxOccursUnbounded() || occurrence < particle.getMinOccurs()
-               || occurrence < particle.getMaxOccurs())
-         {
-            // this increase is actually ahead of its time, it may fail to locate the element
-            // but in the current impl it doesn't matter
-            ++occurrence;
-         }
-         else
-         {
-            throw new JBossXBRuntimeException(startName + " cannot appear in this position. Expected content of "
-                  + qName + " is " + modelGroup);
-         }
-      }
-
-      next = modelGroup.newPosition(startName, atts, typeParticle);
-      if (next == null)
-      {
-         throw new JBossXBRuntimeException(startName + " not found as a child of " + qName + " in " + modelGroup);
-      }
-      else
-      {
-         flushIgnorableCharacters();
-
-         Object value = o;
-         while (next.getNext() != null)
-         {
-            if (next.getParticle().isRepeatable())
-               next.startRepeatableParticle(value);
-
-            stack.push(next);
-            value = next.initValue(o, atts);
-            next.setParentType(parentType);
-            next = next.getNext();
-         }
-
-         next.setParentType(parentType);
-         if (!next.isElement())
-            throw new IllegalStateException();
-      }
-      return next;
+      return (ElementPosition) nextPosition(startName, atts);
    }
    
    private void endRepeatableParent()

@@ -85,7 +85,7 @@ public class AllBinding
       if(particle != null)
       {
          Position next = particle.getTerm().newPosition(qName, attrs, particle);
-         return new AllPosition(qName, allParticle, particle, next);
+         return new AllPosition(qName, allParticle, next);
       }
 
       return null;
@@ -99,55 +99,22 @@ public class AllBinding
    
    private final class AllPosition extends NonElementPosition
    {
-      private AllPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
+      private AllPosition(QName name, ParticleBinding particle, Position next)
       {
-         super(name, particle, currentParticle, next);
+         super(name, particle, next);
       }
 
-      protected Position startElement(QName qName, Attributes atts, boolean required)
+      public Position nextPosition(QName qName, Attributes atts)
       {
-         next = null;
-
-/*         if(currentParticle != null)
-         {
-            if(particle.getMaxOccursUnbounded() ||
-               occurrence < particle.getMinOccurs() ||
-               occurrence < particle.getMaxOccurs())
-            {
-               ParticleBinding particle = elements.get(qName);
-               if(particle != null)
-               {
-                  next = particle.getTerm().newPosition(qName, atts, particle);
-                  ++occurrence;
-                  currentParticle = particle;
-                  
-                  endParticle();
-                  o = initValue(stack.parent().getValue(), atts);
-                  ended = false;
-
-                  return this;
-               }               
-            }
-
-            endParticle();
-            if(particle.isRepeatable() && repeatableParticleValue != null)
-               endRepeatableParticle(stack.parent());
-
-            currentParticle = null;
-            occurrence = 0;
-            
-            return null;
-         }
-*/         
          ParticleBinding particle = elements.get(qName);
          if(particle != null)
          {
             next = particle.getTerm().newPosition(qName, atts, particle);
-            ++occurrence;
-            currentParticle = particle;
+            // TODO occurrence is not used here ++occurrence;
             return this;
-         }               
+         }
 
+         nextNotFound();
          return null;
       }
    }

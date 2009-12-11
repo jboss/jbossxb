@@ -31,10 +31,10 @@ import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.NoopParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.PositionStack;
 import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.StackImpl;
 import org.xml.sax.Attributes;
 
 /**
@@ -45,10 +45,15 @@ import org.xml.sax.Attributes;
  */
 public abstract class AbstractPosition implements Position
 {
-   protected final Logger log = Logger.getLogger(getClass());
-   protected boolean trace;
-
-   protected StackImpl stack;
+   protected static Logger log = Logger.getLogger(AbstractPosition.class);
+   protected static boolean trace;
+   
+   public static void resetTrace()
+   {
+      trace = log.isTraceEnabled();
+   }
+   
+   protected PositionStack stack;
    protected final QName qName;
    protected ParticleBinding particle;
    protected ParticleHandler handler;
@@ -74,14 +79,9 @@ public abstract class AbstractPosition implements Position
       this.occurrence = 1;
    }
 
-   public void setStack(StackImpl stack)
+   public void setStack(PositionStack stack)
    {
       this.stack = stack;
-   }
-   
-   public QName getQName()
-   {
-      return qName;
    }
 
    public ParticleBinding getParticle()
@@ -89,29 +89,9 @@ public abstract class AbstractPosition implements Position
       return particle;
    }
 
-   public void setParticle(ParticleBinding particle)
-   {
-      this.particle = particle;
-   }
-
    public Position getNext()
    {
       return next;
-   }
-
-   public void setNext(Position next)
-   {
-      this.next = next;
-   }
-
-   public ParticleHandler getHandler()
-   {
-      return handler;
-   }
-
-   public void setHandler(ParticleHandler handler)
-   {
-      this.handler = handler;
    }
 
    public RepeatableParticleHandler getRepeatableHandler()
@@ -119,19 +99,9 @@ public abstract class AbstractPosition implements Position
       return repeatableHandler;
    }
 
-   public void setRepeatableHandler(RepeatableParticleHandler repeatableHandler)
-   {
-      this.repeatableHandler = repeatableHandler;
-   }
-
    public Object getRepeatableParticleValue()
    {
       return repeatableParticleValue;
-   }
-
-   public void setRepeatableParticleValue(Object repeatableParticleValue)
-   {
-      this.repeatableParticleValue = repeatableParticleValue;
    }
 
    public Object getValue()
@@ -149,16 +119,6 @@ public abstract class AbstractPosition implements Position
       return ended;
    }
 
-   public void setEnded(boolean ended)
-   {
-      this.ended = ended;
-   }
-
-   public TypeBinding getParentType()
-   {
-      return parentType;
-   }
-
    public void setParentType(TypeBinding parentType)
    {
       this.parentType = parentType;
@@ -169,11 +129,6 @@ public abstract class AbstractPosition implements Position
       return false;
    }
 
-   public boolean isModelGroup()
-   {
-      return false;
-   }
-   
    public void setCurrentParticle(ParticleBinding currentParticle)
    {
       this.particle = currentParticle;
@@ -223,7 +178,7 @@ public abstract class AbstractPosition implements Position
 
    public Position nextPosition(QName qName, Attributes attrs)
    {
-      return startElement(qName, attrs, true);
+      return startElement(qName, attrs, false);
    }
 
    protected Position startElement(QName qName, Attributes atts, boolean required)
@@ -235,7 +190,7 @@ public abstract class AbstractPosition implements Position
    {
       if(handler == null)
          handler = getHandler(particle.getTerm());
-      o = handler.startParticle(parent, qName, particle, atts, stack.nsRegistry);
+      o = handler.startParticle(parent, qName, particle, atts, stack.getNamespaceRegistry());
       return o;
    }
 
@@ -247,10 +202,35 @@ public abstract class AbstractPosition implements Position
       o = null;
    }      
 
-   public void flushIgnorableCharacters()
+   public void startRepeatableParticle(Object parent)
    {
+      if(trace)
+         log.trace(" start repeatable " + particle.getTerm());
+
+      RepeatableParticleHandler repeatableHandler = particle.getTerm().getRepeatableHandler();
+      // the way it is now it's never null
+      Object repeatableContainer = repeatableHandler.startRepeatableParticle(parent, qName, particle);
+      if(repeatableContainer != null)
+      {
+         if(this.repeatableParticleValue != null)
+            throw new IllegalStateException("Previous repeatable particle hasn't been ended yet!");
+         this.repeatableParticleValue = repeatableContainer;
+         this.repeatableHandler = repeatableHandler;
+      }
    }
-   
+
+   public void endRepeatableParticle(Position parentPosition)
+   {
+      if (trace)
+         log.trace(" end repeatable " + particle.getTerm());
+
+      if(repeatableParticleValue == null)
+         throw new IllegalStateException("handler is null");
+      repeatableHandler.endRepeatableParticle(parentPosition.getValue(), repeatableParticleValue, qName, particle, parentPosition.getParticle());
+      repeatableParticleValue = null;
+      this.repeatableHandler = null;
+   }
+
    private ParticleHandler getHandler(TermBinding term)
    {
       ParticleHandler handler = null;

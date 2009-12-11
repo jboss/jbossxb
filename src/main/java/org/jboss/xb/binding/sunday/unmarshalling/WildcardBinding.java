@@ -308,8 +308,36 @@ public class WildcardBinding
       protected Position startElement(QName name, Attributes atts, boolean required)
       {
          // if positioned try repeating
-         if(currentParticle != null && repeatTerm(qName, atts))
-            return this;
+         if(currentParticle != null)
+         {
+            if(particle.getMaxOccursUnbounded() ||
+               occurrence < particle.getMinOccurs() ||
+               occurrence < particle.getMaxOccurs())
+            {
+               ElementBinding wildcardContent = getElement(name, atts);
+               if(wildcardContent != null)
+               {
+                  currentParticle = new ParticleBinding(wildcardContent);
+                  next = wildcardContent.newPosition(name, atts, currentParticle);
+                  ++occurrence;
+                  
+                  endParticle();
+                  //o = initValue(stack.parent().getValue(), atts);
+                  ended = false;
+
+                  return this;
+               }
+            }
+
+            endParticle();
+            if(particle.isRepeatable() && repeatableParticleValue != null)
+               endRepeatableParticle(stack.parent());
+
+            currentParticle = null;
+            occurrence = 0;
+            
+            return null;
+         }
 
          next = null;
          ElementBinding wildcardContent = getElement(name, atts);

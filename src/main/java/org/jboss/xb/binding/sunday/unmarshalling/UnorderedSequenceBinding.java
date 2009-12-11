@@ -133,11 +133,6 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
    
    private final class UnorderedSequencePosition extends NonElementPosition
    {
-      private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
-      {
-         super(name, particle, currentParticle);
-      }
-
       private UnorderedSequencePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
       {
          super(name, particle, currentParticle, next);
@@ -153,16 +148,17 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
             log.trace(sb.toString());
          }
 
-         next = null;
-         
-         if(currentParticle != null && repeatTerm(qName, atts))
-            return this;               
+         boolean repeating = currentParticle != null;
 
+         next = null;
          currentParticle = elementParticles.get(qName);
          if (currentParticle != null)
          {
             next = currentParticle.getTerm().newPosition(qName, atts, currentParticle);
-            occurrence = 1;
+            if(repeating)
+               ++occurrence;
+            else
+               occurrence = 1;
             if (trace)
                log.trace("found " + qName + " in " + UnorderedSequenceBinding.this);
             return this;
@@ -174,7 +170,10 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
 
             if (next != null)
             {
-               occurrence = 1;
+               if(repeating)
+                  ++occurrence;
+               else
+                  occurrence = 1;
                currentParticle = particle;
                return this;
             }
@@ -186,12 +185,25 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
 
             if (next != null)
             {
-               occurrence = 1;
+               if(repeating)
+                  ++occurrence;
+               else
+                  occurrence = 1;
                currentParticle = particle;
                return this;
             }
          }
 
+         if(repeating)
+         {
+            endParticle();
+            if(particle.isRepeatable() && repeatableParticleValue != null)
+               endRepeatableParticle(stack.parent());
+
+            currentParticle = null;
+            occurrence = 0;
+         }
+         
          return null;
       }
    }

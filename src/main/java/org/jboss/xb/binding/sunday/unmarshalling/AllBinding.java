@@ -106,16 +106,45 @@ public class AllBinding
 
       protected Position startElement(QName qName, Attributes atts, boolean required)
       {
-         if(currentParticle != null && repeatTerm(qName, atts))
-            throw new IllegalStateException("maxOccurs in all model group can only be 1: " + qName);
-
          next = null;
+
+/*         if(currentParticle != null)
+         {
+            if(particle.getMaxOccursUnbounded() ||
+               occurrence < particle.getMinOccurs() ||
+               occurrence < particle.getMaxOccurs())
+            {
+               ParticleBinding particle = elements.get(qName);
+               if(particle != null)
+               {
+                  next = particle.getTerm().newPosition(qName, atts, particle);
+                  ++occurrence;
+                  currentParticle = particle;
+                  
+                  endParticle();
+                  o = initValue(stack.parent().getValue(), atts);
+                  ended = false;
+
+                  return this;
+               }               
+            }
+
+            endParticle();
+            if(particle.isRepeatable() && repeatableParticleValue != null)
+               endRepeatableParticle(stack.parent());
+
+            currentParticle = null;
+            occurrence = 0;
+            
+            return null;
+         }
+*/         
          ParticleBinding particle = elements.get(qName);
          if(particle != null)
          {
             next = particle.getTerm().newPosition(qName, atts, particle);
+            ++occurrence;
             currentParticle = particle;
-            occurrence = 1;            
             return this;
          }               
 

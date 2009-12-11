@@ -93,11 +93,6 @@ public class ChoiceBinding
    
    private final class ChoicePosition extends NonElementPosition
    {
-      private ChoicePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
-      {
-         super(name, particle, currentParticle);
-      }
-
       private ChoicePosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
       {
          super(name, particle, currentParticle, next);
@@ -116,10 +111,40 @@ public class ChoiceBinding
 
          if(currentParticle != null)
          {
-            if(repeatTerm(qName, atts))
-               return this;
-            else
-               return null;
+            if(particle.getMaxOccursUnbounded() ||
+               occurrence < particle.getMinOccurs() ||
+               occurrence < particle.getMaxOccurs())
+            {
+               for(int i = 0; i < choices.size(); ++i)
+               {
+                  ParticleBinding choice = (ParticleBinding)choices.get(i);
+                  TermBinding term = choice.getTerm();
+                  next = term.newPosition(qName, atts, choice);
+
+                  if(next != null)
+                  {
+                     ++occurrence;
+                     currentParticle = choice;
+                     
+                     endParticle();
+                     o = initValue(stack.parent().getValue(), atts);
+                     ended = false;
+
+                     if(trace)
+                        log.trace("found " + qName + " in " + ChoiceBinding.this + ", term=" + currentParticle.getTerm());
+                     return this;
+                  }
+               }
+            }
+
+            endParticle();
+            if(particle.isRepeatable() && repeatableParticleValue != null)
+               endRepeatableParticle(stack.parent());
+
+            currentParticle = null;
+            occurrence = 0;
+            
+            return null;
          }
          
          for(int i = 0; i < choices.size(); ++i)

@@ -64,8 +64,44 @@ public class RepeatableTermsUnitTestCase extends AbstractBuilderTest
       Sequence[] sequences = top.getSequences();
       assertNotNull(sequences);
       
+      String[] expected = new String[]{
+            "sequenceChoice1_1", "sequenceChoice2_1", "sequenceChoice1_2", "sequenceChoice1_3", "sequenceChoice2_2"};
+      assertEquals(expected.length, sequences.length);
+      for(int i = 0; i < sequences.length; ++i)
+         assertEquals(expected[i], sequences[i].getChoice());
+         
+
       Choice[] choices = top.getChoices();
       assertNotNull(choices);
+      
+      assertEquals(3, choices.length);
+      
+      Choice choice = choices[0];
+      assertNotNull(choice);
+      assertNull(choice.getChoiceChoice2());
+      String[] strings = choice.getChoiceChoice1();
+      assertNotNull(strings);
+      assertEquals(2, strings.length);
+      assertEquals("choiceChoice1_1", strings[0]);
+      assertEquals("choiceChoice1_2", strings[1]);
+
+      choice = choices[1];
+      assertNotNull(choice);
+      assertNull(choice.getChoiceChoice1());
+      strings = choice.getChoiceChoice2();
+      assertNotNull(strings);
+      assertEquals(2, strings.length);
+      assertEquals("choiceChoice2_1", strings[0]);
+      assertEquals("choiceChoice2_2", strings[1]);
+
+      choice = choices[2];
+      assertNotNull(choice);
+      assertNull(choice.getChoiceChoice2());
+      strings = choice.getChoiceChoice1();
+      assertNotNull(strings);
+      assertEquals(2, strings.length);
+      assertEquals("choiceChoice1_3", strings[0]);
+      assertEquals("choiceChoice1_4", strings[1]);
    }
    
    public void testBinding() throws Exception

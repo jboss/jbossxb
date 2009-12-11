@@ -22,15 +22,21 @@
 package org.jboss.test.xb.builder.object.mc.test;
 
 import java.util.List;
+import java.util.Set;
 
 import junit.framework.Test;
 
+import org.jboss.test.xb.builder.object.mc.support.MyObject;
 import org.jboss.test.xb.builder.object.mc.support.TestBeanMetaDataFactory;
 import org.jboss.test.xb.builder.object.mc.support.TestBeanMetaDataFactory1;
 import org.jboss.test.xb.builder.object.mc.support.TestBeanMetaDataFactory2;
+import org.jboss.test.xb.builder.object.mc.support.model.AbstractArrayMetaData;
 import org.jboss.test.xb.builder.object.mc.support.model.AbstractKernelDeployment;
+import org.jboss.test.xb.builder.object.mc.support.model.AbstractValueMetaData;
 import org.jboss.test.xb.builder.object.mc.support.model.BeanMetaData;
 import org.jboss.test.xb.builder.object.mc.support.model.BeanMetaDataFactory;
+import org.jboss.test.xb.builder.object.mc.support.model.PropertyMetaData;
+import org.jboss.test.xb.builder.object.mc.support.model.ValueMetaData;
 
 /**
  * DeploymentTestCase.
@@ -230,6 +236,39 @@ public class DeploymentTestCase extends AbstractMCTest
       bean = (BeanMetaData) beans.get(7);
       assertNotNull(bean);
       assertEquals("Bean4", bean.getBean());
+   }
+
+   public void testDeploymentWithArrayOfJavaBeans() throws Exception
+   {
+      AbstractKernelDeployment deployment = unmarshalDeployment();
+      List<BeanMetaData> beans = deployment.getBeans();
+      assertNotNull(beans);
+      assertEquals(1, beans.size());
+      BeanMetaData beanMetaData = beans.get(0);
+      assertNotNull(beanMetaData);
+      Set<PropertyMetaData> properties = beanMetaData.getProperties();
+      assertNotNull(properties);
+      assertEquals(1, properties.size());
+      PropertyMetaData property = properties.iterator().next();
+      assertNotNull(property);
+      ValueMetaData value = property.getValue();
+      assertNotNull(value);
+      assertTrue(value instanceof AbstractArrayMetaData);
+      AbstractArrayMetaData array = (AbstractArrayMetaData) value;
+      assertEquals(4, array.size());
+      String keys[] = new String[]{"object1", "object2", "object2", "object1"};
+      for(int i = 0; i < keys.length; ++i)
+      {
+         Object o = array.get(i);
+         assertNotNull(o);
+         assertTrue(o instanceof AbstractValueMetaData);
+         AbstractValueMetaData v = (AbstractValueMetaData) o;
+         Object uv = v.getUnderlyingValue();
+         assertNotNull(uv);
+         assertTrue(uv instanceof MyObject);
+         MyObject mo = (MyObject) uv;
+         assertEquals(keys[i], mo.getKey());
+      }
    }
    
    public static Test suite()

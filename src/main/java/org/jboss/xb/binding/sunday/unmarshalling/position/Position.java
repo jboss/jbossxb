@@ -24,10 +24,9 @@ package org.jboss.xb.binding.sunday.unmarshalling.position;
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.PositionStack;
 import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.StackImpl;
 import org.xml.sax.Attributes;
 
 /**
@@ -38,20 +37,10 @@ import org.xml.sax.Attributes;
  */
 public interface Position
 {
-   void setStack(StackImpl stack);
-   
-   QName getQName();
-   
+   void setStack(PositionStack stack);
+
    ParticleBinding getParticle();
-   
-   void setParticle(ParticleBinding particle);
-   
-   ParticleHandler getHandler();
-   
-   void setHandler(ParticleHandler handler);
-   
-   TypeBinding getParentType();
-   
+
    void setParentType(TypeBinding parentType);
    
    Object getValue();
@@ -59,24 +48,14 @@ public interface Position
    void setValue(Object value);
    
    Object getRepeatableParticleValue();
-   
-   void setRepeatableParticleValue(Object repeatableParticleValue);
-   
+
    RepeatableParticleHandler getRepeatableHandler();
-   
-   void setRepeatableHandler(RepeatableParticleHandler repeatableHandler);
    
    boolean isEnded();
    
-   void setEnded(boolean ended);
-   
    Position getNext();
    
-   void setNext(Position next);
-   
    boolean isElement();
-   
-   boolean isModelGroup();
    
    void reset();
    
@@ -88,8 +67,6 @@ public interface Position
    
    void setCurrentParticle(ParticleBinding currentParticle);
    
-   void flushIgnorableCharacters();
-   
    void characters(char[] ch, int start, int length);
    
    Object initValue(Object parent, Attributes atts);
@@ -97,4 +74,8 @@ public interface Position
    Position startParticle(QName startName, Attributes atts);
    
    void endParticle();
+   
+   void startRepeatableParticle(Object parent);
+   
+   void endRepeatableParticle(Position parentPosition);
 }

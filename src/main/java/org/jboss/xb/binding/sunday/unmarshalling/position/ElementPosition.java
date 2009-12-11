@@ -29,6 +29,7 @@ import javax.xml.namespace.QName;
 import org.jboss.util.StringPropertyReplacer;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.NamespaceRegistry;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
@@ -38,12 +39,14 @@ import org.jboss.xb.binding.sunday.unmarshalling.ElementInterceptor;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.PositionStack;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.UnmarshallingContextImpl;
 import org.jboss.xb.binding.sunday.xop.XOPIncludeHandler;
 import org.xml.sax.Attributes;
 
@@ -66,23 +69,18 @@ public class ElementPosition extends AbstractPosition
       super(qName, particle);
    }
 
+   public ElementPosition(QName qName, ParticleBinding particle, Object o, ParticleHandler handler, TypeBinding parentType)
+   {
+      super(qName, particle);
+      this.particle = particle;
+      this.o = o;
+      this.handler = handler;
+      this.parentType = parentType;
+   }
+   
    public boolean isElement()
    {
       return true;
-   }
-
-   public void flushIgnorableCharacters()
-   {
-      if(textContent == null)
-         return;
-
-      if(indentation == Boolean.TRUE || ignorableCharacters)
-      {
-         if(trace)
-            log.trace("ignored characters: " + ((ElementBinding) particle.getTerm()).getQName() + " '" + textContent + "'");
-         textContent = null;
-         indentation = null;
-      }
    }
 
    public void reset()
@@ -252,8 +250,8 @@ public class ElementPosition extends AbstractPosition
 
                // todo valueMetaData is available from type
                unmarshalled = dataContent == null ?
-                  charHandler.unmarshalEmpty(qName, charType, stack.nsRegistry, valueMetaData) :
-                  charHandler.unmarshal(qName, charType, stack.nsRegistry, valueMetaData, dataContent);
+                  charHandler.unmarshalEmpty(qName, charType, stack.getNamespaceRegistry(), valueMetaData) :
+                  charHandler.unmarshal(qName, charType, stack.getNamespaceRegistry(), valueMetaData, dataContent);
             }
 
             if(unmarshalled != null)
@@ -268,11 +266,12 @@ public class ElementPosition extends AbstractPosition
                   TermBeforeSetParentCallback beforeSetParent = charType.getBeforeSetParentCallback();
                   if(beforeSetParent != null)
                   {
-                     stack.ctx.parent = o;
-                     stack.ctx.particle = particle;
-                     stack.ctx.parentParticle = stack.getNotSkippedParent().getParticle();
-                     unmarshalled = beforeSetParent.beforeSetParent(unmarshalled, stack.ctx);
-                     stack.ctx.clear();
+                     UnmarshallingContextImpl ctx = stack.getContext();
+                     ctx.parent = o;
+                     ctx.particle = particle;
+                     ctx.parentParticle = stack.notSkippedParent().getParticle();
+                     unmarshalled = beforeSetParent.beforeSetParent(unmarshalled, ctx);
+                     ctx.clear();
                   }
                   
                   charHandler.setValue(qName, element, o, unmarshalled);
@@ -281,17 +280,18 @@ public class ElementPosition extends AbstractPosition
 
             if(allInterceptors > 0)
             {
+               NamespaceRegistry nsRegistry = stack.getNamespaceRegistry();
                int interceptorIndex = stack.size() - 1 - allInterceptors;
                for (int i = interceptors.size() - 1; i >= 0; --i)
                {
                   ElementInterceptor interceptor = interceptors.get(i);
-                  interceptor.characters(stack.peek(interceptorIndex++).getValue(), qName, type, stack.nsRegistry, dataContent);
+                  interceptor.characters(stack.parent(interceptorIndex++).getValue(), qName, type, nsRegistry, dataContent);
                }
 
                for (int i = localInterceptors.size() - 1; i >= 0; --i)
                {
                   ElementInterceptor interceptor = localInterceptors.get(i);
-                  interceptor.characters(stack.peek(interceptorIndex++).getValue(), qName, type, stack.nsRegistry, dataContent);
+                  interceptor.characters(stack.parent(interceptorIndex++).getValue(), qName, type, nsRegistry, dataContent);
                }
             }
          }
@@ -313,7 +313,7 @@ public class ElementPosition extends AbstractPosition
          for (int i = interceptors.size() - 1; i >= 0; --i)
          {
             ElementInterceptor interceptor = interceptors.get(i);
-            interceptor.endElement(stack.peek(interceptorIndex++).getValue(), qName, type);
+            interceptor.endElement(stack.parent(interceptorIndex++).getValue(), qName, type);
          }
       }
       
@@ -323,7 +323,7 @@ public class ElementPosition extends AbstractPosition
 
       if(allInterceptors == 0)
       {
-         Position notSkippedParent = stack.getNotSkippedParent();
+         Position notSkippedParent = stack.notSkippedParent();
          if (notSkippedParent != null)
          {
             ParticleBinding parentParticle = notSkippedParent.getParticle();
@@ -339,16 +339,21 @@ public class ElementPosition extends AbstractPosition
                      handler = wh;
                }
                
-               if(notSkippedParent.getRepeatableParticleValue() == null)
+               if(repeatableParticleValue != null)
+               {
+                  repeatableHandler.addTermValue(repeatableParticleValue, o, qName, particle, notSkippedParent.getParticle(), handler);
+               }
+               else if(notSkippedParent.getRepeatableParticleValue() == null || !notSkippedParent.getParticle().getTerm().isSkip())
                {
                   TermBeforeSetParentCallback beforeSetParent = particle.getTerm().getBeforeSetParentCallback();
                   if(beforeSetParent != null)
                   {
-                     stack.ctx.parent = notSkippedParent.getValue();
-                     stack.ctx.particle = particle;
-                     stack.ctx.parentParticle = stack.getNotSkippedParent().getParticle();
-                     o = beforeSetParent.beforeSetParent(o, stack.ctx);
-                     stack.ctx.clear();
+                     UnmarshallingContextImpl ctx = stack.getContext();
+                     ctx.parent = notSkippedParent.getValue();
+                     ctx.particle = particle;
+                     ctx.parentParticle = stack.notSkippedParent().getParticle();
+                     o = beforeSetParent.beforeSetParent(o, ctx);
+                     ctx.clear();
                   }
 
                   handler.setParent(notSkippedParent.getValue(), o, qName, particle, notSkippedParent.getParticle());
@@ -360,15 +365,13 @@ public class ElementPosition extends AbstractPosition
                         o, qName, particle,
                         notSkippedParent.getParticle(), handler);
                }
-
-               //setParent(handler, notSkippedParent, this);
             }
             else if (parentTerm.isWildcard() && stack.size() > 1)
             {
                // the parent has anyType, so it gets the value of its child
                for (int i = stack.size() - 2; i >= 0; --i)
                {
-                  Position peeked = stack.peek(i);
+                  Position peeked = stack.parent(i);
                   peeked.setValue(o);
                   if (peeked.isElement())
                      break;
@@ -408,106 +411,118 @@ public class ElementPosition extends AbstractPosition
    
    public Position startParticle(QName startName, Attributes atts)
    {
-      Position position = this;
       if(ended)
       {
          if(qName.equals(startName))
          {
             if(particle.isRepeatable())
             {
-               Position parentPosition = stack.peek1();
+               Position parentPosition = stack.parent();
                if(parentPosition.repeatTerm(startName, atts))
                   reset();
-               else if(parentPosition.getRepeatableParticleValue() != null)
-                  stack.endRepeatableParticle(parentPosition, qName, particle, parentPosition.getParticle());
+               else if(repeatableParticleValue != null)
+                  endRepeatableParticle(parentPosition);
             }
             else
             {
                reset();
+               occurrence = 0;
                endRepeatableParent();
             }
          }
          else if(particle.isRepeatable())
          {
-            Position parentPosition = stack.peek1();
-            if(parentPosition.getRepeatableParticleValue() != null)
-               stack.endRepeatableParticle(parentPosition, qName, particle, parentPosition.getParticle());
+            if(repeatableParticleValue != null)
+               endRepeatableParticle(stack.parent());
          }
+         return this;
       }
-      else
+      
+      ElementBinding element = (ElementBinding) particle.getTerm();
+      TypeBinding parentType = element.getType();
+      ParticleBinding typeParticle = parentType.getParticle();
+      ModelGroupBinding modelGroup = typeParticle == null ? null : (ModelGroupBinding) typeParticle.getTerm();
+      if (modelGroup == null)
       {
-         ElementBinding element = (ElementBinding)particle.getTerm();
-         TypeBinding parentType = element.getType();
-         ParticleBinding typeParticle = parentType.getParticle();
-         ModelGroupBinding modelGroup = typeParticle == null ? null : (ModelGroupBinding)typeParticle.getTerm();
-         if(modelGroup == null)
+         if (startName.equals(Constants.QNAME_XOP_INCLUDE))
          {
-            if(startName.equals(Constants.QNAME_XOP_INCLUDE))
-            {
-               TypeBinding anyUriType = stack.schema.getType(Constants.QNAME_ANYURI);
-               if(anyUriType == null)
-                  log.warn("Type " + Constants.QNAME_ANYURI + " not bound.");
-               
-               ElementBinding parentElement = (ElementBinding) particle.getTerm();
-               parentElement.setXopUnmarshaller(stack.schema.getXopUnmarshaller());
+            SchemaBinding schema = element.getSchema();
+            TypeBinding anyUriType = schema.getType(Constants.QNAME_ANYURI);
+            if (anyUriType == null)
+               log.warn("Type " + Constants.QNAME_ANYURI + " not bound.");
 
-               flushIgnorableCharacters();
-               handler = DefaultHandlers.XOP_HANDLER;
-               ignoreCharacters = true;
-               initValue(o, null);
-               
-               TypeBinding xopIncludeType = new TypeBinding(new QName(Constants.NS_XOP_INCLUDE, "Include"));
-               xopIncludeType.setSchemaBinding(stack.schema);
-               xopIncludeType.addAttribute(new QName("href"), anyUriType, DefaultHandlers.ATTRIBUTE_HANDLER);
-               xopIncludeType.setHandler(new XOPIncludeHandler(parentType, stack.schema.getXopUnmarshaller()));
+            ElementBinding parentElement = (ElementBinding) particle.getTerm();
+            parentElement.setXopUnmarshaller(schema.getXopUnmarshaller());
 
-               ElementBinding xopInclude = new ElementBinding(stack.schema, Constants.QNAME_XOP_INCLUDE, xopIncludeType);
-               position = new ElementPosition(startName, new ParticleBinding(xopInclude));
-               return position;
-            }
+            flushIgnorableCharacters();
+            handler = DefaultHandlers.XOP_HANDLER;
+            ignoreCharacters = true;
+            initValue(o, null);
 
-            QName typeName = parentType.getQName();
-            throw new JBossXBRuntimeException((typeName == null ? "Anonymous" : typeName.toString()) +
-               " type of element " + qName +
-               " should be complex and contain " + startName + " as a child element."
-            );
+            TypeBinding xopIncludeType = new TypeBinding(new QName(Constants.NS_XOP_INCLUDE, "Include"));
+            xopIncludeType.setSchemaBinding(schema);
+            xopIncludeType.addAttribute(new QName("href"), anyUriType, DefaultHandlers.ATTRIBUTE_HANDLER);
+            xopIncludeType.setHandler(new XOPIncludeHandler(parentType, schema.getXopUnmarshaller()));
+
+            ElementBinding xopInclude = new ElementBinding(schema, Constants.QNAME_XOP_INCLUDE, xopIncludeType);
+            next = new ElementPosition(startName, new ParticleBinding(xopInclude));
+            return next;
          }
 
-         Position newPosition = modelGroup.newPosition(startName, atts, typeParticle);
-         if(newPosition == null)
+         QName typeName = parentType.getQName();
+         throw new JBossXBRuntimeException((typeName == null ? "Anonymous" : typeName.toString()) + " type of element "
+               + qName + " should be complex and contain " + startName + " as a child element.");
+      }
+
+      if (next != null)
+      {
+         if (particle.getMaxOccursUnbounded() || occurrence < particle.getMinOccurs()
+               || occurrence < particle.getMaxOccurs())
          {
-            throw new JBossXBRuntimeException(startName + " not found as a child of " + qName + " in " + modelGroup);
+            // this increase is actually ahead of its time, it may fail to locate the element
+            // but in the current impl it doesn't matter
+            ++occurrence;
          }
          else
          {
-            flushIgnorableCharacters();
-
-            Object value = o;
-            while(newPosition.getNext() != null)
-            {
-               if(newPosition.getParticle().isRepeatable())
-                  stack.startRepeatableParticle(stack.peek(), value, startName, newPosition.getParticle());
-
-               stack.push(newPosition);                        
-               value = newPosition.initValue(o, atts);
-               newPosition.setParentType(parentType);
-               newPosition = newPosition.getNext();
-            }
-
-            position = newPosition;
-            position.setParentType(parentType);
-            if(!position.isElement())
-               throw new IllegalStateException();
-         }                  
+            throw new JBossXBRuntimeException(startName + " cannot appear in this position. Expected content of "
+                  + qName + " is " + modelGroup);
+         }
       }
-      return position;
+
+      next = modelGroup.newPosition(startName, atts, typeParticle);
+      if (next == null)
+      {
+         throw new JBossXBRuntimeException(startName + " not found as a child of " + qName + " in " + modelGroup);
+      }
+      else
+      {
+         flushIgnorableCharacters();
+
+         Object value = o;
+         while (next.getNext() != null)
+         {
+            if (next.getParticle().isRepeatable())
+               next.startRepeatableParticle(value);
+
+            stack.push(next);
+            value = next.initValue(o, atts);
+            next.setParentType(parentType);
+            next = next.getNext();
+         }
+
+         next.setParentType(parentType);
+         if (!next.isElement())
+            throw new IllegalStateException();
+      }
+      return next;
    }
    
    private void endRepeatableParent()
    {
       int stackIndex = stack.size() - 2;
       Position position;
-      Position parentPosition = stack.peek1();
+      Position parentPosition = stack.parent();
       while(true)
       {
          if(parentPosition.isElement())
@@ -523,13 +538,13 @@ public class ElementPosition extends AbstractPosition
          if(position.getParticle().isRepeatable())
          {
             ((NonElementPosition)position).endParticle(stackIndex - 1);
-            parentPosition = stack.peek(stackIndex - 1);
+            parentPosition = stack.parent(stackIndex - 1);
             position.reset();
             position.initValue(parentPosition.getValue(), null);
             break;
          }
 
-         parentPosition = stack.peek(--stackIndex);
+         parentPosition = stack.parent(--stackIndex);
          ((NonElementPosition)position).endParticle(stackIndex);
       }
 
@@ -584,9 +599,123 @@ public class ElementPosition extends AbstractPosition
       while(++stackIndex < stack.size() - 1)
       {
          parentPosition = position;
-         position = stack.peek(stackIndex);
+         position = stack.parent(stackIndex);
          position.reset();
          position.initValue(parentPosition.getValue(), null);
+      }
+   }
+   
+   public void push(PositionStack stack, Attributes atts, boolean repeated)
+   {
+      ElementBinding element = (ElementBinding) particle.getTerm();
+
+      // TODO xsi:type support should be implemented in a better way
+      String xsiType = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "type");
+      if (xsiType != null)
+      {
+         if (trace)
+            log.trace(element.getQName() + " uses xsi:type " + xsiType);
+
+         if (nonXsiParticle == null)
+            nonXsiParticle = particle;
+
+         String xsiTypePrefix;
+         String xsiTypeLocal;
+         int colon = xsiType.indexOf(':');
+         if (colon == -1)
+         {
+            xsiTypePrefix = "";
+            xsiTypeLocal = xsiType;
+         }
+         else
+         {
+            xsiTypePrefix = xsiType.substring(0, colon);
+            xsiTypeLocal = xsiType.substring(colon + 1);
+         }
+
+         String xsiTypeNs = stack.getNamespaceRegistry().getNamespaceURI(xsiTypePrefix);
+         QName xsiTypeQName = new QName(xsiTypeNs, xsiTypeLocal);
+
+         SchemaBinding schemaBinding = element.getSchema();
+         TypeBinding xsiTypeBinding = schemaBinding.getType(xsiTypeQName);
+         if (xsiTypeBinding == null)
+         {
+            throw new JBossXBRuntimeException("Type binding not found for type " + xsiTypeQName
+                  + " specified with xsi:type for element " + qName);
+         }
+
+         ElementBinding xsiElement = new ElementBinding(schemaBinding, qName, xsiTypeBinding);
+         xsiElement.setRepeatableHandler(element.getRepeatableHandler());
+
+         particle = new ParticleBinding(xsiElement, particle.getMinOccurs(), particle.getMaxOccurs(), particle.getMaxOccursUnbounded());
+      }
+
+      Object parent = stack.isEmpty() ? null : (repeated ? stack.parent().getValue() : stack.current().getValue());
+      if (!repeated && particle.isRepeatable())
+         startRepeatableParticle(parent);
+
+      TypeBinding type = element.getType();
+      if (type == null)
+         throw new JBossXBRuntimeException("No type for element " + element);
+
+      handler = type.getHandler();
+      if (handler == null)
+         handler = DefaultHandlers.ELEMENT_HANDLER;
+
+      List<ElementInterceptor> localInterceptors = parentType == null
+            ? Collections.<ElementInterceptor>emptyList()
+            : parentType.getInterceptors(qName);
+      List<ElementInterceptor> interceptors = element.getInterceptors();
+      if (interceptors.size() + localInterceptors.size() > 0)
+      {
+         if (repeated)
+            stack.pop();
+
+         NamespaceRegistry nsRegistry = stack.getNamespaceRegistry();
+         for (int i = 0; i < localInterceptors.size(); ++i)
+         {
+            ElementInterceptor interceptor = localInterceptors.get(i);
+            parent = interceptor.startElement(parent, qName, type);
+            stack.push(qName, particle, parent, handler, parentType);
+            interceptor.attributes(parent, qName, type, atts, nsRegistry);
+         }
+
+         for (int i = 0; i < interceptors.size(); ++i)
+         {
+            ElementInterceptor interceptor = interceptors.get(i);
+            parent = interceptor.startElement(parent, qName, type);
+            stack.push(qName, particle, parent, handler, parentType);
+            interceptor.attributes(parent, qName, type, atts, nsRegistry);
+         }
+
+         if (repeated)
+         {
+            // to have correct endRepeatableParticle calls
+            stack.push(this);
+         }
+      }
+
+      if (!repeated)
+         stack.push(this);
+
+      String nil = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "nil");
+      if (nil == null || !("1".equals(nil) || "true".equals(nil)))
+         initValue(parent, atts);
+      else
+         o = SundayContentHandler.NIL;
+   }
+   
+   private void flushIgnorableCharacters()
+   {
+      if(textContent == null)
+         return;
+
+      if(indentation == Boolean.TRUE || ignorableCharacters)
+      {
+         if(trace)
+            log.trace("ignored characters: " + ((ElementBinding) particle.getTerm()).getQName() + " '" + textContent + "'");
+         textContent = null;
+         indentation = null;
       }
    }
 }

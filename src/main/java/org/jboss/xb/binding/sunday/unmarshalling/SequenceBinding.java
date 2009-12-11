@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Collection;
 import javax.xml.namespace.QName;
+
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.position.NonElementPosition;
 import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
@@ -113,12 +114,6 @@ public class SequenceBinding
    {
       private int pos = -1;
 
-      protected SequencePosition(QName qName, ParticleBinding particle, int pos, ParticleBinding currentParticle)
-      {
-         super(qName, particle, currentParticle);
-         this.pos = pos;
-      }
-
       protected SequencePosition(QName qName, ParticleBinding particle, int pos, ParticleBinding currentParticle, Position next)
       {
          super(qName, particle, currentParticle, next);
@@ -136,12 +131,6 @@ public class SequenceBinding
 
          next = null;
 
-         // if positioned try repeating
-         if(currentParticle != null && repeatTerm(qName, atts))
-            return this;
-         
-         // this will be the first occurrence
-         
          int i = pos;
          while(i < sequence.size() - 1)
          {
@@ -151,27 +140,70 @@ public class SequenceBinding
             if (next != null)
             {
                pos = i;
-               occurrence = 1;
                currentParticle = particle;
+               if(occurrence == 0)
+                  occurrence = 1;
                return this;
             }
 
             if (particle.isRequired())
             {
                if (required)
-               {
                   throw new JBossXBRuntimeException("Requested element " + qName
                         + " is not allowed in this position in the sequence. A model group with minOccurs="
                         + particle.getMinOccurs() + " that doesn't contain this element must follow.");
-               }
                else
+                  return null;
+            }
+         }
+
+         if(pos >= 0 && (particle.getMaxOccursUnbounded() ||
+               occurrence < particle.getMinOccurs() ||
+               occurrence < particle.getMaxOccurs()))
+         {
+            for(i = 0; i < sequence.size(); ++i)
+            {
+               ParticleBinding item = sequence.get(i);
+               TermBinding term = item.getTerm();
+               next = term.newPosition(qName, atts, item);
+
+               if(next != null)
                {
-                  break;
+                  pos = i;
+                  ++occurrence;
+                  currentParticle = item;
+
+                  endParticle();
+                  o = initValue(stack.parent().getValue(), atts);
+                  ended = false;
+
+                  if(trace)
+                     log.trace("found " + qName + " in " + SequenceBinding.this);
+
+                  return this;
+               }
+               
+               if (particle.isRequired())
+               {
+                  if (required)
+                     throw new JBossXBRuntimeException("Requested element " + qName
+                           + " is not allowed in this position in the sequence. A model group with minOccurs="
+                           + particle.getMinOccurs() + " that doesn't contain this element must follow.");
+                  else
+                     return null;
                }
             }
          }
 
-         if(trace && i == sequence.size())
+         endParticle();
+         if(particle.isRepeatable() && repeatableParticleValue != null)
+            endRepeatableParticle(stack.parent());
+
+         currentParticle = null;
+         occurrence = 0;
+         pos = -1;
+
+         if(trace)
             log.trace(qName + " not found in " + SequenceBinding.this);
 
          return null;

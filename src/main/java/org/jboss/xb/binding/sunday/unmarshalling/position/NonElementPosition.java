@@ -28,6 +28,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.UnmarshallingContextImpl;
 import org.xml.sax.Attributes;
 
 /**
@@ -38,16 +39,10 @@ public abstract class NonElementPosition extends AbstractPosition
 {
    protected ParticleBinding currentParticle;
 
-   protected NonElementPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle)
+   protected NonElementPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
    {
       super(name, particle);
       this.particle = particle;
-      this.currentParticle = currentParticle;
-   }
-
-   protected NonElementPosition(QName name, ParticleBinding particle, ParticleBinding currentParticle, Position next)
-   {
-      this(name, particle, currentParticle);
       this.currentParticle = currentParticle;
       this.next = next;
    }
@@ -56,12 +51,7 @@ public abstract class NonElementPosition extends AbstractPosition
    {
       return false;
    }
-   
-   public boolean isModelGroup()
-   {
-      return true;
-   }
-   
+
    public ParticleBinding getCurrentParticle()
    {
       return currentParticle;
@@ -85,7 +75,7 @@ public abstract class NonElementPosition extends AbstractPosition
       ended = true;
       
       // model group should always have parent particle
-      Position parentPosition = stack.peek1();
+      Position parentPosition = stack.parent();
       if(parentPosition.getValue() != null)
          setParent(parentPosition);
    }
@@ -99,23 +89,28 @@ public abstract class NonElementPosition extends AbstractPosition
       ended = true;
 
       // model group should always have parent particle
-      Position parentPosition = stack.getNotSkippedParent(parentIdex);
+      Position parentPosition = stack.notSkippedParent(parentIdex);
       if(parentPosition.getValue() != null)
          setParent(parentPosition);
    }
 
    private void setParent(Position parentPosition)
    {
-      if(parentPosition.getRepeatableParticleValue() == null)
+      if(repeatableParticleValue != null)
+      {
+         repeatableHandler.addTermValue(repeatableParticleValue, o, qName, particle, parentPosition.getParticle(), handler);
+      }
+      else if(parentPosition.getRepeatableParticleValue() == null || !parentPosition.getParticle().getTerm().isSkip())
       {
          TermBeforeSetParentCallback beforeSetParent = particle.getTerm().getBeforeSetParentCallback();
          if(beforeSetParent != null)
          {
-            stack.ctx.parent = parentPosition.getValue();
-            stack.ctx.particle = particle;
-            stack.ctx.parentParticle = stack.getNotSkippedParent().getParticle();
-            o = beforeSetParent.beforeSetParent(o, stack.ctx);
-            stack.ctx.clear();
+            UnmarshallingContextImpl ctx = stack.getContext();
+            ctx.parent = parentPosition.getValue();
+            ctx.particle = particle;
+            ctx.parentParticle = stack.notSkippedParent().getParticle();
+            o = beforeSetParent.beforeSetParent(o, ctx);
+            ctx.clear();
          }
          
          handler.setParent(parentPosition.getValue(), o, qName, particle, parentPosition.getParticle());
@@ -137,12 +132,12 @@ public abstract class NonElementPosition extends AbstractPosition
          {
             endParticle();
             
-            if(!particle.isRepeatable() && stack.peek1().isElement())
+            if(!particle.isRepeatable() && stack.parent().isElement())
             {
                TermBinding t = particle.getTerm();
                StringBuffer sb = new StringBuffer(250);
                sb.append(startName).append(" cannot appear in this position. Expected content of ")
-               .append(((ElementBinding)stack.peek1().getParticle().getTerm()).getQName())
+               .append(((ElementBinding)stack.parent().getParticle().getTerm()).getQName())
                .append(" is ").append(t);
                throw new JBossXBRuntimeException(sb.toString());
             }
@@ -153,15 +148,16 @@ public abstract class NonElementPosition extends AbstractPosition
       {
          if(currentParticle != prevParticle)
          {
-            if(getRepeatableParticleValue() != null &&
+            if(repeatableParticleValue != null &&
                   prevParticle != null && prevParticle.isRepeatable() && prevParticle.getTerm().isModelGroup())
             {
-               stack.endRepeatableParticle(this, qName, prevParticle, particle);
-            }
+               if (trace)
+                  log.trace(" end repeatable " + particle.getTerm());
 
-            if(newPosition.getNext() != null && currentParticle.isRepeatable() && !currentParticle.getTerm().isElement())
-            {
-               stack.startRepeatableParticle(this, o, startName, currentParticle);
+               // the way it is now it's never null
+               repeatableHandler.endRepeatableParticle(o, repeatableParticleValue, qName, prevParticle, particle);
+               repeatableParticleValue = null;
+               repeatableHandler = null;
             }
          }
 
@@ -170,6 +166,9 @@ public abstract class NonElementPosition extends AbstractPosition
          newPosition = newPosition.getNext();
          while (newPosition.getNext() != null)
          {
+            if(newPosition.getParticle().isRepeatable())
+               newPosition.startRepeatableParticle(value);
+
             stack.push(newPosition);
             value = newPosition.initValue(value, atts);
             newPosition.setParentType(parentType);

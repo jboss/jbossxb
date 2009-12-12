@@ -314,6 +314,7 @@ public class WildcardBinding
             {
                ParticleBinding wildcardParticle = new ParticleBinding(wildcardContent);
                next = wildcardContent.newPosition(name, atts, wildcardParticle);
+               next.setPrevious(this);
                ++occurrence;
 
                endParticle();

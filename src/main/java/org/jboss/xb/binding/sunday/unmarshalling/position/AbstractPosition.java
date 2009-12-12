@@ -63,6 +63,7 @@ public abstract class AbstractPosition implements Position
    protected boolean ended;
    protected int occurrence;
 
+   protected Position previous;
    protected Position next;
 
    protected AbstractPosition(QName qName, ParticleBinding particle)
@@ -92,7 +93,22 @@ public abstract class AbstractPosition implements Position
    {
       return next;
    }
+   
+   public void setNext(Position position)
+   {
+      this.next = position;
+   }
 
+   public Position getPrevious()
+   {
+      return previous;
+   }
+
+   public void setPrevious(Position previous)
+   {
+      this.previous = previous;
+   }
+   
    public RepeatableParticleHandler getRepeatableHandler()
    {
       return repeatableHandler;
@@ -128,12 +144,12 @@ public abstract class AbstractPosition implements Position
       return false;
    }
 
-   public Object initValue(Object parent, Attributes atts)
+   public void initValue(Attributes atts)
    {
       if(handler == null)
          handler = getHandler(particle.getTerm());
+      Object parent = previous == null ? null : previous.getValue();
       o = handler.startParticle(parent, qName, particle, atts, stack.getNamespaceRegistry());
-      return o;
    }
 
    public void reset()
@@ -144,14 +160,14 @@ public abstract class AbstractPosition implements Position
       o = null;
    }      
 
-   public void startRepeatableParticle(Object parent)
+   public void startRepeatableParticle()
    {
       if(trace)
          log.trace(" start repeatable " + particle.getTerm());
 
       RepeatableParticleHandler repeatableHandler = particle.getTerm().getRepeatableHandler();
       // the way it is now it's never null
-      Object repeatableContainer = repeatableHandler.startRepeatableParticle(parent, qName, particle);
+      Object repeatableContainer = repeatableHandler.startRepeatableParticle(previous.getValue(), qName, particle);
       if(repeatableContainer != null)
       {
          if(this.repeatableParticleValue != null)
@@ -161,16 +177,35 @@ public abstract class AbstractPosition implements Position
       }
    }
 
-   public void endRepeatableParticle(Position parentPosition)
+   public void endRepeatableParticle()
    {
       if (trace)
          log.trace(" end repeatable " + particle.getTerm());
 
       if(repeatableParticleValue == null)
          throw new IllegalStateException("handler is null");
-      repeatableHandler.endRepeatableParticle(parentPosition.getValue(), repeatableParticleValue, qName, particle, parentPosition.getParticle());
+      repeatableHandler.endRepeatableParticle(previous.getValue(), repeatableParticleValue, qName, particle, previous.getParticle());
       repeatableParticleValue = null;
-      this.repeatableHandler = null;
+      repeatableHandler = null;
+   }
+
+   protected Position notSkippedParent()
+   {
+      Position position = previous;
+      Position wildcardPosition = null;
+      while(position != null)
+      {
+         ParticleBinding particle = position.getParticle();
+         if(!particle.getTerm().isSkip() || position.getRepeatableParticleValue() != null)
+            return position;
+         else if(wildcardPosition != null)
+            return wildcardPosition;
+
+         if(particle.getTerm().isWildcard())
+            wildcardPosition = position;
+         position = position.getPrevious();
+      }
+      return wildcardPosition;
    }
 
    private ParticleHandler getHandler(TermBinding term)

@@ -151,6 +151,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
          if (element != null)
          {
             next = element.getTerm().newPosition(qName, atts, element);
+            next.setPrevious(this);
             // TODO occurrence here is not used ++occurrence;
             if (trace)
                log.trace("found " + qName + " in " + UnorderedSequenceBinding.this);
@@ -163,6 +164,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
             if (next != null)
             {
                //++occurrence;
+               next.setPrevious(this);
                return this;
             }
          }
@@ -173,6 +175,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
             if (next != null)
             {
                //++occurrence;
+               next.setPrevious(this);
                return this;
             }
          }

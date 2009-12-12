@@ -40,6 +40,7 @@ public abstract class NonElementPosition extends AbstractPosition
       super(name, particle);
       this.particle = particle;
       this.next = next;
+      next.setPrevious(this);
    }
 
    public boolean isElement()
@@ -59,13 +60,11 @@ public abstract class NonElementPosition extends AbstractPosition
       o = handler.endParticle(o, qName, particle);
       ended = true;
       
-      // model group should always have parent particle
-      Position parentPosition = stack.parent();
-      if(parentPosition.getValue() != null)
-         setParent(parentPosition);
+      if(previous.getValue() != null)
+         setParent(previous);
    }
    
-   public void endParticle(int parentIdex)
+   public void endParticleWithNotSkippedParent()
    {
       if(ended)
          throw new JBossXBRuntimeException("The position has already been ended!");
@@ -74,7 +73,7 @@ public abstract class NonElementPosition extends AbstractPosition
       ended = true;
 
       // model group should always have parent particle
-      Position parentPosition = stack.notSkippedParent(parentIdex);
+      Position parentPosition = notSkippedParent();
       if(parentPosition.getValue() != null)
          setParent(parentPosition);
    }
@@ -93,7 +92,7 @@ public abstract class NonElementPosition extends AbstractPosition
             UnmarshallingContextImpl ctx = stack.getContext();
             ctx.parent = parentPosition.getValue();
             ctx.particle = particle;
-            ctx.parentParticle = stack.notSkippedParent().getParticle();
+            ctx.parentParticle = notSkippedParent().getParticle();
             o = beforeSetParent.beforeSetParent(o, ctx);
             ctx.clear();
          }
@@ -113,15 +112,14 @@ public abstract class NonElementPosition extends AbstractPosition
          return null;
 
       // push all except the last one
-      Object value = o;
       Position newPosition = next;
       while (newPosition.getNext() != null)
       {
          if (newPosition.getParticle().isRepeatable())
-            newPosition.startRepeatableParticle(value);
+            newPosition.startRepeatableParticle();
 
          stack.push(newPosition);
-         value = newPosition.initValue(value, atts);
+         newPosition.initValue(atts);
          newPosition.setParentType(parentType);
          newPosition = newPosition.getNext();
       }
@@ -133,9 +131,10 @@ public abstract class NonElementPosition extends AbstractPosition
    protected void nextNotFound()
    {
       endParticle();
-      if(particle.isRepeatable() && repeatableParticleValue != null)
-         endRepeatableParticle(stack.parent());
+      if(repeatableParticleValue != null)
+         endRepeatableParticle();
 
+      previous = null;
       next = null;
       occurrence = 0;
    }

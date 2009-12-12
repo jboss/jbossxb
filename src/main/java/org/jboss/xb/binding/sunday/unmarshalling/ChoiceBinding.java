@@ -115,12 +115,14 @@ public class ChoiceBinding
                TermBinding term = choice.getTerm();
                next = term.newPosition(qName, atts, choice);
 
+
                if (next != null)
                {
+                  next.setPrevious(this);
                   ++occurrence;
 
                   endParticle();
-                  o = initValue(stack.parent().getValue(), atts);
+                  initValue(atts);
                   ended = false;
 
                   if (trace)

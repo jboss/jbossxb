@@ -22,8 +22,6 @@
 package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.xml.namespace.QName;
 import org.apache.xerces.xs.XSTypeDefinition;
@@ -101,23 +99,16 @@ public class SundayContentHandler
 
    public void characters(char[] ch, int start, int length)
    {
-      Position position = stack.current();
+      Position position = stack.head();
       if(!position.isElement())
          return;
       
       // if current is ended the characters belong to its parent
       if(position.isEnded())
       {
-         position = stack.parent();
-         if(!position.isElement())
-         {
-            for(int i = stack.size() - 3; i >= 0; --i)
-            {
-               position = stack.parent(i);
-               if(position.isElement())
-                  break;
-            }
-         }
+         position = position.getPrevious();
+         while(!position.isElement())
+            position = position.getPrevious();
       }
 
       position.characters(ch, start, length);
@@ -126,16 +117,15 @@ public class SundayContentHandler
    public void endElement(String namespaceURI, String localName, String qName)
    {
       ElementBinding elementBinding = null;
-      Position position = null;
-      while(elementBinding == null && !stack.isEmpty())
+      Position position = stack.head;
+      while(elementBinding == null && position != null)
       {
-         position = stack.current();
          if(position.isElement())
          {
             if(position.isEnded())
             {
                if(position.getRepeatableParticleValue() != null)
-                  position.endRepeatableParticle(stack.parent());
+                  position.endRepeatableParticle();
                stack.pop();
             }
             else
@@ -158,15 +148,16 @@ public class SundayContentHandler
          {
             position.endParticle();
             if(position.getRepeatableParticleValue() != null)
-               position.endRepeatableParticle(stack.parent());
+               position.endRepeatableParticle();
             stack.pop();
          }
+         position = stack.head;
       }
 
       if(elementBinding == null)
          throw new JBossXBRuntimeException("Failed to endElement " + qName + ": binding not found");
 
-      if(stack.size() == 1)
+      if(stack.head.getPrevious() == null)
       {
          root = elementBinding.getType().getValueAdapter().cast(position.getValue(), Object.class);
          stack.clear();
@@ -201,7 +192,7 @@ public class SundayContentHandler
 
       atts = preprocessAttributes(atts);
       
-      if(stack.isEmpty())
+      if(stack.head == null)
       {
          ParticleBinding particle = null;
          if(schemaBinding != null)
@@ -242,13 +233,12 @@ public class SundayContentHandler
          return;
       }
 
-      while (!stack.isEmpty())
+      while (stack.head != null)
       {
-         Position current = stack.current();
-         ElementPosition next = current.startParticle(startName, atts);
+         ElementPosition next = stack.head.startParticle(startName, atts);
          if (next != null)
          {
-            next.push(stack, atts, current == next);
+            next.push(stack, atts, stack.head == next);
             break;
          }
          stack.pop();
@@ -319,20 +309,17 @@ public class SundayContentHandler
 
    public class StackImpl implements PositionStack
    {
-      private List<Position> list = new ArrayList<Position>();
       private Position head;
       private Position peek1;
 
       public void clear()
       {
-         list.clear();
          head = null;
          peek1 = null;
       }
 
       public void push(Position o)
       {
-         list.add(o);
          peek1 = head;
          head = o;
          o.setStack(this);
@@ -340,89 +327,19 @@ public class SundayContentHandler
             log.trace("pushed " + o.getParticle().getTerm());
       }
 
-      public void push(QName qName, ParticleBinding particle, Object o, ParticleHandler handler, TypeBinding parentType)
-      {
-         ElementPosition position = new ElementPosition(qName, particle, o, handler, parentType);
-         push(position);
-      }
-
       public Position pop()
       {
+         Position popped = head;
          head = peek1;
-         int index = list.size() - 1;
-         peek1 = index > 1 ? list.get(index - 2) : null;
-         
-         Position popped = list.remove(index);
+         peek1 = peek1.getPrevious();
          if(trace)
             log.trace("popped " + popped.getParticle().getTerm());
          return popped;
       }
 
-      public Position current()
+      public Position head()
       {
          return head;
-      }
-
-      public Position parent()
-      {
-         return peek1;
-      }
-
-      public Position parent(int i)
-      {
-         return list.get(i);
-      }
-
-      public boolean isEmpty()
-      {
-         return head == null;//list.isEmpty();
-      }
-
-      public int size()
-      {
-         return list.size();
-      }
-      
-      public Position notSkippedParent()
-      {
-         Position position = peek1;
-         if(position == null)
-            return null;
-         
-         ParticleBinding particle = position.getParticle();
-         if(!particle.getTerm().isSkip() || position.getRepeatableParticleValue() != null)
-            return position;
-         
-         Position wildcardPosition = null;
-         if(particle.getTerm().isWildcard())
-            wildcardPosition = position;
-
-         for(int i = list.size() - 3; i >= 0; --i)
-         {
-            position = list.get(i);
-            particle = position.getParticle();
-            if(!particle.getTerm().isSkip() || position.getRepeatableParticleValue() != null)
-               return position;
-            else if(wildcardPosition != null)
-               return wildcardPosition;
-
-            if(particle.getTerm().isWildcard())
-               wildcardPosition = position;
-         }
-         return wildcardPosition;
-      }
-      
-      public Position notSkippedParent(int i)
-      {
-         Position position = null;
-         while(i >= 0)
-         {
-            position = list.get(i--);
-            ParticleBinding particle = position.getParticle();
-            if(!particle.getTerm().isSkip() || position.getRepeatableParticleValue() != null)
-               return position;
-         }
-         return null;
       }
 
       public UnmarshallingContextImpl getContext()

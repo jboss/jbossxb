@@ -21,8 +21,6 @@
   */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
-import javax.xml.namespace.QName;
-
 import org.jboss.xb.binding.NamespaceRegistry;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.UnmarshallingContextImpl;
 import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
@@ -35,27 +33,13 @@ public interface PositionStack
 {
    void push(Position o);
 
-   void push(QName qName, ParticleBinding particle, Object o, ParticleHandler handler, TypeBinding parentType);
-
    Position pop();
 
-   Position current();
-
-   Position parent();
-
-   Position parent(int i);
-
-   Position notSkippedParent();
-
-   Position notSkippedParent(int i);
-
-   boolean isEmpty();
-
-   int size();
+   Position head();
 
    void clear();
 
-   // TODO not realle stack methods
+   // TODO not really stack methods
    
    NamespaceRegistry getNamespaceRegistry();
    

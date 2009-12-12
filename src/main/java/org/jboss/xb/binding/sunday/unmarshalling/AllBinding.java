@@ -110,6 +110,7 @@ public class AllBinding
          if(particle != null)
          {
             next = particle.getTerm().newPosition(qName, atts, particle);
+            next.setPrevious(this);
             // TODO occurrence is not used here ++occurrence;
             return this;
          }

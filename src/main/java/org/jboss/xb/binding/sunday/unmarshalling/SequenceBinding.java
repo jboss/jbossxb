@@ -128,7 +128,10 @@ public class SequenceBinding
             next = particle.getTerm().newPosition(qName, atts, particle);
 
             if (next != null)
+            {
+               next.setPrevious(this);
                return this;
+            }
 
             if (particle.isRequired())
             {
@@ -149,10 +152,11 @@ public class SequenceBinding
 
                if(next != null)
                {
+                  next.setPrevious(this);
                   ++occurrence;
 
                   endParticle();
-                  o = initValue(stack.parent().getValue(), atts);
+                  initValue(atts);
                   ended = false;
 
                   if(trace)

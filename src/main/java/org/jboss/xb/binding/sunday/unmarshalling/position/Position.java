@@ -54,6 +54,12 @@ public interface Position
    boolean isEnded();
    
    Position getNext();
+
+   void setNext(Position next);
+
+   Position getPrevious();
+
+   void setPrevious(Position previous);
    
    boolean isElement();
    
@@ -63,13 +69,13 @@ public interface Position
 
    void characters(char[] ch, int start, int length);
    
-   Object initValue(Object parent, Attributes atts);
+   void initValue(Attributes atts);
    
    ElementPosition startParticle(QName startName, Attributes atts);
    
    void endParticle();
    
-   void startRepeatableParticle(Object parent);
+   void startRepeatableParticle();
    
-   void endRepeatableParticle(Position parentPosition);
+   void endRepeatableParticle();
 }

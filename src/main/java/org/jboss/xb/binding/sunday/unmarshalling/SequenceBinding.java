@@ -140,9 +140,7 @@ public class SequenceBinding
             }
          }
 
-         if(particle.getMaxOccursUnbounded() ||
-               occurrence < particle.getMinOccurs() ||
-               occurrence < particle.getMaxOccurs())
+         if(particle.isOccurrenceAllowed(occurrence + 1))
          {
             for(pos = 0; pos < sequence.size(); ++pos)
             {

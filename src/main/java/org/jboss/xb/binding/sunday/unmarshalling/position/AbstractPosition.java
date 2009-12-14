@@ -32,8 +32,10 @@ import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.PositionStack;
 import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.UnmarshallingContextImpl;
 import org.xml.sax.Attributes;
 
 /**
@@ -206,6 +208,34 @@ public abstract class AbstractPosition implements Position
          position = position.getPrevious();
       }
       return wildcardPosition;
+   }
+
+   protected void setParent(Position parentPosition, ParticleHandler handler)
+   {
+      if(repeatableParticleValue != null)
+      {
+         repeatableHandler.addTermValue(repeatableParticleValue, o, qName, particle, parentPosition.getParticle(), handler);
+      }
+      else if(parentPosition.getRepeatableParticleValue() == null || !parentPosition.getParticle().getTerm().isSkip())
+      {
+         TermBeforeSetParentCallback beforeSetParent = particle.getTerm().getBeforeSetParentCallback();
+         if(beforeSetParent != null)
+         {
+            UnmarshallingContextImpl ctx = stack.getContext();
+            ctx.parent = parentPosition.getValue();
+            ctx.particle = particle;
+            ctx.parentParticle = notSkippedParent().getParticle();
+            o = beforeSetParent.beforeSetParent(o, ctx);
+            ctx.clear();
+         }
+         
+         handler.setParent(parentPosition.getValue(), o, qName, particle, parentPosition.getParticle());
+      }
+      else
+         parentPosition.getRepeatableHandler().addTermValue(
+               parentPosition.getRepeatableParticleValue(),
+               o, qName, particle,
+               parentPosition.getParticle(), handler);
    }
 
    private ParticleHandler getHandler(TermBinding term)

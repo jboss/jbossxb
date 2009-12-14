@@ -107,14 +107,13 @@ public class ChoiceBinding
             log.trace(sb.toString());
          }
 
-         if (particle.getMaxOccursUnbounded() || occurrence < particle.getMinOccurs() || occurrence < particle.getMaxOccurs())
+         if (particle.isOccurrenceAllowed(occurrence + 1))
          {
             for (int i = 0; i < choices.size(); ++i)
             {
                ParticleBinding choice = (ParticleBinding) choices.get(i);
                TermBinding term = choice.getTerm();
                next = term.newPosition(qName, atts, choice);
-
 
                if (next != null)
                {

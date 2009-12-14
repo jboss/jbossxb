@@ -137,8 +137,7 @@ public class ElementPosition extends AbstractPosition
 
          if (particle.isRepeatable())
          {
-            if (particle.getMaxOccursUnbounded() || occurrence < particle.getMinOccurs()
-                  || occurrence < particle.getMaxOccurs())
+            if (particle.isOccurrenceAllowed(occurrence + 1))
             {
                reset();
                ++occurrence;
@@ -152,8 +151,13 @@ public class ElementPosition extends AbstractPosition
          // it's not repeatable but it re-appeared
          // it probably has a repeatable parent
          reset();
-         occurrence = 0;
          endRepeatableParent();
+         occurrence = 1;
+         if(next != null)
+         {
+            next.setPrevious(null);
+            next = null;
+         }
          return this;
       }
       
@@ -197,8 +201,7 @@ public class ElementPosition extends AbstractPosition
 
       if (next != null)
       {
-         if (particle.getMaxOccursUnbounded() || occurrence < particle.getMinOccurs()
-               || occurrence < particle.getMaxOccurs())
+         if (particle.isOccurrenceAllowed(occurrence + 1))
          {
             // this increase is actually ahead of its time, it may fail to locate the element
             // but in the current impl it doesn't matter
@@ -337,7 +340,6 @@ public class ElementPosition extends AbstractPosition
                if(!type.isSimple() &&
                   schema != null &&
                   schema.isStrictSchema()
-                  // todo this isSkip() doesn't look nice here
                   && !element.isSkip())
                {
                   throw new JBossXBRuntimeException("Element " +
@@ -454,33 +456,7 @@ public class ElementPosition extends AbstractPosition
                   if (wh != null)
                      handler = wh;
                }
-               
-               if(repeatableParticleValue != null)
-               {
-                  repeatableHandler.addTermValue(repeatableParticleValue, o, qName, particle, notSkippedParent.getParticle(), handler);
-               }
-               else if(notSkippedParent.getRepeatableParticleValue() == null || !notSkippedParent.getParticle().getTerm().isSkip())
-               {
-                  TermBeforeSetParentCallback beforeSetParent = particle.getTerm().getBeforeSetParentCallback();
-                  if(beforeSetParent != null)
-                  {
-                     UnmarshallingContextImpl ctx = stack.getContext();
-                     ctx.parent = notSkippedParent.getValue();
-                     ctx.particle = particle;
-                     ctx.parentParticle = notSkippedParent().getParticle();
-                     o = beforeSetParent.beforeSetParent(o, ctx);
-                     ctx.clear();
-                  }
-
-                  handler.setParent(notSkippedParent.getValue(), o, qName, particle, notSkippedParent.getParticle());
-               }
-               else
-               {
-                  notSkippedParent.getRepeatableHandler().addTermValue(
-                        notSkippedParent.getRepeatableParticleValue(),
-                        o, qName, particle,
-                        notSkippedParent.getParticle(), handler);
-               }
+               setParent(notSkippedParent, handler);
             }
             else if (parentTerm.isWildcard())
             {
@@ -500,7 +476,7 @@ public class ElementPosition extends AbstractPosition
       }
       else
       {
-         Position popped = stack.pop();
+         stack.pop(); // which is this
 
          for(int i = interceptors.size() - 1; i >= 0; --i)
          {
@@ -519,8 +495,8 @@ public class ElementPosition extends AbstractPosition
          }
 
          previous = stack.head();
-         previous.setNext(popped);
-         stack.push(popped);
+         previous.setNext(this);
+         stack.push(this);
       }
       
       ended = true;
@@ -533,31 +509,20 @@ public class ElementPosition extends AbstractPosition
    
    private void endRepeatableParent()
    {
-      Position position = previous;
-      while(true)
+      Position position = this;
+      do
       {
+         position = position.getPrevious();
          if(position.isElement())
-         {
             throw new JBossXBRuntimeException(
                "Failed to start " + qName +
                ": the element is not repeatable, repeatable parent expected to be a model group but got element " +
                position.getParticle().getTerm().getQName()
             );
-         }
-
          ((NonElementPosition)position).endParticleWithNotSkippedParent();
-
-         if(position.getParticle().isRepeatable())
-         {
-            position.reset();
-            position.initValue(null);
-            break;
-         }
-
-         position = position.getPrevious();
       }
+      while(!position.getParticle().isRepeatable());
 
-      position = position.getNext();
       while(position != this)
       {
          position.reset();
@@ -653,13 +618,8 @@ public class ElementPosition extends AbstractPosition
          }
 
          if (repeated)
-            stack.push(this);
-         
-/*         if(interceptors.size() > 1)
-            throw new IllegalStateException("" + interceptors.size());
-         if(localInterceptors.size() > 1)
-            throw new IllegalStateException("" + localInterceptors.size());
-*/      }
+            stack.push(this);         
+      }
 
       if (!repeated)
          stack.push(this);

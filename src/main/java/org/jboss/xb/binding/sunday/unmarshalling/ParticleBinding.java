@@ -92,12 +92,12 @@ public class ParticleBinding
 
    public boolean isRequired()
    {
-      return isRequired(0);
+      return minOccurs > 0 && (!term.isModelGroup() || ((ModelGroupBinding)term).hasRequiredParticle());
    }
 
-   public boolean isRequired(int occurs)
+   public boolean isOccurrenceAllowed(int occurrence)
    {
-      return minOccurs > occurs && (!term.isModelGroup() || ((ModelGroupBinding)term).hasRequiredParticle());
+      return maxOccursUnbounded || occurrence <= maxOccurs;
    }
    
    public String toString()

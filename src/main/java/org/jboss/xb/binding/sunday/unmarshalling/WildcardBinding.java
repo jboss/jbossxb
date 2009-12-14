@@ -306,8 +306,7 @@ public class WildcardBinding
 
       public Position nextPosition(QName name, Attributes atts)
       {
-         if (particle.getMaxOccursUnbounded() || occurrence < particle.getMinOccurs()
-               || occurrence < particle.getMaxOccurs())
+         if (particle.isOccurrenceAllowed(occurrence + 1))
          {
             ElementBinding wildcardContent = getElement(name, atts);
             if (wildcardContent != null)

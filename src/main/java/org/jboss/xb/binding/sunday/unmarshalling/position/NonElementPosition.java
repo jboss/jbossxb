@@ -25,8 +25,6 @@ import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
-import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.UnmarshallingContextImpl;
 import org.xml.sax.Attributes;
 
 /**
@@ -61,7 +59,7 @@ public abstract class NonElementPosition extends AbstractPosition
       ended = true;
       
       if(previous.getValue() != null)
-         setParent(previous);
+         setParent(previous, handler);
    }
    
    public void endParticleWithNotSkippedParent()
@@ -75,37 +73,9 @@ public abstract class NonElementPosition extends AbstractPosition
       // model group should always have parent particle
       Position parentPosition = notSkippedParent();
       if(parentPosition.getValue() != null)
-         setParent(parentPosition);
+         setParent(parentPosition, handler);
    }
 
-   private void setParent(Position parentPosition)
-   {
-      if(repeatableParticleValue != null)
-      {
-         repeatableHandler.addTermValue(repeatableParticleValue, o, qName, particle, parentPosition.getParticle(), handler);
-      }
-      else if(parentPosition.getRepeatableParticleValue() == null || !parentPosition.getParticle().getTerm().isSkip())
-      {
-         TermBeforeSetParentCallback beforeSetParent = particle.getTerm().getBeforeSetParentCallback();
-         if(beforeSetParent != null)
-         {
-            UnmarshallingContextImpl ctx = stack.getContext();
-            ctx.parent = parentPosition.getValue();
-            ctx.particle = particle;
-            ctx.parentParticle = notSkippedParent().getParticle();
-            o = beforeSetParent.beforeSetParent(o, ctx);
-            ctx.clear();
-         }
-         
-         handler.setParent(parentPosition.getValue(), o, qName, particle, parentPosition.getParticle());
-      }
-      else
-         parentPosition.getRepeatableHandler().addTermValue(
-               parentPosition.getRepeatableParticleValue(),
-               o, qName, particle,
-               parentPosition.getParticle(), handler);
-   }
-   
    public ElementPosition startParticle(QName startName, Attributes atts)
    {
       if (nextPosition(startName, atts) == null)

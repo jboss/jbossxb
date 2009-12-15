@@ -391,7 +391,7 @@ public class TypeBinding
    public List<ElementInterceptor> getInterceptors(QName qName)
    {
       List<ElementInterceptor> list = interceptors.get(qName);
-      return list == null ? Collections.EMPTY_LIST : list;
+      return list == null ? Collections.<ElementInterceptor>emptyList() : list;
    }
    
    public TypeBinding getBaseType()

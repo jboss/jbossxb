@@ -64,6 +64,8 @@ public class ElementPosition extends AbstractPosition
    private Boolean indentation;
    private boolean ignorableCharacters = true;
 
+   private Object[] interceptorObjects;
+
    public ElementPosition(QName qName, ParticleBinding particle)
    {
       super(qName, particle);
@@ -288,9 +290,14 @@ public class ElementPosition extends AbstractPosition
    {
       ElementBinding element = (ElementBinding) particle.getTerm();
       TypeBinding type = element.getType();
-      List<ElementInterceptor> interceptors = element.getInterceptors();
-      List<ElementInterceptor> localInterceptors = parentType == null ? Collections.<ElementInterceptor>emptyList() : parentType.getInterceptors(qName);
-      int allInterceptors = interceptors.size() + localInterceptors.size();
+      
+      List<ElementInterceptor> interceptors = null;
+      List<ElementInterceptor> localInterceptors = null;
+      if(interceptorObjects != null)
+      {
+         interceptors = element.getInterceptors();
+         localInterceptors = parentType == null ? Collections.<ElementInterceptor>emptyList() : parentType.getInterceptors(qName);
+      }
 
       if(o != SundayContentHandler.NIL)
       {
@@ -393,22 +400,20 @@ public class ElementPosition extends AbstractPosition
                }
             }
 
-            if(allInterceptors > 0)
+            if(interceptorObjects != null)
             {
                NamespaceRegistry nsRegistry = stack.getNamespaceRegistry();
-               Position iPos = previous;
+               int ioIndex = 0;
                for (int i = interceptors.size() - 1; i >= 0; --i)
                {
                   ElementInterceptor interceptor = interceptors.get(i);
-                  interceptor.characters(iPos.getValue(), qName, type, nsRegistry, dataContent);
-                  iPos = iPos.getPrevious();
+                  interceptor.characters(interceptorObjects[ioIndex++], qName, type, nsRegistry, dataContent);
                }
 
                for (int i = localInterceptors.size() - 1; i >= 0; --i)
                {
                   ElementInterceptor interceptor = localInterceptors.get(i);
-                  interceptor.characters(iPos.getValue(), qName, type, nsRegistry, dataContent);
-                  iPos = iPos.getPrevious();
+                  interceptor.characters(interceptorObjects[ioIndex++], qName, type, nsRegistry, dataContent);
                }
             }
          }
@@ -424,14 +429,13 @@ public class ElementPosition extends AbstractPosition
 
       o = handler.endParticle(o, qName, particle);
 
-      if(!interceptors.isEmpty())
+      if(interceptorObjects != null && !interceptors.isEmpty())
       {
-         Position iPos = previous;
+         int ioIndex = 0;
          for (int i = interceptors.size() - 1; i >= 0; --i)
          {
             ElementInterceptor interceptor = interceptors.get(i);
-            interceptor.endElement(iPos.getValue(), qName, type);
-            iPos = iPos.getPrevious();
+            interceptorObjects[ioIndex] = interceptor.endElement(interceptorObjects[ioIndex++], qName, type);
          }
       }
       
@@ -439,7 +443,7 @@ public class ElementPosition extends AbstractPosition
       // setParent
       //
 
-      if(allInterceptors == 0)
+      if(interceptorObjects == null)
       {
          Position notSkippedParent = notSkippedParent();
          if (notSkippedParent != null)
@@ -476,12 +480,11 @@ public class ElementPosition extends AbstractPosition
       }
       else
       {
-         stack.pop(); // which is this
-
+         int ioIndex = 0;
          for(int i = interceptors.size() - 1; i >= 0; --i)
          {
             ElementInterceptor interceptor = interceptors.get(i);
-            Object parent = stack.pop().getValue();
+            Object parent = interceptorObjects[ioIndex++];
             interceptor.add(parent, o, qName);
             o = parent;
          }
@@ -489,14 +492,10 @@ public class ElementPosition extends AbstractPosition
          for(int i = localInterceptors.size() - 1; i >= 0; --i)
          {
             ElementInterceptor interceptor = localInterceptors.get(i);
-            Object parent = stack.pop().getValue();
+            Object parent = interceptorObjects[ioIndex++];
             interceptor.add(parent, o, qName);
             o = parent;
          }
-
-         previous = stack.head();
-         previous.setNext(this);
-         stack.push(this);
       }
       
       ended = true;
@@ -589,38 +588,43 @@ public class ElementPosition extends AbstractPosition
 
       Object parent = previous == null ? null : previous.getValue();
 
-      List<ElementInterceptor> localInterceptors = parentType == null
-            ? Collections.<ElementInterceptor>emptyList()
-            : parentType.getInterceptors(qName);
-      List<ElementInterceptor> interceptors = element.getInterceptors();
-      if (interceptors.size() + localInterceptors.size() > 0)
+      if(parentType != null)
       {
-         if (repeated)
-            stack.pop();
-
-         NamespaceRegistry nsRegistry = stack.getNamespaceRegistry();
-         for (int i = 0; i < localInterceptors.size(); ++i)
+         List<ElementInterceptor> interceptors = parentType.getInterceptors(qName);
+         if(!interceptors.isEmpty())
          {
-            ElementInterceptor interceptor = localInterceptors.get(i);
-            parent = interceptor.startElement(parent, qName, type);
-            interceptor.attributes(parent, qName, type, atts, nsRegistry);
-            previous = new ElementPosition(qName, particle, parent, handler, parentType, previous);
-            stack.push(previous);
+            NamespaceRegistry nsRegistry = stack.getNamespaceRegistry();
+            interceptorObjects = new Object[interceptors.size() + element.getInterceptors().size()];
+            // objects are written to the array in the reversed order to optimize endParticle iterations
+            int ioIndex = interceptorObjects.length - 1;
+            for(ElementInterceptor i : interceptors)
+            {
+               parent = i.startElement(parent, qName, type);
+               i.attributes(parent, qName, type, atts, nsRegistry);
+               interceptorObjects[ioIndex--] = parent;
+            }
          }
-
-         for (int i = 0; i < interceptors.size(); ++i)
-         {
-            ElementInterceptor interceptor = interceptors.get(i);
-            parent = interceptor.startElement(parent, qName, type);
-            interceptor.attributes(parent, qName, type, atts, nsRegistry);
-            previous = new ElementPosition(qName, particle, parent, handler, parentType, previous);
-            stack.push(previous);
-         }
-
-         if (repeated)
-            stack.push(this);         
       }
-
+      
+      if(!element.getInterceptors().isEmpty())
+      {
+         NamespaceRegistry nsRegistry = stack.getNamespaceRegistry();
+         int ioIndex;
+         if(interceptorObjects == null)
+         {
+            interceptorObjects = new Object[element.getInterceptors().size()];
+            ioIndex = interceptorObjects.length - 1;
+         }
+         else
+            ioIndex = element.getInterceptors().size() - 1;
+         for(ElementInterceptor i : element.getInterceptors())
+         {
+            parent = i.startElement(parent, qName, type);
+            i.attributes(parent, qName, type, atts, nsRegistry);
+            interceptorObjects[ioIndex--] = parent;
+         }
+      }
+      
       if (!repeated)
          stack.push(this);
 

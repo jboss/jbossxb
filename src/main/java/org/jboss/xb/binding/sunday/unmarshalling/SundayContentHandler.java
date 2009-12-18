@@ -47,7 +47,7 @@ import org.xml.sax.Attributes;
  * @version <tt>$Revision$</tt>
  */
 public class SundayContentHandler
-   implements JBossXBParser.DtdAwareContentHandler
+   implements JBossXBParser.DtdAwareContentHandler, PositionStack
 {
    final static Logger log = Logger.getLogger(SundayContentHandler.class);
 
@@ -56,10 +56,8 @@ public class SundayContentHandler
    private final SchemaBindingResolver schemaResolver;
    private final SchemaBinding schema;
 
-   private final StackImpl stack = new StackImpl();
-
-   private Object root;
-
+   private Position head;
+   
    // DTD information frm startDTD
    private String dtdRootName;
    private String dtdPublicId;
@@ -99,7 +97,7 @@ public class SundayContentHandler
 
    public void characters(char[] ch, int start, int length)
    {
-      Position position = stack.head();
+      Position position = head;
       if(!position.isElement())
          return;
       
@@ -116,69 +114,39 @@ public class SundayContentHandler
 
    public void endElement(String namespaceURI, String localName, String qName)
    {
-      ElementBinding elementBinding = null;
-      Position position = stack.head;
-      while(elementBinding == null && position != null)
+      while(head != null)
       {
-         if(position.isElement())
+         if(head.isElement())
          {
-            if(position.isEnded())
+            if(!head.isEnded())
             {
-               if(position.getRepeatableParticleValue() != null)
-                  position.endRepeatableParticle();
-               stack.pop();
-            }
-            else
-            {
-               elementBinding = (ElementBinding)position.getParticle().getTerm();
-
+               QName elementQName = head.getParticle().getTerm().getQName();
                QName endName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
-               if(!elementBinding.getQName().equals(endName))
+               if(!elementQName.equals(endName))
                {
                   throw new JBossXBRuntimeException("Failed to end element " +
                      new QName(namespaceURI, localName) +
-                     ": element on the stack is " + elementBinding.getQName()
+                     ": element on the stack is " + elementQName
                   );
                }
-
-               position.endParticle();
+               head.endParticle();
+               break;
             }
          }
          else
          {
-            position.endParticle();
-            if(position.getRepeatableParticleValue() != null)
-               position.endRepeatableParticle();
-            stack.pop();
+            head.endParticle();
          }
-         position = stack.head;
+
+         // assert head.isEnded() == true
+         if(head.getRepeatableParticleValue() != null)
+            head.endRepeatableParticle();
+
+         head = head.getPrevious();
       }
 
-      if(elementBinding == null)
+      if(head == null)
          throw new JBossXBRuntimeException("Failed to endElement " + qName + ": binding not found");
-
-      if(stack.head.getPrevious() == null)
-      {
-         root = elementBinding.getType().getValueAdapter().cast(position.getValue(), Object.class);
-         stack.clear();
-         
-         if(sawDTD)
-         {
-            // Probably should be integrated into schema binding?
-            try
-            {
-               // setDTD(String root, String publicId, String systemId)
-               Class[] sig = {String.class, String.class, String.class};
-               Method setDTD = root.getClass().getMethod("setDTD", sig);
-               Object[] args = {dtdRootName, dtdPublicId, dtdSystemId};
-               setDTD.invoke(root, args);
-            }
-            catch(Exception e)
-            {
-               log.debug("No setDTD found on root: " + root);
-            }
-         }
-      }
    }
 
    public void startElement(String namespaceURI,
@@ -192,7 +160,7 @@ public class SundayContentHandler
 
       atts = preprocessAttributes(atts);
       
-      if(stack.head == null)
+      if(head == null)
       {
          ParticleBinding particle = null;
          if(schemaBinding != null)
@@ -229,19 +197,22 @@ public class SundayContentHandler
             throw new JBossXBRuntimeException(sb.toString());
          }
          
-         new ElementPosition(startName, particle).push(stack, atts, false);
+         ElementPosition next = new ElementPosition(startName, particle);
+         next.push(this, atts, false);
+         head = next;
          return;
       }
 
-      while (stack.head != null)
+      while (head != null)
       {
-         ElementPosition next = stack.head.startParticle(startName, atts);
+         ElementPosition next = head.startParticle(startName, atts);
          if (next != null)
          {
-            next.push(stack, atts, stack.head == next);
+            next.push(this, atts, head == next);
+            head = next;
             break;
          }
-         stack.pop();
+         head = head.getPrevious();
       }
    }
 
@@ -261,6 +232,31 @@ public class SundayContentHandler
 
    public Object getRoot()
    {
+      if(head.getPrevious() != null)
+         throw new IllegalStateException("The stack still contains positions!");
+
+      ElementBinding elementBinding = (ElementBinding) head.getParticle().getTerm();
+      Object root = elementBinding.getType().getValueAdapter().cast(head.getValue(), Object.class);
+      head = null;
+         
+      if (sawDTD)
+      {
+         // Probably should be integrated into schema binding?
+         try
+         {
+            // setDTD(String root, String publicId, String systemId)
+            Class[] sig = {String.class, String.class, String.class};
+            Method setDTD = root.getClass().getMethod("setDTD", sig);
+            Object[] args = {dtdRootName, dtdPublicId, dtdSystemId};
+            setDTD.invoke(root, args);
+         }
+         catch (Exception e)
+         {
+            if(trace)
+               log.trace("No setDTD found on root: " + root);
+         }
+      }
+
       return root;
    }
 
@@ -305,54 +301,18 @@ public class SundayContentHandler
       return attrs;
    }
 
+   public UnmarshallingContextImpl getContext()
+   {
+      return ctx;
+   }
+
+   public NamespaceRegistry getNamespaceRegistry()
+   {
+      return nsRegistry;
+   }
+
    // Inner
 
-   public class StackImpl implements PositionStack
-   {
-      private Position head;
-      private Position peek1;
-
-      public void clear()
-      {
-         head = null;
-         peek1 = null;
-      }
-
-      public void push(Position o)
-      {
-         peek1 = head;
-         head = o;
-         o.setStack(this);
-         if(trace)
-            log.trace("pushed " + o.getParticle().getTerm());
-      }
-
-      public Position pop()
-      {
-         Position popped = head;
-         head = peek1;
-         peek1 = peek1.getPrevious();
-         if(trace)
-            log.trace("popped " + popped.getParticle().getTerm());
-         return popped;
-      }
-
-      public Position head()
-      {
-         return head;
-      }
-
-      public UnmarshallingContextImpl getContext()
-      {
-         return ctx;
-      }
-
-      public NamespaceRegistry getNamespaceRegistry()
-      {
-         return nsRegistry;
-      }
-   }
-   
    public static class UnmarshallingContextImpl implements UnmarshallingContext
    {
       public Object parent;

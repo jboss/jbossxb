@@ -88,7 +88,7 @@ public abstract class NonElementPosition extends AbstractPosition
          if (newPosition.getParticle().isRepeatable())
             newPosition.startRepeatableParticle();
 
-         stack.push(newPosition);
+         newPosition.setStack(stack);
          newPosition.initValue(atts);
          newPosition.setParentType(parentType);
          newPosition = newPosition.getNext();
@@ -103,8 +103,6 @@ public abstract class NonElementPosition extends AbstractPosition
       endParticle();
       if(repeatableParticleValue != null)
          endRepeatableParticle();
-
-      previous = null;
       next = null;
       occurrence = 0;
    }

@@ -23,7 +23,6 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import org.jboss.xb.binding.NamespaceRegistry;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.UnmarshallingContextImpl;
-import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
@@ -31,16 +30,6 @@ import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
  */
 public interface PositionStack
 {
-   void push(Position o);
-
-   Position pop();
-
-   Position head();
-
-   void clear();
-
-   // TODO not really stack methods
-   
    NamespaceRegistry getNamespaceRegistry();
    
    UnmarshallingContextImpl getContext();

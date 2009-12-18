@@ -230,7 +230,7 @@ public class ElementPosition extends AbstractPosition
          if (newPosition.getParticle().isRepeatable())
             newPosition.startRepeatableParticle();
 
-         stack.push(newPosition);
+         newPosition.setStack(stack);
          newPosition.initValue(atts);
          newPosition.setParentType(parentType);
          newPosition = newPosition.getNext();
@@ -532,6 +532,7 @@ public class ElementPosition extends AbstractPosition
    
    public void push(PositionStack stack, Attributes atts, boolean repeated)
    {
+      this.stack = stack;
       ElementBinding element = (ElementBinding) particle.getTerm();
 
       // TODO xsi:type support should be implemented in a better way
@@ -624,9 +625,6 @@ public class ElementPosition extends AbstractPosition
             interceptorObjects[ioIndex--] = parent;
          }
       }
-      
-      if (!repeated)
-         stack.push(this);
 
       String nil = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "nil");
       if (nil == null || !("1".equals(nil) || "true".equals(nil)))

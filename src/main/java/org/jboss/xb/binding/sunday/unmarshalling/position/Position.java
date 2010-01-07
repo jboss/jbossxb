@@ -55,15 +55,11 @@ public interface Position
    
    Position getNext();
 
-   void setNext(Position next);
-
    Position getPrevious();
 
    void setPrevious(Position previous);
    
    boolean isElement();
-   
-   void reset();
    
    Position nextPosition(QName qName, Attributes attrs);
 
@@ -78,4 +74,6 @@ public interface Position
    void startRepeatableParticle();
    
    void endRepeatableParticle();
+   
+   void repeatForChild(Attributes atts);
 }

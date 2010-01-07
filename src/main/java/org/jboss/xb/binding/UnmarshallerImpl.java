@@ -43,7 +43,7 @@ import org.xml.sax.InputSource;
  */
 public class UnmarshallerImpl implements Unmarshaller
 {
-   private ObjectModelBuilder builder = new ObjectModelBuilder();
+   private ObjectModelBuilder builder;
    private final JBossXBParser parser;
 
    // Constructor

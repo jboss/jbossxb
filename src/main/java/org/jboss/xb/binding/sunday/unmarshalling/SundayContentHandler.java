@@ -24,7 +24,6 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 import java.lang.reflect.Method;
 
 import javax.xml.namespace.QName;
-import org.apache.xerces.xs.XSTypeDefinition;
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.AttributesImpl;
 import org.jboss.xb.binding.Constants;
@@ -97,10 +96,10 @@ public class SundayContentHandler
 
    public void characters(char[] ch, int start, int length)
    {
-      Position position = head;
-      if(!position.isElement())
+      if(!head.isElement())
          return;
-      
+
+      Position position = head;
       // if current is ended the characters belong to its parent
       if(position.isEnded())
       {
@@ -132,15 +131,15 @@ public class SundayContentHandler
                head.endParticle();
                break;
             }
+            
+            // assert head.isEnded() == true
+            if(head.getRepeatableParticleValue() != null)
+               head.endRepeatableParticle();
          }
          else
          {
             head.endParticle();
          }
-
-         // assert head.isEnded() == true
-         if(head.getRepeatableParticleValue() != null)
-            head.endRepeatableParticle();
 
          head = head.getPrevious();
       }
@@ -152,8 +151,7 @@ public class SundayContentHandler
    public void startElement(String namespaceURI,
                             String localName,
                             String qName,
-                            Attributes atts,
-                            XSTypeDefinition xercesType)
+                            Attributes atts)
    {
       QName startName = localName.length() == 0 ? new QName(qName) : new QName(namespaceURI, localName);
       SchemaBinding schemaBinding = schema;
@@ -198,7 +196,8 @@ public class SundayContentHandler
          }
          
          ElementPosition next = new ElementPosition(startName, particle);
-         next.push(this, atts, false);
+         next.setStack(this);
+         next.push(atts);
          head = next;
          return;
       }
@@ -208,7 +207,7 @@ public class SundayContentHandler
          ElementPosition next = head.startParticle(startName, atts);
          if (next != null)
          {
-            next.push(this, atts, head == next);
+            next.push(atts);
             head = next;
             break;
          }

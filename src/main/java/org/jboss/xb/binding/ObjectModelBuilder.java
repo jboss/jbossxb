@@ -336,8 +336,7 @@ public class ObjectModelBuilder
    public void startElement(String namespaceURI,
                             String localName,
                             String qName,
-                            Attributes atts,
-                            XSTypeDefinition type)
+                            Attributes atts)
    {
       Object parent = accepted.isEmpty() ? root : peekAccepted();
 

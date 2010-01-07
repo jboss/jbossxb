@@ -24,7 +24,6 @@ package org.jboss.xb.binding.sunday.unmarshalling.position;
 import javax.xml.namespace.QName;
 
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.NoopParticleHandler;
@@ -95,11 +94,6 @@ public abstract class AbstractPosition implements Position
    {
       return next;
    }
-   
-   public void setNext(Position position)
-   {
-      this.next = position;
-   }
 
    public Position getPrevious()
    {
@@ -154,14 +148,6 @@ public abstract class AbstractPosition implements Position
       o = handler.startParticle(parent, qName, particle, atts, stack.getNamespaceRegistry());
    }
 
-   public void reset()
-   {
-      if(!ended)
-         throw new JBossXBRuntimeException("Attempt to reset a particle that has already been reset: " + particle.getTerm());
-      ended = false;
-      o = null;
-   }      
-
    public void startRepeatableParticle()
    {
       if(trace)
@@ -183,9 +169,6 @@ public abstract class AbstractPosition implements Position
    {
       if (trace)
          log.trace(" end repeatable " + particle.getTerm());
-
-      if(repeatableParticleValue == null)
-         throw new IllegalStateException("handler is null");
       repeatableHandler.endRepeatableParticle(previous.getValue(), repeatableParticleValue, qName, particle, previous.getParticle());
       repeatableParticleValue = null;
       repeatableHandler = null;

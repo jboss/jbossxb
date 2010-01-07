@@ -39,7 +39,6 @@ import org.jboss.xb.binding.sunday.unmarshalling.ElementInterceptor;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.PositionStack;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
@@ -71,17 +70,6 @@ public class ElementPosition extends AbstractPosition
       super(qName, particle);
    }
 
-   public ElementPosition(QName qName, ParticleBinding particle, Object o, ParticleHandler handler, TypeBinding parentType, Position previous)
-   {
-      super(qName, particle);
-      this.particle = particle;
-      this.o = o;
-      this.handler = handler;
-      this.parentType = parentType;
-      this.previous = previous;
-      previous.setNext(this);
-   }
-   
    public boolean isElement()
    {
       return true;
@@ -89,7 +77,10 @@ public class ElementPosition extends AbstractPosition
 
    public void reset()
    {
-      super.reset();
+      if(!ended)
+         throw new JBossXBRuntimeException("Attempt to reset a particle that has already been reset: " + particle.getTerm());
+      ended = false;
+      o = null;
       
       if(textContent != null)
          textContent.setLength(0);
@@ -153,7 +144,7 @@ public class ElementPosition extends AbstractPosition
          // it's not repeatable but it re-appeared
          // it probably has a repeatable parent
          reset();
-         endRepeatableParent();
+         previous.repeatForChild(atts);
          occurrence = 1;
          if(next != null)
          {
@@ -192,6 +183,7 @@ public class ElementPosition extends AbstractPosition
 
             ElementBinding xopInclude = new ElementBinding(schema, Constants.QNAME_XOP_INCLUDE, xopIncludeType);
             next = new ElementPosition(startName, new ParticleBinding(xopInclude));
+            next.setStack(stack);
             next.setPrevious(this);
             return next;
          }
@@ -224,20 +216,21 @@ public class ElementPosition extends AbstractPosition
       
       flushIgnorableCharacters();
 
-      Position newPosition = next;
-      while (newPosition.getNext() != null)
+      Position nextPosition = next;
+      while (nextPosition.getNext() != null)
       {
-         if (newPosition.getParticle().isRepeatable())
-            newPosition.startRepeatableParticle();
+         if (nextPosition.getParticle().isRepeatable())
+            nextPosition.startRepeatableParticle();
 
-         newPosition.setStack(stack);
-         newPosition.initValue(atts);
-         newPosition.setParentType(parentType);
-         newPosition = newPosition.getNext();
+         nextPosition.setStack(stack);
+         nextPosition.initValue(atts);
+         nextPosition.setParentType(parentType);
+         nextPosition = nextPosition.getNext();
       }
 
-      newPosition.setParentType(parentType);
-      return (ElementPosition) newPosition;
+      nextPosition.setStack(stack);
+      nextPosition.setParentType(parentType);
+      return (ElementPosition) nextPosition;
    }
 
    public void characters(char[] ch, int start, int length)
@@ -505,34 +498,16 @@ public class ElementPosition extends AbstractPosition
    {
       return (ElementPosition) nextPosition(startName, atts);
    }
-   
-   private void endRepeatableParent()
-   {
-      Position position = this;
-      do
-      {
-         position = position.getPrevious();
-         if(position.isElement())
-            throw new JBossXBRuntimeException(
-               "Failed to start " + qName +
-               ": the element is not repeatable, repeatable parent expected to be a model group but got element " +
-               position.getParticle().getTerm().getQName()
-            );
-         ((NonElementPosition)position).endParticleWithNotSkippedParent();
-      }
-      while(!position.getParticle().isRepeatable());
 
-      while(position != this)
-      {
-         position.reset();
-         position.initValue(null);
-         position = position.getNext();
-      }
-   }
-   
-   public void push(PositionStack stack, Attributes atts, boolean repeated)
+   public void repeatForChild(Attributes atts)
    {
-      this.stack = stack;
+      throw new JBossXBRuntimeException("Failed to repeat parent for non-repeatable element: "
+            + "repeatable parent expected to be a model group but got element "
+            + qName);
+   }
+
+   public void push(Attributes atts)
+   {
       ElementBinding element = (ElementBinding) particle.getTerm();
 
       // TODO xsi:type support should be implemented in a better way
@@ -576,7 +551,7 @@ public class ElementPosition extends AbstractPosition
          particle = new ParticleBinding(xsiElement, particle.getMinOccurs(), particle.getMaxOccurs(), particle.getMaxOccursUnbounded());
       }
 
-      if (!repeated && particle.isRepeatable())
+      if (occurrence == 1 && particle.isRepeatable())
          startRepeatableParticle();
 
       TypeBinding type = element.getType();

@@ -50,6 +50,7 @@ public abstract class NonElementPosition extends AbstractPosition
    {
    }
    
+   
    public void endParticle()
    {
       if(ended)
@@ -60,49 +61,56 @@ public abstract class NonElementPosition extends AbstractPosition
       
       if(previous.getValue() != null)
          setParent(previous, handler);
+      
+      if(repeatableParticleValue != null)
+         endRepeatableParticle();
    }
-   
-   public void endParticleWithNotSkippedParent()
+
+   public void repeatForChild(Attributes atts)
    {
       if(ended)
          throw new JBossXBRuntimeException("The position has already been ended!");
 
       o = handler.endParticle(o, qName, particle);
-      ended = true;
 
       // model group should always have parent particle
       Position parentPosition = notSkippedParent();
       if(parentPosition.getValue() != null)
          setParent(parentPosition, handler);
-   }
 
+      // if it is repeatable then this is the repeatable parent
+      if(!particle.isRepeatable())
+         previous.repeatForChild(atts);
+      
+      initValue(atts);
+   }
+   
    public ElementPosition startParticle(QName startName, Attributes atts)
    {
       if (nextPosition(startName, atts) == null)
          return null;
 
       // push all except the last one
-      Position newPosition = next;
-      while (newPosition.getNext() != null)
+      Position nextPosition = next;
+      while (nextPosition.getNext() != null)
       {
-         if (newPosition.getParticle().isRepeatable())
-            newPosition.startRepeatableParticle();
+         if (nextPosition.getParticle().isRepeatable())
+            nextPosition.startRepeatableParticle();
 
-         newPosition.setStack(stack);
-         newPosition.initValue(atts);
-         newPosition.setParentType(parentType);
-         newPosition = newPosition.getNext();
+         nextPosition.setStack(stack);
+         nextPosition.initValue(atts);
+         nextPosition.setParentType(parentType);
+         nextPosition = nextPosition.getNext();
       }
 
-      newPosition.setParentType(parentType);
-      return (ElementPosition) newPosition;
+      nextPosition.setStack(stack);
+      nextPosition.setParentType(parentType);
+      return (ElementPosition) nextPosition;
    }
 
    protected void nextNotFound()
    {
       endParticle();
-      if(repeatableParticleValue != null)
-         endRepeatableParticle();
       next = null;
       occurrence = 0;
    }

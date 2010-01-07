@@ -316,9 +316,10 @@ public class WildcardBinding
                next.setPrevious(this);
                ++occurrence;
 
-               endParticle();
+               o = handler.endParticle(o, qName, particle);
+               if(previous.getValue() != null)
+                  setParent(previous, handler);
                //o = initValue(stack.parent().getValue(), atts);
-               ended = false;
 
                return this;
             }

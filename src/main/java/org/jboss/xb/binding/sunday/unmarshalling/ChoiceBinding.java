@@ -120,9 +120,10 @@ public class ChoiceBinding
                   next.setPrevious(this);
                   ++occurrence;
 
-                  endParticle();
+                  o = handler.endParticle(o, qName, particle);
+                  if(previous.getValue() != null)
+                     setParent(previous, handler);
                   initValue(atts);
-                  ended = false;
 
                   if (trace)
                      log.trace("found " + qName + " in " + ChoiceBinding.this + ", term=" + choice.getTerm());

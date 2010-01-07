@@ -23,7 +23,6 @@ package org.jboss.xb.binding.parser.sax;
 
 import java.io.InputStream;
 import java.io.Reader;
-import java.lang.reflect.Method;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -56,7 +55,15 @@ public class SaxJBossXBParser
    {
       saxFactory.setValidating(true);
       saxFactory.setNamespaceAware(true);
-      enableXInclude();
+
+      try
+      {
+         saxFactory.setXIncludeAware(true);
+      }
+      catch (UnsupportedOperationException e)
+      {
+         log.trace("setXIncludeAware is not supported by the SAXParserFactory", e);
+      }
    }
 
    private final SAXParser parser;
@@ -65,32 +72,12 @@ public class SaxJBossXBParser
    private DelegatingContentHandler delegateHandler;
    private boolean trace;
 
-   /**
-    * Enables XInclude if the saxFactory supports it.<p>
-    * 
-    * NOTE: Checks the real factory class, not the JAXP interface.
-    */
-   private static void enableXInclude()
-   {
-      try
-      {
-         Class<? extends SAXParserFactory> clazz = saxFactory.getClass();
-         Method method = clazz.getMethod("setXIncludeAware", new Class[] { Boolean.TYPE });
-         method.invoke(saxFactory, new Object[] { Boolean.TRUE });
-      }
-      catch (Exception e)
-      {
-         log.trace("Not setting XIncludeAware", e);
-      }
-   }
-   
    public SaxJBossXBParser()
       throws JBossXBException
    {
       try
       {
          parser = saxFactory.newSAXParser();
-         logParserInfo();
       }
       catch(Exception e)
       {
@@ -117,7 +104,7 @@ public class SaxJBossXBParser
       }
       catch(Exception e)
       {
-         log.debug("LexicalHandler", e);
+         log.trace("LexicalHandler", e);
       }
 
 /*
@@ -154,7 +141,8 @@ public class SaxJBossXBParser
       try
       {
          reader.setFeature(name, value);
-         log.debug(name+" set to: "+reader.getFeature(name));
+         if(trace)
+            log.trace(name+" set to: "+reader.getFeature(name));
       }
       catch(SAXException e)
       {
@@ -166,8 +154,9 @@ public class SaxJBossXBParser
    {
       this.contentHandler = handler;
       trace = log.isTraceEnabled();
-
-      logParserInfo();
+      if(trace)
+         logParserInfo();
+      
       try
       {
          reader.parse(systemId);
@@ -192,8 +181,9 @@ public class SaxJBossXBParser
    {
       this.contentHandler = handler;
       trace = log.isTraceEnabled();
-      
-      logParserInfo();
+      if(trace)
+         logParserInfo();
+
       try
       {
          reader.parse(source);
@@ -238,7 +228,7 @@ public class SaxJBossXBParser
       {
          sb.append("unsupported operation '").append(e.getMessage()).append('\'');
       }
-      log.debug(sb.toString());
+      log.trace(sb.toString());
    }
 
    // Inner
@@ -355,58 +345,41 @@ public class SaxJBossXBParser
 
       public void endElement(String namespaceURI, String localName, String qName)
       {
-         String name = null;
          if(trace)
          {
-            if(localName.length() == 0)
-            {
-               name = qName;
-            }
-            else
-            {
-               name = namespaceURI + ':' + localName;
-            }
+            String name = localName.length() == 0 ? qName : namespaceURI + ':' + localName;
             log.trace("Enter endElement " + name);
-         }
-         try
-         {
-            contentHandler.endElement(namespaceURI, localName, qName);
-         }
-         finally
-         {
-            if(trace)
+            try
+            {
+               contentHandler.endElement(namespaceURI, localName, qName);
+            }
+            finally
             {
                log.trace("Exit endElement  " + name);
             }
          }
+         else
+            contentHandler.endElement(namespaceURI, localName, qName);
       }
 
       public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
       {
-         String name = null;
          if(trace)
          {
-            if(localName.length() == 0)
-            {
-               name = qName;
-            }
-            else
-            {
-               name = namespaceURI + ':' + localName;
-            }
+            String name = localName.length() == 0 ? qName : namespaceURI + ':' + localName;
             log.trace("Enter startElement " + name);
-         }
-         try
-         {
-            contentHandler.startElement(namespaceURI, localName, qName, atts, null);
-         }
-         finally
-         {
-            if(trace)
+            
+            try
+            {
+               contentHandler.startElement(namespaceURI, localName, qName, atts);
+            }
+            finally
             {
                log.trace("Exit startElement  " + name);
             }
          }
+         else
+            contentHandler.startElement(namespaceURI, localName, qName, atts);
       }
    }
 

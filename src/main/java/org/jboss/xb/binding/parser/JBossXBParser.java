@@ -24,7 +24,6 @@ package org.jboss.xb.binding.parser;
 import java.io.InputStream;
 import java.io.Reader;
 
-import org.apache.xerces.xs.XSTypeDefinition;
 import org.jboss.xb.binding.JBossXBException;
 import org.xml.sax.Attributes;
 import org.xml.sax.EntityResolver;
@@ -42,7 +41,7 @@ public interface JBossXBParser
 
       void endElement(String namespaceURI, String localName, String qName);
 
-      void startElement(String namespaceURI, String localName, String qName, Attributes atts, XSTypeDefinition type);
+      void startElement(String namespaceURI, String localName, String qName, Attributes atts);
 
       void startPrefixMapping(String prefix, String uri);
 

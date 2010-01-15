@@ -22,7 +22,6 @@
 package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
-import org.jboss.logging.Logger;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.ObjectLocalMarshaller;
 import org.jboss.xb.binding.Util;
@@ -37,7 +36,7 @@ import org.xml.sax.Attributes;
 public class WildcardBinding
    extends TermBinding
 {
-   private static final Logger log = Logger.getLogger(WildcardBinding.class);
+   //private static final Logger log = Logger.getLogger(WildcardBinding.class);
 
    private static final short PC_LAX = 3;
    private static final short PC_SKIP = 2;
@@ -187,14 +186,14 @@ public class WildcardBinding
     */
    private ElementBinding getUnresolvedElement(QName qName, boolean required)
    {
-      if(log.isTraceEnabled())
+/*      if(log.isTraceEnabled())
       {
          log.trace(
             "getUnresolvedElement for " + qName + ", required=" + required
             + ", unresolvedElementHandler=" + unresolvedElementHandler
          );
       }
-
+*/
       if(unresolvedElementHandler == null)
       {
          if(required)
@@ -327,6 +326,12 @@ public class WildcardBinding
 
          nextNotFound();
          return null;
+      }
+      
+      @Override
+      protected ParticleHandler getHandler()
+      {
+         return NoopParticleHandler.INSTANCE;
       }
    }
 }

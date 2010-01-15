@@ -621,4 +621,10 @@ public class ElementPosition extends AbstractPosition
          indentation = null;
       }
    }
+   
+   @Override
+   protected ParticleHandler getHandler()
+   {
+      return DefaultHandlers.ELEMENT_HANDLER;
+   }
 }

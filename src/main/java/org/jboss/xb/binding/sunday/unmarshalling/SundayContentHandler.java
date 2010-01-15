@@ -24,6 +24,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 import java.lang.reflect.Method;
 
 import javax.xml.namespace.QName;
+
 import org.jboss.logging.Logger;
 import org.jboss.xb.binding.AttributesImpl;
 import org.jboss.xb.binding.Constants;
@@ -48,7 +49,7 @@ import org.xml.sax.Attributes;
 public class SundayContentHandler
    implements JBossXBParser.DtdAwareContentHandler, PositionStack
 {
-   final static Logger log = Logger.getLogger(SundayContentHandler.class);
+   private static Logger log;
 
    public final static Object NIL = new Object();
 
@@ -63,9 +64,7 @@ public class SundayContentHandler
    private String dtdSystemId;
    private boolean sawDTD;
 
-   private boolean trace = log.isTraceEnabled();
-
-   private UnmarshallingContextImpl ctx = new UnmarshallingContextImpl();
+   private UnmarshallingContextImpl ctx;
    private NamespaceRegistry nsRegistry = new NamespaceRegistry();
 
    public SundayContentHandler(SchemaBinding schema)
@@ -237,7 +236,8 @@ public class SundayContentHandler
       ElementBinding elementBinding = (ElementBinding) head.getParticle().getTerm();
       Object root = elementBinding.getType().getValueAdapter().cast(head.getValue(), Object.class);
       head = null;
-         
+      nsRegistry = null;
+      
       if (sawDTD)
       {
          // Probably should be integrated into schema binding?
@@ -251,7 +251,9 @@ public class SundayContentHandler
          }
          catch (Exception e)
          {
-            if(trace)
+            if(log == null)
+               log = Logger.getLogger(SundayContentHandler.class);
+            if(log.isTraceEnabled())
                log.trace("No setDTD found on root: " + root);
          }
       }
@@ -302,6 +304,8 @@ public class SundayContentHandler
 
    public UnmarshallingContextImpl getContext()
    {
+      if(ctx == null)
+         ctx = new UnmarshallingContextImpl();
       return ctx;
    }
 

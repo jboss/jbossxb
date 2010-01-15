@@ -21,6 +21,7 @@
   */
 package org.jboss.xb.binding.parser.sax;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 
@@ -45,10 +46,9 @@ import org.xml.sax.XMLReader;
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public class SaxJBossXBParser
-   implements JBossXBParser
+public class SaxJBossXBParser implements JBossXBParser, org.xml.sax.ContentHandler, org.xml.sax.ext.LexicalHandler, ErrorHandler
 {
-   private static final Logger log = Logger.getLogger(SaxJBossXBParser.class);
+   private static final Logger log = Logger.getLogger("org.jboss.xb.binding.parser.sax.SaxJBossXBParser");
 
    private static final SAXParserFactory saxFactory = SAXParserFactory.newInstance();
    static
@@ -69,38 +69,42 @@ public class SaxJBossXBParser
    private final SAXParser parser;
    private final XMLReader reader;
    private JBossXBParser.ContentHandler contentHandler;
-   private DelegatingContentHandler delegateHandler;
    private boolean trace;
 
    public SaxJBossXBParser()
       throws JBossXBException
    {
+      trace = log.isTraceEnabled();
       try
       {
          parser = saxFactory.newSAXParser();
+         reader = parser.getXMLReader();
       }
       catch(Exception e)
       {
          throw new JBossXBException("Failed to create a new SAX parser", e);
       }
 
-      try
-      {
-         reader = parser.getXMLReader();
-      }
-      catch(SAXException e1)
-      {
-         throw new JBossXBRuntimeException("Failed to get parser's XMLReader", e1);
-      }
-
-      delegateHandler = new DelegatingContentHandler();
-      reader.setContentHandler(delegateHandler);
-      reader.setErrorHandler(MetaDataErrorHandler.INSTANCE);
-      reader.setEntityResolver(new JBossEntityResolver());
+      reader.setContentHandler(this);
+      reader.setErrorHandler(this);
+      
+      reader.setEntityResolver(
+            new EntityResolver()
+            {
+               private EntityResolver delegate;
+               public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException
+               {
+                  if(delegate == null)
+                     delegate = new JBossEntityResolver();
+                  return delegate.resolveEntity(publicId, systemId);
+               }               
+            }
+      );
+      
       // LexicalHandler
       try
       {
-         reader.setProperty("http://xml.org/sax/properties/lexical-handler", delegateHandler);
+         reader.setProperty("http://xml.org/sax/properties/lexical-handler", this);
       }
       catch(Exception e)
       {
@@ -153,7 +157,6 @@ public class SaxJBossXBParser
    public void parse(String systemId, ContentHandler handler) throws JBossXBException
    {
       this.contentHandler = handler;
-      trace = log.isTraceEnabled();
       if(trace)
          logParserInfo();
       
@@ -180,7 +183,6 @@ public class SaxJBossXBParser
    public void parse(InputSource source, ContentHandler handler) throws JBossXBException
    {
       this.contentHandler = handler;
-      trace = log.isTraceEnabled();
       if(trace)
          logParserInfo();
 
@@ -196,7 +198,6 @@ public class SaxJBossXBParser
 
    public String getLocationAsString(String fileName)
    {
-      Locator locator = delegateHandler.getDocumentLocator();
       if (locator == null)
          return fileName;
       else
@@ -231,205 +232,185 @@ public class SaxJBossXBParser
       log.trace(sb.toString());
    }
 
-   // Inner
+   // LexicalHandler
+   private Locator locator;
 
-   private final class DelegatingContentHandler
-      implements org.xml.sax.ContentHandler,
-      org.xml.sax.ext.LexicalHandler
+   public void comment(char[] ch, int start, int length) throws SAXException
    {
-      Locator locator;
-      // Begin LexicalHandler
+   }
 
-      public void comment(char[] ch, int start, int length) throws SAXException
+   public void startDTD(String name, String publicId, String systemId) throws SAXException
+   {
+      if (contentHandler instanceof DtdAwareContentHandler)
       {
-         // TODO Auto-generated method stub
-         
-      }
-
-      public void startDTD(String name, String publicId, String systemId) throws SAXException
-      {
-         if( contentHandler instanceof DtdAwareContentHandler )
-         {
-            DtdAwareContentHandler dach = (DtdAwareContentHandler) contentHandler;
-            dach.startDTD(name, publicId, systemId);
-         }
-      }
-      public void endDTD() throws SAXException
-      {
-         if( contentHandler instanceof DtdAwareContentHandler )
-         {
-            DtdAwareContentHandler dach = (DtdAwareContentHandler) contentHandler;
-            dach.endDTD();
-         }
-      }
-
-      public void startEntity(String name) throws SAXException
-      {
-         // TODO Auto-generated method stub
-         
-      }
-      public void endEntity(String name) throws SAXException
-      {
-         // TODO Auto-generated method stub
-         
-      }
-
-      public void startCDATA() throws SAXException
-      {
-         // TODO Auto-generated method stub
-         
-      }
-      public void endCDATA() throws SAXException
-      {
-         // TODO Auto-generated method stub
-         
-      }
-
-      // End LexicalHandler
-
-      public void endDocument()
-      {
-      }
-
-      public void startDocument()
-      {
-      }
-
-      public void characters(char ch[], int start, int length)
-      {
-         // todo look at this later
-         // do not notify content handler if these are just whitespaces
-         //int i = start;
-         //while(i < start + length)
-         //{
-         //   if(!Character.isWhitespace(ch[i++]))
-         //   {
-               contentHandler.characters(ch, start, length);
-         //      break;
-         //   }
-         //}
-      }
-
-      public void ignorableWhitespace(char ch[], int start, int length)
-      {
-      }
-
-      public void endPrefixMapping(String prefix)
-      {
-         contentHandler.endPrefixMapping(prefix);
-      }
-
-      public void skippedEntity(String name)
-      {
-      }
-
-      public Locator getDocumentLocator()
-      {
-         return locator;
-      }
-      
-      public void setDocumentLocator(Locator locator)
-      {
-         this.locator = locator;
-      }
-
-      public void processingInstruction(String target, String data)
-      {
-         contentHandler.processingInstruction(target, data);
-      }
-
-      public void startPrefixMapping(String prefix, String uri)
-      {
-         contentHandler.startPrefixMapping(prefix, uri);
-      }
-
-      public void endElement(String namespaceURI, String localName, String qName)
-      {
-         if(trace)
-         {
-            String name = localName.length() == 0 ? qName : namespaceURI + ':' + localName;
-            log.trace("Enter endElement " + name);
-            try
-            {
-               contentHandler.endElement(namespaceURI, localName, qName);
-            }
-            finally
-            {
-               log.trace("Exit endElement  " + name);
-            }
-         }
-         else
-            contentHandler.endElement(namespaceURI, localName, qName);
-      }
-
-      public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
-      {
-         if(trace)
-         {
-            String name = localName.length() == 0 ? qName : namespaceURI + ':' + localName;
-            log.trace("Enter startElement " + name);
-            
-            try
-            {
-               contentHandler.startElement(namespaceURI, localName, qName, atts);
-            }
-            finally
-            {
-               log.trace("Exit startElement  " + name);
-            }
-         }
-         else
-            contentHandler.startElement(namespaceURI, localName, qName, atts);
+         DtdAwareContentHandler dach = (DtdAwareContentHandler) contentHandler;
+         dach.startDTD(name, publicId, systemId);
       }
    }
 
-   private static final class MetaDataErrorHandler
-      implements ErrorHandler
+   public void endDTD() throws SAXException
    {
-      public static final ErrorHandler INSTANCE = new MetaDataErrorHandler();
-
-      public void warning(SAXParseException exception)
+      if (contentHandler instanceof DtdAwareContentHandler)
       {
-         log.warn(formatMessage(exception));
+         DtdAwareContentHandler dach = (DtdAwareContentHandler) contentHandler;
+         dach.endDTD();
       }
+   }
 
-      public void error(SAXParseException exception)
-         throws SAXException
+   public void startEntity(String name) throws SAXException
+   {
+   }
+
+   public void endEntity(String name) throws SAXException
+   {
+   }
+
+   public void startCDATA() throws SAXException
+   {
+   }
+
+   public void endCDATA() throws SAXException
+   {
+   }
+
+   // ContentHandler
+
+      public void endDocument()
+   {
+   }
+
+   public void startDocument()
+   {
+   }
+
+   public void characters(char ch[], int start, int length)
+   {
+      // todo look at this later
+      // do not notify content handler if these are just whitespaces
+      //int i = start;
+      //while(i < start + length)
+      //{
+      //   if(!Character.isWhitespace(ch[i++]))
+      //   {
+      contentHandler.characters(ch, start, length);
+      //      break;
+      //   }
+      //}
+   }
+
+   public void ignorableWhitespace(char ch[], int start, int length)
+   {
+   }
+
+   public void endPrefixMapping(String prefix)
+   {
+      contentHandler.endPrefixMapping(prefix);
+   }
+
+   public void skippedEntity(String name)
+   {
+   }
+
+   public Locator getDocumentLocator()
+   {
+      return locator;
+   }
+
+   public void setDocumentLocator(Locator locator)
+   {
+      this.locator = locator;
+   }
+
+   public void processingInstruction(String target, String data)
+   {
+      contentHandler.processingInstruction(target, data);
+   }
+
+   public void startPrefixMapping(String prefix, String uri)
+   {
+      contentHandler.startPrefixMapping(prefix, uri);
+   }
+
+   public void endElement(String namespaceURI, String localName, String qName)
+   {
+      if (trace)
       {
-         throw new SAXException(formatMessage(exception));
+         String name = localName.length() == 0 ? qName : namespaceURI + ':' + localName;
+         log.trace("Enter endElement " + name);
+         try
+         {
+            contentHandler.endElement(namespaceURI, localName, qName);
+         }
+         finally
+         {
+            log.trace("Exit endElement  " + name);
+         }
       }
+      else
+         contentHandler.endElement(namespaceURI, localName, qName);
+   }
 
-      public void fatalError(SAXParseException exception)
-         throws SAXException
+   public void startElement(String namespaceURI, String localName, String qName, Attributes atts)
+   {
+      if (trace)
       {
-         throw new SAXException(formatMessage(exception));
+         String name = localName.length() == 0 ? qName : namespaceURI + ':' + localName;
+         log.trace("Enter startElement " + name);
+
+         try
+         {
+            contentHandler.startElement(namespaceURI, localName, qName, atts);
+         }
+         finally
+         {
+            log.trace("Exit startElement  " + name);
+         }
       }
+      else
+         contentHandler.startElement(namespaceURI, localName, qName, atts);
+   }
 
-      public String formatMessage(SAXParseException exception)
+   // Error handling
+   
+   public void warning(SAXParseException exception)
+   {
+      log.warn(formatMessage(exception));
+   }
+
+   public void error(SAXParseException exception) throws SAXException
+   {
+      throw new SAXException(formatMessage(exception));
+   }
+
+   public void fatalError(SAXParseException exception) throws SAXException
+   {
+      throw new SAXException(formatMessage(exception));
+   }
+
+   public String formatMessage(SAXParseException exception)
+   {
+      StringBuffer buffer = new StringBuffer(50);
+      buffer.append(exception.getMessage()).append(" @ ");
+      String location = exception.getPublicId();
+      if (location != null)
       {
-         StringBuffer buffer = new StringBuffer(50);
-         buffer.append(exception.getMessage()).append(" @ ");
-         String location = exception.getPublicId();
-         if(location != null)
+         buffer.append(location);
+      }
+      else
+      {
+         location = exception.getSystemId();
+         if (location != null)
          {
             buffer.append(location);
          }
          else
          {
-            location = exception.getSystemId();
-            if(location != null)
-            {
-               buffer.append(location);
-            }
-            else
-            {
-               buffer.append("*unknown*");
-            }
+            buffer.append("*unknown*");
          }
-         buffer.append('[');
-         buffer.append(exception.getLineNumber()).append(',');
-         buffer.append(exception.getColumnNumber()).append(']');
-         return buffer.toString();
       }
+      buffer.append('[');
+      buffer.append(exception.getLineNumber()).append(',');
+      buffer.append(exception.getColumnNumber()).append(']');
+      return buffer.toString();
    }
 }

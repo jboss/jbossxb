@@ -135,5 +135,13 @@ public class ChoiceBinding
          nextNotFound();
          return null;
       }
+      
+      @Override
+      protected ParticleHandler getHandler()
+      {
+         TermBinding term = particle.getTerm();
+         ParticleHandler handler = ((ModelGroupBinding)term).getHandler();
+         return handler == null ? DefaultHandlers.ELEMENT_HANDLER : handler;
+      }
    }
 }

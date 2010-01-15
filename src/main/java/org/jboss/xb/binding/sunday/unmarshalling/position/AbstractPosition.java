@@ -24,15 +24,11 @@ package org.jboss.xb.binding.sunday.unmarshalling.position;
 import javax.xml.namespace.QName;
 
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
-import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.NoopParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.PositionStack;
 import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.UnmarshallingContextImpl;
 import org.xml.sax.Attributes;
@@ -143,7 +139,7 @@ public abstract class AbstractPosition implements Position
    public void initValue(Attributes atts)
    {
       if(handler == null)
-         handler = getHandler(particle.getTerm());
+         handler = getHandler();
       Object parent = previous == null ? null : previous.getValue();
       o = handler.startParticle(parent, qName, particle, atts, stack.getNamespaceRegistry());
    }
@@ -221,16 +217,5 @@ public abstract class AbstractPosition implements Position
                parentPosition.getParticle(), handler);
    }
 
-   private ParticleHandler getHandler(TermBinding term)
-   {
-      ParticleHandler handler = null;
-      if(term.isModelGroup())
-         handler = ((ModelGroupBinding)term).getHandler();
-      else if(term.isWildcard())
-         //handler = ((WildcardBinding)term).getWildcardHandler();
-         handler = NoopParticleHandler.INSTANCE;
-      else
-         throw new IllegalArgumentException("Unexpected term " + term);
-      return handler == null ? DefaultHandlers.ELEMENT_HANDLER : handler;
-   }
+   protected abstract ParticleHandler getHandler();
 }

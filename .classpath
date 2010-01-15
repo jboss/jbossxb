@@ -5,7 +5,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="var" path="M2_REPO/junit/junit/4.4/junit-4.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/javax/activation/activation/1.1.1/activation-1.1.1.jar"/>
-	<classpathentry kind="var" path="M2_REPO/org/jboss/jboss-common-core/2.2.9.GA/jboss-common-core-2.2.9.GA.jar"/>
+	<classpathentry kind="var" path="M2_REPO/org/jboss/jboss-common-core/2.2.9.GA/jboss-common-core-2.2.9.GA.jar" sourcepath="/M2_REPO/org/jboss/jboss-common-core/2.2.9.GA/jboss-common-core-2.2.9.GA-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/apache-xerces/xercesImpl/2.9.1/xercesImpl-2.9.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/log4j/log4j/1.2.14/log4j-1.2.14.jar"/>
 	<classpathentry kind="var" path="M2_REPO/wutka-dtdparser/dtdparser121/1.2.1/dtdparser121-1.2.1.jar"/>

@@ -33,8 +33,8 @@ import org.jboss.xb.binding.parser.JBossXBParser;
 public abstract class UnmarshallerFactory
 {
    protected Map<String, Object> features;
-   protected Boolean validation = Boolean.TRUE;
-   protected Boolean namespaces = Boolean.TRUE;
+   protected Boolean validation;
+   protected Boolean namespaces;
 
    public static UnmarshallerFactory newInstance()
    {
@@ -102,14 +102,9 @@ public abstract class UnmarshallerFactory
 
          JBossXBParser parser = unmarshaller.getParser();
          if(validation != null)
-         {
             parser.setFeature(Unmarshaller.VALIDATION, validation.booleanValue());
-         }
-
          if(namespaces != null)
-         {
             parser.setFeature(Unmarshaller.NAMESPACES, namespaces.booleanValue());
-         }
 
          if(features != null)
          {

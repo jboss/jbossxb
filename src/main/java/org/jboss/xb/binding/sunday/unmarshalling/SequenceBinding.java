@@ -185,5 +185,13 @@ public class SequenceBinding
          super.nextNotFound();
          pos = -1;
       }
+
+      @Override
+      protected ParticleHandler getHandler()
+      {
+         TermBinding term = particle.getTerm();
+         ParticleHandler handler = ((ModelGroupBinding)term).getHandler();
+         return handler == null ? DefaultHandlers.ELEMENT_HANDLER : handler;
+      }
    }
 }

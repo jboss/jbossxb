@@ -49,7 +49,7 @@ import org.xml.sax.helpers.AttributesImpl;
  * @version <tt>$Revision$</tt>
  */
 public class TypeBinding
-{
+{   
    protected QName qName;
    /** Map<QName, AttributeBinding>  */
    private Map<QName, AttributeBinding> attrs;
@@ -69,9 +69,9 @@ public class TypeBinding
    private TermBeforeMarshallingCallback beforeMarshallingCallback;
    private TermBeforeSetParentCallback beforeSetParentCallback;
    
-   private Boolean startElementCreatesObject;
-   private int simple; // 0 - not set, 1 - false, 2 - true
-   private Boolean ignoreEmptyString;
+   private int startElementCreatesObject;
+   private int simple;
+   private int ignoreEmptyString;
 
    private WildcardBinding wildcard;
    private ParticleBinding particle;
@@ -87,7 +87,7 @@ public class TypeBinding
    /** Map<QName, List<ElementInterceptor>>
     * these are local element interceptors that are "added" to the interceptor stack
     * defined in the element binding */
-   private Map<QName, List<ElementInterceptor>> interceptors = Collections.emptyMap();
+   private Map<QName, List<ElementInterceptor>> interceptors;
    
    public TypeBinding()
    {
@@ -346,25 +346,21 @@ public class TypeBinding
    {
       ElementBinding el = getElement(qName);
       if(el == null)
-      {
          el = addElement(qName, new TypeBinding());
+      
+      if(interceptors == null)
+      {
+         interceptors = Collections.singletonMap(qName, Collections.singletonList(interceptor));
+         return;
       }
-      //el.pushInterceptor(interceptor);
       
       List<ElementInterceptor> intList = (List<ElementInterceptor>) interceptors.get(qName);
       if(intList == null)
       {
          intList = Collections.singletonList(interceptor);
-         switch(interceptors.size())
-         {
-            case 0:
-               interceptors = Collections.singletonMap(qName, intList);
-               break;
-            case 1:
-               interceptors = new HashMap<QName, List<ElementInterceptor>>(interceptors);
-            default:
-               interceptors.put(qName, intList);
-         }
+         if(interceptors.size() == 1)
+            interceptors = new HashMap<QName, List<ElementInterceptor>>(interceptors);            
+         interceptors.put(qName, intList);
       }
       else
       {
@@ -387,6 +383,8 @@ public class TypeBinding
     */
    public List<ElementInterceptor> getInterceptors(QName qName)
    {
+      if(interceptors == null)
+         return Collections.<ElementInterceptor>emptyList();
       List<ElementInterceptor> list = interceptors.get(qName);
       return list == null ? Collections.<ElementInterceptor>emptyList() : list;
    }
@@ -406,12 +404,12 @@ public class TypeBinding
       // actually, a type can be complex when the particle is null and
       // there are no attributes. But the XsdBinder will set the value of simple
       // to false. This check is for schema bindings created programmatically
-      return simple == 0 ? particle == null && attrs == null : simple == 2;
+      return simple == Constants.NOT_SET ? particle == null && attrs == null : simple == Constants.TRUE;
    }
 
    public void setSimple(boolean simple)
    {
-      this.simple = simple ? 2 : 1;
+      this.simple = simple ? Constants.TRUE : Constants.FALSE;
    }
 
    public boolean isTextContentAllowed()
@@ -520,8 +518,8 @@ public class TypeBinding
     */
    public boolean isStartElementCreatesObject()
    {
-      return startElementCreatesObject == null ?
-         particle != null || attrs != null : startElementCreatesObject;
+      return startElementCreatesObject == Constants.NOT_SET ?
+         particle != null || attrs != null : startElementCreatesObject == Constants.TRUE;
    }
 
    /**
@@ -535,7 +533,7 @@ public class TypeBinding
     */
    public void setStartElementCreatesObject(boolean startElementCreatesObject)
    {
-      this.startElementCreatesObject = startElementCreatesObject;
+      this.startElementCreatesObject = startElementCreatesObject ? Constants.TRUE : Constants.FALSE;
    }
 
    private boolean initializedWildcard;
@@ -676,12 +674,12 @@ public class TypeBinding
 
    public boolean isIgnoreEmptyString()
    {
-      return ignoreEmptyString == null ? !isSimple() : ignoreEmptyString;
+      return ignoreEmptyString == Constants.NOT_SET ? !isSimple() : ignoreEmptyString == Constants.TRUE;
    }
    
    public void setIgnoreEmptyString(boolean value)
    {
-      this.ignoreEmptyString = value;
+      this.ignoreEmptyString = value ? Constants.TRUE : Constants.FALSE;
    }
    
    public AnyAttributeBinding getAnyAttribute()

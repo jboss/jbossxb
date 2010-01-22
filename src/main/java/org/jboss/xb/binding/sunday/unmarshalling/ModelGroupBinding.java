@@ -25,6 +25,7 @@ import java.util.Collection;
 
 import javax.xml.namespace.QName;
 
+import org.jboss.xb.binding.Constants;
 import org.xml.sax.Attributes;
 
 /**
@@ -104,7 +105,7 @@ public abstract class ModelGroupBinding
 
    public boolean isSkip()
    {
-      return skip == null || skip;
+      return skip != Constants.FALSE;
    }
 
    public boolean isModelGroup()

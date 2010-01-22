@@ -125,7 +125,7 @@ public class GlobalGroupUnitTestCase extends AbstractJBossXBTest
       ModelGroupBinding group = schema.getGroup(new QName(NS, "global1"));
       assertNotNull(group);
       group.setClassMetaData(classMetaData);
-      group.setSkip(Boolean.FALSE);
+      group.setSkip(false);
 
       // TODO should be able to determine this from the global group name!
       PropertyMetaData prop = new PropertyMetaData();

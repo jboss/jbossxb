@@ -22,6 +22,8 @@
 package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
+
+import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.ObjectLocalMarshaller;
 import org.jboss.xb.binding.Util;
@@ -213,7 +215,7 @@ public class WildcardBinding
 
             ElementBinding element = new ElementBinding(schema, qName, type);
             // this is unresolved element we don't care about
-            element.setSkip(Boolean.TRUE);
+            element.setSkip(true);
             return element;
          }
       }
@@ -256,7 +258,7 @@ public class WildcardBinding
    
    public boolean isSkip()
    {
-      return skip == null ? true : skip.booleanValue();
+      return skip != Constants.FALSE;
    }
 
    public boolean isModelGroup()
@@ -329,7 +331,7 @@ public class WildcardBinding
       @Override
       protected ParticleHandler getHandler()
       {
-         return NoopParticleHandler.INSTANCE;
+         return DefaultHandlers.NOOP_PARTICLE_HANDLER;
       }
    }
 }

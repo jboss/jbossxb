@@ -31,6 +31,7 @@ import org.jboss.xb.binding.metadata.ClassMetaData;
 import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
+import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
@@ -47,7 +48,7 @@ public class ElementBinding
 
    protected TypeBinding typeBinding;
    protected boolean nillable;
-   protected Boolean normalizeSpace;
+   protected int normalizeSpace;
 
    protected XOPUnmarshaller xopUnmarshaller;
 
@@ -68,6 +69,7 @@ public class ElementBinding
          throw new JBossXBRuntimeException("Each element must have a non-null QName!");
       this.qName = qName;
    }
+   
    public List<ElementInterceptor> getInterceptors()
    {
       return interceptors;
@@ -99,7 +101,6 @@ public class ElementBinding
             if( interceptors.contains(interceptor) == false )
                interceptors.add(interceptor);
          }
-
       }
    }
 
@@ -146,7 +147,7 @@ public class ElementBinding
 
    public boolean isSkip()
    {
-      return skip == null ? typeBinding.isSkip() : skip.booleanValue();
+      return skip == Constants.NOT_SET ? typeBinding.isSkip() : skip == Constants.TRUE;
    }
 
    public ValueAdapter getValueAdapter()
@@ -199,16 +200,16 @@ public class ElementBinding
       this.xopUnmarshaller = xopUnmarshaller;
    }
 
-   public void setNormalizeSpace(Boolean value)
+   public void setNormalizeSpace(boolean value)
    {
-      this.normalizeSpace = value;
+      this.normalizeSpace = value ? Constants.TRUE : Constants.FALSE;
    }
    
    public boolean isNormalizeSpace()
    {
-      if(normalizeSpace != null)
-         return normalizeSpace.booleanValue();      
-      return schema == null ? true : schema.isNormalizeSpace();
+      if(normalizeSpace == Constants.NOT_SET)
+         return schema == null ? true : schema.isNormalizeSpace();
+      return normalizeSpace == Constants.TRUE;
    }
    
    public String toString()

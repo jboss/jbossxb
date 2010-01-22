@@ -1448,7 +1448,7 @@ public class XsdBinder
                msg += ": will be skipped, it's attributes, character content and children will be set on the parent";
                log.trace(msg);
             }
-            term.setSkip(skipAnnotation ? Boolean.TRUE : Boolean.FALSE);
+            term.setSkip(skipAnnotation);
          }
       }
    }

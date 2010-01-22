@@ -42,6 +42,58 @@ public class BuilderParticleHandler implements ParticleHandler
    /** The singleton instance */
    public static final BuilderParticleHandler INSTANCE = new BuilderParticleHandler();
    
+   public static final ParticleHandler PARENT_ELEMENT = new ParticleHandler()
+   {
+      public Object endParticle(Object o, QName elementName, ParticleBinding particle)
+      {
+         return o;
+      }
+
+      public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
+      {
+         if (particle.getTerm().isElement())
+         {
+            ParticleHandler particleHandler = ((ElementBinding)parentParticle.getTerm()).getType().getHandler();
+            if(particleHandler != null)
+               particleHandler.setParent(parent, o, elementName, particle, parentParticle);
+         }
+      }
+
+      public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs,
+            NamespaceContext nsCtx)
+      {
+         return parent;
+      }
+   };
+
+   public static final ParticleHandler PARENT_GROUP = new ParticleHandler()
+   {
+      public Object endParticle(Object o, QName elementName, ParticleBinding particle)
+      {
+         return o;
+      }
+
+      public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
+      {
+         if (particle.getTerm().isElement())
+         {
+            TermBinding parentTerm = parentParticle.getTerm();
+            if (!parentTerm.isSkip())
+            {
+               ParticleHandler particleHandler = ((ModelGroupBinding)parentTerm).getHandler();
+               if(particleHandler != null)
+                  particleHandler.setParent(parent, o, elementName, particle, parentParticle);
+            }
+         }
+      }
+
+      public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs,
+            NamespaceContext nsCtx)
+      {
+         return parent;
+      }
+   };
+
    public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs, NamespaceContext nsCtx)
    {
       return parent;
@@ -49,11 +101,10 @@ public class BuilderParticleHandler implements ParticleHandler
 
    public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
    {
-      TermBinding term = particle.getTerm();
-      TermBinding parentTerm = parentParticle.getTerm();
-      if (term.isModelGroup() == false)
+      if (particle.getTerm().isModelGroup() == false)
       {
          ParticleHandler particleHandler = null;
+         TermBinding parentTerm = parentParticle.getTerm();
          if(parentTerm.isElement())
          {
             particleHandler = ((ElementBinding)parentTerm).getType().getHandler();            

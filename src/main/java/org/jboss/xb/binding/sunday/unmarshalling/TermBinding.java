@@ -23,6 +23,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
 
+import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.metadata.ClassMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.MapEntryMetaData;
@@ -49,7 +50,7 @@ public abstract class TermBinding
    protected ValueMetaData valueMetaData;
    protected boolean mapEntryKey;
    protected boolean mapEntryValue;
-   protected Boolean skip;
+   protected int skip;
    protected ValueAdapter valueAdapter;
    protected TermBeforeMarshallingCallback beforeMarshallingCallback;
    protected TermBeforeSetParentCallback beforeSetParentCallback;
@@ -156,9 +157,9 @@ public abstract class TermBinding
 
    public abstract boolean isSkip();
 
-   public void setSkip(Boolean skip)
+   public void setSkip(boolean skip)
    {
-      this.skip = skip;
+      this.skip = skip ? Constants.TRUE : Constants.FALSE;
    }
 
    public ValueAdapter getValueAdapter()

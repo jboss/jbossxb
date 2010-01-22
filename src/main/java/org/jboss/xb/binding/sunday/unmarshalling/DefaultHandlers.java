@@ -21,6 +21,7 @@
 */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler.UnmarshalCharactersHandler;
@@ -28,6 +29,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtAttributeHandler
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
 import org.jboss.xb.binding.sunday.xop.XOPElementHandler;
+import org.xml.sax.Attributes;
 
 /**
  * The DefaultHandlers.
@@ -46,7 +48,8 @@ public class DefaultHandlers
 
    public static ParticleHandler SIMPLE_HANDLER = new RtElementHandler()
    {
-      public Object startParticle(Object parent, QName qName, ParticleBinding particle)
+      @Override
+      public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs, NamespaceContext nsCtx)
       {
          return null;
       }
@@ -67,9 +70,41 @@ public class DefaultHandlers
       }
    };
    
-   //public static CharactersHandler CHARACTERS_HANDLER = RtCharactersHandler.INSTANCE;
-
    public static ParticleHandler XOP_HANDLER = new XOPElementHandler();
    
-   public static RepeatableParticleHandler REPEATABLE_HANDLER = NoopRepeatableParticleHandler.INSTANCE;
+   public static ParticleHandler NOOP_PARTICLE_HANDLER = new ParticleHandler()
+   {
+      public Object endParticle(Object o, QName elementName, ParticleBinding particle)
+      {
+         return o;
+      }
+
+      public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle,
+            ParticleBinding parentParticle)
+      {
+      }
+
+      public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs,
+            NamespaceContext nsCtx)
+      {
+         return parent;
+      }
+   };
+   
+   public static RepeatableParticleHandler REPEATABLE_HANDLER = new RepeatableParticleHandler()
+   {
+      public Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle)
+      {
+         return null;
+      }
+
+      public void endRepeatableParticle(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
+      {
+      }
+
+      public void addTermValue(Object particleValue, Object termValue, QName elementName,
+            ParticleBinding particle, ParticleBinding parentParticle, ParticleHandler handler)
+      {
+      }
+   };
 }

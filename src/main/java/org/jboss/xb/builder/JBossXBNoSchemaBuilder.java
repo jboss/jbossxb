@@ -103,9 +103,9 @@ import org.jboss.xb.binding.sunday.unmarshalling.AttributeHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ChoiceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultElementInterceptor;
+import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.NoopParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
@@ -1140,7 +1140,7 @@ public class JBossXBNoSchemaBuilder
       if (trace)
          log.trace(model.getGroupType() + " model group for type=" + beanInfo.getName());
 
-      model.setHandler(BuilderParticleHandler.INSTANCE);
+      model.setHandler(BuilderParticleHandler.PARENT_ELEMENT);
       ParticleBinding typeParticle = new ParticleBinding(model);
       typeParticle.setMinOccurs(1);
       typeParticle.setMaxOccurs(1);
@@ -1447,7 +1447,7 @@ public class JBossXBNoSchemaBuilder
       if (elements.length > 1)
       {
          ChoiceBinding choice = new ChoiceBinding(schemaBinding);
-         choice.setHandler(BuilderParticleHandler.INSTANCE);
+         choice.setHandler(BuilderParticleHandler.PARENT_GROUP);
          ParticleBinding particleBinding = new ParticleBinding(choice);
          particleBinding.setMinOccurs(0);
          // WARN normally maxOccursUnbounded should be set to true in this case
@@ -1558,7 +1558,7 @@ public class JBossXBNoSchemaBuilder
                }
                else
                {
-                  elementTypeBinding.setHandler(BuilderParticleHandler.INSTANCE);
+                  elementTypeBinding.setHandler(BuilderParticleHandler.PARENT_GROUP);
                }
                elementTypeBinding.setSchemaBinding(schemaBinding);
                ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, propertyQName, false);
@@ -1571,7 +1571,7 @@ public class JBossXBNoSchemaBuilder
 
                // Setup the child model
                ChoiceBinding childModel = new ChoiceBinding(schemaBinding);
-               childModel.setHandler(BuilderParticleHandler.INSTANCE);
+               childModel.setHandler(BuilderParticleHandler.PARENT_ELEMENT);
                ParticleBinding particleBinding = new ParticleBinding(childModel);
                particleBinding.setMinOccurs(0);
                particleBinding.setMaxOccurs(1);
@@ -1874,7 +1874,7 @@ public class JBossXBNoSchemaBuilder
                log.trace("Property order for " + annotation.kind() + " property " + property.getName() + ": " + Arrays.asList(memberOrder));
 
             group = createModelGroup(annotation.kind(), groupType, memberOrder.length > 1 && propOrderMissing, annotation.propOrder());
-            group.setSkip(Boolean.FALSE);
+            group.setSkip(false);
             group.setHandler(propHandler);
 
             // bind model group members
@@ -1966,14 +1966,14 @@ public class JBossXBNoSchemaBuilder
    {
       TypeBinding wrapperType = new TypeBinding();
       SequenceBinding seq = new SequenceBinding(schemaBinding);
-      seq.setHandler(BuilderParticleHandler.INSTANCE);
+      seq.setHandler(BuilderParticleHandler.PARENT_ELEMENT);
       ParticleBinding particle = new ParticleBinding(seq);
       wrapperType.setParticle(particle);
-      wrapperType.setHandler(NoopParticleHandler.INSTANCE);
+      wrapperType.setHandler(DefaultHandlers.NOOP_PARTICLE_HANDLER);
 
       ElementBinding wrapperElement = createElementBinding(propertyType, wrapperType, wrapperQName, false);
       wrapperElement.setNillable(annotation.nillable());
-      wrapperElement.setSkip(Boolean.TRUE);
+      wrapperElement.setSkip(true);
       particle = new ParticleBinding(wrapperElement, annotation.required() ? 1 : 0, 1, propertyType.isCollection() || propertyType.isArray());
       parentModel.addParticle(particle);
 
@@ -2252,7 +2252,7 @@ public class JBossXBNoSchemaBuilder
             keyValueSequence = new SequenceBinding(schemaBinding);                     
             if(entryType == null)
             {
-               keyValueSequence.setSkip(Boolean.FALSE);
+               keyValueSequence.setSkip(false);
                keyValueSequence.setQName(propertyQName);
                schemaBinding.addGroup(keyValueSequence.getQName(), keyValueSequence);
                ParticleBinding keyValueParticle = new ParticleBinding(keyValueSequence, 0, -1, true);

@@ -30,13 +30,13 @@ import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
-import org.jboss.xb.binding.sunday.unmarshalling.position.PositionFactory;
+import org.xml.sax.Attributes;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision$</tt>
  */
-public abstract class TermBinding implements PositionFactory
+public abstract class TermBinding
 {
    protected SchemaBinding schema;
    protected QName qName;
@@ -211,4 +211,6 @@ public abstract class TermBinding implements PositionFactory
    {
       this.repeatableHandler = repeatableHandler;
    }
+   
+   public abstract AbstractPosition newPosition(QName qName, Attributes attrs, ParticleBinding particle);
 }

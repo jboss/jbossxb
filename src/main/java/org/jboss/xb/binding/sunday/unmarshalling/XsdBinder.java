@@ -56,6 +56,7 @@ import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 import org.jboss.xb.binding.sunday.xop.XOPIncludeHandler;
 import org.jboss.xb.binding.group.ValueListRepeatableParticleHandler;
 import org.jboss.xb.binding.metadata.AddMethodMetaData;
@@ -531,8 +532,16 @@ public class XsdBinder
 
       XSTypeDefinition baseTypeDef = type.getBaseType();
       TypeBinding baseType = baseTypeDef == null ? null : bindType(baseTypeDef);
-
-      binding = baseType == null ? new TypeBinding(typeName) : new TypeBinding(typeName, baseType);
+      if(baseType == null)
+      {
+         binding = new TypeBinding(typeName);
+      }
+      else
+      {
+         binding = new TypeBinding(typeName, baseType);
+         if(Constants.NS_XML_SCHEMA.equals(baseTypeDef.getNamespace()))
+            binding.setCharactersHandler(DefaultHandlers.CHARACTERS_HANDLER_FACTORY.newCharactersHandler());
+      }
 
       StringList strList = type.getLexicalPattern();
       if(strList != null && strList.getLength() > 0)
@@ -1384,6 +1393,17 @@ public class XsdBinder
                log.trace(msg);
             }
             term.setValueMetaData(valueMetaData);
+            if(term.isElement())
+            {
+               ElementBinding e = (ElementBinding)term;
+               TypeBinding currentType = e.getType();
+               // that's not nice, i.e. creating another type with the same name but not adding it to SchemaBinding
+               // but it would be wrong to do that in case of built-in types
+               TypeBinding newType = new TypeBinding(currentType.getQName(), currentType);
+               CharactersHandler ch = DefaultHandlers.CHARACTERS_HANDLER_FACTORY.newCharactersHandler(RtCharactersHandler.VALUE_METADATA_UNMARSHAL_HANDLER);
+               newType.setCharactersHandler(ch);
+               e.setType(newType);
+            }
          }
 
          boolean mapEntryKey = appInfo.isMapEntryKey();

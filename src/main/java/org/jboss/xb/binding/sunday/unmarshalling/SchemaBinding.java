@@ -21,19 +21,26 @@
   */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.JBossXBValueFormatException;
+import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
 import org.jboss.xb.binding.metadata.PackageMetaData;
+import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.util.DomCharactersHandler;
 import org.jboss.xb.util.DomLocalMarshaller;
 import org.jboss.xb.util.DomParticleHandler;
@@ -103,51 +110,464 @@ public class SchemaBinding
 
    public SchemaBinding()
    {
-      addType(new SimpleTypeBinding(Constants.QNAME_ANYSIMPLETYPE));
-      addType(new SimpleTypeBinding(Constants.QNAME_STRING));
-      addType(new SimpleTypeBinding(Constants.QNAME_BOOLEAN));
-      addType(new SimpleTypeBinding(Constants.QNAME_DECIMAL));
-      addType(new SimpleTypeBinding(Constants.QNAME_FLOAT));
-      addType(new SimpleTypeBinding(Constants.QNAME_DOUBLE));
-      addType(new SimpleTypeBinding(Constants.QNAME_DURATION));
-      addType(new SimpleTypeBinding(Constants.QNAME_DATETIME, DATE_ADAPTER));
-      addType(new SimpleTypeBinding(Constants.QNAME_TIME, DATE_ADAPTER));
-      addType(new SimpleTypeBinding(Constants.QNAME_DATE, DATE_ADAPTER));
-      addType(new SimpleTypeBinding(Constants.QNAME_GYEARMONTH));
-      addType(new SimpleTypeBinding(Constants.QNAME_GYEAR));
-      addType(new SimpleTypeBinding(Constants.QNAME_GMONTHDAY));
-      addType(new SimpleTypeBinding(Constants.QNAME_GDAY));
-      addType(new SimpleTypeBinding(Constants.QNAME_GMONTH));
-      addType(new SimpleTypeBinding(Constants.QNAME_HEXBINARY));
-      addType(new SimpleTypeBinding(Constants.QNAME_BASE64BINARY));
-      addType(new SimpleTypeBinding(Constants.QNAME_ANYURI));
-      addType(new SimpleTypeBinding(Constants.QNAME_QNAME));
-      addType(new SimpleTypeBinding(Constants.QNAME_NOTATION));
-      addType(new SimpleTypeBinding(Constants.QNAME_NORMALIZEDSTRING));
-      addType(new SimpleTypeBinding(Constants.QNAME_TOKEN));
-      addType(new SimpleTypeBinding(Constants.QNAME_LANGUAGE));
-      addType(new SimpleTypeBinding(Constants.QNAME_NMTOKEN));
-      addType(new SimpleTypeBinding(Constants.QNAME_NMTOKENS));
-      addType(new SimpleTypeBinding(Constants.QNAME_NAME));
-      addType(new SimpleTypeBinding(Constants.QNAME_NCNAME));
-      addType(new SimpleTypeBinding(Constants.QNAME_ID));
-      addType(new SimpleTypeBinding(Constants.QNAME_IDREF));
-      addType(new SimpleTypeBinding(Constants.QNAME_IDREFS));
-      addType(new SimpleTypeBinding(Constants.QNAME_ENTITY));
-      addType(new SimpleTypeBinding(Constants.QNAME_ENTITIES));
-      addType(new SimpleTypeBinding(Constants.QNAME_INTEGER));
-      addType(new SimpleTypeBinding(Constants.QNAME_NONPOSITIVEINTEGER));
-      addType(new SimpleTypeBinding(Constants.QNAME_NEGATIVEINTEGER));
-      addType(new SimpleTypeBinding(Constants.QNAME_LONG));
-      addType(new SimpleTypeBinding(Constants.QNAME_INT));
-      addType(new SimpleTypeBinding(Constants.QNAME_SHORT));
-      addType(new SimpleTypeBinding(Constants.QNAME_BYTE));
-      addType(new SimpleTypeBinding(Constants.QNAME_NONNEGATIVEINTEGER));
-      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDLONG));
-      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDINT));
-      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDSHORT));
-      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDBYTE));
-      addType(new SimpleTypeBinding(Constants.QNAME_POSITIVEINTEGER));
+      addType(new SimpleTypeBinding(Constants.QNAME_ANYSIMPLETYPE, CharactersHandler.NOOP_UNMARSHAL_HANDLER));
+      addType(new SimpleTypeBinding(Constants.QNAME_STRING, CharactersHandler.NOOP_UNMARSHAL_HANDLER));
+      addType(new SimpleTypeBinding(Constants.QNAME_BOOLEAN, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            if(value.length() == 1)
+            {
+               char c = value.charAt(0);
+               if(c == '1')
+                  return Boolean.TRUE;
+               if(c == '0')
+                  return Boolean.FALSE;
+               throw new JBossXBValueFormatException("An instance of a datatype that is defined as ?boolean? can have the following legal literals" +
+                  " {true, false, 1, 0}. But got: " + value);
+            }
+            else
+               return Boolean.valueOf(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_DECIMAL, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return new BigDecimal(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_FLOAT, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            if("INF".equals(value))
+               return new Float(Float.POSITIVE_INFINITY);
+            else if("-INF".equals(value))
+               return new Float(Float.NEGATIVE_INFINITY);
+            else
+               return Float.valueOf(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_DOUBLE, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            if("INF".equals(value))
+               return new Double(Double.POSITIVE_INFINITY);
+            else if("-INF".equals(value))
+               return new Double(Double.NEGATIVE_INFINITY);
+            else
+               return Double.valueOf(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_DURATION, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {         
+            // todo XS_DURATION
+            throw new IllegalStateException("Recognized but not supported xsdType: " + Constants.QNAME_DURATION);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_DATETIME, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalDateTime(value);
+         }
+      }, DATE_ADAPTER));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_TIME, new CharactersHandler.UnmarshalCharactersHandler(){
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalTime(value);
+         }         
+      }, DATE_ADAPTER));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_DATE, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalDate(value);
+         }         
+      }, DATE_ADAPTER));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_GYEARMONTH, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalGYearMonth(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_GYEAR, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalGYear(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_GMONTHDAY, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalGMonthDay(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_GDAY, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalGDay(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_GMONTH, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalGMonth(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_HEXBINARY, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalHexBinary(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_BASE64BINARY, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalBase64(value);
+         }         
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_ANYURI, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            // anyUri is by default bound to java.net.URI for now. The following is the warning from JAXB2.0:
+            //
+            // Design Note � xs:anyURI is not bound to java.net.URI by default since not all
+            // possible values of xs:anyURI can be passed to the java.net.URI constructor. Using
+            // a global JAXB customization described in Section 7.9, �<javaType>
+            // Declaration", a JAXB user can override the default mapping to map xs:anyURI to
+            // java.net.URI.
+            //
+            try
+            {
+               return new java.net.URI(value);
+            }
+            catch(URISyntaxException e)
+            {
+               throw new JBossXBValueFormatException("Failed to unmarshal anyURI value " + value, e);
+            }
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_QNAME, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalQName(value, nsCtx);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_NOTATION, CharactersHandler.NOOP));
+      addType(new SimpleTypeBinding(Constants.QNAME_NORMALIZEDSTRING, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            if(SimpleTypeBindings.isNormalizedString(value))
+               return value;
+            else
+               throw new JBossXBValueFormatException("Invalid normalizedString value: " + value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_TOKEN, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            if(SimpleTypeBindings.isValidToken(value))
+               return value;
+            else
+               throw new JBossXBValueFormatException("Invalid token value: " + value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_LANGUAGE, CharactersHandler.NOOP));
+      addType(new SimpleTypeBinding(Constants.QNAME_NMTOKEN, CharactersHandler.NOOP));
+      addType(new SimpleTypeBinding(Constants.QNAME_NMTOKENS, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalNMTokens(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_NAME, CharactersHandler.NOOP));
+      addType(new SimpleTypeBinding(Constants.QNAME_NCNAME, CharactersHandler.NOOP));
+      addType(new SimpleTypeBinding(Constants.QNAME_ID, CharactersHandler.NOOP));
+      addType(new SimpleTypeBinding(Constants.QNAME_IDREF, CharactersHandler.NOOP));
+      addType(new SimpleTypeBinding(Constants.QNAME_IDREFS, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalIdRefs(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_ENTITY, CharactersHandler.NOOP));
+      addType(new SimpleTypeBinding(Constants.QNAME_ENTITIES, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return SimpleTypeBindings.unmarshalIdRefs(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_INTEGER, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return new BigInteger(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_NONPOSITIVEINTEGER, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            BigInteger result = new BigInteger(value);
+            if(BigInteger.ZERO.compareTo(result) < 0)
+               throw new JBossXBValueFormatException("Invalid nonPositiveInteger value: " + value);
+            return result;
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_NEGATIVEINTEGER, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            BigInteger result = new BigInteger(value);
+            if(BigInteger.ZERO.compareTo(result) <= 0)
+               throw new JBossXBValueFormatException("Invalid negativeInteger value: " + value);
+            return result;
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_LONG, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return Long.valueOf(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_INT, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return Integer.valueOf(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_SHORT, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return Short.valueOf(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_BYTE, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            return Byte.valueOf(value);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_NONNEGATIVEINTEGER, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            BigInteger result = new BigInteger(value);
+            if(BigInteger.ZERO.compareTo(result) > 0)
+               throw new JBossXBValueFormatException("Invalid nonNegativeInteger value: " + value);
+            return result;
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDLONG, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            BigInteger d = new BigInteger(value);
+            if(d.doubleValue() < 0 || d.doubleValue() > 18446744073709551615D)
+               throw new JBossXBValueFormatException("Invalid unsignedLong value: " + value);
+            return d;
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDINT, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            long l = Long.parseLong(value);
+            if(l < 0 || l > 4294967295L)
+               throw new JBossXBValueFormatException("Invalid unsignedInt value: " + value);
+            return new Long(l);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDSHORT, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            int i = Integer.parseInt(value);
+            if(i < 0 || i > 65535)
+               throw new JBossXBValueFormatException("Invalid unsignedShort value: " + value);
+            return new Integer(i);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_UNSIGNEDBYTE, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            short s = Short.parseShort(value);
+            if(s < 0 || s > 255)
+               throw new JBossXBValueFormatException("Invalid unsignedByte value: " + value);
+            return new Short(s);
+         }
+      }));
+      
+      addType(new SimpleTypeBinding(Constants.QNAME_POSITIVEINTEGER, new CharactersHandler.UnmarshalCharactersHandler()
+      {
+         public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx,
+               ValueMetaData valueMetaData, String value)
+         {
+            if (value == null)
+               throw new IllegalArgumentException("Value string cannot be null");
+            BigInteger result = new BigInteger(value);
+            if(BigInteger.ZERO.compareTo((BigInteger)result) >= 0)
+               throw new JBossXBValueFormatException("Invalid positiveInteger value: " + value);
+            return result;
+         }
+      }));
    }
    
    public void addPrefixMapping(String prefix, String ns)

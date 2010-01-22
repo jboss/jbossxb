@@ -19,7 +19,7 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-package org.jboss.xb.binding.sunday.unmarshalling.position;
+package org.jboss.xb.binding.sunday.unmarshalling;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,19 +32,6 @@ import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.NamespaceRegistry;
 import org.jboss.xb.binding.metadata.CharactersMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
-import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
-import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ElementInterceptor;
-import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.UnmarshallingContextImpl;
 import org.jboss.xb.binding.sunday.xop.XOPIncludeHandler;
 import org.xml.sax.Attributes;
@@ -117,7 +104,7 @@ public class ElementPosition extends AbstractPosition
       return this.textContent;
    }
 
-   public Position nextPosition(QName startName, Attributes atts)
+   public AbstractPosition nextPosition(QName startName, Attributes atts)
    {
       if (ended) // this is about repeating itself
       {
@@ -148,7 +135,7 @@ public class ElementPosition extends AbstractPosition
          occurrence = 1;
          if(next != null)
          {
-            next.setPrevious(null);
+            next.previous = null;
             next = null;
          }
          return this;
@@ -183,8 +170,8 @@ public class ElementPosition extends AbstractPosition
 
             ElementBinding xopInclude = new ElementBinding(schema, Constants.QNAME_XOP_INCLUDE, xopIncludeType);
             next = new ElementPosition(startName, new ParticleBinding(xopInclude));
-            next.setStack(stack);
-            next.setPrevious(this);
+            next.stack = stack;
+            next.previous = this;
             return next;
          }
 
@@ -212,24 +199,24 @@ public class ElementPosition extends AbstractPosition
       if (next == null)
          throw new JBossXBRuntimeException(startName + " not found as a child of " + qName + " in " + modelGroup);
 
-      next.setPrevious(this);
+      next.previous = this;
       
       flushIgnorableCharacters();
 
-      Position nextPosition = next;
-      while (nextPosition.getNext() != null)
+      AbstractPosition nextPosition = next;
+      while (nextPosition.next != null)
       {
-         if (nextPosition.getParticle().isRepeatable())
+         if (nextPosition.particle.isRepeatable())
             nextPosition.startRepeatableParticle();
 
-         nextPosition.setStack(stack);
+         nextPosition.stack = stack;
          nextPosition.initValue(atts);
-         nextPosition.setParentType(parentType);
-         nextPosition = nextPosition.getNext();
+         nextPosition.parentType = parentType;
+         nextPosition = nextPosition.next;
       }
 
-      nextPosition.setStack(stack);
-      nextPosition.setParentType(parentType);
+      nextPosition.stack = stack;
+      nextPosition.parentType = parentType;
       return (ElementPosition) nextPosition;
    }
 
@@ -325,7 +312,7 @@ public class ElementPosition extends AbstractPosition
             }
             else
             {
-               dataContent = textContent.toString();
+               dataContent = textContent;
                if(schema != null && schema.isReplacePropertyRefs())
                   dataContent = StringPropertyReplacer.replaceProperties(dataContent);
                
@@ -384,7 +371,7 @@ public class ElementPosition extends AbstractPosition
                      UnmarshallingContextImpl ctx = stack.getContext();
                      ctx.parent = o;
                      ctx.particle = particle;
-                     ctx.parentParticle = notSkippedParent().getParticle();
+                     ctx.parentParticle = notSkippedParent().particle;
                      unmarshalled = beforeSetParent.beforeSetParent(unmarshalled, ctx);
                      ctx.clear();
                   }
@@ -438,13 +425,13 @@ public class ElementPosition extends AbstractPosition
 
       if(interceptorObjects == null)
       {
-         Position notSkippedParent = notSkippedParent();
+         AbstractPosition notSkippedParent = notSkippedParent();
          if (notSkippedParent != null)
          {
-            ParticleBinding parentParticle = notSkippedParent.getParticle();
+            ParticleBinding parentParticle = notSkippedParent.particle;
             TermBinding parentTerm = parentParticle.getTerm();
 
-            if (notSkippedParent.getValue() != null)
+            if (notSkippedParent.o != null)
             {
                ParticleHandler handler = this.handler;
                if (parentTerm.isWildcard())
@@ -458,12 +445,12 @@ public class ElementPosition extends AbstractPosition
             else if (parentTerm.isWildcard())
             {
                // the parent has anyType, so it gets the value of its child
-               Position parentPos = previous;
-               parentPos.setValue(o);
+               AbstractPosition parentPos = previous;
+               parentPos.o = o;
                while(!parentPos.isElement())
                {
                   parentPos = parentPos.getPrevious();
-                  parentPos.setValue(o);
+                  parentPos.o = o;
                }
 
                if (trace)
@@ -562,7 +549,7 @@ public class ElementPosition extends AbstractPosition
       if (handler == null)
          handler = DefaultHandlers.ELEMENT_HANDLER;
 
-      Object parent = previous == null ? null : previous.getValue();
+      Object parent = previous == null ? null : previous.o;
 
       if(parentType != null)
       {

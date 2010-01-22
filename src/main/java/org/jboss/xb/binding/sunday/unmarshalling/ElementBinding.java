@@ -33,8 +33,6 @@ import org.jboss.xb.binding.metadata.PutMethodMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
-import org.jboss.xb.binding.sunday.unmarshalling.position.ElementPosition;
-import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 import org.xml.sax.Attributes;
 
@@ -78,6 +76,13 @@ public class ElementBinding
    public TypeBinding getType()
    {
       return typeBinding;
+   }
+
+   public void setType(TypeBinding type)
+   {
+      if(type == null)
+         throw new IllegalArgumentException("The type cannot be null: " + qName);
+      this.typeBinding = type;
    }
 
    public void pushInterceptor(ElementInterceptor interceptor)
@@ -211,7 +216,7 @@ public class ElementBinding
       return "element(" + qName + ", type=" + typeBinding.getQName() + ")";
    }
 
-   public Position newPosition(QName name, Attributes attrs, ParticleBinding particle)
+   public ElementPosition newPosition(QName name, Attributes attrs, ParticleBinding particle)
    {
       if(!qName.equals(name))
          return null;

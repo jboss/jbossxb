@@ -31,8 +31,6 @@ import java.util.Map;
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.sunday.unmarshalling.position.NonElementPosition;
-import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
 import org.xml.sax.Attributes;
 
 /**
@@ -101,7 +99,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
       return allParticles;
    }
 
-   public Position newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
+   public AbstractPosition newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
    {
       ParticleBinding currentParticle = elementParticles.get(qName);
       if (currentParticle != null)
@@ -110,14 +108,14 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
 
       for (ParticleBinding particle : groupParticles)
       {
-         Position next = particle.getTerm().newPosition(qName, attrs, particle);
+         AbstractPosition next = particle.getTerm().newPosition(qName, attrs, particle);
          if (next != null)
             return new UnorderedSequencePosition(qName, seqParticle, next);
       }
 
       for (ParticleBinding particle : wildcardParticles)
       {
-         Position next = particle.getTerm().newPosition(qName, attrs, particle);
+         AbstractPosition next = particle.getTerm().newPosition(qName, attrs, particle);
          if (next != null)
             return new UnorderedSequencePosition(qName, seqParticle, next);
       }
@@ -133,12 +131,12 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
    
    private final class UnorderedSequencePosition extends NonElementPosition
    {
-      private UnorderedSequencePosition(QName name, ParticleBinding particle, Position next)
+      private UnorderedSequencePosition(QName name, ParticleBinding particle, AbstractPosition next)
       {
          super(name, particle, next);
       }
 
-      public Position nextPosition(QName qName, Attributes atts)
+      public AbstractPosition nextPosition(QName qName, Attributes atts)
       {
          if(trace)
          {
@@ -151,7 +149,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
          if (element != null)
          {
             next = element.getTerm().newPosition(qName, atts, element);
-            next.setPrevious(this);
+            next.previous = this;
             // TODO occurrence here is not used ++occurrence;
             if (trace)
                log.trace("found " + qName + " in " + UnorderedSequenceBinding.this);
@@ -164,7 +162,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
             if (next != null)
             {
                //++occurrence;
-               next.setPrevious(this);
+               next.previous = this;
                return this;
             }
          }
@@ -175,7 +173,7 @@ public class UnorderedSequenceBinding extends ModelGroupBinding
             if (next != null)
             {
                //++occurrence;
-               next.setPrevious(this);
+               next.previous = this;
                return this;
             }
          }

@@ -53,6 +53,17 @@ public abstract class CharactersHandler
    {
    };
 
+   protected UnmarshalCharactersHandler unmarshalHandler = DEFAULT_UNMARSHAL_HANDLER;
+   
+   public CharactersHandler()
+   {
+   }
+   
+   public CharactersHandler(UnmarshalCharactersHandler unmarshalHandler)
+   {
+      this.unmarshalHandler = unmarshalHandler;
+   }
+   
    public Object unmarshalEmpty(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, ValueMetaData valueMetaData)
    {
       if(typeBinding.isIgnoreEmptyString())
@@ -74,67 +85,90 @@ public abstract class CharactersHandler
 
    public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, ValueMetaData valueMetaData, String value)
    {
-      Object o;
-      QName typeQName = typeBinding.getQName();
-      TypeBinding itemType = typeBinding.getItemType();
-      if(itemType != null)
-      {
-         QName itemTypeQName = itemType.getQName();
-         ValueAdapter adapter = itemType.getValueAdapter();
-         
-         if(itemTypeQName == null || !Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
-         {
-            if(adapter == null)
-               throw new JBossXBRuntimeException(
-                     "Only list types with item type from " + Constants.NS_XML_SCHEMA +
-                     " namespace are supported currently."
-                  );
-            else
-               itemTypeQName = Constants.QNAME_STRING;
-         }
-         
-         if(adapter == null)
-            adapter = ValueAdapter.NOOP;
-
-         List<?> list = SimpleTypeBindings.unmarshalList(itemTypeQName.getLocalPart(), value, nsCtx, adapter);
-         if (typeBinding.getSchemaBinding().isUnmarshalListsToArrays())
-         {
-            if (list.isEmpty())
-            {
-               Class<?> compType = SimpleTypeBindings.classForType(itemTypeQName.getLocalPart(), true);
-               o = Array.newInstance(compType, 0);
-            }
-            else
-            {
-               Class<?> compType = list.get(0).getClass();
-               o = list.toArray((Object[]) Array.newInstance(compType, list.size()));
-            }
-         }
-         else
-         {
-            o = list;
-         }
-      }
-      else if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))
-      {
-         try
-         {
-            o = SimpleTypeBindings.unmarshal(typeQName.getLocalPart(), value, nsCtx);
-         }
-         catch (IllegalStateException e)
-         {
-            throw new JBossXBRuntimeException("Characters are not allowed here", e);
-         }
-      }
-      else
-      {
-         TypeBinding baseType = typeBinding.getBaseType();
-         o = (baseType == null ? value : unmarshal(qName, baseType, nsCtx, valueMetaData, value));
-      }
-      return o;
+      return unmarshalHandler.unmarshal(qName, typeBinding, nsCtx, valueMetaData, value);
    }
 
    public void setValue(QName qName, ElementBinding element, Object owner, Object value)
    {
    }
+   
+   public static interface UnmarshalCharactersHandler
+   {
+      Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, ValueMetaData valueMetaData, String value);
+   }
+
+   public static class DefaultUnmarshalCharactersHandler implements UnmarshalCharactersHandler
+   {
+      public Object unmarshal(QName name, TypeBinding typeBinding, NamespaceContext nsCtx, ValueMetaData valueMetaData, String value)
+      {
+         Object o;
+         QName typeQName = typeBinding.getQName();
+         TypeBinding itemType = typeBinding.getItemType();
+         if(itemType != null)
+         {
+            QName itemTypeQName = itemType.getQName();
+            ValueAdapter adapter = itemType.getValueAdapter();
+            
+            if(itemTypeQName == null || !Constants.NS_XML_SCHEMA.equals(itemTypeQName.getNamespaceURI()))
+            {
+               if(adapter == null)
+                  throw new JBossXBRuntimeException(
+                        "Only list types with item type from " + Constants.NS_XML_SCHEMA +
+                        " namespace are supported currently."
+                     );
+               else
+                  itemTypeQName = Constants.QNAME_STRING;
+            }
+            
+            if(adapter == null)
+               adapter = ValueAdapter.NOOP;
+
+            List<?> list = SimpleTypeBindings.unmarshalList(itemTypeQName.getLocalPart(), value, nsCtx, adapter);
+            if (typeBinding.getSchemaBinding().isUnmarshalListsToArrays())
+            {
+               if (list.isEmpty())
+               {
+                  Class<?> compType = SimpleTypeBindings.classForType(itemTypeQName.getLocalPart(), true);
+                  o = Array.newInstance(compType, 0);
+               }
+               else
+               {
+                  Class<?> compType = list.get(0).getClass();
+                  o = list.toArray((Object[]) Array.newInstance(compType, list.size()));
+               }
+            }
+            else
+            {
+               o = list;
+            }
+         }
+         else if(typeQName != null && Constants.NS_XML_SCHEMA.equals(typeQName.getNamespaceURI()))
+         {
+            try
+            {
+               o = SimpleTypeBindings.unmarshal(typeQName.getLocalPart(), value, nsCtx);
+            }
+            catch (IllegalStateException e)
+            {
+               throw new JBossXBRuntimeException("Characters are not allowed here", e);
+            }
+         }
+         else
+         {
+            TypeBinding baseType = typeBinding.getBaseType();
+            o = (baseType == null ? value : unmarshal(name, baseType, nsCtx, valueMetaData, value));
+         }
+         return o;
+      }
+   }
+   
+   public static final UnmarshalCharactersHandler NOOP_UNMARSHAL_HANDLER = new UnmarshalCharactersHandler()
+   {
+      public Object unmarshal(QName name, TypeBinding typeBinding, NamespaceContext nsCtx, ValueMetaData valueMetaData, String value)
+      {
+         return value;
+      }      
+   };
+   
+   public static final UnmarshalCharactersHandler DEFAULT_UNMARSHAL_HANDLER = new DefaultUnmarshalCharactersHandler();
 }

@@ -39,21 +39,36 @@ public class SimpleTypeBinding
 
    public SimpleTypeBinding(QName qName)
    {
-      super(qName, DefaultHandlers.CHARACTERS_HANDLER);
+      super(qName, DefaultHandlers.CHARACTERS_HANDLER_FACTORY.newCharactersHandler());
       setDefaultHandler();
    }
 
    public SimpleTypeBinding(QName qName, ValueAdapter valueAdapter)
    {
-      super(qName, DefaultHandlers.CHARACTERS_HANDLER);
+      this(qName, DefaultHandlers.CHARACTERS_HANDLER_FACTORY.newCharactersHandler(), valueAdapter);
+   }
+
+   public SimpleTypeBinding(QName qName, CharactersHandler handler, ValueAdapter valueAdapter)
+   {
+      super(qName, handler);
       setDefaultHandler();
       setValueAdapter(valueAdapter);
+   }
+
+   public SimpleTypeBinding(QName qName, CharactersHandler.UnmarshalCharactersHandler unmarshalHandler, ValueAdapter valueAdapter)
+   {
+      this(qName, DefaultHandlers.CHARACTERS_HANDLER_FACTORY.newCharactersHandler(unmarshalHandler), valueAdapter);
    }
 
    public SimpleTypeBinding(QName qName, CharactersHandler simple)
    {
       super(qName, simple);
       setDefaultHandler();
+   }
+
+   public SimpleTypeBinding(QName qName, CharactersHandler.UnmarshalCharactersHandler unmarshalHandler)
+   {
+      this(qName, DefaultHandlers.CHARACTERS_HANDLER_FACTORY.newCharactersHandler(unmarshalHandler));
    }
 
    private void setDefaultHandler()

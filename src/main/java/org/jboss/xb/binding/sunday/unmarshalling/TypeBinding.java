@@ -52,7 +52,7 @@ public class TypeBinding
 {
    protected QName qName;
    /** Map<QName, AttributeBinding>  */
-   private Map<QName, AttributeBinding> attrs = Collections.emptyMap();
+   private Map<QName, AttributeBinding> attrs;
    private AnyAttributeBinding anyAttribute;
    private ParticleHandler handler;//todo default handler is now in SundayContentHandler.
    private CharactersHandler charactersHandler;
@@ -70,7 +70,7 @@ public class TypeBinding
    private TermBeforeSetParentCallback beforeSetParentCallback;
    
    private Boolean startElementCreatesObject;
-   private Boolean simple;
+   private int simple; // 0 - not set, 1 - false, 2 - true
    private Boolean ignoreEmptyString;
 
    private WildcardBinding wildcard;
@@ -97,7 +97,7 @@ public class TypeBinding
    public TypeBinding(QName qName)
    {
       //this(qName, (CharactersHandler)null);
-      this(qName, DefaultHandlers.CHARACTERS_HANDLER);
+      this(qName, DefaultHandlers.CHARACTERS_HANDLER_FACTORY.newCharactersHandler());
    }
 
    public TypeBinding(CharactersHandler charactersHandler)
@@ -121,7 +121,7 @@ public class TypeBinding
          this.particle = baseType.particle;
       }
 
-      this.attrs = new HashMap<QName, AttributeBinding>(baseType.attrs);
+      this.attrs = baseType.attrs == null ? null : new HashMap<QName, AttributeBinding>(baseType.attrs);
       this.classMetaData = baseType.classMetaData;
       this.valueMetaData = baseType.valueMetaData;
       this.propertyMetaData = baseType.propertyMetaData;
@@ -214,7 +214,7 @@ public class TypeBinding
 
    public AttributeBinding getAttribute(QName qName)
    {
-      return attrs.get(qName);
+      return attrs == null ? null : attrs.get(qName);
    }
 
    /**
@@ -227,10 +227,8 @@ public class TypeBinding
     */
    public Attributes expandWithDefaultAttributes(Attributes attrs)
    {
-      if(this.attrs.size() == 0)
-      {
+      if(this.attrs == null)
          return attrs;
-      }
 
       // Map<QName, AttributeBinding>
       HashMap<QName, AttributeBinding> attrsNotSeen = new HashMap<QName, AttributeBinding>(this.attrs);
@@ -275,21 +273,20 @@ public class TypeBinding
 
    public void addAttribute(AttributeBinding attr)
    {
-      switch(attrs.size())
+      if(attrs == null)
       {
-         case 0:
-            attrs = Collections.singletonMap(attr.getQName(), attr);
-            break;
-         case 1:
-            attrs = new HashMap<QName, AttributeBinding>(attrs);
-         default:
-            attrs.put(attr.getQName(), attr);
+         attrs = Collections.singletonMap(attr.getQName(), attr);
+         return;
       }
+      
+      if(attrs.size() == 1)
+         attrs = new HashMap<QName, AttributeBinding>(attrs);         
+      attrs.put(attr.getQName(), attr);
    }
 
    public Collection<AttributeBinding> getAttributes()
    {
-      return attrs.values();
+      return attrs == null ? Collections.<AttributeBinding>emptyList() : attrs.values();
    }
 
    public CharactersHandler getCharactersHandler()
@@ -409,12 +406,12 @@ public class TypeBinding
       // actually, a type can be complex when the particle is null and
       // there are no attributes. But the XsdBinder will set the value of simple
       // to false. This check is for schema bindings created programmatically
-      return simple == null ? particle == null && attrs.isEmpty() : simple.booleanValue();
+      return simple == 0 ? particle == null && attrs == null : simple == 2;
    }
 
    public void setSimple(boolean simple)
    {
-      this.simple = simple ? Boolean.TRUE : Boolean.FALSE;
+      this.simple = simple ? 2 : 1;
    }
 
    public boolean isTextContentAllowed()
@@ -524,7 +521,7 @@ public class TypeBinding
    public boolean isStartElementCreatesObject()
    {
       return startElementCreatesObject == null ?
-         particle != null || !attrs.isEmpty() : startElementCreatesObject.booleanValue();
+         particle != null || attrs != null : startElementCreatesObject;
    }
 
    /**
@@ -538,7 +535,7 @@ public class TypeBinding
     */
    public void setStartElementCreatesObject(boolean startElementCreatesObject)
    {
-      this.startElementCreatesObject = startElementCreatesObject ? Boolean.TRUE : Boolean.FALSE;
+      this.startElementCreatesObject = startElementCreatesObject;
    }
 
    private boolean initializedWildcard;
@@ -644,21 +641,15 @@ public class TypeBinding
 
    public boolean hasOnlyXmlMimeAttributes()
    {
-      if(attrs.isEmpty())
-      {
+      if(attrs == null)
          return false;
-      }
-      else
+
+      Iterator<QName> iter = attrs.keySet().iterator();
+      while(iter.hasNext())
       {
-         Iterator<QName> iter = attrs.keySet().iterator();
-         while(iter.hasNext())
-         {
-            QName qName = iter.next();
-            if(!Constants.NS_XML_MIME.equals(qName.getNamespaceURI()))
-            {
-               return false;
-            }
-         }
+         QName qName = iter.next();
+         if(!Constants.NS_XML_MIME.equals(qName.getNamespaceURI()))
+            return false;
       }
       return true;
    }

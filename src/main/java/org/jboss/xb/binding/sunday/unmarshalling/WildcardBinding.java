@@ -25,8 +25,6 @@ import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.ObjectLocalMarshaller;
 import org.jboss.xb.binding.Util;
-import org.jboss.xb.binding.sunday.unmarshalling.position.NonElementPosition;
-import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
 import org.xml.sax.Attributes;
 
 /**
@@ -244,13 +242,13 @@ public class WildcardBinding
       return element;
    }
 
-   public Position newPosition(QName qName, Attributes attrs, ParticleBinding wildcardParticle)
+   public AbstractPosition newPosition(QName qName, Attributes attrs, ParticleBinding wildcardParticle)
    {
       ElementBinding wildcardContent = getElement(qName, attrs);
       if(wildcardContent != null)
       {
          ParticleBinding particle = new ParticleBinding(wildcardContent);
-         Position next = wildcardContent.newPosition(qName, attrs, particle);
+         AbstractPosition next = wildcardContent.newPosition(qName, attrs, particle);
          return new WildcardPosition(qName, wildcardParticle, next);
       }
       return null;
@@ -298,12 +296,12 @@ public class WildcardBinding
    
    private final class WildcardPosition extends NonElementPosition
    {
-      protected WildcardPosition(QName name, ParticleBinding particle, Position next)
+      protected WildcardPosition(QName name, ParticleBinding particle, AbstractPosition next)
       {
          super(name, particle, next);
       }
 
-      public Position nextPosition(QName name, Attributes atts)
+      public AbstractPosition nextPosition(QName name, Attributes atts)
       {
          if (particle.isOccurrenceAllowed(occurrence + 1))
          {
@@ -312,11 +310,11 @@ public class WildcardBinding
             {
                ParticleBinding wildcardParticle = new ParticleBinding(wildcardContent);
                next = wildcardContent.newPosition(name, atts, wildcardParticle);
-               next.setPrevious(this);
+               next.previous = this;
                ++occurrence;
 
                o = handler.endParticle(o, qName, particle);
-               if(previous.getValue() != null)
+               if(previous.o != null)
                   setParent(previous, handler);
                //o = initValue(stack.parent().getValue(), atts);
 

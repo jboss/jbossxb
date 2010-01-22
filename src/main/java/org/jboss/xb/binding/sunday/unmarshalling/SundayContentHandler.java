@@ -35,9 +35,6 @@ import org.jboss.xb.binding.introspection.FieldInfo;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.parser.JBossXBParser;
 import org.jboss.xb.binding.resolver.MutableSchemaResolver;
-import org.jboss.xb.binding.sunday.unmarshalling.position.AbstractPosition;
-import org.jboss.xb.binding.sunday.unmarshalling.position.ElementPosition;
-import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
 import org.xml.sax.Attributes;
 
 /**
@@ -56,7 +53,7 @@ public class SundayContentHandler
    private final SchemaBindingResolver schemaResolver;
    private final SchemaBinding schema;
 
-   private Position head;
+   private AbstractPosition head;
    
    // DTD information frm startDTD
    private String dtdRootName;
@@ -98,7 +95,7 @@ public class SundayContentHandler
       if(!head.isElement())
          return;
 
-      Position position = head;
+      AbstractPosition position = head;
       // if current is ended the characters belong to its parent
       if(position.isEnded())
       {

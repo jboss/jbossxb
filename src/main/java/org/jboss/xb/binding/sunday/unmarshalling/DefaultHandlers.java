@@ -23,6 +23,7 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
 
+import org.jboss.xb.binding.sunday.unmarshalling.CharactersHandler.UnmarshalCharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtAttributeHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtCharactersHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.impl.runtime.RtElementHandler;
@@ -53,7 +54,20 @@ public class DefaultHandlers
 
    public static AttributeHandler ATTRIBUTE_HANDLER = RtAttributeHandler.INSTANCE;
 
-   public static CharactersHandler CHARACTERS_HANDLER = RtCharactersHandler.INSTANCE;
+   public static CharactersHandlerFactory CHARACTERS_HANDLER_FACTORY = new CharactersHandlerFactory()
+   {
+      public CharactersHandler newCharactersHandler()
+      {
+         return RtCharactersHandler.INSTANCE;
+      }
+
+      public CharactersHandler newCharactersHandler(UnmarshalCharactersHandler unmarshalHandler)
+      {
+         return new RtCharactersHandler(unmarshalHandler);
+      }
+   };
+   
+   //public static CharactersHandler CHARACTERS_HANDLER = RtCharactersHandler.INSTANCE;
 
    public static ParticleHandler XOP_HANDLER = new XOPElementHandler();
    

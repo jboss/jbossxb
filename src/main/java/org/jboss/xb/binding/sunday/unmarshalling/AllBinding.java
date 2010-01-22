@@ -27,8 +27,6 @@ import java.util.HashMap;
 import java.util.Collection;
 import javax.xml.namespace.QName;
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.sunday.unmarshalling.position.NonElementPosition;
-import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
 import org.xml.sax.Attributes;
 
 
@@ -79,12 +77,12 @@ public class AllBinding
       return elements.values();
    }
 
-   public Position newPosition(QName qName, Attributes attrs, ParticleBinding allParticle)
+   public AbstractPosition newPosition(QName qName, Attributes attrs, ParticleBinding allParticle)
    {
       ParticleBinding particle = elements.get(qName);
       if(particle != null)
       {
-         Position next = particle.getTerm().newPosition(qName, attrs, particle);
+         AbstractPosition next = particle.getTerm().newPosition(qName, attrs, particle);
          return new AllPosition(qName, allParticle, next);
       }
 
@@ -99,18 +97,18 @@ public class AllBinding
    
    private final class AllPosition extends NonElementPosition
    {
-      private AllPosition(QName name, ParticleBinding particle, Position next)
+      private AllPosition(QName name, ParticleBinding particle, AbstractPosition next)
       {
          super(name, particle, next);
       }
 
-      public Position nextPosition(QName qName, Attributes atts)
+      public AbstractPosition nextPosition(QName qName, Attributes atts)
       {
          ParticleBinding particle = elements.get(qName);
          if(particle != null)
          {
             next = particle.getTerm().newPosition(qName, atts, particle);
-            next.setPrevious(this);
+            next.previous = this;
             // TODO occurrence is not used here ++occurrence;
             return this;
          }

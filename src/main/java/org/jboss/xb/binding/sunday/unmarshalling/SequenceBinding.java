@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Collection;
 import javax.xml.namespace.QName;
 
-import org.jboss.xb.binding.sunday.unmarshalling.position.NonElementPosition;
-import org.jboss.xb.binding.sunday.unmarshalling.position.Position;
 import org.xml.sax.Attributes;
 
 
@@ -81,12 +79,12 @@ public class SequenceBinding
       return sequence;
    }
 
-   public Position newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
+   public AbstractPosition newPosition(QName qName, Attributes attrs, ParticleBinding seqParticle)
    {
       for(int i = 0; i < sequence.size(); ++i)
       {
          ParticleBinding particle = sequence.get(i);
-         Position next = particle.getTerm().newPosition(qName, attrs, particle);
+         AbstractPosition next = particle.getTerm().newPosition(qName, attrs, particle);
          if(next != null)
             return new SequencePosition(qName, seqParticle, i, next);
          
@@ -107,13 +105,13 @@ public class SequenceBinding
    {
       private int pos = -1;
 
-      protected SequencePosition(QName qName, ParticleBinding particle, int pos, Position next)
+      protected SequencePosition(QName qName, ParticleBinding particle, int pos, AbstractPosition next)
       {
          super(qName, particle, next);
          this.pos = pos;
       }
 
-      public Position nextPosition(QName qName, Attributes atts)
+      public AbstractPosition nextPosition(QName qName, Attributes atts)
       {
          if(trace)
          {
@@ -129,7 +127,7 @@ public class SequenceBinding
 
             if (next != null)
             {
-               next.setPrevious(this);
+               next.previous = this;
                return this;
             }
 
@@ -150,11 +148,11 @@ public class SequenceBinding
 
                if(next != null)
                {
-                  next.setPrevious(this);
+                  next.previous = this;
                   ++occurrence;
 
                   o = handler.endParticle(o, qName, particle);
-                  if(previous.getValue() != null)
+                  if(previous.o != null)
                      setParent(previous, handler);
                   initValue(atts);
 

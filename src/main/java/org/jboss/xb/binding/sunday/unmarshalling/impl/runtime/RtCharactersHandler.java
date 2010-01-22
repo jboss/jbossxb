@@ -44,84 +44,101 @@ import org.jboss.util.Classes;
 public class RtCharactersHandler
    extends CharactersHandler
 {
-   public static final RtCharactersHandler INSTANCE = new RtCharactersHandler();
-
-   public Object unmarshal(QName qName,
-                           TypeBinding typeBinding,
-                           NamespaceContext nsCtx,
-                           ValueMetaData valueMetaData,
-                           String value)
+   public static final UnmarshalCharactersHandler VALUE_METADATA_UNMARSHAL_HANDLER = new UnmarshalCharactersHandler()
    {
-      Object unmarshalled = null;
-      if(valueMetaData != null)
+      public Object unmarshal(QName name, TypeBinding typeBinding, NamespaceContext nsCtx, ValueMetaData valueMetaData, String value)
       {
-         Method unmarshalMethod = RtUtil.getUnmarshalMethod(qName, valueMetaData);
+         if(valueMetaData == null)
+            throw new JBossXBRuntimeException("The handler expects non-null valueMetaData: element=" + name
+                  + ", type=" + typeBinding.getQName() + ", value=" + value);
+         Method unmarshalMethod = RtUtil.getUnmarshalMethod(name, valueMetaData);
          Object args[] = unmarshalMethod.getParameterTypes().length == 1 ?
-            new Object[]{value} :
-            new Object[]{value, nsCtx};
-         unmarshalled = RtUtil.invokeUnmarshalMethod(unmarshalMethod, args, qName);
+               new Object[]{value} : new Object[]{value, nsCtx};
+         return RtUtil.invokeUnmarshalMethod(unmarshalMethod, args, name);
       }
-      else
+   };
+   
+   public static final UnmarshalCharactersHandler RT_UNMARSHAL_HANDLER = new DefaultUnmarshalCharactersHandler()
+   {
+      public Object unmarshal(QName qName, TypeBinding typeBinding, NamespaceContext nsCtx, ValueMetaData valueMetaData, String value)
       {
-         unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, valueMetaData, value);
-
-         if(typeBinding.isSimple())
+         Object unmarshalled = null;
+         if (valueMetaData != null)
          {
-            String clsName = null;
-            boolean failIfNotFound = false;
-            if(typeBinding.getClassMetaData() != null)
-            {
-               clsName = typeBinding.getClassMetaData().getImpl();
-               failIfNotFound = true;
-            }
-            else
-            {
-               QName typeName = typeBinding.getQName();
-               if(typeName != null && !Constants.NS_XML_SCHEMA.equals(typeName.getNamespaceURI()))
-               {
-                  boolean ignoreLowLine = typeBinding.getSchemaBinding() != null ?
-                     typeBinding.getSchemaBinding().isIgnoreLowLine() :
-                     true;
-                  clsName =
-                     Util.xmlNameToClassName(typeName.getNamespaceURI(), typeName.getLocalPart(), ignoreLowLine);
-               }
-            }
+            Method unmarshalMethod = RtUtil.getUnmarshalMethod(qName, valueMetaData);
+            Object args[] = unmarshalMethod.getParameterTypes().length == 1 ? new Object[]
+            {value} : new Object[]
+            {value, nsCtx};
+            unmarshalled = RtUtil.invokeUnmarshalMethod(unmarshalMethod, args, qName);
+         }
+         else
+         {
+            unmarshalled = super.unmarshal(qName, typeBinding, nsCtx, valueMetaData, value);
 
-            Class<?> cls = clsName == null ? null : RtUtil.loadClass(clsName, failIfNotFound);
-            if(cls != null && !cls.isPrimitive())
+            if (typeBinding.isSimple())
             {
-               // I assume if it doesn't have ctors, there should be static fromValue
-               // method like it is defined for enum types in JAXB2.0
-               // for java5 cls.isEnum() should be used instead
-               if(cls.getConstructors().length == 0)
+               String clsName = null;
+               boolean failIfNotFound = false;
+               if (typeBinding.getClassMetaData() != null)
                {
-                  Class<?> valueType = unmarshalled.getClass();
-                  // todo: this should be used in combination element.isNillable...
-                  if(Classes.isPrimitiveWrapper(valueType))
-                  {
-                     valueType = Classes.getPrimitive(valueType);
-                  }
-
-                  // it should probably invoke fromValue even if unmarshalled is null
-                  unmarshalled = unmarshalled == null ? null :
-                     RtUtil.invokeUnmarshalMethod(cls, "fromValue", unmarshalled, valueType, nsCtx, qName);
+                  clsName = typeBinding.getClassMetaData().getImpl();
+                  failIfNotFound = true;
                }
                else
                {
-                  throw new JBossXBRuntimeException("This case is not yet supported (create a feature request): " +
-                     "simple type (" +
-                     typeBinding.getQName() +
-                     ") is bound to a class (" +
-                     cls +
-                     ") with optional property metadata with " +
-                     "default value for the property name 'value'."
-                  );
+                  QName typeName = typeBinding.getQName();
+                  if (typeName != null && !Constants.NS_XML_SCHEMA.equals(typeName.getNamespaceURI()))
+                  {
+                     boolean ignoreLowLine = typeBinding.getSchemaBinding() != null ? typeBinding.getSchemaBinding()
+                           .isIgnoreLowLine() : true;
+                     clsName = Util.xmlNameToClassName(typeName.getNamespaceURI(), typeName.getLocalPart(),
+                           ignoreLowLine);
+                  }
+               }
+
+               Class<?> cls = clsName == null ? null : RtUtil.loadClass(clsName, failIfNotFound);
+               if (cls != null && !cls.isPrimitive())
+               {
+                  // I assume if it doesn't have ctors, there should be static fromValue
+                  // method like it is defined for enum types in JAXB2.0
+                  // for java5 cls.isEnum() should be used instead
+                  if (cls.getConstructors().length == 0)
+                  {
+                     Class<?> valueType = unmarshalled.getClass();
+                     // todo: this should be used in combination element.isNillable...
+                     if (Classes.isPrimitiveWrapper(valueType))
+                     {
+                        valueType = Classes.getPrimitive(valueType);
+                     }
+
+                     // it should probably invoke fromValue even if unmarshalled is null
+                     unmarshalled = unmarshalled == null ? null : RtUtil.invokeUnmarshalMethod(cls, "fromValue",
+                           unmarshalled, valueType, nsCtx, qName);
+                  }
+                  else
+                  {
+                     throw new JBossXBRuntimeException("This case is not yet supported (create a feature request): "
+                           + "simple type (" + typeBinding.getQName() + ") is bound to a class (" + cls
+                           + ") with optional property metadata with " + "default value for the property name 'value'.");
+                  }
                }
             }
          }
-      }
 
-      return unmarshalled;
+         return unmarshalled;
+      }
+   };
+ 
+   public static final RtCharactersHandler INSTANCE = new RtCharactersHandler();
+
+   public RtCharactersHandler()
+   {
+      super(RT_UNMARSHAL_HANDLER);
+   }
+   
+   public RtCharactersHandler(UnmarshalCharactersHandler unmarshalHandler)
+   {
+      super(unmarshalHandler);
    }
 
    public void setValue(QName qName, ElementBinding element, Object owner, Object value)

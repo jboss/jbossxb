@@ -19,12 +19,11 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-package org.jboss.xb.binding.sunday.unmarshalling.position;
+package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.JBossXBRuntimeException;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.xml.sax.Attributes;
 
 /**
@@ -33,12 +32,12 @@ import org.xml.sax.Attributes;
  */
 public abstract class NonElementPosition extends AbstractPosition
 {
-   protected NonElementPosition(QName name, ParticleBinding particle, Position next)
+   protected NonElementPosition(QName name, ParticleBinding particle, AbstractPosition next)
    {
       super(name, particle);
       this.particle = particle;
       this.next = next;
-      next.setPrevious(this);
+      next.previous = this;
    }
 
    public boolean isElement()
@@ -59,7 +58,7 @@ public abstract class NonElementPosition extends AbstractPosition
       o = handler.endParticle(o, qName, particle);
       ended = true;
       
-      if(previous.getValue() != null)
+      if(previous.o != null)
          setParent(previous, handler);
       
       if(repeatableParticleValue != null)
@@ -74,8 +73,8 @@ public abstract class NonElementPosition extends AbstractPosition
       o = handler.endParticle(o, qName, particle);
 
       // model group should always have parent particle
-      Position parentPosition = notSkippedParent();
-      if(parentPosition.getValue() != null)
+      AbstractPosition parentPosition = notSkippedParent();
+      if(parentPosition.o != null)
          setParent(parentPosition, handler);
 
       // if it is repeatable then this is the repeatable parent
@@ -91,20 +90,20 @@ public abstract class NonElementPosition extends AbstractPosition
          return null;
 
       // push all except the last one
-      Position nextPosition = next;
-      while (nextPosition.getNext() != null)
+      AbstractPosition nextPosition = next;
+      while (nextPosition.next != null)
       {
-         if (nextPosition.getParticle().isRepeatable())
+         if (nextPosition.particle.isRepeatable())
             nextPosition.startRepeatableParticle();
 
-         nextPosition.setStack(stack);
+         nextPosition.stack = stack;
          nextPosition.initValue(atts);
-         nextPosition.setParentType(parentType);
-         nextPosition = nextPosition.getNext();
+         nextPosition.parentType = parentType;
+         nextPosition = nextPosition.next;
       }
 
-      nextPosition.setStack(stack);
-      nextPosition.setParentType(parentType);
+      nextPosition.stack = stack;
+      nextPosition.parentType = parentType;
       return (ElementPosition) nextPosition;
    }
 

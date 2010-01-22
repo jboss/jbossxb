@@ -19,17 +19,11 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-package org.jboss.xb.binding.sunday.unmarshalling.position;
+package org.jboss.xb.binding.sunday.unmarshalling;
 
 import javax.xml.namespace.QName;
 
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.PositionStack;
-import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBeforeSetParentCallback;
-import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler.UnmarshallingContextImpl;
 import org.xml.sax.Attributes;
 
@@ -39,7 +33,7 @@ import org.xml.sax.Attributes;
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public abstract class AbstractPosition implements Position
+public abstract class AbstractPosition
 {
    protected static Logger log = Logger.getLogger(AbstractPosition.class);
    protected static boolean trace;
@@ -60,8 +54,9 @@ public abstract class AbstractPosition implements Position
    protected boolean ended;
    protected int occurrence;
 
-   protected Position previous;
-   protected Position next;
+   protected AbstractPosition previous;
+   protected AbstractPosition next;
+   private AbstractPosition notSkippedParent;
 
    protected AbstractPosition(QName qName, ParticleBinding particle)
    {
@@ -86,24 +81,9 @@ public abstract class AbstractPosition implements Position
       return particle;
    }
 
-   public Position getNext()
-   {
-      return next;
-   }
-
-   public Position getPrevious()
+   public AbstractPosition getPrevious()
    {
       return previous;
-   }
-
-   public void setPrevious(Position previous)
-   {
-      this.previous = previous;
-   }
-   
-   public RepeatableParticleHandler getRepeatableHandler()
-   {
-      return repeatableHandler;
    }
 
    public Object getRepeatableParticleValue()
@@ -116,42 +96,47 @@ public abstract class AbstractPosition implements Position
       return o;
    }
 
-   public void setValue(Object value)
-   {
-      this.o = value;
-   }
-
    public boolean isEnded()
    {
       return ended;
    }
 
-   public void setParentType(TypeBinding parentType)
-   {
-      this.parentType = parentType;
-   }
-   
    public boolean isElement()
    {
       return false;
    }
 
-   public void initValue(Attributes atts)
+   public void endRepeatableParticle()
+   {
+      if (trace)
+         log.trace(" end repeatable " + particle.getTerm());
+      repeatableHandler.endRepeatableParticle(previous.o, repeatableParticleValue, qName, particle, previous.particle);
+      repeatableParticleValue = null;
+      repeatableHandler = null;
+   }
+
+   public abstract void endParticle();
+   
+   public abstract void characters(char[] ch, int start, int length);
+   
+   public abstract ElementPosition startParticle(QName startName, Attributes atts);
+
+   protected void initValue(Attributes atts)
    {
       if(handler == null)
          handler = getHandler();
-      Object parent = previous == null ? null : previous.getValue();
+      Object parent = previous == null ? null : previous.o;
       o = handler.startParticle(parent, qName, particle, atts, stack.getNamespaceRegistry());
    }
 
-   public void startRepeatableParticle()
+   protected void startRepeatableParticle()
    {
       if(trace)
          log.trace(" start repeatable " + particle.getTerm());
 
       RepeatableParticleHandler repeatableHandler = particle.getTerm().getRepeatableHandler();
       // the way it is now it's never null
-      Object repeatableContainer = repeatableHandler.startRepeatableParticle(previous.getValue(), qName, particle);
+      Object repeatableContainer = repeatableHandler.startRepeatableParticle(previous.o, qName, particle);
       if(repeatableContainer != null)
       {
          if(this.repeatableParticleValue != null)
@@ -161,61 +146,66 @@ public abstract class AbstractPosition implements Position
       }
    }
 
-   public void endRepeatableParticle()
+   protected AbstractPosition notSkippedParent()
    {
-      if (trace)
-         log.trace(" end repeatable " + particle.getTerm());
-      repeatableHandler.endRepeatableParticle(previous.getValue(), repeatableParticleValue, qName, particle, previous.getParticle());
-      repeatableParticleValue = null;
-      repeatableHandler = null;
-   }
-
-   protected Position notSkippedParent()
-   {
-      Position position = previous;
-      Position wildcardPosition = null;
+      if(notSkippedParent != null)
+         return notSkippedParent;
+      
+      AbstractPosition position = previous;
+      AbstractPosition wildcardPosition = null;
       while(position != null)
       {
-         ParticleBinding particle = position.getParticle();
-         if(!particle.getTerm().isSkip() || position.getRepeatableParticleValue() != null)
+         ParticleBinding particle = position.particle;
+         if(!particle.getTerm().isSkip() || position.repeatableParticleValue != null)
+         {
+            notSkippedParent = position;
             return position;
+         }
          else if(wildcardPosition != null)
+         {
+            notSkippedParent = wildcardPosition;
             return wildcardPosition;
+         }
 
          if(particle.getTerm().isWildcard())
             wildcardPosition = position;
-         position = position.getPrevious();
+         position = position.previous;
       }
+      notSkippedParent = wildcardPosition;
       return wildcardPosition;
    }
 
-   protected void setParent(Position parentPosition, ParticleHandler handler)
+   protected void setParent(AbstractPosition parentPosition, ParticleHandler handler)
    {
       if(repeatableParticleValue != null)
       {
-         repeatableHandler.addTermValue(repeatableParticleValue, o, qName, particle, parentPosition.getParticle(), handler);
+         repeatableHandler.addTermValue(repeatableParticleValue, o, qName, particle, parentPosition.particle, handler);
       }
-      else if(parentPosition.getRepeatableParticleValue() == null || !parentPosition.getParticle().getTerm().isSkip())
+      else if(parentPosition.repeatableParticleValue == null || !parentPosition.particle.getTerm().isSkip())
       {
          TermBeforeSetParentCallback beforeSetParent = particle.getTerm().getBeforeSetParentCallback();
          if(beforeSetParent != null)
          {
             UnmarshallingContextImpl ctx = stack.getContext();
-            ctx.parent = parentPosition.getValue();
+            ctx.parent = parentPosition.o;
             ctx.particle = particle;
-            ctx.parentParticle = notSkippedParent().getParticle();
+            ctx.parentParticle = notSkippedParent().particle;
             o = beforeSetParent.beforeSetParent(o, ctx);
             ctx.clear();
          }
          
-         handler.setParent(parentPosition.getValue(), o, qName, particle, parentPosition.getParticle());
+         handler.setParent(parentPosition.o, o, qName, particle, parentPosition.particle);
       }
       else
-         parentPosition.getRepeatableHandler().addTermValue(
-               parentPosition.getRepeatableParticleValue(),
+         parentPosition.repeatableHandler.addTermValue(
+               parentPosition.repeatableParticleValue,
                o, qName, particle,
-               parentPosition.getParticle(), handler);
+               parentPosition.particle, handler);
    }
 
    protected abstract ParticleHandler getHandler();
+   
+   protected abstract void repeatForChild(Attributes atts);
+   
+   protected abstract AbstractPosition nextPosition(QName startName, Attributes atts);
 }

@@ -34,6 +34,7 @@ import org.jboss.reflect.spi.ClassInfo;
 import org.jboss.reflect.spi.ConstructorInfo;
 import org.jboss.reflect.spi.TypeInfo;
 import org.jboss.xb.annotations.JBossXmlCollection;
+import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.spi.BeanAdapter;
 
 /**
@@ -115,8 +116,19 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
    @SuppressWarnings("unchecked")
    public void handle(PropertyInfo propertyInfo, TypeInfo propertyType, Object parent, Object child, QName qName)
    {
-      if (componentType != null && child != null && componentType.isInstance(child) == false)
-         throw new IllegalArgumentException("Child is not an instance of " + componentType + ", child: " + child);
+      if (componentType != null && child != null)
+      {
+         if(!componentType.isInstance(child))
+            throw new IllegalArgumentException("Child is not an instance of " + componentType + ", child: " + child);
+         try
+         {
+            child = componentType.convertValue(child);
+         }
+         catch (Throwable e)
+         {
+            throw new JBossXBRuntimeException("QName " + qName + " error converting " + BuilderUtil.toDebugString(child) + " to type " + componentType.getName(), e);
+         }
+      }
 
       BeanAdapter beanAdapter = (BeanAdapter) parent;
       
@@ -153,18 +165,7 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
          }
       }
       
-      // Now add
-      try
-      {
-         if (componentType != null && child != null)
-            c.add(componentType.convertValue(child));
-         else
-            c.add(child);
-      }
-      catch (Throwable t)
-      {
-         throw new RuntimeException("QName " + qName + " error adding " + BuilderUtil.toDebugString(child) + " to collection " + BuilderUtil.toDebugString(c), t);
-      }
+      c.add(child);
    }
    
    private static interface CollectionFactory

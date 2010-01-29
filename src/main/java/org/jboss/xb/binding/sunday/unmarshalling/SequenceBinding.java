@@ -151,11 +151,14 @@ public class SequenceBinding
                   next.previous = this;
                   ++occurrence;
 
-                  o = handler.endParticle(o, qName, particle);
-                  if(previous.o != null)
-                     setParent(previous, handler);
-                  initValue(atts);
-
+                  if(!skip)
+                  {
+                     o = handler.endParticle(o, qName, particle);
+                     if (previous.o != null)
+                        setParent(previous, handler);
+                     initValue(atts);
+                  }
+                  
                   if(trace)
                      log.trace("found " + qName + " in " + SequenceBinding.this);
 

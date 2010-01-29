@@ -61,8 +61,6 @@ public class ArrayWrapperRepeatableParticleHandler implements RepeatableParticle
    public void addTermValue(Object particleValue, Object termValue, QName elementName, ParticleBinding particle,
          ParticleBinding parentParticle, ParticleHandler handler)
    {
-      if(particle.getTerm().isSkip())
-         return;
       ValueAdapter valueAdapter = particle.getTerm().getValueAdapter();
       if(valueAdapter != null)
          termValue = valueAdapter.cast(termValue, null);

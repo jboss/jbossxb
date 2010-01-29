@@ -315,11 +315,13 @@ public class WildcardBinding
                next.previous = this;
                ++occurrence;
 
-               o = handler.endParticle(o, qName, particle);
-               if(previous.o != null)
-                  setParent(previous, handler);
-               //o = initValue(stack.parent().getValue(), atts);
-
+               if(!skip)
+               {
+                  o = handler.endParticle(o, qName, particle);
+                  if (previous.o != null)
+                     setParent(previous, handler);
+                  //o = initValue(stack.parent().getValue(), atts);
+               }
                return this;
             }
          }
@@ -331,7 +333,7 @@ public class WildcardBinding
       @Override
       protected ParticleHandler getHandler()
       {
-         return DefaultHandlers.NOOP_PARTICLE_HANDLER;
+         return DefaultHandlers.UOE_PARTICLE_HANDLER;
       }
    }
 }

@@ -1140,7 +1140,7 @@ public class JBossXBNoSchemaBuilder
       if (trace)
          log.trace(model.getGroupType() + " model group for type=" + beanInfo.getName());
 
-      model.setHandler(BuilderParticleHandler.PARENT_ELEMENT);
+      model.setHandler(BuilderParticleHandler.setParentDelegate(typeBinding.getHandler()));
       ParticleBinding typeParticle = new ParticleBinding(model);
       typeParticle.setMinOccurs(1);
       typeParticle.setMaxOccurs(1);
@@ -1447,7 +1447,7 @@ public class JBossXBNoSchemaBuilder
       if (elements.length > 1)
       {
          ChoiceBinding choice = new ChoiceBinding(schemaBinding);
-         choice.setHandler(BuilderParticleHandler.PARENT_GROUP);
+         choice.setHandler(BuilderParticleHandler.parentGroup(localModel));
          ParticleBinding particleBinding = new ParticleBinding(choice);
          particleBinding.setMinOccurs(0);
          // WARN normally maxOccursUnbounded should be set to true in this case
@@ -1558,7 +1558,7 @@ public class JBossXBNoSchemaBuilder
                }
                else
                {
-                  elementTypeBinding.setHandler(BuilderParticleHandler.PARENT_GROUP);
+                  elementTypeBinding.setHandler(BuilderParticleHandler.parentGroup(localModel));
                }
                elementTypeBinding.setSchemaBinding(schemaBinding);
                ElementBinding elementBinding = createElementBinding(localPropertyType, elementTypeBinding, propertyQName, false);
@@ -1571,7 +1571,7 @@ public class JBossXBNoSchemaBuilder
 
                // Setup the child model
                ChoiceBinding childModel = new ChoiceBinding(schemaBinding);
-               childModel.setHandler(BuilderParticleHandler.PARENT_ELEMENT);
+               childModel.setHandler(BuilderParticleHandler.setParentDelegate(elementTypeBinding.getHandler()));
                ParticleBinding particleBinding = new ParticleBinding(childModel);
                particleBinding.setMinOccurs(0);
                particleBinding.setMaxOccurs(1);
@@ -1966,10 +1966,10 @@ public class JBossXBNoSchemaBuilder
    {
       TypeBinding wrapperType = new TypeBinding();
       SequenceBinding seq = new SequenceBinding(schemaBinding);
-      seq.setHandler(BuilderParticleHandler.PARENT_ELEMENT);
+      seq.setHandler(DefaultHandlers.UOE_PARTICLE_HANDLER);
       ParticleBinding particle = new ParticleBinding(seq);
       wrapperType.setParticle(particle);
-      wrapperType.setHandler(DefaultHandlers.NOOP_PARTICLE_HANDLER);
+      wrapperType.setHandler(DefaultHandlers.UOE_PARTICLE_HANDLER);
 
       ElementBinding wrapperElement = createElementBinding(propertyType, wrapperType, wrapperQName, false);
       wrapperElement.setNillable(annotation.nillable());
@@ -2194,7 +2194,6 @@ public class JBossXBNoSchemaBuilder
          BeanAdapterFactory entryAdapterFactory = null;
          BeanInfo entryInfo = JBossXBBuilder.configuration.getBeanInfo(DefaultMapEntry.class);
          entryAdapterFactory = createAdapterFactory(DefaultBeanAdapterBuilder.class, entryInfo, null);
-         BeanHandler entryHandler = new BeanHandler(entryInfo.getName(), entryAdapterFactory);
 
          TypeBinding entryType = null;
          TypeInfo entryTypeInfo = null;
@@ -2209,6 +2208,7 @@ public class JBossXBNoSchemaBuilder
 
             entryType = new TypeBinding();
             entryType.setSchemaBinding(schemaBinding);
+            BeanHandler entryHandler = new BeanHandler(entryInfo.getName(), entryAdapterFactory);
             entryType.setHandler(entryHandler);
 
             entryTypeInfo = JBossXBBuilder.configuration.getTypeInfo(DefaultMapEntry.class);                     
@@ -2252,6 +2252,7 @@ public class JBossXBNoSchemaBuilder
             keyValueSequence = new SequenceBinding(schemaBinding);                     
             if(entryType == null)
             {
+               BeanHandler entryHandler = new BeanHandler(entryInfo.getName(), entryAdapterFactory);
                keyValueSequence.setSkip(false);
                keyValueSequence.setQName(propertyQName);
                schemaBinding.addGroup(keyValueSequence.getQName(), keyValueSequence);

@@ -72,6 +72,26 @@ public class DefaultHandlers
    
    public static ParticleHandler XOP_HANDLER = new XOPElementHandler();
    
+   public static ParticleHandler UOE_PARTICLE_HANDLER = new ParticleHandler()
+   {
+      public Object endParticle(Object o, QName elementName, ParticleBinding particle)
+      {
+         throw new UnsupportedOperationException();
+      }
+
+      public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle,
+            ParticleBinding parentParticle)
+      {
+         throw new UnsupportedOperationException();
+      }
+
+      public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs,
+            NamespaceContext nsCtx)
+      {
+         throw new UnsupportedOperationException();
+      }
+   };
+
    public static ParticleHandler NOOP_PARTICLE_HANDLER = new ParticleHandler()
    {
       public Object endParticle(Object o, QName elementName, ParticleBinding particle)
@@ -90,7 +110,7 @@ public class DefaultHandlers
          return parent;
       }
    };
-   
+
    public static RepeatableParticleHandler REPEATABLE_HANDLER = new RepeatableParticleHandler()
    {
       public Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle)

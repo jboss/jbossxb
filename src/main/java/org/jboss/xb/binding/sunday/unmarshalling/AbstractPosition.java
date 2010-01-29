@@ -58,6 +58,8 @@ public abstract class AbstractPosition
    protected AbstractPosition next;
    private AbstractPosition notSkippedParent;
 
+   protected boolean skip;
+   
    protected AbstractPosition(QName qName, ParticleBinding particle)
    {
       if (particle == null)
@@ -69,6 +71,8 @@ public abstract class AbstractPosition
 
       this.particle = particle;
       this.occurrence = 1;
+      
+      this.skip = particle.getTerm().isSkip();
    }
 
    public void setStack(PositionStack stack)
@@ -123,6 +127,12 @@ public abstract class AbstractPosition
 
    protected void initValue(Attributes atts)
    {
+      if(skip)
+      {
+         o = previous == null ? null : previous.o;
+         return;
+      }
+      
       if(handler == null)
          handler = getHandler();
       Object parent = previous == null ? null : previous.o;
@@ -155,8 +165,7 @@ public abstract class AbstractPosition
       AbstractPosition wildcardPosition = null;
       while(position != null)
       {
-         ParticleBinding particle = position.particle;
-         if(!particle.getTerm().isSkip() || position.repeatableParticleValue != null)
+         if(!position.skip || position.repeatableParticleValue != null)
          {
             notSkippedParent = position;
             return position;
@@ -167,7 +176,7 @@ public abstract class AbstractPosition
             return wildcardPosition;
          }
 
-         if(particle.getTerm().isWildcard())
+         if(position.particle.getTerm().isWildcard())
             wildcardPosition = position;
          position = position.previous;
       }
@@ -177,14 +186,24 @@ public abstract class AbstractPosition
 
    protected void setParent(AbstractPosition parentPosition, ParticleHandler handler)
    {
+      if(skip)
+         return;
+      
       if(repeatableParticleValue != null)
       {
          repeatableHandler.addTermValue(repeatableParticleValue, o, qName, particle, parentPosition.particle, handler);
       }
-      else if(parentPosition.repeatableParticleValue == null || !parentPosition.particle.getTerm().isSkip())
+      else if(parentPosition.repeatableParticleValue != null && parentPosition.skip)
+      {
+         parentPosition.repeatableHandler.addTermValue(
+               parentPosition.repeatableParticleValue,
+               o, qName, particle,
+               parentPosition.particle, handler);
+      }
+      else
       {
          TermBeforeSetParentCallback beforeSetParent = particle.getTerm().getBeforeSetParentCallback();
-         if(beforeSetParent != null)
+         if (beforeSetParent != null)
          {
             UnmarshallingContextImpl ctx = stack.getContext();
             ctx.parent = parentPosition.o;
@@ -193,14 +212,9 @@ public abstract class AbstractPosition
             o = beforeSetParent.beforeSetParent(o, ctx);
             ctx.clear();
          }
-         
+
          handler.setParent(parentPosition.o, o, qName, particle, parentPosition.particle);
       }
-      else
-         parentPosition.repeatableHandler.addTermValue(
-               parentPosition.repeatableParticleValue,
-               o, qName, particle,
-               parentPosition.particle, handler);
    }
 
    protected abstract ParticleHandler getHandler();

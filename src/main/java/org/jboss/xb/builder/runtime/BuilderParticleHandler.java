@@ -24,6 +24,8 @@ package org.jboss.xb.builder.runtime;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 
+import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
@@ -41,58 +43,6 @@ public class BuilderParticleHandler implements ParticleHandler
 {
    /** The singleton instance */
    public static final BuilderParticleHandler INSTANCE = new BuilderParticleHandler();
-   
-   public static final ParticleHandler PARENT_ELEMENT = new ParticleHandler()
-   {
-      public Object endParticle(Object o, QName elementName, ParticleBinding particle)
-      {
-         return o;
-      }
-
-      public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
-      {
-         if (particle.getTerm().isElement())
-         {
-            ParticleHandler particleHandler = ((ElementBinding)parentParticle.getTerm()).getType().getHandler();
-            if(particleHandler != null)
-               particleHandler.setParent(parent, o, elementName, particle, parentParticle);
-         }
-      }
-
-      public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs,
-            NamespaceContext nsCtx)
-      {
-         return parent;
-      }
-   };
-
-   public static final ParticleHandler PARENT_GROUP = new ParticleHandler()
-   {
-      public Object endParticle(Object o, QName elementName, ParticleBinding particle)
-      {
-         return o;
-      }
-
-      public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
-      {
-         if (particle.getTerm().isElement())
-         {
-            TermBinding parentTerm = parentParticle.getTerm();
-            if (!parentTerm.isSkip())
-            {
-               ParticleHandler particleHandler = ((ModelGroupBinding)parentTerm).getHandler();
-               if(particleHandler != null)
-                  particleHandler.setParent(parent, o, elementName, particle, parentParticle);
-            }
-         }
-      }
-
-      public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs,
-            NamespaceContext nsCtx)
-      {
-         return parent;
-      }
-   };
 
    public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs, NamespaceContext nsCtx)
    {
@@ -122,5 +72,41 @@ public class BuilderParticleHandler implements ParticleHandler
    public Object endParticle(Object o, QName elementName, ParticleBinding particle)
    {
       return o;
+   }
+   
+   public static ParticleHandler setParentDelegate(final ParticleHandler typeHandler)
+   {
+      return new ParticleHandler()
+      {
+         private final ParticleHandler delegate = typeHandler;
+         
+         public Object endParticle(Object o, QName elementName, ParticleBinding particle)
+         {
+            return o;
+         }
+
+         public void setParent(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
+         {
+            if (particle.getTerm().isElement())
+               delegate.setParent(parent, o, elementName, particle, parentParticle);
+         }
+
+         public Object startParticle(Object parent, QName elementName, ParticleBinding particle, Attributes attrs,
+               NamespaceContext nsCtx)
+         {
+            return parent;
+         }
+      };
+   }
+   
+   public static ParticleHandler parentGroup(final ModelGroupBinding group)
+   {
+      if(group.isSkip())
+         return DefaultHandlers.UOE_PARTICLE_HANDLER;
+      
+      ParticleHandler handler = group.getHandler();
+      if(handler == null)
+         throw new JBossXBRuntimeException("The group is expected to have a non-null handler: " + group);
+      return setParentDelegate(handler);
    }
 }

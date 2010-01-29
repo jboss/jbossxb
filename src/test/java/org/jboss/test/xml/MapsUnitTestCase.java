@@ -320,6 +320,7 @@ public class MapsUnitTestCase
       );
 
       // sequence entry
+      entrySeq.setSkip(false);
       entrySeq.setHandler(new ParticleHandler()
       {
          public Object startParticle(Object parent,

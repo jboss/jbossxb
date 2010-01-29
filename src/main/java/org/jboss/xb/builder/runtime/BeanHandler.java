@@ -45,7 +45,7 @@ import org.xml.sax.Attributes;
 public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHandler
 {
    /** The log */
-   private final Logger log = Logger.getLogger(getClass());
+   protected static final Logger log = Logger.getLogger("org.jboss.xb.builder.runtime.BeanHandler");
    
    /** Whether trace is enabled */
    private boolean trace = log.isTraceEnabled();
@@ -110,6 +110,7 @@ public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHa
          ElementBinding element = (ElementBinding) term;
          attrsHandler.attributes(o, elementName, element.getType(), attrs, nsCtx);
       }
+
       return o;
    }
 
@@ -120,25 +121,22 @@ public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHa
 
       TermBinding term = particle.getTerm();
       ValueAdapter valueAdapter = null;
-      if(term.isModelGroup())
-      {
-         QName modelGroupName = ((ModelGroupBinding)term).getQName();
-         if(modelGroupName != null)
-         {
-            qName = modelGroupName;
-         }
-      }
-      else if(term.isElement())
+      if(term.isElement()) // elements appear much more often than model groups
       {
          valueAdapter = ((ElementBinding)term).getValueAdapter();
       }
+      else if(term.isModelGroup())
+      {
+         QName modelGroupName = ((ModelGroupBinding)term).getQName();
+         if(modelGroupName != null)
+            qName = modelGroupName;
+      } 
 
       BeanAdapter beanAdapter = (BeanAdapter) parent;
       AbstractPropertyHandler propertyHandler = beanAdapter.getPropertyHandler(qName);
       if (propertyHandler == null)
       {
-         TermBinding element = term;
-         if (element.getSchema().isStrictSchema())
+         if (term.getSchema().isStrictSchema())
             throw new RuntimeException("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o) + " available=" + beanAdapter.getAvailable());
          if (trace)
             log.trace("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o));

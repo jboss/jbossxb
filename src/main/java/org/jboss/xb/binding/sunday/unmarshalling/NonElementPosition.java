@@ -55,11 +55,14 @@ public abstract class NonElementPosition extends AbstractPosition
       if(ended)
          throw new JBossXBRuntimeException("The position has already been ended!");
       
-      o = handler.endParticle(o, qName, particle);
-      ended = true;
-      
-      if(previous.o != null)
-         setParent(previous, handler);
+      if(!skip)
+      {
+         o = handler.endParticle(o, qName, particle);
+         ended = true;
+
+         if (previous.o != null)
+            setParent(previous, handler);
+      }
       
       if(repeatableParticleValue != null)
          endRepeatableParticle();
@@ -70,13 +73,16 @@ public abstract class NonElementPosition extends AbstractPosition
       if(ended)
          throw new JBossXBRuntimeException("The position has already been ended!");
 
-      o = handler.endParticle(o, qName, particle);
+      if (!skip)
+      {
+         o = handler.endParticle(o, qName, particle);
 
-      // model group should always have parent particle
-      AbstractPosition parentPosition = notSkippedParent();
-      if(parentPosition.o != null)
-         setParent(parentPosition, handler);
-
+         // model group should always have parent particle
+         AbstractPosition parentPosition = notSkippedParent();
+         if (parentPosition.o != null)
+            setParent(parentPosition, handler);
+      }
+      
       // if it is repeatable then this is the repeatable parent
       if(!particle.isRepeatable())
          previous.repeatForChild(atts);

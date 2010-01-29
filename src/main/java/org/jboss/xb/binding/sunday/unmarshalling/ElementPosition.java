@@ -268,6 +268,10 @@ public class ElementPosition extends AbstractPosition
    
    public void endParticle()
    {
+      ended = true;
+      if(skip)
+         return;
+      
       ElementBinding element = (ElementBinding) particle.getTerm();
       TypeBinding type = element.getType();
       
@@ -477,8 +481,6 @@ public class ElementPosition extends AbstractPosition
             o = parent;
          }
       }
-      
-      ended = true;
    }
    
    public ElementPosition startParticle(QName startName, Attributes atts)

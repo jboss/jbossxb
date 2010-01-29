@@ -172,6 +172,7 @@ public class ElementPosition extends AbstractPosition
             next = new ElementPosition(startName, new ParticleBinding(xopInclude));
             next.stack = stack;
             next.previous = this;
+            next.notSkippedParent = getLastNotSkipped();
             return next;
          }
 
@@ -199,16 +200,16 @@ public class ElementPosition extends AbstractPosition
       if (next == null)
          throw new JBossXBRuntimeException(startName + " not found as a child of " + qName + " in " + modelGroup);
 
-      next.previous = this;
+      next.previous = this;      
       
       flushIgnorableCharacters();
 
       AbstractPosition nextPosition = next;
       while (nextPosition.next != null)
       {
+         nextPosition.notSkippedParent = nextPosition.previous.getLastNotSkipped();
          if (nextPosition.particle.isRepeatable())
             nextPosition.startRepeatableParticle();
-
          nextPosition.stack = stack;
          nextPosition.initValue(atts);
          nextPosition.parentType = parentType;
@@ -217,6 +218,7 @@ public class ElementPosition extends AbstractPosition
 
       nextPosition.stack = stack;
       nextPosition.parentType = parentType;
+      nextPosition.notSkippedParent = nextPosition.previous.getLastNotSkipped();
       return (ElementPosition) nextPosition;
    }
 
@@ -375,7 +377,7 @@ public class ElementPosition extends AbstractPosition
                      UnmarshallingContextImpl ctx = stack.getContext();
                      ctx.parent = o;
                      ctx.particle = particle;
-                     ctx.parentParticle = notSkippedParent().particle;
+                     ctx.parentParticle = notSkippedParent.particle;
                      unmarshalled = beforeSetParent.beforeSetParent(unmarshalled, ctx);
                      ctx.clear();
                   }
@@ -427,42 +429,7 @@ public class ElementPosition extends AbstractPosition
       // setParent
       //
 
-      if(interceptorObjects == null)
-      {
-         AbstractPosition notSkippedParent = notSkippedParent();
-         if (notSkippedParent != null)
-         {
-            ParticleBinding parentParticle = notSkippedParent.particle;
-            TermBinding parentTerm = parentParticle.getTerm();
-
-            if (notSkippedParent.o != null)
-            {
-               ParticleHandler handler = this.handler;
-               if (parentTerm.isWildcard())
-               {
-                  ParticleHandler wh = ((WildcardBinding) parentTerm).getWildcardHandler();
-                  if (wh != null)
-                     handler = wh;
-               }
-               setParent(notSkippedParent, handler);
-            }
-            else if (parentTerm.isWildcard())
-            {
-               // the parent has anyType, so it gets the value of its child
-               AbstractPosition parentPos = previous;
-               parentPos.o = o;
-               while(!parentPos.isElement())
-               {
-                  parentPos = parentPos.getPrevious();
-                  parentPos.o = o;
-               }
-
-               if (trace)
-                  log.trace("Value of " + qName + " " + o + " is promoted as the value of its parent element.");
-            }
-         }
-      }
-      else
+      if(interceptorObjects != null)
       {
          int ioIndex = 0;
          for(int i = interceptors.size() - 1; i >= 0; --i)
@@ -479,6 +446,37 @@ public class ElementPosition extends AbstractPosition
             Object parent = interceptorObjects[ioIndex++];
             interceptor.add(parent, o, qName);
             o = parent;
+         }
+      }
+      else if (notSkippedParent != null)
+      {
+         ParticleBinding parentParticle = notSkippedParent.particle;
+         TermBinding parentTerm = parentParticle.getTerm();
+
+         if (notSkippedParent.o != null)
+         {
+            ParticleHandler handler = this.handler;
+            if (parentTerm.isWildcard())
+            {
+               ParticleHandler wh = ((WildcardBinding) parentTerm).getWildcardHandler();
+               if (wh != null)
+                  handler = wh;
+            }
+            setParent(notSkippedParent, handler);
+         }
+         else if (parentTerm.isWildcard())
+         {
+            // the parent has anyType, so it gets the value of its child
+            AbstractPosition parentPos = previous;
+            parentPos.o = o;
+            while(!parentPos.isElement())
+            {
+               parentPos = parentPos.getPrevious();
+               parentPos.o = o;
+            }
+
+            if (trace)
+               log.trace("Value of " + qName + " " + o + " is promoted as the value of its parent element.");
          }
       }
    }

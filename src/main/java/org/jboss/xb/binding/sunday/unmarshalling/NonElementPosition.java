@@ -78,7 +78,7 @@ public abstract class NonElementPosition extends AbstractPosition
          o = handler.endParticle(o, qName, particle);
 
          // model group should always have parent particle
-         AbstractPosition parentPosition = notSkippedParent();
+         AbstractPosition parentPosition = notSkippedParent;
          if (parentPosition.o != null)
             setParent(parentPosition, handler);
       }
@@ -99,9 +99,9 @@ public abstract class NonElementPosition extends AbstractPosition
       AbstractPosition nextPosition = next;
       while (nextPosition.next != null)
       {
+         nextPosition.notSkippedParent = nextPosition.previous.getLastNotSkipped();
          if (nextPosition.particle.isRepeatable())
             nextPosition.startRepeatableParticle();
-
          nextPosition.stack = stack;
          nextPosition.initValue(atts);
          nextPosition.parentType = parentType;
@@ -110,6 +110,7 @@ public abstract class NonElementPosition extends AbstractPosition
 
       nextPosition.stack = stack;
       nextPosition.parentType = parentType;
+      nextPosition.notSkippedParent = nextPosition.previous.getLastNotSkipped();
       return (ElementPosition) nextPosition;
    }
 

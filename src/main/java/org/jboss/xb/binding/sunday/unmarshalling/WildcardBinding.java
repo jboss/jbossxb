@@ -335,5 +335,11 @@ public class WildcardBinding
       {
          return DefaultHandlers.UOE_PARTICLE_HANDLER;
       }
+      
+      @Override
+      protected AbstractPosition getLastNotSkipped()
+      {
+         return !skip || repeatableParticleValue != null || previous != notSkippedParent ? this : notSkippedParent;
+      }
    }
 }

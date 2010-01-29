@@ -56,7 +56,7 @@ public abstract class AbstractPosition
 
    protected AbstractPosition previous;
    protected AbstractPosition next;
-   private AbstractPosition notSkippedParent;
+   protected AbstractPosition notSkippedParent;
 
    protected boolean skip;
    
@@ -156,32 +156,9 @@ public abstract class AbstractPosition
       }
    }
 
-   protected AbstractPosition notSkippedParent()
+   protected AbstractPosition getLastNotSkipped()
    {
-      if(notSkippedParent != null)
-         return notSkippedParent;
-      
-      AbstractPosition position = previous;
-      AbstractPosition wildcardPosition = null;
-      while(position != null)
-      {
-         if(!position.skip || position.repeatableParticleValue != null)
-         {
-            notSkippedParent = position;
-            return position;
-         }
-         else if(wildcardPosition != null)
-         {
-            notSkippedParent = wildcardPosition;
-            return wildcardPosition;
-         }
-
-         if(position.particle.getTerm().isWildcard())
-            wildcardPosition = position;
-         position = position.previous;
-      }
-      notSkippedParent = wildcardPosition;
-      return wildcardPosition;
+      return !skip || repeatableParticleValue != null ? this : notSkippedParent;
    }
 
    protected void setParent(AbstractPosition parentPosition, ParticleHandler handler)
@@ -193,14 +170,7 @@ public abstract class AbstractPosition
       {
          repeatableHandler.addTermValue(repeatableParticleValue, o, qName, particle, parentPosition.particle, handler);
       }
-      else if(parentPosition.repeatableParticleValue != null && parentPosition.skip)
-      {
-         parentPosition.repeatableHandler.addTermValue(
-               parentPosition.repeatableParticleValue,
-               o, qName, particle,
-               parentPosition.particle, handler);
-      }
-      else
+      else if(parentPosition.repeatableParticleValue == null || !parentPosition.skip)
       {
          TermBeforeSetParentCallback beforeSetParent = particle.getTerm().getBeforeSetParentCallback();
          if (beforeSetParent != null)
@@ -208,12 +178,19 @@ public abstract class AbstractPosition
             UnmarshallingContextImpl ctx = stack.getContext();
             ctx.parent = parentPosition.o;
             ctx.particle = particle;
-            ctx.parentParticle = notSkippedParent().particle;
+            ctx.parentParticle = notSkippedParent.particle;
             o = beforeSetParent.beforeSetParent(o, ctx);
             ctx.clear();
          }
 
          handler.setParent(parentPosition.o, o, qName, particle, parentPosition.particle);
+      }
+      else
+      {
+         parentPosition.repeatableHandler.addTermValue(
+               parentPosition.repeatableParticleValue,
+               o, qName, particle,
+               parentPosition.particle, handler);
       }
    }
 

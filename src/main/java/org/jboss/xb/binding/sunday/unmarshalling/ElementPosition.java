@@ -545,7 +545,7 @@ public class ElementPosition extends AbstractPosition
       if (type == null)
          throw new JBossXBRuntimeException("No type for element " + element);
 
-      handler = type.getHandler();
+      handler = element.getHandler();
       if (handler == null)
          handler = DefaultHandlers.ELEMENT_HANDLER;
 

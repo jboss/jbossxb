@@ -32,7 +32,6 @@ import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.RepeatableParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
-import org.jboss.xb.spi.BeanAdapterFactory;
 
 /**
  * A ArrayWrapperRepeatableParticleHandler.
@@ -48,24 +47,21 @@ public class ArrayWrapperRepeatableParticleHandler implements RepeatableParticle
    /** Whether trace is enabled */
    protected boolean trace = log.isTraceEnabled();
 
-
-   private final BeanAdapterFactory beanAdapterFactory;
+   private final AbstractPropertyHandler setParentProperty;
    
-   public ArrayWrapperRepeatableParticleHandler(BeanAdapterFactory beanAdapterFactory)
+   public ArrayWrapperRepeatableParticleHandler(AbstractPropertyHandler setParentProperty)
    {
-      if(beanAdapterFactory == null)
-         throw new IllegalArgumentException("beanAdapterFactory is null");
-      this.beanAdapterFactory = beanAdapterFactory;
+      if(setParentProperty == null)
+         throw new IllegalArgumentException("setParentProperty is null");
+      this.setParentProperty = setParentProperty;
    }
    
    public void addTermValue(Object particleValue, Object termValue, QName elementName, ParticleBinding particle,
          ParticleBinding parentParticle, ParticleHandler handler)
    {
-      ValueAdapter valueAdapter = particle.getTerm().getValueAdapter();
-      if(valueAdapter != null)
-         termValue = valueAdapter.cast(termValue, null);
-      //ArrayWrapper aw = (ArrayWrapper) particleValue;
-      //aw.add(termValue);
+//      ValueAdapter valueAdapter = particle.getTerm().getValueAdapter();
+//      if(valueAdapter != null)
+//         termValue = valueAdapter.cast(termValue, null);
       ((List<Object>)particleValue).add(termValue);
       
       if(trace)
@@ -77,32 +73,13 @@ public class ArrayWrapperRepeatableParticleHandler implements RepeatableParticle
    {
       if(trace)
          log.trace("endRepeatableParticle " + elementName);
+      
+      ValueAdapter valueAdapter = particle.getTerm().getValueAdapter();
+      if(valueAdapter != null)
+         o = valueAdapter.cast(o, null);
 
-      QName qName = particle.getTerm().getQName();
-      if(qName == null)
-         qName = elementName;
-      AbstractPropertyHandler propertyHandler = beanAdapterFactory.getPropertyHandler(qName);
-      if (propertyHandler == null)
-      {
-         AbstractPropertyHandler wildcardHandler = beanAdapterFactory.getWildcardHandler();
-         if (wildcardHandler != null && o != null)
-         {
-            o = toArray((List<Object>) o, (ArrayInfo) wildcardHandler.getPropertyType());
-            wildcardHandler.doHandle(parent, o, qName);
-            return;
-         }
-
-         if (particle.getTerm().getSchema().isStrictSchema())
-            throw new RuntimeException("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o) + " available=" + beanAdapterFactory.getAvailable());
-
-         if (trace)
-            log.trace("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o));
-         
-         return;
-      }
-
-      o = toArray((List<Object>) o, (ArrayInfo) propertyHandler.getPropertyType());
-      propertyHandler.doHandle(parent, o, qName);
+      o = toArray((List<Object>) o, (ArrayInfo) setParentProperty.getPropertyType());
+      setParentProperty.doHandle(parent, o, elementName);
    }
 
    public Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle)

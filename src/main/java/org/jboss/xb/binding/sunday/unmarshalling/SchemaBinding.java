@@ -58,7 +58,7 @@ public class SchemaBinding
    {
       public Object cast(Object o, Class<?> c)
       {
-         if (o != null && java.util.Date.class.isAssignableFrom(c))
+         if (c != null && o != null && java.util.Date.class.isAssignableFrom(c))
          {
             o = ((java.util.Calendar) o).getTime();
          }

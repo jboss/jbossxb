@@ -48,7 +48,6 @@ public class WildcardBinding
    private ParticleHandler unresolvedElementHandler;
    private CharactersHandler unresolvedCharactersHandler;
    private ObjectLocalMarshaller unresolvedMarshaller;
-   private ParticleHandler wildcardHandler;
 
 
    public WildcardBinding(SchemaBinding schema)
@@ -95,14 +94,21 @@ public class WildcardBinding
       return pc == PC_STRICT;
    }
 
+   /**
+    * TermBinding.setHandler should be used instead
+    */
+   @Deprecated
    public void setWildcardHandler(ParticleHandler wildcardHandler)
    {
-      this.wildcardHandler = wildcardHandler;
+      this.handler = wildcardHandler;
    }
 
+   /**
+    * TermBinding.getHandler should be used instead
+    */
    public ParticleHandler getWildcardHandler()
    {
-      return wildcardHandler;
+      return handler;
    }
 
    public ParticleHandler getUnresolvedElementHandler()

@@ -56,6 +56,8 @@ public abstract class TermBinding
    protected TermBeforeSetParentCallback beforeSetParentCallback;
    protected RepeatableParticleHandler repeatableHandler = DefaultHandlers.REPEATABLE_HANDLER;
 
+   protected ParticleHandler handler;
+   
    protected TermBinding(SchemaBinding schema)
    {
       this.schema = schema;
@@ -201,6 +203,16 @@ public abstract class TermBinding
    public TermBeforeSetParentCallback getBeforeSetParentCallback()
    {
       return beforeSetParentCallback;
+   }
+   
+   public ParticleHandler getHandler()
+   {
+      return handler;
+   }
+   
+   public void setHandler(ParticleHandler handler)
+   {
+      this.handler = handler;
    }
    
    public RepeatableParticleHandler getRepeatableHandler()

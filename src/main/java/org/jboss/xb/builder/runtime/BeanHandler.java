@@ -120,17 +120,12 @@ public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHa
          log.trace("setParent " + qName + " parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o));
 
       TermBinding term = particle.getTerm();
-      ValueAdapter valueAdapter = null;
-      if(term.isElement()) // elements appear much more often than model groups
-      {
-         valueAdapter = ((ElementBinding)term).getValueAdapter();
-      }
-      else if(term.isModelGroup())
+      if(term.isModelGroup())
       {
          QName modelGroupName = ((ModelGroupBinding)term).getQName();
          if(modelGroupName != null)
             qName = modelGroupName;
-      } 
+      }
 
       BeanAdapter beanAdapter = (BeanAdapter) parent;
       AbstractPropertyHandler propertyHandler = beanAdapter.getPropertyHandler(qName);
@@ -143,9 +138,6 @@ public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHa
          return;
       }
 
-      // TODO looks like value adapter should be used earlier in the stack
-      if(valueAdapter != null)
-         o = valueAdapter.cast(o, null/*propertyHandler.getPropertyType().getType()*/);
       propertyHandler.doHandle(beanAdapter, o, qName);
    }
 
@@ -155,7 +147,15 @@ public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHa
          log.trace("endElement " + qName + " o=" + BuilderUtil.toDebugString(o));
 
       BeanAdapter beanAdapter = (BeanAdapter) o;
-      return beanAdapter.getValue();
+      Object value = beanAdapter.getValue();
+
+      if(!particle.isRepeatable())
+      {
+         ValueAdapter valueAdapter = particle.getTerm().getValueAdapter();
+         if (valueAdapter != null)
+            value = valueAdapter.cast(value, null);
+      }
+      return value;
    }
 
    public RegisteredAttributesHandler getAttributesHandler()

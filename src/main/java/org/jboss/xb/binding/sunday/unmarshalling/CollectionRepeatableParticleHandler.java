@@ -45,17 +45,15 @@ public class CollectionRepeatableParticleHandler implements RepeatableParticleHa
       if(o == null)
          return;
       
-      ParticleHandler handler;
       TermBinding term = particle.getTerm();
-      if(term.isElement())
-         handler = ((ElementBinding)term).getType().getHandler();
-      else if(term.isModelGroup())
-         handler = ((ModelGroupBinding)term).getHandler();
-      else
-         handler = ((WildcardBinding)term).getWildcardHandler();
-
+      ParticleHandler handler = term.getHandler();
       if(handler == null)
          handler = DefaultHandlers.ELEMENT_HANDLER;
+      
+      ValueAdapter valueAdapter = term.getValueAdapter();
+      if(valueAdapter != null)
+         o = valueAdapter.cast(o, null);
+      
       handler.setParent(parent, o, elementName, particle, parentParticle);
    }
 

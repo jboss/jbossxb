@@ -26,11 +26,12 @@ import javax.xml.namespace.QName;
 
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.DefaultHandlers;
-import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
+import org.jboss.xb.spi.BeanAdapter;
 import org.xml.sax.Attributes;
 
 /**
@@ -55,15 +56,8 @@ public class BuilderParticleHandler implements ParticleHandler
       {
          ParticleHandler particleHandler = null;
          TermBinding parentTerm = parentParticle.getTerm();
-         if(parentTerm.isElement())
-         {
-            particleHandler = ((ElementBinding)parentTerm).getType().getHandler();            
-         }
-         else if (!parentTerm.isSkip() && parentTerm.isModelGroup())
-         {
-            particleHandler = ((ModelGroupBinding)parentTerm).getHandler();
-         }
-         
+         if(!parentTerm.isSkip())
+            particleHandler = parentTerm.getHandler();         
          if(particleHandler != null)
             particleHandler.setParent(parent, o, elementName, particle, parentParticle);
       }
@@ -71,6 +65,9 @@ public class BuilderParticleHandler implements ParticleHandler
 
    public Object endParticle(Object o, QName elementName, ParticleBinding particle)
    {
+      ValueAdapter valueAdapter = particle.getTerm().getValueAdapter();
+      if(valueAdapter != null)
+         o = valueAdapter.cast(o, null);
       return o;
    }
    

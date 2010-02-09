@@ -230,8 +230,7 @@ public class SundayContentHandler
       if(head.getPrevious() != null)
          throw new IllegalStateException("The stack still contains positions!");
 
-      ElementBinding elementBinding = (ElementBinding) head.getParticle().getTerm();
-      Object root = elementBinding.getType().getValueAdapter().cast(head.getValue(), Object.class);
+      Object root = head.getValue();
       head = null;
       nsRegistry = null;
       

@@ -36,21 +36,11 @@ public abstract class ModelGroupBinding
    extends TermBinding
 {
    protected boolean requiredParticle;
-   protected ParticleHandler handler = DefaultHandlers.MODEL_GROUP_HANDLER;
 
    protected ModelGroupBinding(SchemaBinding schema)
    {
       super(schema);
-   }
-
-   public ParticleHandler getHandler()
-   {
-      return handler;
-   }
-
-   public void setHandler(ParticleHandler handler)
-   {
-      this.handler = handler;
+      handler = DefaultHandlers.MODEL_GROUP_HANDLER;
    }
 
    public abstract ElementBinding getArrayItem();

@@ -57,6 +57,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.xml.sax.Attributes;
 
@@ -369,6 +370,10 @@ public class RtElementHandler
       {
          log.trace("endParticle " + elementName + " object=" + o + " term=" + term);
       }
+
+      ValueAdapter valueAdapter = term.getValueAdapter();
+      if(valueAdapter != null)
+         o = valueAdapter.cast(o, null);
 
       return o;
    }

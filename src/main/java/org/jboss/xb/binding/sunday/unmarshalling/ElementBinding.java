@@ -52,6 +52,8 @@ public class ElementBinding
 
    protected XOPUnmarshaller xopUnmarshaller;
 
+   private ParticleHandler handler;
+   
    public ElementBinding(SchemaBinding schema, QName qName, TypeBinding typeBinding)
    {
       super(schema);
@@ -87,6 +89,18 @@ public class ElementBinding
       this.typeBinding = type;
    }
 
+   @Override
+   public ParticleHandler getHandler()
+   {
+      return handler == null ? typeBinding.getHandler() : handler;
+   }
+   
+   @Override
+   public void setHandler(ParticleHandler handler)
+   {
+      this.handler = handler;
+   }
+   
    public void pushInterceptor(ElementInterceptor interceptor)
    {
       switch(interceptors.size())

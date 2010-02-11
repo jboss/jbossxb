@@ -187,6 +187,7 @@ public class JBossXBNoSchemaBuilder
    
    private boolean useUnorderedSequence;
    private boolean sequencesRequirePropOrder;
+   private boolean elementSetParentHandler;
 
    /** transient property names by type name */
    private Map<String, Set<String>> jbossXmlTransients = Collections.emptyMap();
@@ -228,7 +229,17 @@ public class JBossXBNoSchemaBuilder
    {
       this.sequencesRequirePropOrder = sequencesRequirePropOrder;
    }
-   
+
+   public boolean isElementSetParentOverrideHandler()
+   {
+      return elementSetParentHandler;
+   }
+
+   public void setElementSetParentOverrideHandler(boolean elementSetParentHandler)
+   {
+      this.elementSetParentHandler = elementSetParentHandler;
+   }
+
    /**
     * Build the schema
     * 
@@ -1538,7 +1549,8 @@ public class JBossXBNoSchemaBuilder
             ElementBinding elementBinding = createElementBinding(propertyType, elementTypeBinding, propertyQName, false);
 
             AbstractPropertyHandler propertyHandler = new PropertyHandler(property, propertyType);
-            elementBinding.setHandler(new SetParentOverrideHandler(elementTypeBinding.getHandler(), propertyHandler));
+            if(elementSetParentHandler)
+               elementBinding.setHandler(new SetParentOverrideHandler(elementTypeBinding.getHandler(), propertyHandler));
             beanAdapterFactory.addProperty(propertyQName, propertyHandler);
 
             // Bind it to the model
@@ -1728,7 +1740,8 @@ public class JBossXBNoSchemaBuilder
                   }
                   if(propertyHandler == null)
                      propertyHandler = new PropertyHandler(property, localPropertyType);
-                  wrapperElement.setHandler(new SetParentOverrideHandler(wrapperElement.getHandler(), propertyHandler));
+                  if(elementSetParentHandler)
+                     wrapperElement.setHandler(new SetParentOverrideHandler(wrapperElement.getHandler(), propertyHandler));
                }
                else
                {
@@ -1816,7 +1829,7 @@ public class JBossXBNoSchemaBuilder
             targetGroup.addParticle(particle);
          }
 
-         if(elementBinding != null)
+         if(elementBinding != null && elementSetParentHandler)
             elementBinding.setHandler(new SetParentOverrideHandler(elementBinding.getType().getHandler(), propertyHandler));
 
          beanAdapterFactory.addProperty(propertyQName, propertyHandler);
@@ -2305,7 +2318,8 @@ public class JBossXBNoSchemaBuilder
             keyValueSequence.addParticle(particle);
             PropertyHandler keyHandler = new PropertyHandler(entryInfo.getProperty("key"), keyType);
             entryAdapterFactory.addProperty(keyElementBinding.getQName(), keyHandler);
-            keyElementBinding.setHandler(new SetParentOverrideHandler(keyTypeBinding.getHandler(), keyHandler));
+            if(elementSetParentHandler)
+               keyElementBinding.setHandler(new SetParentOverrideHandler(keyTypeBinding.getHandler(), keyHandler));
          }
          
          if(valueElement != null)
@@ -2319,7 +2333,8 @@ public class JBossXBNoSchemaBuilder
             keyValueSequence.addParticle(particle);
             PropertyHandler valueHandler = new PropertyHandler(entryInfo.getProperty("value"), valueType);
             entryAdapterFactory.addProperty(valueElementBinding.getQName(), valueHandler);
-            valueElementBinding.setHandler(new SetParentOverrideHandler(valueTypeBinding.getHandler(), valueHandler));
+            if(elementSetParentHandler)
+               valueElementBinding.setHandler(new SetParentOverrideHandler(valueTypeBinding.getHandler(), valueHandler));
          }
       }
       else if(entryElement != null && !JBossXmlMapEntry.DEFAULT.class.equals(entryElement.type()))

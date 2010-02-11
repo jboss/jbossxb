@@ -267,19 +267,6 @@ public class MapPropertyHandler extends AbstractPropertyHandler
          throw new IllegalArgumentException("Key is not an instance of " + keyType + ", key: " + key);
       if (valueType != null && value != null && valueType.isInstance(value) == false)
          throw new IllegalArgumentException("Value is not an instance of " + valueType + ", value: " + value);
-
-      try
-      {
-         if (keyType != null && key != null)
-            key = keyType.convertValue(key);
-         if (valueType != null && value != null)
-            value = valueType.convertValue(value);
-      }
-      catch (Throwable t)
-      {
-         throw new RuntimeException(t);
-      }
-
       map.put(key, value);
    }
 

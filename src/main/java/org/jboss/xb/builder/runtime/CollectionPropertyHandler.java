@@ -34,7 +34,6 @@ import org.jboss.reflect.spi.ClassInfo;
 import org.jboss.reflect.spi.ConstructorInfo;
 import org.jboss.reflect.spi.TypeInfo;
 import org.jboss.xb.annotations.JBossXmlCollection;
-import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.spi.BeanAdapter;
 
 /**
@@ -120,14 +119,6 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
       {
          if(!componentType.isInstance(child))
             throw new IllegalArgumentException("Child is not an instance of " + componentType + ", child: " + child);
-         try
-         {
-            child = componentType.convertValue(child);
-         }
-         catch (Throwable e)
-         {
-            throw new JBossXBRuntimeException("QName " + qName + " error converting " + BuilderUtil.toDebugString(child) + " to type " + componentType.getName(), e);
-         }
       }
 
       BeanAdapter beanAdapter = (BeanAdapter) parent;

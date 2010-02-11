@@ -63,6 +63,9 @@ public class JBossXBBuilder
    /** system property name to use for initialization */
    public static final String SEQUENCES_REQUIRE_PROP_ORDER = "xb.builder.sequencesRequirePropOrder";
 
+   /** system property name to use for initialization */
+   public static final String ELEMENT_SET_PARENT_OVERRIDE_HANDLER = "xb.builder.elementSetParentOverrideHandler";
+
    /** The configuration */
    static Configuration configuration;
    
@@ -75,6 +78,8 @@ public class JBossXBBuilder
    static boolean useUnorderedSequence;
 
    static boolean sequencesRequirePropOrder;
+
+   static boolean elementSetParentHandler = true;
 
    static
    {
@@ -89,31 +94,25 @@ public class JBossXBBuilder
       STRING = configuration.getClassInfo(String.class);
       OBJECT = configuration.getClassInfo(Object.class);
       
-      String useUnorderedSequenceStr = AccessController.doPrivileged(
+      useUnorderedSequence = getBooleanProperty(JBossXBBuilder.USE_UNORDERED_SEQUENCE_PROPERTY, false);
+      sequencesRequirePropOrder = getBooleanProperty(JBossXBBuilder.SEQUENCES_REQUIRE_PROP_ORDER, true);
+      elementSetParentHandler = getBooleanProperty(JBossXBBuilder.ELEMENT_SET_PARENT_OVERRIDE_HANDLER, true);
+   }
+
+   private static boolean getBooleanProperty(final String propertyName, boolean defaultValue)
+   {
+      String stringValue = AccessController.doPrivileged(
             new PrivilegedAction<String>()
             {
                public String run()
                {
-                  return System.getProperty(JBossXBBuilder.USE_UNORDERED_SEQUENCE_PROPERTY);
+                  return System.getProperty(propertyName);
                }               
             }
       );            
-      if(useUnorderedSequenceStr != null)
-         useUnorderedSequence = Boolean.parseBoolean(useUnorderedSequenceStr);
-      
-      String sequencesRequirePropOrderStr = AccessController.doPrivileged(
-            new PrivilegedAction<String>()
-            {
-               public String run()
-               {
-                  return System.getProperty(JBossXBBuilder.SEQUENCES_REQUIRE_PROP_ORDER);
-               }               
-            }
-      ); 
-      if(sequencesRequirePropOrderStr != null)
-         sequencesRequirePropOrder = Boolean.parseBoolean(sequencesRequirePropOrderStr);
-      else
-         sequencesRequirePropOrder = true;
+      if(stringValue != null)
+         return Boolean.parseBoolean(stringValue);
+      return defaultValue;
    }
    
    public static boolean isUseUnorderedSequence()
@@ -135,7 +134,17 @@ public class JBossXBBuilder
    {
       JBossXBBuilder.sequencesRequirePropOrder = sequencesRequirePropOrder;
    }
+
+   public static boolean isElementSetParentOverrideHandler()
+   {
+      return elementSetParentHandler;
+   }
    
+   public static void setElementSetParentOverrideHandler(boolean elementSetParentHandler)
+   {
+      JBossXBBuilder.elementSetParentHandler = elementSetParentHandler;
+   }
+
    /**
     * Create a new schema binding initializer
     * 
@@ -253,6 +262,7 @@ public class JBossXBBuilder
       JBossXBNoSchemaBuilder builder = new JBossXBNoSchemaBuilder(classInfo);
       builder.setUseUnorderedSequence(useUnorderedSequence);
       builder.setSequencesRequirePropOrder(sequencesRequirePropOrder);
+      builder.setElementSetParentOverrideHandler(elementSetParentHandler);
       builder.build(schemaBinding);
    }
    
@@ -288,6 +298,7 @@ public class JBossXBBuilder
          JBossXBNoSchemaBuilder builder = new JBossXBNoSchemaBuilder(classInfo);
          builder.setUseUnorderedSequence(useUnorderedSequence);
          builder.setSequencesRequirePropOrder(sequencesRequirePropOrder);
+         builder.setElementSetParentOverrideHandler(elementSetParentHandler);
          binding = builder.build();
          classInfo.setAttachment(SchemaBinding.class.getName(), binding);
       }

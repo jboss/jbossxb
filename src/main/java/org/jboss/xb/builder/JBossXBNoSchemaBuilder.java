@@ -907,7 +907,7 @@ public class JBossXBNoSchemaBuilder
       // Create the handler
       BeanInfo beanInfo = JBossXBBuilder.configuration.getBeanInfo(typeInfo);
       BeanAdapterFactory beanAdapterFactory = createAdapterFactory(beanAdapterBuilderClass, beanInfo, factory);
-      BeanHandler handler = new BeanHandler(beanInfo.getName(), beanAdapterFactory);
+      BeanHandler handler = new BeanHandler(beanInfo.getName(), beanAdapterFactory, typeBinding);
       typeBinding.setHandler(handler);
       if (trace)
          log.trace("Created BeanHandler for type=" + beanInfo.getName() + " factory=" + factory);
@@ -1140,7 +1140,7 @@ public class JBossXBNoSchemaBuilder
       ModelGroupBinding model = null;
       boolean propOrderMissing = propertyNames.size() > 1 && determinePropertyOrder && accessOrder == XmlAccessOrder.UNDEFINED;
       if(jbossXmlType != null && !JBossXmlConstants.DEFAULT.equals(jbossXmlType.modelGroup()))
-         model = createModelGroup(jbossXmlType.modelGroup(), typeInfo, propOrderMissing, propertyOrder);
+         model = createModelGroup(jbossXmlType.modelGroup(), typeInfo, propOrderMissing, propertyOrder, null);
       else if (allBinding)
          model = new AllBinding(schemaBinding);
       else
@@ -1163,14 +1163,7 @@ public class JBossXBNoSchemaBuilder
       {
          typeParticle.setMinOccurs(0);
          typeParticle.setMaxOccursUnbounded(true);
-/*         TypeInfo memberBaseType = typeInfo.getComponentType();
-
-         JBossXmlModelGroup xmlModelGroup = ((ClassInfo) memberBaseType).getUnderlyingAnnotation(JBossXmlModelGroup.class);
-         if (xmlModelGroup != null)
-         {
-            bindParticlesModelGroup(typeBinding, model, memberBaseType, xmlModelGroup, true, beanAdapterFactory, null);
-         }
-*/      }
+      }
 
       // Determine the wildcard handler
       AbstractPropertyHandler wildcardHandler = null;
@@ -1326,7 +1319,7 @@ public class JBossXBNoSchemaBuilder
          particleBinding.setMaxOccurs(1);
          model.addParticle(particleBinding);
 
-         typeBinding.getWildcard().setWildcardHandler(childWildcardHandler);
+         typeBinding.getWildcard().setHandler(childWildcardHandler);
       }
 
       if (trace)
@@ -1525,7 +1518,8 @@ public class JBossXBNoSchemaBuilder
                   throw new IllegalStateException("Cannot wrap " + wrapperInfo.getName() + " not a bean type " + particleHandler);
                BeanHandler beanHandler = (BeanHandler) particleHandler;
                WrapperBeanAdapterFactory wrapperFactory = new WrapperBeanAdapterFactory(beanHandler.getBeanAdapterFactory(), propertyType.getType());
-               BeanHandler wrapperHandler = new BeanHandler(wrapperInfo.getName(), wrapperFactory);
+               BeanHandler wrapperHandler = new BeanHandler(wrapperInfo.getName(), wrapperFactory, elementTypeBinding);
+               elementTypeBinding.setHandler(wrapperHandler);
 
                // Steal the attributes
                Collection<AttributeBinding> otherAttributes = wrapperTypeBinding.getAttributes();
@@ -1537,7 +1531,6 @@ public class JBossXBNoSchemaBuilder
                      wrapperHandler.getAttributesHandler().addAttribute(other);
                   }
                }
-               elementTypeBinding.setHandler(wrapperHandler);
                elementTypeBinding.setSimpleType(wrapperTypeBinding.getSimpleType());
             }
             else
@@ -1891,7 +1884,6 @@ public class JBossXBNoSchemaBuilder
             // handler for the model group members
             BeanInfo groupBeanInfo = JBossXBBuilder.configuration.getBeanInfo(groupType);
             BeanAdapterFactory propBeanAdapterFactory = createAdapterFactory(DefaultBeanAdapterBuilder.class, groupBeanInfo, null);
-            BeanHandler propHandler = new GroupBeanHandler(groupBeanInfo.getName(), propBeanAdapterFactory);
 
             String[] memberOrder = annotation.propOrder();
             if (memberOrder.length == 0 || memberOrder[0].length() == 0)
@@ -1909,8 +1901,9 @@ public class JBossXBNoSchemaBuilder
             if (trace)
                log.trace("Property order for " + annotation.kind() + " property " + property.getName() + ": " + Arrays.asList(memberOrder));
 
-            group = createModelGroup(annotation.kind(), groupType, memberOrder.length > 1 && propOrderMissing, annotation.propOrder());
+            group = createModelGroup(annotation.kind(), groupType, memberOrder.length > 1 && propOrderMissing, annotation.propOrder(), groupName);
             group.setSkip(false);
+            GroupBeanHandler propHandler = new GroupBeanHandler(groupBeanInfo.getName(), propBeanAdapterFactory, group);
             group.setHandler(propHandler);
             // can't do it with global components
             //group.setHandler(new SetParentOverrideHandler(propHandler, propertyHandler));
@@ -1925,13 +1918,7 @@ public class JBossXBNoSchemaBuilder
             }
          }
          else
-            group = createModelGroup(annotation.kind(), groupType, propOrderMissing, annotation.propOrder());
-            
-         if (groupName != null)
-         {
-            group.setQName(groupName);
-            schemaBinding.addGroup(group.getQName(), group);
-         }
+            group = createModelGroup(annotation.kind(), groupType, propOrderMissing, annotation.propOrder(), groupName);
 
          if(property.getType().isArray())
             group.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(propertyHandler));
@@ -1983,7 +1970,7 @@ public class JBossXBNoSchemaBuilder
       defaultNamespace = overridenDefaultNamespace;
    }
 
-   private ModelGroupBinding createModelGroup(String kind, TypeInfo type, boolean propOrderMissing, String[] propertyOrder)
+   private ModelGroupBinding createModelGroup(String kind, TypeInfo type, boolean propOrderMissing, String[] propertyOrder, QName groupName)
    {
       ModelGroupBinding group;
       if (kind.equals(JBossXmlConstants.MODEL_GROUP_SEQUENCE))
@@ -2000,6 +1987,12 @@ public class JBossXBNoSchemaBuilder
          group = new AllBinding(schemaBinding);
       else
          throw new IllegalStateException("Unexpected JBossXmlModelGroup.kind=" + kind + " for type " + type.getName());
+      
+      if(groupName != null)
+      {
+         group.setQName(groupName);
+         schemaBinding.addGroup(groupName, group);
+      }
       return group;
    }
       
@@ -2248,7 +2241,7 @@ public class JBossXBNoSchemaBuilder
 
             entryType = new TypeBinding();
             entryType.setSchemaBinding(schemaBinding);
-            BeanHandler entryHandler = new BeanHandler(entryInfo.getName(), entryAdapterFactory);
+            BeanHandler entryHandler = new BeanHandler(entryInfo.getName(), entryAdapterFactory, entryType);
             entryType.setHandler(entryHandler);
 
             entryTypeInfo = JBossXBBuilder.configuration.getTypeInfo(DefaultMapEntry.class);                     
@@ -2293,9 +2286,9 @@ public class JBossXBNoSchemaBuilder
             keyValueSequence = new SequenceBinding(schemaBinding);                     
             if(entryType == null)
             {
-               BeanHandler entryHandler = new BeanHandler(entryInfo.getName(), entryAdapterFactory);
                keyValueSequence.setSkip(false);
                keyValueSequence.setQName(propertyQName);
+               GroupBeanHandler entryHandler = new GroupBeanHandler(entryInfo.getName(), entryAdapterFactory, keyValueSequence);
                schemaBinding.addGroup(keyValueSequence.getQName(), keyValueSequence);
                ParticleBinding keyValueParticle = new ParticleBinding(keyValueSequence, 0, -1, true);
                targetGroup.addParticle(keyValueParticle);

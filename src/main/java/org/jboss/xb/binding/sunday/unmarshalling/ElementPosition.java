@@ -208,7 +208,7 @@ public class ElementPosition extends AbstractPosition
       while (nextPosition.next != null)
       {
          nextPosition.notSkippedParent = nextPosition.previous.getLastNotSkipped();
-         if (nextPosition.particle.isRepeatable())
+         if (nextPosition.repeatableHandler != null)
             nextPosition.startRepeatableParticle();
          nextPosition.stack = stack;
          nextPosition.initValue(atts);
@@ -538,7 +538,7 @@ public class ElementPosition extends AbstractPosition
          particle = new ParticleBinding(xsiElement, particle.getMinOccurs(), particle.getMaxOccurs(), particle.getMaxOccursUnbounded());
       }
 
-      if (occurrence == 1 && particle.isRepeatable())
+      if (occurrence == 1 && repeatableHandler != null)
          startRepeatableParticle();
 
       TypeBinding type = element.getType();

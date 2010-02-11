@@ -100,7 +100,7 @@ public abstract class NonElementPosition extends AbstractPosition
       while (nextPosition.next != null)
       {
          nextPosition.notSkippedParent = nextPosition.previous.getLastNotSkipped();
-         if (nextPosition.particle.isRepeatable())
+         if (nextPosition.repeatableHandler != null)
             nextPosition.startRepeatableParticle();
          nextPosition.stack = stack;
          nextPosition.initValue(atts);

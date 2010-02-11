@@ -49,7 +49,9 @@ import org.xml.sax.helpers.AttributesImpl;
  * @version <tt>$Revision$</tt>
  */
 public class TypeBinding
-{   
+{
+   private static final List<ElementInterceptor> EMPTY_ICEPTOR_LIST = Collections.<ElementInterceptor>emptyList();
+   
    protected QName qName;
    /** Map<QName, AttributeBinding>  */
    private Map<QName, AttributeBinding> attrs;
@@ -384,9 +386,9 @@ public class TypeBinding
    public List<ElementInterceptor> getInterceptors(QName qName)
    {
       if(interceptors == null)
-         return Collections.<ElementInterceptor>emptyList();
+         return EMPTY_ICEPTOR_LIST;
       List<ElementInterceptor> list = interceptors.get(qName);
-      return list == null ? Collections.<ElementInterceptor>emptyList() : list;
+      return list == null ? EMPTY_ICEPTOR_LIST : list;
    }
    
    public TypeBinding getBaseType()

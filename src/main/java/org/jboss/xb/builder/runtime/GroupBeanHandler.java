@@ -25,10 +25,12 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 
 import org.jboss.beans.info.spi.PropertyInfo;
+import org.jboss.logging.Logger;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
+import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 import org.jboss.xb.spi.BeanAdapter;
 import org.jboss.xb.spi.BeanAdapterFactory;
 import org.xml.sax.Attributes;
@@ -47,29 +49,46 @@ import org.xml.sax.Attributes;
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public class GroupBeanHandler extends BeanHandler
+public class GroupBeanHandler implements ParticleHandler
 {
+   /** The log */
+   protected static final Logger log = Logger.getLogger("org.jboss.xb.builder.runtime.GroupBeanHandler");
    
-   public GroupBeanHandler(String name, BeanAdapterFactory beanAdapterFactory)
+   /** Whether trace is enabled */
+   protected boolean trace = log.isTraceEnabled();
+
+   /** The bean name */
+   protected String name;
+   
+   /** The BeanAdapter */
+   protected BeanAdapterFactory beanAdapterFactory;
+  
+   protected QName groupName;
+   
+   public GroupBeanHandler(String name, BeanAdapterFactory beanAdapterFactory, ModelGroupBinding group)
    {
-      super(name, beanAdapterFactory);
+      if (name == null)
+         throw new IllegalArgumentException("Null name");
+      if (beanAdapterFactory == null)
+         throw new IllegalArgumentException("Null bean adapter factory");
+      if(group == null)
+         throw new IllegalArgumentException("Null group");
+      if(group.getQName() == null)
+         throw new JBossXBRuntimeException("The group has to have a non-null QName.");
+
+      this.name = name;
+      this.beanAdapterFactory = beanAdapterFactory;
+      this.groupName = group.getQName();
    }
 
-   @Override
    public Object startParticle(Object parent, QName qName, ParticleBinding particle, Attributes attrs, NamespaceContext nsCtx)
    {
+      if (trace)
+         log.trace(" startElement " + qName + " bean=" + name + " parent=" + BuilderUtil.toDebugString(parent));
+
       if(!(parent instanceof BeanAdapter))
          throw new JBossXBRuntimeException("Parent expected to be an instance of BeanAdapter: " + parent);
-      
-      TermBinding term = particle.getTerm();
-      if(!term.isModelGroup())
-         throw new JBossXBRuntimeException("The term expected to be a model group: " + term);
-      
-      ModelGroupBinding group = (ModelGroupBinding) term;
-      QName groupName = group.getQName();
-      if(groupName == null)
-         throw new JBossXBRuntimeException("The group has to have a non-null QName. Failed to start element " + qName);
-      
+
       AbstractPropertyHandler groupHandler = ((BeanAdapter) parent).getPropertyHandler(groupName);
       if (groupHandler == null)
          throw new JBossXBRuntimeException("No property mapped for group " + qName + " in bean adapter" + ((BeanAdapter)parent).getValue()
@@ -92,11 +111,57 @@ public class GroupBeanHandler extends BeanHandler
       }
 
       if(groupValue == null || particle.isRepeatable())
-         return super.startParticle(parent, qName, particle, attrs, nsCtx);
+      {
+         try
+         {
+            return beanAdapterFactory.newInstance();
+         }
+         catch (Throwable t)
+         {
+            throw new RuntimeException("Element " + qName + " (group " + groupName +") error invoking beanAdapterFactory.newInstance() for bean=" + name, t);
+         }
+
+      }
       else
-         return new SingletonBeanAdapter(this.getBeanAdapterFactory(), groupValue);
+         return new SingletonBeanAdapter(beanAdapterFactory, groupValue);
    }
-      
+   
+   public void setParent(Object parent, Object o, QName qName,  ParticleBinding particle, ParticleBinding parentParticle)
+   {
+      if (trace)
+         log.trace("setParent " + qName + " parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o));
+
+      BeanAdapter beanAdapter = (BeanAdapter) parent;
+      AbstractPropertyHandler propertyHandler = beanAdapter.getPropertyHandler(groupName);
+      if (propertyHandler == null)
+      {
+         if (particle.getTerm().getSchema().isStrictSchema())
+            throw new RuntimeException("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o) + " available=" + beanAdapter.getAvailable());
+         if (trace)
+            log.trace("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o));
+         return;
+      }
+
+      propertyHandler.doHandle(beanAdapter, o, qName);
+   }
+
+   public Object endParticle(Object o, QName qName, ParticleBinding particle)
+   {
+      if (trace)
+         log.trace("endElement " + qName + " o=" + BuilderUtil.toDebugString(o));
+
+      BeanAdapter beanAdapter = (BeanAdapter) o;
+      Object value = beanAdapter.getValue();
+
+      if(!particle.isRepeatable())
+      {
+         ValueAdapter valueAdapter = particle.getTerm().getValueAdapter();
+         if (valueAdapter != null)
+            value = valueAdapter.cast(value, null);
+      }
+      return value;
+   }
+
    private static class SingletonBeanAdapter extends BeanAdapter
    {
       private final Object value;

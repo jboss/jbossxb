@@ -25,12 +25,10 @@ import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
-import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ParticleHandler;
 import org.jboss.xb.binding.sunday.unmarshalling.RegisteredAttributesHandler;
-import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 import org.jboss.xb.spi.BeanAdapter;
 import org.jboss.xb.spi.BeanAdapterFactory;
@@ -40,21 +38,24 @@ import org.xml.sax.Attributes;
  * BeanHandler.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHandler
+public class BeanHandler implements ParticleHandler
 {
    /** The log */
    protected static final Logger log = Logger.getLogger("org.jboss.xb.builder.runtime.BeanHandler");
    
    /** Whether trace is enabled */
-   private boolean trace = log.isTraceEnabled();
+   protected boolean trace = log.isTraceEnabled();
 
    /** The bean name */
-   private String name;
+   protected String name;
    
    /** The BeanAdapter */
-   private BeanAdapterFactory beanAdapterFactory;
+   protected BeanAdapterFactory beanAdapterFactory;
+   
+   protected TypeBinding elementType;
    
    private RegisteredAttributesHandler attrsHandler = new RegisteredAttributesHandler();
 
@@ -65,14 +66,17 @@ public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHa
     * @param beanAdapterFactory the bean adapterFactory
     * @throws IllegalArgumentException for a null parameter
     */
-   public BeanHandler(String name, BeanAdapterFactory beanAdapterFactory)
+   public BeanHandler(String name, BeanAdapterFactory beanAdapterFactory, TypeBinding elementType)
    {
       if (name == null)
          throw new IllegalArgumentException("Null name");
       if (beanAdapterFactory == null)
          throw new IllegalArgumentException("Null bean adapter factory");
+      if (elementType == null)
+         throw new IllegalArgumentException("Null element type");
       this.name = name;
       this.beanAdapterFactory = beanAdapterFactory;
+      this.elementType = elementType;
    }
    
    /**
@@ -104,12 +108,8 @@ public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHa
          throw new RuntimeException("QName " + elementName + " error invoking beanAdapterFactory.newInstance() for bean=" + name, t);
       }
 
-      TermBinding term = particle.getTerm();
-      if (o != null && term.isElement())
-      {
-         ElementBinding element = (ElementBinding) term;
-         attrsHandler.attributes(o, elementName, element.getType(), attrs, nsCtx);
-      }
+      if (o != null)
+         attrsHandler.attributes(o, elementName, elementType, attrs, nsCtx);
 
       return o;
    }
@@ -119,19 +119,11 @@ public class BeanHandler /*extends DefaultElementHandler*/ implements ParticleHa
       if (trace)
          log.trace("setParent " + qName + " parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o));
 
-      TermBinding term = particle.getTerm();
-      if(term.isModelGroup())
-      {
-         QName modelGroupName = ((ModelGroupBinding)term).getQName();
-         if(modelGroupName != null)
-            qName = modelGroupName;
-      }
-
       BeanAdapter beanAdapter = (BeanAdapter) parent;
       AbstractPropertyHandler propertyHandler = beanAdapter.getPropertyHandler(qName);
       if (propertyHandler == null)
       {
-         if (term.getSchema().isStrictSchema())
+         if (elementType.getSchemaBinding().isStrictSchema())
             throw new RuntimeException("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o) + " available=" + beanAdapter.getAvailable());
          if (trace)
             log.trace("QName " + qName + " unknown property parent=" + BuilderUtil.toDebugString(parent) + " child=" + BuilderUtil.toDebugString(o));

@@ -72,7 +72,11 @@ public abstract class AbstractPosition
       this.particle = particle;
       this.occurrence = 1;
       
-      this.skip = particle.getTerm().isSkip();
+      TermBinding term = particle.getTerm();
+      this.skip = term.isSkip();
+
+      if(particle.isRepeatable())
+         repeatableHandler = term.getRepeatableHandler();
    }
 
    public void setStack(PositionStack stack)
@@ -116,7 +120,6 @@ public abstract class AbstractPosition
          log.trace(" end repeatable " + particle.getTerm());
       repeatableHandler.endRepeatableParticle(previous.o, repeatableParticleValue, qName, particle, previous.particle);
       repeatableParticleValue = null;
-      repeatableHandler = null;
    }
 
    public abstract void endParticle();
@@ -152,7 +155,6 @@ public abstract class AbstractPosition
          if(this.repeatableParticleValue != null)
             throw new IllegalStateException("Previous repeatable particle hasn't been ended yet!");
          this.repeatableParticleValue = repeatableContainer;
-         this.repeatableHandler = repeatableHandler;
       }
    }
 

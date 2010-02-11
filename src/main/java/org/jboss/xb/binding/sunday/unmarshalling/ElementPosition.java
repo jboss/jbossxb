@@ -44,6 +44,7 @@ import org.xml.sax.Attributes;
  */
 public class ElementPosition extends AbstractPosition
 {
+   private TypeBinding type;
    private ParticleBinding nonXsiParticle;
    private boolean ignoreCharacters;
    private StringBuffer textContent;
@@ -55,6 +56,7 @@ public class ElementPosition extends AbstractPosition
    public ElementPosition(QName qName, ParticleBinding particle)
    {
       super(qName, particle);
+      type = ((ElementBinding)term).getType();
    }
 
    public boolean isElement()
@@ -65,7 +67,7 @@ public class ElementPosition extends AbstractPosition
    public void reset()
    {
       if(!ended)
-         throw new JBossXBRuntimeException("Attempt to reset a particle that has already been reset: " + particle.getTerm());
+         throw new JBossXBRuntimeException("Attempt to reset a particle that has already been reset: " + term);
       ended = false;
       o = null;
       
@@ -76,7 +78,11 @@ public class ElementPosition extends AbstractPosition
       ignorableCharacters = true;
       
       if(nonXsiParticle != null)
+      {
          particle = nonXsiParticle;
+         term = particle.getTerm();
+         type = ((ElementBinding)term).getType();
+      }
    }
    
    public ParticleBinding getNonXsiParticle()
@@ -142,21 +148,19 @@ public class ElementPosition extends AbstractPosition
       }
       
       // this is locating the next child
-      ElementBinding element = (ElementBinding) particle.getTerm();
-      TypeBinding parentType = element.getType();
-      ParticleBinding typeParticle = parentType.getParticle();
+      ParticleBinding typeParticle = type.getParticle();
       ModelGroupBinding modelGroup = typeParticle == null ? null : (ModelGroupBinding) typeParticle.getTerm();
       if (modelGroup == null)
       {
          if (startName.equals(Constants.QNAME_XOP_INCLUDE))
          {
-            SchemaBinding schema = element.getSchema();
+            SchemaBinding schema = term.getSchema();
             TypeBinding anyUriType = schema.getType(Constants.QNAME_ANYURI);
             if (anyUriType == null)
                log.warn("Type " + Constants.QNAME_ANYURI + " not bound.");
 
-            ElementBinding parentElement = (ElementBinding) particle.getTerm();
-            parentElement.setXopUnmarshaller(schema.getXopUnmarshaller());
+            ElementBinding element = (ElementBinding) term;
+            element.setXopUnmarshaller(schema.getXopUnmarshaller());
 
             flushIgnorableCharacters();
             handler = DefaultHandlers.XOP_HANDLER;
@@ -166,7 +170,7 @@ public class ElementPosition extends AbstractPosition
             TypeBinding xopIncludeType = new TypeBinding(new QName(Constants.NS_XOP_INCLUDE, "Include"));
             xopIncludeType.setSchemaBinding(schema);
             xopIncludeType.addAttribute(new QName("href"), anyUriType, DefaultHandlers.ATTRIBUTE_HANDLER);
-            xopIncludeType.setHandler(new XOPIncludeHandler(parentType, schema.getXopUnmarshaller()));
+            xopIncludeType.setHandler(new XOPIncludeHandler(type, schema.getXopUnmarshaller()));
 
             ElementBinding xopInclude = new ElementBinding(schema, Constants.QNAME_XOP_INCLUDE, xopIncludeType);
             next = new ElementPosition(startName, new ParticleBinding(xopInclude));
@@ -176,24 +180,18 @@ public class ElementPosition extends AbstractPosition
             return next;
          }
 
-         QName typeName = parentType.getQName();
+         QName typeName = type.getQName();
          throw new JBossXBRuntimeException((typeName == null ? "Anonymous" : typeName.toString()) + " type of element "
                + qName + " should be complex and contain " + startName + " as a child element.");
       }
 
       if (next != null)
       {
-         if (particle.isOccurrenceAllowed(occurrence + 1))
-         {
-            // this increase is actually ahead of its time, it may fail to locate the element
-            // but in the current impl it doesn't matter
-            ++occurrence;
-         }
-         else
-         {
+         // this increase is actually ahead of its time, it may fail to locate the element
+         // but in the current impl it doesn't matter
+         if (!particle.isOccurrenceAllowed(++occurrence))
             throw new JBossXBRuntimeException(startName + " cannot appear in this position. Expected content of "
                   + qName + " is " + modelGroup);
-         }
       }
 
       next = modelGroup.newPosition(startName, atts, typeParticle);
@@ -212,60 +210,58 @@ public class ElementPosition extends AbstractPosition
             nextPosition.startRepeatableParticle();
          nextPosition.stack = stack;
          nextPosition.initValue(atts);
-         nextPosition.parentType = parentType;
+         nextPosition.parentType = type;
          nextPosition = nextPosition.next;
       }
 
       nextPosition.stack = stack;
-      nextPosition.parentType = parentType;
+      nextPosition.parentType = type;
       nextPosition.notSkippedParent = nextPosition.previous.getLastNotSkipped();
       return (ElementPosition) nextPosition;
    }
 
    public void characters(char[] ch, int start, int length)
    {
-      ElementBinding e = (ElementBinding) particle.getTerm();
-
       // collect characters only if they are allowed content
-      if(e.getType().isTextContentAllowed())
+      if(!type.isTextContentAllowed())
+         return;
+      
+      if(indentation != Boolean.FALSE)
       {
-         if(indentation != Boolean.FALSE)
+         if(type.isSimple())
          {
-            if(e.getType().isSimple())
+            // simple content is not analyzed
+            indentation = Boolean.FALSE;
+            ignorableCharacters = false;
+         }
+         else if(term.getSchema() != null && !term.getSchema().isIgnoreWhitespacesInMixedContent())
+         {
+            indentation = Boolean.FALSE;
+            ignorableCharacters = false;
+         }
+         else
+         {
+            // the indentation is currently defined as whitespaces with next line characters
+            // this should probably be externalized in the form of a filter or something
+            for (int i = start; i < start + length; ++i)
             {
-               // simple content is not analyzed
-               indentation = Boolean.FALSE;
-               ignorableCharacters = false;
-            }
-            else if(e.getSchema() != null && !e.getSchema().isIgnoreWhitespacesInMixedContent())
-            {
-               indentation = Boolean.FALSE;
-               ignorableCharacters = false;
-            }
-            else
-            {
-               // the indentation is currently defined as whitespaces with next line characters
-               // this should probably be externalized in the form of a filter or something
-               for (int i = start; i < start + length; ++i)
+               if(ch[i] == 0x0a)
                {
-                  if(ch[i] == 0x0a)
-                  {
-                     indentation = Boolean.TRUE;
-                  }
-                  else if (!Character.isWhitespace(ch[i]))
-                  {
-                     indentation = Boolean.FALSE;
-                     ignorableCharacters = false;
-                     break;
-                  }
+                  indentation = Boolean.TRUE;
+               }
+               else if (!Character.isWhitespace(ch[i]))
+               {
+                  indentation = Boolean.FALSE;
+                  ignorableCharacters = false;
+                  break;
                }
             }
          }
-         
-         if (textContent == null)
-            textContent = new StringBuffer();
-         textContent.append(ch, start, length);
       }
+         
+      if (textContent == null)
+         textContent = new StringBuffer();
+      textContent.append(ch, start, length);
    }
    
    public void endParticle()
@@ -274,9 +270,7 @@ public class ElementPosition extends AbstractPosition
       if(skip)
          return;
       
-      ElementBinding element = (ElementBinding) particle.getTerm();
-      TypeBinding type = element.getType();
-      
+      ElementBinding element = (ElementBinding) term;
       List<ElementInterceptor> interceptors = null;
       List<ElementInterceptor> localInterceptors = null;
       if(interceptorObjects != null)
@@ -311,7 +305,7 @@ public class ElementPosition extends AbstractPosition
          if(textContent.length() > 0 || charHandler != null && !type.isIgnoreEmptyString())
          {
             String dataContent;
-            SchemaBinding schema = element.getSchema();
+            SchemaBinding schema = term.getSchema();
             if(textContent.length() == 0)
             {
                dataContent = null;
@@ -330,10 +324,7 @@ public class ElementPosition extends AbstractPosition
 
             if(charHandler == null)
             {
-               if(!type.isSimple() &&
-                  schema != null &&
-                  schema.isStrictSchema()
-                  && !element.isSkip())
+               if(!type.isSimple() && !term.isSkip() && schema != null && schema.isStrictSchema())
                {
                   throw new JBossXBRuntimeException("Element " +
                      qName +
@@ -346,7 +337,7 @@ public class ElementPosition extends AbstractPosition
             }
             else
             {
-               ValueMetaData valueMetaData = element.getValueMetaData();
+               ValueMetaData valueMetaData = term.getValueMetaData();
                if(valueMetaData == null)
                {
                   CharactersMetaData charactersMetaData = type.getCharactersMetaData();
@@ -450,21 +441,18 @@ public class ElementPosition extends AbstractPosition
       }
       else if (notSkippedParent != null)
       {
-         ParticleBinding parentParticle = notSkippedParent.particle;
-         TermBinding parentTerm = parentParticle.getTerm();
-
          if (notSkippedParent.o != null)
          {
             ParticleHandler handler = this.handler;
-            if (parentTerm.isWildcard())
+            if (notSkippedParent.term.isWildcard())
             {
-               ParticleHandler wh = ((WildcardBinding) parentTerm).getWildcardHandler();
+               ParticleHandler wh = ((WildcardBinding) notSkippedParent.term).getWildcardHandler();
                if (wh != null)
                   handler = wh;
             }
             setParent(notSkippedParent, handler);
          }
-         else if (parentTerm.isWildcard())
+         else if (notSkippedParent.term.isWildcard())
          {
             // the parent has anyType, so it gets the value of its child
             AbstractPosition parentPos = previous;
@@ -495,14 +483,12 @@ public class ElementPosition extends AbstractPosition
 
    public void push(Attributes atts)
    {
-      ElementBinding element = (ElementBinding) particle.getTerm();
-
       // TODO xsi:type support should be implemented in a better way
       String xsiType = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "type");
       if (xsiType != null)
       {
          if (trace)
-            log.trace(element.getQName() + " uses xsi:type " + xsiType);
+            log.trace(term.getQName() + " uses xsi:type " + xsiType);
 
          if (nonXsiParticle == null)
             nonXsiParticle = particle;
@@ -524,7 +510,7 @@ public class ElementPosition extends AbstractPosition
          String xsiTypeNs = stack.getNamespaceRegistry().getNamespaceURI(xsiTypePrefix);
          QName xsiTypeQName = new QName(xsiTypeNs, xsiTypeLocal);
 
-         SchemaBinding schemaBinding = element.getSchema();
+         SchemaBinding schemaBinding = term.getSchema();
          TypeBinding xsiTypeBinding = schemaBinding.getType(xsiTypeQName);
          if (xsiTypeBinding == null)
          {
@@ -533,24 +519,19 @@ public class ElementPosition extends AbstractPosition
          }
 
          ElementBinding xsiElement = new ElementBinding(schemaBinding, qName, xsiTypeBinding);
-         xsiElement.setRepeatableHandler(element.getRepeatableHandler());
+         xsiElement.setRepeatableHandler(term.getRepeatableHandler());
 
          particle = new ParticleBinding(xsiElement, particle.getMinOccurs(), particle.getMaxOccurs(), particle.getMaxOccursUnbounded());
+         term = xsiElement;
+         type = xsiTypeBinding;
       }
 
       if (occurrence == 1 && repeatableHandler != null)
          startRepeatableParticle();
 
-      TypeBinding type = element.getType();
-      if (type == null)
-         throw new JBossXBRuntimeException("No type for element " + element);
-
-      handler = element.getHandler();
-      if (handler == null)
-         handler = DefaultHandlers.ELEMENT_HANDLER;
-
       Object parent = previous == null ? null : previous.o;
 
+      ElementBinding element = (ElementBinding) term;
       if(parentType != null)
       {
          List<ElementInterceptor> interceptors = parentType.getInterceptors(qName);
@@ -588,11 +569,16 @@ public class ElementPosition extends AbstractPosition
          }
       }
 
-      String nil = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "nil");
-      if (nil == null || !("1".equals(nil) || "true".equals(nil)))
-         initValue(atts);
+      if(element.isNillable())
+      {
+         String nil = atts.getValue(Constants.NS_XML_SCHEMA_INSTANCE, "nil");
+         if (nil == null || !("1".equals(nil) || "true".equals(nil)))
+            initValue(atts);
+         else
+            o = SundayContentHandler.NIL;
+      }
       else
-         o = SundayContentHandler.NIL;
+         initValue(atts);
    }
    
    private void flushIgnorableCharacters()
@@ -603,15 +589,9 @@ public class ElementPosition extends AbstractPosition
       if(indentation == Boolean.TRUE || ignorableCharacters)
       {
          if(trace)
-            log.trace("ignored characters: " + ((ElementBinding) particle.getTerm()).getQName() + " '" + textContent + "'");
+            log.trace("ignored characters: " + term.getQName() + " '" + textContent + "'");
          textContent = null;
          indentation = null;
       }
-   }
-   
-   @Override
-   protected ParticleHandler getHandler()
-   {
-      return DefaultHandlers.ELEMENT_HANDLER;
    }
 }

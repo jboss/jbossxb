@@ -22,16 +22,27 @@
 package org.jboss.xb.spi;
 
 import org.jboss.beans.info.spi.BeanInfo;
+import org.jboss.beans.info.spi.PropertyInfo;
 import org.jboss.reflect.spi.MethodInfo;
 
 /**
  * DefaultBeanAdapter.
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public class DefaultBeanAdapter extends AbstractBeanAdapter
+public class DefaultBeanAdapter extends BeanAdapter
 {
+   /** The bean info */
+   private BeanInfo beanInfo;
+
+   /** Any factory  */
+   private MethodInfo factory;
+
+   /** The value */
+   private Object value;
+
    /**
     * Create a new bean adapter
     * 
@@ -42,7 +53,57 @@ public class DefaultBeanAdapter extends AbstractBeanAdapter
     */
    public DefaultBeanAdapter(BeanAdapterFactory beanAdapterFactory, BeanInfo beanInfo, MethodInfo factory)
    {
-      super(beanAdapterFactory, beanInfo, factory);
-      ensureConstructed();
+      super(beanAdapterFactory);
+      if (beanInfo == null)
+         throw new IllegalArgumentException("Null bean info");
+      this.beanInfo = beanInfo;
+      this.factory = factory;
+      
+      try
+      {
+         if (factory != null)
+            value = factory.invoke(null, null);
+         else
+            value = beanInfo.newInstance();
+      }
+      catch (Throwable t)
+      {
+         throw new RuntimeException("Error instantiating bean for " + beanInfo.getName(), t);
+      }
+   }
+
+   /**
+    * Get the bean info
+    * 
+    * @return the bean info
+    */
+   public BeanInfo getBeanInfo()
+   {
+      return beanInfo;
+   }
+
+   /**
+    * Get the factory
+    * 
+    * @return the factgory
+    */
+   public MethodInfo getFactory()
+   {
+      return factory;
+   }
+   
+   public Object get(PropertyInfo propertyInfo) throws Throwable
+   {
+      return propertyInfo.get(value);
+   }
+   
+   public void set(PropertyInfo propertyInfo, Object child) throws Throwable
+   {
+      propertyInfo.set(value, child);
+   }
+
+   public Object getValue()
+   {
+      return value;
    }
 }

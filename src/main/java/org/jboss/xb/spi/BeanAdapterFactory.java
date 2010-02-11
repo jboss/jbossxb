@@ -21,10 +21,11 @@
 */
 package org.jboss.xb.spi;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import javax.xml.namespace.QName;
 
-import org.jboss.util.collection.CollectionsFactory;
 import org.jboss.xb.builder.runtime.AbstractPropertyHandler;
 
 /**
@@ -32,12 +33,13 @@ import org.jboss.xb.builder.runtime.AbstractPropertyHandler;
  * 
  * @author <a href="adrian@jboss.com">Adrian Brock</a>
  * @author <a href="ales.justin@jboss.com">Ales Justin</a>
+ * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
 public abstract class BeanAdapterFactory
 {
    /** The properties */
-   private Map<QName, AbstractPropertyHandler> properties = CollectionsFactory.createLazyMap();
+   private Map<QName, AbstractPropertyHandler> properties = Collections.emptyMap();
    
    /** The wildcard handler */
    private AbstractPropertyHandler wildcardHandler;
@@ -76,7 +78,15 @@ public abstract class BeanAdapterFactory
       if (propertyHandler == null)
          throw new IllegalArgumentException("Null property handler");
 
-      properties.put(qName, propertyHandler);
+      int size = properties.size();
+      if(size == 0)
+         properties = Collections.singletonMap(qName, propertyHandler);
+      else
+      {
+         if(size == 1)
+            properties = new HashMap<QName, AbstractPropertyHandler>(properties);
+         properties.put(qName, propertyHandler);
+      }
    }
 
    /**

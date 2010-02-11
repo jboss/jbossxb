@@ -126,7 +126,9 @@ public class AbstractBeanAdapter extends BeanAdapter
    protected void ensureConstructed()
    {
       if (constructed == false)
+      {
          value = construct();
-      constructed = true;
+         constructed = true;
+      }
    }
 }

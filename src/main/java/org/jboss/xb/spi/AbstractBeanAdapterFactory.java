@@ -33,10 +33,10 @@ import org.jboss.reflect.spi.MethodInfo;
 public class AbstractBeanAdapterFactory extends BeanAdapterFactory
 {
    /** The bean info */
-   private BeanInfo beanInfo;
+   protected BeanInfo beanInfo;
 
    /** Any factory  */
-   private MethodInfo factory;
+   protected MethodInfo factory;
 
    /**
     * Create a new bean adapter factory
@@ -73,7 +73,7 @@ public class AbstractBeanAdapterFactory extends BeanAdapterFactory
       return factory;
    }
 
-   public AbstractBeanAdapter newInstance()
+   public BeanAdapter newInstance()
    {
       return new AbstractBeanAdapter(this, getBeanInfo(), getFactory());
    }

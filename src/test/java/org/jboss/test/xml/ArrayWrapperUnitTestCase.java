@@ -60,7 +60,6 @@ public class ArrayWrapperUnitTestCase
       "   <xsd:sequence>" +
       "     <xsd:element name='stringArray' type='StringArray' minOccurs='0'/>" +
       "     <xsd:element name='stringArrayArray' type='StringArrayArray' minOccurs='0'/>" +
-      "     <xsd:element name='jbxb79' type='xsd:string' minOccurs='0' maxOccurs='unbounded'/>" +
       "   </xsd:sequence>" +
       " </xsd:complexType>" +
       " <xsd:complexType name='StringArray'>" +
@@ -83,6 +82,30 @@ public class ArrayWrapperUnitTestCase
       "     <xsd:element maxOccurs='unbounded' minOccurs='0' name='value' nillable='true' type='StringArray'/>" +
       "   </xsd:sequence>" +
       "  </xsd:complexType>" +
+      " <xsd:element name='arr' type='ArrayWrapper'/>" +
+      "</xsd:schema>";
+
+   private static final String JBXB79_XSD =
+      "<xsd:schema" +
+      " targetNamespace='http://www.jboss.org/xml/test/arraywrapper'" +
+      " xmlns='http://www.jboss.org/xml/test/arraywrapper'" +
+      " xmlns:jbxb='" +
+      Constants.NS_JBXB +
+      "'" +
+      " elementFormDefault='qualified'" +
+      " xmlns:xsd='http://www.w3.org/2001/XMLSchema'>" +
+      " <xsd:complexType name='ArrayWrapper'>" +
+      "   <xsd:annotation>" +
+      "      <xsd:appinfo>" +
+      "         <jbxb:class impl='" +
+      ArrayWrapper.class.getName() +
+      "'/>" +
+      "      </xsd:appinfo>" +
+      "   </xsd:annotation>" +
+      "   <xsd:sequence>" +
+      "     <xsd:element name='jbxb79' type='xsd:string' minOccurs='0' maxOccurs='unbounded' nillable='true'/>" +
+      "   </xsd:sequence>" +
+      " </xsd:complexType>" +
       " <xsd:element name='arr' type='ArrayWrapper'/>" +
       "</xsd:schema>";
 
@@ -136,11 +159,8 @@ public class ArrayWrapperUnitTestCase
    protected void configureLogging()
    {
 //      enableTrace("org.jboss.xb.binding");
-      
       if(SCHEMA == null)
-      {
          SCHEMA = XsdBinder.bind(new StringReader(XSD), null);
-      }
    }
 
    public void testMarshalStringArraySunday() throws Exception
@@ -238,8 +258,9 @@ public class ArrayWrapperUnitTestCase
 
    public void testUnmarshalJBXB79StringArray() throws Exception
    {
+      SchemaBinding schema = XsdBinder.bind(new StringReader(JBXB79_XSD), null);
       Unmarshaller unmarshaller = UnmarshallerFactory.newInstance().newUnmarshaller();
-      Object o = unmarshaller.unmarshal(new StringReader(JBXB79_XML), SCHEMA);
+      Object o = unmarshaller.unmarshal(new StringReader(JBXB79_XML), schema);
       assertNotNull(o);
       assertTrue(o instanceof ArrayWrapper);
       ArrayWrapper aw = (ArrayWrapper)o;

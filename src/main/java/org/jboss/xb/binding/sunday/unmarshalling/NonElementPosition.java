@@ -35,7 +35,6 @@ public abstract class NonElementPosition extends AbstractPosition
    protected NonElementPosition(QName name, ParticleBinding particle, AbstractPosition next)
    {
       super(name, particle);
-      this.particle = particle;
       this.next = next;
       next.previous = this;
    }

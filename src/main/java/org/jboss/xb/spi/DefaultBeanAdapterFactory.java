@@ -44,8 +44,8 @@ public class DefaultBeanAdapterFactory extends AbstractBeanAdapterFactory
       super(beanInfo, factory);
    }
 
-   public DefaultBeanAdapter newInstance()
+   public BeanAdapter newInstance()
    {
-      return new DefaultBeanAdapter(this, getBeanInfo(), getFactory());
+      return new DefaultBeanAdapter(this, beanInfo, factory);
    }
 }

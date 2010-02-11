@@ -337,15 +337,15 @@ public class WildcardBinding
       }
       
       @Override
-      protected ParticleHandler getHandler()
-      {
-         return DefaultHandlers.UOE_PARTICLE_HANDLER;
-      }
-      
-      @Override
       protected AbstractPosition getLastNotSkipped()
       {
          return !skip || repeatableParticleValue != null || previous != notSkippedParent ? this : notSkippedParent;
+      }
+      
+      @Override
+      protected void initHandler()
+      {
+         handler = DefaultHandlers.UOE_PARTICLE_HANDLER;
       }
    }
 }

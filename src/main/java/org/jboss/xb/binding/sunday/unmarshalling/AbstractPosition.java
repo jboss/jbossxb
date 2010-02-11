@@ -46,6 +46,7 @@ public abstract class AbstractPosition
    protected PositionStack stack;
    protected final QName qName;
    protected ParticleBinding particle;
+   protected TermBinding term;
    protected ParticleHandler handler;
    protected TypeBinding parentType;
    protected Object o;
@@ -72,11 +73,16 @@ public abstract class AbstractPosition
       this.particle = particle;
       this.occurrence = 1;
       
-      TermBinding term = particle.getTerm();
+      this.term = particle.getTerm();
       this.skip = term.isSkip();
 
       if(particle.isRepeatable())
          repeatableHandler = term.getRepeatableHandler();
+      
+      if(skip)
+         handler = DefaultHandlers.UOE_PARTICLE_HANDLER;
+      else
+         initHandler();
    }
 
    public void setStack(PositionStack stack)
@@ -117,7 +123,7 @@ public abstract class AbstractPosition
    public void endRepeatableParticle()
    {
       if (trace)
-         log.trace(" end repeatable " + particle.getTerm());
+         log.trace(" end repeatable " + term);
       repeatableHandler.endRepeatableParticle(previous.o, repeatableParticleValue, qName, particle, previous.particle);
       repeatableParticleValue = null;
    }
@@ -136,8 +142,6 @@ public abstract class AbstractPosition
          return;
       }
       
-      if(handler == null)
-         handler = getHandler();
       Object parent = previous == null ? null : previous.o;
       o = handler.startParticle(parent, qName, particle, atts, stack.getNamespaceRegistry());
    }
@@ -145,9 +149,9 @@ public abstract class AbstractPosition
    protected void startRepeatableParticle()
    {
       if(trace)
-         log.trace(" start repeatable " + particle.getTerm());
+         log.trace(" start repeatable " + term);
 
-      RepeatableParticleHandler repeatableHandler = particle.getTerm().getRepeatableHandler();
+      RepeatableParticleHandler repeatableHandler = term.getRepeatableHandler();
       // the way it is now it's never null
       Object repeatableContainer = repeatableHandler.startRepeatableParticle(previous.o, qName, particle);
       if(repeatableContainer != null)
@@ -174,7 +178,7 @@ public abstract class AbstractPosition
       }
       else if(parentPosition.repeatableParticleValue == null || !parentPosition.skip)
       {
-         TermBeforeSetParentCallback beforeSetParent = particle.getTerm().getBeforeSetParentCallback();
+         TermBeforeSetParentCallback beforeSetParent = term.getBeforeSetParentCallback();
          if (beforeSetParent != null)
          {
             UnmarshallingContextImpl ctx = stack.getContext();
@@ -196,8 +200,13 @@ public abstract class AbstractPosition
       }
    }
 
-   protected abstract ParticleHandler getHandler();
-   
+   protected void initHandler()
+   {
+      handler = term.getHandler();
+      if(handler == null)
+         handler = DefaultHandlers.ELEMENT_HANDLER;
+   }
+
    protected abstract void repeatForChild(Attributes atts);
    
    protected abstract AbstractPosition nextPosition(QName startName, Attributes atts);

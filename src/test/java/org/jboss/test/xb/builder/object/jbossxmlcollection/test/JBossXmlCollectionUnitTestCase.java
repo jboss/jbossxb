@@ -28,7 +28,6 @@ import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.jbossxmlcollection.support.Root;
 
 
-
 /**
  * A JBossXmlCollectionUnitTestCase.
  * 

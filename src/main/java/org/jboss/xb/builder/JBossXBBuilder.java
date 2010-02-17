@@ -66,6 +66,9 @@ public class JBossXBBuilder
    /** system property name to use for initialization */
    public static final String ELEMENT_SET_PARENT_OVERRIDE_HANDLER = "xb.builder.elementSetParentOverrideHandler";
 
+   /** system property name to use for initialization */
+   public static final String REPEATABLE_PARTICLE_HANDLERS = "xb.builder.repeatableParticleHandlers";
+
    /** The configuration */
    static Configuration configuration;
    
@@ -79,7 +82,11 @@ public class JBossXBBuilder
 
    static boolean sequencesRequirePropOrder;
 
-   static boolean elementSetParentHandler = true;
+   // whether elements override their type's ParticleHandler.setParent with property-specific setParent impl
+   static boolean elementSetParentHandler;
+
+   // whether to use repeatable particle handlers for collections
+   static boolean repeatableParticleHandlers;
 
    static
    {
@@ -97,6 +104,7 @@ public class JBossXBBuilder
       useUnorderedSequence = getBooleanProperty(JBossXBBuilder.USE_UNORDERED_SEQUENCE_PROPERTY, false);
       sequencesRequirePropOrder = getBooleanProperty(JBossXBBuilder.SEQUENCES_REQUIRE_PROP_ORDER, true);
       elementSetParentHandler = getBooleanProperty(JBossXBBuilder.ELEMENT_SET_PARENT_OVERRIDE_HANDLER, true);
+      repeatableParticleHandlers = getBooleanProperty(JBossXBBuilder.REPEATABLE_PARTICLE_HANDLERS, true);
    }
 
    private static boolean getBooleanProperty(final String propertyName, boolean defaultValue)
@@ -143,6 +151,16 @@ public class JBossXBBuilder
    public static void setElementSetParentOverrideHandler(boolean elementSetParentHandler)
    {
       JBossXBBuilder.elementSetParentHandler = elementSetParentHandler;
+   }
+
+   public static boolean isRepeatableParticleHandlers()
+   {
+      return repeatableParticleHandlers;
+   }
+   
+   public static void setRepeatableParticleHandlers(boolean repeatableParticleHandlers)
+   {
+      JBossXBBuilder.repeatableParticleHandlers = repeatableParticleHandlers;
    }
 
    /**
@@ -263,6 +281,7 @@ public class JBossXBBuilder
       builder.setUseUnorderedSequence(useUnorderedSequence);
       builder.setSequencesRequirePropOrder(sequencesRequirePropOrder);
       builder.setElementSetParentOverrideHandler(elementSetParentHandler);
+      builder.setRepeatableParticleHandlers(repeatableParticleHandlers);
       builder.build(schemaBinding);
    }
    
@@ -299,6 +318,7 @@ public class JBossXBBuilder
          builder.setUseUnorderedSequence(useUnorderedSequence);
          builder.setSequencesRequirePropOrder(sequencesRequirePropOrder);
          builder.setElementSetParentOverrideHandler(elementSetParentHandler);
+         builder.setRepeatableParticleHandlers(repeatableParticleHandlers);
          binding = builder.build();
          classInfo.setAttachment(SchemaBinding.class.getName(), binding);
       }

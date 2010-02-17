@@ -189,6 +189,7 @@ public class JBossXBNoSchemaBuilder
    private boolean useUnorderedSequence;
    private boolean sequencesRequirePropOrder;
    private boolean elementSetParentHandler;
+   private boolean repeatableParticleHandlers;
 
    /** transient property names by type name */
    private Map<String, Set<String>> jbossXmlTransients = Collections.emptyMap();
@@ -239,6 +240,16 @@ public class JBossXBNoSchemaBuilder
    public void setElementSetParentOverrideHandler(boolean elementSetParentHandler)
    {
       this.elementSetParentHandler = elementSetParentHandler;
+   }
+
+   public boolean isRepeatableParticleHandlers()
+   {
+      return repeatableParticleHandlers;
+   }
+   
+   public void setRepeatableParticleHandlers(boolean repeatableParticleHandlers)
+   {
+      this.repeatableParticleHandlers = repeatableParticleHandlers;
    }
 
    /**
@@ -1247,13 +1258,11 @@ public class JBossXBNoSchemaBuilder
             localModel.addParticle(particleBinding);
             particleBinding.setMinOccurs(0);
 
-            wildcardHandler = new PropertyWildcardHandler(wildcardProperty, wildcardType);
-            wildcard.setHandler((ParticleHandler) wildcardHandler);
-            
             // Setup any new model and determine the wildcard type
             if (wildcardType.isArray())
             {
                particleBinding.setMaxOccursUnbounded(true);
+               wildcardHandler = new PropertyWildcardHandler(wildcardProperty, wildcardType);
                wildcard.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(wildcardHandler));
                type = ((ArrayInfo) wildcardType).getComponentType();
                if (trace)
@@ -1262,13 +1271,25 @@ public class JBossXBNoSchemaBuilder
             else if (wildcardType.isCollection())
             {
                particleBinding.setMaxOccursUnbounded(true);
-               wildcard.setRepeatableHandler(new CollectionRepeatableParticleHandler(wildcardHandler, (ClassInfo) wildcardType, null));
+               if(repeatableParticleHandlers)
+               {
+                  wildcardHandler = new PropertyWildcardHandler(wildcardProperty, wildcardType);
+                  wildcard.setRepeatableHandler(new CollectionRepeatableParticleHandler(wildcardHandler, (ClassInfo) wildcardType, null));
+               }
+               else
+                  wildcardHandler = new CollectionPropertyWildcardHandler(wildcardProperty, wildcardType);
+               
                type = ((ClassInfo)wildcardProperty.getType()).getComponentType();
                if (trace)
                   log.trace("Wildcard " + wildcardProperty.getName() + " is a collection of type " + type.getName());
             }
             else
+            {
                particleBinding.setMaxOccurs(1);
+               wildcardHandler = new PropertyWildcardHandler(wildcardProperty, wildcardType);
+            }
+
+            wildcard.setHandler((ParticleHandler) wildcardHandler);
 
             XmlAnyElement xmlAnyElement = wildcardProperty.getUnderlyingAnnotation(XmlAnyElement.class);
             boolean isLax = xmlAnyElement == null ? true : xmlAnyElement.lax();
@@ -1465,10 +1486,10 @@ public class JBossXBNoSchemaBuilder
 
          if(xmlWrapper == null)
          {
-            if(propertyType.isCollection())
-               choice.setRepeatableHandler(new CollectionRepeatableParticleHandler(new PropertyHandler(property, propertyType), (ClassInfo) propertyType, null));
-            else if(propertyType.isArray())
+            if(propertyType.isArray())
                choice.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(new PropertyHandler(property, propertyType)));
+            else if(repeatableParticleHandlers && propertyType.isCollection())
+               choice.setRepeatableHandler(new CollectionRepeatableParticleHandler(new PropertyHandler(property, propertyType), (ClassInfo) propertyType, null));
          }
 
          if (trace)
@@ -1486,7 +1507,7 @@ public class JBossXBNoSchemaBuilder
          localModel.addParticle(particleBinding);
          particleBinding.setMinOccurs(0);
 
-         AbstractPropertyHandler wildcardHandler = new PropertyWildcardHandler(property, propertyType);
+         AbstractPropertyHandler wildcardHandler;
 
          // Setup any new model and determine the wildcard type
          TypeInfo wildcardType = propertyType;
@@ -1494,6 +1515,7 @@ public class JBossXBNoSchemaBuilder
          {
             if(!repeatableChoice)
                particleBinding.setMaxOccursUnbounded(true);
+            wildcardHandler = new PropertyWildcardHandler(property, propertyType);
             wildcard.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(wildcardHandler));
             wildcardType = ((ArrayInfo) propertyType).getComponentType();
             if (trace)
@@ -1503,13 +1525,23 @@ public class JBossXBNoSchemaBuilder
          {
             if(!repeatableChoice)
                particleBinding.setMaxOccursUnbounded(true);
-            wildcard.setRepeatableHandler(new CollectionRepeatableParticleHandler(wildcardHandler, (ClassInfo) propertyType, null));
+            if(repeatableParticleHandlers)
+            {
+               wildcardHandler = new PropertyWildcardHandler(property, propertyType);
+               wildcard.setRepeatableHandler(new CollectionRepeatableParticleHandler(wildcardHandler, (ClassInfo) propertyType, null));
+            }
+            else
+               wildcardHandler = new CollectionPropertyWildcardHandler(property, propertyType);
+
             wildcardType = ((ClassInfo)property.getType()).getComponentType();
             if (trace)
                log.trace("Wildcard " + property.getName() + " is a collection of type " + wildcardType.getName());
          }
          else
+         {
+            wildcardHandler = new PropertyWildcardHandler(property, propertyType);
             particleBinding.setMaxOccurs(1);
+         }
 
          XmlAnyElement xmlAnyElement = property.getUnderlyingAnnotation(XmlAnyElement.class);
          boolean isLax = xmlAnyElement == null ? true : xmlAnyElement.lax();
@@ -1719,11 +1751,7 @@ public class JBossXBNoSchemaBuilder
          {
             localPropertyType = valueAdapter.getAdaptedTypeInfo();
             if(localPropertyType.isCollection())
-            {
-               if(propertyHandler == null)
-                  propertyHandler = new PropertyHandler(property, localPropertyType);
-               repeatableHandler = new CollectionRepeatableParticleHandler(propertyHandler, (ClassInfo) localPropertyType, valueAdapter);
-            }
+               repeatableHandler = new CollectionRepeatableParticleHandler(new PropertyHandler(property, localPropertyType), (ClassInfo) localPropertyType, valueAdapter);
          }
 
          ModelGroupBinding targetGroup = localModel;
@@ -1735,6 +1763,9 @@ public class JBossXBNoSchemaBuilder
          // and this is checked with the XmlType annotation
          if (propertyType.isCollection() && ((ClassInfo) propertyType).getUnderlyingAnnotation(XmlType.class) == null)
          {
+            if(propertyHandler == null && !repeatableParticleHandlers)
+               propertyHandler = new CollectionPropertyHandler(property, propertyType);
+            
             isCol = true;
             colType = propertyType;
             // here we get the comp type based on the non-overriden property type...
@@ -1754,6 +1785,14 @@ public class JBossXBNoSchemaBuilder
          else if (localPropertyType.isCollection()
                && ((ClassInfo) localPropertyType).getUnderlyingAnnotation(XmlType.class) == null)
          {
+            if(propertyHandler == null && !repeatableParticleHandlers)
+            {
+               if (valueAdapter != null)
+                  propertyHandler = new PropertyHandler(property, localPropertyType);
+               else
+                  propertyHandler = new CollectionPropertyHandler(property, localPropertyType);
+            }
+
             isCol = true;
             colType = localPropertyType;
             localPropertyType = ((ClassInfo)localPropertyType).getComponentType();
@@ -1853,13 +1892,13 @@ public class JBossXBNoSchemaBuilder
 
             if(repeatableHandler == null && elements.length == 1 && xmlWrapper == null)
             {
-               if(isCol)
-                  repeatableHandler = new CollectionRepeatableParticleHandler(propertyHandler, (ClassInfo) colType, null);
-               else if(propertyType.isArray())
+               if(propertyType.isArray())
                {
                   isCol = true;
                   repeatableHandler = new ArrayWrapperRepeatableParticleHandler(propertyHandler);
                }
+               else if(isCol && repeatableParticleHandlers)
+                  repeatableHandler = new CollectionRepeatableParticleHandler(propertyHandler, (ClassInfo) colType, null);
             }
             
             if(repeatableHandler != null)
@@ -2069,9 +2108,9 @@ public class JBossXBNoSchemaBuilder
       particle = new ParticleBinding(wrapperElement, annotation.required() ? 1 : 0, 1, propertyType.isCollection() || propertyType.isArray());
       parentModel.addParticle(particle);
 
-      if(propertyType.isArray())
+      if (propertyType.isArray())
          wrapperElement.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(setParentProperty));
-      else if(propertyType.isCollection())
+      else if (propertyType.isCollection() && repeatableParticleHandlers)
          wrapperElement.setRepeatableHandler(new CollectionRepeatableParticleHandler(setParentProperty, (ClassInfo) propertyType, null));
       
       return seq;

@@ -28,7 +28,6 @@ import javax.xml.namespace.QName;
 import org.jboss.beans.info.spi.PropertyInfo;
 import org.jboss.reflect.spi.ClassInfo;
 import org.jboss.reflect.spi.TypeInfo;
-import org.jboss.xb.annotations.JBossXmlCollection;
 import org.jboss.xb.spi.BeanAdapter;
 import org.jboss.xb.util.CollectionFactory;
 
@@ -56,16 +55,8 @@ public class CollectionPropertyHandler extends AbstractPropertyHandler
    public CollectionPropertyHandler(PropertyInfo propertyInfo, TypeInfo propertyType)
    {
       super(propertyInfo, propertyType);
-
       componentType = ((ClassInfo) propertyType).getComponentType();
-
-      ClassInfo collectionType = null;
-      JBossXmlCollection xmlCol = propertyInfo.getUnderlyingAnnotation(JBossXmlCollection.class);
-      if (xmlCol != null)
-         collectionType = (ClassInfo) propertyType.getTypeInfoFactory().getTypeInfo(xmlCol.type());
-      else
-         collectionType = (ClassInfo) propertyType;
-      colFactory = CollectionFactory.getFactory(collectionType);
+      colFactory = CollectionFactory.getFactory((ClassInfo) propertyType);
    }
 
    @Override

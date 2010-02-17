@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.Iterator;
 import java.util.StringTokenizer;
 
 import javax.xml.XMLConstants;
@@ -37,7 +38,11 @@ import org.apache.xerces.xs.XSModel;
 import org.jboss.logging.Logger;
 import org.jboss.util.Classes;
 import org.jboss.xb.binding.sunday.unmarshalling.LSInputAdaptor;
+import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.ParticleBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
+import org.jboss.xb.binding.sunday.unmarshalling.TermBinding;
+import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinderTerminatingErrorHandler;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMErrorHandler;
@@ -758,5 +763,30 @@ public final class Util
             return command;
          }
       };
+   }
+   
+   public static WildcardBinding getWildcard(TermBinding term)
+   {
+      if(term.isWildcard())
+         return (WildcardBinding) term;
+      
+      if(term.isModelGroup())
+      {
+         ModelGroupBinding group = (ModelGroupBinding) term;
+         for(Iterator<ParticleBinding> i = group.getParticles().iterator(); i.hasNext();)
+         {
+            term = i.next().getTerm();
+            if(term.isWildcard())
+               return (WildcardBinding)term;
+            else if(term.isModelGroup())
+            {
+               WildcardBinding wc = getWildcard(term);
+               if (wc != null)
+                  return wc;
+            }
+         }
+      }
+      
+      return null;
    }
 }

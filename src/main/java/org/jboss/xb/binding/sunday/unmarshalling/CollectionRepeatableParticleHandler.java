@@ -21,10 +21,15 @@
 */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.xml.namespace.QName;
+
+import org.jboss.reflect.spi.ClassInfo;
+import org.jboss.reflect.spi.TypeInfo;
+import org.jboss.xb.binding.JBossXBRuntimeException;
+import org.jboss.xb.builder.runtime.AbstractPropertyHandler;
+import org.jboss.xb.util.CollectionFactory;
 
 /**
  * 
@@ -33,11 +38,31 @@ import javax.xml.namespace.QName;
  */
 public class CollectionRepeatableParticleHandler implements RepeatableParticleHandler
 {
-   public static final CollectionRepeatableParticleHandler INSTANCE = new CollectionRepeatableParticleHandler();
+   private AbstractPropertyHandler propertyHandler;
+   private CollectionFactory colFactory;
+   private ValueAdapter valueAdapter;
+   private TypeInfo componentType;
    
+   public CollectionRepeatableParticleHandler(AbstractPropertyHandler propertyHandler, ClassInfo collectionType, ValueAdapter valueAdapter)
+   {
+      if(propertyHandler == null)
+         throw new IllegalArgumentException("Null property handler.");
+      colFactory = CollectionFactory.getFactory(collectionType);
+      componentType = ((ClassInfo) collectionType).getComponentType();
+      this.valueAdapter = valueAdapter;
+      this.propertyHandler = propertyHandler;
+   }
+
    public Object startRepeatableParticle(Object parent, QName startName, ParticleBinding particle)
    {
-      return createCollection();
+      try
+      {
+         return colFactory.createCollection();
+      }
+      catch (Throwable e)
+      {
+         throw new JBossXBRuntimeException("Failed to create collection for " + startName, e);
+      }
    }
 
    public void endRepeatableParticle(Object parent, Object o, QName elementName, ParticleBinding particle, ParticleBinding parentParticle)
@@ -45,26 +70,20 @@ public class CollectionRepeatableParticleHandler implements RepeatableParticleHa
       if(o == null)
          return;
       
-      TermBinding term = particle.getTerm();
-      ParticleHandler handler = term.getHandler();
-      if(handler == null)
-         handler = DefaultHandlers.ELEMENT_HANDLER;
-      
-      ValueAdapter valueAdapter = term.getValueAdapter();
       if(valueAdapter != null)
          o = valueAdapter.cast(o, null);
       
-      handler.setParent(parent, o, elementName, particle, parentParticle);
+      propertyHandler.doHandle(parent, o, elementName);
    }
 
    public void addTermValue(Object particleValue, Object termValue, QName elementName,
          ParticleBinding particle, ParticleBinding parentParticle, ParticleHandler handler)
    {
-      ((Collection<Object>)particleValue).add(termValue);
-   }
-   
-   protected Collection<Object> createCollection()
-   {
-      return new ArrayList<Object>();
+      if (componentType != null && termValue != null)
+      {
+         if(!componentType.isInstance(termValue))
+            throw new IllegalArgumentException("Child is not an instance of " + componentType + ", child: " + termValue);
+      }
+      ((Collection)particleValue).add(termValue);
    }
 }

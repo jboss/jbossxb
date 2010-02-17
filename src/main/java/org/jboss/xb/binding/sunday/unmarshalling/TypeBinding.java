@@ -38,6 +38,7 @@ import org.jboss.xb.binding.metadata.MapEntryMetaData;
 import org.jboss.xb.binding.metadata.PropertyMetaData;
 import org.jboss.xb.binding.metadata.ValueMetaData;
 import org.jboss.xb.binding.Constants;
+import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.sunday.marshalling.TermBeforeMarshallingCallback;
 import org.jboss.xb.binding.sunday.xop.XOPUnmarshaller;
 import org.jboss.xb.binding.sunday.xop.XOPMarshaller;
@@ -542,13 +543,11 @@ public class TypeBinding
    public WildcardBinding getWildcard()
    {
       if(initializedWildcard)
-      {
          return wildcard;
-      }
       
       if(particle != null)
       {
-         wildcard = getWildcard(particle.getTerm());
+         wildcard = Util.getWildcard(particle.getTerm());
          initializedWildcard = true;
       }
       
@@ -697,34 +696,5 @@ public class TypeBinding
    public String toString()
    {
       return super.toString() + "[" + qName + "]";
-   }
-
-   private static WildcardBinding getWildcard(TermBinding term)
-   {
-      if(term.isWildcard())
-      {
-         return (WildcardBinding) term;
-      }     
-      
-      if(term.isModelGroup())
-      {
-         ModelGroupBinding group = (ModelGroupBinding) term;
-         for(Iterator<ParticleBinding> i = group.getParticles().iterator(); i.hasNext();)
-         {
-            term = i.next().getTerm();
-            if(term.isWildcard())
-            {
-               return (WildcardBinding)term;
-            }
-            else if(term.isModelGroup())
-            {
-               WildcardBinding wc = getWildcard(term);
-               if (wc != null)
-                  return wc;
-            }
-         }
-      }
-      
-      return null;
    }
 }

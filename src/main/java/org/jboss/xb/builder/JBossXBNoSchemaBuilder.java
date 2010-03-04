@@ -986,6 +986,15 @@ public class JBossXBNoSchemaBuilder
                TypeInfo attributeTypeInfo = property.getType();
                if (jbossXmlAttribute != null && jbossXmlAttribute.type() != Object.class)
                   attributeTypeInfo = attributeTypeInfo.getTypeInfoFactory().getTypeInfo(jbossXmlAttribute.type());
+               
+               XBValueAdapter valueAdapter = null;
+               XmlJavaTypeAdapter xmlTypeAdapter = property.getUnderlyingAnnotation(XmlJavaTypeAdapter.class);
+               if (xmlTypeAdapter != null)
+               {
+                  valueAdapter = new XBValueAdapter(xmlTypeAdapter.value(), attributeTypeInfo.getTypeInfoFactory());
+                  attributeTypeInfo = valueAdapter.getAdaptedTypeInfo();
+               }
+
                TypeBinding attributeType = resolveTypeBinding(attributeTypeInfo);
                
                // Create the attribute handler
@@ -1000,8 +1009,10 @@ public class JBossXBNoSchemaBuilder
 
                attributeHandler = new PropertyHandler(property, attributeTypeInfo);
                
-               // Create the attributre and bind it to the type
+               // Create the attribute and bind it to the type
                AttributeBinding attribute = new AttributeBinding(schemaBinding, qName, attributeType, attributeHandler);
+               if(valueAdapter != null)
+                  attribute.setValueAdapter(valueAdapter);
                attribute.setRequired(xmlAttribute.required());
                typeBinding.addAttribute(attribute);
                JBossXmlPreserveWhitespace preserveSpace = property.getUnderlyingAnnotation(JBossXmlPreserveWhitespace.class);

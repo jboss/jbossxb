@@ -50,4 +50,6 @@ public @interface JBossXmlType
     * @return  model group type which should be used for the xml type
     */
    String modelGroup() default JBossXmlConstants.DEFAULT;
+   
+   JBossXmlAccessMode accessMode() default JBossXmlAccessMode.NOT_SPECIFIED;
 }

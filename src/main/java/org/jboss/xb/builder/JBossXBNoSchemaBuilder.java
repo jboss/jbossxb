@@ -55,6 +55,7 @@ import javax.xml.bind.annotation.adapters.XmlAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import javax.xml.namespace.QName;
 
+import org.jboss.beans.info.spi.BeanAccessMode;
 import org.jboss.beans.info.spi.BeanInfo;
 import org.jboss.beans.info.spi.PropertyInfo;
 import org.jboss.joinpoint.plugins.Config;
@@ -88,6 +89,7 @@ import org.jboss.xb.annotations.JBossXmlModelGroup;
 import org.jboss.xb.annotations.JBossXmlNoElements;
 import org.jboss.xb.annotations.JBossXmlNsPrefix;
 import org.jboss.xb.annotations.JBossXmlPreserveWhitespace;
+import org.jboss.xb.annotations.JBossXmlAccessMode;
 import org.jboss.xb.annotations.JBossXmlSchema;
 import org.jboss.xb.annotations.JBossXmlTransient;
 import org.jboss.xb.annotations.JBossXmlTransients;
@@ -191,6 +193,8 @@ public class JBossXBNoSchemaBuilder
    private boolean elementSetParentHandler;
    private boolean repeatableParticleHandlers;
 
+   private BeanAccessMode beanAccessMode = BeanAccessMode.STANDARD;
+   
    /** transient property names by type name */
    private Map<String, Set<String>> jbossXmlTransients = Collections.emptyMap();
    
@@ -251,7 +255,7 @@ public class JBossXBNoSchemaBuilder
    {
       this.repeatableParticleHandlers = repeatableParticleHandlers;
    }
-
+   
    /**
     * Build the schema
     * 
@@ -371,8 +375,22 @@ public class JBossXBNoSchemaBuilder
             }
          }
       }
+      
+      if(jbossXmlSchema != null)
+         beanAccessMode = jbossXmlAccessModeToBeanAccessMode(jbossXmlSchema.accessMode());
    }
 
+   private static BeanAccessMode jbossXmlAccessModeToBeanAccessMode(JBossXmlAccessMode accessMode)
+   {
+      if (accessMode == JBossXmlAccessMode.ALL)
+         return BeanAccessMode.ALL;
+      else if (accessMode == JBossXmlAccessMode.PROPERTY)
+         return BeanAccessMode.STANDARD;
+      else if (accessMode == JBossXmlAccessMode.PUBLIC_MEMBER)
+         return BeanAccessMode.FIELDS;
+      throw new IllegalArgumentException("Unsupported JBossXmlAccessMode: " + accessMode);
+   }
+   
    /**
     * Create the root elements
     */
@@ -713,7 +731,7 @@ public class JBossXBNoSchemaBuilder
       Class<? extends ValueAdapter> adapter = annotation.valueAdapter();
       try
       {
-         BeanInfo adapterInfo = JBossXBBuilder.configuration.getBeanInfo(adapter);
+         BeanInfo adapterInfo = JBossXBBuilder.configuration.getBeanInfo(adapter, beanAccessMode);
 
          ValueAdapter valueAdapter = (ValueAdapter) adapterInfo.newInstance();
 
@@ -871,10 +889,16 @@ public class JBossXBNoSchemaBuilder
          factoryMethod = xmlType.factoryMethod();
          propertyOrder = xmlType.propOrder();
       }
+      
+      BeanAccessMode beanAccessMode = this.beanAccessMode;
       JBossXmlType jbossXmlType = typeInfo.getUnderlyingAnnotation(JBossXmlType.class);
+      
       if (jbossXmlType != null)
       {
          beanAdapterBuilderClass = jbossXmlType.beanAdapterBuilder();
+         JBossXmlAccessMode accessMode = jbossXmlType.accessMode();
+         if(accessMode != JBossXmlAccessMode.NOT_SPECIFIED)
+            beanAccessMode = jbossXmlAccessModeToBeanAccessMode(accessMode);
       }
       // Determine the property access order
       XmlAccessorOrder accessorOrder = typeInfo.getUnderlyingAnnotation(XmlAccessorOrder.class);
@@ -919,7 +943,7 @@ public class JBossXBNoSchemaBuilder
          factory = Config.findMethodInfo(factoryClassInfo, factoryMethod, null, true, true);
 
       // Create the handler
-      BeanInfo beanInfo = JBossXBBuilder.configuration.getBeanInfo(typeInfo);
+      BeanInfo beanInfo = JBossXBBuilder.configuration.getBeanInfo(typeInfo, beanAccessMode);
       BeanAdapterFactory beanAdapterFactory = createAdapterFactory(beanAdapterBuilderClass, beanInfo, factory);
       BeanHandler handler = new BeanHandler(beanInfo.getName(), beanAdapterFactory, typeBinding);
       typeBinding.setHandler(handler);
@@ -1333,7 +1357,7 @@ public class JBossXBNoSchemaBuilder
          {
             if (childWildcard.wrapper() != Object.class)
             {
-               BeanInfo wrapperInfo = JBossXBBuilder.configuration.getBeanInfo(childWildcard.wrapper());
+               BeanInfo wrapperInfo = JBossXBBuilder.configuration.getBeanInfo(childWildcard.wrapper(), beanAccessMode);
                childWildcardHandler = new ChildCollectionWildcardHandler(wrapperInfo, childWildcard.property());
             }
             else
@@ -1614,7 +1638,7 @@ public class JBossXBNoSchemaBuilder
             JBossXmlGroupText groupText = ((ClassInfo) propertyType).getUnderlyingAnnotation(JBossXmlGroupText.class);
             if (groupText != null && groupText.wrapper() != Object.class)
             {
-               BeanInfo wrapperInfo = JBossXBBuilder.configuration.getBeanInfo(groupText.wrapper());
+               BeanInfo wrapperInfo = JBossXBBuilder.configuration.getBeanInfo(groupText.wrapper(), beanAccessMode);
                TypeBinding wrapperTypeBinding = resolveTypeBinding(wrapperInfo.getClassInfo());
 
                ParticleHandler particleHandler = wrapperTypeBinding.getHandler();
@@ -1668,7 +1692,7 @@ public class JBossXBNoSchemaBuilder
                ChildWildcardHandler groupWildcardHandler;
                if (groupWildcard.wrapper() != Object.class)
                {
-                  BeanInfo wrapperInfo = JBossXBBuilder.configuration.getBeanInfo(groupWildcard.wrapper());
+                  BeanInfo wrapperInfo = JBossXBBuilder.configuration.getBeanInfo(groupWildcard.wrapper(), beanAccessMode);
                   groupWildcardHandler = new ChildWildcardHandler(property, wrapperInfo, groupWildcard.property());
                }
                else
@@ -1837,7 +1861,7 @@ public class JBossXBNoSchemaBuilder
                   Map<QName, AbstractPropertyHandler> properties = wrapperBeanFactory.getProperties();
                   if(properties.containsKey(entryQName) == false)
                   {
-                     MapPropertyHandler mapHandler = new MapPropertyHandler(JBossXBBuilder.configuration, property, localPropertyType, true);
+                     MapPropertyHandler mapHandler = new MapPropertyHandler(JBossXBBuilder.configuration, beanAccessMode, property, localPropertyType, true);
                      wrapperBeanFactory.addProperty(entryQName, mapHandler);
                   }
                   if(propertyHandler == null)
@@ -1849,7 +1873,7 @@ public class JBossXBNoSchemaBuilder
                {
                   propertyQName = entryQName;
                   if(propertyHandler == null)
-                     propertyHandler = new MapPropertyHandler(JBossXBBuilder.configuration, property, localPropertyType, false);
+                     propertyHandler = new MapPropertyHandler(JBossXBBuilder.configuration, beanAccessMode, property, localPropertyType, false);
                }
                // overriding setParent doesn't make sense for a map
                // entryTerm.setHandler(new SetParentOverrideHandler(entryTerm.getHandler(), propertyHandler));
@@ -1989,8 +2013,13 @@ public class JBossXBNoSchemaBuilder
          
          if(annotation.particles().length == 0)
          {
+            BeanAccessMode beanAccessMode = this.beanAccessMode;
+            JBossXmlAccessMode accessMode = annotation.accessMode();
+            if(accessMode != JBossXmlAccessMode.NOT_SPECIFIED)
+               beanAccessMode = jbossXmlAccessModeToBeanAccessMode(accessMode);
+            
             // handler for the model group members
-            BeanInfo groupBeanInfo = JBossXBBuilder.configuration.getBeanInfo(groupType);
+            BeanInfo groupBeanInfo = JBossXBBuilder.configuration.getBeanInfo(groupType, beanAccessMode);
             BeanAdapterFactory propBeanAdapterFactory = createAdapterFactory(DefaultBeanAdapterBuilder.class, groupBeanInfo, null);
 
             String[] memberOrder = annotation.propOrder();
@@ -2131,7 +2160,7 @@ public class JBossXBNoSchemaBuilder
    {
       try
       {
-         BeanInfo adapterBuilderInfo = JBossXBBuilder.configuration.getBeanInfo(beanAdapterBuilderClass);
+         BeanInfo adapterBuilderInfo = JBossXBBuilder.configuration.getBeanInfo(beanAdapterBuilderClass, beanAccessMode);
          BeanAdapterBuilder adapterBuilder = (BeanAdapterBuilder) adapterBuilderInfo.newInstance();
          return adapterBuilder.newFactory(beanInfo, factory);
       }
@@ -2335,7 +2364,7 @@ public class JBossXBNoSchemaBuilder
 
          // entry handler
          BeanAdapterFactory entryAdapterFactory = null;
-         BeanInfo entryInfo = JBossXBBuilder.configuration.getBeanInfo(DefaultMapEntry.class);
+         BeanInfo entryInfo = JBossXBBuilder.configuration.getBeanInfo(DefaultMapEntry.class, beanAccessMode);
          entryAdapterFactory = createAdapterFactory(DefaultBeanAdapterBuilder.class, entryInfo, null);
 
          TypeBinding entryType = null;

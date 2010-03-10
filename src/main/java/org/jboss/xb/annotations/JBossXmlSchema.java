@@ -67,4 +67,6 @@ public @interface JBossXmlSchema
    
    /** Whether to trim string values */
    boolean normalizeSpace() default false;
+   
+   JBossXmlAccessMode accessMode() default JBossXmlAccessMode.PROPERTY;
 }

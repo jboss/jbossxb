@@ -50,6 +50,8 @@ public @interface JBossXmlModelGroup
     */
    String[] propOrder() default {""};
    
+   JBossXmlAccessMode accessMode() default JBossXmlAccessMode.NOT_SPECIFIED;
+   
    /**
     * Used when a model group is bound to a class hierarchy,
     * i.e. each subclass of the class annotated with JBossXmlModelGroup

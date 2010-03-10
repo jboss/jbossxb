@@ -27,6 +27,7 @@ import java.util.Map;
 
 import javax.xml.namespace.QName;
 
+import org.jboss.beans.info.spi.BeanAccessMode;
 import org.jboss.beans.info.spi.BeanInfo;
 import org.jboss.beans.info.spi.PropertyInfo;
 import org.jboss.config.spi.Configuration;
@@ -62,7 +63,7 @@ public class MapPropertyHandler extends AbstractPropertyHandler
     * @param wrapped the wrapped flag
     * @throws IllegalArgumentException for a null qName or property
     */
-   public MapPropertyHandler(Configuration config, PropertyInfo propertyInfo, TypeInfo propertyType, boolean wrapped)
+   public MapPropertyHandler(Configuration config, BeanAccessMode beanAccessMode, PropertyInfo propertyInfo, TypeInfo propertyType, boolean wrapped)
    {
       super(propertyInfo, propertyType);
 
@@ -111,7 +112,7 @@ public class MapPropertyHandler extends AbstractPropertyHandler
       
       if(entry != null && !JBossXmlMapEntry.DEFAULT.class.equals(entry.type()))
       {
-         BeanInfo entryBean = config.getBeanInfo(entry.type());
+         BeanInfo entryBean = config.getBeanInfo(entry.type(), beanAccessMode);
          mapPutAdapter = new CustomMapEntryPutAdapter(entryBean);
       }
       else

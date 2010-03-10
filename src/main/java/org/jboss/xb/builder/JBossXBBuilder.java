@@ -29,6 +29,7 @@ import java.util.Set;
 
 import javax.xml.XMLConstants;
 
+import org.jboss.beans.info.spi.BeanAccessMode;
 import org.jboss.config.plugins.property.PropertyConfiguration;
 import org.jboss.config.spi.Configuration;
 import org.jboss.reflect.spi.ClassInfo;
@@ -57,16 +58,29 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingInitializer;
  */
 public class JBossXBBuilder
 {
-   /** system property name to use for initialization */
+   /** system property name to use for initialization
+    * whether to use unordered sequences as the default sequence type during binding
+    */
    public static final String USE_UNORDERED_SEQUENCE_PROPERTY = "xb.builder.useUnorderedSequence";
 
-   /** system property name to use for initialization */
+   /** system property name to use for initialization
+    * whether to enforce the presence of propOrder in XmlType annotation when content of the type is bound to a sequence
+    */
    public static final String SEQUENCES_REQUIRE_PROP_ORDER = "xb.builder.sequencesRequirePropOrder";
 
-   /** system property name to use for initialization */
+   /** system property name to use for initialization
+    * General purpose handlers in setParent do a map<QName, PropertyHandler>.get(QName) to find the correct
+    * property handler to add the child to the parent. In case of non-global elements/groups we know the parent
+    * and the property from the beginning (during binding), so these terms could have a handler that would use
+    * the property directly.
+    */
    public static final String ELEMENT_SET_PARENT_OVERRIDE_HANDLER = "xb.builder.elementSetParentOverrideHandler";
 
-   /** system property name to use for initialization */
+   /** system property name to use for initialization
+    * Used for collection or array properties. To avoid calling property getter to get the collection value
+    * and then add the just unmarshalled item, all the items could be collected first instead and then property
+    * setter could be called to set the final value. This is what repeatable particle handlers do.
+    */
    public static final String REPEATABLE_PARTICLE_HANDLERS = "xb.builder.repeatableParticleHandlers";
 
    /** The configuration */

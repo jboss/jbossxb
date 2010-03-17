@@ -192,12 +192,14 @@ public class JBossXBNoSchemaBuilder
    private boolean sequencesRequirePropOrder;
    private boolean elementSetParentHandler;
    private boolean repeatableParticleHandlers;
+   // this is repeatableParticleHandlers in a specific context while the one above is global default
+   private boolean currentRepeatableHandlers;
 
    private BeanAccessMode beanAccessMode = BeanAccessMode.STANDARD;
    
    /** transient property names by type name */
    private Map<String, Set<String>> jbossXmlTransients = Collections.emptyMap();
-   
+
    /**
     * Create a new JBossXBNoSchemaBuilder.
     * 
@@ -865,7 +867,7 @@ public class JBossXBNoSchemaBuilder
     * @return the type binding
     */
    public TypeBinding generateType(ClassInfo typeInfo, boolean root)
-   {      
+   {
       // Determine the parameters
       String overrideNamespace = null;
       String overrideName = null;
@@ -1198,7 +1200,13 @@ public class JBossXBNoSchemaBuilder
             assertPropOrderNotRequired(typeInfo, propertyOrder);
          model = groupFactory.createSequence(schemaBinding);
       }
-      
+
+      boolean previousRepeatableHandlers = this.currentRepeatableHandlers;
+      if(model instanceof UnorderedSequenceBinding)
+         this.currentRepeatableHandlers = false;
+      else
+         this.currentRepeatableHandlers = this.repeatableParticleHandlers;
+
       if (trace)
          log.trace(model.getGroupType() + " model group for type=" + beanInfo.getName());
 
@@ -1306,7 +1314,7 @@ public class JBossXBNoSchemaBuilder
             else if (wildcardType.isCollection())
             {
                particleBinding.setMaxOccursUnbounded(true);
-               if(repeatableParticleHandlers)
+               if(currentRepeatableHandlers)
                {
                   wildcardHandler = new PropertyWildcardHandler(wildcardProperty, wildcardType);
                   wildcard.setRepeatableHandler(new CollectionRepeatableParticleHandler(wildcardHandler, (ClassInfo) wildcardType, null));
@@ -1383,6 +1391,7 @@ public class JBossXBNoSchemaBuilder
       if (trace)
          log.trace("Created type=" + typeInfo.getName() + " typeBinding=" + typeBinding + " rootType=" + root);
 
+      this.currentRepeatableHandlers = previousRepeatableHandlers;
       return typeBinding;
    }
 
@@ -1523,7 +1532,7 @@ public class JBossXBNoSchemaBuilder
          {
             if(propertyType.isArray())
                choice.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(new PropertyHandler(property, propertyType)));
-            else if(repeatableParticleHandlers && propertyType.isCollection())
+            else if(currentRepeatableHandlers && propertyType.isCollection())
                choice.setRepeatableHandler(new CollectionRepeatableParticleHandler(new PropertyHandler(property, propertyType), (ClassInfo) propertyType, null));
          }
 
@@ -1560,7 +1569,7 @@ public class JBossXBNoSchemaBuilder
          {
             if(!repeatableChoice)
                particleBinding.setMaxOccursUnbounded(true);
-            if(repeatableParticleHandlers)
+            if(currentRepeatableHandlers)
             {
                wildcardHandler = new PropertyWildcardHandler(property, propertyType);
                wildcard.setRepeatableHandler(new CollectionRepeatableParticleHandler(wildcardHandler, (ClassInfo) propertyType, null));
@@ -1798,7 +1807,7 @@ public class JBossXBNoSchemaBuilder
          // and this is checked with the XmlType annotation
          if (propertyType.isCollection() && ((ClassInfo) propertyType).getUnderlyingAnnotation(XmlType.class) == null)
          {
-            if(propertyHandler == null && !repeatableParticleHandlers)
+            if(propertyHandler == null && !currentRepeatableHandlers)
                propertyHandler = new CollectionPropertyHandler(property, propertyType);
             
             isCol = true;
@@ -1820,7 +1829,7 @@ public class JBossXBNoSchemaBuilder
          else if (localPropertyType.isCollection()
                && ((ClassInfo) localPropertyType).getUnderlyingAnnotation(XmlType.class) == null)
          {
-            if(propertyHandler == null && !repeatableParticleHandlers)
+            if(propertyHandler == null && !currentRepeatableHandlers)
             {
                if (valueAdapter != null)
                   propertyHandler = new PropertyHandler(property, localPropertyType);
@@ -1932,7 +1941,7 @@ public class JBossXBNoSchemaBuilder
                   isCol = true;
                   repeatableHandler = new ArrayWrapperRepeatableParticleHandler(propertyHandler);
                }
-               else if(isCol && repeatableParticleHandlers)
+               else if(isCol && currentRepeatableHandlers)
                   repeatableHandler = new CollectionRepeatableParticleHandler(propertyHandler, (ClassInfo) colType, null);
             }
             
@@ -2045,6 +2054,11 @@ public class JBossXBNoSchemaBuilder
             // can't do it with global components
             //group.setHandler(new SetParentOverrideHandler(propHandler, propertyHandler));
 
+            boolean previousRepeatableHandlers = this.currentRepeatableHandlers;
+            if(annotation.kind().equals(JBossXmlConstants.MODEL_GROUP_UNORDERED_SEQUENCE))
+               this.currentRepeatableHandlers = false;
+            else
+               this.currentRepeatableHandlers = this.repeatableParticleHandlers;
             // bind model group members
             for (String memberPropName : memberOrder)
             {
@@ -2053,6 +2067,7 @@ public class JBossXBNoSchemaBuilder
                bindProperty(memberProp, group, propBeanAdapterFactory, memberOrder, false);
                pop();
             }
+            this.currentRepeatableHandlers = previousRepeatableHandlers;
          }
          else
             group = createModelGroup(annotation.kind(), groupType, propOrderMissing, annotation.propOrder(), groupName);
@@ -2114,7 +2129,7 @@ public class JBossXBNoSchemaBuilder
       {
          if(propOrderMissing)
             assertPropOrderNotRequired(type, propertyOrder);
-         group = groupFactory.createSequence(schemaBinding);
+         group = new SequenceBinding(schemaBinding);//groupFactory.createSequence(schemaBinding);
       }
       else if (kind.equals(JBossXmlConstants.MODEL_GROUP_UNORDERED_SEQUENCE))
          group = new UnorderedSequenceBinding(schemaBinding);
@@ -2122,6 +2137,12 @@ public class JBossXBNoSchemaBuilder
          group = new ChoiceBinding(schemaBinding);
       else if (kind.equals(JBossXmlConstants.MODEL_GROUP_ALL))
          group = new AllBinding(schemaBinding);
+      else if(kind.equals(JBossXmlConstants.DEFAULT))
+      {
+         if(propOrderMissing)
+            assertPropOrderNotRequired(type, propertyOrder);
+         group = groupFactory.createSequence(schemaBinding);
+      }
       else
          throw new IllegalStateException("Unexpected JBossXmlModelGroup.kind=" + kind + " for type " + type.getName());
       
@@ -2150,7 +2171,7 @@ public class JBossXBNoSchemaBuilder
 
       if (propertyType.isArray())
          wrapperElement.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(setParentProperty));
-      else if (propertyType.isCollection() && repeatableParticleHandlers)
+      else if (propertyType.isCollection() && currentRepeatableHandlers)
          wrapperElement.setRepeatableHandler(new CollectionRepeatableParticleHandler(setParentProperty, (ClassInfo) propertyType, null));
       
       return seq;

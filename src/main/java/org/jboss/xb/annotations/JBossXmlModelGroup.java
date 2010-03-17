@@ -38,7 +38,11 @@ import javax.xml.bind.annotation.XmlElement;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface JBossXmlModelGroup
 {
-   String kind() default JBossXmlConstants.MODEL_GROUP_SEQUENCE;
+   /**
+    * if not specified, the default will be either sequence or unordered sequence depending on whether
+    * unordered sequences are disabled (default) or enabled
+    */
+   String kind() default JBossXmlConstants.DEFAULT;
    
    String name() default JBossXmlConstants.DEFAULT;
    

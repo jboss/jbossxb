@@ -125,13 +125,13 @@ public class AbstractBuilderTest extends AbstractTestCaseWithSetup
    {
       TestSchemaResolver resolver = new TestSchemaResolver();
       
-      SchemaBinding schemaBinding = JBossXBBuilder.build(reference);
+      SchemaBinding schemaBinding = JBossXBBuilder.build(reference, true);
       resolver.addSchemaBinding(schemaBinding);
       if (others != null)
       {
          for (Class<?> other : others)
          {
-            SchemaBinding otherBinding = JBossXBBuilder.build(other);
+            SchemaBinding otherBinding = JBossXBBuilder.build(other, true);
             resolver.addSchemaBinding(otherBinding);
          }
       }

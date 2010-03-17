@@ -118,7 +118,7 @@ public class RtElementHandler
          log.trace("setParent " + qName + " parent=" + parent + " object=" + o + " term=" + term);
       }
 
-      TermBinding parentTerm = parentParticle.getTerm();
+      final TermBinding parentTerm = parentParticle.getTerm();
 
       if(term.isMapEntryKey())
       {
@@ -248,18 +248,7 @@ public class RtElementHandler
          }
 
          // the wildcard this element is a content of
-         WildcardBinding wildcard = null;
-         if(parentTerm != null && parentTerm.isElement())
-         {
-            ElementBinding parentElement = (ElementBinding)parentTerm;
-            TypeBinding parentType = parentElement.getType();
-            wildcard = parentType.getWildcard();
-            // there should be a better way of checking this
-            if(wildcard != null && parentType.getElement(qName) != null)
-            {
-               wildcard = null;
-            }
-         }
+         WildcardBinding wildcard = parentTerm.isWildcard() ? (WildcardBinding) parentTerm : null;
 
          if(owner instanceof ValueList)
          {
@@ -312,8 +301,9 @@ public class RtElementHandler
             if (trace)
                log.trace("setParent " + qName + " metadata set " + propName);
 
+            boolean repeatable = particle.isRepeatable() || wildcard != null && parentParticle.isRepeatable();            
             // TODO with RepeatableParticleHandler.NOOP check for Collection should be commented out
-            if(particle.isRepeatable() && !(o instanceof Collection))
+            if(repeatable && !(o instanceof Collection))
             {
                RtUtil.add(owner, o, propName, colType,
                      term.getSchema().isIgnoreUnresolvedFieldOrClass(),

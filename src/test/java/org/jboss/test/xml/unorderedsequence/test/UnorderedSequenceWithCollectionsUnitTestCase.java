@@ -83,9 +83,9 @@ public class UnorderedSequenceWithCollectionsUnitTestCase extends AbstractBuilde
       assertNotNull(strings);
       assertEquals(4, strings.size());
       assertTrue(Arrays.asList(new String[]{"1", "2", "3", "4"}).containsAll(strings));
-      List<Integer> ints = root.getInts();
+      Integer[] ints = root.getInts();
       assertNotNull(ints);
-      assertEquals(4, ints.size());
-      assertTrue(Arrays.asList(new Integer[]{1, 2, 3, 4}).containsAll(ints));
+      assertEquals(4, ints.length);
+      assertEquals(new Integer[]{1, 2, 3, 4}, ints);
    }
 }

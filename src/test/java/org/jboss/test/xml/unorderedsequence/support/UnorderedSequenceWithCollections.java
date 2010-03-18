@@ -39,7 +39,7 @@ import org.jboss.xb.annotations.JBossXmlType;
 public class UnorderedSequenceWithCollections
 {
    private List<String> strings;
-   private List<Integer> ints;
+   private Integer[] ints;
    
    public List<String> getStrings()
    {
@@ -51,12 +51,12 @@ public class UnorderedSequenceWithCollections
       this.strings = strings;
    }
    
-   public List<Integer> getInts()
+   public Integer[] getInts()
    {
       return ints;
    }
    
-   public void setInts(List<Integer> ints)
+   public void setInts(Integer[] ints)
    {
       this.ints = ints;
    }

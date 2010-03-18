@@ -122,6 +122,7 @@ import org.jboss.xb.binding.sunday.unmarshalling.ValueAdapter;
 import org.jboss.xb.binding.sunday.unmarshalling.WildcardBinding;
 import org.jboss.xb.builder.runtime.AbstractPropertyHandler;
 import org.jboss.xb.builder.runtime.AnyAttributePropertyHandler;
+import org.jboss.xb.builder.runtime.AppendingArrayRepeatableHandler;
 import org.jboss.xb.builder.runtime.ArrayWrapperRepeatableParticleHandler;
 import org.jboss.xb.builder.runtime.BeanHandler;
 import org.jboss.xb.builder.runtime.BuilderParticleHandler;
@@ -1306,7 +1307,10 @@ public class JBossXBNoSchemaBuilder
             {
                particleBinding.setMaxOccursUnbounded(true);
                wildcardHandler = new PropertyWildcardHandler(wildcardProperty, wildcardType);
-               wildcard.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(wildcardHandler));
+               if(currentRepeatableHandlers)
+                  wildcard.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(wildcardHandler));
+               else
+                  wildcard.setRepeatableHandler(new AppendingArrayRepeatableHandler(wildcardHandler));
                type = ((ArrayInfo) wildcardType).getComponentType();
                if (trace)
                   log.trace("Wildcard " + wildcardProperty.getName() + " is an array of type " + type.getName());
@@ -1531,7 +1535,12 @@ public class JBossXBNoSchemaBuilder
          if(xmlWrapper == null)
          {
             if(propertyType.isArray())
-               choice.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(new PropertyHandler(property, propertyType)));
+            {
+               if(currentRepeatableHandlers)
+                  choice.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(new PropertyHandler(property, propertyType)));
+               else
+                  choice.setRepeatableHandler(new AppendingArrayRepeatableHandler(new PropertyHandler(property, propertyType)));
+            }
             else if(currentRepeatableHandlers && propertyType.isCollection())
                choice.setRepeatableHandler(new CollectionRepeatableParticleHandler(new PropertyHandler(property, propertyType), (ClassInfo) propertyType, null));
          }
@@ -1560,6 +1569,7 @@ public class JBossXBNoSchemaBuilder
             if(!repeatableChoice)
                particleBinding.setMaxOccursUnbounded(true);
             wildcardHandler = new PropertyWildcardHandler(property, propertyType);
+            // TODO test this!
             wildcard.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(wildcardHandler));
             wildcardType = ((ArrayInfo) propertyType).getComponentType();
             if (trace)
@@ -1939,7 +1949,10 @@ public class JBossXBNoSchemaBuilder
                if(propertyType.isArray())
                {
                   isCol = true;
-                  repeatableHandler = new ArrayWrapperRepeatableParticleHandler(propertyHandler);
+                  if(currentRepeatableHandlers)
+                     repeatableHandler = new ArrayWrapperRepeatableParticleHandler(propertyHandler);
+                  else
+                     repeatableHandler = new AppendingArrayRepeatableHandler(propertyHandler);
                }
                else if(isCol && currentRepeatableHandlers)
                   repeatableHandler = new CollectionRepeatableParticleHandler(propertyHandler, (ClassInfo) colType, null);
@@ -2073,7 +2086,12 @@ public class JBossXBNoSchemaBuilder
             group = createModelGroup(annotation.kind(), groupType, propOrderMissing, annotation.propOrder(), groupName);
 
          if(property.getType().isArray())
-            group.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(propertyHandler));
+         {
+            if(currentRepeatableHandlers)
+               group.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(propertyHandler));
+            else
+               group.setRepeatableHandler(new AppendingArrayRepeatableHandler(propertyHandler));
+         }
       }
       
       parentGroup.addParticle(new ParticleBinding(group, 0, 1, repeatable));
@@ -2170,7 +2188,10 @@ public class JBossXBNoSchemaBuilder
       parentModel.addParticle(particle);
 
       if (propertyType.isArray())
-         wrapperElement.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(setParentProperty));
+         if(currentRepeatableHandlers)
+            wrapperElement.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(setParentProperty));
+         else
+            wrapperElement.setRepeatableHandler(new AppendingArrayRepeatableHandler(setParentProperty));
       else if (propertyType.isCollection() && currentRepeatableHandlers)
          wrapperElement.setRepeatableHandler(new CollectionRepeatableParticleHandler(setParentProperty, (ClassInfo) propertyType, null));
       

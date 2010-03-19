@@ -27,6 +27,7 @@ import junit.framework.Test;
 
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.support.XmlElementsAndXmlAnyElement;
+import org.jboss.test.xb.builder.object.type.xmlanyelement.support.XmlElementsAndXmlAnyElementArray;
 
 
 /**
@@ -47,7 +48,7 @@ public class XmlElementsAndXmlAnyElementUnitTestCase extends AbstractBuilderTest
       super(name);
    }
 
-   public void testUnmarshalling() throws Exception
+   public void testList() throws Exception
    {
       XmlElementsAndXmlAnyElement o = unmarshalObject(XmlElementsAndXmlAnyElement.class);
       List<Object> list = o.getList();
@@ -56,5 +57,16 @@ public class XmlElementsAndXmlAnyElementUnitTestCase extends AbstractBuilderTest
       assertEquals(11, list.get(0));
       assertEquals("22", list.get(1));
       assertTrue(list.get(2) instanceof XmlElementsAndXmlAnyElement);
+   }
+
+   public void testArray() throws Exception
+   {
+      XmlElementsAndXmlAnyElementArray o = unmarshalObject(XmlElementsAndXmlAnyElementArray.class);
+      Object[] array = o.getArray();
+      assertNotNull(array);
+      assertEquals(3, array.length);
+      assertEquals(11, array[0]);
+      assertEquals("22", array[1]);
+      assertTrue(array[2] instanceof XmlElementsAndXmlAnyElementArray);
    }
 }

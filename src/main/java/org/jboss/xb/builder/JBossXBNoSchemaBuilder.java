@@ -1569,7 +1569,8 @@ public class JBossXBNoSchemaBuilder
             if(!repeatableChoice)
                particleBinding.setMaxOccursUnbounded(true);
             wildcardHandler = new PropertyWildcardHandler(property, propertyType);
-            // TODO test this!
+            // this is actually currently not kicking in because most probably it's a choice (XmlElements)
+            // and the choice's repeatable handler will be used instead
             wildcard.setRepeatableHandler(new ArrayWrapperRepeatableParticleHandler(wildcardHandler));
             wildcardType = ((ArrayInfo) propertyType).getComponentType();
             if (trace)
@@ -1582,6 +1583,8 @@ public class JBossXBNoSchemaBuilder
             if(currentRepeatableHandlers)
             {
                wildcardHandler = new PropertyWildcardHandler(property, propertyType);
+               // this is actually currently not kicking in because most probably it's a choice (XmlElements)
+               // and the choice's repeatable handler will be used instead
                wildcard.setRepeatableHandler(new CollectionRepeatableParticleHandler(wildcardHandler, (ClassInfo) propertyType, null));
             }
             else

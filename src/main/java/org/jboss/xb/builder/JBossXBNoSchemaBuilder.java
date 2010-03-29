@@ -779,17 +779,12 @@ public class JBossXBNoSchemaBuilder
     */
    public TypeBinding generateCollection(ClassInfo typeInfo)
    {
-      if (typeInfo instanceof ParameterizedClassInfo)
-      {
-         ParameterizedClassInfo parameterizedClassInfo = (ParameterizedClassInfo) typeInfo;
-         TypeInfo[] actualTypes = parameterizedClassInfo.getActualTypeArguments();
-         TypeInfo elementType = actualTypes[0];
-         return resolveTypeBinding(elementType);
-      }
-      else
-      {
+      TypeInfo[] actualTypes = typeInfo.getActualTypeArguments();
+      if (actualTypes == null || actualTypes.length == 0)
          return generateBean(typeInfo);
-      }
+
+      TypeInfo elementType = actualTypes[0];
+      return resolveTypeBinding(elementType);
    }
 
    /**

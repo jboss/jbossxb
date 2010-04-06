@@ -48,7 +48,7 @@ public class PropertyInitializer implements SchemaBindingInitializer
       ClassMetaData classMetaData = new ClassMetaData();
       classMetaData.setImpl(AbstractPropertyMetaData.class.getName());
       element.setClassMetaData(classMetaData);
-      element.getType().getWildcard().setWildcardHandler(new DefaultWildcardHandler()
+      element.getType().getWildcard().setHandler(new DefaultWildcardHandler()
       {
          public void setParent(Object parent, Object o, QName elementName, ElementBinding element, ElementBinding parentElement)
          {

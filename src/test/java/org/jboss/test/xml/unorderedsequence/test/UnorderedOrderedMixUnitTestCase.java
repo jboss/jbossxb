@@ -64,6 +64,7 @@ public class UnorderedOrderedMixUnitTestCase extends AbstractBuilderTest
    
    public void tearDown() throws Exception
    {
+      super.tearDown();
       JBossXBBuilder.setRepeatableParticleHandlers(defaultRepeatableHandlers);
    }
    

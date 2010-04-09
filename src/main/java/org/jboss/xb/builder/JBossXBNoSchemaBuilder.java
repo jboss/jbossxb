@@ -2174,10 +2174,10 @@ public class JBossXBNoSchemaBuilder
    {
       TypeBinding wrapperType = new TypeBinding();
       SequenceBinding seq = new SequenceBinding(schemaBinding);
-      seq.setHandler(DefaultHandlers.UOE_PARTICLE_HANDLER);
+      seq.setHandler(DefaultHandlers.NOOP_PARTICLE_HANDLER);
       ParticleBinding particle = new ParticleBinding(seq);
       wrapperType.setParticle(particle);
-      wrapperType.setHandler(DefaultHandlers.UOE_PARTICLE_HANDLER);
+      wrapperType.setHandler(DefaultHandlers.NOOP_PARTICLE_HANDLER);
 
       ElementBinding wrapperElement = createElementBinding(propertyType, wrapperType, wrapperQName, false);
       wrapperElement.setNillable(annotation.nillable());

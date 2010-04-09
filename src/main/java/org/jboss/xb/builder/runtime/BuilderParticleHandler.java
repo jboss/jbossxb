@@ -99,7 +99,7 @@ public class BuilderParticleHandler implements ParticleHandler
    public static ParticleHandler parentGroup(final ModelGroupBinding group)
    {
       if(group.isSkip())
-         return DefaultHandlers.UOE_PARTICLE_HANDLER;
+         return DefaultHandlers.NOOP_PARTICLE_HANDLER;
       
       ParticleHandler handler = group.getHandler();
       if(handler == null)

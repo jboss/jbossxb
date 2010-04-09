@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jndi:bindings
    xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
-   xmlns:jndi="urn:jboss:jndi-binding-service"
-   xs:schemaLocation="urn:jboss:jndi-binding-service jndi-binding-service_1_0.xsd"
+   xmlns:jndi="urn:jboss:jndi-binding-service:1.0"
+   xs:schemaLocation="urn:jboss:jndi-binding-service:1.0 urn:jboss:jndi-binding-service:1.0"
    >
    <jndi:binding name="ctx1/key1">
       <jndi:value>value1</jndi:value>

@@ -267,8 +267,6 @@ public class ElementPosition extends AbstractPosition
    public void endParticle()
    {
       ended = true;
-      if(skip)
-         return;
       
       ElementBinding element = (ElementBinding) term;
       List<ElementInterceptor> interceptors = null;
@@ -399,6 +397,9 @@ public class ElementPosition extends AbstractPosition
       {
          o = null;
       }
+
+      if(skip)
+         return;
 
       //
       // endElement

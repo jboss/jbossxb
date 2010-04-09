@@ -345,7 +345,7 @@ public class WildcardBinding
       @Override
       protected void initHandler()
       {
-         handler = DefaultHandlers.UOE_PARTICLE_HANDLER;
+         handler = DefaultHandlers.NOOP_PARTICLE_HANDLER;
       }
    }
 }

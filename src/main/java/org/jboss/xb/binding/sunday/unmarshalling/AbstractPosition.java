@@ -78,10 +78,10 @@ public abstract class AbstractPosition
 
       if(particle.isRepeatable())
          repeatableHandler = term.getRepeatableHandler();
-      
-      if(skip)
-         handler = DefaultHandlers.UOE_PARTICLE_HANDLER;
-      else
+
+//      if(skip)
+//         handler = DefaultHandlers.UOE_PARTICLE_HANDLER;
+//      else
          initHandler();
    }
 
@@ -136,12 +136,13 @@ public abstract class AbstractPosition
 
    protected void initValue(Attributes atts)
    {
-      if(skip)
-      {
-         o = previous == null ? null : previous.o;
-         return;
-      }
-      
+
+// attributes and characters of skipped elements should be set on the parent
+//      if(skip)
+//      {
+//         o = previous == null ? null : previous.o;
+//         return;
+//      }
       Object parent = previous == null ? null : previous.o;
       o = handler.startParticle(parent, qName, particle, atts, stack.getNamespaceRegistry());
    }

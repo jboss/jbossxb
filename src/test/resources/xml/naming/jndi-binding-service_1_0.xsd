@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema version="1.0beta" attributeFormDefault="unqualified"
    elementFormDefault="qualified"
-   targetNamespace="urn:jboss:jndi-binding-service"
-   xmlns:jndi="urn:jboss:jndi-binding-service"
+   targetNamespace="urn:jboss:jndi-binding-service:1.0"
+   xmlns:jndi="urn:jboss:jndi-binding-service:1.0"
    xmlns:xs="http://www.w3.org/2001/XMLSchema"
    xmlns:jbxb="http://www.jboss.org/xml/ns/jbxb"
    >
@@ -24,7 +24,7 @@
    <xs:element name="bindings">
       <xs:annotation>
          <xs:appinfo>
-            <jbxb:class impl="org.jboss.naming.JNDIBindings"/>
+            <jbxb:class impl="org.jboss.test.xml.naming.JNDIBindings"/>
          </xs:appinfo>
       </xs:annotation>
       <xs:complexType>
@@ -33,7 +33,7 @@
                maxOccurs="unbounded">
                <xs:annotation>
                   <xs:appinfo>
-                     <jbxb:class impl="org.jboss.naming.JNDIBinding"/>
+                     <jbxb:class impl="org.jboss.test.xml.naming.JNDIBinding"/>
                      <jbxb:property name="Bindings" />
                   </xs:appinfo>
                </xs:annotation>

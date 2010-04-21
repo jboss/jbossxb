@@ -222,15 +222,18 @@ public class JBossXBHelper<T> implements FeatureAware
       if (source == null)
          throw new IllegalArgumentException("Null source");
 
-      log.debug("Parsing file: " + source + " for type: " + expectedType);
+      boolean trace = log.isTraceEnabled();
+      if(trace)
+         log.trace("Parsing file: " + source + " for type: " + expectedType);
       Unmarshaller unmarshaller = factory.newUnmarshaller();
       unmarshaller.setSchemaValidation(isUseSchemaValidation());
       unmarshaller.setValidation(isUseValidation());
       Object parsed = unmarshaller.unmarshal(source, getResolver());
       if (parsed == null)
-         throw new Exception("The xml " + source + " is not well formed!");
+         throw new Exception("Failed to resolve Java binding for " + source + " (check the SchemaBinding resolver configuration)");
 
-      log.debug("Parsed file: " + source + " to: " + parsed);
+      if(trace)
+         log.trace("Parsed file: " + source + " to: " + parsed);
       return expectedType.cast(parsed);
    }
 
@@ -264,16 +267,19 @@ public class JBossXBHelper<T> implements FeatureAware
       if (source == null)
          throw new IllegalArgumentException("Null source");
 
-      log.debug("Parsing source: " + source + " for deploymentType: " + expectedType);
+      boolean trace = log.isTraceEnabled();
+      if(trace)
+         log.trace("Parsing source: " + source + " for deploymentType: " + expectedType);
 
       Unmarshaller unmarshaller = factory.newUnmarshaller();
       unmarshaller.setSchemaValidation(isUseSchemaValidation());
       unmarshaller.setValidation(isUseValidation());
       Object parsed = unmarshaller.unmarshal(source, omf, root);
       if (parsed == null)
-         throw new Exception("The xml " + source + " is not well formed!");
+         throw new Exception("Failed to resolve Java binding for " + source);
 
-      log.debug("Parsed file: " + source + " to: "+parsed);
+      if(trace)
+         log.trace("Parsed file: " + source + " to: "+parsed);
       return expectedType.cast(parsed);
    }
 }

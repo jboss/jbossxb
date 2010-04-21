@@ -192,7 +192,18 @@ public class SaxJBossXBParser implements JBossXBParser, org.xml.sax.ContentHandl
       }
       catch(Throwable e)
       {
-         throw new JBossXBException("Failed to parse source: " + e.getMessage(), e);
+         String str;
+         if(locator != null)
+            str = getLocationAsString(null);
+         else if(source.getSystemId() != null)
+            str = source.getSystemId();
+         else if(source.getByteStream() != null)
+            str = source.getByteStream().toString();
+         else if(source.getCharacterStream() != null)
+            str = source.getCharacterStream().toString();
+         else
+            str = "";
+         throw new JBossXBException("Failed to parse source: " + str, e);
       }
    }
 
@@ -206,6 +217,8 @@ public class SaxJBossXBParser implements JBossXBParser, org.xml.sax.ContentHandl
          String id = locator.getSystemId();
          if (id == null)
             id = locator.getPublicId();
+         if (id == null)
+            id = "xml_stream";
          buffer.append(id).append('@');
          buffer.append(locator.getLineNumber());
          buffer.append(',');

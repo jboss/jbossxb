@@ -178,13 +178,13 @@ public class SundayContentHandler
             if(schemaBinding != null)
                particle = schemaBinding.getElementParticle(startName);
             else
-               throw new JBossXBRuntimeException("Failed to resolve schema nsURI=" + namespaceURI + " location=" + schemaLocation);
+               throw new JBossXBRuntimeException("Failed to resolve schema binding for QName " + startName + " with schemaLocation=" + schemaLocation);
          }
 
          if(particle == null)
          {
             StringBuffer sb = new StringBuffer();
-            sb.append("Failed to resolve global element ");
+            sb.append("Failed to resolve global element binding ");
             sb.append(startName);
             if(schemaBinding == null && schemaResolver == null)
                sb.append(". Neither SchemaBinding nor SchemaBindingResolver are available.");

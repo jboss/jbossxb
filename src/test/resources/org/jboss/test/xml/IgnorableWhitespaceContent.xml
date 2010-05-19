@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<top xmlns='http://www.jboss.org/test/xml/simpleContent'>
-   <string> </string>
-   <string>
-      newline, 6 spaces, newline, 3 spaces
-   </string>
-</top>

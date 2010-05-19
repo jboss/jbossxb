@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<top xmlns='http://www.jboss.org/test/xml/repeatedElements'>
-   <child>one</child>
-   <child>two</child>
-</top>

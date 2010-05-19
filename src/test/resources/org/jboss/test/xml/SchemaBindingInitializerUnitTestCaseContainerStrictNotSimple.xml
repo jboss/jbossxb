@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<containerStrict
-xmlns="dummy://www.jboss.org/container"
->
-   <simple:test 
-   xmlns:simple="dummy://www.jboss.org/notsimple" 
-   >This should cause an error</simple:test>
-</containerStrict>

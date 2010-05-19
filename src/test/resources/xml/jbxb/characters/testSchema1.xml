@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<binding xmlns="urn:jboss:jbxb-characters-schema1"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="urn:jboss:jbxb-characters-schema1 schema1.xsd"
-   name="root">
-   <value>value1</value>
-</binding>

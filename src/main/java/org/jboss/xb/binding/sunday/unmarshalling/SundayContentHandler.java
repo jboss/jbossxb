@@ -173,7 +173,6 @@ public class SundayContentHandler
                if(schemaLocation == null && (namespaceURI == null || namespaceURI.length() == 0))
                   schemaLocation = localName;
             }
-            
             schemaBinding = schemaResolver.resolve(namespaceURI, null, schemaLocation);
             if(schemaBinding != null)
                particle = schemaBinding.getElementParticle(startName);
@@ -265,11 +264,10 @@ public class SundayContentHandler
       if(resolver == null || !(resolver instanceof MutableSchemaResolver))
          return attrs;
       
-      int ind = attrs.getIndex(Constants.NS_JBXB, "schemabinding");
-      if (ind != -1)
+      String value = attrs.getValue(Constants.NS_JBXB, "schemabinding");
+      if (value != null)
       {
          MutableSchemaResolver defaultResolver = (MutableSchemaResolver)resolver;
-         String value = attrs.getValue(ind);
          java.util.StringTokenizer tokenizer = new java.util.StringTokenizer(value);
          while(tokenizer.hasMoreTokens())
          {
@@ -290,7 +288,7 @@ public class SundayContentHandler
          AttributesImpl attrsImpl = new AttributesImpl(attrs.getLength() - 1);
          for(int i = 0; i < attrs.getLength(); ++i)
          {
-            if(i != ind)
+            if(!attrs.getURI(i).equals(Constants.NS_JBXB))
                attrsImpl.add(attrs.getURI(i), attrs.getLocalName(i), attrs.getQName(i), attrs.getType(i), attrs.getValue(i));
          }
          attrs = attrsImpl;

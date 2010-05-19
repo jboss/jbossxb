@@ -198,14 +198,10 @@ public class AttributesImpl
             (attr.localName == null ? localName == null : attr.localName.equals(localName))
          )
          {
-            break;
+            return attr.value;
          }
       }
-
-      if (attr == null)
-         return null;
-
-      return attr.value;
+      return null;
    }
 
    public String getValue(String qName)

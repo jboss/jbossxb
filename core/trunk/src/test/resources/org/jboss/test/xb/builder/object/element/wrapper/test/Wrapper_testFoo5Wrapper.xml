@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<foo4>
+  <bar>
+    <int>1</int>
+    <int>2</int>    
+    <float>1.1</float>    
+    <x>123456789</x>
+  </bar>
+</foo4>

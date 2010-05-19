@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<main-root>
+   <group1>
+      <c>c</c>
+      <b>b</b>
+      <a>a</a>
+   </group1>
+   <group2>
+      <c>c</c>
+      <b>b</b>
+      <a>a</a>
+   </group2>
+</main-root>

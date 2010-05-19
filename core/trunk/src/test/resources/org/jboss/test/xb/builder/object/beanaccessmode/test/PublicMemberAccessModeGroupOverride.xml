@@ -1,0 +1,4 @@
+<root property="property" public-field="fields" private-field="all">
+   <property>property</property>
+   <public-field>fields</public-field>
+</root>

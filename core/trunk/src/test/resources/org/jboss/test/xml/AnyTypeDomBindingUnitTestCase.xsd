@@ -1,0 +1,17 @@
+<schema
+ targetNamespace='http://www.jboss.org/xb/test/any'
+ xmlns='http://www.w3.org/2001/XMLSchema'
+ xmlns:jbxb='http://www.jboss.org/xml/ns/jbxb'
+ xmlns:tns='http://www.jboss.org/xb/test/any'>
+  <complexType name='myType'>
+    <annotation>
+      <appinfo>
+        <jbxb:class impl='org.jboss.test.xml.AnyTypeDomBindingUnitTestCase$MyType'/>
+      </appinfo>
+    </annotation>
+    <sequence>
+      <element name='anything' nillable='true' type='anyType'/>
+    </sequence>
+  </complexType>
+  <element name='e' type='tns:myType'/>
+</schema>

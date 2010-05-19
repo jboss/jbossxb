@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<jbean xmlns="urn:jboss:jbxb-minOccurs-schema1"
+   attr1="123">
+   <element2 />
+</jbean>

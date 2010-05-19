@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns_e:e xmlns:ns_e='http://www.jboss.org/xml/test/xop'>
+  <ns_e:imageWithContentType>
+    <xop:Include href='cid:imageWithContentType' xmlns:xop='http://www.w3.org/2004/08/xop/include'></xop:Include>
+  </ns_e:imageWithContentType>
+</ns_e:e>

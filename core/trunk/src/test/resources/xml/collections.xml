@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<collections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.jboss.org/test/xml/collections collections.xsd"
+   xmlns="http://www.jboss.org/test/xml/collections">
+
+   <stringArray>str1</stringArray>
+   <stringArray>str2</stringArray>
+   <stringArray>str3</stringArray>
+
+   <intCol>1</intCol>
+   <intCol>2</intCol>
+   <intCol>3</intCol>
+
+   <itemArray>
+      <item>item1</item>
+      <item>item2</item>
+      <item>item3</item>
+   </itemArray>
+
+   <itemCol>
+      <item>item4</item>
+      <item>item5</item>
+      <item>item6</item>
+   </itemCol>
+
+   <intArray>1</intArray>
+   <intArray>0</intArray>
+   <intArray>-1</intArray>
+</collections>

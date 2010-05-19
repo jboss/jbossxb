@@ -1,0 +1,4 @@
+<root min="${org.jboss.test.xb.builder.object.propertyrefs.test.PropertyReplacementUnitTestCase_testPropertyReplacement.min}">
+   <max>${org.jboss.test.xb.builder.object.propertyrefs.test.PropertyReplacementUnitTestCase_testPropertyReplacement.max}</max>
+   ${org.jboss.test.xb.builder.object.propertyrefs.test.PropertyReplacementUnitTestCase_testPropertyReplacement.val}
+</root>

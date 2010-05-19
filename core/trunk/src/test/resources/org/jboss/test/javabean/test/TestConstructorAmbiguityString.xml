@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<javabean xmlns="urn:jboss:javabean:2.0" class="org.jboss.test.javabean.support.AmbiguityBean">
+   <constructor>
+      <parameter paramClass="java.lang.String">SomeString</parameter>
+   </constructor>
+</javabean>

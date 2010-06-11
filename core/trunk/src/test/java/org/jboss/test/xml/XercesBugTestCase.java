@@ -23,6 +23,8 @@ package org.jboss.test.xml;
 
 import java.net.URL;
 
+import junit.framework.Test;
+
 import org.apache.xerces.xs.XSComplexTypeDefinition;
 import org.apache.xerces.xs.XSConstants;
 import org.apache.xerces.xs.XSImplementation;
@@ -49,6 +51,11 @@ import org.w3c.dom.ls.LSResourceResolver;
  */
 public class XercesBugTestCase extends BaseTestCase
 {
+   public static Test suite()
+   {
+      return suite(XercesBugTestCase.class);
+   }
+   
    public XercesBugTestCase(String localName)
    {
       super(localName);

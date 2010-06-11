@@ -26,6 +26,9 @@ import java.io.StringWriter;
 import java.io.IOException;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.MappingObjectModelProvider;
 import org.jboss.xb.binding.XercesXsMarshaller;
@@ -44,6 +47,11 @@ import org.xml.sax.SAXException;
 public class QNameAttributesUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(QNameAttributesUnitTestCase.class);
+   }
+   
    private static final String XSD =
       "<xsd:schema xmlns:xsd='http://www.w3.org/2001/XMLSchema'" +
       "   targetNamespace='http://www.jboss.org/test/xml/qnameattr'" +

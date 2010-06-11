@@ -27,6 +27,7 @@ import junit.textui.TestRunner;
 
 import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ArrayElementWildcardUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ArrayObjectWildcardUnitTestCase;
+import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ElementBeforePrimitiveUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ElementPropertiesAndWildcardUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ElementWildcardUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.test.ElementWildcardWithCollectionPropertyUnitTestCase;
@@ -57,6 +58,7 @@ public class ObjectTypeXmlAnyElementTestSuite extends TestSuite
       suite.addTest(ArrayObjectWildcardUnitTestCase.suite());
       suite.addTest(ListObjectWildcardUnitTestCase.suite());
       suite.addTest(ElementWildcardUnitTestCase.suite());
+      suite.addTest(ElementBeforePrimitiveUnitTestCase.suite());
       suite.addTest(ArrayElementWildcardUnitTestCase.suite());
       suite.addTest(ListElementWildcardUnitTestCase.suite());
       suite.addTest(ElementPropertiesAndWildcardUnitTestCase.suite());

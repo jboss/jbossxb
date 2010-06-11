@@ -21,6 +21,8 @@
  */
 package org.jboss.test.xb.validator.test;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.validator.support.EE2Root;
 import org.jboss.test.xb.validator.support.ValidatorTestRoot;
@@ -37,6 +39,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class ValidatingResolverUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(ValidatingResolverUnitTestCase.class);
+   }
+   
    public ValidatingResolverUnitTestCase(String name)
    {
       super(name);

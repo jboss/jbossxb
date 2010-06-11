@@ -34,6 +34,8 @@ import java.util.Iterator;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import junit.framework.Test;
+
 import org.jboss.logging.Logger;
 import org.jboss.test.xml.book.Book;
 import org.jboss.test.xml.book.BookCharacter;
@@ -70,6 +72,11 @@ public class SimpleTestCase
 {
    private static final Logger log = Logger.getLogger(SimpleTestCase.class);
 
+   public static Test suite()
+   {
+      return suite(SimpleTestCase.class);
+   }
+   
    public SimpleTestCase(String name)
    {
       super(name);

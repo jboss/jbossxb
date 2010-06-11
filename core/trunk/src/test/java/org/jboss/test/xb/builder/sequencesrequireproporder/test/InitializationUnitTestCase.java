@@ -22,6 +22,8 @@
 package org.jboss.test.xb.builder.sequencesrequireproporder.test;
 
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractSystemPropertyInitializationTest;
 import org.jboss.xb.builder.JBossXBBuilder;
 
@@ -34,6 +36,16 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class InitializationUnitTestCase extends AbstractSystemPropertyInitializationTest
 {
+   public static Test suite()
+   {
+      return suite(InitializationUnitTestCase.class);
+   }
+ 
+   public InitializationUnitTestCase(String name)
+   {
+      super(name);
+   }
+   
    @Override
    protected String getPropertyGetter()
    {

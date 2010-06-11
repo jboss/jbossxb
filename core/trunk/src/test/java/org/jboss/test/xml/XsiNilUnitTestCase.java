@@ -25,6 +25,8 @@ import java.io.StringReader;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
@@ -39,6 +41,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
  */
 public class XsiNilUnitTestCase extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(XsiNilUnitTestCase.class);
+   }
+   
    private static String XSD =
       "<xsd:schema xmlns:xsd='http://www.w3.org/2001/XMLSchema'" +
       "  xmlns='http://www.w3.org/2001/XMLSchema'" +

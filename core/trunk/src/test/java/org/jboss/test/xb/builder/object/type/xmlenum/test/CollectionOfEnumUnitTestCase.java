@@ -23,6 +23,8 @@ package org.jboss.test.xb.builder.object.type.xmlenum.test;
 
 import java.util.List;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.xmlenum.support.CollectionOfEnum;
 import org.jboss.test.xb.builder.object.type.xmlenum.support.EnumGlobalType;
@@ -36,6 +38,11 @@ import org.jboss.test.xb.builder.object.type.xmlenum.support.EnumGlobalType;
  */
 public class CollectionOfEnumUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(CollectionOfEnumUnitTestCase.class);
+   }
+   
    public CollectionOfEnumUnitTestCase(String name)
    {
       super(name);

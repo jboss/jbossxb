@@ -26,18 +26,15 @@ import java.net.URLClassLoader;
 
 import org.jboss.xb.builder.JBossXBBuilder;
 
-import junit.framework.TestCase;
-
-public abstract class AbstractSystemPropertyInitializationTest extends TestCase
+/**
+* @author <a href="alex@jboss.com">Alexey Loubyansky</a>
+* @version $Revision: 1.1 $
+*/
+public abstract class AbstractSystemPropertyInitializationTest extends AbstractBuilderTest
 {
 
    private String defaultSystemValue;
    private ClassLoader cl;
-
-   public AbstractSystemPropertyInitializationTest()
-   {
-      super();
-   }
 
    public AbstractSystemPropertyInitializationTest(String name)
    {

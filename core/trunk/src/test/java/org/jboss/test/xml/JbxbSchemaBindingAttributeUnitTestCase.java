@@ -21,6 +21,8 @@
  */
 package org.jboss.test.xml;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xml.jbxb.schemabindingattribute.Ns2Root;
 import org.jboss.test.xml.jbxb.schemabindingattribute.Root;
@@ -37,6 +39,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
 public class JbxbSchemaBindingAttributeUnitTestCase
    extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(JbxbSchemaBindingAttributeUnitTestCase.class);
+   }
+   
    public JbxbSchemaBindingAttributeUnitTestCase(String name)
    {
       super(name);

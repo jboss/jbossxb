@@ -26,6 +26,8 @@ import java.util.Iterator;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ComponentQNameFalseComponentContentFalseGroup;
 import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.support.ComponentQNameFalseComponentContentTrue;
@@ -55,6 +57,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class JBossXmlNsPrefixUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(JBossXmlNsPrefixUnitTestCase.class);
+   }
+   
    public JBossXmlNsPrefixUnitTestCase(String name)
    {
       super(name);

@@ -26,6 +26,8 @@ import java.util.Iterator;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.beanaccessmode.support.PublicMemberAccessModeGroupOverride;
 import org.jboss.test.xb.builder.object.beanaccessmode.support.PublicMemberAccessModeGroupOverride.PropertyAccessModeGroup;
@@ -45,6 +47,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class PublicMemberAccessModeGroupOverrideUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(PublicMemberAccessModeGroupOverrideUnitTestCase.class);
+   }
+
    public PublicMemberAccessModeGroupOverrideUnitTestCase(String name)
    {
       super(name);

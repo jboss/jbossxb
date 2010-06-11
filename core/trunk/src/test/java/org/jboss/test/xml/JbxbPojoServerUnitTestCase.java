@@ -21,6 +21,8 @@
   */
 package org.jboss.test.xml;
 
+import junit.framework.Test;
+
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 
 /**
@@ -30,6 +32,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 public class JbxbPojoServerUnitTestCase
    extends PojoServerTestBase
 {
+   public static Test suite()
+   {
+      return suite(JbxbPojoServerUnitTestCase.class);
+   }
+   
    public JbxbPojoServerUnitTestCase(String localName)
    {
       super(localName);

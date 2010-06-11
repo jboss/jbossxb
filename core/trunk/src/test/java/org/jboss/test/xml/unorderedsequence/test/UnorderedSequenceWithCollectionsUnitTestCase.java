@@ -29,6 +29,8 @@ import java.util.List;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xml.unorderedsequence.support.UnorderedSequenceWithCollections;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
@@ -46,6 +48,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class UnorderedSequenceWithCollectionsUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(UnorderedSequenceWithCollectionsUnitTestCase.class);
+   }
+   
    public UnorderedSequenceWithCollectionsUnitTestCase(String name)
    {
       super(name);

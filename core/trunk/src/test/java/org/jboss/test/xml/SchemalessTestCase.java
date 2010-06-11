@@ -21,7 +21,10 @@
   */
 package org.jboss.test.xml;
 
+import junit.framework.Test;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
 import org.jboss.test.xml.person.Person;
 import org.jboss.xb.binding.SchemalessMarshaller;
 import org.jboss.xb.binding.SchemalessObjectModelFactory;
@@ -38,6 +41,11 @@ import java.io.StringWriter;
 public class SchemalessTestCase
    extends TestCase
 {
+   public static Test suite()
+   {
+      return new TestSuite(SchemalessTestCase.class);
+   }
+   
    public SchemalessTestCase()
    {
    }

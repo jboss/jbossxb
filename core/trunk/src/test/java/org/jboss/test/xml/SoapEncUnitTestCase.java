@@ -29,12 +29,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Arrays;
 import java.util.TimeZone;
 import java.lang.reflect.Array;
 import javax.xml.namespace.QName;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.MappingObjectModelProvider;
 import org.jboss.xb.binding.XercesXsMarshaller;
 import org.jboss.xb.binding.Unmarshaller;
@@ -55,6 +57,11 @@ import org.w3c.dom.ls.LSInput;
 public class SoapEncUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(SoapEncUnitTestCase.class);
+   }
+   
    private static final SchemaBindingResolver RESOLVER = new SchemaBindingResolver()
    {
       public String getBaseURI()

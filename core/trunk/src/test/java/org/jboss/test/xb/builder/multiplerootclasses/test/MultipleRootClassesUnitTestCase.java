@@ -25,6 +25,8 @@ import java.util.Iterator;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.multiplerootclasses.support.AnotherRootAnotherNs;
 import org.jboss.test.xb.builder.multiplerootclasses.support.AnotherRootDefaultNs;
@@ -44,6 +46,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class MultipleRootClassesUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(MultipleRootClassesUnitTestCase.class);
+   }
+   
    public MultipleRootClassesUnitTestCase(String name)
    {
       super(name);

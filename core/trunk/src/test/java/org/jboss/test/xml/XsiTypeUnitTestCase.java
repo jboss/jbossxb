@@ -23,6 +23,9 @@ package org.jboss.test.xml;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.MappingObjectModelProvider;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
@@ -42,6 +45,11 @@ import org.w3c.dom.ls.LSInput;
 public class XsiTypeUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(XsiTypeUnitTestCase.class);
+   }
+   
    private static final String PO_NS = "http://www.example.com/IPO";
 
    private static final String ADDRESS_XSD =

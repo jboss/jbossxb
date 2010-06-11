@@ -24,6 +24,9 @@ package org.jboss.test.xml;
 import java.io.StringReader;
 import java.io.StringWriter;
 import javax.xml.namespace.QName;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.AbstractMarshaller;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.MappingObjectModelProvider;
@@ -43,6 +46,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 public class BasicArraysUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(BasicArraysUnitTestCase.class);
+   }
+   
    private static final String NS = "http://www.jboss.org/test/xml/longarr";
 
    private static final long[] PRIMITIVES = new long[]{-1, 0, 1};

@@ -25,10 +25,18 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
+import org.jboss.test.xb.builder.object.anyattribute.ObjectAnyAttributeTestSuite;
 import org.jboss.test.xb.builder.object.attribute.ObjectAttributeTestSuite;
+import org.jboss.test.xb.builder.object.beanaccessmode.BeanAccessModeTestSuite;
 import org.jboss.test.xb.builder.object.element.ObjectElementTestSuite;
 import org.jboss.test.xb.builder.object.javabean.ObjectJavaBeanTestSuite;
+import org.jboss.test.xb.builder.object.jbossxmlcollection.test.JBossXmlCollectionUnitTestCase;
+import org.jboss.test.xb.builder.object.jbossxmlmapentry.test.JBossXmlMapEntryUnitTestCase;
+import org.jboss.test.xb.builder.object.jbossxmlpreservewhitespace.test.JBossXmlPreserveWhitespaceUnitTestCase;
+import org.jboss.test.xb.builder.object.jbossxmltransient.test.JBossXmlTransientTypeAndPropertiesUnitTestCase;
+import org.jboss.test.xb.builder.object.jbossxmlvalue.test.MixedTypeIgnoreEmptyStringUnitTestCase;
 import org.jboss.test.xb.builder.object.mc.ObjectMCTestSuite;
+import org.jboss.test.xb.builder.object.propertyrefs.test.PropertyReplacementUnitTestCase;
 import org.jboss.test.xb.builder.object.schema.ObjectSchemaTestSuite;
 import org.jboss.test.xb.builder.object.type.ObjectTypeTestSuite;
 
@@ -49,12 +57,20 @@ public class ObjectTestSuite extends TestSuite
    {
       TestSuite suite = new TestSuite("Object Tests");
 
-      suite.addTest(ObjectSchemaTestSuite.suite());
       suite.addTest(ObjectElementTestSuite.suite());
-      suite.addTest(ObjectTypeTestSuite.suite());
       suite.addTest(ObjectAttributeTestSuite.suite());
+      suite.addTest(ObjectAnyAttributeTestSuite.suite());
       suite.addTest(ObjectJavaBeanTestSuite.suite());
+      suite.addTest(BeanAccessModeTestSuite.suite());
+      suite.addTest(JBossXmlCollectionUnitTestCase.suite());
+      suite.addTest(JBossXmlMapEntryUnitTestCase.suite());
+      suite.addTest(JBossXmlPreserveWhitespaceUnitTestCase.suite());
+      suite.addTest(JBossXmlTransientTypeAndPropertiesUnitTestCase.suite());
+      suite.addTest(MixedTypeIgnoreEmptyStringUnitTestCase.suite());
       suite.addTest(ObjectMCTestSuite.suite());
+      suite.addTest(PropertyReplacementUnitTestCase.suite());
+      suite.addTest(ObjectSchemaTestSuite.suite());
+      suite.addTest(ObjectTypeTestSuite.suite());
 
       return suite;
    }

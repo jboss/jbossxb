@@ -21,8 +21,11 @@
   */
 package org.jboss.test.xml;
 
+import junit.framework.Test;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
+import org.jboss.test.BaseTestCase;
 import org.jboss.xb.binding.Util;
 
 /**
@@ -32,8 +35,13 @@ import org.jboss.xb.binding.Util;
  * @version <tt>$Revision: 37940 $</tt>
  */
 public class XMLNameToJavaIdentifierUnitTestCase
-   extends TestCase
+   extends BaseTestCase
 {
+   public static Test suite()
+   {
+      return new TestSuite(XMLNameToJavaIdentifierUnitTestCase.class);
+   }
+   
    private static final String[] xmlNames = new String[]
    {
       "mixedCaseName", "Answer42", "name-with-dashes", "other_punct-chars", "one2three", "__-invalids-at-the-end---",

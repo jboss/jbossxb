@@ -25,6 +25,9 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Collection;
 import javax.xml.namespace.QName;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Unmarshaller;
@@ -50,6 +53,11 @@ import org.w3c.dom.ls.LSInput;
 public class AttributesUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(AttributesUnitTestCase.class);
+   }
+   
    private static final String NS_1 = "http://www.jboss.org/test/xml/attrs";
    private static final String NS_2 = "http://www.jboss.org/test/xml/attrs2";
    private static final String UNQUALIFIED_NAME = "unqualified";

@@ -25,6 +25,8 @@ import java.util.Map;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.anyattribute.support.AnyAttributes;
 
@@ -37,6 +39,11 @@ import org.jboss.test.xb.builder.object.anyattribute.support.AnyAttributes;
  */
 public class AnyAttributeUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(AnyAttributeUnitTestCase.class);
+   }
+   
    public AnyAttributeUnitTestCase(String name)
    {
       super(name);

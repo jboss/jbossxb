@@ -21,6 +21,8 @@
 */
 package org.jboss.test.xb.validator.test;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.validator.support.ImportedSchema;
 import org.jboss.test.xb.validator.support.ImportingSchema;
@@ -39,6 +41,11 @@ import org.xml.sax.InputSource;
  */
 public class ImportedSchemaUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(ImportedSchemaUnitTestCase.class);
+   }
+   
    public ImportedSchemaUnitTestCase(String name)
    {
       super(name);

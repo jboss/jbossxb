@@ -24,6 +24,8 @@ package org.jboss.test.xb.builder.object.attribute.test;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.attribute.support.DefaultAttribute;
 import org.jboss.util.xml.JBossEntityResolver;
@@ -45,6 +47,11 @@ import org.jboss.xb.builder.runtime.BeanHandler;
  */
 public class SchemaDefaultAttributeValueUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(SchemaDefaultAttributeValueUnitTestCase.class);
+   }
+   
    public SchemaDefaultAttributeValueUnitTestCase(String name)
    {
       super(name);

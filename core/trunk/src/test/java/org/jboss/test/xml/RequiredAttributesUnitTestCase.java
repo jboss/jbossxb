@@ -26,6 +26,8 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.xb.binding.JBossXBException;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.binding.Unmarshaller;
@@ -45,6 +47,11 @@ import org.xml.sax.SAXException;
 public class RequiredAttributesUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(RequiredAttributesUnitTestCase.class);
+   }
+   
    private static final String XSD =
       "<xsd:schema" +
       " xmlns:jbxb='http://www.jboss.org/xml/ns/jbxb'" +

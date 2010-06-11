@@ -26,6 +26,9 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.AbstractMarshaller;
 import org.jboss.xb.binding.MappingObjectModelProvider;
 import org.jboss.xb.binding.Marshaller;
@@ -42,6 +45,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 public class ModelGroupBindingUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(ModelGroupBindingUnitTestCase.class);
+   }
+   
    private static final String XSD =
       "<xsd:schema targetNamespace='http://jboss.org/ns/mg'" +
       " xmlns:xsd='http://www.w3.org/2001/XMLSchema'" +

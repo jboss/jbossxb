@@ -21,7 +21,11 @@
 */
 package org.jboss.test.xb.builder.object.attribute;
 
+import org.jboss.test.xb.builder.object.attribute.javatypeadapter.test.JavaTypeAdapterUnitTestCase;
+import org.jboss.test.xb.builder.object.attribute.test.IntegerListUnitTestCase;
 import org.jboss.test.xb.builder.object.attribute.test.IntegerUnitTestCase;
+import org.jboss.test.xb.builder.object.attribute.test.QualifierPointListUnitTestCase;
+import org.jboss.test.xb.builder.object.attribute.test.SchemaDefaultAttributeValueUnitTestCase;
 import org.jboss.test.xb.builder.object.attribute.test.StringUnitTestCase;
 
 import junit.framework.Test;
@@ -48,9 +52,10 @@ public class ObjectAttributeTestSuite extends TestSuite
 
       suite.addTest(StringUnitTestCase.suite());
       suite.addTest(IntegerUnitTestCase.suite());
-      
-      // TODO test other simple types
-      // TODO other tests
+      suite.addTest(IntegerListUnitTestCase.suite());
+      suite.addTest(QualifierPointListUnitTestCase.suite());
+      suite.addTest(SchemaDefaultAttributeValueUnitTestCase.suite());
+      suite.addTest(JavaTypeAdapterUnitTestCase.suite());
       
       return suite;
    }

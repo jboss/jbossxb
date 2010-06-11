@@ -21,7 +21,7 @@
   */
 package org.jboss.test.xml;
 
-import junit.framework.TestCase;
+import junit.framework.Test;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -55,13 +55,14 @@ import org.jboss.logging.Logger;
  * @version <tt>$Revision: 45336 $</tt>
  */
 public class MultispacedUnitTestCase
-   extends TestCase
+   extends AbstractJBossXBTest
 {
-   private static final Logger log = Logger.getLogger(MultispacedUnitTestCase.class);
-
-   public MultispacedUnitTestCase()
+   public static Test suite()
    {
+      return suite(MultispacedUnitTestCase.class);
    }
+   
+   private static final Logger log = Logger.getLogger(MultispacedUnitTestCase.class);
 
    public MultispacedUnitTestCase(String name)
    {
@@ -72,7 +73,7 @@ public class MultispacedUnitTestCase
    {
       log.debug("--- " + getName());
 
-      InputStream xmlIs = getResource("xml/multispaced/xmbean.xml");
+      InputStream xmlIs = getResourceStream("xml/multispaced/xmbean.xml");
       InputStreamReader xmlReader = new InputStreamReader(xmlIs);
 
       XMBeanMetaData xmbean = unmarshalXMBean(xmlReader);
@@ -86,7 +87,7 @@ public class MultispacedUnitTestCase
    {
       log.debug("--- " + getName());
 
-      InputStream xmlIs = getResource("xml/multispaced/xmbean-localns.xml");
+      InputStream xmlIs = getResourceStream("xml/multispaced/xmbean-localns.xml");
       InputStreamReader xmlReader = new InputStreamReader(xmlIs);
 
       XMBeanMetaData xmbean = unmarshalXMBean(xmlReader);
@@ -245,7 +246,7 @@ public class MultispacedUnitTestCase
       return xmbean;
    }
 
-   private static InputStream getResource(String name)
+   private static InputStream getResourceStream(String name)
    {
       InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(name);
       if(is == null)

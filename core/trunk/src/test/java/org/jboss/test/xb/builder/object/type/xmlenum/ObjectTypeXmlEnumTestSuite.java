@@ -25,6 +25,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
+import org.jboss.test.xb.builder.object.type.xmlenum.test.CollectionOfEnumUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlenum.test.DefaultsUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlenum.test.EnumConstantUnconvertableUnitTestCase;
 import org.jboss.test.xb.builder.object.type.xmlenum.test.EnumGlobalTypeUnitTestCase;
@@ -61,6 +62,7 @@ public class ObjectTypeXmlEnumTestSuite extends TestSuite
       suite.addTest(IgnoreCaseUnitTestCase.suite());
       suite.addTest(FailIgnoreCaseTestCase.suite());
       suite.addTest(MatchCaseUnitTestCase.suite());
+      suite.addTest(CollectionOfEnumUnitTestCase.suite());
 
       return suite;
    }

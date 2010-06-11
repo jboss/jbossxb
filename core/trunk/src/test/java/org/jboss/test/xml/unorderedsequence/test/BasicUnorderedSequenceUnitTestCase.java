@@ -22,6 +22,8 @@
 package org.jboss.test.xml.unorderedsequence.test;
 
 
+import junit.framework.Test;
+
 import org.jboss.test.xml.unorderedsequence.support.RootWithUnorderedSequence;
 
 /**
@@ -32,6 +34,11 @@ import org.jboss.test.xml.unorderedsequence.support.RootWithUnorderedSequence;
  */
 public class BasicUnorderedSequenceUnitTestCase extends AbstractUnorderedSequenceTest<RootWithUnorderedSequence>
 {
+   public static Test suite()
+   {
+      return suite(BasicUnorderedSequenceUnitTestCase.class);
+   }
+   
    public BasicUnorderedSequenceUnitTestCase(String name)
    {
       super(name, RootWithUnorderedSequence.class);

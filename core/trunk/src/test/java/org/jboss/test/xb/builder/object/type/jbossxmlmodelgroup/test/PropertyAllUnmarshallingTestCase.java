@@ -21,6 +21,8 @@
  */
 package org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.test;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.PropertiesAll;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithPropertiesAll;
@@ -33,6 +35,10 @@ import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWith
  */
 public class PropertyAllUnmarshallingTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(PropertyAllUnmarshallingTestCase.class);
+   }
 
    /**
     * Create a new PropertyAllUnmarshallingTestCase.

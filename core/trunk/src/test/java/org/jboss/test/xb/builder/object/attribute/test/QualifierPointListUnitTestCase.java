@@ -22,7 +22,6 @@
 package org.jboss.test.xb.builder.object.attribute.test;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.xml.XMLConstants;
@@ -30,10 +29,8 @@ import javax.xml.namespace.QName;
 
 import junit.framework.Test;
 
-import org.jboss.test.xb.builder.object.attribute.support.IntegerListAttribute;
 import org.jboss.test.xb.builder.object.attribute.support.QualifierPoint;
 import org.jboss.test.xb.builder.object.attribute.support.QualifierPointListAttribute;
-import org.jboss.xb.binding.SimpleTypeBindings;
 import org.jboss.xb.binding.sunday.unmarshalling.AttributeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;

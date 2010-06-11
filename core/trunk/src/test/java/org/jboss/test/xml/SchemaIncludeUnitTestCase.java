@@ -23,6 +23,8 @@ package org.jboss.test.xml;
 
 import java.net.URL;
 
+import junit.framework.Test;
+
 import org.jboss.test.BaseTestCase;
 import org.jboss.xb.binding.Util;
 import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
@@ -35,6 +37,11 @@ import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
  */
 public class SchemaIncludeUnitTestCase extends BaseTestCase
 {
+   public static Test suite()
+   {
+      return suite(SchemaIncludeUnitTestCase.class);
+   }
+   
    public void testSimpleInclude() throws Exception
    {
       MultiClassSchemaResolver resolver = new MultiClassSchemaResolver();

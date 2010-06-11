@@ -26,6 +26,8 @@ import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 import org.jboss.test.xb.builder.object.type.accessor.ObjectTypeAccessorTestSuite;
 import org.jboss.test.xb.builder.object.type.collection.ObjectTypeCollectionTestSuite;
+import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.JBossXmlModelGroupTestSuite;
+import org.jboss.test.xb.builder.object.type.jbossxmltype.test.JBossXmlTypeUnitTestCase;
 import org.jboss.test.xb.builder.object.type.simple.ObjectTypeSimpleTestSuite;
 import org.jboss.test.xb.builder.object.type.value.ObjectTypeValueTestSuite;
 import org.jboss.test.xb.builder.object.type.xmlanyelement.ObjectTypeXmlAnyElementTestSuite;
@@ -51,14 +53,16 @@ public class ObjectTypeTestSuite extends TestSuite
    {
       TestSuite suite = new TestSuite("Object Type Tests");
 
-      suite.addTest(ObjectTypeXmlTypeTestSuite.suite());
-      suite.addTest(ObjectTypeXmlEnumTestSuite.suite());
-      suite.addTest(ObjectTypeSimpleTestSuite.suite());
       suite.addTest(ObjectTypeCollectionTestSuite.suite());
       suite.addTest(ObjectTypeValueTestSuite.suite());
-      suite.addTest(ObjectTypeXmlAnyElementTestSuite.suite());
-      suite.addTest(ObjectTypeXmlTransientTestSuite.suite());
       suite.addTest(ObjectTypeAccessorTestSuite.suite());
+      suite.addTest(JBossXmlModelGroupTestSuite.suite());
+      suite.addTest(JBossXmlTypeUnitTestCase.suite());
+      suite.addTest(ObjectTypeSimpleTestSuite.suite());
+      suite.addTest(ObjectTypeXmlAnyElementTestSuite.suite());
+      suite.addTest(ObjectTypeXmlEnumTestSuite.suite());
+      suite.addTest(ObjectTypeXmlTransientTestSuite.suite());
+      suite.addTest(ObjectTypeXmlTypeTestSuite.suite());
 
       return suite;
    }

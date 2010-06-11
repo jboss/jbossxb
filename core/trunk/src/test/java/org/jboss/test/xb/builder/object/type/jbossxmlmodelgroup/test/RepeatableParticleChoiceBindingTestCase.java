@@ -26,6 +26,8 @@ import java.util.Iterator;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithParticlesChoiceCollection;
 import org.jboss.xb.binding.sunday.unmarshalling.ChoiceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
@@ -45,6 +47,10 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class RepeatableParticleChoiceBindingTestCase extends AbstractJBossXmlModelGroupTest
 {
+   public static Test suite()
+   {
+      return suite(RepeatableParticleChoiceBindingTestCase.class);
+   }
 
    /**
     * Create a new RepeatableParticleChoiceBindingTestCase.

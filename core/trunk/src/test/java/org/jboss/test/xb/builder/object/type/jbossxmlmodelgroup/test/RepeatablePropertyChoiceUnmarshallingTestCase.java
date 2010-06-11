@@ -23,6 +23,8 @@ package org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.test;
 
 import java.util.List;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.PropertiesChoice;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithPropertiesChoiceCollection;
@@ -35,6 +37,10 @@ import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWith
  */
 public class RepeatablePropertyChoiceUnmarshallingTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(RepeatablePropertyChoiceUnmarshallingTestCase.class);
+   }
 
    /**
     * Create a new RepeatablePropertyChoiceUnmarshallingTestCase.

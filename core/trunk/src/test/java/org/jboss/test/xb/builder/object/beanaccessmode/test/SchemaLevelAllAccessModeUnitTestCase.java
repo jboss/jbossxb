@@ -23,6 +23,8 @@ package org.jboss.test.xb.builder.object.beanaccessmode.test;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.beanaccessmode.support.SomeType;
 import org.jboss.test.xb.builder.object.beanaccessmode.support.SchemaLevelAllAccessMode;
@@ -41,6 +43,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class SchemaLevelAllAccessModeUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(SchemaLevelAllAccessModeUnitTestCase.class);
+   }
+
    public SchemaLevelAllAccessModeUnitTestCase(String name)
    {
       super(name);

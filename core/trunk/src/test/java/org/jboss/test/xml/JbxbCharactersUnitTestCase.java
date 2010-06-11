@@ -26,6 +26,9 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.net.URL;
+
+import junit.framework.Test;
+
 import org.jboss.test.BaseTestCase;
 import org.jboss.test.xml.jbxb.characters.Binding;
 import org.jboss.xb.binding.JBossXBException;
@@ -49,6 +52,11 @@ import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
 public class JbxbCharactersUnitTestCase
    extends BaseTestCase
 {
+   public static Test suite()
+   {
+      return suite(JbxbCharactersUnitTestCase.class);
+   }
+   
    private static final String XML_VALUE4 =
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
       "<ns_binding:binding xmlns:ns_binding=\"urn:jboss:jbxb-characters-schema1\" name=\"root\">" +

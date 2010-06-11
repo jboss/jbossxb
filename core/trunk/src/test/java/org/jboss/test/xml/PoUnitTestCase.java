@@ -23,6 +23,8 @@ package org.jboss.test.xml;
 
 import java.net.URL;
 
+import junit.framework.Test;
+
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -37,6 +39,11 @@ import org.jboss.test.BaseTestCase;
 public class PoUnitTestCase
    extends BaseTestCase
 {
+   public static Test suite()
+   {
+      return suite(PoUnitTestCase.class);
+   }
+   
    public PoUnitTestCase(String localName)
    {
       super(localName);

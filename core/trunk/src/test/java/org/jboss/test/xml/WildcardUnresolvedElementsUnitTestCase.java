@@ -34,6 +34,9 @@ import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.AttributesImpl;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -78,6 +81,11 @@ import org.xml.sax.ContentHandler;
 public class WildcardUnresolvedElementsUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(WildcardUnresolvedElementsUnitTestCase.class);
+   }
+   
    private static final String XSD =
       "<schema targetNamespace='http://org.jboss.ws/jbws434/types'" +
       " xmlns:tns='http://org.jboss.ws/jbws434/types'" +

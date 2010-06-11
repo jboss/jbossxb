@@ -25,6 +25,8 @@ import java.io.InputStream;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.javabean.plugins.jaxb.JavaBean10;
 import org.jboss.javabean.plugins.jaxb.JavaBean20;
 import org.jboss.test.xb.builder.AbstractBuilderTest;
@@ -41,6 +43,11 @@ import org.xml.sax.InputSource;
  */
 public class JavaBeanBindingValidationUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(JavaBeanBindingValidationUnitTestCase.class);
+   }
+   
    public JavaBeanBindingValidationUnitTestCase(String name)
    {
       super(name);

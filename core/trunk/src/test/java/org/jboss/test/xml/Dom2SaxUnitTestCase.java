@@ -29,6 +29,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import junit.framework.Test;
+
 import org.apache.xml.serialize.OutputFormat;
 import org.apache.xml.serialize.XMLSerializer;
 import org.jboss.xb.util.Dom2Sax;
@@ -44,6 +46,11 @@ import org.xml.sax.SAXException;
 public class Dom2SaxUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(Dom2SaxUnitTestCase.class);
+   }
+   
    private static final String XML =
       "<e1 xmlns='http://ns1'" +
       "  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>" +

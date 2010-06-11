@@ -23,6 +23,8 @@ package org.jboss.test.xb.builder.object.jbossxmlvalue.test;
 
 import java.util.List;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.jbossxmlvalue.support.MixedType;
 import org.jboss.test.xb.builder.object.jbossxmlvalue.support.MixedTypeIgnoreEmptyStringFalse;
@@ -36,6 +38,11 @@ import org.jboss.test.xb.builder.object.jbossxmlvalue.support.MixedTypeIgnoreEmp
  */
 public class MixedTypeIgnoreEmptyStringUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(MixedTypeIgnoreEmptyStringUnitTestCase.class);
+   }
+   
    public MixedTypeIgnoreEmptyStringUnitTestCase(String name)
    {
       super(name);

@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import junit.framework.Test;
+
 import org.jboss.test.xml.loginconfig.Users;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
@@ -39,6 +41,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
  */
 public class LoginConfigUnitTestCase extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(LoginConfigUnitTestCase.class);
+   }
+   
    public LoginConfigUnitTestCase(String name)
    {
       super(name);

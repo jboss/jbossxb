@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Collections;
 import java.io.StringReader;
 import java.io.StringWriter;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
@@ -48,6 +51,11 @@ import org.w3c.dom.ls.LSInput;
 public class SchemaImportUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(SchemaImportUnitTestCase.class);
+   }
+   
    private static final String NS = "http://www.jboss.org/test/xml/schema-import";
    private static final String XSD = "<xsd:schema" +
       "   targetNamespace='" + NS + "'" +

@@ -44,6 +44,7 @@ import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import junit.framework.Test;
 import junit.framework.TestCase;
 
 import java.io.InputStream;
@@ -63,8 +64,13 @@ import java.net.URL;
  * @version <tt>$Revision: 57179 $</tt>
  */
 public class MappingTestCase
-   extends TestCase
+   extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(MappingTestCase.class);
+   }
+   
    private static final Logger log = Logger.getLogger(MappingTestCase.class);
 
    public MappingTestCase(String name)
@@ -109,7 +115,7 @@ public class MappingTestCase
       final Person person = Person.newInstance();
       StringWriter xmlOutput = new StringWriter();
 
-      InputStream is = getResource("xml/person.dtd");
+      InputStream is = getResourceStream("xml/person.dtd");
       Reader dtdReader = new InputStreamReader(is);
 
       // create an instance of DTD marshaller
@@ -276,7 +282,7 @@ public class MappingTestCase
       return (Person)unmarshaller.unmarshal(xmlReader, factory, null);
    }
 
-   private static InputStream getResource(String name)
+   private InputStream getResourceStream(String name)
    {
       InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(name);
       if(is == null)

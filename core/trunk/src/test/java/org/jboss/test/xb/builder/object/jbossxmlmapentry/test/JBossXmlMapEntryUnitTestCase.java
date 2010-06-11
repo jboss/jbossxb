@@ -23,6 +23,8 @@ package org.jboss.test.xb.builder.object.jbossxmlmapentry.test;
 
 import java.util.Map;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.jbossxmlmapentry.support.EntryTypeKeyAttributeValueEntry;
 import org.jboss.test.xb.builder.object.jbossxmlmapentry.support.Root;
@@ -36,6 +38,10 @@ import org.jboss.test.xb.builder.object.jbossxmlmapentry.support.Root;
  */
 public class JBossXmlMapEntryUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(JBossXmlMapEntryUnitTestCase.class);
+   }
 
    public JBossXmlMapEntryUnitTestCase(String name)
    {

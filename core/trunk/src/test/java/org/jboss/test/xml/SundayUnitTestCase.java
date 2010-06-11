@@ -21,7 +21,7 @@
   */
 package org.jboss.test.xml;
 
-import junit.framework.TestCase;
+import junit.framework.Test;
 
 import org.jboss.xb.binding.Immutable;
 import org.jboss.xb.binding.Unmarshaller;
@@ -53,12 +53,13 @@ import java.net.URL;
  * @version <tt>$Revision: 56873 $</tt>
  */
 public class SundayUnitTestCase
-   extends TestCase
+   extends AbstractJBossXBTest
 {
-   public SundayUnitTestCase()
+   public static Test suite()
    {
+      return suite(SundayUnitTestCase.class);
    }
-
+   
    public SundayUnitTestCase(String localName)
    {
       super(localName);

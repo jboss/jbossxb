@@ -27,6 +27,8 @@ import java.util.Iterator;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xml.BeforeMarshalAfterUnmarshalHandlerTestCase.GlobalElement.StringType;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.Unmarshaller;
@@ -51,6 +53,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 public class BeforeMarshalAfterUnmarshalHandlerTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(BeforeMarshalAfterUnmarshalHandlerTestCase.class);
+   }
+   
    private static final String XSD =
       "<xsd:schema targetNamespace='http://jboss.org/ns/test'" +
       "  xmlns:xsd='http://www.w3.org/2001/XMLSchema'" +

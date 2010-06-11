@@ -23,6 +23,8 @@ package org.jboss.test.xml;
 
 import java.io.StringReader;
 
+import junit.framework.Test;
+
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -34,6 +36,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
  */
 public class ChoiceMinOccurs0UnitTestCase extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(ChoiceMinOccurs0UnitTestCase.class);
+   }
+   
    private static final String XSD =
       "<xsd:schema xmlns:xsd='http://www.w3.org/2001/XMLSchema'" +
       "  targetNamespace='http://www.jboss.org/test/xml'" +

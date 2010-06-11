@@ -25,6 +25,8 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.util.Properties;
 
+import junit.framework.Test;
+
 import org.jboss.test.xml.naming.JNDIBinding;
 import org.jboss.test.xml.naming.JNDIBindings;
 import org.jboss.xb.binding.Unmarshaller;
@@ -39,6 +41,11 @@ import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
  */
 public class JNDIBindingUnitTestCase extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(JNDIBindingUnitTestCase.class);
+   }
+   
    public JNDIBindingUnitTestCase(String name)
    {
       super(name);

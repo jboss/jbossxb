@@ -21,6 +21,8 @@
  */
 package org.jboss.test.xb.builder.sequencesrequireproporder.test;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.sequencesrequireproporder.support.RootWithXmlAccessorOrder;
 
 
@@ -33,6 +35,16 @@ import org.jboss.test.xb.builder.sequencesrequireproporder.support.RootWithXmlAc
  */
 public class RootWithXmlAccessorOrderUnitTestCase extends AbstractSequencesRequirePropOrderTest
 {
+   public static Test suite()
+   {
+      return suite(RootWithXmlAccessorOrderUnitTestCase.class);
+   }
+   
+   public RootWithXmlAccessorOrderUnitTestCase(String name)
+   {
+      super(name);
+   }
+
    @Override
    protected Class<?> getRootType()
    {

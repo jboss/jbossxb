@@ -21,6 +21,8 @@
  */
 package org.jboss.test.xb.builder.object.jbossxmlpreservewhitespace.test;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.jbossxmlpreservewhitespace.support.CustomizedSchemaRoot;
 import org.jboss.test.xb.builder.object.jbossxmlpreservewhitespace.support.DefaultsRoot;
@@ -33,6 +35,10 @@ import org.jboss.test.xb.builder.object.jbossxmlpreservewhitespace.support.Defau
  */
 public class JBossXmlPreserveWhitespaceUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(JBossXmlPreserveWhitespaceUnitTestCase.class);
+   }
 
    public JBossXmlPreserveWhitespaceUnitTestCase(String name)
    {

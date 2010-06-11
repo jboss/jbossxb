@@ -19,19 +19,22 @@
 * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
 * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
 */
-package org.jboss.test.xml;
+package org.jboss.test.xb.builder.object.anyattribute;
+
+import org.jboss.test.xb.builder.object.anyattribute.test.AnyAttributeUnitTestCase;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
+
 /**
- * JBossXB TestSuite.
+ * ObjectAttributeTestSuite.
  * 
- * @author <a href="adrian@jboss.com">Adrian Brock</a>
+ * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public class JBossXBTestSuite extends TestSuite
+public class ObjectAnyAttributeTestSuite extends TestSuite
 {
    public static void main(String[] args)
    {
@@ -40,14 +43,10 @@ public class JBossXBTestSuite extends TestSuite
 
    public static Test suite()
    {
-      TestSuite suite = new TestSuite("JBossXB Tests");
+      TestSuite suite = new TestSuite("Object AnyAttribute Tests");
 
-      suite.addTest(GlobalGroupUnitTestCase.suite());
-      suite.addTest(RepeatableTermsUnitTestCase.suite());
-      suite.addTest(SharedElementUnitTestCase.suite());
-      suite.addTest(XIncludeUnitTestCase.suite());
-      suite.addTest(XOPUnitTestCase.suite());
-
+      suite.addTest(AnyAttributeUnitTestCase.suite());
+      
       return suite;
    }
 }

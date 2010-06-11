@@ -23,6 +23,8 @@ package org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.test;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithParticlesChoice;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
@@ -40,7 +42,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class ParticleChoiceBindingTestCase extends AbstractJBossXmlModelGroupTest
 {
-
+   public static Test suite()
+   {
+      return suite(ParticleChoiceBindingTestCase.class);
+   }
+   
    /**
     * Create a new ParticleChoiceBindingTestCase.
     * 

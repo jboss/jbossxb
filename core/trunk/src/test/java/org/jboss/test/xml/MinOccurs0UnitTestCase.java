@@ -23,6 +23,9 @@ package org.jboss.test.xml;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
@@ -40,6 +43,11 @@ import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
 public class MinOccurs0UnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(MinOccurs0UnitTestCase.class);
+   }
+   
    private static final String XSD =
       "<xsd:schema xmlns:xsd='http://www.w3.org/2001/XMLSchema'" +
       "  targetNamespace='http://www.jboss.org/test/xml/minoccurs'" +

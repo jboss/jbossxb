@@ -21,6 +21,8 @@
  */
 package org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.test;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithPropertiesChoice;
 
 /**
@@ -31,6 +33,10 @@ import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWith
  */
 public class PropertyChoiceBindingTestCase extends AbstractJBossXmlModelGroupTest
 {
+   public static Test suite()
+   {
+      return suite(PropertyChoiceBindingTestCase.class);
+   }
 
    /**
     * Create a new PropertyChoiceBindingTestCase.

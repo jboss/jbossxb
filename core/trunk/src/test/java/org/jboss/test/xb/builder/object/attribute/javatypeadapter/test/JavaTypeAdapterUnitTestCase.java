@@ -22,6 +22,8 @@
 package org.jboss.test.xb.builder.object.attribute.javatypeadapter.test;
 
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.attribute.javatypeadapter.support.Root;
 import org.jboss.test.xb.builder.object.attribute.javatypeadapter.support.StringWrapper;
@@ -35,6 +37,11 @@ import org.jboss.test.xb.builder.object.attribute.javatypeadapter.support.String
  */
 public class JavaTypeAdapterUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(JavaTypeAdapterUnitTestCase.class);
+   }
+   
    public JavaTypeAdapterUnitTestCase(String name)
    {
       super(name);

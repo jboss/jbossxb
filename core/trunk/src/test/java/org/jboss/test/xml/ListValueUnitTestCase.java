@@ -28,6 +28,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 
+import junit.framework.Test;
+
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.builder.JBossXBBuilder;
 
@@ -39,6 +41,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class ListValueUnitTestCase extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(ListValueUnitTestCase.class);
+   }
+   
    public ListValueUnitTestCase(String name)
    {
       super(name);

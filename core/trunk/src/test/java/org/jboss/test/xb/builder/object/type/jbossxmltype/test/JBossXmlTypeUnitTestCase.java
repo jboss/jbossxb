@@ -26,6 +26,8 @@ import java.util.Iterator;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.jbossxmltype.support.RootWithDefaults;
 import org.jboss.test.xb.builder.object.type.jbossxmltype.support.RootWithModelGroupAll;
@@ -52,6 +54,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class JBossXmlTypeUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(JBossXmlTypeUnitTestCase.class);
+   }
+   
    public JBossXmlTypeUnitTestCase(String name)
    {
       super(name);

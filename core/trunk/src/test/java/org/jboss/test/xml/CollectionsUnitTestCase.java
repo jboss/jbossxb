@@ -29,6 +29,9 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import javax.xml.namespace.QName;
+
+import junit.framework.Test;
+
 import org.jboss.test.xml.collections.Collections;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.JBossXBException;
@@ -48,6 +51,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 public class CollectionsUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(CollectionsUnitTestCase.class);
+   }
+   
    private static final String LIST_TYPE_XSD = "<xsd:schema xmlns:xsd='" +
       Constants.NS_XML_SCHEMA +
       "'" +

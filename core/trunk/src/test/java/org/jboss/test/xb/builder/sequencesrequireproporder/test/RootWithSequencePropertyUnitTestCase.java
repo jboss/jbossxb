@@ -21,6 +21,8 @@
  */
 package org.jboss.test.xb.builder.sequencesrequireproporder.test;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.sequencesrequireproporder.support.RootWithSequenceProperty;
 
 
@@ -33,6 +35,16 @@ import org.jboss.test.xb.builder.sequencesrequireproporder.support.RootWithSeque
  */
 public class RootWithSequencePropertyUnitTestCase extends AbstractSequencesRequirePropOrderTest
 {
+   public static Test suite()
+   {
+      return suite(RootWithSequencePropertyUnitTestCase.class);
+   }
+ 
+   public RootWithSequencePropertyUnitTestCase(String name)
+   {
+      super(name);
+   }
+
    @Override
    protected Class<?> getRootType()
    {

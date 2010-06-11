@@ -24,6 +24,9 @@ package org.jboss.test.xml;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Arrays;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
@@ -40,6 +43,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 public class ArrayWrapperUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(ArrayWrapperUnitTestCase.class);
+   }
+   
    private static final String XSD =
       "<xsd:schema" +
       " targetNamespace='http://www.jboss.org/xml/test/arraywrapper'" +

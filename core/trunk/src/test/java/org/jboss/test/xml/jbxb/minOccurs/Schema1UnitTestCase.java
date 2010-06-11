@@ -24,6 +24,8 @@ package org.jboss.test.xml.jbxb.minOccurs;
 
 import java.net.URL;
 
+import junit.framework.Test;
+
 import org.jboss.xb.binding.resolver.MultiClassSchemaResolver;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
@@ -36,6 +38,11 @@ import org.jboss.test.xml.AbstractJBossXBTest;
 public class Schema1UnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(Schema1UnitTestCase.class);
+   }
+   
    public Schema1UnitTestCase(String name)
    {
       super(name);

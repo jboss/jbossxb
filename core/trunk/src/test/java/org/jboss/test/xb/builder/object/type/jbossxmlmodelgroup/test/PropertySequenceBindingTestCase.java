@@ -21,6 +21,8 @@
  */
 package org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.test;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithPropertiesSequence;
 
 /**
@@ -31,6 +33,11 @@ import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWith
  */
 public class PropertySequenceBindingTestCase extends AbstractJBossXmlModelGroupTest
 {
+   public static Test suite()
+   {
+      return suite(PropertySequenceBindingTestCase.class);
+   }
+
    public PropertySequenceBindingTestCase(String name)
    {
       super(name);

@@ -22,6 +22,8 @@
 package org.jboss.test.xml.unorderedsequence.test;
 
 
+import junit.framework.Test;
+
 import org.jboss.test.xml.unorderedsequence.support.RootWithMiscGroups;
 import org.jboss.test.xml.unorderedsequence.support.RootWithMiscGroups.CDEChoice;
 import org.jboss.test.xml.unorderedsequence.support.RootWithMiscGroups.DESequence;
@@ -35,6 +37,11 @@ import org.jboss.test.xml.unorderedsequence.support.RootWithMiscGroups.FGSequenc
  */
 public class MiscGroupsUnitTestCase extends AbstractUnorderedSequenceTest<RootWithMiscGroups>
 {
+   public static Test suite()
+   {
+      return suite(MiscGroupsUnitTestCase.class);
+   }
+   
    public MiscGroupsUnitTestCase(String name)
    {
       super(name, RootWithMiscGroups.class);

@@ -21,7 +21,7 @@
   */
 package org.jboss.test.xml;
 
-import junit.framework.TestCase;
+import junit.framework.Test;
 
 import org.jboss.xb.binding.NamespaceRegistry;
 
@@ -31,8 +31,13 @@ import org.jboss.xb.binding.NamespaceRegistry;
  * @version <tt>$Revision: 37406 $</tt>
  */
 public class NamespaceRegistryUnitTestCase
-   extends TestCase
+   extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(NamespaceRegistryUnitTestCase.class);
+   }
+   
    private String[] prefix = new String[]{"p1", "p2", "p3"};
    private String[] uri = new String[]{"http://jboss.org/p1", "http://jboss.org/p2", "http://jboss.org/p3"};
    private NamespaceRegistry ctx;

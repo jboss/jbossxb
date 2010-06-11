@@ -27,6 +27,8 @@ import java.util.List;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xml.AbstractJBossXBTest;
 import org.jboss.xb.binding.Unmarshaller;
 import org.jboss.xb.binding.UnmarshallerFactory;
@@ -49,6 +51,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
  */
 public class Foo2BarSequenceOrBarUnitTestCase extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(Foo2BarSequenceOrBarUnitTestCase.class);
+   }
+   
    public Foo2BarSequenceOrBarUnitTestCase(String name)
    {
       super(name);

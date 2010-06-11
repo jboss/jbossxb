@@ -23,6 +23,8 @@ package org.jboss.test.xb.builder.object.jbossxmltransient.test;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.jbossxmltransient.support.ExtendedBase;
 import org.jboss.test.xb.builder.object.jbossxmltransient.support.ExtendedJBossObject;
@@ -40,6 +42,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class JBossXmlTransientTypeAndPropertiesUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(JBossXmlTransientTypeAndPropertiesUnitTestCase.class);
+   }
+   
    public JBossXmlTransientTypeAndPropertiesUnitTestCase(String name)
    {
       super(name);

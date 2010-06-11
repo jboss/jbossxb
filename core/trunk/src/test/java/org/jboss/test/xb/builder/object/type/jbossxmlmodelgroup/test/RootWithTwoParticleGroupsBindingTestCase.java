@@ -26,6 +26,8 @@ import java.util.Iterator;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithTwoParticleGroups;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
@@ -44,6 +46,10 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class RootWithTwoParticleGroupsBindingTestCase extends AbstractJBossXmlModelGroupTest
 {
+   public static Test suite()
+   {
+      return suite(RootWithTwoParticleGroupsBindingTestCase.class);
+   }
 
    /**
     * Create a new RootWithTwoParticleGroupsBindingTestCase.

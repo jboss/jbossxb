@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.sunday.unmarshalling.AllBinding;
@@ -51,6 +53,11 @@ import org.xml.sax.InputSource;
  */
 public class BasicBindingValidatorUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(BasicBindingValidatorUnitTestCase.class);
+   }
+   
    public BasicBindingValidatorUnitTestCase(String name)
    {
       super(name);

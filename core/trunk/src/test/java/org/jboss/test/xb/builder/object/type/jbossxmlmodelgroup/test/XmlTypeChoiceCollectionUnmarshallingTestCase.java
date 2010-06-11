@@ -21,6 +21,8 @@
  */
 package org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.test;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.AbstractChoice;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.ChoiceA;
@@ -36,6 +38,10 @@ import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWith
  */
 public class XmlTypeChoiceCollectionUnmarshallingTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(XmlTypeChoiceCollectionUnmarshallingTestCase.class);
+   }
 
    /**
     * Create a new XmlTypeChoiceCollectionUnmarshallingTestCase.

@@ -23,6 +23,8 @@ package org.jboss.test.xb.builder.object.element.javatypeadapter.test;
 
 import java.util.Map;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.element.javatypeadapter.support.MyHashMapTypeRoot;
 import org.jboss.test.xb.builder.object.element.javatypeadapter.support.Root;
@@ -36,6 +38,11 @@ import org.jboss.test.xb.builder.object.element.javatypeadapter.support.Root;
  */
 public class JavaTypeAdapterUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(JavaTypeAdapterUnitTestCase.class);
+   }
+   
    public JavaTypeAdapterUnitTestCase(String name)
    {
       super(name);

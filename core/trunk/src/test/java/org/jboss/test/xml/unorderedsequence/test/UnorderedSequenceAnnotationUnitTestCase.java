@@ -27,6 +27,8 @@ import java.util.Iterator;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.xb.annotations.JBossXmlConstants;
 import org.jboss.xb.annotations.JBossXmlModelGroup;
@@ -46,6 +48,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class UnorderedSequenceAnnotationUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(UnorderedSequenceAnnotationUnitTestCase.class);
+   }
+   
    public UnorderedSequenceAnnotationUnitTestCase(String name)
    {
       super(name);

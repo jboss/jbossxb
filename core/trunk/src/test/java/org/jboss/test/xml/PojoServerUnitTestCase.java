@@ -30,6 +30,8 @@ import java.util.Set;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xml.pojoserver.deployment.AbstractKernelDeployment;
 import org.jboss.test.xml.pojoserver.metadata.AbstractArrayMetaData;
 import org.jboss.test.xml.pojoserver.metadata.AbstractBeanMetaData;
@@ -69,6 +71,11 @@ import org.xml.sax.Attributes;
 public class PojoServerUnitTestCase
    extends PojoServerTestBase
 {
+   public static Test suite()
+   {
+      return suite(PojoServerUnitTestCase.class);
+   }
+   
    public PojoServerUnitTestCase(String localName)
    {
       super(localName);

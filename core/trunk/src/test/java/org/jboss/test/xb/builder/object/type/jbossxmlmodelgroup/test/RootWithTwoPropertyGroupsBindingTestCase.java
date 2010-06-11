@@ -26,6 +26,8 @@ import java.util.Iterator;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithTwoPropertyGroups;
 import org.jboss.xb.binding.sunday.unmarshalling.ElementBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.ModelGroupBinding;
@@ -44,6 +46,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class RootWithTwoPropertyGroupsBindingTestCase extends AbstractJBossXmlModelGroupTest
 {
+   public static Test suite()
+   {
+      return suite(RootWithTwoPropertyGroupsBindingTestCase.class);
+   }
+
    public RootWithTwoPropertyGroupsBindingTestCase(String name)
    {
       super(name);

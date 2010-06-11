@@ -21,17 +21,22 @@
  */
 package org.jboss.test.xb.builder.sequencesrequireproporder.test;
 
+import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.xb.binding.JBossXBRuntimeException;
 import org.jboss.xb.builder.JBossXBBuilder;
 
-import junit.framework.TestCase;
 
 /**
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public abstract class AbstractSequencesRequirePropOrderTest extends TestCase
+public abstract class AbstractSequencesRequirePropOrderTest extends AbstractBuilderTest
 {
+   public AbstractSequencesRequirePropOrderTest(String name)
+   {
+      super(name);
+   }
+
    protected abstract boolean isPropOrderProvided();
    protected abstract Class<?> getRootType();
    

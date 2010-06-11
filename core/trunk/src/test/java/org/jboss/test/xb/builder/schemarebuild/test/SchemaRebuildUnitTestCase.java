@@ -21,10 +21,11 @@
  */
 package org.jboss.test.xb.builder.schemarebuild.test;
 
-import java.util.Set;
 
 import javax.xml.bind.annotation.XmlNs;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import junit.framework.Test;
 
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.xb.annotations.JBossXmlSchema;
@@ -39,6 +40,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class SchemaRebuildUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(SchemaRebuildUnitTestCase.class);
+   }
+   
    public SchemaRebuildUnitTestCase(String name)
    {
       super(name);

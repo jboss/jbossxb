@@ -26,6 +26,8 @@ import java.util.Iterator;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.repeatableterms.support.Choice;
 import org.jboss.test.xb.builder.repeatableterms.support.Sequence;
@@ -46,6 +48,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class RepeatableTermsUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(RepeatableTermsUnitTestCase.class);
+   }
+   
    public RepeatableTermsUnitTestCase(String name)
    {
       super(name);

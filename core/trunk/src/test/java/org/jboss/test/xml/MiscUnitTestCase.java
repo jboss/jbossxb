@@ -28,6 +28,9 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+
+import junit.framework.Test;
+
 import org.jboss.test.xml.sandbox.Choice1;
 import org.jboss.test.xml.sandbox.Choice2;
 import org.jboss.test.xml.sandbox.Choice3;
@@ -59,6 +62,11 @@ import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
 public class MiscUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(MiscUnitTestCase.class);
+   }
+   
    //private static final Logger log = Logger.getLogger(MiscUnitTestCase.class);
 
    public MiscUnitTestCase(String localName)

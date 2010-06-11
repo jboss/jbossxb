@@ -28,15 +28,21 @@ import java.beans.IntrospectionException;
 import org.jboss.xb.binding.introspection.ClassInfo;
 import org.jboss.xb.binding.introspection.ClassInfos;
 import org.jboss.xb.binding.introspection.FieldInfo;
-import junit.framework.TestCase;
+
+import junit.framework.Test;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision: 56570 $</tt>
  */
 public class IntrospectionUnitTestCase
-   extends TestCase
+   extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(IntrospectionUnitTestCase.class);
+   }
+   
    public IntrospectionUnitTestCase(String localName)
    {
       super(localName);

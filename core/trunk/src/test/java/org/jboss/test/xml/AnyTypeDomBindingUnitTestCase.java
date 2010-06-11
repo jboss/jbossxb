@@ -26,6 +26,8 @@ import java.io.StringWriter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import junit.framework.Test;
+
 import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.w3c.dom.Element;
@@ -38,6 +40,11 @@ import org.w3c.dom.Element;
 public class AnyTypeDomBindingUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(AnyTypeDomBindingUnitTestCase.class);
+   }
+   
    public AnyTypeDomBindingUnitTestCase(String name)
    {
       super(name);

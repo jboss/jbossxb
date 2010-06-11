@@ -41,15 +41,21 @@ import org.jboss.xb.binding.sunday.unmarshalling.SequenceBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.TypeBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.xml.sax.Attributes;
-import junit.framework.TestCase;
+
+import junit.framework.Test;
 
 /**
  * @author <a href="mailto:alex@jboss.org">Alexey Loubyansky</a>
  * @version <tt>$Revision: 37406 $</tt>
  */
 public class MapsUnitTestCase
-   extends TestCase
+   extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(MapsUnitTestCase.class);
+   }
+   
    private static final String NS = "http://www.jboss.org/test/xml/maps";
    private static final QName QNAME_MAP = new QName(NS, "map");
    private static final QName QNAME_SUBMAP = new QName(NS, "submap");
@@ -74,10 +80,6 @@ public class MapsUnitTestCase
       expected.put("key_2", "value_2");
       expected.put("submap", Collections.singletonMap("submapKey", "submapValue"));
       EXPECTED = expected;
-   }
-
-   public MapsUnitTestCase()
-   {
    }
 
    public MapsUnitTestCase(String localName)

@@ -25,7 +25,11 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
+import org.jboss.test.xb.builder.object.element.javatypeadapter.test.JavaTypeAdapterUnitTestCase;
+import org.jboss.test.xb.builder.object.element.jbossxmlnsprefix.test.JBossXmlNsPrefixUnitTestCase;
+import org.jboss.test.xb.builder.object.element.wrapper.test.WrapperUnitTestCase;
 import org.jboss.test.xb.builder.object.element.xmlelement.ObjectXmlElementTestSuite;
+import org.jboss.test.xb.builder.object.element.xmlelements.test.XmlElementsUnitTestCase;
 import org.jboss.test.xb.builder.object.element.xmlrootelement.ObjectXmlRootElementTestSuite;
 
 /**
@@ -45,8 +49,12 @@ public class ObjectElementTestSuite extends TestSuite
    {
       TestSuite suite = new TestSuite("Object Element Tests");
 
-      suite.addTest(ObjectXmlRootElementTestSuite.suite());
+      suite.addTest(JavaTypeAdapterUnitTestCase.suite());
+      suite.addTest(JBossXmlNsPrefixUnitTestCase.suite());
+      suite.addTest(WrapperUnitTestCase.suite());
       suite.addTest(ObjectXmlElementTestSuite.suite());
+      suite.addTest(XmlElementsUnitTestCase.suite());
+      suite.addTest(ObjectXmlRootElementTestSuite.suite());
       
       return suite;
    }

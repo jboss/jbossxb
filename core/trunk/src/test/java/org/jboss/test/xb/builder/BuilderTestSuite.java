@@ -25,7 +25,12 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.textui.TestRunner;
 
+import org.jboss.test.xb.builder.multiplerootclasses.test.MultipleRootClassesUnitTestCase;
 import org.jboss.test.xb.builder.object.ObjectTestSuite;
+import org.jboss.test.xb.builder.repeatableterms.test.RepeatableTermsUnitTestCase;
+import org.jboss.test.xb.builder.schemarebuild.test.SchemaRebuildUnitTestCase;
+import org.jboss.test.xb.builder.sequencesrequireproporder.SequencesRequirePropOrderTestSuite;
+import org.jboss.test.xb.builder.useunorderedsequence.test.InitializationUnitTestCase;
 
 /**
  * BuilderTestSuite.
@@ -45,6 +50,11 @@ public class BuilderTestSuite extends TestSuite
       TestSuite suite = new TestSuite("Builder Tests");
 
       suite.addTest(ObjectTestSuite.suite());
+      suite.addTest(MultipleRootClassesUnitTestCase.suite());
+      suite.addTest(RepeatableTermsUnitTestCase.suite());
+      suite.addTest(SchemaRebuildUnitTestCase.suite());
+      suite.addTest(SequencesRequirePropOrderTestSuite.suite());
+      suite.addTest(InitializationUnitTestCase.suite());
 
       return suite;
    }

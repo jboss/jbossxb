@@ -22,6 +22,9 @@
 package org.jboss.test.xml;
 
 import java.io.StringReader;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.Constants;
 import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.Unmarshaller;
@@ -35,6 +38,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 public class ExceptionUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(ExceptionUnitTestCase.class);
+   }
+   
    private static final String XSD =
       "<schema targetNamespace='http://jboss.org/xml/test/exc'" +
       " elementFormDefault='qualified'" +

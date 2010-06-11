@@ -36,7 +36,7 @@ import junit.framework.TestSuite;
  */
 public class RepeatableTermsUnitTestCase
    extends AbstractJBossXBTest
-{  
+{   
    public RepeatableTermsUnitTestCase(String name)
    {
       super(name);

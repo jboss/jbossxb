@@ -21,6 +21,8 @@
  */
 package org.jboss.test.xml.unorderedsequence.test;
 
+import junit.framework.Test;
+
 import org.jboss.test.xml.unorderedsequence.support.OneTwoSequence;
 import org.jboss.test.xml.unorderedsequence.support.RootWithOneTwoSequence;
 
@@ -32,6 +34,11 @@ import org.jboss.test.xml.unorderedsequence.support.RootWithOneTwoSequence;
  */
 public class NestedSequenceUnitTestCase extends AbstractUnorderedSequenceTest<RootWithOneTwoSequence>
 {
+   public static Test suite()
+   {
+      return suite(NestedSequenceUnitTestCase.class);
+   }
+   
    public NestedSequenceUnitTestCase(String name)
    {
       super(name, RootWithOneTwoSequence.class);

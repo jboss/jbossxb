@@ -21,6 +21,8 @@
   */
 package org.jboss.test.xml;
 
+import junit.framework.Test;
+
 import org.jboss.test.xml.book.Book;
 import org.jboss.test.BaseTestCase;
 import org.jboss.xb.binding.Unmarshaller;
@@ -36,6 +38,11 @@ import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 public class AnnotationsUnitTestCase
    extends BaseTestCase
 {
+   public static Test suite()
+   {
+      return suite(AnnotationsUnitTestCase.class);
+   }
+   
    public AnnotationsUnitTestCase(String name)
    {
       super(name);

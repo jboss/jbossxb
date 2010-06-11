@@ -25,6 +25,9 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Arrays;
+
+import junit.framework.Test;
+
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.marshalling.MarshallerImpl;
@@ -41,6 +44,11 @@ import org.jboss.xb.binding.Marshaller;
 public class EnumUnitTestCase
    extends AbstractJBossXBTest
 {
+   public static Test suite()
+   {
+      return suite(EnumUnitTestCase.class);
+   }
+   
    private final String XSD = "<xsd:schema xmlns='http://jboss.org/ns/enum' targetNamespace='http://jboss.org/ns/enum'" +
       " xmlns:xsd='http://www.w3.org/2001/XMLSchema'" +
       " xmlns:jbxb='http://www.jboss.org/xml/ns/jbxb'" +

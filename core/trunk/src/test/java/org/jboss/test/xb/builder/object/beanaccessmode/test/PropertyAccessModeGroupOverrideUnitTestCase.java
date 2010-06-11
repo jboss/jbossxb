@@ -25,6 +25,8 @@ import java.util.Collection;
 
 import javax.xml.namespace.QName;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.beanaccessmode.support.PropertyAccessModeGroupOverride;
 import org.jboss.test.xb.builder.object.beanaccessmode.support.PropertyAccessModeGroupOverride.PropertyAccessModeGroup;
@@ -44,6 +46,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class PropertyAccessModeGroupOverrideUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(PropertyAccessModeGroupOverrideUnitTestCase.class);
+   }
+
    public PropertyAccessModeGroupOverrideUnitTestCase(String name)
    {
       super(name);

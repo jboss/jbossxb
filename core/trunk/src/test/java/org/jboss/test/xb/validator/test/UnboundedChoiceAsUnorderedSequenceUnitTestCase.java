@@ -21,6 +21,8 @@
 */
 package org.jboss.test.xb.validator.test;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.validator.support.UnorderedSequenceType;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
@@ -36,6 +38,11 @@ import org.xml.sax.InputSource;
  */
 public class UnboundedChoiceAsUnorderedSequenceUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(UnboundedChoiceAsUnorderedSequenceUnitTestCase.class);
+   }
+   
    public UnboundedChoiceAsUnorderedSequenceUnitTestCase(String name)
    {
       super(name);

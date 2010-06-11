@@ -26,7 +26,7 @@ import java.io.Reader;
 
 import org.jboss.xb.binding.metadata.unmarshalling.DocumentBinding;
 import org.jboss.xb.binding.parser.JBossXBParser;
-import org.jboss.xb.binding.parser.sax.SaxJBossXBParser;
+import org.jboss.xb.binding.parser.ParserFactoryResolverUtil;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBindingResolver;
 import org.jboss.xb.binding.sunday.unmarshalling.SundayContentHandler;
@@ -53,7 +53,7 @@ public class UnmarshallerImpl implements Unmarshaller
     */
    public UnmarshallerImpl() throws JBossXBException
    {
-      parser = new SaxJBossXBParser();
+      parser = ParserFactoryResolverUtil.resolveParserFactory().createParser();
    }
 
    public void setValidation(boolean validation) throws JBossXBException

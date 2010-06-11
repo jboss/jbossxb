@@ -24,6 +24,9 @@ package org.jboss.test.xml;
 import java.io.FileReader;
 import java.net.URL;
 import javax.xml.namespace.QName;
+
+import junit.framework.Test;
+
 import org.jboss.test.xml.collections.Collections;
 import org.jboss.test.xml.any.Container;
 import org.jboss.test.BaseTestCase;
@@ -43,6 +46,11 @@ import org.w3c.dom.ls.LSInput;
 public class AnyUnitTestCase
    extends BaseTestCase
 {
+   public static Test suite()
+   {
+      return suite(AnyUnitTestCase.class);
+   }
+   
    public AnyUnitTestCase(String localName)
    {
       super(localName);

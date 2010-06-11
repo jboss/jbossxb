@@ -29,7 +29,9 @@ import org.jboss.xb.binding.UnmarshallerFactory;
 import org.jboss.xb.binding.sunday.unmarshalling.SchemaBinding;
 import org.jboss.xb.binding.sunday.unmarshalling.XsdBinder;
 
+import junit.framework.Test;
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
 /**
  * @author Scott.Stark@jboss.org
@@ -38,6 +40,11 @@ import junit.framework.TestCase;
 public class DefaultsUnitTestCase
    extends TestCase
 {
+   public static Test suite()
+   {
+      return new TestSuite(DefaultsUnitTestCase.class);
+   }
+   
    public void testSchema1() throws Exception
    {
       InputStream xsd = getResource("xml/jbxb/defaults/schema1.xsd");

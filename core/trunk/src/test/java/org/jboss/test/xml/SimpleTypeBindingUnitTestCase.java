@@ -21,7 +21,7 @@
   */
 package org.jboss.test.xml;
 
-import junit.framework.TestCase;
+import junit.framework.Test;
 
 import org.jboss.xb.binding.SimpleTypeBindings;
 
@@ -43,10 +43,11 @@ import java.net.URI;
  * @version <tt>$Revision: 40286 $</tt>
  */
 public class SimpleTypeBindingUnitTestCase
-   extends TestCase
+   extends AbstractJBossXBTest
 {
-   public SimpleTypeBindingUnitTestCase()
+   public static Test suite()
    {
+      return suite(SimpleTypeBindingUnitTestCase.class);
    }
 
    public SimpleTypeBindingUnitTestCase(String localName)

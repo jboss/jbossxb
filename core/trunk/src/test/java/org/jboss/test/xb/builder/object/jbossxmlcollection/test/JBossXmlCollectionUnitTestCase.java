@@ -24,6 +24,8 @@ package org.jboss.test.xb.builder.object.jbossxmlcollection.test;
 import java.util.LinkedList;
 import java.util.List;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.jbossxmlcollection.support.Root;
 
@@ -36,6 +38,11 @@ import org.jboss.test.xb.builder.object.jbossxmlcollection.support.Root;
  */
 public class JBossXmlCollectionUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(JBossXmlCollectionUnitTestCase.class);
+   }
+   
    public JBossXmlCollectionUnitTestCase(String name)
    {
       super(name);

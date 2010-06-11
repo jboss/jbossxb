@@ -22,6 +22,8 @@
 package org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.test;
 
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.PropertiesSequence;
 import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWithTwoPropertyGroups;
@@ -36,6 +38,11 @@ import org.jboss.test.xb.builder.object.type.jbossxmlmodelgroup.support.RootWith
  */
 public class RootWithTwoPropertyGroupsUnmarshallingTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(RootWithTwoPropertyGroupsUnmarshallingTestCase.class);
+   }
+
    public RootWithTwoPropertyGroupsUnmarshallingTestCase(String name)
    {
       super(name);

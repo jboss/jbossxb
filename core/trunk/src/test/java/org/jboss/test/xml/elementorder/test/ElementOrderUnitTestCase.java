@@ -23,6 +23,8 @@ package org.jboss.test.xml.elementorder.test;
 
 import java.util.List;
 
+import junit.framework.Test;
+
 import org.jboss.test.xb.builder.AbstractBuilderTest;
 import org.jboss.test.xml.elementorder.support.ABSequence;
 import org.jboss.test.xml.elementorder.support.CDSequence;
@@ -39,6 +41,11 @@ import org.jboss.xb.builder.JBossXBBuilder;
  */
 public class ElementOrderUnitTestCase extends AbstractBuilderTest
 {
+   public static Test suite()
+   {
+      return suite(ElementOrderUnitTestCase.class);
+   }
+   
    public ElementOrderUnitTestCase(String name)
    {
       super(name);

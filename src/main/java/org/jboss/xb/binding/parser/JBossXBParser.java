@@ -60,6 +60,22 @@ public interface JBossXBParser
       public void endDTD();
    }
 
+   /**
+    * This property controls whether the (underlying) parser errors should be
+    * logged as warnings or should they terminate parsing with errors.
+    * The default is to terminate parsing by re-throwing parser errors.
+    */
+   void setWarnOnParserErrors(boolean value);
+
+   /**
+    * This property controls whether the (underlying) parser errors should be
+    * logged as warnings or should they terminate parsing with errors.
+    * The default is to terminate parsing by re-throwing parser errors.
+    * 
+    * @return false if parser errors should be logged as warnings, otherwise - true
+    */
+   boolean getWarnOnParserErrors();
+
    void setEntityResolver(EntityResolver entityResolver) throws JBossXBException;
 
    void setProperty(String name, Object value);

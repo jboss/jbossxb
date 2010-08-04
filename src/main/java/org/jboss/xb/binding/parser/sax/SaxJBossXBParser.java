@@ -70,6 +70,7 @@ public class SaxJBossXBParser implements JBossXBParser, org.xml.sax.ContentHandl
    private final XMLReader reader;
    private JBossXBParser.ContentHandler contentHandler;
    private boolean trace;
+   private boolean warnOnParserErrors;
 
    public SaxJBossXBParser()
       throws JBossXBException
@@ -121,6 +122,23 @@ public class SaxJBossXBParser implements JBossXBParser, org.xml.sax.ContentHandl
    }
 
    // JBossXBParser implementation
+
+   public void setWarnOnParserErrors(boolean value)
+   {
+      this.warnOnParserErrors = value;
+   }
+
+   /**
+    * This property controls whether the (underlying) parser errors should be
+    * logged as warnings or should they terminate parsing with errors.
+    * The default is to terminate parsing by re-throwing parser errors.
+    * 
+    * @return false if parser errors should be logged as warnings, otherwise - true
+    */
+   public boolean getWarnOnParserErrors()
+   {
+      return this.warnOnParserErrors;
+   }
 
    public void setEntityResolver(EntityResolver entityResolver)
       throws JBossXBException
@@ -392,7 +410,10 @@ public class SaxJBossXBParser implements JBossXBParser, org.xml.sax.ContentHandl
 
    public void error(SAXParseException exception) throws SAXException
    {
-      throw new SAXException(formatMessage(exception));
+      if(this.warnOnParserErrors)
+         log.warn(formatMessage(exception));
+      else
+         throw new SAXException(formatMessage(exception));
    }
 
    public void fatalError(SAXParseException exception) throws SAXException

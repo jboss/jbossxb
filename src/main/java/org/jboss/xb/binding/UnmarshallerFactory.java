@@ -35,6 +35,7 @@ public abstract class UnmarshallerFactory
    protected Map<String, Object> features;
    protected Boolean validation;
    protected Boolean namespaces;
+   protected Boolean warnOnParserErrors;
 
    public static UnmarshallerFactory newInstance()
    {
@@ -81,6 +82,27 @@ public abstract class UnmarshallerFactory
          }
          features.put(name, value);
       }
+   }
+
+   /**
+    * This property controls whether the (underlying) parser errors should be
+    * logged as warnings or should they terminate parsing with errors.
+    */
+   public void setWarnOnParserErrors(boolean value)
+   {
+      this.warnOnParserErrors = value;
+   }
+
+   /**
+    * This property controls whether the (underlying) parser errors should be
+    * logged as warnings or should they terminate parsing with errors.
+    * The default is to terminate parsing by re-throwing parser errors.
+    * 
+    * @return false if parser errors should be logged as warnings, otherwise - true
+    */
+   public boolean getWarnOnParserErrors()
+   {
+      return warnOnParserErrors == null ? false : warnOnParserErrors;
    }
 
    // Inner

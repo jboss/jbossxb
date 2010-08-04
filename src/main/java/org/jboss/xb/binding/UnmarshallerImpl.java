@@ -92,6 +92,16 @@ public class UnmarshallerImpl implements Unmarshaller
       // todo reader.setErrorHandler(errorHandler);
    }
 
+   public void setWarnOnParserErrors(boolean value)
+   {
+      parser.setWarnOnParserErrors(value);
+   }
+
+   public boolean getWarnOnParserErrors()
+   {
+      return parser.getWarnOnParserErrors();
+   }
+
    public void mapFactoryToNamespace(ObjectModelFactory factory, String namespaceUri)
    {
       if(builder == null)

@@ -24,6 +24,8 @@ package org.jboss.xb.binding.resolver;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.namespace.QName;
+
 import org.jboss.logging.Logger;
 import org.jboss.util.xml.JBossEntityResolver;
 
@@ -43,6 +45,8 @@ public class MultiClassSchemaResolver extends AbstractMutableSchemaResolver
    private Map<String, Class<?>[]> uriToClass = new HashMap<String, Class<?>[]>();
    /** SchemaLocation to JBossXBBuilder binding class */
    private Map<String, Class<?>[]> schemaLocationToClass = new HashMap<String, Class<?>[]>();
+   
+   private Map<QName, Class<?>[]> qNameToClass;
 
    public MultiClassSchemaResolver()
    {
@@ -110,5 +114,34 @@ public class MultiClassSchemaResolver extends AbstractMutableSchemaResolver
    public Class<?>[] removeURIToClassMapping(String nsUri)
    {
       return uriToClass.remove(nsUri);
+   }
+
+   @Override
+   protected Class<?>[] getClassesForQName(QName elementName)
+   {
+      if(qNameToClass == null)
+         return null;
+      return qNameToClass.get(elementName);
+   }
+
+   @Override
+   public void mapQNameToClasses(QName elementName, Class<?>... classes)
+   {
+      if(elementName == null)
+         throw new IllegalArgumentException("QName can't be null.");
+      if(classes == null)
+         throw new IllegalArgumentException("Classes can't be null.");
+
+      if(qNameToClass == null)
+         qNameToClass = new HashMap<QName, Class<?>[]>();
+      qNameToClass.put(elementName, classes);
+   }
+
+   @Override
+   public Class<?>[] removeQNameToClassMapping(QName elementName)
+   {
+      if(qNameToClass == null)
+         return null;
+      return qNameToClass.remove(elementName);
    }
 }

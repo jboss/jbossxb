@@ -29,6 +29,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.namespace.QName;
+
 import org.jboss.logging.Logger;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.xb.binding.JBossXBRuntimeException;
@@ -48,7 +50,7 @@ import org.xml.sax.InputSource;
  * @author <a href="alex@jboss.com">Alexey Loubyansky</a>
  * @version $Revision: 1.1 $
  */
-public abstract class AbstractMutableSchemaResolver implements MutableSchemaResolver
+public abstract class AbstractMutableSchemaResolver implements MutableSchemaResolverWithQNameMapping
 {
    private Logger log;
    private String baseURI;
@@ -280,7 +282,7 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
     * 3. If that fails, the baseURI is not null, the xsd is located using URL(baseURL, schemaLocation)
     * 4. If the baseURI is null, the xsd is located using URL(schemaLocation)
     */
-   public SchemaBinding resolve(String nsURI, String baseURI, String schemaLocation)
+   public SchemaBinding resolve(String nsURI, String localName, String schemaLocation)
    {
       boolean trace = log.isTraceEnabled();
       // Was the schema binding based on the nsURI
@@ -293,8 +295,12 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
          return schema;
       }
 
+      Class<?>[] classes = null;
+      if(localName != null)
+         classes = getClassesForQName(new QName(nsURI, localName));
       // Look for a class binding by schemaLocation
-      Class<?>[] classes = resolveClassFromSchemaLocation(schemaLocation, trace);
+      if(classes == null)
+         classes = resolveClassFromSchemaLocation(schemaLocation, trace);
       if (classes == null)
       {
          // Next look by namespace
@@ -308,7 +314,7 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
          if( trace )
          {
             log.trace("found bindingClass, nsURI=" + nsURI +
-                  ", baseURI=" + baseURI +
+                  ", localName=" + localName +
                   ", schemaLocation=" + schemaLocation +
                   ", classes=" + Arrays.asList(classes));
          }
@@ -317,32 +323,29 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
       else
       {
          // Parse the schema
-         InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
+         InputSource is = getInputSource(nsURI, null, schemaLocation);
          if( trace )
          {
             String msg = (is == null ? "couldn't find" : "found") +
                   " schema InputSource, nsURI=" + nsURI +
-                  ", baseURI=" + baseURI + ", schemaLocation=" +
+                  ", localName=" + localName + ", schemaLocation=" +
                   schemaLocation;
             log.trace(msg);
          }
          
          if (is != null)
          {
-            if( baseURI == null )
-               baseURI = this.baseURI;
-   
             Boolean processAnnotationsBoolean = schemaParseAnnotationsByUri.get(nsURI);
             boolean processAnnotations = (processAnnotationsBoolean == null) || processAnnotationsBoolean;
             try
             {
-               schema = XsdBinder.bind(is.getByteStream(), null, baseURI, processAnnotations);
+               schema = XsdBinder.bind(is.getByteStream(), null, this.baseURI, processAnnotations);
                foundByNS = true;
             }
             catch(RuntimeException e)
             {
                String msg = "Failed to parse schema for nsURI="+nsURI
-                  +", baseURI="+baseURI
+                  +", localName="+localName
                   +", schemaLocation="+schemaLocation;
                throw new JBossXBRuntimeException(msg, e);
             }
@@ -373,7 +376,7 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
       {
          if(validateBinding)
          {
-            InputSource is = getInputSource(nsURI, baseURI, schemaLocation);
+            InputSource is = getInputSource(nsURI, null, schemaLocation);
             if(is != null)
             {
                SchemaBindingValidator validator = this.validator;
@@ -574,5 +577,7 @@ public abstract class AbstractMutableSchemaResolver implements MutableSchemaReso
    protected abstract Class<?>[] getClassesForURI(String uri);
 
    protected abstract Class<?>[] getClassesForSchemaLocation(String uri);
+
+   protected abstract Class<?>[] getClassesForQName(QName elementName);
 }
 

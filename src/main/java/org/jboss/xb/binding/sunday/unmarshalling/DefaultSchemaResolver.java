@@ -24,6 +24,8 @@ package org.jboss.xb.binding.sunday.unmarshalling;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.namespace.QName;
+
 import org.jboss.logging.Logger;
 import org.jboss.util.xml.JBossEntityResolver;
 import org.jboss.xb.binding.resolver.AbstractMutableSchemaResolver;
@@ -43,7 +45,9 @@ public class DefaultSchemaResolver extends AbstractMutableSchemaResolver
    private Map<String, Class<?>> uriToClass = new HashMap<String, Class<?>>();
    /** SchemaLocation to JBossXBBuilder binding class */
    private Map<String, Class<?>> schemaLocationToClass = new HashMap<String, Class<?>>();
-
+   /** element name to class mapping */
+   private Map<QName, Class<?>> qNameToClass;
+   
    public DefaultSchemaResolver()
    {
       super(log);
@@ -208,6 +212,40 @@ public class DefaultSchemaResolver extends AbstractMutableSchemaResolver
    public Class<?>[] removeURIToClassMapping(String nsUri)
    {
       Class<?> c = this.removeClassBinding(nsUri);
+      return c == null ? null : new Class<?>[]{c};
+   }
+
+   @Override
+   protected Class<?>[] getClassesForQName(QName elementName)
+   {
+      if(qNameToClass == null)
+         return null;
+      Class<?> c = qNameToClass.get(elementName);
+      return c == null ? null : new Class<?>[]{c};
+   }
+
+   @Override
+   public void mapQNameToClasses(QName elementName, Class<?>... classes)
+   {
+      if(elementName == null)
+         throw new IllegalArgumentException("QName can't be null");
+      if(classes.length != 1)
+         throw new IllegalArgumentException("Attempt to map " + classes.length + " classes to " + elementName +
+               ". This implementation supports only single class mappings.");
+      Class<?> c = classes[0];
+      if(c == null)
+         throw new IllegalArgumentException("Class argument can't be null");
+      if(qNameToClass == null)
+         qNameToClass = new HashMap<QName, Class<?>>();
+      qNameToClass.put(elementName, c);
+   }
+
+   @Override
+   public Class<?>[] removeQNameToClassMapping(QName elementName)
+   {
+      if(qNameToClass == null)
+         return null;
+      Class<?> c = qNameToClass.remove(elementName);
       return c == null ? null : new Class<?>[]{c};
    }
 }

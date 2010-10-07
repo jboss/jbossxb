@@ -173,7 +173,7 @@ public class SundayContentHandler
                if(schemaLocation == null && (namespaceURI == null || namespaceURI.length() == 0))
                   schemaLocation = localName;
             }
-            schemaBinding = schemaResolver.resolve(namespaceURI, null, schemaLocation);
+            schemaBinding = schemaResolver.resolve(namespaceURI, localName, schemaLocation);
             if(schemaBinding != null)
                particle = schemaBinding.getElementParticle(startName);
             else

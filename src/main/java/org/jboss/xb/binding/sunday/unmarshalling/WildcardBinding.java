@@ -167,7 +167,7 @@ public class WildcardBinding
          {
             // this is wildcard handling
             String schemaLocation = attrs == null ? null : Util.getSchemaLocation(attrs, qName.getNamespaceURI());
-            SchemaBinding schema = resolver.resolve(qName.getNamespaceURI(), null, schemaLocation);
+            SchemaBinding schema = resolver.resolve(qName.getNamespaceURI(), qName.getLocalPart(), schemaLocation);
             if(schema != null)
             {
                element = schema.getElement(qName);

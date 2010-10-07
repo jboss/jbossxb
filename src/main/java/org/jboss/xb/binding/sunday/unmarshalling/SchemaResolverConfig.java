@@ -25,8 +25,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.xml.namespace.QName;
+
 import org.jboss.logging.Logger;
-import org.jboss.xb.binding.resolver.MutableSchemaResolver;
+import org.jboss.xb.binding.resolver.MutableSchemaResolverWithQNameMapping;
 
 /**
  * SchemaResolverConfig.
@@ -41,7 +43,7 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
    private static final Logger log = Logger.getLogger(SchemaResolverConfig.class);
    
    /** The singleton schema resolver */
-   protected static MutableSchemaResolver resolver = SingletonSchemaResolverFactory.getInstance().getSchemaBindingResolver();
+   protected static MutableSchemaResolverWithQNameMapping resolver = (MutableSchemaResolverWithQNameMapping) SingletonSchemaResolverFactory.getInstance().getSchemaBindingResolver();
    
    /** The initializers by namespace */
    protected Properties schemaInitializers;
@@ -194,4 +196,24 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
       }
    }
 
+   public void setBindingClassesByElementNames(Map<QName, String> bindingClassesByElementName)
+   {
+      if (bindingClassesByElementName != null && bindingClassesByElementName.size() != 0)
+      {
+         ClassLoader loader = Thread.currentThread().getContextClassLoader();
+         for (Iterator<Map.Entry<QName, String>> i = bindingClassesByElementName.entrySet().iterator(); i.hasNext();)
+         {
+            Map.Entry<QName, String> entry = i.next();
+            try
+            {
+               Class<?> clazz = loader.loadClass(entry.getValue());
+               resolver.mapQNameToClasses(entry.getKey(), clazz);
+            }
+            catch(ClassNotFoundException e)
+            {
+               log.warn("Failed to load class: " + entry.getValue(), e);
+            }
+         }
+      }
+   }
 }

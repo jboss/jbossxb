@@ -66,7 +66,7 @@ public interface Unmarshaller extends FeatureAware
     * 
     * @return false if parser errors should be logged as warnings, otherwise - true
     */
-   boolean getWarnOnParserErrors();
+   boolean isWarnOnParserErrors();
 
    void setEntityResolver(EntityResolver entityResolver) throws JBossXBException;
 

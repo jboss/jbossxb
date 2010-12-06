@@ -97,7 +97,7 @@ public class UnmarshallerImpl implements Unmarshaller
       parser.setWarnOnParserErrors(value);
    }
 
-   public boolean getWarnOnParserErrors()
+   public boolean isWarnOnParserErrors()
    {
       return parser.getWarnOnParserErrors();
    }

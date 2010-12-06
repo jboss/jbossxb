@@ -100,7 +100,7 @@ public abstract class UnmarshallerFactory
     * 
     * @return false if parser errors should be logged as warnings, otherwise - true
     */
-   public boolean getWarnOnParserErrors()
+   public boolean isWarnOnParserErrors()
    {
       return warnOnParserErrors == null ? false : warnOnParserErrors;
    }

@@ -56,6 +56,9 @@ public class JBossXBHelper<T> implements FeatureAware
 
    /** Whether to validate */
    private boolean useValidation = true;
+   
+   /** Whether to warn on parser errors or terminate parsing by re-throwing the parsing errors */
+   private boolean warnOnParserErrors;
 
    /**
     * Create a new SchemaResolverDeployer.
@@ -113,6 +116,28 @@ public class JBossXBHelper<T> implements FeatureAware
    public void setUseValidation(boolean useValidation)
    {
       this.useValidation = useValidation;
+   }
+
+   /**
+    * This property controls whether the (underlying) parser errors should be
+    * logged as warnings or should they terminate parsing with errors.
+    * The default is to terminate parsing by re-throwing parser errors.
+    * 
+    * @return false if parser errors should be logged as warnings, otherwise - true
+    */
+   public boolean isWarnOnParserErrors()
+   {
+      return warnOnParserErrors;
+   }
+   
+   /**
+    * This property controls whether the (underlying) parser errors should be
+    * logged as warnings or should they terminate parsing with errors.
+    * The default is to terminate parsing by re-throwing parser errors.
+    */
+   public void setWarnOnParserErrors(boolean value)
+   {
+      this.warnOnParserErrors = value;
    }
 
    /**
@@ -228,6 +253,7 @@ public class JBossXBHelper<T> implements FeatureAware
       Unmarshaller unmarshaller = factory.newUnmarshaller();
       unmarshaller.setSchemaValidation(isUseSchemaValidation());
       unmarshaller.setValidation(isUseValidation());
+      unmarshaller.setWarnOnParserErrors(isWarnOnParserErrors());
       Object parsed = unmarshaller.unmarshal(source, getResolver());
       if (parsed == null)
          throw new Exception("Failed to resolve Java binding for " + source + " (check the SchemaBinding resolver configuration)");
@@ -274,6 +300,7 @@ public class JBossXBHelper<T> implements FeatureAware
       Unmarshaller unmarshaller = factory.newUnmarshaller();
       unmarshaller.setSchemaValidation(isUseSchemaValidation());
       unmarshaller.setValidation(isUseValidation());
+      unmarshaller.setWarnOnParserErrors(isWarnOnParserErrors());
       Object parsed = unmarshaller.unmarshal(source, omf, root);
       if (parsed == null)
          throw new Exception("Failed to resolve Java binding for " + source);

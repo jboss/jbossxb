@@ -224,7 +224,6 @@ public class DefaultSchemaResolver extends AbstractMutableSchemaResolver
       return c == null ? null : new Class<?>[]{c};
    }
 
-   @Override
    public void mapQNameToClasses(QName elementName, Class<?>... classes)
    {
       if(elementName == null)
@@ -240,7 +239,6 @@ public class DefaultSchemaResolver extends AbstractMutableSchemaResolver
       qNameToClass.put(elementName, c);
    }
 
-   @Override
    public Class<?>[] removeQNameToClassMapping(QName elementName)
    {
       if(qNameToClass == null)

@@ -124,7 +124,6 @@ public class MultiClassSchemaResolver extends AbstractMutableSchemaResolver
       return qNameToClass.get(elementName);
    }
 
-   @Override
    public void mapQNameToClasses(QName elementName, Class<?>... classes)
    {
       if(elementName == null)
@@ -137,7 +136,6 @@ public class MultiClassSchemaResolver extends AbstractMutableSchemaResolver
       qNameToClass.put(elementName, classes);
    }
 
-   @Override
    public Class<?>[] removeQNameToClassMapping(QName elementName)
    {
       if(qNameToClass == null)

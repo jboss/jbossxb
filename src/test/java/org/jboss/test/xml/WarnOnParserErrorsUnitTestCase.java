@@ -85,7 +85,6 @@ public class WarnOnParserErrorsUnitTestCase
       SchemaBinding schema = JBossXBBuilder.build(E.class, true);
 
       EntityResolver resolver = new EntityResolver(){
-         @Override
          public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException
          {
             return new InputSource(new StringReader(XSD));
@@ -111,7 +110,6 @@ public class WarnOnParserErrorsUnitTestCase
       SchemaBinding schema = JBossXBBuilder.build(E.class, true);
 
       EntityResolver resolver = new EntityResolver(){
-         @Override
          public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException
          {
             return new InputSource(new StringReader(XSD));

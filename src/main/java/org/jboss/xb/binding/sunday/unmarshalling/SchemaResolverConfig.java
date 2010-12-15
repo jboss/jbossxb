@@ -48,6 +48,9 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
    /** The initializers by namespace */
    protected Properties schemaInitializers;
 
+   /** The initializer instances by namespace */
+   protected Map<String, SchemaBindingInitializer> schemaInitializerInstances;
+
    /** The locations by namespace */
    protected Properties schemaLocations;
 
@@ -84,6 +87,33 @@ public class SchemaResolverConfig implements SchemaResolverConfigMBean
             Map.Entry<?, ?> entry = (Map.Entry<?, ?>) i.next();
             String namespace = (String) entry.getKey();
             String initializer = (String) entry.getValue();
+            try
+            {
+               resolver.mapSchemaInitializer(namespace, initializer);
+            }
+            catch (Exception ignored)
+            {
+               log.debug("Ignored: ", ignored);
+            }
+         }
+      }
+   }
+
+   public Map<String, SchemaBindingInitializer> getSchemaInitializerInstances()
+   {
+      return this.schemaInitializerInstances;
+   }
+   
+   public void setSchemaInitializerInstances(Map<String, SchemaBindingInitializer> schemaInitializers)
+   {
+      this.schemaInitializerInstances = schemaInitializers;
+      if (schemaInitializers != null && schemaInitializers.size() != 0)
+      {
+         for (Iterator<Map.Entry<String, SchemaBindingInitializer>> i = schemaInitializers.entrySet().iterator(); i.hasNext();)
+         {
+            Map.Entry<String, SchemaBindingInitializer> entry = i.next();
+            String namespace = entry.getKey();
+            SchemaBindingInitializer initializer = entry.getValue();
             try
             {
                resolver.mapSchemaInitializer(namespace, initializer);

@@ -21,6 +21,7 @@
 */
 package org.jboss.xb.binding.sunday.unmarshalling;
 
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -55,6 +56,20 @@ public interface SchemaResolverConfigMBean
     * @param schemaInitializers the schemaInitializers.
     */
    void setSchemaInitializers(Properties schemaInitializers);
+
+   /**
+    * Get the schemaInitializers.
+    * 
+    * @return the schemaInitializers.
+    */
+   Map<String, SchemaBindingInitializer> getSchemaInitializerInstances();
+
+   /**
+    * Set the schemaInitializers.
+    * 
+    * @param schemaInitializers the schemaInitializers.
+    */
+   void setSchemaInitializerInstances(Map<String, SchemaBindingInitializer> schemaInitializers);
 
    /**
     * Get the schemaLocations.
